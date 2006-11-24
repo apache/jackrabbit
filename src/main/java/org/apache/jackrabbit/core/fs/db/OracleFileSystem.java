@@ -28,10 +28,8 @@ import javax.jcr.RepositoryException;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.sql.SQLException;
 import java.sql.Blob;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -42,8 +40,6 @@ import java.io.FilterOutputStream;
 import java.io.FileOutputStream;
 import java.io.FileInputStream;
 import java.io.RandomAccessFile;
-import java.util.List;
-import java.util.LinkedList;
 import java.lang.reflect.Method;
 
 /**
@@ -187,7 +183,7 @@ public class OracleFileSystem extends DbFileSystem {
     }
 
     /**
-     * {@inheritDoc}
+     * Builds the SQL statements
      * <p/>
      * Since Oracle treats emtpy strings and BLOBs as null values the SQL
      * statements had to be adapated accordingly. The following changes were
@@ -202,101 +198,99 @@ public class OracleFileSystem extends DbFileSystem {
      * as " ".</li>
      * </ul>
      */
-    protected List initPreparedStatements() throws SQLException {
-        List stmts = new LinkedList();
-        stmts.add(insertFileStmt = con.prepareStatement("insert into "
+    protected void buildSQLStatements() {
+        insertFileSQL = "insert into "
                 + schemaObjectPrefix + "FSENTRY "
                 + "(FSENTRY_PATH, FSENTRY_NAME, FSENTRY_DATA, "
                 + "FSENTRY_LASTMOD, FSENTRY_LENGTH) "
-                + "values (?, ?, ?, ?, ?)"));
+                + "values (?, ?, ?, ?, ?)";
 
-        stmts.add(insertFolderStmt = con.prepareStatement("insert into "
+        insertFolderSQL = "insert into "
                 + schemaObjectPrefix + "FSENTRY "
                 + "(FSENTRY_PATH, FSENTRY_NAME, FSENTRY_LASTMOD, FSENTRY_LENGTH) "
-                + "values (?, nvl(?, ' '), ?, null)"));
+                + "values (?, nvl(?, ' '), ?, null)";
 
-        stmts.add(updateDataStmt = con.prepareStatement("update "
+        updateDataSQL = "update "
                 + schemaObjectPrefix + "FSENTRY "
                 + "set FSENTRY_DATA = ?, FSENTRY_LASTMOD = ?, FSENTRY_LENGTH = ? "
                 + "where FSENTRY_PATH = ? and FSENTRY_NAME = ? "
-                + "and FSENTRY_LENGTH is not null"));
+                + "and FSENTRY_LENGTH is not null";
 
-        stmts.add(updateLastModifiedStmt = con.prepareStatement("update "
+        updateLastModifiedSQL = "update "
                 + schemaObjectPrefix + "FSENTRY set FSENTRY_LASTMOD = ? "
                 + "where FSENTRY_PATH = ? and FSENTRY_NAME = ? "
-                + "and FSENTRY_LENGTH is not null"));
+                + "and FSENTRY_LENGTH is not null";
 
-        stmts.add(selectExistStmt = con.prepareStatement("select 1 from "
+        selectExistSQL = "select 1 from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = nvl(?, ' ')"));
+                + "and FSENTRY_NAME = nvl(?, ' ')";
 
-        stmts.add(selectFileExistStmt = con.prepareStatement("select 1 from "
+        selectFileExistSQL = "select 1 from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ? and FSENTRY_LENGTH is not null"));
+                + "and FSENTRY_NAME = ? and FSENTRY_LENGTH is not null";
 
-        stmts.add(selectFolderExistStmt = con.prepareStatement("select 1 from "
+        selectFolderExistSQL = "select 1 from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = nvl(?, ' ') and FSENTRY_LENGTH is null"));
+                + "and FSENTRY_NAME = nvl(?, ' ') and FSENTRY_LENGTH is null";
 
-        stmts.add(selectFileNamesStmt = con.prepareStatement("select FSENTRY_NAME from "
+        selectFileNamesSQL = "select FSENTRY_NAME from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_LENGTH is not null"));
+                + "and FSENTRY_LENGTH is not null";
 
-        stmts.add(selectFolderNamesStmt = con.prepareStatement("select FSENTRY_NAME from "
+        selectFolderNamesSQL = "select FSENTRY_NAME from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
                 + "and FSENTRY_NAME != ' ' "
-                + "and FSENTRY_LENGTH is null"));
+                + "and FSENTRY_LENGTH is null";
 
-        stmts.add(selectFileAndFolderNamesStmt = con.prepareStatement("select FSENTRY_NAME from "
+        selectFileAndFolderNamesSQL = "select FSENTRY_NAME from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME != ' '"));
+                + "and FSENTRY_NAME != ' '";
 
-        stmts.add(selectChildCountStmt = con.prepareStatement("select count(FSENTRY_NAME) from "
+        selectChildCountSQL = "select count(FSENTRY_NAME) from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ?  "
-                + "and FSENTRY_NAME != ' '"));
+                + "and FSENTRY_NAME != ' '";
 
-        stmts.add(selectDataStmt = con.prepareStatement("select nvl(FSENTRY_DATA, empty_blob()) from "
+        selectDataSQL = "select nvl(FSENTRY_DATA, empty_blob()) from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ? and FSENTRY_LENGTH is not null"));
+                + "and FSENTRY_NAME = ? and FSENTRY_LENGTH is not null";
 
-        stmts.add(selectLastModifiedStmt = con.prepareStatement("select FSENTRY_LASTMOD from "
+        selectLastModifiedSQL = "select FSENTRY_LASTMOD from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = nvl(?, ' ')"));
+                + "and FSENTRY_NAME = nvl(?, ' ')";
 
-        stmts.add(selectLengthStmt = con.prepareStatement("select nvl(FSENTRY_LENGTH, 0) from "
+        selectLengthSQL = "select nvl(FSENTRY_LENGTH, 0) from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ? and FSENTRY_LENGTH is not null"));
+                + "and FSENTRY_NAME = ? and FSENTRY_LENGTH is not null";
 
-        stmts.add(deleteFileStmt = con.prepareStatement("delete from "
+        deleteFileSQL = "delete from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ? and FSENTRY_LENGTH is not null"));
+                + "and FSENTRY_NAME = ? and FSENTRY_LENGTH is not null";
 
-        stmts.add(deleteFolderStmt = con.prepareStatement("delete from "
+        deleteFolderSQL = "delete from "
                 + schemaObjectPrefix + "FSENTRY where "
                 + "(FSENTRY_PATH = ? and FSENTRY_NAME = nvl(?, ' ') and FSENTRY_LENGTH is null) "
                 + "or (FSENTRY_PATH = ?) "
-                + "or (FSENTRY_PATH like ?) "));
+                + "or (FSENTRY_PATH like ?) ";
 
-        stmts.add(copyFileStmt = con.prepareStatement("insert into "
+        copyFileSQL = "insert into "
                 + schemaObjectPrefix + "FSENTRY "
                 + "(FSENTRY_PATH, FSENTRY_NAME, FSENTRY_DATA, "
                 + "FSENTRY_LASTMOD, FSENTRY_LENGTH) "
                 + "select ?, ?, FSENTRY_DATA, "
                 + "FSENTRY_LASTMOD, FSENTRY_LENGTH from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ? and FSENTRY_LENGTH is not null"));
+                + "and FSENTRY_NAME = ? and FSENTRY_LENGTH is not null";
 
-        stmts.add(copyFilesStmt = con.prepareStatement("insert into "
+        copyFilesSQL = "insert into "
                 + schemaObjectPrefix + "FSENTRY "
                 + "(FSENTRY_PATH, FSENTRY_NAME, FSENTRY_DATA, "
                 + "FSENTRY_LASTMOD, FSENTRY_LENGTH) "
                 + "select ?, FSENTRY_NAME, FSENTRY_DATA, "
                 + "FSENTRY_LASTMOD, FSENTRY_LENGTH from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_LENGTH is not null"));
-
-        return stmts;
+                + "and FSENTRY_LENGTH is not null";
     }
+
 
     /**
      * {@inheritDoc}
@@ -332,42 +326,41 @@ public class OracleFileSystem extends DbFileSystem {
                 public void close() throws IOException {
                     super.close();
 
-                    PreparedStatement stmt = null;
                     InputStream in = null;
                     Blob blob = null;
                     try {
                         if (isFile(filePath)) {
-                            stmt = updateDataStmt;
-                            synchronized (stmt) {
+                            synchronized (updateDataSQL) {
                                 long length = tmpFile.length();
                                 in = new FileInputStream(tmpFile);
                                 blob = createTemporaryBlob(in);
-                                stmt.setBlob(1, blob);
-                                stmt.setLong(2, System.currentTimeMillis());
-                                stmt.setLong(3, length);
-                                stmt.setString(4, parentDir);
-                                stmt.setString(5, name);
-                                stmt.executeUpdate();
+                                executeStmt(updateDataSQL,
+                                        new Object[]{
+                                            blob,
+                                            new Long(System.currentTimeMillis()),
+                                            new Long(length),
+                                            parentDir,
+                                            name
+                                        });
                             }
                         } else {
-                            stmt = insertFileStmt;
-                            stmt.setString(1, parentDir);
-                            stmt.setString(2, name);
-                            long length = tmpFile.length();
-                            in = new FileInputStream(tmpFile);
-                            blob = createTemporaryBlob(in);
-                            stmt.setBlob(3, blob);
-                            stmt.setLong(4, System.currentTimeMillis());
-                            stmt.setLong(5, length);
-                            stmt.executeUpdate();
+                            synchronized (insertFileSQL) {
+                                long length = tmpFile.length();
+                                in = new FileInputStream(tmpFile);
+                                blob = createTemporaryBlob(in);
+                                executeStmt(insertFileSQL,
+                                        new Object[]{
+                                            parentDir,
+                                            name,
+                                            blob,
+                                            new Long(System.currentTimeMillis()),
+                                            new Long(length)
+                                        });
+                            }
                         }
-
                     } catch (Exception e) {
                         throw new IOException(e.getMessage());
                     } finally {
-                        if (stmt != null) {
-                            resetStatement(stmt);
-                        }
                         if (blob != null) {
                             try {
                                 freeTemporaryBlob(blob);
@@ -442,42 +435,41 @@ public class OracleFileSystem extends DbFileSystem {
                 public void close() throws IOException {
                     raf.close();
 
-                    PreparedStatement stmt = null;
                     InputStream in = null;
                     Blob blob = null;
                     try {
                         if (isFile(filePath)) {
-                            stmt = updateDataStmt;
-                            synchronized (stmt) {
+                            synchronized (updateDataSQL) {
                                 long length = tmpFile.length();
                                 in = new FileInputStream(tmpFile);
                                 blob = createTemporaryBlob(in);
-                                stmt.setBlob(1, blob);
-                                stmt.setLong(2, System.currentTimeMillis());
-                                stmt.setLong(3, length);
-                                stmt.setString(4, parentDir);
-                                stmt.setString(5, name);
-                                stmt.executeUpdate();
+                                executeStmt(updateDataSQL,
+                                        new Object[]{
+                                            blob,
+                                            new Long(System.currentTimeMillis()),
+                                            new Long(length),
+                                            parentDir,
+                                            name
+                                        });
                             }
                         } else {
-                            stmt = insertFileStmt;
-                            stmt.setString(1, parentDir);
-                            stmt.setString(2, name);
-                            long length = tmpFile.length();
-                            in = new FileInputStream(tmpFile);
-                            blob = createTemporaryBlob(in);
-                            stmt.setBlob(3, blob);
-                            stmt.setLong(4, System.currentTimeMillis());
-                            stmt.setLong(5, length);
-                            stmt.executeUpdate();
+                            synchronized (insertFileSQL) {
+                                long length = tmpFile.length();
+                                in = new FileInputStream(tmpFile);
+                                blob = createTemporaryBlob(in);
+                                executeStmt(insertFileSQL,
+                                        new Object[]{
+                                            parentDir,
+                                            name,
+                                            blob,
+                                            new Long(System.currentTimeMillis()),
+                                            new Long(length)
+                                        });
+                            }
                         }
-
                     } catch (Exception e) {
                         throw new IOException(e.getMessage());
                     } finally {
-                        if (stmt != null) {
-                            resetStatement(stmt);
-                        }
                         if (blob != null) {
                             try {
                                 freeTemporaryBlob(blob);
