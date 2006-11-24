@@ -35,7 +35,6 @@ import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.lock.LockManagerImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.virtual.VirtualNodeTypeStateManager;
 import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
@@ -533,20 +532,9 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          * - all other workspaces should be dynamic workspaces based on
          *   this 'read-only' system workspace
          *
-         * for now, we just create a /jcr:system node in every workspace
+         * for now, the jcr:system node is created in
+         * {@link org.apache.jackrabbit.core.state.SharedItemStateManager#createRootNodeState}
          */
-        NodeImpl rootNode = (NodeImpl) sysSession.getRootNode();
-        if (!rootNode.hasNode(QName.JCR_SYSTEM)) {
-            NodeTypeImpl nt = sysSession.getNodeTypeManager().getNodeType(QName.REP_SYSTEM);
-            NodeImpl sysRoot = rootNode.internalAddChildNode(QName.JCR_SYSTEM, nt, SYSTEM_ROOT_NODE_ID);
-            // add version storage
-            nt = sysSession.getNodeTypeManager().getNodeType(QName.REP_VERSIONSTORAGE);
-            sysRoot.internalAddChildNode(QName.JCR_VERSIONSTORAGE, nt, VERSION_STORAGE_NODE_ID);
-            // add node types
-            nt = sysSession.getNodeTypeManager().getNodeType(QName.REP_NODETYPES);
-            sysRoot.internalAddChildNode(QName.JCR_NODETYPES, nt, NODETYPES_NODE_ID);
-            rootNode.save();
-        }
 
         // register the repository as event listener for keeping repository statistics
         wsp.getObservationManager().addEventListener(this,
