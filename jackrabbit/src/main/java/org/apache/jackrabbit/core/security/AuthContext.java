@@ -138,18 +138,19 @@ public abstract class AuthContext {
                     Collections.EMPTY_MAP,
                     this.options);
 
+            LoginException failure = null;
             try {
-                if (this.module.login()) {
-                    this.module.commit();
+                if (!module.login()) {
+                    failure = new LoginException("Login not confirmed");
                 }
+            } catch (LoginException e) {
+                failure = e;
             }
-            catch (LoginException le) {
-                try {
-                    this.module.abort();
-                } catch (Exception e) {
-                    // Ignore
-                }
-                throw le;
+            if (failure == null) {
+                module.commit();
+            } else {
+                module.abort();
+                throw failure;
             }
         }
 
