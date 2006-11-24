@@ -50,8 +50,6 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -77,6 +75,9 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.VersionException;
 import javax.security.auth.Subject;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.sax.SAXTransformerFactory;
@@ -1075,16 +1076,13 @@ public class SessionImpl implements Session, Dumpable {
         ImportHandler handler = (ImportHandler)
                 getImportContentHandler(parentAbsPath, uuidBehavior);
         try {
-            XMLReader parser =
-                    XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
-            parser.setContentHandler(handler);
-            parser.setErrorHandler(handler);
-            // being paranoid...
-            parser.setFeature("http://xml.org/sax/features/namespaces", true);
-            parser.setFeature("http://xml.org/sax/features/namespace-prefixes",
-                    false);
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            factory.setFeature(
+                    "http://xml.org/sax/features/namespace-prefixes", false);
 
-            parser.parse(new InputSource(in));
+            SAXParser parser = factory.newSAXParser();
+            parser.parse(new InputSource(in), handler);
         } catch (SAXException se) {
             // check for wrapped repository exception
             Exception e = se.getException();
@@ -1095,6 +1093,8 @@ public class SessionImpl implements Session, Dumpable {
                 log.debug(msg);
                 throw new InvalidSerializedDataException(msg, se);
             }
+        } catch (ParserConfigurationException e) {
+            throw new RepositoryException("SAX parser configuration error", e);
         }
     }
 
