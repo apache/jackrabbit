@@ -678,7 +678,7 @@ public class DatabaseFileSystem implements FileSystem {
         synchronized (selectDataSQL) {
             try {
                 Statement stmt = executeStmt(
-                        updateLastModifiedSQL, new Object[]{parentDir, name});
+                        selectDataSQL, new Object[]{parentDir, name});
 
                 final ResultSet rs = stmt.getResultSet();
                 if (!rs.next()) {
@@ -1448,7 +1448,7 @@ public class DatabaseFileSystem implements FileSystem {
         synchronized (copyFileSQL) {
             try {
                 Statement stmt = executeStmt(
-                        selectFolderExistSQL,
+                        copyFileSQL,
                         new Object[]{
                                 destParentDir,
                                 destName,
