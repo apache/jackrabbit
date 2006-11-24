@@ -160,107 +160,6 @@ public class DatabaseFileSystem implements FileSystem {
     //-----------------------------------------------------------< FileSystem >
 
     /**
-     * initializes the prepared statements and returns the list of them. please
-     * note, that this list is used to close the statements in the {@link #close()}
-     * call.
-     *
-     * @return the list of prepared statements.
-     * @throws SQLException
-     */
-    protected List initPreparedStatements() throws SQLException {
-        List stmts = new LinkedList();
-        stmts.add(insertFileStmt = con.prepareStatement("insert into "
-                + schemaObjectPrefix + "FSENTRY "
-                + "(FSENTRY_PATH, FSENTRY_NAME, FSENTRY_DATA, "
-                + "FSENTRY_LASTMOD, FSENTRY_LENGTH) "
-                + "values (?, ?, ?, ?, ?)"));
-
-        stmts.add(insertFolderStmt = con.prepareStatement("insert into "
-                + schemaObjectPrefix + "FSENTRY "
-                + "(FSENTRY_PATH, FSENTRY_NAME, FSENTRY_LASTMOD, FSENTRY_LENGTH) "
-                + "values (?, ?, ?, 0)"));
-
-        stmts.add(updateDataStmt = con.prepareStatement("update "
-                + schemaObjectPrefix + "FSENTRY "
-                + "set FSENTRY_DATA = ?, FSENTRY_LASTMOD = ?, FSENTRY_LENGTH = ? "
-                + "where FSENTRY_PATH = ? and FSENTRY_NAME = ? "
-                + "and FSENTRY_DATA is not null"));
-
-        stmts.add(updateLastModifiedStmt = con.prepareStatement("update "
-                + schemaObjectPrefix + "FSENTRY set FSENTRY_LASTMOD = ? "
-                + "where FSENTRY_PATH = ? and FSENTRY_NAME = ? "
-                + "and FSENTRY_DATA is not null"));
-
-        stmts.add(selectExistStmt = con.prepareStatement("select 1 from "
-                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ?"));
-
-        stmts.add(selectFileExistStmt = con.prepareStatement("select 1 from "
-                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null"));
-
-        stmts.add(selectFolderExistStmt = con.prepareStatement("select 1 from "
-                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ? and FSENTRY_DATA is null"));
-
-        stmts.add(selectFileNamesStmt = con.prepareStatement("select FSENTRY_NAME from "
-                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_DATA is not null"));
-
-        stmts.add(selectFolderNamesStmt = con.prepareStatement("select FSENTRY_NAME from "
-                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_DATA is null"));
-
-        stmts.add(selectFileAndFolderNamesStmt = con.prepareStatement("select FSENTRY_NAME from "
-                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ?"));
-
-        stmts.add(selectChildCountStmt = con.prepareStatement("select count(FSENTRY_NAME) from "
-                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ?  "));
-
-        stmts.add(selectDataStmt = con.prepareStatement("select FSENTRY_DATA from "
-                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null"));
-
-        stmts.add(selectLastModifiedStmt = con.prepareStatement("select FSENTRY_LASTMOD from "
-                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ?"));
-
-        stmts.add(selectLengthStmt = con.prepareStatement("select FSENTRY_LENGTH from "
-                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null"));
-
-        stmts.add(deleteFileStmt = con.prepareStatement("delete from "
-                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null"));
-
-        stmts.add(deleteFolderStmt = con.prepareStatement("delete from "
-                + schemaObjectPrefix + "FSENTRY where "
-                + "(FSENTRY_PATH = ? and FSENTRY_NAME = ? and FSENTRY_DATA is null) "
-                + "or (FSENTRY_PATH = ?) "
-                + "or (FSENTRY_PATH like ?) "));
-
-        stmts.add(copyFileStmt = con.prepareStatement("insert into "
-                + schemaObjectPrefix + "FSENTRY "
-                + "(FSENTRY_PATH, FSENTRY_NAME, FSENTRY_DATA, "
-                + "FSENTRY_LASTMOD, FSENTRY_LENGTH) "
-                + "select ?, ?, FSENTRY_DATA, "
-                + "FSENTRY_LASTMOD, FSENTRY_LENGTH from "
-                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null"));
-
-        stmts.add(copyFilesStmt = con.prepareStatement("insert into "
-                + schemaObjectPrefix + "FSENTRY "
-                + "(FSENTRY_PATH, FSENTRY_NAME, FSENTRY_DATA, "
-                + "FSENTRY_LASTMOD, FSENTRY_LENGTH) "
-                + "select ?, FSENTRY_NAME, FSENTRY_DATA, "
-                + "FSENTRY_LASTMOD, FSENTRY_LENGTH from "
-                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_DATA is not null"));
-
-        return stmts;
-    }
-
-    /**
      * {@inheritDoc}
      */
     public void init() throws FileSystemException {
@@ -908,7 +807,7 @@ public class DatabaseFileSystem implements FileSystem {
                 }
             };
         } catch (Exception e) {
-            String msg = "failed to open output strean to file: " + filePath;
+            String msg = "failed to open output stream to file: " + filePath;
             log.error(msg, e);
             throw new FileSystemException(msg, e);
         }
@@ -1027,7 +926,7 @@ public class DatabaseFileSystem implements FileSystem {
                 }
             };
         } catch (Exception e) {
-            String msg = "failed to open output strean to file: " + filePath;
+            String msg = "failed to open output stream to file: " + filePath;
             log.error(msg, e);
             throw new FileSystemException(msg, e);
         }
@@ -1203,6 +1102,107 @@ public class DatabaseFileSystem implements FileSystem {
                 closeStatement(stmt);
             }
         }
+    }
+
+    /**
+     * initializes the prepared statements and returns the list of them. please
+     * note, that this list is used to close the statements in the {@link #close()}
+     * call.
+     *
+     * @return the list of prepared statements.
+     * @throws SQLException
+     */
+    protected List initPreparedStatements() throws SQLException {
+        List stmts = new LinkedList();
+        stmts.add(insertFileStmt = con.prepareStatement("insert into "
+                + schemaObjectPrefix + "FSENTRY "
+                + "(FSENTRY_PATH, FSENTRY_NAME, FSENTRY_DATA, "
+                + "FSENTRY_LASTMOD, FSENTRY_LENGTH) "
+                + "values (?, ?, ?, ?, ?)"));
+
+        stmts.add(insertFolderStmt = con.prepareStatement("insert into "
+                + schemaObjectPrefix + "FSENTRY "
+                + "(FSENTRY_PATH, FSENTRY_NAME, FSENTRY_LASTMOD, FSENTRY_LENGTH) "
+                + "values (?, ?, ?, 0)"));
+
+        stmts.add(updateDataStmt = con.prepareStatement("update "
+                + schemaObjectPrefix + "FSENTRY "
+                + "set FSENTRY_DATA = ?, FSENTRY_LASTMOD = ?, FSENTRY_LENGTH = ? "
+                + "where FSENTRY_PATH = ? and FSENTRY_NAME = ? "
+                + "and FSENTRY_DATA is not null"));
+
+        stmts.add(updateLastModifiedStmt = con.prepareStatement("update "
+                + schemaObjectPrefix + "FSENTRY set FSENTRY_LASTMOD = ? "
+                + "where FSENTRY_PATH = ? and FSENTRY_NAME = ? "
+                + "and FSENTRY_DATA is not null"));
+
+        stmts.add(selectExistStmt = con.prepareStatement("select 1 from "
+                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
+                + "and FSENTRY_NAME = ?"));
+
+        stmts.add(selectFileExistStmt = con.prepareStatement("select 1 from "
+                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
+                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null"));
+
+        stmts.add(selectFolderExistStmt = con.prepareStatement("select 1 from "
+                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
+                + "and FSENTRY_NAME = ? and FSENTRY_DATA is null"));
+
+        stmts.add(selectFileNamesStmt = con.prepareStatement("select FSENTRY_NAME from "
+                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
+                + "and FSENTRY_DATA is not null"));
+
+        stmts.add(selectFolderNamesStmt = con.prepareStatement("select FSENTRY_NAME from "
+                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
+                + "and FSENTRY_DATA is null"));
+
+        stmts.add(selectFileAndFolderNamesStmt = con.prepareStatement("select FSENTRY_NAME from "
+                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ?"));
+
+        stmts.add(selectChildCountStmt = con.prepareStatement("select count(FSENTRY_NAME) from "
+                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ?  "));
+
+        stmts.add(selectDataStmt = con.prepareStatement("select FSENTRY_DATA from "
+                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
+                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null"));
+
+        stmts.add(selectLastModifiedStmt = con.prepareStatement("select FSENTRY_LASTMOD from "
+                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
+                + "and FSENTRY_NAME = ?"));
+
+        stmts.add(selectLengthStmt = con.prepareStatement("select FSENTRY_LENGTH from "
+                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
+                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null"));
+
+        stmts.add(deleteFileStmt = con.prepareStatement("delete from "
+                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
+                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null"));
+
+        stmts.add(deleteFolderStmt = con.prepareStatement("delete from "
+                + schemaObjectPrefix + "FSENTRY where "
+                + "(FSENTRY_PATH = ? and FSENTRY_NAME = ? and FSENTRY_DATA is null) "
+                + "or (FSENTRY_PATH = ?) "
+                + "or (FSENTRY_PATH like ?) "));
+
+        stmts.add(copyFileStmt = con.prepareStatement("insert into "
+                + schemaObjectPrefix + "FSENTRY "
+                + "(FSENTRY_PATH, FSENTRY_NAME, FSENTRY_DATA, "
+                + "FSENTRY_LASTMOD, FSENTRY_LENGTH) "
+                + "select ?, ?, FSENTRY_DATA, "
+                + "FSENTRY_LASTMOD, FSENTRY_LENGTH from "
+                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
+                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null"));
+
+        stmts.add(copyFilesStmt = con.prepareStatement("insert into "
+                + schemaObjectPrefix + "FSENTRY "
+                + "(FSENTRY_PATH, FSENTRY_NAME, FSENTRY_DATA, "
+                + "FSENTRY_LASTMOD, FSENTRY_LENGTH) "
+                + "select ?, FSENTRY_NAME, FSENTRY_DATA, "
+                + "FSENTRY_LASTMOD, FSENTRY_LENGTH from "
+                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
+                + "and FSENTRY_DATA is not null"));
+
+        return stmts;
     }
 
     /**
