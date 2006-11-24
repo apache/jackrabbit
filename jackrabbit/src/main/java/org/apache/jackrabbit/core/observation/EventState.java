@@ -17,20 +17,33 @@
 package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.QName;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import javax.jcr.Session;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.observation.Event;
 import java.util.Set;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Collections;
 
 /**
  * The <code>EventState</code> class encapsulates the session
  * independent state of an {@link javax.jcr.observation.Event}.
  */
 public class EventState {
+
+    /**
+     * The logger instance for this class.
+     */
+    private static final Logger log = LoggerFactory.getLogger(EventState.class);
 
     /**
      * The {@link javax.jcr.observation.Event} of this event.
@@ -69,6 +82,15 @@ public class EventState {
      * Set of mixin QNames assigned to the parent node.
      */
     private final Set mixins;
+
+    /**
+     * Set of node types. This Set consists of the primary node type and all
+     * mixin types assigned to the associated parent node of this event state.
+     * </p>
+     * This <code>Set</code> is initialized when
+     * {@link #getNodeTypes(NodeTypeManagerImpl)} is called for the first time.
+     */
+    private Set allTypes;
 
     /**
      * The session that caused this event.
@@ -349,6 +371,31 @@ public class EventState {
      */
     public Set getMixinNames() {
         return mixins;
+    }
+
+    /**
+     * Returns the <code>Set</code> of {@link javax.jcr.nodetype.NodeType}s
+     * assigned to the parent node associated with this event. This
+     * <code>Set</code> includes the primary type as well as all the mixin types
+     * assigned to the parent node.
+     *
+     * @return <code>Set</code> of {@link javax.jcr.nodetype.NodeType}s.
+     */
+    public Set getNodeTypes(NodeTypeManagerImpl ntMgr) {
+        if (allTypes == null) {
+            Set tmp = new HashSet();
+            tmp.add(nodeType);
+            for (Iterator it = mixins.iterator(); it.hasNext(); ) {
+                QName mixinName = (QName) it.next();
+                try {
+                    tmp.add(ntMgr.getNodeType(mixinName));
+                } catch (NoSuchNodeTypeException e) {
+                    log.warn("Unknown node type: " + mixinName);
+                }
+            }
+            allTypes = Collections.unmodifiableSet(tmp);
+        }
+        return allTypes;
     }
 
     /**

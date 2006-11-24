@@ -16,14 +16,15 @@
  */
 package org.apache.jackrabbit.core.observation;
 
+import java.util.Iterator;
+import java.util.Set;
+
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
@@ -33,11 +34,6 @@ import javax.jcr.observation.Event;
  * on the session's access rights and the specified filter rules.
  */
 class EventFilter {
-
-    /**
-     * Logger instance for this class.
-     */
-    private static final Logger log = LoggerFactory.getLogger(EventFilter.class);
 
     static final EventFilter BLOCK_ALL = new BlockAllFilter();
 
@@ -184,11 +180,14 @@ class EventFilter {
 
         // check node types
         if (nodeTypes != null) {
+            Set eventTypes = eventState.getNodeTypes(session.getNodeTypeManager());
             boolean match = false;
             for (int i = 0; i < nodeTypes.length && !match; i++) {
-                match |= eventState.getNodeType().getQName().equals(nodeTypes[i].getQName())
-                        || eventState.getMixinNames().contains(nodeTypes[i].getQName())
-                        || eventState.getNodeType().isDerivedFrom(nodeTypes[i].getQName());
+                for (Iterator iter = eventTypes.iterator(); iter.hasNext();) {
+                    NodeTypeImpl nodeType = (NodeTypeImpl) iter.next();
+                    match |= nodeType.getQName().equals(nodeTypes[i].getQName())
+                            || nodeType.isDerivedFrom(nodeTypes[i].getQName());
+                }
             }
             if (!match) {
                 return true;
@@ -202,7 +201,7 @@ class EventFilter {
             // Event.getPath().
             // for property events, the relevant path is the path of the
             // node where the property belongs to.
-            Path eventPath = null;
+            Path eventPath;
             if (type == Event.NODE_ADDED || type == Event.NODE_REMOVED) {
                 Path.PathElement nameElem = eventState.getChildRelPath();
                 if (nameElem.getIndex() == 0) {
