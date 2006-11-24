@@ -49,9 +49,9 @@ import java.util.List;
  * node type definition format and returns a list of NodeTypeDef objects that
  * can then be used to register node types.
  * <p/>
- * The BNF grammar of the compact node type definition:<br>
+ * The EBNF grammar of the compact node type definition:<br>
  * <pre>
- * cnd ::= {ns_mapping | node_type_def}
+ * cnd ::= ns_mapping* node_type_def+
  *
  * ns_mapping ::= "&lt;" prefix "=" namespace "&gt;"
  *
@@ -194,9 +194,11 @@ public class CompactNodeTypeDefReader {
      */
     private void parse() throws ParseException {
         while (!currentTokenEquals(Lexer.EOF)) {
-            if (doNameSpace()) {
-                continue;
+            if (!doNameSpace()) {
+                break;
             }
+        }
+        while (!currentTokenEquals(Lexer.EOF)) {
             NodeTypeDef ntd = new NodeTypeDef();
             ntd.setOrderableChildNodes(false);
             ntd.setMixin(false);
