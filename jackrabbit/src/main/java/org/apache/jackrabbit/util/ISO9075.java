@@ -134,7 +134,12 @@ public class ISO9075 {
         StringBuffer decoded = new StringBuffer();
         Matcher m = ENCODE_PATTERN.matcher(name);
         while (m.find()) {
-            m.appendReplacement(decoded, Character.toString((char) Integer.parseInt(m.group().substring(2, 6), 16)));
+            char ch = (char) Integer.parseInt(m.group().substring(2, 6), 16);
+            if (ch == '$' || ch == '\\') {
+                m.appendReplacement(decoded, "\\" + ch);
+            } else {
+                m.appendReplacement(decoded, Character.toString(ch));
+            }
         }
         m.appendTail(decoded);
         return decoded.toString();
