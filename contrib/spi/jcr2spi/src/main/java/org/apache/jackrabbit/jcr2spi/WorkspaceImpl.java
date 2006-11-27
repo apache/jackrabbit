@@ -31,10 +31,8 @@ import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.apache.jackrabbit.jcr2spi.lock.LockManager;
 import org.apache.jackrabbit.jcr2spi.lock.LockManagerImpl;
-import org.apache.jackrabbit.jcr2spi.lock.DefaultLockManager;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.apache.jackrabbit.jcr2spi.version.VersionManagerImpl;
-import org.apache.jackrabbit.jcr2spi.version.DefaultVersionManager;
 import org.apache.jackrabbit.jcr2spi.version.VersionImpl;
 import org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryImpl;
 import org.apache.jackrabbit.jcr2spi.observation.ObservationManagerImpl;
@@ -242,7 +240,6 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      * @see javax.jcr.Workspace#restore(Version[], boolean)
      */
     public void restore(Version[] versions, boolean removeExisting) throws ItemExistsException, UnsupportedRepositoryOperationException, VersionException, LockException, InvalidItemStateException, RepositoryException {
-        session.checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
         session.checkHasPendingChanges();
 
         NodeState[] versionStates = new NodeState[versions.length];
@@ -471,13 +468,9 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      * @return a new <code>LockManager</code> instance.
      */
     protected LockManager createLockManager(WorkspaceManager wspManager, ItemManager itemManager) {
-        if (session.isSupportedOption(Repository.OPTION_LOCKING_SUPPORTED)) {
-            LockManager lMgr = new LockManagerImpl(wspManager, itemManager);
-            session.addListener((LockManagerImpl) lMgr);
-            return lMgr;
-        } else {
-            return new DefaultLockManager();
-        }
+        LockManager lMgr = new LockManagerImpl(wspManager, itemManager);
+        session.addListener((LockManagerImpl) lMgr);
+        return lMgr;
     }
 
     /**
@@ -487,11 +480,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      * @return a new <code>VersionManager</code> instance.
      */
     protected VersionManager createVersionManager(WorkspaceManager wspManager) {
-        if (session.isSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED)) {
-            return new VersionManagerImpl(wspManager);
-        } else {
-            return new DefaultVersionManager();
-        }
+        return new VersionManagerImpl(wspManager);
     }
 
     /**
