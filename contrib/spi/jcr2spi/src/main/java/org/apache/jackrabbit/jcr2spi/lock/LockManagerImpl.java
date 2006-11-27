@@ -40,6 +40,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.Item;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -453,9 +454,10 @@ public class LockManagerImpl implements LockManager, SessionListener {
     private class LockState implements InternalEventListener{
 
         private final NodeState lockHoldingState;
+
         private LockInfo lockInfo;
         private boolean isLive = true;
-        private final EventFilter eventFilter;
+        private EventFilter eventFilter;
 
         private LockState(NodeState lockHoldingState, LockInfo lockInfo)
             throws LockException, RepositoryException{
@@ -471,12 +473,15 @@ public class LockManagerImpl implements LockManager, SessionListener {
                 this.lockInfo = lockInfo;
             }
 
-            // TODO: TOBEFIXED...SPI may not support observation
-            // register as internal listener to the wsp manager in order to get
-            // informed if this lock ends his life.
-            eventFilter = wspManager.createEventFilter(Event.PROPERTY_REMOVED,
+            try {
+                // register as internal listener to the wsp manager in order to get
+                // informed if this lock ends his life.
+                eventFilter = wspManager.createEventFilter(Event.PROPERTY_REMOVED,
                     lockHoldingState.getQPath(), false, null, null, true);
-            wspManager.addEventListener(this);
+                wspManager.addEventListener(this);
+            } catch (UnsupportedRepositoryOperationException e) {
+                eventFilter = null;
+            }
         }
 
         private LockState(NodeState lockHoldingState) throws LockException, RepositoryException {
@@ -551,7 +556,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
          * @see InternalEventListener#getEventFilters()
          */
         public Collection getEventFilters() {
-            return Collections.singletonList(eventFilter);
+            return (eventFilter == null) ?  Collections.EMPTY_LIST : Collections.singletonList(eventFilter);
         }
 
         /**
@@ -590,11 +595,12 @@ public class LockManagerImpl implements LockManager, SessionListener {
          */
         public LockImpl(LockState lockState, Node lockHoldingNode) {
             this.lockState = lockState;
-
             this.node = lockHoldingNode;
 
-            // store lock in the map
-            lockMap.put(lockState.lockHoldingState, this);
+            // if observation is supported -> store lock in the map
+            if (lockState.eventFilter != null) {
+                lockMap.put(lockState.lockHoldingState, this);
+            }
         }
 
         /**

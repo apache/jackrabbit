@@ -35,7 +35,7 @@ public class Checkin extends AbstractOperation {
 
     private Checkin(NodeState nodeState) {
         this.nodeState = nodeState;
-        addAffectedItemState(nodeState);
+        // NOTE: affected-states only needed for transient modifications
     }
 
     //----------------------------------------------------------< Operation >---

@@ -43,7 +43,7 @@ public class LockOperation extends AbstractOperation {
         this.isDeep = isDeep;
         this.isSessionScoped = isSessionScoped;
 
-        this.addAffectedItemState(nodeState);
+        // NOTE: affected-states only needed for transient modifications
     }
 
     //----------------------------------------------------------< Operation >---

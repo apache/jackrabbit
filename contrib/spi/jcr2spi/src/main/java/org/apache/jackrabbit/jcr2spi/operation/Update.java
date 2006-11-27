@@ -38,7 +38,7 @@ public class Update extends AbstractOperation {
         this.nodeState = nodeState;
         this.srcWorkspaceName = srcWorkspaceName;
 
-        this.addAffectedItemState(nodeState);
+        // NOTE: affected-states only needed for transient modifications
     }
 
     //----------------------------------------------------------< Operation >---

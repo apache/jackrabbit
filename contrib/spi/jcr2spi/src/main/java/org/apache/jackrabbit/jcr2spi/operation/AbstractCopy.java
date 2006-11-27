@@ -57,7 +57,6 @@ public abstract class AbstractCopy extends AbstractOperation {
         }
         this.srcState = (NodeState)srcItemState;
         this.destParentState = getNodeState(destPath.getAncestor(1), destMgrProvider.getHierarchyManager(), destMgrProvider.getNamespaceResolver());
-        addAffectedItemState(destParentState);
 
         // check for illegal index present in destination path
         Path.PathElement destElement = destPath.getNameElement();
@@ -70,6 +69,8 @@ public abstract class AbstractCopy extends AbstractOperation {
         }
         this.destName = destElement.getName();
         this.srcWorkspaceName = srcWorkspaceName;
+
+        // NOTE: affected-states only needed for transient modifications
     }
 
     //----------------------------------------------------------< Operation >---

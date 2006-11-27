@@ -122,11 +122,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
     private static Logger log = LoggerFactory.getLogger(WorkspaceManager.class);
 
-    /**
-     * TODO: make configurable
-     */
-    private static final int EXTERNAL_EVENT_POLLING_INTERVAL = 3 * 1000;
-
     private final RepositoryService service;
     private final SessionInfo sessionInfo;
 
@@ -162,8 +157,9 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      */
     private final Set listeners = Collections.synchronizedSet(new HashSet());
 
-    public WorkspaceManager(RepositoryService service, CacheBehaviour cacheBehaviour,
-                            SessionInfo sessionInfo) throws RepositoryException {
+    public WorkspaceManager(RepositoryService service, SessionInfo sessionInfo,
+                            CacheBehaviour cacheBehaviour, int pollingInterval)
+        throws RepositoryException {
         this.service = service;
         this.sessionInfo = sessionInfo;
         this.cacheBehaviour = cacheBehaviour;
@@ -174,7 +170,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
         nsRegistry = createNamespaceRegistry(repositoryDescriptors);
         ntRegistry = createNodeTypeRegistry(nsRegistry, repositoryDescriptors);
-        externalChangeFeed = createChangeFeed(EXTERNAL_EVENT_POLLING_INTERVAL);
+        externalChangeFeed = createChangeFeed(pollingInterval);
     }
 
     public NamespaceRegistryImpl getNamespaceRegistryImpl() {

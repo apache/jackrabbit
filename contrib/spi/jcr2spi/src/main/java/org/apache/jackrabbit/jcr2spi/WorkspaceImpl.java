@@ -40,6 +40,7 @@ import org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryImpl;
 import org.apache.jackrabbit.jcr2spi.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.jcr2spi.xml.WorkspaceContentHandler;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
+import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
@@ -104,11 +105,11 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     private VersionManager versionManager;
     private ItemStateValidator validator;
 
-    public WorkspaceImpl(String name, SessionImpl session, RepositoryService service, SessionInfo sessionInfo) throws RepositoryException {
+    public WorkspaceImpl(String name, SessionImpl session, RepositoryConfig config, SessionInfo sessionInfo) throws RepositoryException {
         this.name = name;
         this.session = session;
 
-        wspManager = createManager(service, session.getCacheBehaviour(), sessionInfo);
+        wspManager = createManager(config.getRepositoryService(), sessionInfo, session.getCacheBehaviour(), config.getPollingInterval());
     }
 
     //----------------------------------------------------------< Workspace >---
@@ -456,9 +457,10 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      * @return state manager
      */
     protected WorkspaceManager createManager(RepositoryService service,
+                                             SessionInfo sessionInfo,
                                              CacheBehaviour cacheBehaviour,
-                                             SessionInfo sessionInfo) throws RepositoryException {
-        return new WorkspaceManager(service, cacheBehaviour, sessionInfo);
+                                             int pollingInterval) throws RepositoryException {
+        return new WorkspaceManager(service, sessionInfo, cacheBehaviour, pollingInterval);
     }
 
     /**

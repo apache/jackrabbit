@@ -48,7 +48,7 @@ public class RemoveLabel extends AbstractOperation {
         this.versionState = versionState;
         this.label = label;
 
-        // TODO: add affected states. required?
+        // NOTE: affected-states only needed for transient modifications
     }
     //----------------------------------------------------------< Operation >---
     /**

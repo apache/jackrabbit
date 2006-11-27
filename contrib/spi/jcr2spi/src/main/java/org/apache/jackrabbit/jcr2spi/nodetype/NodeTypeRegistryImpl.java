@@ -114,16 +114,16 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
 
         try {
             // validate & register the definitions
-            // DIFF JACKRABBIT: we cannot determine built-in vs. custom nodetypes.
-            // TODO: 'false' flag maybe not totally correct....
-            Map defMap = validator.validateNodeTypeDefs(nodeTypeDefs, new HashMap(registeredNTDefs), false);
+            /* Note: since the client reads all nodetypes from the server, it is
+             * not able to distinguish between built-in and custom-defined
+             * nodetypes (compared to Jackrabbit-core) */
+            Map defMap = validator.validateNodeTypeDefs(nodeTypeDefs, new HashMap(registeredNTDefs));
             internalRegister(defMap);
         } catch (InvalidNodeTypeDefException intde) {
             String error = "Unexpected error: Found invalid node type definition.";
             log.debug(error);
             throw new RepositoryException(error, intde);
         }
-        // DIFF JR: 'finally' for resetting 'checkAutoCreated' not needed any more...
     }
 
 
@@ -336,7 +336,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
     public synchronized EffectiveNodeType registerNodeType(QNodeTypeDefinition ntDef)
             throws InvalidNodeTypeDefException, RepositoryException {
         // validate the new nodetype definition
-        EffectiveNodeTypeImpl ent = validator.validateNodeTypeDef(ntDef, registeredNTDefs, true);
+        EffectiveNodeTypeImpl ent = validator.validateNodeTypeDef(ntDef, registeredNTDefs);
 
         // persist new node type definition
         storage.registerNodeTypes(new QNodeTypeDefinition[] {ntDef});
@@ -356,7 +356,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
             throws InvalidNodeTypeDefException, RepositoryException {
 
         // validate new nodetype definitions
-        Map defMap = validator.validateNodeTypeDefs(ntDefs, registeredNTDefs, true);
+        Map defMap = validator.validateNodeTypeDefs(ntDefs, registeredNTDefs);
         storage.registerNodeTypes((QNodeTypeDefinition[])ntDefs.toArray(new QNodeTypeDefinition[ntDefs.size()]));
 
         // update internal cache
@@ -379,8 +379,6 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
         if (!registeredNTDefs.containsKey(nodeTypeName)) {
             throw new NoSuchNodeTypeException(nodeTypeName.toString());
         }
-        // DIFF JACKRABBIT: detection of built-in NodeTypes not possible
-        // omit check for build-in nodetypes which would cause failure
 
         /**
          * check if there are node types that have dependencies on the given
@@ -392,10 +390,8 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
             throw new RepositoryException(msg.toString());
         }
 
-        // make sure node type is not currently in use
-        checkForReferencesInContent(nodeTypeName);
-
         // persist removal of node type definition
+        // NOTE: conflict with existing content not asserted on client
         storage.unregisterNodeTypes(new QName[] {nodeTypeName});
 
         // update internal cache
@@ -416,7 +412,6 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
             if (!registeredNTDefs.containsKey(ntName)) {
                 throw new NoSuchNodeTypeException(ntName.toString());
             }
-            // DIFF JR: no distiction of built-in nts
 
             // check for node types other than those to be unregistered
             // that depend on the given node types
@@ -434,15 +429,8 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
             }
         }
 
-        // make sure node types are not currently in use
-        for (Iterator iter = nodeTypeNames.iterator(); iter.hasNext();) {
-            QName ntName = (QName) iter.next();
-            checkForReferencesInContent(ntName);
-        }
-
-
-
         // persist removal of node type definitions
+        // NOTE: conflict with existing content not asserted on client
         storage.unregisterNodeTypes((QName[]) nodeTypeNames.toArray(new QName[nodeTypeNames.size()]));
 
 
@@ -466,15 +454,8 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
         if (!registeredNTDefs.containsKey(name)) {
             throw new NoSuchNodeTypeException(name.toString());
         }
-        // DIFF JACKRABBIT: detection of built-in NodeTypes not possible
-        // omit check for build-in nodetypes which would cause failure
-
-        /**
-         * validate new node type definition
-         */
-        EffectiveNodeTypeImpl ent = validator.validateNodeTypeDef(ntd, registeredNTDefs, true);
-
-        // DIFF JACKRABBIT: removed check for severity of nt modification
+        /* validate new node type definition */
+        EffectiveNodeTypeImpl ent = validator.validateNodeTypeDef(ntd, registeredNTDefs);
 
         // first call reregistering on storage
         storage.reregisterNodeTypes(new QNodeTypeDefinition[]{ntd});
@@ -584,14 +565,14 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
     }
 
     private void internalUnregister(QName name) {
-        // DIFF JACKRABBIT: check for registered name removed, since duplicate code
-
-        // DIFF JACKRABBIT: detection of built-in NodeTypes not possible
-        // omit check for build-in nodetypes which would cause failure
-
+        /*
+         * NOTE: detection of built-in NodeTypes not possible, since the client
+         * reads all nodetypes from the 'server' only without being able to
+         * destinguish between built-in and custom-defined nodetypes.
+         */
         QNodeTypeDefinition ntd = (QNodeTypeDefinition) registeredNTDefs.get(name);
         registeredNTDefs.remove(name);
-        /**
+        /*
          * remove all affected effective node types from aggregates cache
          * (copy keys first to prevent ConcurrentModificationException)
          */
@@ -660,7 +641,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
             throw new NoSuchNodeTypeException(nodeTypeName.toString());
         }
 
-        /**
+        /*
          * collect names of those node types that have dependencies on the given
          * node type
          */
@@ -675,74 +656,6 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
         return names;
     }
 
-    /**
-     * Checks whether there is existing content that would conflict with the
-     * given node type definition.
-     * <p/>
-     * This method is not implemented yet and always throws a
-     * <code>RepositoryException</code>.
-     * <p/>
-     * TODO
-     * <ol>
-     * <li>apply deep locks on root nodes in every workspace or alternatively
-     * put repository in 'exclusive' or 'single-user' mode
-     * <li>check if the given node type (or any node type that has
-     * dependencies on this node type) is currently referenced by nodes
-     * in the repository.
-     * <li>check if applying the changed definitions to the affected items would
-     * violate existing node type constraints
-     * <li>apply and persist changes to affected nodes (e.g. update
-     * definition id's, etc.)
-     * </ul>
-     * <p/>
-     * the above checks/actions are absolutely necessary in order to
-     * guarantee integrity of repository content.
-     *
-     * @param ntd The node type definition replacing the former node type
-     *            definition of the same name.
-     * @throws RepositoryException If there is conflicting content or if the
-     *                             check failed for some other reason.
-     */
-    private void checkForConflictingContent(QNodeTypeDefinition ntd)
-            throws RepositoryException {
-        /**
-         * collect names of node types that have dependencies on the given
-         * node type
-         */
-        //Set dependentNTs = getDependentNodeTypes(ntd.getQName());
-
-        throw new RepositoryException("not yet implemented");
-    }
-
-    /**
-     * Checks whether there is existing content that directly or indirectly
-     * refers to the specified node type.
-     * <p/>
-     * This method is not implemented yet and always throws a
-     * <code>RepositoryException</code>.
-     * <p/>
-     * TODO:
-     * <ol>
-     * <li>apply deep locks on root nodes in every workspace or alternatively
-     * put repository in 'single-user' mode
-     * <li>check if the given node type is currently referenced by nodes
-     * in the repository.
-     * <li>remove the node type if it is not currently referenced, otherwise
-     * throw exception
-     * </ul>
-     * <p/>
-     * the above checks are absolutely necessary in order to guarantee
-     * integrity of repository content.
-     *
-     * @param nodeTypeName The name of the node type to be checked.
-     * @throws RepositoryException If the specified node type is currently
-     *                             being referenced or if the check failed for
-     *                             some other reason.
-     */
-    private void checkForReferencesInContent(QName nodeTypeName)
-            throws RepositoryException {
-        throw new RepositoryException("not yet implemented");
-    }
     //-----------------------------------------------------------< Dumpable >---
     /**
      * {@inheritDoc}

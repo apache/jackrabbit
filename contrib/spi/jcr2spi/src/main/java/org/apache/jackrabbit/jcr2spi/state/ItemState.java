@@ -60,7 +60,6 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      */
     private final transient Collection listeners = new WeakIdentityCollection(5);
 
-    // TODO: check again...
     /**
      *  IdFactory used to build id of the states
      */

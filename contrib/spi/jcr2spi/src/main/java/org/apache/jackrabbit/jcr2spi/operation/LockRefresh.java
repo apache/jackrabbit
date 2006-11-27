@@ -36,7 +36,7 @@ public class LockRefresh extends AbstractOperation {
     private LockRefresh(NodeState nodeState) {
         this.nodeState = nodeState;
 
-        this.addAffectedItemState(nodeState);
+        // NOTE: affected-states only needed for transient modifications
     }
 
     //----------------------------------------------------------< Operation >---

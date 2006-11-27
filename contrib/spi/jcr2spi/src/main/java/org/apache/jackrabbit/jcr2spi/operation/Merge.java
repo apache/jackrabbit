@@ -43,7 +43,7 @@ public class Merge extends AbstractOperation {
         this.srcWorkspaceName = srcWorkspaceName;
         this.bestEffort = bestEffort;
 
-        this.addAffectedItemState(nodeState);
+        // NOTE: affected-states only needed for transient modifications
     }
 
     //----------------------------------------------------------< Operation >---
