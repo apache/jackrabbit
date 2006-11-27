@@ -45,9 +45,7 @@ public class ResolveMergeConflict extends AbstractOperation {
         this.versionState = versionState;
         this.resolveDone = resolveDone;
 
-        // TODO: correct? needed?
-        addAffectedItemState(nodeState);
-        addAffectedItemState(versionState);
+        // NOTE: affected-states only needed for transient modifications
     }
 
     //----------------------------------------------------------< Operation >---

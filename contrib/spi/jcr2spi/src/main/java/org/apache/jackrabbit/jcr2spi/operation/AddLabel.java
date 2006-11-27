@@ -50,7 +50,7 @@ public class AddLabel extends AbstractOperation {
         this.label = label;
         this.moveLabel = moveLabel;
 
-        // TODO: setting affecting states?
+        // NOTE: affected-states only needed for transient modifications
     }
     //----------------------------------------------------------< Operation >---
     /**

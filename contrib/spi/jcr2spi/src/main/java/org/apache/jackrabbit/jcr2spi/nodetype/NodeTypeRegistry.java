@@ -31,7 +31,6 @@ import java.util.Map;
  */
 public interface NodeTypeRegistry {
 
-    // TODO: review, probably does not belong into NodeTypeRegistry interface
     /**
      * Return the <code>QNodeDefinition</code> of the root node.
      *
@@ -50,7 +49,6 @@ public interface NodeTypeRegistry {
     QNodeTypeDefinition getNodeTypeDefinition(QName nodeTypeName)
             throws NoSuchNodeTypeException;
 
-    // TODO: review, probably does not belong into NodeTypeRegistry interface
     /**
      *
      *
@@ -61,7 +59,6 @@ public interface NodeTypeRegistry {
     EffectiveNodeType getEffectiveNodeType(QName ntName)
             throws NoSuchNodeTypeException;
 
-    // TODO: review, probably does not belong into NodeTypeRegistry interface
     /**
      *
      *
@@ -73,7 +70,6 @@ public interface NodeTypeRegistry {
     EffectiveNodeType getEffectiveNodeType(QName[] ntNames)
             throws NodeTypeConflictException, NoSuchNodeTypeException;
 
-    // TODO: review, probably does not belong into NodeTypeRegistry interface
     /**
      * @param ntNames
      * @param ntdMap

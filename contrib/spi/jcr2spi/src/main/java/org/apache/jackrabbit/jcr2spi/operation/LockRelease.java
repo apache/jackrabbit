@@ -41,7 +41,7 @@ public class LockRelease extends AbstractOperation {
     private LockRelease(NodeState nodeState) {
         this.nodeState = nodeState;
 
-        this.addAffectedItemState(nodeState);
+        // NOTE: affected-states only needed for transient modifications
     }
 
     //----------------------------------------------------------< Operation >---

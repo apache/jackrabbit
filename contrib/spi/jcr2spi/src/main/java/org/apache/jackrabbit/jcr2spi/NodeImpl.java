@@ -651,7 +651,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see Node#isNodeType(String)
      */
     public boolean isNodeType(String nodeTypeName) throws RepositoryException {
-        // check is performed by isNodeType(QName)
+        checkStatus();        
         return isNodeType(getQName(nodeTypeName));
     }
 
@@ -1194,7 +1194,6 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException
      */
     boolean isNodeType(QName qName) throws RepositoryException {
-        checkStatus();
         // first do trivial checks without using type hierarchy
         if (qName.equals(primaryTypeName)) {
             return true;

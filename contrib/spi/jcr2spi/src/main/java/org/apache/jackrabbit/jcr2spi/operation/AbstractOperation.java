@@ -53,7 +53,7 @@ public abstract class AbstractOperation implements Operation {
      * @inheritDoc
      */
     public Collection getAffectedItemStates() {
-        return Collections.unmodifiableCollection(affectedStates);
+        return (affectedStates.isEmpty()) ? Collections.EMPTY_LIST : Collections.unmodifiableCollection(affectedStates);
     }
 
     /**

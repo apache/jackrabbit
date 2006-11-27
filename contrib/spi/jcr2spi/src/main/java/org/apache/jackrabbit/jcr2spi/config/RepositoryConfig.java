@@ -33,4 +33,6 @@ public interface RepositoryConfig {
     public String getDefaultWorkspaceName();
 
     public CacheBehaviour getCacheBehaviour();
+
+    public int getPollingInterval();
 }

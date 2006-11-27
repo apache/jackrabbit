@@ -34,8 +34,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
  */
 public class Restore extends AbstractOperation {
 
-    // TODO: since the restore target can point to a non-existing item -> use NodeId
-    // TODO: review this.
     private final NodeState nodeState;
     private final Path relQPath;
     private final NodeState[] versionStates;
@@ -47,7 +45,7 @@ public class Restore extends AbstractOperation {
         this.versionStates = versionStates;
         this.removeExisting = removeExisting;
 
-        // TODO: affected states... needed?
+        // NOTE: affected-states only needed for transient modifications
     }
 
     //----------------------------------------------------------< Operation >---
@@ -59,10 +57,19 @@ public class Restore extends AbstractOperation {
     }
 
     /**
+     * In case of a workspace-restore or 'removeExisting' the complete tree gets
+     * invalidated, otherwise the given <code>NodeState</code> that has been
+     * updated and all its decendants.
+     *
      * @see Operation#persisted()
      */
     public void persisted() {
-        // TODO
+        if (nodeState == null || removeExisting) {
+            // invalidate the complete tree
+            // TODO
+        } else {
+            nodeState.invalidate(true);
+        }
     }
     //----------------------------------------< Access Operation Parameters >---
 

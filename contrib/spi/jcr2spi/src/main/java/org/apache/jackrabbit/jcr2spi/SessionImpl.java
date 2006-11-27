@@ -46,7 +46,6 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.IdFactory;
@@ -130,7 +129,7 @@ public class SessionImpl implements Session, ManagerProvider {
         this.config = config;
         this.sessionInfo = sessionInfo;
 
-        workspace = createWorkspaceInstance(config.getRepositoryService(), sessionInfo);
+        workspace = createWorkspaceInstance(config, sessionInfo);
 
         // build local name-mapping
         nsMappings = new LocalNamespaceMappings(workspace.getNamespaceRegistryImpl());
@@ -674,8 +673,8 @@ public class SessionImpl implements Session, ManagerProvider {
     }
 
     //-------------------------------------------------------< init methods >---
-    protected WorkspaceImpl createWorkspaceInstance(RepositoryService service, SessionInfo sessionInfo) throws RepositoryException {
-        return new WorkspaceImpl(sessionInfo.getWorkspaceName(), this, service, sessionInfo);
+    protected WorkspaceImpl createWorkspaceInstance(RepositoryConfig config, SessionInfo sessionInfo) throws RepositoryException {
+        return new WorkspaceImpl(sessionInfo.getWorkspaceName(), this, config, sessionInfo);
     }
 
     protected SessionItemStateManager createSessionItemStateManager(UpdatableItemStateManager workspaceStateManager, NamespaceResolver nsResolver) {

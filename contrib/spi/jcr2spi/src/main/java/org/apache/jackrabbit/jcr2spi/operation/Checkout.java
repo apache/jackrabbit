@@ -35,7 +35,7 @@ public class Checkout extends AbstractOperation {
 
     private Checkout(NodeState nodeState) {
         this.nodeState = nodeState;
-        addAffectedItemState(nodeState);
+        // NOTE: affected-states only needed for transient modifications
     }
 
     //----------------------------------------------------------< Operation >---

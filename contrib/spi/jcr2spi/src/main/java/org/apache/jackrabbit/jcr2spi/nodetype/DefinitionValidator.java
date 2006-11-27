@@ -59,18 +59,12 @@ class DefinitionValidator {
      *
      * @param ntDefs
      * @param validatedDefs
-     * @param checkAutoCreatePropHasDefault flag used to disable checking that auto-created properties
-     * have a default value; this check has to be disabled while validating
-     * built-in node types because there are properties defined in built-in
-     * node types which are auto-created but don't have a fixed default value
-     * that can be exposed in a property definition because it is
-     * system-generated (e.g. jcr:primaryType in nt:base).
-     * // TODO FIXME
      * @return Map mapping the definition to the resulting effective nodetype
      * @throws InvalidNodeTypeDefException
      * @throws RepositoryException
      */
-    public Map validateNodeTypeDefs(Collection ntDefs, Map validatedDefs, boolean checkAutoCreatePropHasDefault) throws InvalidNodeTypeDefException, RepositoryException {
+    public Map validateNodeTypeDefs(Collection ntDefs, Map validatedDefs)
+        throws InvalidNodeTypeDefException, RepositoryException {
         // tmp. map containing names/defs of validated nodetypes
         Map validDefs = new HashMap(validatedDefs);
         // map of nodetype definitions and effective nodetypes to be registered
@@ -87,9 +81,9 @@ class DefinitionValidator {
             while (iterator.hasNext()) {
                 QNodeTypeDefinition ntd = (QNodeTypeDefinition) iterator.next();
                 // check if definition has unresolved dependencies
-                // DIFF JR: cannot compared to 'registered' nodetypes since registr. is performed later on
+                /* Note: don't compared to 'registered' nodetypes since registr. is performed later on */
                 if (validDefs.keySet().containsAll(ntd.getDependencies())) {
-                    EffectiveNodeType ent = validateNodeTypeDef(ntd, validDefs, checkAutoCreatePropHasDefault);
+                    EffectiveNodeType ent = validateNodeTypeDef(ntd, validDefs);
                     // keep track of validated definitions and eff. nodetypes
                     if (!validDefs.containsKey(ntd.getQName())) {
                         validDefs.put(ntd.getQName(), ntd);
@@ -122,18 +116,11 @@ class DefinitionValidator {
      * @param validatedDefs Map of qualified nodetype names and nodetype definitions
      * that are known to be valid or are already registered. This map is used to
      * validated dependencies and check for circular inheritance
-     * @param checkAutoCreatePropHasDefault flag used to disable checking that auto-created properties
-     * have a default value; this check has to be disabled while validating
-     * built-in node types because there are properties defined in built-in
-     * node types which are auto-created but don't have a fixed default value
-     * that can be exposed in a property definition because it is
-     * system-generated (e.g. jcr:primaryType in nt:base).
-     * // TODO FIXME
      * @return
      * @throws InvalidNodeTypeDefException
      * @throws RepositoryException
      */
-    public EffectiveNodeTypeImpl validateNodeTypeDef(QNodeTypeDefinition ntDef, Map validatedDefs, boolean checkAutoCreatePropHasDefault)
+    public EffectiveNodeTypeImpl validateNodeTypeDef(QNodeTypeDefinition ntDef, Map validatedDefs)
             throws InvalidNodeTypeDefException, RepositoryException {
         /**
          * the effective (i.e. merged and resolved) node type resulting from
@@ -168,10 +155,9 @@ class DefinitionValidator {
                     log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg);
                 }
-                // DIFF JR: compare to given nt-name set and not to registered nodetypes
+                /* compare to given nt-name set and not to registered nodetypes */
                 if (!validatedDefs.containsKey(supertypes[i])) {
-                    String msg = "[" + name + "] invalid supertype: "
-                            + supertypes[i];
+                    String msg = "[" + name + "] invalid supertype: " + supertypes[i];
                     log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg);
                 }
@@ -199,7 +185,6 @@ class DefinitionValidator {
          */
         if (supertypes.length > 0) {
             try {
-                // DIFF JR: use extra method that does not compare to registered nts
                 EffectiveNodeType est = ntRegistry.getEffectiveNodeType(supertypes, validatedDefs);
                 // make sure that all primary types except nt:base extend from nt:base
                 if (!ntDef.isMixin() && !QName.NT_BASE.equals(ntDef.getQName())
@@ -256,30 +241,20 @@ class DefinitionValidator {
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg);
             }
-            /**
-             * check default values:
+            /* check default values:
              * make sure type of value is consistent with required property type
+             * Note: default internal values are built from the required type,
+             * thus check for match with pd.getRequiredType is redundant.
              */
-            // DIFF JACKRABBIT: default internal values are built from the
-            // required type, thus check for match with pd.getRequiredType is redundant
             QValue[] defVals = getQValues(pd);
-            if (defVals == null || defVals.length == 0) {
-                // no default values specified
-                if (checkAutoCreatePropHasDefault) {
-                    // auto-created properties must have a default value
-                    if (pd.isAutoCreated()) {
-                        String msg = "[" + name + "#" + pd.getQName() + "] auto-created property must have a default value";
-                        log.debug(msg);
-                        throw new InvalidNodeTypeDefException(msg);
-                    }
-                }
-            }
 
-            // check that default values satisfy value constraints
+            /* check that default values satisfy value constraints.
+             * Note however, that no check is performed if autocreated property-
+             * definitions define a default value. JSR170 does not require this.
+             */
             ValueConstraint.checkValueConstraints(pd, defVals);
 
-            /**
-             * ReferenceConstraint:
+            /* ReferenceConstraint:
              * the specified node type must be registered, with one notable
              * exception: the node type just being registered
              */
@@ -289,7 +264,7 @@ class DefinitionValidator {
                 if (pd.getRequiredType() == PropertyType.REFERENCE) {
                     for (int j = 0; j < constraints.length; j++) {
                         QName ntName = QName.valueOf(constraints[j]);
-                        // DIFF JR: compare to given ntd map and not registered nts only
+                        /* compare to given ntd map and not registered nts only */
                         if (!name.equals(ntName) && !validatedDefs.containsKey(ntName)) {
                             String msg = "[" + name + "#" + pd.getQName()
                                     + "] invalid REFERENCE value constraint '"
@@ -306,10 +281,7 @@ class DefinitionValidator {
         QNodeDefinition[] cnda = ntDef.getChildNodeDefs();
         for (int i = 0; i < cnda.length; i++) {
             QNodeDefinition cnd = cnda[i];
-            /**
-             * sanity check:
-             * make sure declaring node type matches name of node type definition
-             */
+            /* make sure declaring node type matches name of node type definition */
             if (!name.equals(cnd.getDeclaringNodeType())) {
                 String msg = "[" + name + "#" + cnd.getQName()
                         + "] invalid declaring node type specified";
