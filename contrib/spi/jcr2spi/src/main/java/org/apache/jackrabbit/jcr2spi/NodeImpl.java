@@ -871,7 +871,6 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see Node#merge(String, boolean)
      */
     public NodeIterator merge(String srcWorkspace, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, VersionException, LockException, InvalidItemStateException, RepositoryException {
-        checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
         checkIsWritable();
         checkSessionHasPendingChanges();
 
@@ -973,9 +972,6 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public boolean isCheckedOut() throws RepositoryException {
         checkStatus();
-        if (!isSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED)) {
-            return true;
-        }
         // shortcut: if state is new, its ancestor must be checkout
         if (isNew()) {
             return true;
@@ -987,7 +983,6 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see Node#restore(String, boolean)
      */
     public void restore(String versionName, boolean removeExisting) throws VersionException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
-        checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
         checkSessionHasPendingChanges();
         // check for version-enabled and lock are performed with subsequent calls.
         Version v = getVersionHistory().getVersion(versionName);
@@ -998,9 +993,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see Node#restore(Version, boolean)
      */
     public void restore(Version version, boolean removeExisting) throws VersionException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
-        checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
         checkSessionHasPendingChanges();
-
         restore(this, null, version, removeExisting);
     }
 
@@ -1008,7 +1001,6 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see Node#restore(Version, String, boolean)
      */
     public void restore(Version version, String relPath, boolean removeExisting) throws PathNotFoundException, ItemExistsException, VersionException, ConstraintViolationException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
-        checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
         checkSessionHasPendingChanges();
 
         // additional checks are performed with subsequest calls.
@@ -1046,7 +1038,6 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see Node#restoreByLabel(String, boolean)
      */
     public void restoreByLabel(String versionLabel, boolean removeExisting) throws VersionException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
-        checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
         checkSessionHasPendingChanges();
 
         // check for version-enabled and lock are performed with subsequent calls.
@@ -1142,9 +1133,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Lock getLock() throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, RepositoryException {
         // lock can be inherited from a parent > do not check for node being lockable.
-        checkSupportedOption(Repository.OPTION_LOCKING_SUPPORTED);
         checkStatus();
-
         return session.getLockManager().getLock(getNodeState());
     }
 
@@ -1163,9 +1152,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public boolean holdsLock() throws RepositoryException {
         // lock can be inherited from a parent > do not check for node being lockable.
-        checkSupportedOption(Repository.OPTION_LOCKING_SUPPORTED);
         checkStatus();
-
         if (isNew() || !isNodeType(QName.MIX_LOCKABLE)) {
             // a node that is new or not lockable never holds a lock
             return false;
@@ -1180,9 +1167,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public boolean isLocked() throws RepositoryException {
         // lock can be inherited from a parent > do not check for node being lockable.
-        checkSupportedOption(Repository.OPTION_LOCKING_SUPPORTED);
         checkStatus();
-
         return session.getLockManager().isLocked(getNodeState());
     }
 
@@ -1261,7 +1246,6 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException if another error occurs.
      */
     private void checkIsLockable() throws UnsupportedRepositoryOperationException, RepositoryException {
-        checkSupportedOption(Repository.OPTION_LOCKING_SUPPORTED);
         checkStatus();
         if (!isNodeType(QName.MIX_LOCKABLE)) {
             String msg = "Unable to perform locking operation on non-lockable node: " + getPath();
@@ -1277,9 +1261,8 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException if some other error occurs.
      */
     void checkIsLocked() throws LockException, RepositoryException {
-        if (!isSupportedOption(Repository.OPTION_LOCKING_SUPPORTED) || isNew()) {
-            // if locking is not support at all or if this node is new, no
-            // checks must be performed.
+        if (isNew()) {
+            // if this node is new, no checks must be performed.
             return;
         }
         // perform check
@@ -1293,7 +1276,6 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException
      */
     private void checkIsVersionable() throws UnsupportedRepositoryOperationException, RepositoryException {
-        checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
         checkStatus();
         if (!isNodeType(QName.MIX_VERSIONABLE)) {
             String msg = "Unable to perform versioning operation on non versionable node: " + getPath();
