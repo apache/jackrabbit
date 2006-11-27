@@ -88,6 +88,10 @@ public class JCR2SPIRepositoryStub extends RepositoryStub {
                     public CacheBehaviour getCacheBehaviour() {
                         return CacheBehaviour.OBSERVATION;
                     }
+
+                    public int getPollingInterval() {
+                        return 3 * 1000;
+                    }
                 };
 
                 repository = RepositoryImpl.create(config);
