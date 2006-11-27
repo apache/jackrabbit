@@ -870,7 +870,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                                 derefNode.setNameTest(name);
                             }
                         } else {
-                            exceptions.add(new InvalidQueryException("Wrong second argument type for jcr:like"));
+                            exceptions.add(new InvalidQueryException("Second argument for jcr:deref must be a String"));
                         }
 
                         // check if descendant
