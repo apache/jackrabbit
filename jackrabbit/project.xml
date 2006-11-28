@@ -29,7 +29,7 @@
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-core</artifactId>
     <name>Apache Jackrabbit</name>
-    <currentVersion>1.1</currentVersion>
+    <currentVersion>1.1.1</currentVersion>
     <organization>
         <name>The Apache Software Foundation</name>
         <url>http://www.apache.org/</url>

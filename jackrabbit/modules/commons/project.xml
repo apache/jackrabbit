@@ -24,6 +24,6 @@
     <pomVersion>3</pomVersion>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-jcr-commons</artifactId>
-    <currentVersion>1.1</currentVersion>
+    <currentVersion>1.1.1</currentVersion>
     <name>Jackrabbit Commons</name>
 </project>

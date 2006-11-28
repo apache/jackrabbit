@@ -30,7 +30,7 @@
   <artifactId>jackrabbit-jca</artifactId>
   <packaging>jar</packaging>
   <name>Jackrabbit JCA</name>
-  <version>1.1</version>
+  <version>1.1.1</version>
   <!--
     Keep the description on a single line. Otherwise Maven might generate
     a corrupted MANIFEST.MF (see http://jira.codehaus.org/browse/MJAR-4)

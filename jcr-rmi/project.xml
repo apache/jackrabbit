@@ -26,7 +26,7 @@
   <groupId>org.apache.jackrabbit</groupId>
   <artifactId>jackrabbit-jcr-rmi</artifactId>
   <name>JCR-RMI</name>
-  <currentVersion>1.1</currentVersion>
+  <currentVersion>1.1.1</currentVersion>
   <inceptionYear>2004</inceptionYear>
   <package>org.apache.jackrabbit.rmi.*</package>
   <description>
