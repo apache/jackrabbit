@@ -104,6 +104,11 @@ indexing, etc.
 
     <versions>
         <version>
+            <name>Apache Jackrabbit 1.1</name>
+            <tag>tags/1.1</tag>
+            <id>1.1</id>
+        </version>
+        <version>
             <name>Apache Jackrabbit 1.0.1</name>
             <tag>tags/1.0.1</tag>
             <id>1.0.1</id>
