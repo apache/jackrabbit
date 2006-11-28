@@ -195,7 +195,7 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
                 }
             }
         }
-        return Pattern.compile(regexp.toString());
+        return Pattern.compile(regexp.toString(), Pattern.DOTALL);
     }
 
     /**
