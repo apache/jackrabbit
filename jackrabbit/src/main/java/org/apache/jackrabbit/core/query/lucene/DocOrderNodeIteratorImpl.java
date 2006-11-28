@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.name.Path;
 import org.slf4j.Logger;
@@ -42,26 +41,22 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
     /** A node iterator with ordered nodes */
     private NodeIteratorImpl orderedNodes;
 
-    /** The DIs of the nodes in the result set */
-    protected NodeId[] ids;
-
-    /** The score values for the nodes in the result set */
-    protected Float[] scores;
+    /** Unordered list of {@link ScoreNode}s. */
+    private final List scoreNodes;
 
     /** ItemManager to turn UUIDs into Node instances */
     protected final ItemManager itemMgr;
 
     /**
-     * Creates a <code>DocOrderNodeIteratorImpl</code> that orders the nodes
-     * with <code>uuids</code> in document order.
-     * @param itemMgr the item manager of the session executing the query.
-     * @param ids the uuids of the nodes.
-     * @param scores the score values of the nodes.
+     * Creates a <code>DocOrderNodeIteratorImpl</code> that orders the nodes in
+     * <code>scoreNodes</code> in document order.
+     *
+     * @param itemMgr    the item manager of the session executing the query.
+     * @param scoreNodes the ids of the matching nodes with their score value.
      */
-    DocOrderNodeIteratorImpl(final ItemManager itemMgr, NodeId[] ids, Float[] scores) {
+    DocOrderNodeIteratorImpl(final ItemManager itemMgr, List scoreNodes) {
         this.itemMgr = itemMgr;
-        this.ids = ids;
-        this.scores = scores;
+        this.scoreNodes = scoreNodes;
     }
 
     /**
@@ -117,7 +112,7 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
         if (orderedNodes != null) {
             return orderedNodes.getSize();
         } else {
-            return ids.length;
+            return scoreNodes.size();
         }
     }
 
@@ -155,10 +150,7 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
             return;
         }
         long time = System.currentTimeMillis();
-        ScoreNode[] nodes = new ScoreNode[ids.length];
-        for (int i = 0; i < ids.length; i++) {
-            nodes[i] = new ScoreNode(ids[i], scores[i]);
-        }
+        ScoreNode[] nodes = (ScoreNode[]) scoreNodes.toArray(new ScoreNode[scoreNodes.size()]);
 
         final List invalidIDs = new ArrayList(2);
 
@@ -167,7 +159,7 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
                 // previous sort run was not successful -> remove failed uuids
                 List tmp = new ArrayList();
                 for (int i = 0; i < nodes.length; i++) {
-                    if (!invalidIDs.contains(nodes[i].id)) {
+                    if (!invalidIDs.contains(nodes[i].getNodeId())) {
                         tmp.add(nodes[i]);
                     }
                 }
@@ -184,20 +176,20 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
                         try {
                             NodeImpl node1;
                             try {
-                                node1 = (NodeImpl) itemMgr.getItem(n1.id);
+                                node1 = (NodeImpl) itemMgr.getItem(n1.getNodeId());
                             } catch (RepositoryException e) {
-                                log.warn("Node " + n1.id + " does not exist anymore: " + e);
+                                log.warn("Node " + n1.getNodeId() + " does not exist anymore: " + e);
                                 // node does not exist anymore
-                                invalidIDs.add(n1.id);
+                                invalidIDs.add(n1.getNodeId());
                                 throw new SortFailedException();
                             }
                             NodeImpl node2;
                             try {
-                                node2 = (NodeImpl) itemMgr.getItem(n2.id);
+                                node2 = (NodeImpl) itemMgr.getItem(n2.getNodeId());
                             } catch (RepositoryException e) {
-                                log.warn("Node " + n2.id + " does not exist anymore: " + e);
+                                log.warn("Node " + n2.getNodeId() + " does not exist anymore: " + e);
                                 // node does not exist anymore
-                                invalidIDs.add(n2.id);
+                                invalidIDs.add(n2.getNodeId());
                                 throw new SortFailedException();
                             }
                             Path.PathElement[] path1 = node1.getPrimaryPath().getElements();
@@ -246,8 +238,8 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
                         }
                         // if we get here something went wrong
                         // remove both uuids from array
-                        invalidIDs.add(n1.id);
-                        invalidIDs.add(n2.id);
+                        invalidIDs.add(n1.getNodeId());
+                        invalidIDs.add(n2.getNodeId());
                         // terminate sorting
                         throw new SortFailedException();
                     }
@@ -258,35 +250,10 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
 
         } while (invalidIDs.size() > 0);
 
-        // resize uuids and scores array if we had to remove some uuids
-        if (ids.length != nodes.length) {
-            ids = new NodeId[nodes.length];
-            scores = new Float[nodes.length];
-        }
-
-        for (int i = 0; i < nodes.length; i++) {
-            ids[i] = nodes[i].id;
-            scores[i] = nodes[i].score;
-        }
         if (log.isDebugEnabled()) {
-            log.debug("" + ids.length + " node(s) ordered in " + (System.currentTimeMillis() - time) + " ms");
+            log.debug("" + nodes.length + " node(s) ordered in " + (System.currentTimeMillis() - time) + " ms");
         }
-        orderedNodes = new NodeIteratorImpl(itemMgr, ids, scores);
-    }
-
-    /**
-     * Simple helper class that associates a score with each node uuid.
-     */
-    private static final class ScoreNode {
-
-        final NodeId id;
-
-        final Float score;
-
-        ScoreNode(NodeId id, Float score) {
-            this.id = id;
-            this.score = score;
-        }
+        orderedNodes = new NodeIteratorImpl(itemMgr, nodes);
     }
 
     /**

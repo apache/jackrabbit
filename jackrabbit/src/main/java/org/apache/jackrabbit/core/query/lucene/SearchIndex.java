@@ -182,6 +182,13 @@ public class SearchIndex extends AbstractQueryHandler {
     private int cacheSize = 1000;
 
     /**
+     * The number of documents that are pre fetched when a query is executed.
+     * <p/>
+     * Default value is: <code>50</code>.
+     */
+    private int resultFetchSize = 50;
+
+    /**
      * Indicates if this <code>SearchIndex</code> is closed and cannot be used
      * anymore.
      */
@@ -782,6 +789,24 @@ public class SearchIndex extends AbstractQueryHandler {
             delim = ",";
         }
         return names.toString();
+    }
+
+    /**
+     * Tells the query handler how many result should be fetched initially when
+     * a query is executed.
+     *
+     * @param size the number of results to fetch initially.
+     */
+    public void setResultFetchSize(int size) {
+        resultFetchSize = size;
+    }
+
+    /**
+     * @return the number of results the query handler will fetch initially when
+     *         a query is executed.
+     */
+    public int getResultFetchSize() {
+        return resultFetchSize;
     }
 
     //----------------------------< internal >----------------------------------

@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,11 +34,8 @@ class NodeIteratorImpl implements ScoreNodeIterator {
     /** Logger instance for this class */
     private static final Logger log = LoggerFactory.getLogger(NodeIteratorImpl.class);
 
-    /** The node ids of the nodes in the result set */
-    protected final NodeId[] ids;
-
-    /** The score values for the nodes in the result set */
-    protected final Float[] scores;
+    /** The node ids of the nodes in the result set with their score value */
+    protected final ScoreNode[] scoreNodes;
 
     /** ItemManager to turn UUIDs into Node instances */
     protected final ItemManager itemMgr;
@@ -57,15 +53,12 @@ class NodeIteratorImpl implements ScoreNodeIterator {
      * Creates a new <code>NodeIteratorImpl</code> instance.
      * @param itemMgr the <code>ItemManager</code> to turn UUIDs into
      *   <code>Node</code> instances.
-     * @param ids the IDs of the result nodes.
-     * @param scores the corresponding score values for each result node.
+     * @param scoreNodes the node ids of the matching nodes.
      */
     NodeIteratorImpl(ItemManager itemMgr,
-                     NodeId[] ids,
-                     Float[] scores) {
+                     ScoreNode[] scoreNodes) {
         this.itemMgr = itemMgr;
-        this.ids = ids;
-        this.scores = scores;
+        this.scoreNodes = scoreNodes;
         fetchNext();
     }
 
@@ -114,7 +107,7 @@ class NodeIteratorImpl implements ScoreNodeIterator {
         if (skipNum < 0) {
             throw new IllegalArgumentException("skipNum must not be negative");
         }
-        if ((pos + skipNum) > ids.length) {
+        if ((pos + skipNum) > scoreNodes.length) {
             throw new NoSuchElementException();
         }
         if (skipNum == 0) {
@@ -138,7 +131,7 @@ class NodeIteratorImpl implements ScoreNodeIterator {
      * @return the number of node in this iterator.
      */
     public long getSize() {
-        return ids.length - invalid;
+        return scoreNodes.length - invalid;
     }
 
     /**
@@ -176,7 +169,7 @@ class NodeIteratorImpl implements ScoreNodeIterator {
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
-        return scores[pos].floatValue();
+        return scoreNodes[pos].getScore();
     }
 
     /**
@@ -188,12 +181,12 @@ class NodeIteratorImpl implements ScoreNodeIterator {
     protected void fetchNext() {
         // reset
         next = null;
-        while (next == null && (pos + 1) < ids.length) {
+        while (next == null && (pos + 1) < scoreNodes.length) {
             try {
-                next = (NodeImpl) itemMgr.getItem(ids[pos + 1]);
+                next = (NodeImpl) itemMgr.getItem(scoreNodes[pos + 1].getNodeId());
             } catch (RepositoryException e) {
                 log.warn("Exception retrieving Node with UUID: "
-                        + ids[pos + 1] + ": " + e.toString());
+                        + scoreNodes[pos + 1].getNodeId() + ": " + e.toString());
                 // try next
                 invalid++;
                 pos++;

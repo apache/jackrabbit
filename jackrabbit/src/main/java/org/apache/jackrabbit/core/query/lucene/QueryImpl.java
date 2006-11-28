@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
@@ -30,7 +29,6 @@ import org.apache.jackrabbit.core.query.PathQueryNode;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
 import org.apache.jackrabbit.core.query.QueryParser;
 import org.apache.jackrabbit.core.query.QueryRootNode;
-import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.name.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,10 +38,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -164,47 +160,9 @@ public class QueryImpl implements ExecutableQuery {
             ascSpecs[i] = orderSpecs[i].isAscending();
         }
 
-
-        List ids;
-        List scores;
-        AccessManager accessMgr = session.getAccessManager();
-
-        // execute it
-        QueryHits result = null;
-        try {
-            result = index.executeQuery(this, query, orderProperties, ascSpecs);
-            ids = new ArrayList(result.length());
-            scores = new ArrayList(result.length());
-
-            for (int i = 0; i < result.length(); i++) {
-                NodeId id = NodeId.valueOf(result.doc(i).get(FieldNames.UUID));
-                // check access
-                if (accessMgr.isGranted(id, AccessManager.READ)) {
-                    ids.add(id);
-                    scores.add(new Float(result.score(i)));
-                }
-            }
-        } catch (IOException e) {
-            log.error("Exception while executing query: ", e);
-            ids = Collections.EMPTY_LIST;
-            scores = Collections.EMPTY_LIST;
-        } finally {
-            if (result != null) {
-                try {
-                    result.close();
-                } catch (IOException e) {
-                    log.warn("Unable to close query result: " + e);
-                }
-            }
-        }
-
-        // return QueryResult
-        return new QueryResultImpl(itemMgr,
-                (NodeId[]) ids.toArray(new NodeId[ids.size()]),
-                (Float[]) scores.toArray(new Float[scores.size()]),
-                getSelectProperties(),
-                session.getNamespaceResolver(),
-                orderNode == null && documentOrder);
+        return new QueryResultImpl(index, itemMgr, session.getNamespaceResolver(),
+                session.getAccessManager(), this, query, getSelectProperties(),
+                orderProperties, ascSpecs, documentOrder);
     }
 
     /**

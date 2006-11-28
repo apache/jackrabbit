@@ -267,6 +267,8 @@
             - respectDocumentOrder: If true and the query does not contain an 'order by' clause,
               result nodes will be in document order. For better performance when queries return
               a lot of nodes set to 'false'.
+            - resultFetchSize: The number of results the query handler should
+              initially fetch when a query is executed.
 
             Note: all parameters (except path) in this SearchIndex config are default
             values and can be omitted.
@@ -287,6 +289,7 @@
             <param name="queryClass" value="org.apache.jackrabbit.core.query.QueryImpl"/>
             <param name="idleTime" value="-1"/>
             <param name="respectDocumentOrder" value="true"/>
+            <param name="resultFetchSize" value="50" />
         </SearchIndex>
     </Workspace>
 
