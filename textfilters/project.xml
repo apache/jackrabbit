@@ -20,7 +20,7 @@
   <artifactId>jackrabbit-index-filters</artifactId>
   <groupId>org.apache.jackrabbit</groupId>
   <name>Jackrabbit - Index filters</name>
-  <currentVersion>1.1</currentVersion>
+  <currentVersion>1.1.1</currentVersion>
   <organization>
     <name>The Apache Software Foundation</name>
     <url>http://www.apache.org/</url>
