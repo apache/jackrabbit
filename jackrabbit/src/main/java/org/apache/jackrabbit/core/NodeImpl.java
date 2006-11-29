@@ -4090,7 +4090,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         LockManager lockMgr = session.getLockManager();
         synchronized (lockMgr) {
-            if (lockMgr.holdsLock(this)) {
+            if (lockMgr.isLockHolder(session, this)) {
                 // save first, and unlock later. this guards concurrent access
 
                 // remove properties in content
