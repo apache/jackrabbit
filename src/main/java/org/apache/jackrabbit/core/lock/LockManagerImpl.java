@@ -322,7 +322,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener, L
             if (info == null) {
                 throw new LockException("Node not locked: " + node.safeGetJCRPath());
             }
-            if (!session.equals(info.getLockHolder())) {
+            if (session != info.getLockHolder()) {
                 throw new LockException("Node not locked by session: " + node.safeGetJCRPath());
             }
             session.removeLockToken(info.getLockToken(session), false);
@@ -447,6 +447,27 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener, L
     /**
      * {@inheritDoc}
      */
+    public boolean isLockHolder(Session session, NodeImpl node) 
+            throws RepositoryException {
+        acquire();
+
+        try {
+            PathMap.Element element = lockMap.map(getPath(node.getId()), true);
+            if (element == null) {
+                return false;
+            }
+            AbstractLockInfo info = (AbstractLockInfo) element.get();
+            return info != null && info.getLockHolder() == session;
+        } catch (ItemNotFoundException e) {
+            return false;
+        } finally {
+            release();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public boolean isLocked(NodeImpl node) throws RepositoryException {
         acquire();
 
@@ -490,7 +511,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener, L
         AbstractLockInfo info = (AbstractLockInfo) element.get();
         if (info != null) {
             if (element.hasPath(path) || info.deep) {
-                if (!session.equals(info.getLockHolder())) {
+                if (session != info.getLockHolder()) {
                     throw new LockException("Node locked.");
                 }
             }
@@ -512,6 +533,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener, L
                 if (info != null) {
                     if (info.getLockHolder() == null) {
                         info.setLockHolder(session);
+                        if (info instanceof LockInfo) {
+                            session.addListener((LockInfo) info);
+                        }
                     } else {
                         log.warn("Adding lock token has no effect: "
                                 + "lock already held by other session.");
@@ -539,7 +563,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener, L
             if (element != null) {
                 AbstractLockInfo info = (AbstractLockInfo) element.get();
                 if (info != null) {
-                    if (session.equals(info.getLockHolder())) {
+                    if (session == info.getLockHolder()) {
                         info.setLockHolder(null);
                     } else {
                         log.warn("Removing lock token has no effect: "
@@ -910,7 +934,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener, L
                         log.debug("Root cause: ", e);
                     }
                 } else {
-                    if (session.equals(lockHolder)) {
+                    if (session == lockHolder) {
                         session.removeLockToken(lockToken.toString());
                         lockHolder = null;
                     }

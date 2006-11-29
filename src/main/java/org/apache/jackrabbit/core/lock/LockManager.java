@@ -65,13 +65,26 @@ public interface LockManager {
 
     /**
      * Returns <code>true</code> if the node given holds a lock;
-     * otherwise returns <code>false</code>
+     * otherwise returns <code>false</code>.
      * @param node node
      * @return <code>true</code> if the node given holds a lock;
      *         otherwise returns <code>false</code>
      * @see javax.jcr.Node#holdsLock
      */
     boolean holdsLock(NodeImpl node) throws RepositoryException;
+
+    /**
+     * Returns <code>true</code> if the specified session holds a lock on the
+     * given node; otherwise returns <code>false</code>.
+     * <p/>
+     * Note that <code>isLockHolder(session, node)==true</code> implies
+     * <code>holdsLock(node)==true</code>.   
+     * @param session session
+     * @param node node
+     * @return if the specified session holds a lock on the given node;
+     *         otherwise returns <code>false</code>
+     */
+    boolean isLockHolder(Session session, NodeImpl node) throws RepositoryException;
 
     /**
      * Returns <code>true</code> if this node is locked either as a result
