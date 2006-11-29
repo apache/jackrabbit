@@ -25,6 +25,7 @@ import org.apache.jackrabbit.name.Path;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 
@@ -122,6 +123,21 @@ public class XALockManager implements LockManager, InternalXAResource {
             info = lockMgr.getLockInfo(node.getNodeId());
         }
         return info != null && info.getId().equals(node.getId());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isLockHolder(Session session, NodeImpl node)
+            throws RepositoryException {
+        AbstractLockInfo info;
+        if (isInXA()) {
+            info = xaEnv.getLockInfo(node);
+        } else {
+            info = lockMgr.getLockInfo(node.getNodeId());
+        }
+        return info != null && info.getId().equals(node.getId())
+                && info.getLockHolder() == session;
     }
 
     /**
