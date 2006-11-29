@@ -419,8 +419,8 @@ public class LocalItemStateManager
         if (local != null) {
             dispatcher.notifyStateModified(local);
         } else if (modified.isNode()) {
-            // if the state is not ours (and is not cached) it could have been
-            // vanished from the week-ref cache due to a gc. but there could
+            // if the state is not ours (and is not cached) it could have
+            // vanished from the weak-ref cache due to a gc. but there could
             // still be some listeners (e.g. CachingHierarchyManager) that want
             // to get notified.
             dispatcher.notifyNodeModified((NodeState) modified);
