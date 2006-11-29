@@ -302,7 +302,12 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
                     break;
                 case OnParentVersionAction.VERSION:
                 case OnParentVersionAction.COPY:
-                    node.copyFrom(prop);
+                    // ignore frozen properties
+                    if (!prop.getQName().equals(QName.JCR_PRIMARYTYPE)
+                            && !prop.getQName().equals(QName.JCR_MIXINTYPES)
+                            && !prop.getQName().equals(QName.JCR_UUID)) {
+                        node.copyFrom(prop);
+                    }
                     break;
             }
         }
