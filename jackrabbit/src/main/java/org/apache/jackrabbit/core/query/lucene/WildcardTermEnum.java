@@ -165,7 +165,7 @@ class WildcardTermEnum extends FilteredTermEnum {
                 }
             }
         }
-        return Pattern.compile(regexp.toString());
+        return Pattern.compile(regexp.toString(), Pattern.DOTALL);
     }
 
     /**

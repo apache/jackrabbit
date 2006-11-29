@@ -279,6 +279,23 @@ public class SimpleQueryTest extends AbstractQueryTest {
         checkResult(result, 1);
     }
 
+    public void testLikeWithLineTerminator() throws Exception {
+        Node n = testRootNode.addNode("node1");
+        n.setProperty("value", new String[]{"foo\nbar"});
+
+        testRootNode.save();
+
+        String sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value LIKE 'foo%bar'";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
+        QueryResult result = q.execute();
+        checkResult(result, 1);
+
+        sql = "SELECT * FROM nt:base WHERE jcr:path LIKE '" + testRoot + "/%' AND value LIKE 'foo_bar'";
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
+        result = q.execute();
+        checkResult(result, 1);
+    }
+
     public void testNotEqual() throws Exception {
         Node n = testRootNode.addNode("node1");
         n.setProperty("value", new String[]{"foo"});
