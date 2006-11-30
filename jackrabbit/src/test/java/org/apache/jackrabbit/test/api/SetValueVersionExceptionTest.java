@@ -267,6 +267,8 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
         // create a referenceable node
         Node referenceableNode = testRootNode.addNode(nodeName3);
         referenceableNode.addMixin(mixReferenceable);
+        // implementation specific if mixin takes effect immediately or upon save
+        testRootNode.save();
 
         String refPropName = getProperty("propertyname3");
         String nodeType = getProperty("nodetype2");
@@ -283,7 +285,6 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
         }
 
         Property property = node.setProperty(refPropName, referenceableNode);
-
         testRootNode.save();
 
         node.checkin();

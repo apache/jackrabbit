@@ -176,7 +176,10 @@ public class NodeRemoveMixinTest extends AbstractJCRTest {
             node2.lock(true, true);
 
             try {
+                // remove mixin on locked node must throw either directly upon
+                // removeMixin or upon save.
                 node.removeMixin(mixinName);
+                node.save();
                 fail("Node.removeMixin(String mixinName) must throw a " +
                         "LockException if the node is locked.");
             } catch (LockException e) {

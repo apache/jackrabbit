@@ -62,6 +62,9 @@ public class NodeUUIDTest extends AbstractJCRTest {
 
         // create a node with a jcr:uuid property to serve as target
         Node refTargetNode = defaultRootNode.addNode(nodeName2, getProperty("nodetype2"));
+        // make sure, mix:referenceable is effective. some impls may require a save() call.
+        defaultRootNode.save();
+
 
         // set the reference
         referencingNode.setProperty(propertyName1, refTargetNode);

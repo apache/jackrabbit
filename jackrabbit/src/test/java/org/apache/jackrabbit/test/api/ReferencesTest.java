@@ -36,7 +36,10 @@ public class ReferencesTest extends AbstractJCRTest {
     public void testReferences() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
 	n1.addMixin(mixReferenceable);
-	// create references: n2.p1 -> n1
+        // with some impls. the mixin type has only affect upon save
+        testRootNode.save();
+
+        // create references: n2.p1 -> n1
 	Node n2 = testRootNode.addNode(nodeName2, testNodeType);
 	Property p1 = n2.setProperty(propertyName1, new Value[]{superuser.getValueFactory().createValue(n1)});
 	testRootNode.save();
@@ -97,7 +100,10 @@ public class ReferencesTest extends AbstractJCRTest {
     public void testReferenceTarget() throws RepositoryException {
 	Node n1 = testRootNode.addNode(nodeName1, testNodeType);
 	n1.addMixin(mixReferenceable);
-	// create references: n2.p1 -> n1
+        // with some impls. the mixin type has only affect upon save
+        testRootNode.save();
+
+        // create references: n2.p1 -> n1
 	Node n2 = testRootNode.addNode(nodeName2, testNodeType);
 	n2.setProperty(propertyName1, n1);
 	testRootNode.save();
@@ -114,7 +120,10 @@ public class ReferencesTest extends AbstractJCRTest {
 	n1.addMixin(mixReferenceable);
 	Node n2 = testRootNode.addNode(nodeName2, testNodeType);
 	n2.addMixin(mixReferenceable);
-	// create references: n3.p1 -> n1
+        // with some impls. the mixin type has only affect upon save
+        testRootNode.save();
+
+        // create references: n3.p1 -> n1
 	Node n3 = testRootNode.addNode(nodeName3, testNodeType);
 	n3.setProperty(propertyName1, n1);
 	testRootNode.save();
@@ -153,6 +162,5 @@ public class ReferencesTest extends AbstractJCRTest {
 	if (iter.hasNext()) {
 	    fail("too many referers: " + iter.nextProperty().getPath());
 	}
-
     }
 }

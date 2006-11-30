@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -50,7 +51,7 @@ public class SessionUUIDTest extends AbstractJCRTest {
      * <li><code>javax.jcr.tck.SessionUUIDTest.nodetype2</code> must have the mixin type <code>mix:referenceable</code> assigned.</li>
      * </ul>
      */
-    public void testSaveReferentialIntegrityException() throws RepositoryException {
+    public void testSaveReferentialIntegrityException() throws RepositoryException, NotExecutableException {
         // get default workspace test root node using superuser session
         Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
 
@@ -59,6 +60,12 @@ public class SessionUUIDTest extends AbstractJCRTest {
 
         // create a node with a jcr:uuid property to serve as target
         Node refTargetNode = defaultRootNode.addNode(nodeName2, getProperty("nodetype2"));
+        // implementations may only have the mix:referenceable active upon save
+        defaultRootNode.save();
+
+        if (!refTargetNode.isNodeType(mixReferenceable)) {
+            throw new NotExecutableException("Cannot test referential integrity. Node is not referenceable.");
+        }
 
         // set the reference
         referencingNode.setProperty(propertyName1, refTargetNode);
@@ -97,7 +104,7 @@ public class SessionUUIDTest extends AbstractJCRTest {
      * name of a property that can be modified in <code>nodetype2</code> for testing</li>
      * </ul>
      */
-    public void testSaveMovedRefNode() throws RepositoryException {
+    public void testSaveMovedRefNode() throws RepositoryException, NotExecutableException {
         // get default workspace test root node using superuser session
         Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
 
@@ -109,6 +116,10 @@ public class SessionUUIDTest extends AbstractJCRTest {
 
         // save the new nodes
         superuser.save();
+
+        if (!refTargetNode.isNodeType(mixReferenceable)) {
+            throw new NotExecutableException("Cannot test referential integrity. Node is not referenceable.");
+        }
 
         // get the moving node with session 2
         Session testSession = helper.getReadWriteSession();
