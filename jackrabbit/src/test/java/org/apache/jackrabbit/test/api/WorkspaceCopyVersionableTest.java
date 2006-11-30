@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.test.api;
 
+import org.apache.jackrabbit.test.NotExecutableException;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionException;
 
@@ -30,6 +32,14 @@ import javax.jcr.version.VersionException;
  * @keywords level2 versionable
  */
 public class WorkspaceCopyVersionableTest extends AbstractWorkspaceVersionableTest {
+
+    protected String getOtherWorkspaceName() throws NotExecutableException {
+        return workspace.getName();
+    }
+
+    protected void initNodesW2() throws RepositoryException {
+        // nothing to do.
+    }
 
     /**
      * A VersionException is thrown if the parent node of destAbsPath is

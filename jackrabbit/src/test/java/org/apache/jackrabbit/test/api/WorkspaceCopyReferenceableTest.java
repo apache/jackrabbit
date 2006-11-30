@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.test.api;
 
+import org.apache.jackrabbit.test.NotExecutableException;
+
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
@@ -29,6 +31,14 @@ import javax.jcr.RepositoryException;
  * @keywords level2
  */
 public class WorkspaceCopyReferenceableTest extends AbstractWorkspaceReferenceableTest {
+
+    protected String getOtherWorkspaceName() throws NotExecutableException {
+        return workspace.getName();
+    }
+
+    protected void initNodesW2() throws RepositoryException {
+        // nothing to do.
+    }
 
     /**
      * Copies of referenceable nodes (nodes with UUIDs) are automatically given

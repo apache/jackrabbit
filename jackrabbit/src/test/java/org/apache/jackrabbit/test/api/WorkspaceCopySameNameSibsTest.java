@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.test.api;
 
+import org.apache.jackrabbit.test.NotExecutableException;
+
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -31,6 +33,14 @@ import javax.jcr.RepositoryException;
  * @keywords level2
  */
 public class WorkspaceCopySameNameSibsTest extends AbstractWorkspaceSameNameSibsTest {
+
+    protected String getOtherWorkspaceName() throws NotExecutableException {
+        return workspace.getName();
+    }
+
+    protected void initNodesW2() throws RepositoryException {
+        // nothing to do.
+    }
 
     /**
      * If ordering is supported by the node type of the parent node of the new
