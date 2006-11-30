@@ -160,7 +160,7 @@ public class QueryImpl implements ExecutableQuery {
             ascSpecs[i] = orderSpecs[i].isAscending();
         }
 
-        return new QueryResultImpl(index, itemMgr, session.getNamespaceResolver(),
+        return new LazyQueryResultImpl(index, itemMgr, session.getNamespaceResolver(),
                 session.getAccessManager(), this, query, getSelectProperties(),
                 orderProperties, ascSpecs, documentOrder);
     }
