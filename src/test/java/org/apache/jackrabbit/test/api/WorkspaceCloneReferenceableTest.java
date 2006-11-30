@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.test.api;
 
+import org.apache.jackrabbit.test.NotExecutableException;
+
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemExistsException;

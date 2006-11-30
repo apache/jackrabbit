@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.test.api;
 
+import org.apache.jackrabbit.test.NotExecutableException;
+
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -63,8 +65,9 @@ abstract class AbstractWorkspaceCopyBetweenTest extends AbstractWorkspaceCopyTes
         super.setUp();
 
         // init second workspace
-        superuserW2 = helper.getSuperuserSession(workspaceName);
-        rwSessionW2 = helper.getReadWriteSession(workspaceName);
+        String otherWspName = getOtherWorkspaceName();
+        superuserW2 = helper.getSuperuserSession(otherWspName);
+        rwSessionW2 = helper.getReadWriteSession(otherWspName);
         workspaceW2 = superuserW2.getWorkspace();
 
         initNodesW2();
@@ -88,8 +91,14 @@ abstract class AbstractWorkspaceCopyBetweenTest extends AbstractWorkspaceCopyTes
         super.tearDown();
     }
 
+    protected String getOtherWorkspaceName() throws NotExecutableException {
+        if (workspace.getName().equals(workspaceName)) {
+            throw new NotExecutableException("Cannot test copy between workspaces. 'workspaceName' points to default workspace as well.");
+        }
+        return workspaceName;
+    }
 
-    private void initNodesW2() throws RepositoryException {
+    protected void initNodesW2() throws RepositoryException {
 
         // testroot
         if (superuserW2.getRootNode().hasNode(testPath)) {
