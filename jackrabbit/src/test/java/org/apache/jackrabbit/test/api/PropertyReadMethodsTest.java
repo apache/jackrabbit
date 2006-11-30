@@ -310,8 +310,9 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
     }
 
     /**
-     * Tests that a ValueFormatExcdption is thrown in case Property.getNode is called
-     * on a multivalued exception.
+     * Tests if Property.getNode() fails with ValueFormatException for
+     * multivalued properties.
+     *
      * @throws RepositoryException
      * @throws NotExecutableException
      */
