@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.jcr2spi.state.entry;
 
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
@@ -32,11 +31,6 @@ public interface ChildNodeEntry extends ChildItemEntry {
      * @return the <code>NodeId</code> of this child node entry.
      */
     public NodeId getId();
-
-    /**
-     * @return the name of this child node entry.
-     */
-    public QName getName();
 
     /**
      * @return the UUID of the node state which is referenced by this child node
