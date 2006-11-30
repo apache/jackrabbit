@@ -1423,6 +1423,11 @@ public class NodeState extends ItemState {
     }
 
     private static boolean isMovedState(NodeState modState) {
-        return modState.overlayedState.parent != modState.parent.overlayedState;
+        if (modState.parent == null) {
+            // the root state cannot be moved
+            return false;
+        } else {
+            return modState.overlayedState.parent != modState.parent.overlayedState;
+        }
     }
 }
