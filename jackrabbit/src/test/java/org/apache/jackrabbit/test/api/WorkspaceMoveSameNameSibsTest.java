@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.test.api;
 
+import org.apache.jackrabbit.test.NotExecutableException;
+
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -32,6 +34,14 @@ import javax.jcr.RepositoryException;
  */
 public class WorkspaceMoveSameNameSibsTest extends AbstractWorkspaceSameNameSibsTest {
 
+    protected String getOtherWorkspaceName() throws NotExecutableException {
+        return workspace.getName();
+    }
+
+    protected void initNodesW2() throws RepositoryException {
+        // nothing to do.
+    }
+
     /**
      * If ordering is supported by the node type of the parent node of the new
      * location, then the newly moved node is appended to the end of the child
@@ -41,7 +51,7 @@ public class WorkspaceMoveSameNameSibsTest extends AbstractWorkspaceSameNameSibs
         // test assumes that repositry supports Orderable Child Node Support (optional)
         String[] orderList = {nodeName1, nodeName2, nodeName3};
 
-        // create a new node to move node three times
+        // create a new node to move nodes
         Node newNode = testRootNode.addNode(nodeName2, testNodeType);
         testRootNode.save();
 
