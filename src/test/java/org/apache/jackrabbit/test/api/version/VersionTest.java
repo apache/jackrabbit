@@ -562,7 +562,7 @@ public class VersionTest extends AbstractVersionTest {
         }
         try {
             version.restore(version2, "abc", true);
-            fail("Version.restore(Version,String,boolean) did not throw an UnsupportedRepositoryOperationException");
+            fail("Version.restore(Version,String,boolean) did not throw an ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
     }
