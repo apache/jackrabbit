@@ -24,7 +24,6 @@ import javax.jcr.ItemVisitor;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
-import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
@@ -188,8 +187,8 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
      */
     public void testIsSame() throws RepositoryException {
         // access same property through different session
-        PropertyIterator properties = testRootNode.getProperties();
-        Property otherProperty = properties.nextProperty();
+        Session otherSession = helper.getReadOnlySession();
+        Property otherProperty = otherSession.getRootNode().getNode(testPath).getProperty(property.getName());
         assertTrue("isSame must return true for the same " +
                 "property retrieved through different sessions.",
                 property.isSame(otherProperty));
@@ -268,10 +267,9 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
      * property.
      */
     public void testGetValues() throws RepositoryException, NotExecutableException {
-        Property singleProp = PropertyUtil.searchProp(session, testRootNode, PropertyType.STRING);
-
+        Property singleProp = PropertyUtil.searchSingleValuedProperty(testRootNode);
         if (singleProp == null) {
-            throw new NotExecutableException("No single valued String property found.");
+            throw new NotExecutableException("No single valued property found.");
         }
 
         try {
@@ -290,9 +288,9 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
     public void testGetValueCopyStoredValues()
         throws NotExecutableException, RepositoryException {
 
-        Property prop = PropertyUtil.searchMultivalProp(testRootNode, PropertyType.STRING);
+        Property prop = PropertyUtil.searchMultivalProp(testRootNode);
         if (prop == null) {
-            throw new NotExecutableException("No testable property found.");
+            throw new NotExecutableException("No multivalued property found.");
         }
 
         // acquire the values of the property and change the zeroth value
