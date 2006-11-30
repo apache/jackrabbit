@@ -61,8 +61,7 @@ public class NodeAddMixinTest extends AbstractJCRTest {
         // test if mixin is written to property jcr:mixinTypes immediately
         Value mixinValues[] = node.getProperty(jcrMixinTypes).getValues();
         if (mixinValues.length != 1) {
-            fail("Mixin node must be added to property " +
-                    jcrMixinTypes + " immediately.");
+            fail("Mixin node must be added to property " + jcrMixinTypes + " immediately.");
         }
         assertEquals("Mixin was not properly assigned to property " + jcrMixinTypes + ": ",
                 mixinName,
@@ -151,7 +150,10 @@ public class NodeAddMixinTest extends AbstractJCRTest {
             node2.lock(true, true);
 
             try {
+                // implementation specific: either throw LockException upon
+                // addMixin or upon save.
                 node.addMixin(mixinName);
+                node.save();
                 fail("Node.addMixin(String mixinName) must throw a LockException " +
                         "if the node is locked.");
             } catch (LockException e) {
@@ -225,6 +227,8 @@ public class NodeAddMixinTest extends AbstractJCRTest {
         Node node = testRootNode.addNode(nodeName1, testNodeType);
 
         node.addMixin(mixReferenceable);
+        // implementation specific: mixin may take effect only upon save
+        testRootNode.save();
 
         // test if jcr:uuid is not null, empty or throws a exception
         // (format of value is not defined so we can only test if not empty)

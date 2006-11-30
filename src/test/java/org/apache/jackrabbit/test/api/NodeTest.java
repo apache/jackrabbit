@@ -693,8 +693,9 @@ public class NodeTest extends AbstractJCRTest {
 
             try {
                 subNode.remove();
-                fail("Node.remove() must throw a LockException if the parent " +
-                        "of the node is locked");
+                session.save();
+                fail("Removal of a Node must throw a LockException upon remove() " +
+                     "or upon save() if the parent of the node is locked");
             } catch (LockException e) {
                 // success
             }
