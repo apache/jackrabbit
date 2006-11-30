@@ -112,10 +112,10 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
     /**
      * Tests if getName() returns same as last name returned by getPath()
      */
-    public void testGetName() throws RepositoryException {
-        assertEquals("getName() of root must be an empty string",
-                "",
-                session.getRootNode().getName());
+    public void testGetName() throws RepositoryException, NotExecutableException {
+        if (childNode == null) {
+            throw new NotExecutableException("Workspace does not have sufficient content to run this test.");
+        }
 
         // build name from path
         String path = childNode.getPath();
