@@ -82,7 +82,7 @@ public class ReferencePropertyTest extends AbstractPropertyTest {
                 }
             }
             assertTrue("Referencing property of node " + referenced.getName() +
-                    " nof found.", found);
+                    " not found.", found);
             assertTrue("Referenced node retrieved with getNode is different " +
                     "from the node retrieved with getNodeByUUID",
                     referenced.isSame(referencedNode));
