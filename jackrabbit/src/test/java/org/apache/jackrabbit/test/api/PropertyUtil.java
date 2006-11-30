@@ -426,6 +426,24 @@ public class PropertyUtil {
         return multiVal;
     }
 
-
-
+    /**
+     * Retrieve a single valued property from the given node.
+     *
+     * @param node
+     * @return the property found or null if no property is found.
+     */
+    public static Property searchSingleValuedProperty(Node node)
+            throws RepositoryException, ValueFormatException {
+        PropertyIterator props = node.getProperties();
+        while (props.hasNext()) {
+            Property p = props.nextProperty();
+            if (!p.getDefinition().isMultiple()) {
+                return p;
+            }
+        }
+        // should never get here, since every Node must provide the jcr:primaryType
+        // property, which is single valued.
+        return null;
+    }
 }
+
