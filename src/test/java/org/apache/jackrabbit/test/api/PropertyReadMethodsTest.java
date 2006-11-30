@@ -325,7 +325,7 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
             try {
                 prop.getNode();
                 fail("Property.getNode should throw a ValueFormatException in case of "
-                        + "a multivalued porerty.");
+                        + "a multivalued property.");
             } catch (ValueFormatException vfe) {
                 // ok
             }
