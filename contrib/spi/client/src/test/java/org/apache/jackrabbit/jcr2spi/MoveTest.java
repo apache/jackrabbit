@@ -26,6 +26,8 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.Item;
+import javax.jcr.Property;
+import javax.jcr.ItemExistsException;
 
 /**
  * <code>MoveTest</code>...
@@ -243,5 +245,30 @@ public class MoveTest extends AbstractJCRTest {
         assertTrue("Parent of moved node must be the destination parent node.", moveNode.getParent().isSame(destParentNode));
         // NOTE: implementation specific test
         assertTrue("After successful moving a referenceable node node, accessing the node by uuid be the identical node.", moveNode.getParent() == destParentNode);
+    }
+
+    /**
+     * Tries to move a node using <code>{@link javax.jcr.Session#move(String src, String dest)}
+     * </code> to a location where a property already exists with same name.
+     * <br/> <br/>
+     * This should throw an <code>{@link javax.jcr.ItemExistsException}</code>.
+     */
+    public void testMovePropertyExistsException() throws RepositoryException, NotExecutableException {
+        // try to create a property with the name of the node to be moved
+        // to the destination parent
+        Property destProperty;
+        try {
+            destProperty = destParentNode.setProperty(nodeName2, "anyString");
+        } catch (RepositoryException e) {
+            throw new NotExecutableException("Cannot create property with name '" +nodeName2+ "' and value 'anyString' at move destination.");
+        }
+
+        try {
+            // move the node
+            superuser.move(moveNode.getPath(), destProperty.getPath());
+            fail("Moving a node using Session.move() to a location where a property already exists must throw ItemExistsException");
+        } catch (ItemExistsException e) {
+            // ok, works as expected
+        }
     }
 }
