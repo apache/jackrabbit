@@ -96,7 +96,7 @@ public class NodeCanAddMixinTest extends AbstractJCRTest {
 
         Session session = testRootNode.getSession();
 
-        if (!isSupported(Repository.OPTION_LOCKING_SUPPORTED)) {
+        if (!isSupported(Repository.OPTION_VERSIONING_SUPPORTED)) {
             throw new NotExecutableException("Versioning is not supported.");
         }
 
