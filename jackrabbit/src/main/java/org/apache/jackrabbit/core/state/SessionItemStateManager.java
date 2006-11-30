@@ -90,6 +90,8 @@ public class SessionItemStateManager
     public SessionItemStateManager(NodeId rootNodeId,
                                    LocalItemStateManager stateMgr,
                                    NamespaceResolver nsResolver) {
+        transientStore = new ItemStateMap();
+        atticStore = new ItemStateMap();
 
         this.stateMgr = stateMgr;
         stateMgr.addListener(this);
@@ -97,9 +99,6 @@ public class SessionItemStateManager
         // create hierarchy manager that uses both transient and persistent state
         hierMgr = new CachingHierarchyManager(rootNodeId, this, nsResolver);
         addListener(hierMgr);
-
-        transientStore = new ItemStateMap();
-        atticStore = new ItemStateMap();
     }
 
     /**
