@@ -93,8 +93,8 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
      * {@inheritDoc}
      */
     public ItemState retrieve(ItemId id) {
+        touch();
         synchronized (cache) {
-            touch();
             Entry entry = (Entry) cache.remove(id);
             if (entry != null) {
                 // 'touch' item, by adding at end of list
@@ -110,8 +110,8 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
      * {@inheritDoc}
      */
     public void update(ItemId id) {
+        touch();
         synchronized (cache) {
-            touch();
             Entry entry = (Entry) cache.get(id);
             if (entry != null) {
                 totalMem -= entry.size;
@@ -125,8 +125,8 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
      * {@inheritDoc}
      */
     public void cache(ItemState state) {
+        touch();
         synchronized (cache) {
-            touch();
             ItemId id = state.getId();
             if (cache.containsKey(id)) {
                 log.warn("overwriting cached entry " + id);
@@ -144,9 +144,12 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
 
     private void shrinkIfRequired() {
         // remove items, if too many
-        while (totalMem > maxMem) {
-            ItemId id = (ItemId) cache.firstKey();
-            evict(id);
+        synchronized (cache) {
+            while (totalMem > maxMem) {
+                ItemId id = (ItemId) cache.firstKey();
+                Entry entry = (Entry) cache.remove(id);
+                totalMem -= entry.size;
+            }
         }
     }
 
@@ -154,8 +157,8 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
      * {@inheritDoc}
      */
     public void evict(ItemId id) {
+        touch();
         synchronized (cache) {
-            touch();
             Entry entry = (Entry) cache.remove(id);
             if (entry != null) {
                 totalMem -= entry.size;
@@ -287,7 +290,7 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
      */
     public void dispose() {
         synchronized (cache) {
-            if(accessListener != null) {
+            if (accessListener != null) {
                 accessListener.disposeCache(this);
             }
         }
