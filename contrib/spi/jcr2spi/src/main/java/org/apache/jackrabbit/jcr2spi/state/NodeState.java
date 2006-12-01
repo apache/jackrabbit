@@ -876,7 +876,7 @@ public class NodeState extends ItemState {
 
             // adjust parent states unless the parent is removed as well
             NodeState parent = state.getParent();
-            if (!changeLog.deletedStates.contains(parent)) {
+            if (!changeLog.containsDeletedState(parent)) {
                 NodeState overlayedParent = (NodeState) parent.overlayedState;
                 if (state.isNode()) {
                     overlayedParent.childNodeEntries.remove((NodeState)state.overlayedState);

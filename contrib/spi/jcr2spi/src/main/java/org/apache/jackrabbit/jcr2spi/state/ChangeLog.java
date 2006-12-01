@@ -35,17 +35,17 @@ public class ChangeLog {
     /**
      * Added states
      */
-    final Set addedStates = new LinkedHashSet();
+    private final Set addedStates = new LinkedHashSet();
 
     /**
      * Modified states
      */
-    final Set modifiedStates = new LinkedHashSet();
+    private final Set modifiedStates = new LinkedHashSet();
 
     /**
      * Deleted states
      */
-    final Set deletedStates = new LinkedHashSet();
+    private final Set deletedStates = new LinkedHashSet();
 
     /**
      * Type of operation this changelog is collection state modifications for.
@@ -170,6 +170,17 @@ public class ChangeLog {
     }
 
     /**
+     * Returns true, if this change log contains the given <code>ItemState</code>
+     * in the set of transiently removed states.
+     *
+     * @param state
+     * @return
+     */
+    public boolean containsDeletedState(ItemState state) {
+        return deletedStates.contains(state);
+    }
+
+    /**
      * Removes the subset of this changelog represented by the given
      * <code>ChangeLog</code> from this changelog.
      *
@@ -182,6 +193,72 @@ public class ChangeLog {
         deletedStates.removeAll(subChangeLog.deletedStates);
 
         operations.removeAll(subChangeLog.operations);
+    }
+
+    /**
+     * Remove all entries and operation related to the given ItemState, that
+     * are not used any more (respecting the status change).
+     *
+     * @param state
+     */
+    public void removeAffected(ItemState state, int previousStatus) {
+        switch (state.getStatus()) {
+            case (Status.EXISTING):
+                switch (previousStatus) {
+                    case Status.EXISTING_MODIFIED:
+                        // was modified and is now refreshed
+                        modifiedStates.remove(state);
+                        break;
+                    case Status.EXISTING_REMOVED:
+                        // was removed and is now refreshed
+                        deletedStates.remove(state);
+                        break;
+                    case Status.STALE_MODIFIED:
+                        // was modified and state and is now refreshed
+                        modifiedStates.remove(state);
+                        break;
+                    case Status.NEW:
+                        // was new and has been saved now
+                        addedStates.remove(state);
+                        break;
+                }
+                // TODO: check if correct: changelog gets cleared any way -> no need to remove operations
+                break;
+            case Status.EXISTING_MODIFIED:
+                modified(state);
+                break;
+            case (Status.REMOVED):
+                if (previousStatus == Status.NEW) {
+                    // was new and now removed again
+                    addedStates.remove(state);
+                    // TODO: remove 'addNode' or 'setProperty' operation
+                    deletedStates.remove(state);
+                    removeAffectedOperations(state);
+                } else if (previousStatus == Status.EXISTING_REMOVED) {
+                    // was removed and is now saved
+                    deletedStates.remove(state);
+                    removeAffectedOperations(state);
+                }
+                break;
+            case (Status.EXISTING_REMOVED):
+                deleted(state);
+                removeAffectedOperations(state);
+                break;
+            case Status.STALE_DESTROYED:
+                // state is now stale. remove from modified
+                modifiedStates.remove(state);
+                removeAffectedOperations(state);
+                break;
+        }
+    }
+
+    private void removeAffectedOperations(ItemState state) {
+        for (Iterator it = operations.iterator(); it.hasNext();) {
+            Operation op = (Operation) it.next();
+            if (op.getAffectedItemStates().contains(state)) {
+                it.remove();
+            }
+        }
     }
 
     /**
