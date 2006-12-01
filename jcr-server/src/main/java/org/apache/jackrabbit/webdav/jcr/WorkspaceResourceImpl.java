@@ -85,9 +85,12 @@ public class WorkspaceResourceImpl extends AbstractResource
 
     public String getSupportedMethods() {
         StringBuffer sb = new StringBuffer(DavResource.METHODS);
+        sb.append(", ");
         sb.append(DeltaVResource.METHODS_INCL_MKWORKSPACE);
+        sb.append(", ");
         sb.append(SearchResource.METHODS);
         // from vc-resource methods only UPDATE is supported
+        sb.append(", ");
         sb.append(DavMethods.METHOD_UPDATE);
         return sb.toString();
     }

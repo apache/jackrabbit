@@ -70,7 +70,9 @@ public class RootCollection extends AbstractResource {
      */
     public String getSupportedMethods() {
         StringBuffer sb = new StringBuffer(DavResource.METHODS);
+        sb.append(", ");
         sb.append(DeltaVResource.METHODS_INCL_MKWORKSPACE);
+        sb.append(", ");
         sb.append(SearchResource.METHODS);
         return sb.toString();
     }
