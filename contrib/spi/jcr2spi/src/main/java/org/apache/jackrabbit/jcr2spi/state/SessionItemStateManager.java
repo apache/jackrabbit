@@ -482,8 +482,10 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             | ItemStateValidator.CHECK_VERSIONING
             | ItemStateValidator.CHECK_CONSTRAINTS;
         removeItemState(state, options);
-        // remember operation
-        transientStateMgr.addOperation(operation);
+        // remember operation unless new state got removed
+        if (!Status.isTerminal(state.getStatus())) {
+            transientStateMgr.addOperation(operation);
+        }
     }
 
     /**

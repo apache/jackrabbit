@@ -286,7 +286,6 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
             force the overlaying state to synchronize as well as to inform
             other listeners about changes.
             */
-            // TODO: improve...
             status = Status.EXISTING;
         }
     }
