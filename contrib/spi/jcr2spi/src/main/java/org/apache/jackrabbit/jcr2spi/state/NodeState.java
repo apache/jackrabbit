@@ -259,7 +259,7 @@ public class NodeState extends ItemState {
         if (another == null) {
             return false;
         }
-        if (another == null || !another.isNode()) {
+        if (!another.isNode()) {
             throw new IllegalArgumentException("Attempt to merge node state with property state.");
         }
         boolean modified = false;
