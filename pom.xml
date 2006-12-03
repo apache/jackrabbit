@@ -33,7 +33,7 @@
     <relativePath>..</relativePath>
   </parent>
   <artifactId>jackrabbit-jcr-rmi</artifactId>
-  <name>JCR-RMI</name>
+  <name>Jackrabbit JCR-RMI</name>
   <!--
     Keep the description on a single line. Otherwise Maven might generate
     a corrupted MANIFEST.MF (see http://jira.codehaus.org/browse/MJAR-4)
@@ -41,8 +41,8 @@
   <description>JCR-RMI is a transparent Remote Method Invocation (RMI) layer for the Content Repository for Java Technology API (JCR). The layer makes it possible to remotely access JCR content repositories. JCR-RMI is developed as a part of the Apache Jackrabbit project, but the implementation is compatible with all JCR content repositories.</description>
 
   <build>
-    <sourceDirectory>src/java</sourceDirectory>
-    <testSourceDirectory>src/test</testSourceDirectory>
+    <sourceDirectory>src/main/java</sourceDirectory>
+    <testSourceDirectory>src/testjava/</testSourceDirectory>
     <resources>
       <!-- Does not work with eclipse. Maybe we can move README.txt to src/main/resources? -->
       <!-- resource>
@@ -54,7 +54,7 @@
         </resource -->
       <resource>
         <targetPath>.</targetPath>
-        <directory>src/resources</directory>
+        <directory>${basedir}src/main/resources</directory>
         <includes>
           <include>*</include>
         </includes>
@@ -86,10 +86,9 @@
         <executions>
           <execution>
             <id>rmic</id>
-            <phase>compile</phase>
+            <phase>process-classes</phase>
             <configuration>
               <tasks>
-                <echo>Compile RMI stubs</echo>
                 <rmic base="${project.build.outputDirectory}" verify="true"
                       includes="org/apache/jackrabbit/rmi/server/**/Server*.class"
                       classpathref="maven.compile.classpath" />
