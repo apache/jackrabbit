@@ -1,12 +1,23 @@
-==================
-Welcome to JCR-RMI
-==================
+=============================
+Welcome to Jackrabbit JCR-RMI
+=============================
 
+This is the JCR-RMI component of the Apache Jackrabbit project.
 JCR-RMI is a transparent Remote Method Invocation (RMI) layer for
 the Content Repository for Java Technology API (JCR). The layer makes
-it possible to remotely access JCR content repositories. JCR-RMI is
-developed as a part of the Apache Jackrabbit project, but
-the implementation is compatible with all JCR content repositories.
+it possible to remotely access JCR content repositories and is
+compatible with all JCR implementations.
+
+See the Apache Jackrabbit web site (http://jackrabbit.apache.org/)
+for documentation and other information. You are welcome to join the
+Jackrabbit mailing lists (http://jackrabbit.apache.org/mail-lists.html)
+to discuss this compoment and to use the Jackrabbit issue tracker
+(http://issues.apache.org/jira/browse/JCR) to report issues or request
+new features.
+
+Apache Jackrabbit is a project of the Apache Software Foundation
+(http://www.apache.org).
+
 
 License (see also LICENSE.txt)
 ==============================
@@ -27,3 +38,24 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+
+Getting Started
+===============
+
+This compoment uses a Maven 2 (http://maven.apache.org/) build
+environment. If you have Maven 2 installed, you can compile and
+package the jacrabbit-jcr-rmi jar using the following command:
+
+    mvn package
+
+See the Maven 2 documentation for other build features.
+
+The latest source code for this compoment is available in the
+Subversion (http://subversion.tigris.org/) source repository of
+the Apache Software Foundation. If you have Subversion installed,
+you can checkout the latest source using the following command:
+
+    svn checkout http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-jcr-rmi
+
+See the Subversion documentation for other source control features.
