@@ -1,33 +1,25 @@
-=======================================================================
-Jackrabbit JCA 1.0 Resource Adapter
-=======================================================================
+==========================================
+Welcome to Jackrabbit JCA Resource Adapter
+==========================================
 
-Overview
---------
+This is the JCA Resource Adapter component of the Apache Jackrabbit project.
+This component packages the Jackrabbit content repository as a JCA 1.0 resource
+adapter. The packaged adapter can be deployed on a wide range of application
+servers. See the "deploy" directory for example deployment configurations.
 
-This package includes a JCA resource adapter for Jackrabbit. It's
-following the JCA 1.0 specification and can be deployed on a wide
-range of application servers. 
+The Jackrabbit content repository embedded in the JCA package is started when
+first accessed and shut down when the adapter is un- or re-deployed.
 
-Jackrabbit is embedded into the JCA package and is started when
-first accessed by the client. If re-deployed, the old repository
-configuration will shutdown to minimize alot of opened inactive
-repository instances.
+See the Apache Jackrabbit web site (http://jackrabbit.apache.org/)
+for documentation and other information. You are welcome to join the
+Jackrabbit mailing lists (http://jackrabbit.apache.org/mail-lists.html)
+to discuss this compoment and to use the Jackrabbit issue tracker
+(http://issues.apache.org/jira/browse/JCR) to report issues or request
+new features.
 
-Building
---------
-
-To build the resource archive (RAR), use the rar:rar goal in
-maven.
-
-  maven rar:rar
-  
-
-Deployment
-----------
-
-Example deployment configurations are located under ./deploy
-directory. 
+Apache Jackrabbit is a project of the Apache Software Foundation
+(http://www.apache.org).
+ 
 
 License (see also LICENSE.txt)
 ==============================
@@ -48,3 +40,24 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+
+Getting Started
+===============
+
+This compoment uses a Maven 2 (http://maven.apache.org/) build
+environment. If you have Maven 2 installed, you can compile and
+package the jacrabbit-jca rar using the following command:
+
+    mvn package
+
+See the Maven 2 documentation for other build features.
+
+The latest source code for this compoment is available in the
+Subversion (http://subversion.tigris.org/) source repository of
+the Apache Software Foundation. If you have Subversion installed,
+you can checkout the latest source using the following command:
+
+    svn checkout http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-jca
+
+See the Subversion documentation for other source control features.
