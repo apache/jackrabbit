@@ -1,0 +1,192 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.util;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.ref.PhantomReference;
+import java.lang.ref.ReferenceQueue;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Collections;
+
+/**
+ * The <code>TransientFileFactory</code> utility class can be used to create
+ * <i>transient</i> files, i.e. temporary files that are automatically
+ * removed once the associated <code>File</code> object is reclaimed by the
+ * garbage collector.
+ * <p/>
+ * File deletion is handled by a low-priority background thread.
+ * <p/>
+ */
+public class TransientFileFactory {
+
+    /**
+     * The singleton factory instance
+     */
+    private static TransientFileFactory INSTANCE;
+
+    /**
+     * Queue where <code>MoribundFileReference</code> instances will be enqueued
+     * once the associated target <code>File</code> objects have been gc'ed.
+     */
+    private ReferenceQueue phantomRefQueue = new ReferenceQueue();
+
+    /**
+     * Collection of <code>MoribundFileReference</code> instances currently
+     * being tracked.
+     */
+    private Collection trackedRefs = Collections.synchronizedList(new ArrayList());
+
+    /**
+     * The reaper thread responsible for removing files awaiting deletion
+     */
+    private final Thread reaper;
+
+    /**
+     * Returns the singleton <code>TransientFileFactory</code> instance.
+     */
+    public static TransientFileFactory getInstance() {
+        synchronized (TransientFileFactory.class) {
+            if (INSTANCE == null) {
+                INSTANCE = new TransientFileFactory();
+            }
+            return INSTANCE;
+        }
+    }
+
+    /**
+     * Hidden constructor.
+     */
+    private TransientFileFactory() {
+        // instantiate & start low priority reaper thread
+        reaper = new ReaperThread("Transient File Reaper");
+        reaper.setPriority(Thread.MIN_PRIORITY);
+        reaper.setDaemon(true);
+        reaper.start();
+        // register shutdownhook for final cleaning up
+        try {
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                public void run() {
+                    // synchronize on the list before iterating over it in order
+                    // to avoid ConcurrentModificationException (JCR-549)
+                    // @see java.lang.util.Collections.synchronizedList(java.util.List)
+                    synchronized(trackedRefs) {
+                        for (Iterator it = trackedRefs.iterator(); it.hasNext();) {
+                            MoribundFileReference fileRef = (MoribundFileReference) it.next();
+                            fileRef.delete();
+                        }
+
+                    }
+                }
+            });
+        } catch (IllegalStateException e) {
+            // can't register shutdownhook because
+            // jvm shutdown sequence has already begun,
+            // silently ignore... 
+        }
+    }
+
+    //------------------------------------------------------< factory methods >
+    /**
+     * Same as {@link File#createTempFile(String, String, File)} except that
+     * the newly-created file will be automatically deleted once the
+     * returned <code>File</code> object has been gc'ed.
+     *
+     * @param prefix    The prefix string to be used in generating the file's
+     *                  name; must be at least three characters long
+     * @param suffix    The suffix string to be used in generating the file's
+     *                  name; may be <code>null</code>, in which case the
+     *                  suffix <code>".tmp"</code> will be used
+     * @param directory The directory in which the file is to be created, or
+     *                  <code>null</code> if the default temporary-file
+     *                  directory is to be used
+     * @return the newly-created empty file
+     * @throws IOException If a file could not be created
+     */
+    public File createTransientFile(String prefix, String suffix, File directory)
+            throws IOException {
+        File f = File.createTempFile(prefix, suffix, directory);
+        trackedRefs.add(new MoribundFileReference(f, phantomRefQueue));
+        return f;
+    }
+
+    //--------------------------------------------------------< inner classes >
+    /**
+     * The reaper thread that will remove the files that are ready for deletion.
+     */
+    private class ReaperThread extends Thread {
+
+        ReaperThread(String name) {
+            super(name);
+        }
+
+        /**
+         * Run the reaper thread that will delete files as their associated
+         * marker objects are reclaimed by the garbage collector.
+         */
+        public void run() {
+            while (true) {
+                MoribundFileReference fileRef = null;
+                try {
+                    // wait until a MoribundFileReference is ready for deletion
+                    fileRef = (MoribundFileReference) phantomRefQueue.remove();
+                } catch (Exception e) {
+                    // silently ignore...
+                    continue;
+                }
+                // delete target
+                fileRef.delete();
+                fileRef.clear();
+                trackedRefs.remove(fileRef);
+            }
+        }
+    }
+
+    /**
+     * Tracker object for a file pending deletion.
+     */
+    private class MoribundFileReference extends PhantomReference {
+
+        /**
+         * The full path to the file being tracked.
+         */
+        private String path;
+
+        /**
+         * Constructs an instance of this class from the supplied parameters.
+         *
+         * @param file  The file to be tracked.
+         * @param queue The queue on to which the tracker will be pushed.
+         */
+        MoribundFileReference(File file, ReferenceQueue queue) {
+            super(file, queue);
+            this.path = file.getPath();
+        }
+
+        /**
+         * Deletes the file associated with this instance.
+         *
+         * @return <code>true</code> if the file was deleted successfully;
+         *         <code>false</code> otherwise.
+         */
+        boolean delete() {
+            return new File(path).delete();
+        }
+    }
+}
