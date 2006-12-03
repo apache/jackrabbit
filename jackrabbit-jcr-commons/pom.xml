@@ -32,18 +32,18 @@
     <version>1.2-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
-  <artifactId>jackrabbit-commons</artifactId>
-  <name>Jackrabbit Commons</name>
+  <artifactId>jackrabbit-jcr-commons</artifactId>
+  <name>Jackrabbit JCR Commons</name>
   <description>General purpose classes for use with the JCR API</description>
 
   <scm>
     <connection>
-      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-commons
+      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-jcr-commons
     </connection>
     <developerConnection>
-      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-commons
+      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-jcr-commons
     </developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-commons</url>
+    <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-jcr-commons</url>
   </scm>
 
   <build>
