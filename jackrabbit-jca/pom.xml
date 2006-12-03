@@ -66,13 +66,6 @@
     </resources>
     <plugins>
       <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <target>1.4</target>
-          <source>1.4</source>
-        </configuration>
-      </plugin>
-      <plugin>
         <artifactId>maven-rar-plugin</artifactId>
         <configuration>
           <includeJar>true</includeJar>
