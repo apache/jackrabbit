@@ -1,31 +1,72 @@
-TextFilters allow Jackrabbit to extract text from binary
-properties for indexing purposes.
+===================================
+Welcome to Jackrabbit Index Filters
+===================================
 
-This project contains TextFilter implementations for the 
-following binary formats:
+This is the Index Filters component of the Apache Jackrabbit project.
+This component contains filter classes that allow Jackrabbit to
+extract text content from binary properties for full text indexing.
+The following file formats and MIME types are currently supported:
 
-1. MsExcel
-2. MsPowerPoint
-3. MsWord
-4. Pdf
+    * Microsoft Word
+      [org.apache.jackrabbit.core.query.MsWordTextFilter]
+      * application/vnd.ms-word
+      * application/msword
 
-How to register in jackrabbit?
-Build the jar file and place it in the Jackrabbit 
-classpath together with the dependencies of these text
-filters.
-Configure them in the SearchIndex element of the workspace.xml
+    * Microsoft Excel
+      [org.apache.jackrabbit.core.query.MsExcelTextFilter]
+      * application/vnd.ms-excel
 
-Sample:
+    * Microsoft PowerPoint
+      [org.apache.jackrabbit.core.query.MsPowerPointTextFilter] 
+      * application/vnd.ms-powerpoint
+      * application/mspowerpoint
 
-...
-  <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
-    <param name="path" value="${wsp.home}/index" />
-    <param name="textFilterClasses" value="org.apache.jackrabbit.core.query.MsExcelTextFilter,org.apache.jackrabbit.core.query.MsPowerPointTextFilter,org.apache.jackrabbit.core.query.MsWordTextFilter,org.apache.jackrabbit.core.query.PdfTextFilter,org.apache.jackrabbit.core.query.HTMLTextFilter,org.apache.jackrabbit.core.query.XMLTextFilter,org.apache.jackrabbit.core.query.RTFTextFilter,org.apache.jackrabbit.core.query.OpenOfficeTextFilter" />
-  </SearchIndex>
-...
+    * Portable Document Format (PDF)
+      [org.apache.jackrabbit.core.query.PdfTextFilter]
+      * application/pdf
 
-For further information, see the javadocs for:
-org.apache.jackrabbit.core.query.TextFilter
+    * OpenOffice.org
+      [org.apache.jackrabbit.core.query.OpenOfficeTextFilter]
+      * application/vnd.oasis.opendocument.database
+      * application/vnd.oasis.opendocument.formula
+      * application/vnd.oasis.opendocument.graphics
+      * application/vnd.oasis.opendocument.presentation
+      * application/vnd.oasis.opendocument.spreadsheet
+      * application/vnd.oasis.opendocument.text
+
+    * Rich Text Format (RTF)
+      [org.apache.jackrabbit.core.query.RTFTextFilter]
+      * application/rtf
+
+    * HyperText Markup Language (HTML)
+      [org.apache.jackrabbit.core.query.HTMLTextFilter]
+      * text/html
+
+    * Extensible Markup Language (XML)
+      [org.apache.jackrabbit.core.query.XMLTextFilter]
+      * text/xml
+
+To use these index filters with the Jackrabbit Core:
+
+   1) add the jackrabbit-index-filters jar file and the dependencies defined
+      in the Maven POM in the Jackrabbit classpath, and
+   2) add the fully qualified class names listed above in the "textFilterClasses"
+      parameter of the "SearchIndex" configuration element of a Jackrabbit
+      workspace configuration file (workspace.xml).
+
+See the javadocs of org.apache.jackrabbit.core.query.TextFilter in the
+Jackrabbit Core compoment for more information.
+
+See the Apache Jackrabbit web site (http://jackrabbit.apache.org/)
+for documentation and other information. You are welcome to join the
+Jackrabbit mailing lists (http://jackrabbit.apache.org/mail-lists.html)
+to discuss this compoment and to use the Jackrabbit issue tracker
+(http://issues.apache.org/jira/browse/JCR) to report issues or request
+new features.
+
+Apache Jackrabbit is a project of the Apache Software Foundation
+(http://www.apache.org).
+
 
 License (see also LICENSE.txt)
 ==============================
@@ -46,3 +87,24 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+
+Getting Started
+===============
+
+This compoment uses a Maven 2 (http://maven.apache.org/) build
+environment. If you have Maven 2 installed, you can compile and
+package the jacrabbit-index-filters jar using the following command:
+
+    mvn package
+
+See the Maven 2 documentation for other build features.
+
+The latest source code for this compoment is available in the
+Subversion (http://subversion.tigris.org/) source repository of
+the Apache Software Foundation. If you have Subversion installed,
+you can checkout the latest source using the following command:
+
+    svn checkout http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-index-filters
+
+See the Subversion documentation for other source control features.
