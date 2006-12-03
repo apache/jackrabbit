@@ -16,7 +16,6 @@
    limitations under the License.
   -->
 <project name="Apache Jackrabbit">
- <title>Apache Jackrabbit</title>
  <body>
   <menu name="Apache Jackrabbit">
     <item name="Home"                       href="/index.html" />
@@ -46,5 +45,6 @@
         <item name="Compact Notation"       href="/doc/nodetype/cnd.html" />
     </item>
   </menu>
+  ${reports}
  </body>
 </project>
