@@ -39,7 +39,7 @@
   <build>
     <resources>
       <resource>
-        <directory>src/main/java</directory>
+        <directory>${basedir}/src/main/java</directory>
         <includes>
           <include>**/*.xml</include>
           <include>**/*.properties</include>
@@ -50,23 +50,24 @@
       </resource>
       <resource>
         <targetPath>META-INF</targetPath>
-        <directory>.</directory>
+        <directory>${basedir}</directory>
         <includes>
           <include>README.txt</include>
           <include>NOTICE.txt</include>
+          <include>LICENSE.txt</include>
         </includes>
       </resource>
     </resources>
     <testResources>
       <testResource>
-        <directory>applications/test</directory>
+        <directory>${basedir}/applications/test</directory>
         <includes>
           <include>*.properties</include>
           <include>*.xml</include>
         </includes>
       </testResource>
       <testResource>
-        <directory>src/test/java</directory>
+        <directory>${basedir}/src/test/java</directory>
         <includes>
           <include>**/*.cnd</include>
           <include>**/*.xml</include>
@@ -142,9 +143,9 @@
           <execution>
             <id>fulltext-jjtree</id>
             <configuration>
-              <sourceDirectory>src/main/javacc/fulltext</sourceDirectory>
-              <outputDirectory>target/generated-src/main/java/org/apache/jackrabbit/core/query/lucene/fulltext</outputDirectory>
-              <timestampDirectory>target/generated-src/javacc-timestamp</timestampDirectory>
+              <sourceDirectory>${basedir}/src/main/javacc/fulltext</sourceDirectory>
+              <outputDirectory>${project.build.directory}/generated-src/main/java/org/apache/jackrabbit/core/query/lucene/fulltext</outputDirectory>
+              <timestampDirectory>${project.build.directory}/generated-src/javacc-timestamp</timestampDirectory>
               <packageName>org.apache.jackrabbit.core.query.lucene.fulltext</packageName>
             </configuration>
             <goals>
@@ -154,9 +155,9 @@
           <execution>
             <id>fulltext-javacc</id>
             <configuration>
-              <sourceDirectory>target/generated-src/main/java/org/apache/jackrabbit/core/query/lucene/fulltext</sourceDirectory>
-              <outputDirectory>target/generated-src/main/java</outputDirectory>
-              <timestampDirectory>target/generated-src/javacc-timestamp</timestampDirectory>
+              <sourceDirectory>${project.build.directory}/generated-src/main/java/org/apache/jackrabbit/core/query/lucene/fulltext</sourceDirectory>
+              <outputDirectory>${project.build.directory}/generated-src/main/java</outputDirectory>
+              <timestampDirectory>${project.build.directory}/generated-src/javacc-timestamp</timestampDirectory>
               <packageName>org.apache.jackrabbit.core.query.lucene.fulltext</packageName>
             </configuration>
             <goals>
@@ -166,9 +167,9 @@
           <execution>
             <id>sql-jjtree</id>
             <configuration>
-              <sourceDirectory>src/main/javacc/sql</sourceDirectory>
-              <outputDirectory>target/generated-src/main/java/org/apache/jackrabbit/core/query/sql</outputDirectory>
-              <timestampDirectory>target/generated-src/javacc-timestamp</timestampDirectory>
+              <sourceDirectory>${basedir}/src/main/javacc/sql</sourceDirectory>
+              <outputDirectory>${project.build.directory}/generated-src/main/java/org/apache/jackrabbit/core/query/sql</outputDirectory>
+              <timestampDirectory>${project.build.directory}/generated-src/javacc-timestamp</timestampDirectory>
               <packageName>org.apache.jackrabbit.core.query.sql</packageName>
             </configuration>
             <goals>
@@ -178,9 +179,9 @@
           <execution>
             <id>sql-javacc</id>
             <configuration>
-              <sourceDirectory>target/generated-src/main/java/org/apache/jackrabbit/core/query/sql</sourceDirectory>
-              <outputDirectory>target/generated-src/main/java</outputDirectory>
-              <timestampDirectory>target/generated-src/javacc-timestamp</timestampDirectory>
+              <sourceDirectory>${project.build.directory}/generated-src/main/java/org/apache/jackrabbit/core/query/sql</sourceDirectory>
+              <outputDirectory>${project.build.directory}/generated-src/main/java</outputDirectory>
+              <timestampDirectory>${project.build.directory}/generated-src/javacc-timestamp</timestampDirectory>
               <packageName>org.apache.jackrabbit.core.query.sql</packageName>
             </configuration>
             <goals>
@@ -190,9 +191,9 @@
           <execution>
             <id>xpath-jjtree</id>
             <configuration>
-              <sourceDirectory>src/main/javacc/xpath</sourceDirectory>
-              <outputDirectory>target/generated-src/main/java/org/apache/jackrabbit/core/query/xpath</outputDirectory>
-              <timestampDirectory>target/generated-src/javacc-timestamp</timestampDirectory>
+              <sourceDirectory>${basedir}/src/main/javacc/xpath</sourceDirectory>
+              <outputDirectory>${project.build.directory}/generated-src/main/java/org/apache/jackrabbit/core/query/xpath</outputDirectory>
+              <timestampDirectory>${project.build.directory}/generated-src/javacc-timestamp</timestampDirectory>
               <packageName>org.apache.jackrabbit.core.query.xpath</packageName>
             </configuration>
             <goals>
@@ -202,9 +203,9 @@
           <execution>
             <id>xpath-javacc</id>
             <configuration>
-              <sourceDirectory>target/generated-src/main/java/org/apache/jackrabbit/core/query/xpath</sourceDirectory>
-              <outputDirectory>target/generated-src/main/java</outputDirectory>
-              <timestampDirectory>target/generated-src/javacc-timestamp</timestampDirectory>
+              <sourceDirectory>${project.build.directory}/generated-src/main/java/org/apache/jackrabbit/core/query/xpath</sourceDirectory>
+              <outputDirectory>${project.build.directory}/generated-src/main/java</outputDirectory>
+              <timestampDirectory>${project.build.directory}/generated-src/javacc-timestamp</timestampDirectory>
               <packageName>org.apache.jackrabbit.core.query.xpath</packageName>
             </configuration>
             <goals>
