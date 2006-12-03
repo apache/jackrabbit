@@ -59,6 +59,7 @@
         </includes>
       </resource>
       <resource>
+        <filtering>false</filtering>
         <directory>src/main/resources</directory>
         <includes>
           <include>org/apache/jackrabbit/test/api/nodetype/spec/*.txt</include>
