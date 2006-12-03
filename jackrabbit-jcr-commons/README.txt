@@ -1,8 +1,8 @@
-=============================
-Welcome to Jackrabbit Commons 
-=============================
+=================================
+Welcome to Jackrabbit JCR Commons 
+=================================
 
-This is the Commons component of the Apache Jackrabbit project.
+This is the JCR Commons component of the Apache Jackrabbit project.
 This component contains a number of general-purpose classes for
 use with the JCR API.
 
@@ -43,7 +43,7 @@ Getting Started
 
 This compoment uses a Maven 2 (http://maven.apache.org/) build
 environment. If you have Maven 2 installed, you can compile and
-package the jacrabbit-commons jar using the following command:
+package the jacrabbit-jcr-commons jar using the following command:
 
     mvn package
 
@@ -54,6 +54,6 @@ Subversion (http://subversion.tigris.org/) source repository of
 the Apache Software Foundation. If you have Subversion installed,
 you can checkout the latest source using the following command:
 
-    svn checkout http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-commons
+    svn checkout http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-jcr-commons
 
 See the Subversion documentation for other source control features.
