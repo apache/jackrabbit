@@ -59,6 +59,34 @@
     <module>jackrabbit-jca</module>
   </modules>
 
+  <build>
+    <plugins>
+      <!-- User Java 1.4 everywhere -->
+      <plugin>
+        <inherited>true</inherited>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <target>1.4</target>
+          <source>1.4</source>
+        </configuration>
+      </plugin>
+      <!-- Interoperate with Maven 1 -->
+      <plugin>
+        <inherited>true</inherited>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-one-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>install-maven-one-repository</goal>
+            </goals>
+            <phase>install</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
 <!-- ====================================================================== -->
 <!-- M A I L I N G   L I S T S                                              -->
 <!-- ====================================================================== -->
