@@ -43,7 +43,7 @@ Getting Started
 
 This compoment uses a Maven 2 (http://maven.apache.org/) build
 environment. If you have Maven 2 installed, you can compile and
-package the jacrabbit-api jar using the following command:
+package the jacrabbit-commons jar using the following command:
 
     mvn package
 
