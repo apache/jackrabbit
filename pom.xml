@@ -52,10 +52,10 @@
     <module>jackrabbit-jcr-tests</module>
     <module>jackrabbit-core</module>
     <module>jackrabbit-index-filters</module>
-    <!-- <module>jackrabbit-jcr-rmi</module> - rmic vs. multimodule -->
+    <module>jackrabbit-jcr-rmi</module>
     <module>jackrabbit-webdav</module>
     <module>jackrabbit-jcr-server</module>
-    <!-- <module>jackrabbit-webapp</module> - rmi missing -->
+    <module>jackrabbit-webapp</module>
     <module>jackrabbit-jca</module>
   </modules>
 
@@ -83,6 +83,19 @@
             <phase>install</phase>
           </execution>
         </executions>
+      </plugin>
+      <!-- JCR-661: Plugin dependencies are inherited -->
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>sun</groupId>
+            <artifactId>tools</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${java.home}/../lib/tools.jar</systemPath>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>
