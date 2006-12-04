@@ -463,7 +463,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         
         // retrieve applicable definition at the new place
         // TODO: improve. definition has already retrieve within the checkAddNode...
-        // TODO: improve. if move is simple rename, the definition must not be calculated again.
         QNodeDefinition newDefinition = validator.getApplicableNodeDefinition(operation.getDestinationName(), srcState.getNodeTypeName(), destParent);
 
         // perform the move (modifying states)
