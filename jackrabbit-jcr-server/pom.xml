@@ -58,6 +58,12 @@
           <include>LICENSE.txt</include>
         </includes>
       </resource>
+      <resource>
+        <directory>${basedir}/src/main/java</directory>
+        <includes>
+          <include>**/*.properties</include>
+        </includes>
+      </resource>
     </resources>
   </build>
 
