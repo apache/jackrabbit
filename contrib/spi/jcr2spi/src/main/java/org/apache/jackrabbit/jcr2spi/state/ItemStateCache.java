@@ -63,8 +63,16 @@ public class ItemStateCache implements ItemStateCreationListener {
         // TODO: missing caching.
         return null;
     }
-    //------------------------------------------< ItemStateCreationListener >---
 
+    //-----------------------------------------< ItemStateLifeCycleListener >---
+
+    /**
+     * Updates the internal cache
+     *
+     * @param state
+     * @param previousStatus
+     * @see ItemStateLifeCycleListener#statusChanged(ItemState, int)
+     */
     public void statusChanged(ItemState state, int previousStatus) {
         if (Status.isTerminal(state.getStatus())) {
             if (state.isNode()) {
@@ -80,10 +88,22 @@ public class ItemStateCache implements ItemStateCreationListener {
         }
     }
 
+    //------------------------------------------< ItemStateCreationListener >---
+    /**
+     * Updates the internal cache
+     *
+     * @param state
+     * @see ItemStateCreationListener#created(ItemState)
+     */
     public void created(ItemState state) {
         putToCache(state);
     }
 
+    /**
+     * Put the given <code>ItemState</code> in the internal cache.
+     *
+     * @param state
+     */
     private void putToCache(ItemState state) {
         if (state.isNode() && (state.getStatus() == Status.EXISTING || state.getStatus() == Status.MODIFIED)) {
             NodeState nodeState = (NodeState) state;
