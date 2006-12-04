@@ -20,6 +20,13 @@
     text-decoration:none
     }
 
+dl
+    {
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    }
+
 ul,ol,dd,dt
     {
     list-style:none
@@ -73,6 +80,7 @@ body, td, select, input, li
     border: 10px solid #ccc;
     background: ;
     width: 90%;
+    padding: 5px;
     }
 
 #breadcrumbs
