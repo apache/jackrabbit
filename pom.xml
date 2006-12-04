@@ -52,10 +52,10 @@
     <module>jackrabbit-jcr-tests</module>
     <module>jackrabbit-core</module>
     <module>jackrabbit-index-filters</module>
-    <module>jackrabbit-jcr-rmi</module>
+    <!-- <module>jackrabbit-jcr-rmi</module> - rmic vs. multimodule -->
     <module>jackrabbit-webdav</module>
     <module>jackrabbit-jcr-server</module>
-    <module>jackrabbit-webapp</module>
+    <!-- <module>jackrabbit-webapp</module> - rmi missing -->
     <module>jackrabbit-jca</module>
   </modules>
 
