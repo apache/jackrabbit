@@ -517,6 +517,13 @@ void Literal() :
     {
       if (t.image.startsWith("TIMESTAMP")) {
         jjtThis.setValue(t.image.substring(t.image.indexOf('\'') + 1, t.image.length() - 1));
+        if (jjtThis.getValue().indexOf(" ") == 10) {
+          // replace SQL 92 timesamp string with ISO8601
+          StringBuffer tmp = new StringBuffer();
+          tmp.append(jjtThis.getValue().substring(0, 10));
+          tmp.append("T").append(jjtThis.getValue().substring(11));
+          jjtThis.setValue(tmp.toString());
+        }
         jjtThis.setType(QueryConstants.TYPE_TIMESTAMP);
       /*
       } else if (t.image.startsWith("TIME")) {
