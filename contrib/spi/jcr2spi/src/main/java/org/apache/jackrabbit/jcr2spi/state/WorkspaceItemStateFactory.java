@@ -27,12 +27,11 @@ import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.value.QValue;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
-import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
-import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
@@ -47,6 +46,7 @@ import java.util.Set;
 import java.util.Collections;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Collection;
 
 /**
  * <code>WorkspaceItemStateFactory</code>...
@@ -154,17 +154,6 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
             NodeState state = new NodeState(info.getQName(), uuid, parent, info.getNodetype(),
                 definition, Status.EXISTING, this, service.getIdFactory(), true);
 
-            // child node entries
-            Set childNodeEntries = new HashSet();
-            for (IdIterator it = info.getNodeIds(); it.hasNext(); ) {
-                NodeInfo childInfo = service.getNodeInfo(sessionInfo, (NodeId) it.nextId());
-                String childUUID = null;
-                if (childInfo.getId().getPath() == null) {
-                    childUUID = childInfo.getId().getUUID();
-                }
-                childNodeEntries.add(new CNE(childInfo.getQName(), childInfo.getIndex(), childUUID));
-            }
-
             // names of child property entries
             Set propNames = new HashSet();
             for (IdIterator it = info.getPropertyIds(); it.hasNext(); ) {
@@ -176,14 +165,12 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
             PropertyId[] references = info.getReferences();
             NodeReferences nodeRefs = new NodeReferencesImpl(state, references);
 
-            state.init(info.getMixins(), childNodeEntries, propNames, nodeRefs);
+            state.init(info.getMixins(), propNames, nodeRefs);
 
             state.addListener(cache);
             cache.created(state);
 
             return state;
-        } catch (PathNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage(), e);
         } catch (NodeTypeConflictException e) {
             String msg = "Internal error: failed to retrieve node definition.";
             log.debug(msg);
@@ -214,6 +201,23 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
         try {
             PropertyInfo info = service.getPropertyInfo(sessionInfo, propertyId);
             return createPropertyState(info, parent);
+        } catch (PathNotFoundException e) {
+            throw new NoSuchItemStateException(e.getMessage(), e);
+        } catch (RepositoryException e) {
+            throw new ItemStateException(e.getMessage(), e);
+        }
+    }
+
+    public ChildNodeEntries getChildNodeEntries(NodeState nodeState)
+        throws NoSuchItemStateException, ItemStateException {
+        try {
+            ChildNodeEntries entries = new ChildNodeEntries(nodeState);
+            Collection childInfos = service.getChildNodeInfos(sessionInfo, nodeState.getNodeId());
+            for (Iterator it = childInfos.iterator(); it.hasNext();) {
+                ChildInfo ci = (ChildInfo) it.next();
+                entries.add(ci.getName(), ci.getUUID(), ci.getIndex());
+            }
+            return entries;
         } catch (PathNotFoundException e) {
             throw new NoSuchItemStateException(e.getMessage(), e);
         } catch (RepositoryException e) {
@@ -285,52 +289,7 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
         this.cache = cache;
     }
 
-    //-----------------------------------------------------< ChildNodeEntry >---
-    private class CNE implements ChildNodeEntry {
-
-        private final QName name;
-        private final int index;
-        private final String uuid;
-
-        private CNE(QName name, int index, String uuid) {
-            this.name = name;
-            this.index = index;
-            this.uuid = uuid;
-        }
-
-        public NodeId getId() {
-            throw new UnsupportedOperationException();
-        }
-
-        public boolean denotesNode() {
-            return true;
-        }
-
-        public QName getName() {
-            return name;
-        }
-
-        public String getUUID() {
-            return uuid;
-        }
-
-        public int getIndex() {
-            return index;
-        }
-
-        public NodeState getNodeState() throws NoSuchItemStateException, ItemStateException {
-            throw new UnsupportedOperationException();
-        }
-
-        public boolean isAvailable() {
-            throw new UnsupportedOperationException();
-        }
-
-        public ItemState getItemState() throws NoSuchItemStateException, ItemStateException {
-            throw new UnsupportedOperationException();
-        }
-    }
-
+    //-----------------------------------------------------< NodeReferences >---
     /**
      * <code>NodeReferences</code> represents the references (i.e. properties of
      * type <code>REFERENCE</code>) to a particular node (denoted by its uuid).
@@ -348,7 +307,7 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
         private NodeReferencesImpl(NodeState nodeState, PropertyId[] referenceIds) {
             this.nodeState = nodeState;
 
-            // TODO: modify in order to make usage of the references returned
+            // TODO: improve. make usage of the references returned
             // with NodeInfo that was just retrieved and implement a notification
             // mechanism that updates this NodeReference object if references
             // are modified.

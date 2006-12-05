@@ -56,12 +56,6 @@ public interface NodeInfo extends ItemInfo {
     public PropertyId[] getReferences();
 
     /**
-     * @return ids of children nodes
-     * @see NodeInfo#getId()
-     */
-    public IdIterator getNodeIds();
-
-    /**
      * @return ids of children properties
      * @see PropertyInfo#getId()
      */

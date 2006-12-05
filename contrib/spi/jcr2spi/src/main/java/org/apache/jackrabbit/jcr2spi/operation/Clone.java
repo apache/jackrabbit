@@ -73,8 +73,9 @@ public class Clone extends AbstractCopy {
                 NodeState rootState = destMgrProvider.getItemStateManager().getRootState();
                 rootState.invalidate(true);
             } catch (ItemStateException e) {
-                // TODO: fallback behaviour?
                 log.error("Cannot invalidate root state.", e.getMessage());
+                // fallback
+                super.persisted();
             }
         } else {
             super.persisted();

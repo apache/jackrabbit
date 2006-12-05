@@ -140,7 +140,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
                 String propName = prop.getName();
 
                 if (prop.getDefinition().isMultiple()) {
-                    // todo proper multi-value serialization support
+                    // TODO: proper multi-value serialization support
                     // skip multi-valued properties for the time being
                     // until a way of properly handling/detecting multi-valued
                     // properties on re-import is found (see JCR-325);

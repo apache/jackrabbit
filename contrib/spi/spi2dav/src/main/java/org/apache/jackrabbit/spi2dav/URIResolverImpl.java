@@ -185,35 +185,54 @@ class URIResolverImpl implements URIResolver {
         NodeId nodeId;
         DavPropertySet propSet = response.getProperties(DavServletResponse.SC_OK);
 
-        if (propSet.contains(ItemResourceConstants.JCR_UUID)) {
-            String uuid = propSet.get(ItemResourceConstants.JCR_UUID).getValue().toString();
+        String uuid = getUUID(propSet);
+        if (uuid != null) {
             nodeId = service.getIdFactory().createNodeId(uuid);
         } else {
-            DavProperty nameProp = propSet.get(ItemResourceConstants.JCR_NAME);
-            if (nameProp != null && nameProp.getValue() != null) {
-                // not root node. Note that 'unespacing' is not required since
-                // the jcr:name property does not provide the value in escaped form.
-                String jcrName = nameProp.getValue().toString();
-                int index = Path.INDEX_UNDEFINED;
-                DavProperty indexProp = propSet.get(ItemResourceConstants.JCR_INDEX);
-                if (indexProp != null && indexProp.getValue() != null) {
-                    index = Integer.parseInt(indexProp.getValue().toString());
-                }
-                try {
-                    QName qName = NameFormat.parse(jcrName, nsResolver);
-                    nodeId = service.getIdFactory().createNodeId(parentId, Path.create(qName, index));
-                } catch (NameException e) {
-                    throw new RepositoryException(e);
-                }
+            QName qName = getQName(propSet);
+            if (qName == QName.ROOT) {
+                nodeId = service.getIdFactory().createNodeId((String) null, Path.ROOT);
             } else {
-                // TODO: TO_BE_FIXED.... special case: root node
-                return service.getIdFactory().createNodeId((String) null, Path.ROOT);
+                int index = getIndex(propSet);
+                nodeId = service.getIdFactory().createNodeId(parentId, Path.create(qName, index));
             }
         }
-
         // cache
         cache.add(response.getHref(), nodeId);
         return nodeId;
+    }
+
+    String getUUID(DavPropertySet propSet) {
+        if (propSet.contains(ItemResourceConstants.JCR_UUID)) {
+            return propSet.get(ItemResourceConstants.JCR_UUID).getValue().toString();
+        } else {
+            return null;
+        }
+    }
+
+    QName getQName(DavPropertySet propSet) throws RepositoryException {
+        DavProperty nameProp = propSet.get(ItemResourceConstants.JCR_NAME);
+        if (nameProp != null && nameProp.getValue() != null) {
+            // not root node. Note that 'unespacing' is not required since
+            // the jcr:name property does not provide the value in escaped form.
+            String jcrName = nameProp.getValue().toString();
+            try {
+                return NameFormat.parse(jcrName, nsResolver);
+            } catch (NameException e) {
+                throw new RepositoryException(e);
+            }
+        } else {
+            return QName.ROOT;
+        }
+    }
+
+    int getIndex(DavPropertySet propSet) {
+        int index = Path.INDEX_UNDEFINED;
+        DavProperty indexProp = propSet.get(ItemResourceConstants.JCR_INDEX);
+        if (indexProp != null && indexProp.getValue() != null) {
+            index = Integer.parseInt(indexProp.getValue().toString());
+        }
+        return index;
     }
 
     PropertyId buildPropertyId(NodeId parentId, MultiStatusResponse response,

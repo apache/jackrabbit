@@ -118,6 +118,7 @@ public class SessionImpl implements Session, ManagerProvider {
     private final NodeTypeManagerImpl ntManager;
 
     private final SessionItemStateManager itemStateManager;
+    private final HierarchyManager hierarchyManager;
     private final ItemManager itemManager;
     private final ItemStateValidator validator;
 
@@ -139,10 +140,9 @@ public class SessionImpl implements Session, ManagerProvider {
 
         validator = new ItemStateValidator(workspace.getNodeTypeRegistry(), this);
 
-        // build the state mananger
-        itemStateManager = createSessionItemStateManager(workspace.getUpdatableItemStateManager(), nsMappings);
-
-        itemManager = createItemManager(getHierarchyManager());
+        itemStateManager = createSessionItemStateManager(workspace.getUpdatableItemStateManager());
+        hierarchyManager = createHierarchyManager();
+        itemManager = createItemManager();
     }
 
     //--------------------------------------------------< Session interface >---
@@ -677,12 +677,16 @@ public class SessionImpl implements Session, ManagerProvider {
         return new WorkspaceImpl(sessionInfo.getWorkspaceName(), this, config, sessionInfo);
     }
 
-    protected SessionItemStateManager createSessionItemStateManager(UpdatableItemStateManager workspaceStateManager, NamespaceResolver nsResolver) {
-        return new SessionItemStateManager(workspaceStateManager, getIdFactory(), getValidator(), nsResolver);
+    protected SessionItemStateManager createSessionItemStateManager(UpdatableItemStateManager workspaceStateManager) {
+        return new SessionItemStateManager(workspaceStateManager, getIdFactory(), getValidator());
     }
 
-    protected ItemManager createItemManager(HierarchyManager hierarchyMgr) {
-        return new ItemManagerImpl(hierarchyMgr, this);
+    protected HierarchyManager createHierarchyManager() {
+        return new HierarchyManagerImpl(getItemStateManager(), getNamespaceResolver());
+    }
+
+    protected ItemManager createItemManager() {
+        return new ItemManagerImpl(getHierarchyManager(), this);
     }
 
     //---------------------------------------------------< ManagerProvider > ---
@@ -691,7 +695,7 @@ public class SessionImpl implements Session, ManagerProvider {
     }
 
     public HierarchyManager getHierarchyManager() {
-        return itemStateManager.getHierarchyManager();
+        return hierarchyManager;
     }
 
     public ItemStateManager getItemStateManager() {

@@ -187,7 +187,7 @@ class DocViewImportHandler extends TargetImportHandler {
                 // until a way of properly serializing/detecting multi-valued
                 // properties on re-import is found (see JCR-325);
                 // see also DocViewSAXEventGenerator#leavingProperties(Node, int)
-                // todo proper multi-value serialization support
+                // TODO: proper multi-value serialization support
                 propValues = new Importer.TextValue[1];
                 propValues[0] = new StringValue(attrValue);
 
