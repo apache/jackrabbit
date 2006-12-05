@@ -294,8 +294,8 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     public EventFilter createEventFilter(int eventTypes, Path path, boolean isDeep,
                                          String[] uuids, QName[] nodeTypes,
                                          boolean noLocal)
-        throws UnsupportedRepositoryOperationException {
-        return service.createEventFilter(eventTypes, path, isDeep, uuids, nodeTypes, noLocal);
+        throws UnsupportedRepositoryOperationException, RepositoryException {
+        return service.createEventFilter(sessionInfo, eventTypes, path, isDeep, uuids, nodeTypes, noLocal);
     }
     //--------------------------------------------------------------------------
     /**

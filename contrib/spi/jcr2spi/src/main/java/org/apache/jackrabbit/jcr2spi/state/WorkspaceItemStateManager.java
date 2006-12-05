@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.RepositoryException;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -56,8 +57,8 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
             try {
                 // todo for now listen to everything
                 filter = wspManager.createEventFilter(Event.ALL_TYPES, Path.ROOT, true, null, null, false);
-            } catch (UnsupportedRepositoryOperationException e) {
-                // spi does not support observation
+            } catch (RepositoryException e) {
+                // spi does not support observation, or another error occurred.
             }
             this.eventFilter = (filter == null) ? Collections.EMPTY_LIST : Collections.singletonList(filter);
         } else {

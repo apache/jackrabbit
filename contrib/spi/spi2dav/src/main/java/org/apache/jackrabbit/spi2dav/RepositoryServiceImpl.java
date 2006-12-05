@@ -1155,20 +1155,25 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * @see RepositoryService#createEventFilter(int, org.apache.jackrabbit.name.Path, boolean, String[], org.apache.jackrabbit.name.QName[], boolean)
+     * @see RepositoryService#createEventFilter(SessionInfo, int, org.apache.jackrabbit.name.Path, boolean, String[], org.apache.jackrabbit.name.QName[], boolean)
      */
-    public EventFilter createEventFilter(int eventTypes,
+    public EventFilter createEventFilter(SessionInfo sessionInfo,
+                                         int eventTypes,
                                          Path absPath,
                                          boolean isDeep,
                                          String[] uuids,
                                          QName[] nodeTypeNames,
                                          boolean noLocal)
-            throws UnsupportedRepositoryOperationException {
+            throws UnsupportedRepositoryOperationException, RepositoryException {
         // resolve node type names
         // todo what if new node types become available while event filter is still in use?
         Set resolvedTypeNames = null;
         if (nodeTypeNames != null) {
             resolvedTypeNames = new HashSet();
+            // make sure node type definitions are available
+            if (nodeTypeDefinitions.size() == 0) {
+                getNodeTypeDefinitions(sessionInfo);
+            }
             synchronized (nodeTypeDefinitions) {
                 for (int i = 0; i < nodeTypeNames.length; i++) {
                     resolveNodeType(resolvedTypeNames, nodeTypeNames[i]);
@@ -1195,7 +1200,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             sessionInfoImpl.setSubscriptionId(subscriptionId);
         }
 
-        return poll(rootUri, subscriptionId, sessionInfo);
+        return poll(rootUri, subscriptionId, (SessionInfoImpl) sessionInfo);
         // todo timeout is not respected
     }
 
@@ -1260,7 +1265,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    private EventBundle[] poll(String uri, String subscriptionId,  SessionInfo sessionInfo) throws RepositoryException {
+    private EventBundle[] poll(String uri, String subscriptionId,  SessionInfoImpl sessionInfo) throws RepositoryException {
         PollMethod method = null;
         try {
             method = new PollMethod(uri, subscriptionId);
@@ -1270,7 +1275,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             EventDiscovery disc = method.getResponseAsEventDiscovery();
             EventBundle[] events;
             if (disc.isEmpty()) {
-                events = new EventBundle[]{EventBundleImpl.EMPTY};
+                events = new EventBundle[0];
             } else {
                 Element discEl = disc.toXml(domFactory);
                 ElementIterator it = DomUtil.getChildren(discEl,
@@ -1279,9 +1284,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 List bundles = new ArrayList();
                 while (it.hasNext()) {
                     Element bundleElement = it.nextElement();
-                    String value = DomUtil.getAttribute(bundleElement, ObservationConstants.XML_EVENT_IS_LOCAL, NAMESPACE);
-                    boolean isLocal = (value != null) ? Boolean.valueOf(value).booleanValue() : false;
-
+                    String value = DomUtil.getAttribute(bundleElement,
+                            ObservationConstants.XML_EVENT_TRANSACTION_ID,
+                            ObservationConstants.NAMESPACE);
+                    // check if it matches a batch id recently submitted
+                    boolean isLocal = false;
+                    if (value != null && sessionInfo instanceof SessionInfoImpl) {
+                        isLocal = value.equals(sessionInfo.getLastBatchId());
+                    }
                     bundles.add(new EventBundleImpl(buildEventList(bundleElement, sessionInfo), isLocal));
                 }
                 events = (EventBundle[]) bundles.toArray(new EventBundle[bundles.size()]);
@@ -1483,7 +1493,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             // refresh node type definitions map
             synchronized (nodeTypeDefinitions) {
                 nodeTypeDefinitions.clear();
-                for (Iterator defIt = ntDefs.iterator(); it.hasNext(); ) {
+                for (Iterator defIt = ntDefs.iterator(); defIt.hasNext(); ) {
                     QNodeTypeDefinition def = (QNodeTypeDefinition) defIt.next();
                     nodeTypeDefinitions.put(def.getQName(), def);
                 }
@@ -1589,6 +1599,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 method.setRequestBody(new TransactionInfo(commit));
                 client.executeMethod(method);
                 method.checkSuccess();
+                if (sessionInfo instanceof SessionInfoImpl) {
+                    ((SessionInfoImpl) sessionInfo).setLastBatchId(batchId);
+                }
             } catch (IOException e) {
                 throw new RepositoryException(e);
             } catch (DavException e) {
