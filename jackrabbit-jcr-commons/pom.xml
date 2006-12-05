@@ -46,21 +46,6 @@
     <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-jcr-commons</url>
   </scm>
 
-  <build>
-    <resources>
-      <resource>
-        <targetPath>META-INF</targetPath>
-        <filtering>false</filtering>
-        <directory>${basedir}</directory>
-        <includes>
-          <include>README.txt</include>
-          <include>NOTICE.txt</include>
-          <include>LICENSE.txt</include>
-        </includes>
-      </resource>
-    </resources>
-  </build>
-
   <dependencies>
     <dependency>
       <groupId>javax.jcr</groupId>

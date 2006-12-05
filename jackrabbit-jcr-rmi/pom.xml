@@ -41,25 +41,6 @@
   <description>JCR-RMI is a transparent Remote Method Invocation (RMI) layer for the Content Repository for Java Technology API (JCR). The layer makes it possible to remotely access JCR content repositories. JCR-RMI is developed as a part of the Apache Jackrabbit project, but the implementation is compatible with all JCR content repositories.</description>
 
   <build>
-    <sourceDirectory>src/main/java</sourceDirectory>
-    <testSourceDirectory>src/testjava/</testSourceDirectory>
-    <resources>
-      <!-- Does not work with eclipse. Maybe we can move README.txt to src/main/resources? -->
-      <!-- resource>
-        <targetPath>META-INF</targetPath>
-        <directory>.</directory>
-        <includes>
-        <include>README.txt</include>
-        </includes>
-        </resource -->
-      <resource>
-        <targetPath>.</targetPath>
-        <directory>${basedir}src/main/resources</directory>
-        <includes>
-          <include>*</include>
-        </includes>
-      </resource>
-    </resources>
     <plugins>
       <plugin>
         <inherited>true</inherited>
@@ -102,19 +83,6 @@
           </dependency>
         </dependencies>
       </plugin>
-      <!-- plugin>
-        <inherited>true</inherited>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <executions>
-        <execution>
-        <id>attach-javadocs</id>
-        <goals>
-        <goal>jar</goal>
-        </goals>
-        </execution>
-        </executions>
-        </plugin -->
     </plugins>
   </build>
 

@@ -49,16 +49,6 @@
   <build>
     <resources>
       <resource>
-        <targetPath>META-INF</targetPath>
-        <filtering>false</filtering>
-        <directory>${basedir}</directory>
-        <includes>
-          <include>README.txt</include>
-          <include>NOTICE.txt</include>
-          <include>LICENSE.txt</include>
-        </includes>
-      </resource>
-      <resource>
         <directory>${basedir}/src/main/java</directory>
         <includes>
           <include>**/*.properties</include>
