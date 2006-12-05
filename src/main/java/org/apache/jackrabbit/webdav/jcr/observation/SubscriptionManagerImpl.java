@@ -19,8 +19,10 @@ package org.apache.jackrabbit.webdav.jcr.observation;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.transaction.TransactionResource;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
+import org.apache.jackrabbit.webdav.jcr.transaction.TransactionListener;
 import org.apache.jackrabbit.webdav.observation.EventDiscovery;
 import org.apache.jackrabbit.webdav.observation.ObservationResource;
 import org.apache.jackrabbit.webdav.observation.Subscription;
@@ -39,6 +41,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * <code>SubscriptionManager</code> collects all subscriptions requested, handles
@@ -46,7 +51,7 @@ import java.util.Set;
  * present on a given resource as well as events for an specific subscription.
  */
 // todo: make sure all expired subscriptions are removed!
-public class SubscriptionManagerImpl implements SubscriptionManager {
+public class SubscriptionManagerImpl implements SubscriptionManager, TransactionListener {
 
     private static Logger log = LoggerFactory.getLogger(SubscriptionManager.class);
 
@@ -54,6 +59,8 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
      * Map containing all {@link org.apache.jackrabbit.webdav.observation.Subscription subscriptions}.
      */
     private final SubscriptionMap subscriptions = new SubscriptionMap();
+
+    private final Map transactionListenerById = new HashMap();
 
     /**
      * Retrieve the {@link org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery}
@@ -227,6 +234,37 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
         return JcrDavSession.getRepositorySession(resource.getSession());
     }
 
+    //---------------------------< TransactionListener >------------------------
+
+    /**
+     * {@inheritDoc}
+     */
+    public synchronized void beforeCommit(TransactionResource resource,
+                                          String lockToken) {
+        // suspend regular subscriptions during a commit
+        List transactionListeners = new ArrayList();
+        for (Iterator it = subscriptions.iterator(); it.hasNext(); ) {
+            SubscriptionImpl sub = (SubscriptionImpl) it.next();
+            TransactionListener tl = sub.createTransactionListener();
+            tl.beforeCommit(resource, lockToken);
+            transactionListeners.add(tl);
+        }
+        transactionListenerById.put(lockToken, transactionListeners);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void afterCommit(TransactionResource resource, String lockToken, boolean success) {
+        List transactionListeners = (List) transactionListenerById.remove(lockToken);
+        if (transactionListeners != null) {
+            for (Iterator it = transactionListeners.iterator(); it.hasNext(); ) {
+                TransactionListener txListener = (TransactionListener) it.next();
+                txListener.afterCommit(resource, lockToken, success);
+            }
+        }
+    }
+
     //----------------------------------------------< private inner classes >---
     /**
      * Private inner class wrapping around an <code>Subscription</code> as
@@ -267,6 +305,10 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
 
         private Subscription get(String subscriptionId) {
             return (Subscription) subscriptions.get(subscriptionId);
+        }
+
+        private Iterator iterator() {
+            return subscriptions.values().iterator();
         }
 
         private void put(String subscriptionId, SubscriptionImpl subscription) {

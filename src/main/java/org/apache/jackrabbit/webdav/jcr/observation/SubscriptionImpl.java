@@ -20,6 +20,10 @@ import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.transaction.TransactionResource;
+import org.apache.jackrabbit.webdav.jcr.transaction.TransactionListener;
+import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
+import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.observation.EventBundle;
 import org.apache.jackrabbit.webdav.observation.EventDiscovery;
 import org.apache.jackrabbit.webdav.observation.EventType;
@@ -36,9 +40,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
+import javax.jcr.observation.ObservationManager;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -92,6 +98,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
     private final DavResourceLocator locator;
     private final String subscriptionId = UUID.randomUUID().toString();
     private final List eventBundles = new ArrayList();
+    private final ObservationManager obsMgr;
 
     /**
      * Create a new <code>Subscription</code> with the given {@link SubscriptionInfo}
@@ -99,10 +106,19 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
      *
      * @param info
      * @param resource
+     * @throws DavException if resource is not based on a JCR repository or
+     * the repository does not support observation.
      */
-    public SubscriptionImpl(SubscriptionInfo info, ObservationResource resource) {
+    public SubscriptionImpl(SubscriptionInfo info, ObservationResource resource)
+            throws DavException {
         setInfo(info);
         locator = resource.getLocator();
+        Session s = JcrDavSession.getRepositorySession(resource.getSession());
+        try {
+            obsMgr = s.getWorkspace().getObservationManager();
+        } catch (RepositoryException e) {
+            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, e);
+        }
     }
 
     //-------------------------------------------------------< Subscription >---
@@ -261,19 +277,82 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
         return ed;
     }
 
+    /**
+     * Creates a new transaction listener for the scope of a transaction
+     * commit (save call).
+     * @return a transaction listener for this subscription.
+     */
+    TransactionListener createTransactionListener() {
+        if (info.isNoLocal()) {
+            // a subscription which is not interested in local changes does
+            // not need the transaction id
+            return new TransactionEvent() {
+                public void onEvent(EventIterator events) {
+                    // ignore
+                }
+
+                public void beforeCommit(TransactionResource resource, String lockToken) {
+                    // ignore
+                }
+
+                public void afterCommit(TransactionResource resource,
+                                        String lockToken,
+                                        boolean success) {
+                    // ignore
+                }
+            };
+        } else {
+            return new TransactionEvent();
+        }
+    }
+
+    /**
+     * Suspend this subscription. This call will remove this subscription as
+     * event listener from the observation manager.
+     */
+    void suspend() throws DavException {
+        try {
+            obsMgr.removeEventListener(this);
+        } catch (RepositoryException e) {
+            throw new JcrDavException(e);
+        }
+    }
+
+    /**
+     * Resumes this subscription. This call will register this subscription
+     * again as event listener to the observation manager.
+     */
+    void resume() throws DavException {
+        try {
+            obsMgr.addEventListener(this, getJcrEventTypes(),
+                    getLocator().getRepositoryPath(), isDeep(), getUuidFilters(),
+                    getNodetypeNameFilters(), isNoLocal());
+        } catch (RepositoryException e) {
+            throw new JcrDavException(e);
+        }
+    }
+
     //--------------------------------------------< EventListener interface >---
     /**
      * Records the events passed as a new event bundle in order to make them
-     * available with the next {@link #discoverEvents()} request.
+     * available with the next {@link #discoverEvents()} request. If this
+     * subscription is expired it will remove itself as listener from the
+     * observation manager.
      *
      * @param events to be recorded.
      * @see EventListener#onEvent(EventIterator)
      * @see #discoverEvents()
      */
     public synchronized void onEvent(EventIterator events) {
-        // TODO: correct not to accept events after expiration? without unsubscribing?
         if (!isExpired()) {
             eventBundles.add(new EventBundleImpl(events));
+        } else {
+            // expired -> unsubscribe
+            try {
+                obsMgr.removeEventListener(this);
+            } catch (RepositoryException e) {
+                log.warn("Exception while unsubscribing: " + e);
+            }
         }
     }
 
@@ -372,13 +451,22 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
 
         private final EventIterator events;
 
+        private final String transactionId;
+
         private EventBundleImpl(EventIterator events) {
+            this(events, null);
+        }
+
+        private EventBundleImpl(EventIterator events, String transactionId) {
             this.events = events;
+            this.transactionId = transactionId;
         }
 
         public Element toXml(Document document) {
             Element bundle = DomUtil.createElement(document, XML_EVENTBUNDLE, NAMESPACE);
-            DomUtil.setAttribute(bundle, XML_EVENT_IS_LOCAL, NAMESPACE, Boolean.toString(!info.isNoLocal()));
+            if (transactionId != null) {
+                DomUtil.setAttribute(bundle, XML_EVENT_TRANSACTION_ID, NAMESPACE, transactionId);
+            }
             while (events.hasNext()) {
                 Event event = events.nextEvent();
                 Element eventElem = DomUtil.addChildElement(bundle, XML_EVENT, NAMESPACE);
@@ -399,6 +487,66 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                 DomUtil.addChildElement(eventElem, XML_EVENTUSERID, NAMESPACE, event.getUserID());
             }
             return bundle;
+        }
+    }
+
+    //----------------------------< TransactionEvent >------------------------
+
+    /**
+     * Implements a transaction event which listenes for events during a save
+     * call on the repository.
+     */
+    private class TransactionEvent implements EventListener, TransactionListener {
+
+        private String transactionId;
+
+        /**
+         * {@inheritDoc}
+         */
+        public void onEvent(EventIterator events) {
+            String tId = transactionId;
+            if (tId == null) {
+                tId = UUID.randomUUID().toString();
+            }
+            eventBundles.add(new EventBundleImpl(events, tId));
+        }
+
+        //-----------------------------< TransactionListener >------------------
+
+        /**
+         * {@inheritDoc}
+         */
+        public void beforeCommit(TransactionResource resource, String lockToken) {
+            try {
+                transactionId = lockToken;
+                obsMgr.addEventListener(this, getJcrEventTypes(),
+                        getLocator().getRepositoryPath(), isDeep(), getUuidFilters(),
+                        getNodetypeNameFilters(), isNoLocal());
+                // suspend the subscription
+                suspend();
+            } catch (RepositoryException e) {
+                log.warn("Unable to register TransactionListener: " + e);
+            } catch (DavException e) {
+                log.warn("Unable to register TransactionListener: " + e);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void afterCommit(TransactionResource resource,
+                                String lockToken,
+                                boolean success) {
+            try {
+                // resume the subscription
+                resume();
+                // remove this transaction event
+                obsMgr.removeEventListener(this);
+            } catch (RepositoryException e) {
+                log.warn("Unable to remove listener: " + e);
+            } catch (DavException e) {
+                log.warn("Unable to resume Subscription: " + e);
+            }
         }
     }
 }
