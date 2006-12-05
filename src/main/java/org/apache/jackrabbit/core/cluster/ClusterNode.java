@@ -21,6 +21,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.core.config.ClusterConfig;
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
+import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.state.ChangeLog;
@@ -36,11 +38,13 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Collection;
 
 /**
  * Default clustered node implementation.
  */
-public class ClusterNode implements Runnable, UpdateEventChannel  {
+public class ClusterNode implements Runnable, UpdateEventChannel,
+        NamespaceEventChannel, NodeTypeEventChannel  {
 
     /**
      * System property specifying a node id to use.
@@ -101,6 +105,16 @@ public class ClusterNode implements Runnable, UpdateEventChannel  {
      * Versioning update listener.
      */
     private UpdateEventListener versionUpdateListener;
+
+    /**
+     * Namespace listener.
+     */
+    private NamespaceEventListener namespaceListener;
+
+    /**
+     * Node type listener.
+     */
+    private NodeTypeEventListener nodeTypeListener;
 
     /**
      * Initialize this cluster node.
@@ -240,15 +254,6 @@ public class ClusterNode implements Runnable, UpdateEventChannel  {
     }
 
     /**
-     * Create an {@link UpdateEventChannel} for versioning operations.
-     *
-     * @return update event channel
-     */
-    public UpdateEventChannel createUpdateChannel() {
-        return this;
-    }
-
-    /**
      * Create an {@link UpdateEventChannel} for some workspace.
      *
      * @param workspace workspace name
@@ -385,6 +390,58 @@ public class ClusterNode implements Runnable, UpdateEventChannel  {
     public void setListener(UpdateEventListener listener) {
         versionUpdateListener = listener;
     }
+
+    //-----------------------------------------------< NamespaceEventListener >
+
+    /**
+     * {@inheritDoc}
+     */
+    public void remapped(String oldPrefix, String newPrefix, String uri) {
+        try {
+            journal.begin(null);
+            journal.log(oldPrefix, newPrefix, uri);
+            journal.prepare();
+            journal.commit();
+        } catch (JournalException e) {
+            String msg = "Unable to create log entry: " + e.getMessage();
+            log.error(msg);
+        } catch (Throwable e) {
+            String msg = "Unexpected error while creating log entry.";
+            log.error(msg, e);
+        }
+    }
+
+    public void setListener(NamespaceEventListener listener) {
+        namespaceListener = listener;
+    }
+
+    //------------------------------------------------< NodeTypeEventListener >
+
+    /**
+     * {@inheritDoc}
+     */
+    public void registered(Collection ntDefs) {
+        try {
+            journal.begin(null);
+            journal.log(ntDefs);
+            journal.prepare();
+            journal.commit();
+        } catch (JournalException e) {
+            String msg = "Unable to create log entry: " + e.getMessage();
+            log.error(msg);
+        } catch (Throwable e) {
+            String msg = "Unexpected error while creating log entry.";
+            log.error(msg, e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setListener(NodeTypeEventListener listener) {
+        nodeTypeListener = listener;
+    }
+
 
     /**
      * Workspace update channel.
@@ -570,7 +627,6 @@ public class ClusterNode implements Runnable, UpdateEventChannel  {
          * {@inheritDoc}
          */
         public void process(NodeId nodeId, boolean isDeep, String owner) {
-            //todo should be aggregated
             LockEventListener listener = (LockEventListener) wspLockListeners.get(workspace);
             if (listener == null) {
                 try {
@@ -599,19 +655,18 @@ public class ClusterNode implements Runnable, UpdateEventChannel  {
          * {@inheritDoc}
          */
         public void process(NodeId nodeId) {
-            //todo should be aggregated
             LockEventListener listener = (LockEventListener) wspLockListeners.get(workspace);
             if (listener == null) {
                 try {
                     clusterContext.lockEventsReady(workspace);
                 } catch (RepositoryException e) {
-                    String msg = "Error making lock listener for workspace " +
+                    String msg = "Unable to make lock listener for workspace " +
                             workspace + " online: " + e.getMessage();
                     log.warn(msg);
                 }
                 listener = (LockEventListener) wspLockListeners.get(workspace);
                 if (listener ==  null) {
-                    String msg = "Lock listener unavailable for workspace: " + workspace;
+                    String msg = "Lock channel unavailable for workspace: " + workspace;
                     log.error(msg);
                     return;
                 }
@@ -619,7 +674,44 @@ public class ClusterNode implements Runnable, UpdateEventChannel  {
             try {
                 listener.externalUnlock(nodeId);
             } catch (RepositoryException e) {
-                String msg = "Unable to deliver unlock event: " + e.getMessage();
+                String msg = "Unable to deliver lock event: " + e.getMessage();
+                log.error(msg);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void process(String oldPrefix, String newPrefix, String uri) {
+            if (namespaceListener == null) {
+                String msg = "Namespace listener unavailable.";
+                log.error(msg);
+                return;
+            }
+            try {
+                namespaceListener.externalRemap(oldPrefix, newPrefix, uri);
+            } catch (RepositoryException e) {
+                String msg = "Unable to deliver namespace operation: " + e.getMessage();
+                log.error(msg);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void process(Collection ntDefs) {
+            if (nodeTypeListener == null) {
+                String msg = "NodeType listener unavailable.";
+                log.error(msg);
+                return;
+            }
+            try {
+                nodeTypeListener.externalRegistered(ntDefs);
+            } catch (InvalidNodeTypeDefException e) {
+                String msg = "Unable to deliver node type operation: " + e.getMessage();
+                log.error(msg);
+            } catch (RepositoryException e) {
+                String msg = "Unable to deliver node type operation: " + e.getMessage();
                 log.error(msg);
             }
         }
@@ -652,6 +744,7 @@ public class ClusterNode implements Runnable, UpdateEventChannel  {
                 } else {
                     String msg = "Version update listener unavailable.";
                     log.error(msg);
+                    return;
                 }
             }
             try {
