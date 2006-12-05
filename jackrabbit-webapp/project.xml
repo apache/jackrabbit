@@ -24,7 +24,7 @@
     <artifactId>jackrabbit-webapp</artifactId>
     
     <name>Jackrabbit WebApplication</name>
-    <currentVersion>1.1-SNAPSHOT</currentVersion>
+    <currentVersion>1.2-SNAPSHOT</currentVersion>
     <inceptionYear>2005</inceptionYear>
     <package>org.apache.jackrabbit.*</package>
     

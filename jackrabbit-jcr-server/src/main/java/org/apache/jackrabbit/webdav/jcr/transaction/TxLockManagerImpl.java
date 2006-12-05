@@ -35,6 +35,7 @@ import org.apache.jackrabbit.webdav.transaction.TransactionInfo;
 import org.apache.jackrabbit.webdav.transaction.TransactionResource;
 import org.apache.jackrabbit.webdav.transaction.TxActiveLock;
 import org.apache.jackrabbit.webdav.transaction.TxLockManager;
+import org.apache.commons.collections.set.MapBackedSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +48,8 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.IdentityHashMap;
 
 /**
  * <code>TxLockManagerImpl</code> manages locks with locktype
@@ -66,6 +69,8 @@ public class TxLockManagerImpl implements TxLockManager {
     private static Logger log = LoggerFactory.getLogger(TxLockManagerImpl.class);
 
     private TransactionMap map = new TransactionMap();
+
+    private Set listeners = MapBackedSet.decorate(new IdentityHashMap());
 
     /**
      * Create a new lock.
@@ -212,7 +217,25 @@ public class TxLockManagerImpl implements TxLockManager {
             throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED, "Transaction lock for resource '" + resource.getResourcePath() + "' was already expired.");
         } else {
             if (lockInfo.isCommit()) {
-                tx.commit(resource);
+                TransactionListener[] txListeners;
+                synchronized (listeners) {
+                    txListeners = (TransactionListener[]) listeners.toArray(new TransactionListener[0]);
+                }
+                for (int i = 0; i < txListeners.length; i++) {
+                    txListeners[i].beforeCommit(resource, lockToken);
+                }
+                DavException ex = null;
+                try {
+                    tx.commit(resource);
+                } catch (DavException e) {
+                    ex = e;
+                }
+                for (int i = 0; i < txListeners.length; i++) {
+                    txListeners[i].afterCommit(resource, lockToken, ex == null);
+                }
+                if (ex != null) {
+                    throw ex;
+                }
             } else {
                 tx.rollback(resource);
             }
@@ -271,6 +294,28 @@ public class TxLockManagerImpl implements TxLockManager {
             }
         }
         return lock;
+    }
+
+    //-----------------------------< listener support >-------------------------
+
+    /**
+     * Adds a transaction listener to this <code>TxLockManager</code>.
+     * @param listener the listener to add.
+     */
+    public void addTransactionListener(TransactionListener listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
+        }
+    }
+
+    /**
+     * Removes a transaction listener from this <code>TxLockManager</code>.
+     * @param listener the listener to remove.
+     */
+    public void removeTransactionListener(TransactionListener listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
     }
 
     /**

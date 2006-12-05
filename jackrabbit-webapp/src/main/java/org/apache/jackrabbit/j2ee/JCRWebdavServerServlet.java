@@ -111,6 +111,7 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
 
         txMgr = new TxLockManagerImpl();
         subscriptionMgr = new SubscriptionManagerImpl();
+        txMgr.addTransactionListener((SubscriptionManagerImpl) subscriptionMgr);
 
         // todo: ev. make configurable
         resourceFactory = new DavResourceFactoryImpl(txMgr, subscriptionMgr);
