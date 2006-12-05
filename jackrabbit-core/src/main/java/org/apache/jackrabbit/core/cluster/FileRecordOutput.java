@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core.cluster;
 
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
+import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefWriter;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
@@ -27,6 +29,7 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 
 import java.io.IOException;
 import java.io.DataOutputStream;
+import java.io.StringWriter;
 import java.util.ArrayList;
 
 /**
@@ -123,13 +126,18 @@ class FileRecordOutput {
     /**
      * Write a string from the underlying stream.
      *
-     * @param s string
+     * @param s string, may be <code>null</code>
      * @throws IOException if an I/O error occurs
      */
     public void writeString(String s) throws IOException {
         checkOpen();
 
-        out.writeUTF(s);
+        if (s == null) {
+            out.writeBoolean(true);
+        } else {
+            out.writeBoolean(false);
+            out.writeUTF(s);
+        }
     }
 
     /**
@@ -210,6 +218,20 @@ class FileRecordOutput {
 
         writeNodeId(propertyId.getParentId());
         writeQName(propertyId.getName());
+    }
+
+    /**
+     * Write a <code>NodeTypeDef</code>
+     */
+    public void writeNodeTypeDef(NodeTypeDef ntd) throws IOException {
+        checkOpen();
+
+        StringWriter sw = new StringWriter();
+        CompactNodeTypeDefWriter writer = new CompactNodeTypeDefWriter(sw, resolver, true);
+        writer.write(ntd);
+        writer.close();
+
+        writeString(sw.toString());
     }
 
     /**

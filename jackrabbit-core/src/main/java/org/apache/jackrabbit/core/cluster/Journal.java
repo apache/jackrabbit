@@ -19,7 +19,11 @@ package org.apache.jackrabbit.core.cluster;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.QName;
+
+import java.util.Collection;
 
 /**
  * Journal interface. Defines operations on a journal that are used to synchronize clustered repository nodes.
@@ -67,7 +71,8 @@ public interface Journal {
      * @param owner lock owner
      * @throws JournalException if an error occurs
      */
-    public void log(NodeId nodeId, boolean isDeep, String owner) throws JournalException;
+    public void log(NodeId nodeId, boolean isDeep, String owner)
+            throws JournalException;
 
     /**
      * Log an unlock operation.
@@ -76,6 +81,23 @@ public interface Journal {
      * @throws JournalException if an error occurs
      */
     public void log(NodeId nodeId) throws JournalException;
+
+    /**
+     * Log a namespace registry operation.
+     *
+     * @param oldPrefix old prefix
+     * @param newPrefix new prefix
+     * @param uri URI
+     * @throws JournalException if an error occurs
+     */
+    public void log(String oldPrefix, String newPrefix, String uri) throws JournalException;
+
+    /**
+     * Log on or more node type registrations or reregistration.
+     *
+     * @param ntDefs node type definitions
+     */
+    public void log(Collection ntDefs) throws JournalException;
 
     /**
      * Prepare an update operation on the journal. This locks the journal exclusively for updates until this client

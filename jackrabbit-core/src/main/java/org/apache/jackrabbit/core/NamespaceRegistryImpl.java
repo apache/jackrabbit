@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.cluster.NamespaceEventChannel;
+import org.apache.jackrabbit.core.cluster.NamespaceEventListener;
 import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameCache;
@@ -41,7 +43,7 @@ import java.util.Properties;
  * A <code>NamespaceRegistryImpl</code> ...
  */
 public class NamespaceRegistryImpl extends AbstractNamespaceResolver
-        implements NamespaceRegistry, NameCache {
+        implements NamespaceRegistry, NameCache, NamespaceEventListener {
 
     private static Logger log = LoggerFactory.getLogger(NamespaceRegistryImpl.class);
 
@@ -77,6 +79,11 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
     private final CachingNamespaceResolver resolver;
 
     private final FileSystem nsRegStore;
+
+    /**
+     * Namespace event channel.
+     */
+    private NamespaceEventChannel eventChannel;
 
     /**
      * Protected constructor: Constructs a new instance of this class.
@@ -249,6 +256,16 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         }
     }
 
+    /**
+     * Set an event channel to inform about changes.
+     *
+     * @param eventChannel event channel
+     */
+    public void setEventChannel(NamespaceEventChannel eventChannel) {
+        this.eventChannel = eventChannel;
+        eventChannel.setListener(this);
+    }
+
     //----------------------------------------------------< NamespaceRegistry >
     /**
      * {@inheritDoc}
@@ -308,6 +325,10 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         // add new prefix mapping
         prefixToURI.put(prefix, uri);
         uriToPrefix.put(uri, prefix);
+
+        if (eventChannel != null) {
+            eventChannel.remapped(oldPrefix, prefix, uri);
+        }
 
         // persist mappings
         store();
@@ -403,5 +424,46 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
     public void evictAllNames() {
         // just delegate to internal cache
         resolver.evictAllNames();
+    }
+
+    //-----------------------------------------------< NamespaceEventListener >
+
+    /**
+     * {@inheritDoc}
+     */
+    public void externalRemap(String oldPrefix, String newPrefix, String uri)
+            throws RepositoryException {
+
+        if (newPrefix == null) {
+            /**
+             * as we can't guarantee that there are no references to the specified
+             * namespace (in names of nodes/properties/node types etc.) we simply
+             * don't allow it.
+             */
+            throw new NamespaceException("unregistering namespaces is not supported.");
+        }
+
+        if (oldPrefix != null) {
+            // remove old prefix mapping
+            prefixToURI.remove(oldPrefix);
+            uriToPrefix.remove(uri);
+        }
+
+        // add new prefix mapping
+        prefixToURI.put(newPrefix, uri);
+        uriToPrefix.put(uri, newPrefix);
+
+        // persist mappings
+        store();
+
+        // notify listeners
+        if (oldPrefix != null) {
+            // remapped existing namespace uri to new prefix
+            notifyNamespaceRemapped(oldPrefix, newPrefix, uri);
+        } else {
+            // added new namespace uri mapped to prefix
+            notifyNamespaceAdded(newPrefix, uri);
+        }
+
     }
 }

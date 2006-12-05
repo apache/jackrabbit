@@ -21,6 +21,7 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 
 import java.util.Set;
+import java.util.Collection;
 
 /**
  * Listener interface on a journal that gets called back for records that should be processed.
@@ -70,6 +71,22 @@ public interface RecordProcessor {
      * @param nodeId node id
      */
     public void process(NodeId nodeId);
+
+    /**
+     * Process a namespace operation.
+     *
+     * @param oldPrefix old prefix. if <code>null</code> this is a fresh mapping
+     * @param newPrefix new prefix. if <code>null</code> this is an unmap operation
+     * @param uri uri to map prefix to
+     */
+    public void process(String oldPrefix, String newPrefix, String uri);
+
+    /**
+     * Process one or more node type registrations.
+     *
+     * @param ntDefs node type definition
+     */
+    public void process(Collection ntDefs);
 
     /**
      * Invoked when a record ends.
