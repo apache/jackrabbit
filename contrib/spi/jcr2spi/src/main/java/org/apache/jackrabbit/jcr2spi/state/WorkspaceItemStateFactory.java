@@ -212,7 +212,7 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
         throws NoSuchItemStateException, ItemStateException {
         try {
             ChildNodeEntries entries = new ChildNodeEntries(nodeState);
-            Collection childInfos = service.getChildNodeInfos(sessionInfo, nodeState.getNodeId());
+            Collection childInfos = service.getChildInfos(sessionInfo, nodeState.getNodeId());
             for (Iterator it = childInfos.iterator(); it.hasNext();) {
                 ChildInfo ci = (ChildInfo) it.next();
                 entries.add(ci.getName(), ci.getUUID(), ci.getIndex());

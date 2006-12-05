@@ -28,7 +28,6 @@ import org.apache.jackrabbit.name.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.RepositoryException;
 import java.util.Set;
 import java.util.HashSet;
