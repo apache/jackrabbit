@@ -145,6 +145,7 @@ import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.LoginException;
 import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.Repository;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -771,6 +772,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * @see RepositoryService#createBatch(ItemId, SessionInfo)
      */
     public Batch createBatch(ItemId itemId, SessionInfo sessionInfo) throws RepositoryException {
+        checkSessionInfo(sessionInfo);
         return new BatchImpl(itemId, sessionInfo);
     }
 
@@ -786,7 +788,12 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             batchImpl.dispose();
             return;
         }
-        // send batched information
+        // make sure we have a subscription on the server before we
+        // submit the batch
+        if (((SessionInfoImpl) batchImpl.sessionInfo).getSubscriptionId() == null
+                && "true".equals(getRepositoryDescriptors().get(Repository.OPTION_OBSERVATION_SUPPORTED))) {
+            getEvents(batchImpl.sessionInfo, 0, new EventFilter[0]);
+        }        // send batched information
         try {
             HttpClient client = batchImpl.start();
             boolean success = false;
