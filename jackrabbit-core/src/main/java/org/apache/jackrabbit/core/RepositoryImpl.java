@@ -274,6 +274,8 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         // will be interested in
         if (repConfig.getClusterConfig() != null) {
             clusterNode = createClusterNode();
+            nsReg.setEventChannel(clusterNode);
+            ntReg.setEventChannel(clusterNode);
         }
 
         // init version manager
@@ -365,7 +367,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         VersionManagerImpl vMgr = new VersionManagerImpl(pm, fs, ntReg, delegatingDispatcher,
                 VERSION_STORAGE_NODE_ID, SYSTEM_ROOT_NODE_ID, cacheFactory);
         if (clusterNode != null) {
-            vMgr.setEventChannel(clusterNode.createUpdateChannel());
+            vMgr.setEventChannel(clusterNode);
         }
         return vMgr;
     }

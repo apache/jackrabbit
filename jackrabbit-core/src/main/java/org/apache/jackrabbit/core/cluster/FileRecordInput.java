@@ -18,6 +18,9 @@ package org.apache.jackrabbit.core.cluster;
 
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
+import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
+import org.apache.jackrabbit.core.nodetype.compact.ParseException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
@@ -31,7 +34,9 @@ import org.apache.jackrabbit.uuid.UUID;
 
 import java.io.IOException;
 import java.io.DataInputStream;
+import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Allows reading data from a <code>FileRecord</code>.
@@ -120,13 +125,18 @@ class FileRecordInput {
     /**
      * Read a string from the underlying stream.
      *
-     * @return string
+     * @return string or <code>null</code>
      * @throws IOException if an I/O error occurs
      */
     public String readString() throws IOException {
         checkOpen();
 
-        return in.readUTF();
+        boolean isNull = in.readBoolean();
+        if (isNull) {
+            return null;
+        } else {
+            return in.readUTF();
+        }
     }
 
     /**
@@ -218,6 +228,24 @@ class FileRecordInput {
 
         return new PropertyId(readNodeId(), readQName());
     }
+
+    /**
+     * Read a <code>NodeTypeDef</code>
+     */
+    public NodeTypeDef readNodeTypeDef() throws IOException, ParseException {
+        checkOpen();
+
+        StringReader sr = new StringReader(readString());
+
+        CompactNodeTypeDefReader reader = new CompactNodeTypeDefReader(sr, "(internal)");
+        List ntds = reader.getNodeTypeDefs();
+        if (ntds.size() != 1) {
+            throw new IOException("Expected one node type definition: got " + ntds.size());
+        }
+        return (NodeTypeDef) ntds.get(0);
+    }
+
+
 
     /**
      * Close this input. Does not close underlying stream as this is a shared resource.

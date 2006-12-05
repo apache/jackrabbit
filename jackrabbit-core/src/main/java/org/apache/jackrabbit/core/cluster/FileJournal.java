@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.cluster;
 
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
+import org.apache.jackrabbit.core.nodetype.compact.ParseException;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -39,6 +41,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Collection;
 
 import EDU.oswego.cs.dl.util.concurrent.Mutex;
 
@@ -320,9 +323,6 @@ public class FileJournal implements Journal {
 
         try {
             workspace = in.readString();
-            if (workspace.equals("")) {
-                workspace = null;
-            }
             processor.start(workspace);
 
             for (;;) {
@@ -356,13 +356,26 @@ public class FileJournal implements Journal {
                             childRelPath, ntName, mixins, userId);
                 } else if (c == 'L') {
                     NodeId nodeId = in.readNodeId();
-                    boolean isDeep = in.readBoolean();
-                    String owner = in.readString();
-
-                    processor.process(nodeId, isDeep, owner);
-                } else if (c == 'U') {
-                    NodeId nodeId = in.readNodeId();
-                    processor.process(nodeId);
+                    boolean isLock = in.readBoolean();
+                    if (isLock) {
+                        boolean isDeep = in.readBoolean();
+                        String owner = in.readString();
+                        processor.process(nodeId, isDeep, owner);
+                    } else {
+                        processor.process(nodeId);
+                    }
+                } else if (c == 'S') {
+                    String oldPrefix = in.readString();
+                    String newPrefix = in.readString();
+                    String uri = in.readString();
+                    processor.process(oldPrefix, newPrefix, uri);
+                } else if (c == 'T') {
+                    int size = in.readInt();
+                    HashSet ntDefs = new HashSet();
+                    for (int i = 0; i < size; i++) {
+                        ntDefs.add(in.readNodeTypeDef());
+                    }
+                    processor.process(ntDefs);
                 } else {
                     throw new IllegalArgumentException("Unknown entry type: " + c);
                 }
@@ -370,6 +383,10 @@ public class FileJournal implements Journal {
             processor.end();
 
         } catch (NameException e) {
+            String msg = "Unable to read revision " + record.getRevision() +
+                    ": " + e.getMessage();
+            throw new JournalException(msg);
+        } catch (ParseException e) {
             String msg = "Unable to read revision " + record.getRevision() +
                     ": " + e.getMessage();
             throw new JournalException(msg);
@@ -406,7 +423,7 @@ public class FileJournal implements Journal {
 
             record = new FileRecord(id, tempLog);
             out = record.getOutput(resolver);
-            out.writeString(workspace != null ? workspace : "");
+            out.writeString(workspace);
 
             succeeded = true;
         } catch (IOException e) {
@@ -461,12 +478,12 @@ public class FileJournal implements Journal {
     /**
      * {@inheritDoc}
      */
-    public void log(NodeId nodeId, boolean isDeep, String owner) throws JournalException {
+    public void log(String oldPrefix, String newPrefix, String uri) throws JournalException {
         try {
-            out.writeChar('L');
-            out.writeNodeId(nodeId);
-            out.writeBoolean(isDeep);
-            out.writeString(owner);
+            out.writeChar('S');
+            out.writeString(oldPrefix);
+            out.writeString(newPrefix);
+            out.writeString(uri);
         } catch (IOException e) {
             String msg = "Unable to write to journal log " + tempLog + ": " + e.getMessage();
             throw new JournalException(msg);
@@ -476,14 +493,34 @@ public class FileJournal implements Journal {
     /**
      * {@inheritDoc}
      */
+    public void log(NodeId nodeId, boolean isDeep, String owner) throws JournalException {
+        log(nodeId, true, isDeep, owner);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public void log(NodeId nodeId) throws JournalException {
+        log(nodeId, false, false, null);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void log(Collection ntDefs) throws JournalException {
         try {
-            out.writeChar('U');
-            out.writeNodeId(nodeId);
+            out.writeChar('T');
+            out.writeInt(ntDefs.size());
+
+            Iterator iter = ntDefs.iterator();
+            while (iter.hasNext()) {
+                out.writeNodeTypeDef((NodeTypeDef) iter.next());
+            }
         } catch (IOException e) {
             String msg = "Unable to write to journal log " + tempLog + ": " + e.getMessage();
             throw new JournalException(msg);
         }
+
     }
 
     /**
@@ -546,6 +583,32 @@ public class FileJournal implements Journal {
         } catch (NoPrefixDeclaredException e) {
             String msg = "Unable to write to journal log " + tempLog + ": " + e.getMessage();
             throw new JournalException(msg);
+        } catch (IOException e) {
+            String msg = "Unable to write to journal log " + tempLog + ": " + e.getMessage();
+            throw new JournalException(msg);
+        }
+    }
+
+    /**
+     * Log either a lock or an unlock operation.
+     *
+     * @param nodeId node id
+     * @param isLock <code>true</code> if this is a lock;
+     *               <code>false</code> if this is an unlock
+     * @param isDeep flag indicating whether lock is deep
+     * @param owner lock owner
+     */
+    protected void log(NodeId nodeId, boolean isLock, boolean isDeep, String owner)
+            throws JournalException {
+
+        try {
+            out.writeChar('L');
+            out.writeNodeId(nodeId);
+            out.writeBoolean(isLock);
+            if (isLock) {
+                out.writeBoolean(isDeep);
+                out.writeString(owner);
+            }
         } catch (IOException e) {
             String msg = "Unable to write to journal log " + tempLog + ": " + e.getMessage();
             throw new JournalException(msg);

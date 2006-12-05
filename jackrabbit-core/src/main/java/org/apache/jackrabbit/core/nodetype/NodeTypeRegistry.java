@@ -22,6 +22,8 @@ import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.cluster.NodeTypeEventChannel;
+import org.apache.jackrabbit.core.cluster.NodeTypeEventListener;
 import org.apache.jackrabbit.name.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +51,7 @@ import java.util.Stack;
 /**
  * A <code>NodeTypeRegistry</code> ...
  */
-public class NodeTypeRegistry implements Dumpable {
+public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
 
     private static Logger log = LoggerFactory.getLogger(NodeTypeRegistry.class);
 
@@ -96,6 +98,11 @@ public class NodeTypeRegistry implements Dumpable {
      */
     private final Map listeners =
             Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
+
+    /**
+     * Node type event channel.
+     */
+    private NodeTypeEventChannel eventChannel;
 
     /**
      * Create a new <code>NodeTypeRegistry</codes>
@@ -168,6 +175,12 @@ public class NodeTypeRegistry implements Dumpable {
         customNTDefs.add(ntd);
         persistCustomNodeTypeDefs(customNTDefs);
 
+        if (eventChannel != null) {
+            HashSet ntDefs = new HashSet();
+            ntDefs.add(ntd);
+            eventChannel.registered(ntDefs);
+        }
+
         // notify listeners
         notifyRegistered(ntd.getName());
 
@@ -196,6 +209,12 @@ public class NodeTypeRegistry implements Dumpable {
             customNTDefs.add(ntDef);
         }
         persistCustomNodeTypeDefs(customNTDefs);
+
+        // inform cluster
+        if (eventChannel != null) {
+            eventChannel.registered(ntDefs);
+        }
+
         // notify listeners
         for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
             NodeTypeDef ntDef = (NodeTypeDef) iter.next();
@@ -574,6 +593,29 @@ public class NodeTypeRegistry implements Dumpable {
         entCache.dump(ps);
     }
 
+    //------------------------------------------------< NodeTypeEventListener >
+
+    /**
+     * {@inheritDoc}
+     */
+    public void externalRegistered(Collection ntDefs)
+            throws RepositoryException, InvalidNodeTypeDefException {
+
+        // validate and register new node type definitions
+        internalRegister(ntDefs);
+        // persist new node type definitions
+        for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
+            NodeTypeDef ntDef = (NodeTypeDef) iter.next();
+            customNTDefs.add(ntDef);
+        }
+        persistCustomNodeTypeDefs(customNTDefs);
+        // notify listeners
+        for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
+            NodeTypeDef ntDef = (NodeTypeDef) iter.next();
+            notifyRegistered(ntDef.getName());
+        }
+    }
+
     //---------------------------------------------------------< overridables >
     /**
      * Protected constructor
@@ -851,6 +893,17 @@ public class NodeTypeRegistry implements Dumpable {
     public NodeDef getRootNodeDef() {
         return rootNodeDef;
     }
+
+    /**
+     * Set an event channel to inform about changes.
+     *
+     * @param eventChannel event channel
+     */
+    public void setEventChannel(NodeTypeEventChannel eventChannel) {
+        this.eventChannel = eventChannel;
+        eventChannel.setListener(this);
+    }
+
 
     /**
      * @param ntName
