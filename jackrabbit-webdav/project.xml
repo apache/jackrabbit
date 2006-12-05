@@ -24,7 +24,7 @@
     <artifactId>jackrabbit-webdav</artifactId>
     
     <name>Jackrabbit Webdav Library</name>
-    <currentVersion>1.1-SNAPSHOT</currentVersion>
+    <currentVersion>1.2-SNAPSHOT</currentVersion>
     <inceptionYear>2005</inceptionYear>
     <package>org.apache.jackrabbit.webdav.*</package>
     
