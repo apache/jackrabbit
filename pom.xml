@@ -84,10 +84,33 @@
           </execution>
         </executions>
       </plugin>
-      <!-- JCR-661: Plugin dependencies are inherited -->
       <plugin>
+        <inherited>true</inherited>
         <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <!-- Include the project metadata files in META-INF -->
+          <execution>
+            <id>add-project-files</id>
+            <phase>process-resources</phase>
+            <configuration>
+              <tasks>
+                <echo message="foo"/>
+                <copy todir="${project.build.outputDirectory}/META-INF">
+                  <fileset dir="${basedir}">
+                    <include name="README.txt"/>
+                    <include name="NOTICE.txt"/>
+                    <include name="LICENSE.txt"/>
+                  </fileset>
+                </copy>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
         <dependencies>
+          <!-- JCR-661: Plugin dependencies are inherited -->
           <dependency>
             <groupId>sun</groupId>
             <artifactId>tools</artifactId>
