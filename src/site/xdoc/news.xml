@@ -27,6 +27,21 @@
       </p>
       <subsection name="News in 2006">
         <dl>
+          <dt><strong>December 4, 2006: Apache Jackrabbit 1.1.1 released</strong></dt>
+          <dd>
+            From the release notes: "<em>Apache Jackrabbit 1.1.1 is a patch
+            release that fixes a number of issues, see the included change
+            history for details. No new features or configuration changes have
+            been introduced since the 1.1 release.</em>"
+          </dd>
+          <dt><strong>October 12, 2006: Apache Jackrabbit 1.1 released</strong></dt>
+          <dd>
+            From the release notes: "<em>Apache Jackrabbit 1.1 is an
+            incremental release that fixes a number of issues and introduces
+            some new features. The most notable changes in this release
+            include the removal of the Apache Xerces dependency and an
+            improved item state cache.</em>"
+          </dd>
           <dt><strong>June 2, 2006: Apache Jackrabbit 1.0.1 released</strong></dt>
           <dd>
             From the release notes: "<em>Apache Jackrabbit 1.0.1 is a patch

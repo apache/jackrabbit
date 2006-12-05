@@ -47,6 +47,14 @@
       </p>
       <subsection name="Apache Jackrabbit News">
         <dl>
+          <dt><strong>December 4, 2006: Apache Jackrabbit 1.1.1 released</strong></dt>
+          <dd>
+            From the release notes: "<em>Apache Jackrabbit 1.1.1 is a patch
+            release that fixes a number of issues, see the included change
+            history for details. No new features or configuration changes have
+            been introduced since the 1.1 release.</em>"
+            See the <a href="downloads.cgi">downloads page</a> for more details.
+          </dd>
           <dt><strong>October 12, 2006: Apache Jackrabbit 1.1 released</strong></dt>
           <dd>
             From the release notes: "<em>Apache Jackrabbit 1.1 is an
@@ -54,7 +62,6 @@
             some new features. The most notable changes in this release
             include the removal of the Apache Xerces dependency and an
             improved item state cache.</em>"
-            See the <a href="downloads.cgi">downloads page</a> for more details.
           </dd>
           <dt><strong>June 2, 2006: Apache Jackrabbit 1.0.1 released</strong></dt>
           <dd>
@@ -62,15 +69,6 @@
             release that fixes a number of issues, see the included change
             history for details. No new features or configuration changes have
             been introduced since the 1.0 release.</em>"
-          </dd>
-          <dt><strong>April 8, 2006: Apache Jackrabbit 1.0 released</strong></dt>
-          <dd>
-            From the release notes: "<em>Apache Jackrabbit 1.0 is a fully
-            conforming and stable JSR-170 implementation. Developed from
-            the same source tree as the JSR-170 reference implementation,
-            the 1.0 release implements the full JCR API, including level 1,
-            level 2, and all the optional features like versioning,
-            transactions, and observation.</em>"
           </dd>
         </dl>
         <p>
