@@ -530,6 +530,7 @@ public interface RepositoryService {
      * the corresponding {@link javax.jcr.Repository#OPTION_OBSERVATION_SUPPORTED repository descriptor}
      * does not return 'true'.
      *
+     * @param sessionInfo the session info which requests an event filter.
      * @param eventTypes A combination of one or more event type constants
      * encoded as a bitmask.
      * @param absPath An absolute path.
@@ -540,12 +541,15 @@ public interface RepositoryService {
      * @return the event filter instance with the given parameters.
      * @throws UnsupportedRepositoryOperationException if this SPI implementation
      * does not allow to create event filters.
+     * @throws RepositoryException if an error occurs while creating the
+     * EventFilter.
      * @see javax.jcr.observation.ObservationManager#addEventListener(javax.jcr.observation.EventListener, int, String, boolean, String[], String[], boolean)
      */
-    public EventFilter createEventFilter(int eventTypes, Path absPath,
-                                         boolean isDeep, String[] uuid,
-                                         QName[] nodeTypeName, boolean noLocal)
-            throws UnsupportedRepositoryOperationException;
+    public EventFilter createEventFilter(SessionInfo sessionInfo, int eventTypes,
+                                         Path absPath, boolean isDeep,
+                                         String[] uuid, QName[] nodeTypeName,
+                                         boolean noLocal)
+            throws UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
      * Retrieves the external events that occurred since the last call to this

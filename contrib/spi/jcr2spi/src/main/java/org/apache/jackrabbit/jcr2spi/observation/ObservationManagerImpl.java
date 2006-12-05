@@ -127,8 +127,8 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
             }
         }
 
+        EventFilter filter = wspManager.createEventFilter(eventTypes, path, isDeep, uuids, nodeTypeQNames, noLocal);
         synchronized (subscriptions) {
-            EventFilter filter = wspManager.createEventFilter(eventTypes, path, isDeep, uuids, nodeTypeQNames, noLocal);
             subscriptions.put(listener, filter);
             readOnlySubscriptions = null;
         }

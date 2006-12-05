@@ -38,6 +38,8 @@ public class SessionInfoImpl implements SessionInfo {
 
     private String lastEventBundleId;
 
+    private String lastBatchId;
+
     /**
      * The subscriptionId if this session info is subscribed to observation
      * events.
@@ -125,5 +127,24 @@ public class SessionInfoImpl implements SessionInfo {
         String old = this.subscriptionId;
         this.subscriptionId = subscriptionId;
         return old;
+    }
+
+    /**
+     * Returns the id of the most recently submitted batch or <code>null</code>
+     * it no batch has been submitted yet.
+     *
+     * @return the batch id of the most recently submitted batch.
+     */
+    String getLastBatchId() {
+        return lastBatchId;
+    }
+
+    /**
+     * Sets the id of the most recently submitted batch.
+     *
+     * @param batchId the batch id.
+     */
+    void setLastBatchId(String batchId) {
+        this.lastBatchId = batchId;
     }
 }
