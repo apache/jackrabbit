@@ -622,20 +622,16 @@ final class ChildNodeEntries implements Collection {
         }
 
         if (listOrLinkNode instanceof List) {
-            // has same name sibling
-            for (Iterator it = ((List) listOrLinkNode).iterator(); it.hasNext();) {
-                LinkedEntries.LinkNode n = (LinkedEntries.LinkNode) it.next();
-                ChildNodeEntry cne = n.getChildNodeEntry();
-                if (cne.getIndex() == index) {
-                    return n;
-                }
+            // has same name sibling -> check if list size matches
+            int listIndex = index - 1;
+            List lnList = (List) listOrLinkNode;
+            if (listIndex < lnList.size()) {
+                return (LinkedEntries.LinkNode) lnList.get(listIndex);
             }
-        } else {
-            // single child node with this name
-            ChildNodeEntry cne = ((LinkedEntries.LinkNode) listOrLinkNode).getChildNodeEntry();
-            if (cne.getIndex() == index) {
-                return (LinkedEntries.LinkNode) listOrLinkNode;
-            }
+        } else if (index == Path.INDEX_DEFAULT) {
+            // single child node with this name -> matches is requested index
+            // equals to the default index.
+            return (LinkedEntries.LinkNode) listOrLinkNode;
         }
 
         // no matching entry
