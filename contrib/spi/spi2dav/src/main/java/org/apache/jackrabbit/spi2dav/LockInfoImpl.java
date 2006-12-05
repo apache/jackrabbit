@@ -37,7 +37,6 @@ public class LockInfoImpl implements LockInfo {
 
     private static Logger log = LoggerFactory.getLogger(LockInfoImpl.class);
 
-    private final NodeId nodeId;
     private ActiveLock activeLock;
 
     public LockInfoImpl(LockDiscovery ld, NodeId nodeId) throws LockException, RepositoryException {
@@ -58,11 +57,6 @@ public class LockInfoImpl implements LockInfo {
         if (activeLock == null) {
             throw new LockException("No lock present on node " + nodeId);
         }
-        this.nodeId = nodeId;
-    }
-
-    public NodeId getNodeId() {
-        return nodeId;
     }
 
     public String getLockToken() {

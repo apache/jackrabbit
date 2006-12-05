@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.Iterator;
@@ -110,11 +111,11 @@ public class ChangeLog {
 
     /**
      * Call this method when this change log has been sucessfully persisted.
-     * This implementation will call {@link ItemState#persisted(ChangeLog)
+     * This implementation will call {@link ItemState#persisted(ChangeLog, CacheBehaviour)
      * ItemState.refresh(this)} on the target item of this change log.
      */
-    public void persisted() {
-        target.persisted(this);
+    public void persisted(CacheBehaviour cacheBehaviour) {
+        target.persisted(this, cacheBehaviour);
     }
 
     //----------------------< Retrieve information present in the ChangeLog >---

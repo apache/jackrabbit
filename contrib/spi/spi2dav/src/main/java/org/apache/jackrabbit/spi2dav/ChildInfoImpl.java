@@ -14,18 +14,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi;
+package org.apache.jackrabbit.spi2dav;
+
+import org.apache.jackrabbit.spi.ChildInfo;
+import org.apache.jackrabbit.name.QName;
 
 /**
- * <code>LockInfo</code>...
+ * <code>ChildInfoImpl</code>...
  */
-public interface LockInfo {
+class ChildInfoImpl implements ChildInfo {
 
-    public String getLockToken();
+    private final QName qName;
+    private final int index;
+    private final String uuid;
 
-    public String getOwner();
+    ChildInfoImpl(QName qName, int index, String uuid) {
+        this.qName = qName;
+        this.index = index;
+        this.uuid = uuid;
+    }
 
-    public boolean isDeep();
+    /**
+     * @see ChildInfo#getName()
+     */
+    public QName getName() {
+        return qName;
+    }
 
-    public boolean isSessionScoped();
+    /**
+     * @see ChildInfo#getUUID()
+     */
+    public String getUUID() {
+        return this.uuid;
+    }
+
+    /**
+     * @see ChildInfo#getIndex()
+     */
+    public int getIndex() {
+        return index;
+    }
 }

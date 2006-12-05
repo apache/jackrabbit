@@ -119,6 +119,7 @@ import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.Event;
+import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.ValueFormat;
@@ -167,7 +168,6 @@ import java.io.IOException;
  * <code>RepositoryServiceImpl</code>...
  */
 // TODO: encapsulate URI building, escaping, unescaping...
-// TODO: cache info objects
 // TODO: TO-BE-FIXED. caches don't get adjusted upon removal/move of items
 public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
@@ -679,8 +679,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     childResponses.add(responses[i]);
                 }
             }
+
             if (nodeResponse == null) {
-                throw new ItemNotFoundException("Unable to retrieve the node with id " + nodeId);
+                throw new ItemNotFoundException("Unable to retrieve the node " + nodeId);
             }
 
             DavPropertySet propSet = nodeResponse.getProperties(DavServletResponse.SC_OK);
@@ -688,21 +689,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             NodeId id = uriResolver.buildNodeId(parentId, nodeResponse, sessionInfo.getWorkspaceName());
 
             NodeInfoImpl nInfo = new NodeInfoImpl(id, parentId, propSet, nsResolver);
-
-            for (Iterator it = childResponses.iterator(); it.hasNext();) {
-                MultiStatusResponse resp = (MultiStatusResponse) it.next();
-                DavPropertySet childProps = resp.getProperties(DavServletResponse.SC_OK);
-                if (childProps.contains(DavPropertyName.RESOURCETYPE) &&
-                    childProps.get(DavPropertyName.RESOURCETYPE).getValue() != null) {
-                    // any other resource type than default (empty) is represented by a node item
-                    NodeId childId = uriResolver.buildNodeId(id, resp, sessionInfo.getWorkspaceName());
-                    nInfo.addChildId(childId);
-                } else {
-                    PropertyId childId = uriResolver.buildPropertyId(id, resp, sessionInfo.getWorkspaceName());
-                    nInfo.addChildId(childId);
-                }
-            }
-
             if (propSet.contains(ItemResourceConstants.JCR_REFERENCES)) {
                 HrefProperty refProp = new HrefProperty(propSet.get(ItemResourceConstants.JCR_REFERENCES));
                 Iterator hrefIter = refProp.getHrefs().iterator();
@@ -712,8 +698,78 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     nInfo.addReference(propertyId);
                 }
             }
-
+            for (Iterator it = childResponses.iterator(); it.hasNext();) {
+                MultiStatusResponse resp = (MultiStatusResponse) it.next();
+                DavPropertySet childProps = resp.getProperties(DavServletResponse.SC_OK);
+                if (childProps.contains(DavPropertyName.RESOURCETYPE) &&
+                    childProps.get(DavPropertyName.RESOURCETYPE).getValue() != null) {
+                    // any other resource type than default (empty) is represented by a node item
+                    // --> ignore
+                } else {
+                    PropertyId childId = uriResolver.buildPropertyId(nInfo.getId(), resp, sessionInfo.getWorkspaceName());
+                    nInfo.addPropertyId(childId);
+                }
+            }
             return nInfo;
+        } catch (IOException e) {
+            throw new RepositoryException(e);
+        } catch (DavException e) {
+            throw ExceptionConverter.generate(e);
+        } finally {
+            if (method != null) {
+                method.releaseConnection();
+            }
+        }
+    }
+
+    /**
+     * @see RepositoryService#getChildInfos(SessionInfo, NodeId)
+     */
+    public Collection getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws ItemNotFoundException, RepositoryException {
+        // set of properties to be retrieved
+        DavPropertyNameSet nameSet = new DavPropertyNameSet();
+        nameSet.add(ItemResourceConstants.JCR_NAME);
+        nameSet.add(ItemResourceConstants.JCR_INDEX);
+        nameSet.add(ItemResourceConstants.JCR_PARENT);
+        nameSet.add(ItemResourceConstants.JCR_PRIMARYNODETYPE);
+        nameSet.add(ItemResourceConstants.JCR_MIXINNODETYPES);
+        nameSet.add(ItemResourceConstants.JCR_REFERENCES);
+        nameSet.add(ItemResourceConstants.JCR_UUID);
+        nameSet.add(DavPropertyName.RESOURCETYPE);
+
+        DavMethodBase method = null;
+        try {
+            String uri = getItemUri(parentId, sessionInfo);
+            method = new PropFindMethod(uri, nameSet, DEPTH_1);
+            getClient(sessionInfo).executeMethod(method);
+            method.checkSuccess();
+
+            MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();
+            if (responses.length < 1) {
+                throw new ItemNotFoundException("Unable to retrieve the node with id " + parentId);
+            } else if (responses.length == 1) {
+                // no child nodes nor properties
+                return Collections.EMPTY_LIST;
+            }
+
+            Set childEntries = new HashSet();
+            for (int i = 0; i < responses.length; i++) {
+                if (!isSameResource(uri, responses[i])) {
+                    MultiStatusResponse resp = responses[i];
+                    DavPropertySet childProps = resp.getProperties(DavServletResponse.SC_OK);
+                    if (childProps.contains(DavPropertyName.RESOURCETYPE) &&
+                        childProps.get(DavPropertyName.RESOURCETYPE).getValue() != null) {
+
+                        QName qName = uriResolver.getQName(childProps);
+                        int index = uriResolver.getIndex(childProps);
+                        String uuid = uriResolver.getUUID(childProps);
+
+                        ChildInfo childInfo = new ChildInfoImpl(qName, index, uuid);
+                        childEntries.add(childInfo);
+                    } // else: property -> ignore
+                } // else: ignore the response related to the parent
+            }
+            return childEntries;
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {

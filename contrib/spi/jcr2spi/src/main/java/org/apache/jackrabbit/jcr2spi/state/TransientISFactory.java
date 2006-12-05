@@ -182,6 +182,16 @@ final class TransientISFactory implements TransientItemStateFactory {
         return propState;
     }
 
+    public ChildNodeEntries getChildNodeEntries(NodeState nodeState) throws NoSuchItemStateException, ItemStateException {
+        if (nodeState.getStatus() == Status.NEW) {
+            return new ChildNodeEntries(nodeState);
+        } else {
+            NodeState overlayed = (NodeState) nodeState.getWorkspaceState();
+            ChildNodeEntries overlayedEntries = overlayed.isf.getChildNodeEntries(overlayed);
+            return new ChildNodeEntries(nodeState, overlayedEntries);
+        }
+    }
+
     /**
      * @inheritDoc
      * @see ItemStateFactory#setCache(ItemStateCache)

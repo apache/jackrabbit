@@ -16,10 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import org.apache.jackrabbit.jcr2spi.HierarchyManager;
-import org.apache.jackrabbit.jcr2spi.HierarchyManagerImpl;
 import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
-import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
@@ -45,7 +42,6 @@ import org.apache.jackrabbit.jcr2spi.operation.LockRelease;
 import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveVersion;
-import org.apache.jackrabbit.name.NamespaceResolver;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -104,37 +100,22 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     /**
      * Hierarchy manager
      */
-    private final HierarchyManager hierMgr;
-    private final NamespaceResolver nsResolver;
+    //private final HierarchyManager hierMgr;
+    //private final NamespaceResolver nsResolver;
     private final ItemStateValidator validator;
 
     /**
      * Creates a new <code>SessionItemStateManager</code> instance.
      *
      * @param workspaceItemStateMgr
-     * @param nsResolver
      */
     public SessionItemStateManager(UpdatableItemStateManager workspaceItemStateMgr,
                                    IdFactory idFactory,
-                                   ItemStateValidator validator,
-                                   NamespaceResolver nsResolver) {
+                                   ItemStateValidator validator) {
         this.workspaceItemStateMgr = workspaceItemStateMgr;
         this.transientStateMgr = new TransientItemStateManager(idFactory, workspaceItemStateMgr);
         this.validator = validator;
-        this.nsResolver = nsResolver;
-
-        // create hierarchy manager
-        hierMgr = new HierarchyManagerImpl(this, nsResolver);
     }
-
-    /**
-     *
-     * @return
-     */
-    public HierarchyManager getHierarchyManager() {
-        return hierMgr;
-    }
-
 
     //---------------------------------------------------< ItemStateManager >---
     /**
@@ -353,9 +334,9 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 }
             }
             if (modified) {
-                // TODO improve
-                int options = ItemStateValidator.CHECK_LOCK //| ItemStateValidator.CHECK_COLLISION
-                    | ItemStateValidator.CHECK_VERSIONING | ItemStateValidator.CHECK_CONSTRAINTS;
+                int options = ItemStateValidator.CHECK_LOCK |
+                    ItemStateValidator.CHECK_VERSIONING |
+                    ItemStateValidator.CHECK_CONSTRAINTS;
                 setPropertyStateValue(propState, newVals, PropertyType.REFERENCE, options);
             }
         }
@@ -382,12 +363,12 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         ChangeLog changeLog = new ChangeLog(itemState);
         // fail-fast test: check status of this item's state
         if (itemState.getStatus() == Status.NEW) {
-            String msg = "Cannot save an item with status NEW (" +LogUtil.safeGetJCRPath(itemState, nsResolver)+ ").";
+            String msg = "Cannot save an item with status NEW (" +itemState+ ").";
             log.debug(msg);
             throw new ItemStateException(msg);
         }
         if (throwOnStale && Status.isStale(itemState.getStatus())) {
-            String msg =  "Attempt to save an item, that has been externally modified (" +LogUtil.safeGetJCRPath(itemState, nsResolver)+ ").";
+            String msg =  "Attempt to save an item, that has been externally modified (" +itemState+ ").";
             log.debug(msg);
             throw new StaleItemStateException(msg);
         }
@@ -462,7 +443,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             | ItemStateValidator.CHECK_CONSTRAINTS);
         
         // retrieve applicable definition at the new place
-        // TODO: improve. definition has already retrieve within the checkAddNode...
         QNodeDefinition newDefinition = validator.getApplicableNodeDefinition(operation.getDestinationName(), srcState.getNodeTypeName(), destParent);
 
         // perform the move (modifying states)
@@ -539,9 +519,9 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      */
     public void visit(SetPropertyValue operation) throws ValueFormatException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         PropertyState pState = operation.getPropertyState();
-        // TODO improve
-        int options = ItemStateValidator.CHECK_LOCK //| ItemStateValidator.CHECK_COLLISION
-            | ItemStateValidator.CHECK_VERSIONING | ItemStateValidator.CHECK_CONSTRAINTS;
+        int options = ItemStateValidator.CHECK_LOCK
+            | ItemStateValidator.CHECK_VERSIONING
+            | ItemStateValidator.CHECK_CONSTRAINTS;
         setPropertyStateValue(pState, operation.getValues(), operation.getPropertyType(), options);
         transientStateMgr.addOperation(operation);
     }
@@ -655,7 +635,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         UnsupportedRepositoryOperationException, NoSuchNodeTypeException,
         ItemExistsException, VersionException {
 
-        // TODO: improve...
         // check if add node is possible. note, that the options differ if
         // the 'addNode' is called from inside a regular add-node to create
         // autocreated child nodes that my are 'protected' by their def.
@@ -713,7 +692,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             throw new RepositoryException("Cannot remove item: " + e.getMessage(), e);
         } finally {
             if (!success) {
-                // TODO: undo state modifications
+                // TODO: TOBEFIXED undo state modifications
             }
         }
     }
@@ -751,10 +730,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     private QValue[] computeSystemGeneratedPropertyValues(NodeState parent,
                                                           QPropertyDefinition def) {
         QValue[] genValues = null;
-        /**
-         * todo: need to come up with some callback mechanism for applying system generated values
-         * (e.g. using a NodeTypeInstanceHandler interface)
-         */
         String[] qDefaultValues = def.getDefaultValues();
         if (qDefaultValues != null && qDefaultValues.length > 0) {
             if (def.getRequiredType() == PropertyType.BINARY) {
@@ -767,9 +742,9 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             } else {
                genValues = QValue.create(qDefaultValues, def.getRequiredType());
             }
-        } else {
-            // some predefined nodetypes declare auto-created properties without
-            // default values
+        } else if (def.isAutoCreated()) {
+            // handle known predefined nodetypes that declare auto-created
+            // properties without default values
             QName declaringNT = def.getDeclaringNodeType();
             QName name = def.getQName();
             if (QName.MIX_REFERENCEABLE.equals(declaringNT) && QName.JCR_UUID.equals(name)) {
@@ -801,8 +776,10 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             } else if (QName.NT_VERSION.equals(declaringNT) && QName.JCR_CREATED.equals(name)) {
                 // nt:version node type defines jcr:created property
                 genValues = new QValue[]{QValue.create(Calendar.getInstance())};
+            } else {
+                // TODO: TOBEFIXED. other nodetype -> build some default value
+                log.warn("Missing implementation. Nodetype " + def.getDeclaringNodeType() + " defines autocreated property " + def.getQName() + " without default value.");
             }
-            // TODO: defaults???
         }
         return genValues;
     }

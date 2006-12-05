@@ -1319,7 +1319,7 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             List cne = getNodeState().getChildNodeEntries(nodeName);
             if (definition.allowsSameNameSiblings()) {
-                // TODO: find proper solution. problem with same-name-siblings
+                // TODO: find proper solution. problem with SNSs
                 childState = ((ChildNodeEntry)cne.get(cne.size()-1)).getNodeState();
             } else {
                 childState = ((ChildNodeEntry)cne.get(0)).getNodeState();

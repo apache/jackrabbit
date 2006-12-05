@@ -80,6 +80,12 @@ public interface ItemStateFactory {
 
 
     /**
+     *
+     * @param nodeState
+     */
+    public ChildNodeEntries getChildNodeEntries(NodeState nodeState) throws NoSuchItemStateException, ItemStateException;
+
+    /**
      * Set the cache used to retrieve item states that have already been
      * built before.
      *

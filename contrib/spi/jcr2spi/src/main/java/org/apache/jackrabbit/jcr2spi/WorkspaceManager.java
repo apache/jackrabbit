@@ -218,8 +218,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         // TODO: JSR170 defines that a token can be present with one session only.
         //       however, we cannot find out about another session holding the lock.
         //       and neither knows the server, which session is holding a lock token.
-        // TODO: check if throwing would be more appropriate
-        throw new UnsupportedRepositoryOperationException("Session.addLockToken is not possible on the client.");
         */
     }
 
@@ -448,7 +446,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             Sync eventSignal;
             synchronized (updateMonitor) {
                 new OperationVisitorImpl(sessionInfo).execute(changes);
-                changes.persisted();
+                changes.persisted(cacheBehaviour);
                 eventSignal = getEventPollingRequest();
             }
             try {
@@ -459,7 +457,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             }
         } else {
             new OperationVisitorImpl(sessionInfo).execute(changes);
-            changes.persisted();
+            changes.persisted(cacheBehaviour);
         }
     }
 

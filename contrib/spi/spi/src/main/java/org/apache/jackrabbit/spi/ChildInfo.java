@@ -16,16 +16,16 @@
  */
 package org.apache.jackrabbit.spi;
 
+import org.apache.jackrabbit.name.QName;
+
 /**
- * <code>LockInfo</code>...
+ * <code>ChildInfo</code>...
  */
-public interface LockInfo {
+public interface ChildInfo {
 
-    public String getLockToken();
+    public QName getName();
 
-    public String getOwner();
+    public String getUUID();
 
-    public boolean isDeep();
-
-    public boolean isSessionScoped();
+    public int getIndex();
 }

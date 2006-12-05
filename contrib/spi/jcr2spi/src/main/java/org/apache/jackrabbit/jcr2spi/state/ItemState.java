@@ -23,6 +23,7 @@ import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,8 +89,8 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      * @param parent
      * @param initialStatus the initial status of the item state object
      */
-    protected ItemState(NodeState parent, int initialStatus, ItemStateFactory isf, IdFactory idFactory,
-                        boolean isWorkspaceState) {
+    protected ItemState(NodeState parent, int initialStatus, ItemStateFactory isf,
+                        IdFactory idFactory, boolean isWorkspaceState) {
         switch (initialStatus) {
             case Status.EXISTING:
             case Status.NEW:
@@ -485,9 +486,9 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      * successfully submitted to the SPI..
      *
      * @param changeLog
-     * @throws IllegalStateException if this state is a 'session' state.
+     * @throws IllegalStateException if this state is a 'workspace' state.
      */
-    abstract void persisted(ChangeLog changeLog) throws IllegalStateException;
+    abstract void persisted(ChangeLog changeLog, CacheBehaviour cacheBehaviour) throws IllegalStateException;
 
     /**
      * Connect this state to some underlying overlayed state.

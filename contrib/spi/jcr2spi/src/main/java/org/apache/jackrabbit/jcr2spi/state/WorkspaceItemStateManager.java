@@ -55,7 +55,7 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
         if (cacheBehaviour == CacheBehaviour.OBSERVATION) {
             EventFilter filter = null;
             try {
-                // todo for now listen to everything
+                // TODO: improve. for now listen to everything
                 filter = wspManager.createEventFilter(Event.ALL_TYPES, Path.ROOT, true, null, null, false);
             } catch (RepositoryException e) {
                 // spi does not support observation, or another error occurred.
@@ -165,7 +165,7 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
                 if (state != null) {
                     state.refresh(event);
                 }
-                // TODO: check again. parent must be notified if mixintypes or jcr:uuid prop is changed.
+                // parent must be notified in case mixintypes or uuid is changed.
                 if (parent != null) {
                     parent.refresh(event);
                 }

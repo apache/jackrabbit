@@ -13,15 +13,10 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * <code>Status</code>...
  */
 public class Status {
-
-    private static Logger log = LoggerFactory.getLogger(Status.class);
 
     /**
      * A state once read from persistent storage has been set to invalid. This
@@ -78,7 +73,7 @@ public class Status {
      * </ul>
      *
      * @param status
-     * @return
+     * @return true if the given status is terminal.
      */
     public static boolean isTerminal(int status) {
         return status == REMOVED || status == STALE_DESTROYED;
@@ -94,7 +89,7 @@ public class Status {
      * </ul>
      *
      * @param status
-     * @return
+     * @return true if the given status indicates a valid ItemState.
      */
     public static boolean isValid(int status) {
         return status == EXISTING || status == EXISTING_MODIFIED || status == NEW;
@@ -139,7 +134,8 @@ public class Status {
      * @param oldStatus
      * @param newStatus
      * @param isWorkspaceState
-     * @return
+     * @return true if a status change from <code>oldStatus</code> to
+     * <code>newStatus</code> is allowed or if the two status are the same.
      */
     public static boolean isValidStatusChange(int oldStatus, int newStatus,
                                               boolean isWorkspaceState) {
@@ -201,7 +197,7 @@ public class Status {
                 case MODIFIED:
                     isValid = (oldStatus == EXISTING || oldStatus == INVALIDATED);
                     break;
-                    /* default:
+                /* default:
                     NEW cannot change state to NEW -> false */
             }
         }

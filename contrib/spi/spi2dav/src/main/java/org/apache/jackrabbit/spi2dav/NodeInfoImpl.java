@@ -29,7 +29,6 @@ import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.ItemId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -50,11 +49,10 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     private final QName qName;
     private final int index;
 
-    private QName primaryNodeTypeName = null;
-    private QName[] mixinNodeTypeNames = new QName[0];
-    private List references = new ArrayList();
+    private final QName primaryNodeTypeName;
+    private final QName[] mixinNodeTypeNames;
 
-    private final List nodeIds = new ArrayList();
+    private final List references = new ArrayList();
     private final List propertyIds = new ArrayList();
 
     public NodeInfoImpl(NodeId id, NodeId parentId, DavPropertySet propSet,
@@ -116,6 +114,8 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
                     mixinNodeTypeNames[i] = NameFormat.parse(jcrName, nsResolver);
                     i++;
                 }
+            } else {
+                mixinNodeTypeNames = QName.EMPTY_ARRAY;
             }
         } catch (NameException e) {
             throw new RepositoryException("Error while resolving nodetype names: " + e.getMessage());
@@ -152,10 +152,6 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
         return (PropertyId[]) references.toArray(new PropertyId[references.size()]);
     }
 
-    public IdIterator getNodeIds() {
-        return new IteratorHelper(nodeIds);
-    }
-
     public IdIterator getPropertyIds() {
         return new IteratorHelper(propertyIds);
     }
@@ -165,11 +161,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
         references.add(referenceId);
     }
 
-    void addChildId(ItemId childId) {
-        if (childId.denotesNode()) {
-           nodeIds.add(childId);
-        } else {
-           propertyIds.add(childId);
-        }
+    void addPropertyId(PropertyId childId) {
+        propertyIds.add(childId);
     }
 }

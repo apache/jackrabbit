@@ -40,6 +40,7 @@ import javax.jcr.Node;
 import javax.jcr.LoginException;
 import javax.jcr.ReferentialIntegrityException;
 import java.util.Map;
+import java.util.Collection;
 import java.io.InputStream;
 
 /**
@@ -111,8 +112,6 @@ public interface RepositoryService {
      * @see javax.jcr.Workspace#getName()
      */
     public String[] getWorkspaceNames(SessionInfo sessionInfo) throws RepositoryException;
-
-    // todo: createWorkspace required????
 
     //-----------------------------------------------------< Access Control >---
     /**
@@ -186,6 +185,18 @@ public interface RepositoryService {
      * @see javax.jcr.version.Version#getContainingHistory()
      */
     public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException;
+
+    /**
+     * Returns a collection of child node entries present on the
+     * Node represented by the given parentId.
+     *
+     * @param sessionInfo
+     * @param parentId
+     * @return
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
+     */
+    public Collection getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws ItemNotFoundException, RepositoryException;
 
     /**
      * @param sessionInfo

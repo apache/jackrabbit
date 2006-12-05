@@ -29,10 +29,10 @@ import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.value.QValue;
 import org.apache.jackrabbit.jcr2spi.nodetype.ValueConstraint;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
 import java.util.Iterator;
 
 /**
@@ -157,16 +157,16 @@ public class PropertyState extends ItemState {
         if (isWorkspaceState()) {
             // refresh from persistent storage ('keepChanges' not relevant).
             try {
-                PropertyState tmp = isf.createPropertyState(getPropertyId(), parent);
+                PropertyState tmp = isf.createPropertyState(getPropertyId(), getParent());
                 if (merge(tmp, false) || getStatus() == Status.INVALIDATED) {
                     setStatus(Status.MODIFIED);
                 }
             } catch (NoSuchItemStateException e) {
-                // TODO: make sure the property-entry is removed from the parent state
+                // TODO: improve. make sure the property-entry is removed from the parent state
                 // inform overlaying state and listeners
                 setStatus(Status.REMOVED);
             } catch (ItemStateException e) {
-                // todo rather throw? remove from parent?
+                // TODO: rather throw? remove from parent?
                 log.warn("Exception while refreshing property state: " + e);
                 log.debug("Stacktrace: ", e);
             }
@@ -218,7 +218,7 @@ public class PropertyState extends ItemState {
             // workspace state
             setStatus(Status.INVALIDATED);
         } else {
-            // todo only invalidate if existing?
+            // TODO: only invalidate if existing?
             if (getStatus() == Status.EXISTING) {
                 // set workspace state invalidated, this will in turn invalidate
                 // this (session) state as well
@@ -324,9 +324,11 @@ public class PropertyState extends ItemState {
     //----------------------------------------------------< Session - State >---
     /**
      * {@inheritDoc}
-     * @see ItemState#persisted(ChangeLog)
+     * @see ItemState#persisted(ChangeLog, CacheBehaviour)
      */
-    void persisted(ChangeLog changeLog) throws IllegalStateException {
+    void persisted(ChangeLog changeLog, CacheBehaviour cacheBehaviour)
+        throws IllegalStateException {
+        checkIsSessionState();
         for (Iterator it = changeLog.modifiedStates(); it.hasNext();) {
             ItemState modState = (ItemState) it.next();
             if (modState == this) {
