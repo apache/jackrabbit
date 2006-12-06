@@ -301,7 +301,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @throws RepositoryException
      * @see VersionHistory#removeVersion(String)
      */
-    public void removeVersion(String versionName) throws RepositoryException {
+    public void removeVersion(String versionName) throws ReferentialIntegrityException,
+        AccessDeniedException, UnsupportedRepositoryOperationException,
+        VersionException, RepositoryException {
         checkStatus();
         NodeState vState = getVersionState(versionName);
         session.getVersionManager().removeVersion(vhState, vState);
