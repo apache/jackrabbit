@@ -73,13 +73,7 @@ NOTE: This list only contains major open issues.
    call may not identify the new Node in case of same-name-siblings.
 
 
-7) Merge (problem)
-   
-   similar to 8)
-   The call defines a NodeIterator as return value.
-   
-   In addition: fallback required if Observation is not supported feature.
-   
+7) Merge >> done
 
 
 8) Transactions (work in progress)
@@ -97,11 +91,6 @@ NOTE: This list only contains major open issues.
 11) Nodetypes, Namespaces (improve)
     
     Should the SPI define means for observation of nodetype/namespace
-    changes? 
-
-
-12) LockManager currently relies on Observation in order to detect
-    if a lock gets released by someone else.
-    => that needs to be fixed.
+    changes?
 
 
