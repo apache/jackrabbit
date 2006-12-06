@@ -53,6 +53,6 @@ public interface JackrabbitWorkspace extends Workspace {
      *                               already exists or if another error occurs
      * @see #getAccessibleWorkspaceNames()
      */
-    public void createWorkspace(String workspaceName, InputSource workspaceTemplate)
+    void createWorkspace(String workspaceName, InputSource workspaceTemplate)
             throws AccessDeniedException, RepositoryException;
 }

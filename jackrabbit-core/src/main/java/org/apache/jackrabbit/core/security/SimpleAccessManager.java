@@ -18,8 +18,6 @@ package org.apache.jackrabbit.core.security;
 
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
@@ -31,8 +29,6 @@ import javax.security.auth.Subject;
  * <code>SimpleAccessManager</code> ...
  */
 public class SimpleAccessManager implements AccessManager {
-
-    private static Logger log = LoggerFactory.getLogger(SimpleAccessManager.class);
 
     /**
      * Subject whose access rights this AccessManager should reflect

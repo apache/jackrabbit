@@ -103,7 +103,7 @@ class MatchAllWeight implements Weight {
      * {@inheritDoc}
      */
     public Scorer scorer(IndexReader reader) throws IOException {
-        return new MatchAllScorer(reader, this, field);
+        return new MatchAllScorer(reader, field);
     }
 
     /**

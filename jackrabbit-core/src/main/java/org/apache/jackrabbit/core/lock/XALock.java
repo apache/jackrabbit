@@ -17,8 +17,6 @@
 package org.apache.jackrabbit.core.lock;
 
 import org.apache.jackrabbit.core.NodeImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -27,11 +25,6 @@ import javax.jcr.RepositoryException;
  * Extension to standard lock implementation that works in XA environment.
  */
 class XALock extends LockImpl {
-
-    /**
-     * Logger instance for this class.
-     */
-    private static final Logger log = LoggerFactory.getLogger(XALock.class);
 
     /**
      * XA lock manager.
