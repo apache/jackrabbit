@@ -146,7 +146,6 @@ import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.LoginException;
 import javax.jcr.ReferentialIntegrityException;
-import javax.jcr.Repository;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -411,9 +410,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         throws LoginException, NoSuchWorkspaceException, RepositoryException {
         // check if the workspace with the given name is accessible
         PropFindMethod method = null;
+        SessionInfoImpl sessionInfo = new SessionInfoImpl(credentials, workspaceName);
         try {
-            SessionInfo sessionInfo = new SessionInfoImpl(credentials, workspaceName);
-
             DavPropertyNameSet nameSet = new DavPropertyNameSet();
             nameSet.add(DeltaVConstants.WORKSPACE);
             method = new PropFindMethod(uriResolver.getWorkspaceUri(workspaceName), nameSet, DavConstants.DEPTH_0);
@@ -431,7 +429,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 if (!wspName.equals(workspaceName)) {
                     throw new LoginException("Login failed: Invalid workspace name " + workspaceName);
                 }
-                return sessionInfo;
             } else {
                 throw new LoginException("Login failed: Unknown workspace '" + workspaceName+ " '.");
             }
@@ -444,6 +441,13 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 method.releaseConnection();
             }
         }
+
+        // create a subscription on the server
+        String rootUri = uriResolver.getRootItemUri(workspaceName);
+        String subscriptionId = subscribe(rootUri, S_INFO, null, sessionInfo, null);
+        log.debug("Subscribed on server for session info " + sessionInfo);
+        sessionInfo.setSubscriptionId(subscriptionId);
+        return sessionInfo;
     }
 
     public void dispose(SessionInfo sessionInfo) throws RepositoryException {
@@ -844,12 +848,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             batchImpl.dispose();
             return;
         }
-        // make sure we have a subscription on the server before we
-        // submit the batch
-        if (((SessionInfoImpl) batchImpl.sessionInfo).getSubscriptionId() == null
-                && "true".equals(getRepositoryDescriptors().get(Repository.OPTION_OBSERVATION_SUPPORTED))) {
-            getEvents(batchImpl.sessionInfo, 0, new EventFilter[0]);
-        }        // send batched information
         try {
             HttpClient client = batchImpl.start();
             boolean success = false;
@@ -1256,14 +1254,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
         SessionInfoImpl sessionInfoImpl = (SessionInfoImpl)sessionInfo;
         String rootUri = uriResolver.getRootItemUri(sessionInfo.getWorkspaceName());
-        String subscriptionId = sessionInfoImpl.getSubscriptionId();
-        if (subscriptionId == null) {
-            subscriptionId = subscribe(rootUri, S_INFO, null, sessionInfo, null);
-            log.debug("Subscribed on server for session info " + sessionInfo);
-            sessionInfoImpl.setSubscriptionId(subscriptionId);
-        }
 
-        return poll(rootUri, subscriptionId, (SessionInfoImpl) sessionInfo);
+        return poll(rootUri, sessionInfoImpl.getSubscriptionId(), sessionInfoImpl);
         // todo timeout is not respected
     }
 
@@ -1352,7 +1344,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                             ObservationConstants.NAMESPACE);
                     // check if it matches a batch id recently submitted
                     boolean isLocal = false;
-                    if (value != null && sessionInfo instanceof SessionInfoImpl) {
+                    if (value != null) {
                         isLocal = value.equals(sessionInfo.getLastBatchId());
                     }
                     bundles.add(new EventBundleImpl(buildEventList(bundleElement, sessionInfo), isLocal));
