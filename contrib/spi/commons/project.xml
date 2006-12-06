@@ -42,6 +42,12 @@
             <version>${jackrabbit.build.version.jcr}</version>
             <url>http://jcp.org/en/jsr/detail?id=170</url>
         </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <!-- ====================================================================== -->
