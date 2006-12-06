@@ -24,7 +24,6 @@ import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.HitCollector;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Similarity;
-import org.apache.lucene.search.Weight;
 
 import java.io.IOException;
 import java.util.BitSet;
@@ -48,11 +47,6 @@ class MatchAllScorer extends Scorer {
     private IndexReader reader;
 
     /**
-     * Weight associated with this Scorer
-     */
-    private Weight weight;
-
-    /**
      * The field to match
      */
     private String field;
@@ -71,16 +65,14 @@ class MatchAllScorer extends Scorer {
      * Creates a new MatchAllScorer.
      *
      * @param reader the IndexReader
-     * @param weight associated Weight for this Scorer
      * @param field  the field name to match.
      * @throws IOException if an error occurs while collecting hits.
      *                     e.g. while reading from the search index.
      */
-    MatchAllScorer(IndexReader reader, Weight weight, String field)
+    MatchAllScorer(IndexReader reader, String field)
             throws IOException {
         super(Similarity.getDefault());
         this.reader = reader;
-        this.weight = weight;
         this.field = field;
         matchExpl
                 = new Explanation(Similarity.getDefault().idf(reader.maxDoc(),

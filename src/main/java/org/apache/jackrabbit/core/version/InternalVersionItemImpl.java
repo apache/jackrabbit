@@ -17,8 +17,6 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.state.ItemStateListener;
-import org.apache.jackrabbit.core.state.ItemState;
 
 /**
  * Implements a <code>InternalVersionItem</code>.

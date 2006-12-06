@@ -16,11 +16,8 @@
  */
 package org.apache.jackrabbit.core.cluster;
 
-import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.value.InternalValue;
 
 /**
  * Describes a journal record for a node change.

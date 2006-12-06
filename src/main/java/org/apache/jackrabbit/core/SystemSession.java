@@ -20,8 +20,6 @@ import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.SystemPrincipal;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
@@ -36,8 +34,6 @@ import java.util.Set;
  * A <code>SystemSession</code> ...
  */
 class SystemSession extends SessionImpl {
-
-    private static Logger log = LoggerFactory.getLogger(SystemSession.class);
 
     /**
      * Package private factory method
