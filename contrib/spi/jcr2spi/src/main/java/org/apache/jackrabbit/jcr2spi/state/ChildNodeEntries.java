@@ -79,12 +79,18 @@ final class ChildNodeEntries implements Collection {
     ChildNodeEntries(NodeState nodeState, ChildNodeEntries base) {
         this.nodeState = nodeState;
         for (Iterator it = base.iterator(); it.hasNext();) {
-            ChildNodeEntry cne = (ChildNodeEntry) it.next();
-            add(cne.getName(), cne.getUUID(), cne.getIndex());
+            ChildNodeEntry baseCne = (ChildNodeEntry) it.next();
+            ChildNodeEntry cne = ChildNodeReference.create(nodeState, baseCne.getName(), baseCne.getUUID(), nodeState.isf, nodeState.idFactory);
+            add(cne);
         }
     }
 
     /**
+     * Returns true, if this ChildNodeEntries contains a entry that matches
+     * the given name and either index or uuid:<br>
+     * If <code>uuid</code> is not <code>null</code> the given index is
+     * ignored since it is not required to identify a child node entry.
+     * Otherwise the given index is used.
      *
      * @param name
      * @param index
@@ -92,6 +98,46 @@ final class ChildNodeEntries implements Collection {
      * @return
      */
     boolean contains(QName name, int index, String uuid) {
+        if (uuid == null) {
+            return contains(name, index);
+        } else {
+            return contains(name, uuid);
+        }
+    }
+
+    /**
+     *
+     * @param name
+     * @param index
+     * @return
+     */
+    private boolean contains(QName name, int index) {
+        if (!nameMap.containsKey(name) || index < Path.INDEX_DEFAULT) {
+            // no matching child node entry
+            return false;
+        }
+        Object o = nameMap.get(name);
+        if (o instanceof List) {
+            // SNS
+            int listIndex = index - 1;
+            return listIndex < ((List) o).size();
+        } else {
+            // single child node with this name -> matches only if request
+            // index equals the default-index
+            return index == Path.INDEX_DEFAULT;
+        }
+    }
+
+    /**
+     *
+     * @param name
+     * @param uuid
+     * @return
+     */
+    private boolean contains(QName name, String uuid) {
+        if (uuid == null) {
+            throw new IllegalArgumentException();
+        }
         if (!nameMap.containsKey(name)) {
             // no matching child node entry
             return false;
@@ -102,25 +148,17 @@ final class ChildNodeEntries implements Collection {
             for (Iterator it = ((List) o).iterator(); it.hasNext(); ) {
                 LinkedEntries.LinkNode n = (LinkedEntries.LinkNode) it.next();
                 ChildNodeEntry cne = n.getChildNodeEntry();
-                if (uuid == null) {
-                    if (cne.getIndex() == index) {
-                        return true;
-                    }
-                } else if (uuid.equals(cne.getUUID())) {
+                if (uuid.equals(cne.getUUID())) {
                     return true;
                 }
             }
-            // no matching entry found
-            return false;
         } else {
             // single child node with this name
             ChildNodeEntry cne = ((LinkedEntries.LinkNode) o).getChildNodeEntry();
-            if (uuid == null) {
-                return cne.getUUID() == null;
-            } else {
-                return uuid.equals(cne.getUUID());
-            }
+            return uuid.equals(cne.getUUID());
         }
+        // no matching entry found
+        return false;
     }
 
     /**
