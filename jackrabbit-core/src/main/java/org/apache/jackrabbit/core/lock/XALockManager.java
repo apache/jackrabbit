@@ -25,7 +25,6 @@ import org.apache.jackrabbit.name.Path;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 
@@ -42,11 +41,6 @@ public class XALockManager implements LockManager, InternalXAResource {
     private static final String XA_ENV_ATTRIBUTE_NAME = "XALockManager.XAEnv";
 
     /**
-     * Parent session.
-     */
-    private final SessionImpl session;
-
-    /**
      * Global lock manager.
      */
     private final LockManagerImpl lockMgr;
@@ -58,11 +52,9 @@ public class XALockManager implements LockManager, InternalXAResource {
 
     /**
      * Create a new instance of this class.
-     * @param session session
      * @param lockMgr lockMgr global lock manager
      */
-    public XALockManager(SessionImpl session, LockManagerImpl lockMgr) {
-        this.session = session;
+    public XALockManager(LockManagerImpl lockMgr) {
         this.lockMgr = lockMgr;
     }
 
@@ -210,7 +202,7 @@ public class XALockManager implements LockManager, InternalXAResource {
         if (tx != null) {
             xaEnv = (XAEnvironment) tx.getAttribute(XA_ENV_ATTRIBUTE_NAME);
             if (xaEnv == null) {
-                xaEnv = new XAEnvironment(session, lockMgr);
+                xaEnv = new XAEnvironment(lockMgr);
                 tx.setAttribute(XA_ENV_ATTRIBUTE_NAME, xaEnv);
             }
         }

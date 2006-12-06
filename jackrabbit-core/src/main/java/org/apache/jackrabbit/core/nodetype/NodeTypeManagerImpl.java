@@ -31,8 +31,6 @@ import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
 import org.apache.jackrabbit.core.nodetype.compact.ParseException;
 import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
 import org.apache.jackrabbit.core.util.Dumpable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -64,11 +62,6 @@ import java.util.Set;
  */
 public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
         Dumpable, NodeTypeRegistryListener {
-
-    /**
-     * Logger instance for this class
-     */
-    private static Logger log = LoggerFactory.getLogger(NodeTypeManagerImpl.class);
 
     /**
      * The wrapped node type registry.

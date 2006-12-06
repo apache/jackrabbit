@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.core.security;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
 import javax.security.auth.Subject;
@@ -36,8 +33,6 @@ import java.util.Set;
  * A <code>SimpleLoginModule</code> ...
  */
 public class SimpleLoginModule implements LoginModule {
-
-    private static Logger log = LoggerFactory.getLogger(SimpleLoginModule.class);
 
     /**
      * Name of the anonymous user id option in the LoginModule configuration
@@ -57,8 +52,6 @@ public class SimpleLoginModule implements LoginModule {
     // initial state
     private Subject subject;
     private CallbackHandler callbackHandler;
-    private Map sharedState;
-    private Map options;
 
     // configurable options
     //private boolean someOpt = false;
@@ -128,8 +121,6 @@ public class SimpleLoginModule implements LoginModule {
                            Map sharedState, Map options) {
         this.subject = subject;
         this.callbackHandler = callbackHandler;
-        this.sharedState = sharedState;
-        this.options = options;
 
         // initialize any configured options
         //someOpt = "true".equalsIgnoreCase((String)options.get("someOpt"));

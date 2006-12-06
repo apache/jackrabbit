@@ -167,7 +167,7 @@ public class XASessionImpl extends SessionImpl
     public LockManager getLockManager() throws RepositoryException {
         if (lockMgr == null) {
             LockManagerImpl lockMgr = (LockManagerImpl) wsp.getLockManager();
-            this.lockMgr = new XALockManager(this, lockMgr);
+            this.lockMgr = new XALockManager(lockMgr);
         }
         return lockMgr;
     }

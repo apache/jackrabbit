@@ -47,11 +47,6 @@ class XAEnvironment {
     private final LockManagerImpl lockMgr;
 
     /**
-     * Session owning this environment.
-     */
-    private final SessionImpl session;
-
-    /**
      * Map of locked nodes, indexed by their (internal) id.
      */
     private final Map lockedNodesMap = new HashMap();
@@ -80,8 +75,7 @@ class XAEnvironment {
      * Create a new instance of this class.
      * @param lockMgr global lock manager
      */
-    public XAEnvironment(SessionImpl session, LockManagerImpl lockMgr) {
-        this.session = session;
+    public XAEnvironment(LockManagerImpl lockMgr) {
         this.lockMgr = lockMgr;
     }
 

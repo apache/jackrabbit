@@ -73,7 +73,7 @@ public interface JackrabbitNodeTypeManager extends NodeTypeManager {
         throws IOException, RepositoryException;
 
     /**
-     * Checks if a node type with the given name is registered. 
+     * Checks if a node type with the given name is registered.
      *
      * @param name node type name
      * @return <code>true</code> if the named node type is registered

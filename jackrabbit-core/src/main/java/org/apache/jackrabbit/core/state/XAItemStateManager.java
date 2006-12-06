@@ -25,8 +25,6 @@ import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.uuid.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.PropertyType;
@@ -41,11 +39,6 @@ import java.util.Collections;
  * is itself committed.
  */
 public class XAItemStateManager extends LocalItemStateManager implements InternalXAResource {
-
-    /**
-     * Logger instance.
-     */
-    private static Logger log = LoggerFactory.getLogger(XAItemStateManager.class);
 
     /**
      * Default change log attribute name.
