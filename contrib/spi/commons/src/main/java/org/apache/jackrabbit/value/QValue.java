@@ -79,7 +79,10 @@ public class QValue {
      * @return
      */
     public static QValue create(String value) {
-        return new QValue(value);
+        if (value == null) {
+            throw new IllegalArgumentException("Cannot create QValue from null value.");
+        }
+        return new QValue(value, PropertyType.STRING);
     }
 
     /**
@@ -89,7 +92,7 @@ public class QValue {
     public static QValue[] create(String[] values) {
         QValue[] ret = new QValue[values.length];
         for (int i = 0; i < values.length; i++) {
-            ret[i] = new QValue(values[i]);
+            ret[i] = create(values[i]);
         }
         return ret;
     }
@@ -113,13 +116,13 @@ public class QValue {
                 return new QValue(Long.valueOf(value).longValue());
             case PropertyType.REFERENCE:
                 // NOTE: references are not forced to represent a UUID object
-                return new QValue(value, true);
+                return new QValue(value, PropertyType.REFERENCE);
             case PropertyType.PATH:
                 return new QValue(Path.valueOf(value));
             case PropertyType.NAME:
                 return new QValue(QName.valueOf(value));
             case PropertyType.STRING:
-                return new QValue(value);
+                return new QValue(value, PropertyType.STRING);
             case PropertyType.BINARY:
                 throw new IllegalArgumentException("this method does not support the type PropertyType.BINARY");
             default:
@@ -160,7 +163,7 @@ public class QValue {
      * @return
      */
     public static QValue create(Calendar value) {
-        return new QValue(value);
+        return new QValue(ISO8601.format(value), PropertyType.DATE);
     }
 
     /**
@@ -176,6 +179,9 @@ public class QValue {
      * @return
      */
     public static QValue create(byte[] value) {
+        if (value == null) {
+            throw new IllegalArgumentException("Cannot create QValue from null value.");
+        }
         return new QValue(new BLOBFileValue(value));
     }
 
@@ -185,6 +191,9 @@ public class QValue {
      * @throws IOException
      */
     public static QValue create(InputStream value) throws IOException {
+        if (value == null) {
+            throw new IllegalArgumentException("Cannot create QValue from null value.");
+        }
         return new QValue(new BLOBFileValue(value));
     }
 
@@ -201,7 +210,7 @@ public class QValue {
         switch (type) {
             case PropertyType.BINARY:
                 return new QValue(new BLOBFileValue(value));
-            
+
             case PropertyType.BOOLEAN:
             case PropertyType.DATE:
             case PropertyType.DOUBLE:
@@ -253,6 +262,9 @@ public class QValue {
      * @throws IOException
      */
     public static QValue create(InputStream value, boolean temp) throws IOException {
+        if (value == null) {
+            throw new IllegalArgumentException("Cannot create QValue from null value.");
+        }
         return new QValue(new BLOBFileValue(value, temp));
     }
 
@@ -262,6 +274,9 @@ public class QValue {
      * @throws IOException
      */
     public static QValue create(File value) throws IOException {
+        if (value == null) {
+            throw new IllegalArgumentException("Cannot create QValue from null value.");
+        }
         return new QValue(new BLOBFileValue(value));
     }
 
@@ -270,6 +285,9 @@ public class QValue {
      * @return
      */
     public static QValue create(QName value) {
+        if (value == null) {
+            throw new IllegalArgumentException("Cannot create QValue from null value.");
+        }
         return new QValue(value);
     }
 
@@ -280,7 +298,7 @@ public class QValue {
     public static QValue[] create(QName[] values) {
         QValue[] ret = new QValue[values.length];
         for (int i = 0; i < values.length; i++) {
-            ret[i] = new QValue(values[i]);
+            ret[i] = create(values[i]);
         }
         return ret;
     }
@@ -290,6 +308,9 @@ public class QValue {
      * @return
      */
     public static QValue create(Path value) {
+        if (value == null) {
+            throw new IllegalArgumentException("Cannot create QValue from null value.");
+        }
         return new QValue(value);
     }
 
@@ -298,6 +319,9 @@ public class QValue {
      * @return
      */
     public static QValue create(UUID value) {
+        if (value == null) {
+            throw new IllegalArgumentException("Cannot create QValue from null value.");
+        }
         return new QValue(value);
     }
 
@@ -314,9 +338,7 @@ public class QValue {
      * @return
      */
     public String getString() throws RepositoryException {
-        if (type == PropertyType.DATE) {
-            return ISO8601.format((Calendar) val);
-        } else if (type == PropertyType.BINARY) {
+        if (type == PropertyType.BINARY) {
             return ((BLOBFileValue) val).getString();
         } else {
             return val.toString();
@@ -392,19 +414,19 @@ public class QValue {
             case PropertyType.BOOLEAN:
                 return new QValue(((Boolean) val).booleanValue());
             case PropertyType.DATE:
-                return new QValue((Calendar) val);
+                return new QValue((String) val, PropertyType.DATE);
             case PropertyType.DOUBLE:
                 return new QValue(((Double) val).doubleValue());
             case PropertyType.LONG:
                 return new QValue(((Long) val).longValue());
             case PropertyType.REFERENCE:
-                return new QValue((String) val, true);
+                return new QValue((String) val, PropertyType.REFERENCE);
             case PropertyType.PATH:
                 return new QValue((Path) val);
             case PropertyType.NAME:
                 return new QValue((QName) val);
             case PropertyType.STRING:
-                return new QValue((String) val);
+                return new QValue((String) val, PropertyType.STRING);
             default:
                 throw new RepositoryException("Illegal internal value type");
         }
@@ -418,11 +440,7 @@ public class QValue {
      * @return string representation of this internal value
      */
     public String toString() {
-        if (type == PropertyType.DATE) {
-            return ISO8601.format((Calendar) val);
-        } else {
-            return val.toString();
-        }
+        return val.toString();
     }
 
     /**
@@ -437,7 +455,7 @@ public class QValue {
         }
         if (obj instanceof QValue) {
             QValue other = (QValue) obj;
-            return val.equals(other.val);
+            return val.equals(other.val) && type == other.type;
         }
         return false;
     }
@@ -450,15 +468,10 @@ public class QValue {
         return val.hashCode();
     }
 
-    //-------------------------------------------------------< implementation >
-    private QValue(String value) {
+    //-----------------------------------------------------< implementation >---
+    private QValue(String value, int type) {
         val = value;
-        type = PropertyType.STRING;
-    }
-
-    private QValue(String value, boolean isReference) {
-        val = value;
-        type = (isReference) ? PropertyType.REFERENCE : PropertyType.STRING;
+        this.type = type;
     }
 
     private QValue(QName value) {
@@ -477,7 +490,7 @@ public class QValue {
     }
 
     private QValue(Calendar value) {
-        val = value;
+        val = ISO8601.format(value);
         type = PropertyType.DATE;
     }
 
@@ -498,7 +511,7 @@ public class QValue {
 
     private QValue(UUID value) {
         // NOTE: reference value must not represent a UUID object
-        val = (value == null) ? null : value.toString();
+        val = value.toString();
         type = PropertyType.REFERENCE;
     }
 
@@ -679,9 +692,6 @@ public class QValue {
          * Frees temporarily allocated resources such as temporary file, buffer, etc.
          * If this <code>BLOBFileValue</code> is backed by a persistent resource
          * calling this method will have no effect.
-         *
-         * @see #delete()
-         * @see #delete(boolean)
          */
         private void discard() {
             if (!temp) {
@@ -693,29 +703,6 @@ public class QValue {
                 // this instance is backed by a temp file
                 file.delete();
             } else if (buffer != null) {
-                // this instance is backed by an in-memory buffer
-                buffer = EMPTY_BYTE_ARRAY;
-            }
-        }
-
-        /**
-         * Deletes the persistent resource backing this <code>BLOBFileValue</code>.
-         *
-         * @param pruneEmptyParentDirs if <code>true</code>, empty parent directories
-         *                             will automatically be deleted
-         */
-        private void delete(boolean pruneEmptyParentDirs) {
-            if (file != null) {
-                // this instance is backed by a 'real' file
-                file.delete();
-                if (pruneEmptyParentDirs) {
-                    // prune empty parent directories
-                    File parent = file.getParentFile();
-                    while (parent != null && parent.delete()) {
-                        parent = parent.getParentFile();
-                    }
-                }
-            } else {
                 // this instance is backed by an in-memory buffer
                 buffer = EMPTY_BYTE_ARRAY;
             }
