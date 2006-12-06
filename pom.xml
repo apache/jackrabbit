@@ -84,44 +84,102 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <inherited>true</inherited>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <executions>
-          <!-- Include the project metadata files in META-INF -->
-          <execution>
-            <id>add-project-files</id>
-            <phase>process-resources</phase>
-            <configuration>
-              <tasks>
-                <echo message="foo"/>
-                <copy todir="${project.build.outputDirectory}/META-INF">
-                  <fileset dir="${basedir}">
-                    <include name="README.txt"/>
-                    <include name="NOTICE.txt"/>
-                    <include name="LICENSE.txt"/>
-                  </fileset>
-                </copy>
-              </tasks>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-        </executions>
-        <dependencies>
-          <!-- JCR-661: Plugin dependencies are inherited -->
-          <dependency>
-            <groupId>sun</groupId>
-            <artifactId>tools</artifactId>
-            <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${java.home}/../lib/tools.jar</systemPath>
-          </dependency>
-        </dependencies>
-      </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <!-- JCR-661: The antrun tools.jar dependency is not needed on macs -->
+    <profile>
+      <id>non-mac</id>
+      <activation>
+        <os>
+          <family>!mac</family>
+        </os>
+      </activation>
+      <!-- NOTE: If you modify the <build> section below, you MUST also -->
+      <!-- update the version specified below for the "mac" profile.    -->
+      <!-- The only difference between the profiles should be the       -->
+      <!-- <dependencies> section.                                      -->
+      <build>
+        <plugins>
+          <plugin>
+            <inherited>true</inherited>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <!-- Include the project metadata files in META-INF -->
+              <execution>
+                <id>add-project-files</id>
+                <phase>process-resources</phase>
+                <configuration>
+                  <tasks>
+                    <copy todir="${project.build.outputDirectory}/META-INF">
+                      <fileset dir="${basedir}">
+                        <include name="README.txt"/>
+                        <include name="NOTICE.txt"/>
+                        <include name="LICENSE.txt"/>
+                      </fileset>
+                    </copy>
+                  </tasks>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+            <dependencies>
+              <!-- JCR-661: Plugin dependencies are inherited -->
+              <dependency>
+                <groupId>sun</groupId>
+                <artifactId>tools</artifactId>
+                <version>1.0</version>
+                <scope>system</scope>
+                <systemPath>${java.home}/../lib/tools.jar</systemPath>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>mac</id>
+      <activation>
+        <os>
+          <family>mac</family>
+        </os>
+      </activation>
+      <!-- NOTE: The <build> section below MUST be identical to the one -->
+      <!-- specified above for the "non-mac" profile, except for the    -->
+      <!-- missing tools.jar dependency.                                -->
+      <build>
+        <plugins>
+          <plugin>
+            <inherited>true</inherited>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>add-project-files</id>
+                <phase>process-resources</phase>
+                <configuration>
+                  <tasks>
+                    <copy todir="${project.build.outputDirectory}/META-INF">
+                      <fileset dir="${basedir}">
+                        <include name="README.txt"/>
+                        <include name="NOTICE.txt"/>
+                        <include name="LICENSE.txt"/>
+                      </fileset>
+                    </copy>
+                  </tasks>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 <!-- ====================================================================== -->
 <!-- M A I L I N G   L I S T S                                              -->
