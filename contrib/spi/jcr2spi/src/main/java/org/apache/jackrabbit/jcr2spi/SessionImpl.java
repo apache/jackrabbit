@@ -725,6 +725,11 @@ public class SessionImpl implements Session, ManagerProvider {
     }
 
     //--------------------------------------------------------------------------
+
+    LocalNamespaceMappings getLocalNamespaceMappings() {
+        return nsMappings;
+    }
+
     ItemManager getItemManager() {
         return itemManager;
     }

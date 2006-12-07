@@ -39,6 +39,7 @@ import javax.jcr.ValueFormatException;
 import javax.jcr.Node;
 import javax.jcr.LoginException;
 import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.query.InvalidQueryException;
 import java.util.Map;
 import java.util.Collection;
 import java.io.InputStream;
@@ -522,14 +523,33 @@ public interface RepositoryService {
     public String[] getSupportedQueryLanguages(SessionInfo sessionInfo) throws RepositoryException;
 
     /**
+     * Checks if the query <code>statement</code> is valid according to the
+     * specified query <code>language</code>.
+     *
+     * @param sessionInfo the session info.
+     * @param statement   the query statement to check.
+     * @param language    the query language.
+     * @param namespaces  the locally re-mapped namespace which may be used in
+     *                    the query <code>statement</code>.
+     * @throws InvalidQueryException if the query statement is invalid or the
+     *                               language is not supported.
+     * @throws RepositoryException   if an error occurs while checking the
+     *                               statement.
+     * @see javax.jcr.query.QueryManager#createQuery(String, String)
+     */
+    public void checkQueryStatement(SessionInfo sessionInfo, String statement, String language, Map namespaces) throws InvalidQueryException, RepositoryException;
+
+    /**
      * @param sessionInfo
      * @param statement
      * @param language
+     * @param namespaces  the locally re-mapped namespace which may be used in
+     *                    the query <code>statement</code>.
      * @return
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.query.Query#execute()
      */
-    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language) throws RepositoryException;
+    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map namespaces) throws RepositoryException;
 
     //--------------------------------------------------------< Observation >---
 

@@ -18,8 +18,8 @@ package org.apache.jackrabbit.jcr2spi.query;
 
 import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
+import org.apache.jackrabbit.jcr2spi.name.LocalNamespaceMappings;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
-import org.apache.jackrabbit.name.NamespaceResolver;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -39,9 +39,9 @@ public class QueryManagerImpl implements QueryManager {
     private final Session session;
 
     /**
-     * The namespace nsResolver for this query manager.
+     * The local namespace mappings for this query manager.
      */
-    private final NamespaceResolver nsResolver;
+    private final LocalNamespaceMappings nsResolver;
 
     /**
      * The <code>ItemManager</code> of for item retrieval in search results
@@ -69,7 +69,7 @@ public class QueryManagerImpl implements QueryManager {
      * @param wspManager
      */
     public QueryManagerImpl(Session session,
-                            NamespaceResolver nsResolver,
+                            LocalNamespaceMappings nsResolver,
                             ItemManager itemMgr,
                             ItemStateManager itemStateManager,
                             WorkspaceManager wspManager) {

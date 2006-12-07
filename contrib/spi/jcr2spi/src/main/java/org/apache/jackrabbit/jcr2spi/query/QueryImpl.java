@@ -18,9 +18,9 @@ package org.apache.jackrabbit.jcr2spi.query;
 
 import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
+import org.apache.jackrabbit.jcr2spi.name.LocalNamespaceMappings;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
 import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
@@ -53,9 +53,9 @@ public class QueryImpl implements Query {
     private final Session session;
 
     /**
-     * The namespace nsResolver of the session that executes this query.
+     * The namespace mappings of the session that executes this query.
      */
-    private final NamespaceResolver nsResolver;
+    private final LocalNamespaceMappings nsResolver;
 
     /**
      * The item manager of the session that executes this query.
@@ -91,19 +91,21 @@ public class QueryImpl implements Query {
     /**
      * Creates a new query.
      *
-     * @param session    the session that created this query.
-     * @param nsResolver the namespace resolver to be used.
-     * @param itemMgr    the item manager of that session.
+     * @param session          the session that created this query.
+     * @param nsResolver       the namespace resolver to be used.
+     * @param itemMgr          the item manager of that session.
      * @param itemStateManager the item state manager of that session.
-     * @param wspManager the workspace manager that belongs to the session.
-     * @param statement  the query statement.
-     * @param language   the language of the query statement.
+     * @param wspManager       the workspace manager that belongs to the
+     *                         session.
+     * @param statement        the query statement.
+     * @param language         the language of the query statement.
      * @throws InvalidQueryException if the query is invalid.
      */
-    public QueryImpl(Session session, NamespaceResolver nsResolver,
+    public QueryImpl(Session session, LocalNamespaceMappings nsResolver,
                      ItemManager itemMgr, ItemStateManager itemStateManager,
                      WorkspaceManager wspManager,
-                     String statement, String language) throws InvalidQueryException {
+                     String statement, String language)
+            throws InvalidQueryException, RepositoryException {
         this.session = session;
         this.nsResolver = nsResolver;
         this.itemManager = itemMgr;
@@ -111,8 +113,7 @@ public class QueryImpl implements Query {
         this.statement = statement;
         this.language = language;
         this.wspManager = wspManager;
-        // TODO: validate statement
-        //this.query = handler.createExecutableQuery(session, itemMgr, statement, language);
+        this.wspManager.checkQueryStatement(statement, language, nsResolver.getLocalNamespaceMappings());
     }
 
     /**
@@ -127,7 +128,7 @@ public class QueryImpl implements Query {
      * @throws RepositoryException   if another error occurs while reading from
      *                               the node.
      */
-    public QueryImpl(Session session, NamespaceResolver nsResolver,
+    public QueryImpl(Session session, LocalNamespaceMappings nsResolver,
                      ItemManager itemMgr, ItemStateManager itemStateManager,
                      WorkspaceManager wspManager, Node node)
         throws InvalidQueryException, RepositoryException {
@@ -145,8 +146,8 @@ public class QueryImpl implements Query {
             }
             statement = node.getProperty(NameFormat.format(QName.JCR_STATEMENT, nsResolver)).getString();
             language = node.getProperty(NameFormat.format(QName.JCR_LANGUAGE, nsResolver)).getString();
-            // TODO: validate statement
-            //query = handler.createExecutableQuery(session, itemMgr, statement, language);
+            this.wspManager.checkQueryStatement(statement, language,
+                    nsResolver.getLocalNamespaceMappings());
         } catch (NoPrefixDeclaredException e) {
             throw new RepositoryException(e.getMessage(), e);
         }
@@ -156,7 +157,8 @@ public class QueryImpl implements Query {
      * @see Query#execute() 
      */
     public QueryResult execute() throws RepositoryException {
-        QueryInfo qI = wspManager.executeQuery(statement, language);
+        QueryInfo qI = wspManager.executeQuery(statement, language,
+                nsResolver.getLocalNamespaceMappings());
         return new QueryResultImpl(itemManager, itemStateManager, qI, nsResolver);
     }
 

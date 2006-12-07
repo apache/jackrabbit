@@ -20,6 +20,7 @@ import org.apache.jackrabbit.test.api.query.AbstractQueryTest;
 import javax.jcr.RepositoryException;
 import javax.jcr.NodeIterator;
 import javax.jcr.Node;
+import javax.jcr.NamespaceRegistry;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -38,5 +39,30 @@ public class QueryTest extends AbstractQueryTest {
         }
         Node[] children = (Node[]) nodes.toArray(new Node[nodes.size()]);
         executeXPathQuery(superuser, "/jcr:root/*", children);
+    }
+
+    public void testRemappedNamespace() throws RepositoryException {
+        String namespaceURI = "http://jackrabbit.apache.org/spi/test";
+        String defaultPrefix = "spiTest";
+
+        NamespaceRegistry nsReg = superuser.getWorkspace().getNamespaceRegistry();
+        try {
+            nsReg.getPrefix(namespaceURI);
+        } catch (RepositoryException e) {
+            nsReg.registerNamespace(defaultPrefix, namespaceURI);
+        }
+
+        Node n = testRootNode.addNode("spiTest:node");
+        testRootNode.save();
+
+        long time = System.currentTimeMillis();
+        for (int i = 0; i < 10; i++) {
+            String prefix = defaultPrefix + i;
+            superuser.setNamespacePrefix(prefix, namespaceURI);
+            executeXPathQuery(superuser, testPath + "/" + prefix + ":node", new Node[]{n});
+        }
+        time = System.currentTimeMillis() - time;
+        System.out.println("Executed 10 queries in " + time + " ms");
+        System.out.println("Time per query: " + (time / 10) + " ms");
     }
 }

@@ -29,6 +29,7 @@ import javax.jcr.RepositoryException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Arrays;
+import java.util.Map;
 
 /**
  * Manager for local session namespace mappings. This class is
@@ -156,6 +157,13 @@ public class LocalNamespaceMappings extends AbstractNamespaceResolver
      */
     public void dispose() {
         nsReg.removeListener(this);
+    }
+
+    /**
+     * @return the namespace mappings that are locally re-mapped.
+     */
+    public Map getLocalNamespaceMappings() {
+        return new HashMap(prefixToURI);
     }
 
     //--------------------------------------------------< NamespaceResolver >---
