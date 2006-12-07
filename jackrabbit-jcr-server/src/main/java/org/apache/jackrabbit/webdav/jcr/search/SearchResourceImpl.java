@@ -36,12 +36,15 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
+import javax.jcr.NamespaceRegistry;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
+import java.util.Map;
+import java.util.Iterator;
 
 /**
  * <code>SearchResourceImpl</code>...
@@ -115,7 +118,9 @@ public class SearchResourceImpl implements SearchResource {
     private Query getQuery(SearchInfo sInfo)
             throws InvalidQueryException, RepositoryException, DavException {
 
-        Node rootNode = getRepositorySession().getRootNode();
+        Session session = getRepositorySession();
+        NamespaceRegistry nsReg = session.getWorkspace().getNamespaceRegistry();
+        Node rootNode = session.getRootNode();
         QueryManager qMgr = getRepositorySession().getWorkspace().getQueryManager();
 
         // test if query is defined by requested repository node
@@ -132,7 +137,26 @@ public class SearchResourceImpl implements SearchResource {
 
         Query q;
         if (sInfo != null) {
-            q = qMgr.createQuery(sInfo.getQuery(), sInfo.getLanguageName());
+            // apply namespace mappings to session
+            Map namespaces = sInfo.getNamespaces();
+            try {
+                for (Iterator it = namespaces.keySet().iterator(); it.hasNext(); ) {
+                    String prefix = (String) it.next();
+                    String uri = (String) namespaces.get(prefix);
+                    session.setNamespacePrefix(prefix, uri);
+                }
+                q = qMgr.createQuery(sInfo.getQuery(), sInfo.getLanguageName());
+            } finally {
+                // reset namespace mappings
+                for (Iterator it = namespaces.values().iterator(); it.hasNext(); ) {
+                    String uri = (String) it.next();
+                    try {
+                        session.setNamespacePrefix(nsReg.getPrefix(uri), uri);
+                    } catch (RepositoryException e) {
+                        log.warn("Unable to reset mapping of namespace: " + uri);
+                    }
+                }
+            }
         } else {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, locator.getResourcePath() + " is not a nt:query node -> searchRequest body required.");
         }

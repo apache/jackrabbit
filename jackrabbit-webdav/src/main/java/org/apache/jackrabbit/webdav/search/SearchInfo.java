@@ -18,6 +18,7 @@ package org.apache.jackrabbit.webdav.search;
 
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
@@ -25,6 +26,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Attr;
+
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * <code>SearchInfo</code> parses the 'searchrequest' element of a SEARCH
@@ -53,9 +62,38 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
 
     private static Logger log = LoggerFactory.getLogger(SearchInfo.class);
 
+    /**
+     * Set of namespace uri String which are ignored in the search request.
+     */
+    private static final Set IGNORED_NAMESPACES;
+
+    static {
+        Set s = new HashSet();
+        s.add(Namespace.XMLNS_NAMESPACE.getURI());
+        s.add(Namespace.XML_NAMESPACE.getURI());
+        s.add(DavConstants.NAMESPACE.getURI());
+        IGNORED_NAMESPACES = Collections.unmodifiableSet(s);
+    }
+
     private final String language;
     private final Namespace languageNamespace;
     private final String query;
+    private final Map namespaces;
+
+    /**
+     * Create a new <code>SearchInfo</code> instance.
+     *
+     * @param language
+     * @param languageNamespace
+     * @param query
+     * @param namespaces the re-mapped namespaces. Key=prefix, value=uri.
+     */
+    public SearchInfo(String language, Namespace languageNamespace, String query, Map namespaces) {
+        this.language = language;
+        this.languageNamespace = languageNamespace;
+        this.query = query;
+        this.namespaces = Collections.unmodifiableMap(new HashMap(namespaces));
+    }
 
     /**
      * Create a new <code>SearchInfo</code> instance.
@@ -65,9 +103,7 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
      * @param query
      */
     public SearchInfo(String language, Namespace languageNamespace, String query) {
-        this.language = language;
-        this.languageNamespace = languageNamespace;
-        this.query = query;
+        this(language,  languageNamespace, query, Collections.EMPTY_MAP);
     }
 
     /**
@@ -98,6 +134,15 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
     }
 
     /**
+     * Returns the namespaces that have been re-mapped by the user.
+     *
+     * @return map of namespace to prefix mappings. Key=prefix, value=uri.
+     */
+    public Map getNamespaces() {
+        return namespaces;
+    }
+
+    /**
      * Return the xml representation of this <code>SearchInfo</code> instance.
      *
      * @return xml representation
@@ -105,6 +150,11 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
      */
     public Element toXml(Document document) {
         Element sRequestElem = DomUtil.createElement(document, XML_SEARCHREQUEST, NAMESPACE);
+        for (Iterator it = namespaces.keySet().iterator(); it.hasNext(); ) {
+            String prefix = (String) it.next();
+            String uri = (String) namespaces.get(prefix);
+            DomUtil.setNamespaceAttribute(sRequestElem, prefix, uri);
+        }
         DomUtil.addChildElement(sRequestElem, language, languageNamespace, query);
         return sRequestElem;
     }
@@ -124,8 +174,16 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
         Element first = DomUtil.getFirstChildElement(searchRequest);
+        Attr[] nsAttributes = DomUtil.getNamespaceAttributes(searchRequest);
+        Map namespaces = new HashMap();
+        for (int i = 0; i < nsAttributes.length; i++) {
+            // filter out xmlns namespace and DAV namespace
+            if (!IGNORED_NAMESPACES.contains(nsAttributes[i].getValue())) {
+                namespaces.put(nsAttributes[i].getLocalName(), nsAttributes[i].getValue());
+            }
+        }
         if (first != null) {
-            return new SearchInfo(first.getLocalName(), DomUtil.getNamespace(first), DomUtil.getText(first));
+            return new SearchInfo(first.getLocalName(), DomUtil.getNamespace(first), DomUtil.getText(first), namespaces);
         } else {
             log.warn("A single child element is expected with the 'DAV:searchrequest'.");
             throw new DavException(DavServletResponse.SC_BAD_REQUEST);

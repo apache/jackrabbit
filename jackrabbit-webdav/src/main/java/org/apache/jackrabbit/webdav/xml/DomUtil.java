@@ -26,6 +26,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
+import org.w3c.dom.NamedNodeMap;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.util.ArrayList;
@@ -74,6 +75,24 @@ public class DomUtil {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Returns the namespace attributes of the given element.
+     *
+     * @param element
+     * @return the namespace attributes.
+     */
+    public static Attr[] getNamespaceAttributes(Element element) {
+        NamedNodeMap attributes = element.getAttributes();
+        List nsAttr = new ArrayList();
+        for (int i = 0; i < attributes.getLength(); i++) {
+            Attr attr = (Attr) attributes.item(i);
+            if (Namespace.XMLNS_NAMESPACE.getURI().equals(attr.getNamespaceURI())) {
+                nsAttr.add(attr);
+            }
+        }
+        return (Attr[]) nsAttr.toArray(new Attr[nsAttr.size()]);
     }
 
     /**
@@ -493,6 +512,17 @@ public class DomUtil {
             attr.setValue(attrValue);
             element.setAttributeNodeNS(attr);
         }
+    }
+
+    /**
+     * Adds a namespace attribute on the given element.
+     *
+     * @param element
+     * @param prefix
+     * @param uri
+     */
+    public static void setNamespaceAttribute(Element element, String prefix, String uri) {
+        setAttribute(element, prefix, Namespace.XMLNS_NAMESPACE, uri);
     }
 
     /**
