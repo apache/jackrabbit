@@ -236,7 +236,6 @@
           <execution>
             <id>do_init</id>
             <configuration>
-              <skip>false</skip>
               <includes>
                 <include>**/init/*</include>
               </includes>
@@ -251,7 +250,6 @@
           <execution>
             <id>do_test</id>
             <configuration>
-              <skip>false</skip>
               <excludes>
                 <exclude>**/init/*</exclude>
               </excludes>
