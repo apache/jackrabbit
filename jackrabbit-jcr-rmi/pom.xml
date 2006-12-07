@@ -21,160 +21,98 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                              http://maven.apache.org/maven-v4_0_0.xsd ">
-    <modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
 
-    <!-- ====================================================================== -->
-    <!-- P R O J E C T  D E S C R I P T I O N                                   -->
-    <!-- ====================================================================== -->
-    <parent>
-        <groupId>org.apache.jackrabbit</groupId>
-        <artifactId>jackrabbit</artifactId>
-        <version>1.2-SNAPSHOT</version>
-        <relativePath>..</relativePath>
-    </parent>
-    <artifactId>jackrabbit-jcr-rmi</artifactId>
-    <name>Jackrabbit JCR-RMI</name>
-    <!--
-     Keep the description on a single line. Otherwise Maven might generate
-     a corrupted MANIFEST.MF (see http://jira.codehaus.org/browse/MJAR-4)
-    -->
-    <description>JCR-RMI is a transparent Remote Method Invocation (RMI) layer for the Content Repository for Java Technology API (JCR). The layer makes it possible to remotely access JCR content repositories. JCR-RMI is developed as a part of the Apache Jackrabbit project, but the implementation is compatible with all JCR content repositories.</description>
+  <!-- ====================================================================== -->
+  <!-- P R O J E C T  D E S C R I P T I O N                                   -->
+  <!-- ====================================================================== -->
+  <parent>
+    <groupId>org.apache.jackrabbit</groupId>
+    <artifactId>jackrabbit</artifactId>
+    <version>1.2-SNAPSHOT</version>
+    <relativePath>..</relativePath>
+  </parent>
+  <artifactId>jackrabbit-jcr-rmi</artifactId>
+  <name>Jackrabbit JCR-RMI</name>
+  <!--
+   Keep the description on a single line. Otherwise Maven might generate
+   a corrupted MANIFEST.MF (see http://jira.codehaus.org/browse/MJAR-4)
+  -->
+  <description>JCR-RMI is a transparent Remote Method Invocation (RMI) layer for the Content Repository for Java Technology API (JCR). The layer makes it possible to remotely access JCR content repositories. JCR-RMI is developed as a part of the Apache Jackrabbit project, but the implementation is compatible with all JCR content repositories.</description>
 
-    <build>
-        <plugins>
-            <plugin>
-                <inherited>true</inherited>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-    <!--
-     Special profile for non-mac jdks that do not have the tools.jar in
-     the bootclasspath (needed for antrun/rmic)
-    -->
-    <profiles>
-        <profile>
-            <id>non-mac</id>
-            <activation>
-                <os>
-                    <family>!mac</family>
-                </os>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-antrun-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>rmic</id>
-                                <phase>process-classes</phase>
-                                <configuration>
-                                    <tasks>
-                                        <rmic base="${project.build.outputDirectory}"
-                                              verify="true"
-                                              includes="org/apache/jackrabbit/rmi/server/**/Server*.class"
-                                              classpathref="maven.compile.classpath"/>
-                                    </tasks>
-                                </configuration>
-                                <goals>
-                                    <goal>run</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>sun</groupId>
-                                <artifactId>tools</artifactId>
-                                <version>1.0</version>
-                                <scope>system</scope>
-                                <systemPath>${java.home}/../lib/tools.jar</systemPath>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <!--
-         Special profile for mac jdks that do have the tools.jar in
-         the bootclasspath (needed for antrun/rmic)
-        -->
-        <profile>
-            <id>mac</id>
-            <activation>
-                <os>
-                    <family>mac</family>
-                </os>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-antrun-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>rmic</id>
-                                <phase>process-classes</phase>
-                                <configuration>
-                                    <tasks>
-                                        <rmic base="${project.build.outputDirectory}"
-                                              verify="true"
-                                              includes="org/apache/jackrabbit/rmi/server/**/Server*.class"
-                                              classpathref="maven.compile.classpath"/>
-                                    </tasks>
-                                </configuration>
-                                <goals>
-                                    <goal>run</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-    <dependencies>
-        <!-- Test dependencies -->
-        <dependency>
-            <groupId>easymock</groupId>
-            <artifactId>easymock</artifactId>
-            <version>1.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <scope>test</scope>
-        </dependency>
-        <!-- Runtime dependencies -->
-        <dependency>
-            <groupId>javax.jcr</groupId>
-            <artifactId>jcr</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>xerces</groupId>
-            <artifactId>xercesImpl</artifactId>
-            <version>2.6.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.8</version>
-        </dependency>
-    </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <inherited>true</inherited>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>rmic</id>
+            <phase>process-classes</phase>
+            <configuration>
+              <tasks>
+                <rmic base="${project.build.outputDirectory}"
+                      verify="true"
+                      includes="org/apache/jackrabbit/rmi/server/**/Server*.class"
+                      classpathref="maven.compile.classpath"/>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>easymock</groupId>
+      <artifactId>easymock</artifactId>
+      <version>1.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Runtime dependencies -->
+    <dependency>
+      <groupId>javax.jcr</groupId>
+      <artifactId>jcr</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xercesImpl</artifactId>
+      <version>2.6.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.8</version>
+    </dependency>
+  </dependencies>
 
 </project>
