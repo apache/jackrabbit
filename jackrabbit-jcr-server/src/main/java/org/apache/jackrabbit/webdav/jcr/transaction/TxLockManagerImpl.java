@@ -35,7 +35,6 @@ import org.apache.jackrabbit.webdav.transaction.TransactionInfo;
 import org.apache.jackrabbit.webdav.transaction.TransactionResource;
 import org.apache.jackrabbit.webdav.transaction.TxActiveLock;
 import org.apache.jackrabbit.webdav.transaction.TxLockManager;
-import org.apache.commons.collections.set.MapBackedSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,8 +47,8 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.IdentityHashMap;
+import java.util.Map;
 
 /**
  * <code>TxLockManagerImpl</code> manages locks with locktype
@@ -70,7 +69,7 @@ public class TxLockManagerImpl implements TxLockManager {
 
     private TransactionMap map = new TransactionMap();
 
-    private Set listeners = MapBackedSet.decorate(new IdentityHashMap());
+    private Map listeners = new IdentityHashMap();
 
     /**
      * Create a new lock.
@@ -219,7 +218,7 @@ public class TxLockManagerImpl implements TxLockManager {
             if (lockInfo.isCommit()) {
                 TransactionListener[] txListeners;
                 synchronized (listeners) {
-                    txListeners = (TransactionListener[]) listeners.toArray(new TransactionListener[0]);
+                    txListeners = (TransactionListener[]) listeners.values().toArray(new TransactionListener[0]);
                 }
                 for (int i = 0; i < txListeners.length; i++) {
                     txListeners[i].beforeCommit(resource, lockToken);
@@ -304,7 +303,7 @@ public class TxLockManagerImpl implements TxLockManager {
      */
     public void addTransactionListener(TransactionListener listener) {
         synchronized (listeners) {
-            listeners.add(listener);
+            listeners.put(listener, listener);
         }
     }
 
