@@ -85,6 +85,7 @@ import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.header.CodedUrlHeader;
 import org.apache.jackrabbit.webdav.header.IfHeader;
 import org.apache.jackrabbit.webdav.search.SearchConstants;
+import org.apache.jackrabbit.webdav.search.SearchInfo;
 import org.apache.jackrabbit.webdav.jcr.version.report.RepositoryDescriptorsReport;
 import org.apache.jackrabbit.webdav.jcr.version.report.RegisteredNamespacesReport;
 import org.apache.jackrabbit.webdav.jcr.version.report.NodeTypesReport;
@@ -146,6 +147,7 @@ import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.LoginException;
 import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.query.InvalidQueryException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -1190,14 +1192,24 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
+    public void checkQueryStatement(SessionInfo sessionInfo,
+                                    String statement,
+                                    String language,
+                                    Map namespaces)
+            throws InvalidQueryException, RepositoryException {
+        // TODO implement
+    }
+
     /**
-     * @see RepositoryService#executeQuery(SessionInfo, String, String)
+     * @see RepositoryService#executeQuery(SessionInfo, String, String, Map)
      */
-    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language) throws RepositoryException {
+    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map namespaces) throws RepositoryException {
         SearchMethod method = null;
         try {
             String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
-            method = new SearchMethod(uri, statement, language);
+            SearchInfo sInfo = new SearchInfo(language,
+                    Namespace.EMPTY_NAMESPACE, statement, namespaces);
+            method = new SearchMethod(uri, sInfo);
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
 

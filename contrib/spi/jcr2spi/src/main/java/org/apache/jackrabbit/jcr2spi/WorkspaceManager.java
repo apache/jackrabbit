@@ -95,6 +95,7 @@ import javax.jcr.InvalidItemStateException;
 import javax.jcr.MergeException;
 import javax.jcr.Session;
 import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.query.InvalidQueryException;
 import javax.jcr.version.VersionException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -246,15 +247,34 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     }
 
     /**
+     * Checks if the query statement is valid.
      *
-     * @param statement
-     * @param language
+     * @param statement  the query statement.
+     * @param language   the query language.
+     * @param namespaces the locally remapped namespaces which might be used in
+     *                   the query statement.
+     * @throws InvalidQueryException if the query statement is invalid.
+     * @throws RepositoryException   if an error occurs while checking the query
+     *                               statement.
+     */
+    public void checkQueryStatement(String statement,
+                                    String language,
+                                    Map namespaces)
+            throws InvalidQueryException, RepositoryException {
+        service.checkQueryStatement(sessionInfo, statement, language, namespaces);
+    }
+
+    /**
+     * @param statement  the query statement.
+     * @param language   the query language.
+     * @param namespaces the locally remapped namespaces which might be used in
+     *                   the query statement.
      * @return
      * @throws RepositoryException
      */
-    public QueryInfo executeQuery(String statement, String language)
+    public QueryInfo executeQuery(String statement, String language, Map namespaces)
             throws RepositoryException {
-        return service.executeQuery(sessionInfo, statement, language);
+        return service.executeQuery(sessionInfo, statement, language, namespaces);
     }
 
     /**
@@ -450,7 +470,10 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                 eventSignal = getEventPollingRequest();
             }
             try {
-                eventSignal.acquire();
+                // wait at most 10 seconds
+                if (!eventSignal.attempt(10 * 1000)) {
+                    log.warn("No events received for batch");
+                }
             } catch (InterruptedException e) {
                 Thread.interrupted();
                 log.warn("Interrupted while waiting for events from RepositoryService");
@@ -991,13 +1014,16 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                         EventFilter[] filtArr = (EventFilter[]) filters.toArray(new EventFilter[filters.size()]);
 
                         EventBundle[] bundles = service.getEvents(sessionInfo, timeout, filtArr);
-                        if (bundles.length > 0) {
-                            onEventReceived(bundles);
-                        }
-                        if (signal != null) {
-                            log.debug("About to signal that events have been delivered");
-                            signal.release();
-                            log.debug("Event delivery signaled");
+                        try {
+                            if (bundles.length > 0) {
+                                onEventReceived(bundles);
+                            }
+                        } finally {
+                            if (signal != null) {
+                                log.debug("About to signal that events have been delivered");
+                                signal.release();
+                                log.debug("Event delivery signaled");
+                            }
                         }
                     }
                 } catch (UnsupportedRepositoryOperationException e) {
@@ -1010,6 +1036,9 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                 } catch (InterruptedException e) {
                     // terminate
                     break;
+                } catch (Exception e) {
+                    log.warn("Exception in event polling thread: " + e);
+                    log.debug("Dump:", e);
                 }
             }
         }

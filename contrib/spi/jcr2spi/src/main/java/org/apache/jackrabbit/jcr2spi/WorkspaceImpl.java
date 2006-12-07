@@ -260,7 +260,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     public QueryManager getQueryManager() throws RepositoryException {
         session.checkIsAlive();
         if (qManager == null) {
-            qManager = new QueryManagerImpl(session, session.getNamespaceResolver(),
+            qManager = new QueryManagerImpl(session, session.getLocalNamespaceMappings(),
                 session.getItemManager(), session.getItemStateManager(), wspManager);
         }
         return qManager;
