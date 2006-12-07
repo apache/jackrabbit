@@ -155,20 +155,20 @@ public class CachingItemStateManager implements ItemStateManager {
      * @throws ItemStateException       if any other error occurs.
      */
     private ItemState resolve(ItemId id) throws NoSuchItemStateException, ItemStateException {
-        String uuid = id.getUUID();
+        String uid = id.getUniqueID();
         Path path = id.getPath();
 
         NodeState nodeState;
-        // resolve uuid part
-        if (uuid != null) {
-            nodeState = cache.getNodeState(uuid);
+        // resolve uniqueID part
+        if (uid != null) {
+            nodeState = cache.getNodeState(uid);
             if (nodeState == null) {
-                // state identified by the uuid is not yet cached -> get from ISF
-                NodeId refId = (path == null) ? (NodeId) id : idFactory.createNodeId(uuid);
+                // state identified by the uniqueID is not yet cached -> get from ISF
+                NodeId refId = (path == null) ? (NodeId) id : idFactory.createNodeId(uid);
                 nodeState = isf.createNodeState(refId, this);
             }
         } else {
-            // start with root node if no uuid part in id
+            // start with root node if no uniqueID part in id
             nodeState = getRootState();
         }
 
@@ -189,9 +189,9 @@ public class CachingItemStateManager implements ItemStateManager {
      */
     protected ItemState lookup(ItemId id) {
         NodeState start;
-        // resolve UUID
-        if (id.getUUID() != null) {
-            start = cache.getNodeState(id.getUUID());
+        // resolve uniqueID
+        if (id.getUniqueID() != null) {
+            start = cache.getNodeState(id.getUniqueID());
             if (start == null) {
                 // not cached
                 return null;
@@ -208,7 +208,7 @@ public class CachingItemStateManager implements ItemStateManager {
         }
 
         if (id.getPath() == null) {
-            // path is null -> id points to a state identified by uuid
+            // path is null -> id points to a state identified by uniqueID
             return start;
         } else {
             // resolve path part

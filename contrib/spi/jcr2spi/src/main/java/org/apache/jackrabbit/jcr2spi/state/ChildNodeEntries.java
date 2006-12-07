@@ -80,28 +80,28 @@ final class ChildNodeEntries implements Collection {
         this.nodeState = nodeState;
         for (Iterator it = base.iterator(); it.hasNext();) {
             ChildNodeEntry baseCne = (ChildNodeEntry) it.next();
-            ChildNodeEntry cne = ChildNodeReference.create(nodeState, baseCne.getName(), baseCne.getUUID(), nodeState.isf, nodeState.idFactory);
+            ChildNodeEntry cne = ChildNodeReference.create(nodeState, baseCne.getName(), baseCne.getUniqueID(), nodeState.isf, nodeState.idFactory);
             add(cne);
         }
     }
 
     /**
      * Returns true, if this ChildNodeEntries contains a entry that matches
-     * the given name and either index or uuid:<br>
-     * If <code>uuid</code> is not <code>null</code> the given index is
+     * the given name and either index or uniqueID:<br>
+     * If <code>uniqueID</code> is not <code>null</code> the given index is
      * ignored since it is not required to identify a child node entry.
      * Otherwise the given index is used.
      *
      * @param name
      * @param index
-     * @param uuid
+     * @param uniqueID
      * @return
      */
-    boolean contains(QName name, int index, String uuid) {
-        if (uuid == null) {
+    boolean contains(QName name, int index, String uniqueID) {
+        if (uniqueID == null) {
             return contains(name, index);
         } else {
-            return contains(name, uuid);
+            return contains(name, uniqueID);
         }
     }
 
@@ -131,11 +131,11 @@ final class ChildNodeEntries implements Collection {
     /**
      *
      * @param name
-     * @param uuid
+     * @param uniqueID
      * @return
      */
-    private boolean contains(QName name, String uuid) {
-        if (uuid == null) {
+    private boolean contains(QName name, String uniqueID) {
+        if (uniqueID == null) {
             throw new IllegalArgumentException();
         }
         if (!nameMap.containsKey(name)) {
@@ -148,14 +148,14 @@ final class ChildNodeEntries implements Collection {
             for (Iterator it = ((List) o).iterator(); it.hasNext(); ) {
                 LinkedEntries.LinkNode n = (LinkedEntries.LinkNode) it.next();
                 ChildNodeEntry cne = n.getChildNodeEntry();
-                if (uuid.equals(cne.getUUID())) {
+                if (uniqueID.equals(cne.getUniqueID())) {
                     return true;
                 }
             }
         } else {
             // single child node with this name
             ChildNodeEntry cne = ((LinkedEntries.LinkNode) o).getChildNodeEntry();
-            return uuid.equals(cne.getUUID());
+            return uniqueID.equals(cne.getUniqueID());
         }
         // no matching entry found
         return false;
@@ -312,18 +312,18 @@ final class ChildNodeEntries implements Collection {
     /**
      *
      * @param nodeName
-     * @param uuid
+     * @param uniqueID
      * @return
-     * @throws IllegalArgumentException if the given uuid is null.
+     * @throws IllegalArgumentException if the given uniqueID is null.
      */
-    ChildNodeEntry get(QName nodeName, String uuid) {
-        if (uuid == null) {
+    ChildNodeEntry get(QName nodeName, String uniqueID) {
+        if (uniqueID == null) {
             throw new IllegalArgumentException();
         }
         Iterator cneIter = (nodeName != null) ? get(nodeName).iterator() : entries.iterator();
         while (cneIter.hasNext()) {
             ChildNodeEntry cne = (ChildNodeEntry) cneIter.next();
-            if (uuid.equals(cne.getUUID())) {
+            if (uniqueID.equals(cne.getUniqueID())) {
                 return cne;
             }
         }
@@ -334,12 +334,12 @@ final class ChildNodeEntries implements Collection {
      * Insert a new childnode entry at the position indicated by index.
      *
      * @param nodeName
-     * @param uuid
+     * @param uniqueID
      * @param index
      * @return
      */
-    ChildNodeEntry add(QName nodeName, String uuid, int index) {
-        ChildNodeEntry cne = ChildNodeReference.create(nodeState, nodeName, uuid, nodeState.isf, nodeState.idFactory);
+    ChildNodeEntry add(QName nodeName, String uniqueID, int index) {
+        ChildNodeEntry cne = ChildNodeReference.create(nodeState, nodeName, uniqueID, nodeState.isf, nodeState.idFactory);
         add(cne, index);
         return cne;
     }
@@ -578,7 +578,7 @@ final class ChildNodeEntries implements Collection {
     }
 
     /**
-     * If the given child state got a (new) uuid assigned or its removed,
+     * If the given child state got a (new) unique ID assigned or its removed,
      * its childEntry must be adjusted.
      *
      * @param childState

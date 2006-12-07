@@ -749,11 +749,11 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             QName name = def.getQName();
             if (QName.MIX_REFERENCEABLE.equals(declaringNT) && QName.JCR_UUID.equals(name)) {
                 // mix:referenceable node type defines jcr:uuid
-                String uuid = parent.getUUID();
-                if (uuid == null) {
-                    uuid = UUID.randomUUID().toString();
+                String uniqueID = parent.getUniqueID();
+                if (uniqueID == null) {
+                    uniqueID = UUID.randomUUID().toString();
                 }
-                genValues = new QValue[]{QValue.create(uuid)};
+                genValues = new QValue[]{QValue.create(uniqueID)};
             } else if (QName.NT_BASE.equals(declaringNT)) {
                 // nt:base node type
                 if (QName.JCR_PRIMARYTYPE.equals(name)) {

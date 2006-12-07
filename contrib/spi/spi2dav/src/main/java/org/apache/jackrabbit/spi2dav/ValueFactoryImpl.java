@@ -95,7 +95,7 @@ public class ValueFactoryImpl implements ValueFactory {
     /**
      * A <code>ReferenceValue</code> provides an implementation
      * of the <code>Value</code> interface representing a <code>REFERENCE</code> value
-     * (a UUID of an existing node).
+     * (a jcr:uuid property of an existing, referenceable node).
      */
     private static class ReferenceValue extends org.apache.jackrabbit.value.ReferenceValue {
 
@@ -119,19 +119,20 @@ public class ValueFactoryImpl implements ValueFactory {
          * Returns a new <code>ReferenceValue</code> initialized to the value
          * represented by the specified <code>String</code>.
          * <p/>
-         * The specified <code>String</code> must denote the UUID of an existing
-         * node.
+         * The specified <code>String</code> must denote the jcr:uuid property
+         * of an existing node.
          *
          * @param s the string to be parsed.
-         * @return a newly constructed <code>ReferenceValue</code> representing the
-         *         the specified value.
-         * @throws javax.jcr.ValueFormatException If the <code>String</code> is null or empty String.
+         * @return a newly constructed <code>ReferenceValue</code> representing
+         * the specified value.
+         * @throws javax.jcr.ValueFormatException If the <code>String</code> is
+         * null or empty String.
          */
         public static org.apache.jackrabbit.value.ReferenceValue valueOf(String s) throws ValueFormatException {
             if (s != null && !"".equals(s)) {
                 return new ReferenceValue(s);
             } else {
-                throw new ValueFormatException("not a valid UUID format");
+                throw new ValueFormatException("Invalid format for jcr:uuid");
             }
         }
     }

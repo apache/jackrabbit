@@ -164,7 +164,8 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
                 if (state != null) {
                     state.refresh(event);
                 }
-                // parent must be notified in case mixintypes or uuid is changed.
+                // parent must be notified in case jcr:mixintypes or jcr:uuid
+                // was changed.
                 if (parent != null) {
                     parent.refresh(event);
                 }

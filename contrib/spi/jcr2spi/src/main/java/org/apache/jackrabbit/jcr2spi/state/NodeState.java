@@ -58,10 +58,10 @@ public class NodeState extends ItemState {
     private QName nodeTypeName;
 
     /**
-     * The UUID of this node state or <code>null</code> if this node state
-     * cannot be identified with a uuid.
+     * The unique ID of this node state or <code>null</code> if this node state
+     * cannot be identified with a unique ID.
      */
-    private String uuid;
+    private String uniqueID;
 
     /**
      * The name of this node state
@@ -104,7 +104,7 @@ public class NodeState extends ItemState {
      * Constructs a new node state that is not connected.
      *
      * @param name          the name of this NodeState
-     * @param uuid          the uuid of this NodeState or <code>null</code> if
+     * @param uuid          the uniqueID of this NodeState or <code>null</code> if
      *                      this node state cannot be identified with a UUID.
      * @param parent        the parent of this NodeState
      * @param nodeTypeName  node type of this node
@@ -114,13 +114,13 @@ public class NodeState extends ItemState {
      *                      states.
      * @param idFactory     the <code>IdFactory</code> to create new id
      */
-    protected NodeState(QName name, String uuid, NodeState parent,
+    protected NodeState(QName name, String uniqueID, NodeState parent,
                         QName nodeTypeName, QNodeDefinition definition,
                         int initialStatus, ItemStateFactory isf,
                         IdFactory idFactory, boolean isWorkspaceState) {
         super(parent, initialStatus, isf, idFactory, isWorkspaceState);
         this.name = name;
-        this.uuid = uuid;
+        this.uniqueID = uniqueID;
         this.nodeTypeName = nodeTypeName;
         this.definition = definition;
     }
@@ -143,7 +143,7 @@ public class NodeState extends ItemState {
             synchronized (overlayedState) {
                 NodeState wspState = overlayedState;
                 name = wspState.name;
-                uuid = wspState.uuid;
+                uniqueID = wspState.uniqueID;
                 nodeTypeName = wspState.nodeTypeName;
                 definition = wspState.definition;
 
@@ -270,7 +270,7 @@ public class NodeState extends ItemState {
         synchronized (another) {
             NodeState nState = (NodeState) another;
             name = nState.name;
-            setUUID(nState.uuid);
+            setUniqueID(nState.uniqueID);
             nodeTypeName = nState.nodeTypeName;
             definition = nState.definition;
 
@@ -294,9 +294,9 @@ public class NodeState extends ItemState {
                 if (ce.denotesNode()) {
                     ChildNodeEntry cne = (ChildNodeEntry) ce;
                     int index = cne.getIndex();
-                    if (!childNodeEntries().contains(childName, index, cne.getUUID())) {
+                    if (!childNodeEntries().contains(childName, index, cne.getUniqueID())) {
                         modified = true;
-                        childNodeEntries().add(childName, cne.getUUID(), index);
+                        childNodeEntries().add(childName, cne.getUniqueID(), index);
                     }
                 } else {
                     if (!hasPropertyName(childName)) {
@@ -316,7 +316,7 @@ public class NodeState extends ItemState {
                     if (ce.denotesNode()) {
                         ChildNodeEntry cne = (ChildNodeEntry) ce;
                         int index = cne.getIndex();
-                        toRemove = !nState.childNodeEntries().contains(childName, index, cne.getUUID());
+                        toRemove = !nState.childNodeEntries().contains(childName, index, cne.getUniqueID());
                     } else {
                         toRemove = !nState.properties.containsKey(childName);
                     }
@@ -389,8 +389,8 @@ public class NodeState extends ItemState {
      * @return the id of this node state.
      */
     public NodeId getNodeId() {
-        if (uuid != null) {
-            return idFactory.createNodeId(uuid);
+        if (uniqueID != null) {
+            return idFactory.createNodeId(uniqueID);
         }
 
         NodeState parent = getParent();
@@ -416,26 +416,26 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * @return the UUID of this node state or <code>null</code> if this
-     * node cannot be identified with a UUID.
+     * @return the unique ID of this node state or <code>null</code> if this
+     * node cannot be identified with a unique ID.
      */
-    public String getUUID() {
-        return uuid;
+    public String getUniqueID() {
+        return uniqueID;
     }
 
     /**
-     * Modify the uuid of this state and make sure, that the parent state
-     * contains a proper childNodeEntry for this state. If the given uuid is
-     * not different from the uuid of this state, the method returns silently
+     * Modify the uniqueID of this state and make sure, that the parent state
+     * contains a proper childNodeEntry for this state. If the given uniqueID is
+     * not different from the uniqueID of this state, the method returns silently
      * without changing neither the parent nor this state.
      *
-     * @param uuid
+     * @param uniqueID
      */
-    private void setUUID(String uuid) {
-        String oldUUID = this.uuid;
-        boolean mod = (oldUUID == null) ? uuid != null : !oldUUID.equals(uuid);
+    private void setUniqueID(String uniqueID) {
+        String oldUniqueID = this.uniqueID;
+        boolean mod = (oldUniqueID == null) ? uniqueID != null : !oldUniqueID.equals(uniqueID);
         if (mod) {
-            this.uuid = uuid;
+            this.uniqueID = uniqueID;
             if (getParent() != null) {
                 getParent().childNodeEntries().replaceEntry(this);
             }
@@ -584,12 +584,12 @@ public class NodeState extends ItemState {
      * <code>NodeId</code> or <code>null</code> if there's no matching entry.
      */
     synchronized ChildNodeEntry getChildNodeEntry(NodeId nodeId) {
-        String uuid = nodeId.getUUID();
+        String uid = nodeId.getUniqueID();
         Path path = nodeId.getPath();
         ChildNodeEntry cne;
-        if (uuid != null && path == null) {
-            // retrieve child-entry by uuid
-            cne = childNodeEntries().get(null, uuid);
+        if (uid != null && path == null) {
+            // retrieve child-entry by uid
+            cne = childNodeEntries().get(null, uid);
         } else {
            // retrieve child-entry by name and index
             Path.PathElement nameElement = path.getNameElement();
@@ -728,9 +728,9 @@ public class NodeState extends ItemState {
         properties.put(propName, propEntry);
         try {
             if (isWorkspaceState() && isUuidOrMixin(propName)) {
-                if (QName.JCR_UUID.equals(propName) && uuid == null) {
+                if (QName.JCR_UUID.equals(propName) && uniqueID == null) {
                     PropertyState ps = propEntry.getPropertyState();
-                    setUUID(ps.getValue().getString());
+                    setUniqueID(ps.getValue().getString());
                 } else if (QName.JCR_MIXINTYPES.equals(propName) && (mixinTypeNames == null || mixinTypeNames.length == 0)) {
                     PropertyState ps = propEntry.getPropertyState();
                     mixinTypeNames = getMixinNames(ps);
@@ -752,7 +752,7 @@ public class NodeState extends ItemState {
         if (cpe != null) {
             if (isWorkspaceState()) {
                 if (QName.JCR_UUID.equals(propName)) {
-                    setUUID(null);
+                    setUniqueID(null);
                 } else if (QName.JCR_MIXINTYPES.equals(propName)) {
                     mixinTypeNames = QName.EMPTY_ARRAY;
                 }
@@ -803,14 +803,14 @@ public class NodeState extends ItemState {
             case Event.NODE_ADDED:
                 int index = event.getQPath().getNameElement().getNormalizedIndex();
                 NodeId evId = (NodeId) event.getItemId();
-                String uuid = (evId.getPath() != null) ? null : evId.getUUID();
+                String uniqueID = (evId.getPath() != null) ? null : evId.getUniqueID();
 
                 // add new childNodeEntry if it has not been added by
                 // some earlier 'add' event
                 // TODO: TOBEFIXED for SNSs
-                ChildNodeEntry cne = (uuid != null) ? childNodeEntries().get(name, uuid) : childNodeEntries().get(name, index);
+                ChildNodeEntry cne = (uniqueID != null) ? childNodeEntries().get(name, uniqueID) : childNodeEntries().get(name, index);
                 if (cne == null) {
-                    cne = childNodeEntries().add(name, uuid, index);
+                    cne = childNodeEntries().add(name, uniqueID, index);
                 }
                 // and let the transiently modified session state now, that
                 // its workspace state has been touched.
@@ -873,7 +873,7 @@ public class NodeState extends ItemState {
         throws IllegalStateException {
         checkIsSessionState();
 
-        // remember parent states that have need to adjust their uuid/mixintypes
+        // remember parent states that have need to adjust their uniqueID/mixintypes
         // or that got a new child entry added or existing entries removed.
         Map modParents = new HashMap();
 
@@ -917,7 +917,7 @@ public class NodeState extends ItemState {
                         cne = overlayedParent.childNodeEntries().add(addedState.getQName(), null, index);
                     }
                     NodeState overlayed = cne.getNodeState();
-                    if (overlayed.getUUID() != null) {
+                    if (overlayed.getUniqueID() != null) {
                         overlayedParent.childNodeEntries().replaceEntry(overlayed);
                     }
                     addedState.connect(overlayed);
@@ -932,7 +932,7 @@ public class NodeState extends ItemState {
                     addedState.connect(pe.getPropertyState());
                 }
 
-                // make sure the new state gets updated (e.g. uuid created by server)
+                // make sure the new state gets updated (e.g. uniqueID created by server)
                 addedState.merge(addedState.overlayedState, true);
                 // and mark the added-state existing
                 addedState.setStatus(Status.EXISTING);
@@ -987,7 +987,7 @@ public class NodeState extends ItemState {
         }
 
         /* process all parent states that are marked modified and eventually
-           need their uuid or mixin-types being adjusted because that property
+           need their uniqueID or mixin-types being adjusted because that property
            has been added, modified or removed */
         for (Iterator it = modParents.keySet().iterator(); it.hasNext();) {
             NodeState parent = (NodeState) it.next();
@@ -1408,9 +1408,9 @@ public class NodeState extends ItemState {
             for (int i = 0; i < props.length; i++) {
                 try {
                     if (QName.JCR_UUID.equals(props[i].getQName())) {
-                        String uuid = (props[i].getStatus() == Status.REMOVED) ? null : props[i].getValue().getString();
-                        sState.setUUID(uuid);
-                        overlayed.setUUID(uuid);
+                        String uniqueID = (props[i].getStatus() == Status.REMOVED) ? null : props[i].getValue().getString();
+                        sState.setUniqueID(uniqueID);
+                        overlayed.setUniqueID(uniqueID);
                     } else if (QName.JCR_MIXINTYPES.equals(props[i].getQName())) {
                         QName[] mixins = (props[i].getStatus() == Status.REMOVED) ? QName.EMPTY_ARRAY : getMixinNames(props[i]);
 

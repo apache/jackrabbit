@@ -233,7 +233,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         QName[] qLabels = getQLabels();
         for (int i = 0; i < qLabels.length; i++) {
             if (qLabels[i].equals(l)) {
-                String uuid = getVersionStateByLabel(qLabels[i]).getUUID();
+                String uuid = getVersionStateByLabel(qLabels[i]).getUniqueID();
                 return vUUID.equals(uuid);
             }
         }
@@ -278,7 +278,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         List vlabels = new ArrayList();
         QName[] qLabels = getQLabels();
         for (int i = 0; i < qLabels.length; i++) {
-            String uuid = getVersionStateByLabel(qLabels[i]).getUUID();
+            String uuid = getVersionStateByLabel(qLabels[i]).getUniqueID();
             if (vUUID.equals(uuid)) {
                 try {
                     vlabels.add(NameFormat.format(qLabels[i], session.getNamespaceResolver()));
@@ -322,7 +322,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             // since all version histories are referenceable, protected and live
             // in the same workspace, a simple comparison of the UUIDs is sufficient.
             VersionHistoryImpl other = ((VersionHistoryImpl) otherItem);
-            return vhState.getUUID().equals(other.vhState.getUUID());
+            return vhState.getUniqueID().equals(other.vhState.getUniqueID());
         }
         return false;
     }

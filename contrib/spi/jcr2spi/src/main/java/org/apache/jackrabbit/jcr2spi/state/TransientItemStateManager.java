@@ -108,17 +108,17 @@ public class TransientItemStateManager extends CachingItemStateManager
      * {@link NodeState}.
      *
      * @param nodeName     the name of the <code>NodeState</code> to create.
-     * @param uuid         the uuid of the <code>NodeState</code> to create or
+     * @param uniqueID     the uniqueID of the <code>NodeState</code> to create or
      *                     <code>null</code> if the created <code>NodeState</code>
-     *                     cannot be identified by a UUID.
+     *                     cannot be identified by a unique ID.
      * @param nodeTypeName name of the node type of the new node state.
      * @param definition   The qualified definition for the new node state.
      * @param parent       the parent of the new node state.
      * @return a new transient {@link NodeState}.
      */
-    NodeState createNewNodeState(QName nodeName, String uuid, QName nodeTypeName,
+    NodeState createNewNodeState(QName nodeName, String uniqueID, QName nodeTypeName,
                                  QNodeDefinition definition, NodeState parent) {
-        NodeState nodeState = getTransientFactory().createNewNodeState(nodeName, uuid, parent, nodeTypeName, definition);
+        NodeState nodeState = getTransientFactory().createNewNodeState(nodeName, uniqueID, parent, nodeTypeName, definition);
 
         parent.addChildNodeState(nodeState);
         changeLog.added(nodeState);

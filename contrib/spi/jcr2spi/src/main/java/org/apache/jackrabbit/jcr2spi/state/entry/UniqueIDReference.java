@@ -25,18 +25,18 @@ import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 
 /**
- * <code>UUIDReference</code> implements a {@link ChildNodeEntry} based on a
- * <code>NodeId</code> with just a UUID and no relative path component.
+ * <code>UniqueIDReference</code> implements a {@link ChildNodeEntry} based on a
+ * <code>NodeId</code> with just a unique ID and no relative path component.
  */
-class UUIDReference extends ChildNodeReference implements ChildNodeEntry {
+class UniqueIDReference extends ChildNodeReference implements ChildNodeEntry {
 
     /**
-     * The <code>NodeId</code> with just a UUID that references the child node.
+     * The <code>NodeId</code> with just a unique ID that references the child node.
      */
     private final NodeId childId;
 
     /**
-     * Creates a new <code>UUIDReference</code>.
+     * Creates a new <code>UniqueIDReference</code>.
      *
      * @param parent  the <code>NodeState</code> that owns this child node
      *                reference.
@@ -47,16 +47,16 @@ class UUIDReference extends ChildNodeReference implements ChildNodeEntry {
      * @throws IllegalArgumentException if <code>childId</code> has a relative
      *                                  path component.
      */
-    UUIDReference(NodeState parent, NodeId childId, ItemStateFactory isf, QName name) {
+    UniqueIDReference(NodeState parent, NodeId childId, ItemStateFactory isf, QName name) {
         super(parent, name, isf);
         if (childId.getPath() != null) {
-            throw new IllegalArgumentException("Cannot build UUIDReference from childId '" + childId + "' containing a path.");
+            throw new IllegalArgumentException("Cannot build UniqueIDReference from childId '" + childId + "' containing a path.");
         }
         this.childId = childId;
     }
 
     /**
-     * Creates a new <code>UUIDReference</code> with the given parent
+     * Creates a new <code>UniqueIDReference</code> with the given parent
      * <code>NodeState</code> and an already initialized child node state.
      *
      * @param child     the child node state.
@@ -64,11 +64,11 @@ class UUIDReference extends ChildNodeReference implements ChildNodeEntry {
      * @throws IllegalArgumentException if the id of <code>child</code> has a
      *                                  relative path component.
      */
-    UUIDReference(NodeState child, ItemStateFactory isf) {
+    UniqueIDReference(NodeState child, ItemStateFactory isf) {
         super(child, isf);
         this.childId = child.getNodeId();
         if (childId.getPath() != null) {
-            throw new IllegalArgumentException("Cannot build UUIDReference from childId '" + childId + "' containing a path.");
+            throw new IllegalArgumentException("Cannot build UniqueIDReference from childId '" + childId + "' containing a path.");
         }
     }
 
@@ -94,9 +94,9 @@ class UUIDReference extends ChildNodeReference implements ChildNodeEntry {
     /**
      * This implementation always returns a non-null value.
      * @inheritDoc
-     * @see ChildNodeEntry#getUUID()
+     * @see ChildNodeEntry#getUniqueID()
      */
-    public String getUUID() {
-        return childId.getUUID();
+    public String getUniqueID() {
+        return childId.getUniqueID();
     }
 }

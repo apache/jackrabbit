@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi.state.entry;
 
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
@@ -42,32 +43,33 @@ public abstract class ChildNodeReference extends ChildItemReference implements C
     public static ChildNodeEntry create(NodeState child, ItemStateFactory isf,
                                         IdFactory idFactory) {
         ChildNodeEntry cne;
-        if (child.getUUID() == null) {
+        if (child.getUniqueID() == null) {
             cne = new PathElementReference(child, isf, idFactory);
         } else {
-            cne = new UUIDReference(child, isf);
+            cne = new UniqueIDReference(child, isf);
         }
         return cne;
     }
 
     /**
      * Creates a <code>ChildNodeEntry</code> instance based on
-     *  <code>nodeName</code> and an optional <code>uuid</code>.
+     *  <code>name</code> and an optional <code>uniqueID</code>.
      *
      * @param parent
-     * @param childName
-     * @param childUUID
+     * @param name
+     * @param uniqueID
      * @param isf
      * @param idFactory
      * @return
      */
-    public static ChildNodeEntry create(NodeState parent, QName childName,
-                                        String childUUID, ItemStateFactory isf,
+    public static ChildNodeEntry create(NodeState parent, QName name,
+                                        String uniqueID, ItemStateFactory isf,
                                         IdFactory idFactory) {
-        if (childUUID == null) {
-            return new PathElementReference(parent, childName, isf, idFactory);
+        if (uniqueID == null) {
+            return new PathElementReference(parent, name, isf, idFactory);
         } else {
-            return new UUIDReference(parent, idFactory.createNodeId(childUUID), isf, childName);
+            NodeId nId = idFactory.createNodeId(uniqueID);
+            return new UniqueIDReference(parent, nId, isf, name);
         }
     }
 

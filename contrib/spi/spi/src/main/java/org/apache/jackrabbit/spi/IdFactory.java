@@ -28,7 +28,7 @@ public interface IdFactory {
 
     public NodeId createNodeId(NodeId parentId, Path path);
 
-    public NodeId createNodeId(String uuid, Path path);
+    public NodeId createNodeId(String uniqueID, Path path);
 
-    public NodeId createNodeId(String uuid);
+    public NodeId createNodeId(String uniqueID);
 }

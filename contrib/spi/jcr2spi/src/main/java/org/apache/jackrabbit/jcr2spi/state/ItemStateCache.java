@@ -34,25 +34,25 @@ public class ItemStateCache implements ItemStateCreationListener {
     /**
      * Maps a String uuid to a {@link NodeState}.
      */
-    private final Map uuid2NodeState;
+    private final Map uniqueId2NodeState;
 
     /**
      * Creates a new <code>CachingItemStateManager</code>.
      *
      */
     public ItemStateCache() {
-        this.uuid2NodeState = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+        this.uniqueId2NodeState = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
     }
 
 
-    public NodeState getNodeState(String uuid) {
-        return (NodeState) uuid2NodeState.get(uuid);
+    public NodeState getNodeState(String uniqueID) {
+        return (NodeState) uniqueId2NodeState.get(uniqueID);
     }
 
     public NodeState getNodeState(NodeId nodeId) {
-        String uuid = nodeId.getUUID();
-        if (uuid != null && nodeId.getPath() == null) {
-            return getNodeState(uuid);
+        String uid = nodeId.getUniqueID();
+        if (uid != null && nodeId.getPath() == null) {
+            return getNodeState(uid);
         } else {
             // TODO: missing caching for NodeState that are not only identified by uuid.
             return null;
@@ -77,9 +77,9 @@ public class ItemStateCache implements ItemStateCreationListener {
         if (Status.isTerminal(state.getStatus())) {
             if (state.isNode()) {
                 NodeState nodeState = (NodeState) state;
-                String uuid = nodeState.getUUID();
-                if (uuid != null) {
-                    uuid2NodeState.remove(uuid);
+                String uniqueID = nodeState.getUniqueID();
+                if (uniqueID != null) {
+                    uniqueId2NodeState.remove(uniqueID);
                 }
             }
             state.removeListener(this);
@@ -107,10 +107,10 @@ public class ItemStateCache implements ItemStateCreationListener {
     private void putToCache(ItemState state) {
         if (state.isNode() && (state.getStatus() == Status.EXISTING || state.getStatus() == Status.MODIFIED)) {
             NodeState nodeState = (NodeState) state;
-            // NOTE: uuid is retrieved from the state and not from the NodeId.
-            String uuid = nodeState.getUUID();
-            if (uuid != null) {
-                uuid2NodeState.put(uuid, nodeState);
+            // NOTE: uniqueID is retrieved from the state and not from the NodeId.
+            String uniqueID = nodeState.getUniqueID();
+            if (uniqueID != null) {
+                uniqueId2NodeState.put(uniqueID, nodeState);
             }
         }
         // TODO: add caching for other items as well

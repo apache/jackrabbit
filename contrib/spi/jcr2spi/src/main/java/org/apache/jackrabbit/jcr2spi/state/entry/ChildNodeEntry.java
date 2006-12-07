@@ -23,7 +23,7 @@ import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 
 /**
  * <code>ChildNodeEntry</code> specifies the name, index (in the case of
- * same-name siblings) and the UUID of a child node entry.
+ * same-name siblings) and the unique ID of a child node entry.
  */
 public interface ChildNodeEntry extends ChildItemEntry {
 
@@ -33,11 +33,11 @@ public interface ChildNodeEntry extends ChildItemEntry {
     public NodeId getId();
 
     /**
-     * @return the UUID of the node state which is referenced by this child node
-     * entry or <code>null</code> if the node state cannot be identified with a
-     * UUID.
+     * @return the unique ID of the node state which is referenced by this
+     * child node entry or <code>null</code> if the node state cannot be
+     * identified with a unique ID.
      */
-    public String getUUID();
+    public String getUniqueID();
 
     /**
      * @return the index of this child node entry to suppport same-name siblings.

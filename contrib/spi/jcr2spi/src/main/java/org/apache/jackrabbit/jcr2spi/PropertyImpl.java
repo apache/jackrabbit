@@ -22,6 +22,7 @@ import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.value.QValue;
 import org.apache.jackrabbit.value.ValueFormat;
 import org.apache.jackrabbit.value.ValueHelper;
@@ -262,8 +263,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (value == null) {
             setInternalValues(null, reqType);
         } else {
-            checkValidReference(value, reqType, this);
-            QValue qValue = QValue.create(((NodeImpl)value).getUUID(), PropertyType.REFERENCE);
+            checkValidReference(value, reqType, session.getNamespaceResolver());
+            QValue qValue = QValue.create(value.getUUID(), PropertyType.REFERENCE);
             setInternalValues(new QValue[]{qValue}, reqType);
         }
     }
@@ -545,24 +546,21 @@ public class PropertyImpl extends ItemImpl implements Property {
      * 
      * @param value
      * @param propertyType
-     * @param itemImpl
      * @throws ValueFormatException
      * @throws RepositoryException
      */
-    static void checkValidReference(Node value, int propertyType, ItemImpl itemImpl) throws ValueFormatException, RepositoryException {
+    static void checkValidReference(Node value, int propertyType, NamespaceResolver nsResolver) throws ValueFormatException, RepositoryException {
         if (propertyType == PropertyType.REFERENCE) {
-            if (value instanceof NodeImpl) {
-                NodeImpl targetNode = (NodeImpl)value;
-                if (!targetNode.isNodeType(QName.MIX_REFERENCEABLE)) {
+            try {
+                String jcrName = NameFormat.format(QName.MIX_REFERENCEABLE, nsResolver);
+                if (!value.isNodeType(jcrName)) {
                     throw new ValueFormatException("Target node must be of node type mix:referenceable");
                 }
-            } else {
-                String msg = "Incompatible Node object: " + value + "(" + itemImpl.safeGetJCRPath() + ")";
-                log.debug(msg);
-                throw new RepositoryException(msg);
+            } catch (NoPrefixDeclaredException e) {
+                throw new RepositoryException(e);
             }
         } else {
-            throw new ValueFormatException("Property must be of type REFERENCE (" + itemImpl.safeGetJCRPath() + ")");
+            throw new ValueFormatException("Property must be of type REFERENCE.");
         }
     }
 }

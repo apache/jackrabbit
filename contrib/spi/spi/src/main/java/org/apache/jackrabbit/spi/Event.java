@@ -88,13 +88,6 @@ public interface Event {
     public NodeId getParentId();
 
     /**
-     * @return the uuid of the 'associated' node of this event or <code>null</code>
-     * if the node is not referenceable.
-     * @see javax.jcr.observation.ObservationManager#addEventListener
-     */
-    public String getUUID();
-
-    /**
      * @return the name of the primary node type of the 'associated' node of
      *         this event.
      * @see javax.jcr.observation.ObservationManager#addEventListener

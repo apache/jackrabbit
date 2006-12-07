@@ -51,7 +51,7 @@ public interface RepositoryService {
 
     /**
      * Return the <code>IdFactory</code>
-     * 
+     *
      * @return
      */
     public IdFactory getIdFactory();
@@ -130,10 +130,10 @@ public interface RepositoryService {
 
     /**
      * The <code>NodeId</code> of the root node may basically have two
-     * characteristics. If the root node can be identified with a UUID the
-     * returned <code>NodeId</code> simply has a UUID part and the path
+     * characteristics. If the root node can be identified with a unique ID the
+     * returned <code>NodeId</code> simply has a uniqueID part and the path
      * part is <code>null</code>. If the root node cannot be identified with a
-     * UUID the UUID part is <code>null</code> and the path part will be set
+     * unique ID the uniqueID part is <code>null</code> and the path part will be set
      * to "/".
      *
      * @param sessionInfo
@@ -334,7 +334,7 @@ public interface RepositoryService {
 
     /**
      * Retrieve available lock information for the given <code>NodeId</code>.
-     * 
+     *
      * @param sessionInfo
      * @param nodeId
      * @return
@@ -566,7 +566,7 @@ public interface RepositoryService {
      * encoded as a bitmask.
      * @param absPath An absolute path.
      * @param isDeep A <code>boolean</code>.
-     * @param uuid Array of UUIDs.
+     * @param uuid Array of jcr:uuid properties.
      * @param nodeTypeName Array of node type names.
      * @param noLocal A <code>boolean</code>.
      * @return the event filter instance with the given parameters.
