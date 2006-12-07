@@ -185,18 +185,23 @@ public class BinaryValue implements Serializable, StatefulValue {
      *
      * @param out The <code>ObjectOutputStream</code> to where the binary
      *      data is copied.
-     * @throws IOException If an error occurrs writing the binary data.
+     * @throws IOException If an error occurs writing the binary data.
      */
     private void writeObject(ObjectOutputStream out) throws IOException {
         byte[] buffer = new byte[4096];
         int bytes = 0;
         while ((bytes = stream.read(buffer)) >= 0) {
             // Write a segment of the input stream
-            out.writeInt(bytes);
-            out.write(buffer, 0, bytes);
+            if (bytes > 0) {
+                // just to ensure that no 0 is written
+                out.writeInt(bytes);
+                out.write(buffer, 0, bytes);
+            }
         }
         // Write the end of stream marker
         out.writeInt(0);
+        // close stream
+        stream.close();
     }
 
     /**
@@ -207,7 +212,7 @@ public class BinaryValue implements Serializable, StatefulValue {
      *
      * @param in The <code>ObjectInputStream</code> from where to get the
      *      binary data.
-     * @throws IOException If an error occurrs reading the binary data.
+     * @throws IOException If an error occurs reading the binary data.
      */
     private void readObject(ObjectInputStream in) throws IOException {
         final File file = File.createTempFile("jcr-value", "bin");
