@@ -25,7 +25,7 @@ public interface ChildInfo {
 
     public QName getName();
 
-    public String getUUID();
+    public String getUniqueID();
 
     public int getIndex();
 }

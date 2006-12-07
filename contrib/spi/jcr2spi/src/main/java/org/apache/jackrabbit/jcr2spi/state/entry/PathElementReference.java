@@ -88,9 +88,9 @@ class PathElementReference extends ChildNodeReference implements ChildNodeEntry 
     /**
      * This implementation always returns <code>null</code>.
      * @inheritDoc
-     * @see ChildNodeEntry#getUUID()
+     * @see ChildNodeEntry#getUniqueID()
      */
-    public String getUUID() {
+    public String getUniqueID() {
         return null;
     }
 }

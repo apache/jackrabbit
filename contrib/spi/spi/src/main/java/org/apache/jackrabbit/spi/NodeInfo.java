@@ -25,7 +25,7 @@ public interface NodeInfo extends ItemInfo {
 
     /**
      * @return identifier for the item that is based on this info object. the id
-     * can either be an absolute path or a uuid (+ relative path).
+     * can either be an absolute path or a uniqueID (+ relative path).
      * @see RepositoryService#getNodeInfo(SessionInfo, NodeId)
      */
     public NodeId getId();

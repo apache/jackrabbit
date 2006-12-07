@@ -30,16 +30,16 @@ public interface TransientItemStateFactory extends ItemStateFactory {
      * Creates a transient child <code>NodeState</code> with the given
      * <code>name</code>.
      *
-     * @param name   the name of the <code>NodeState</code> to create.
-     * @param uuid   the uuid of the <code>NodeState</code> to create or
-     *               <code>null</code> if the created <code>NodeState</code>
-     *               cannot be identified by a UUID.
+     * @param name the name of the <code>NodeState</code> to create.
+     * @param uniqueID the unique ID of the <code>NodeState</code> to create or
+     * <code>null</code> if the created <code>NodeState</code> cannot be
+     * identified by a unique ID.
      * @param parent the parent of the <code>NodeState</code> to create.
      * @param nodeTypeName name of the primary nodetype
      * @param definition the definition for this new NodeState
      * @return the created <code>NodeState</code>.
      */
-    public NodeState createNewNodeState(QName name, String uuid,
+    public NodeState createNewNodeState(QName name, String uniqueID,
                                         NodeState parent, QName nodeTypeName,
                                         QNodeDefinition definition);
 

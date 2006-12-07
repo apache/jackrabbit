@@ -33,7 +33,6 @@ import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
-import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.jcr.version.report.LocateByUuidReport;
 import org.apache.jackrabbit.webdav.client.methods.DavMethodBase;
@@ -116,18 +115,18 @@ class URIResolverImpl implements URIResolver {
             StringBuffer uriBuffer = new StringBuffer();
 
             Path path = itemId.getPath();
-            String uuid = itemId.getUUID();
+            String uniqueID = itemId.getUniqueID();
 
             // resolver uuid part
-            if (uuid != null) {
-                ItemId uuidId = (path == null) ? itemId : service.getIdFactory().createNodeId(uuid);
+            if (uniqueID != null) {
+                ItemId uuidId = (path == null) ? itemId : service.getIdFactory().createNodeId(uniqueID);
                 if (path != null & cache.containsItemId(uuidId)) {
                     // append uri of parent node, that is already cached
                     uriBuffer.append(cache.getUri(uuidId));
                 } else {
                     // try to request locate-by-uuid report to build the uri
                     ReportInfo rInfo = new ReportInfo(LocateByUuidReport.LOCATE_BY_UUID_REPORT);
-                    rInfo.setContentElement(DomUtil.hrefToXml(uuid, domFactory));
+                    rInfo.setContentElement(DomUtil.hrefToXml(uniqueID, domFactory));
 
                     ReportMethod rm = null;
                     try {
@@ -141,7 +140,7 @@ class URIResolverImpl implements URIResolver {
                             uriBuffer.append(ms.getResponses()[0].getHref());
                             cache.add(ms.getResponses()[0].getHref(), uuidId);
                         } else {
-                            throw new ItemNotFoundException("Cannot identify item with uuid " + uuid);
+                            throw new ItemNotFoundException("Cannot identify item with uniqueID " + uniqueID);
                         }
 
                     } catch (IOException e) {
@@ -185,54 +184,21 @@ class URIResolverImpl implements URIResolver {
         NodeId nodeId;
         DavPropertySet propSet = response.getProperties(DavServletResponse.SC_OK);
 
-        String uuid = getUUID(propSet);
-        if (uuid != null) {
-            nodeId = service.getIdFactory().createNodeId(uuid);
+        String uniqueID = service.getUniqueID(propSet);
+        if (uniqueID != null) {
+            nodeId = service.getIdFactory().createNodeId(uniqueID);
         } else {
-            QName qName = getQName(propSet);
+            QName qName = service.getQName(propSet);
             if (qName == QName.ROOT) {
                 nodeId = service.getIdFactory().createNodeId((String) null, Path.ROOT);
             } else {
-                int index = getIndex(propSet);
+                int index = service.getIndex(propSet);
                 nodeId = service.getIdFactory().createNodeId(parentId, Path.create(qName, index));
             }
         }
         // cache
         cache.add(response.getHref(), nodeId);
         return nodeId;
-    }
-
-    String getUUID(DavPropertySet propSet) {
-        if (propSet.contains(ItemResourceConstants.JCR_UUID)) {
-            return propSet.get(ItemResourceConstants.JCR_UUID).getValue().toString();
-        } else {
-            return null;
-        }
-    }
-
-    QName getQName(DavPropertySet propSet) throws RepositoryException {
-        DavProperty nameProp = propSet.get(ItemResourceConstants.JCR_NAME);
-        if (nameProp != null && nameProp.getValue() != null) {
-            // not root node. Note that 'unespacing' is not required since
-            // the jcr:name property does not provide the value in escaped form.
-            String jcrName = nameProp.getValue().toString();
-            try {
-                return NameFormat.parse(jcrName, nsResolver);
-            } catch (NameException e) {
-                throw new RepositoryException(e);
-            }
-        } else {
-            return QName.ROOT;
-        }
-    }
-
-    int getIndex(DavPropertySet propSet) {
-        int index = Path.INDEX_UNDEFINED;
-        DavProperty indexProp = propSet.get(ItemResourceConstants.JCR_INDEX);
-        if (indexProp != null && indexProp.getValue() != null) {
-            index = Integer.parseInt(indexProp.getValue().toString());
-        }
-        return index;
     }
 
     PropertyId buildPropertyId(NodeId parentId, MultiStatusResponse response,

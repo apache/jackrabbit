@@ -39,7 +39,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import java.io.InputStream;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
@@ -147,11 +146,11 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
             }
 
             // build the node state
-            String uuid = null;
+            String uniqueID = null;
             if (info.getId().getPath() == null) {
-                uuid = info.getId().getUUID();
+                uniqueID = info.getId().getUniqueID();
             }
-            NodeState state = new NodeState(info.getQName(), uuid, parent, info.getNodetype(),
+            NodeState state = new NodeState(info.getQName(), uniqueID, parent, info.getNodetype(),
                 definition, Status.EXISTING, this, service.getIdFactory(), true);
 
             // names of child property entries
@@ -215,7 +214,7 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
             Collection childInfos = service.getChildInfos(sessionInfo, nodeState.getNodeId());
             for (Iterator it = childInfos.iterator(); it.hasNext();) {
                 ChildInfo ci = (ChildInfo) it.next();
-                entries.add(ci.getName(), ci.getUUID(), ci.getIndex());
+                entries.add(ci.getName(), ci.getUniqueID(), ci.getIndex());
             }
             return entries;
         } catch (PathNotFoundException e) {
@@ -249,17 +248,10 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
 
             QValue[] qValues;
             if (info.getType() == PropertyType.BINARY) {
-                InputStream[] ins = info.getValuesAsStream();
-                qValues = new QValue[ins.length];
-                for (int i = 0; i < ins.length; i++) {
-                    qValues[i] = QValue.create(ins[i]);
-                }
+                qValues = QValue.create(info.getValuesAsStream(), PropertyType.BINARY);
             } else {
                 String[] str = info.getValues();
-                qValues = new QValue[str.length];
-                for (int i = 0; i < str.length; i++) {
-                    qValues[i] = QValue.create(str[i], info.getType());
-                }
+                qValues = QValue.create(str, info.getType());
             }
 
             state.init(info.getType(), qValues);
@@ -292,7 +284,7 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
     //-----------------------------------------------------< NodeReferences >---
     /**
      * <code>NodeReferences</code> represents the references (i.e. properties of
-     * type <code>REFERENCE</code>) to a particular node (denoted by its uuid).
+     * type <code>REFERENCE</code>) to a particular node (denoted by its unique ID).
      */
     private class NodeReferencesImpl implements NodeReferences {
 
@@ -319,10 +311,10 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
          */
         public boolean isEmpty() {
             // shortcut
-            if (nodeState.getUUID() == null) {
+            if (nodeState.getUniqueID() == null) {
                 return true;
             }
-            // nodestate has a uuid and is potentially mix:referenceable
+            // nodestate has a unique ID and is potentially mix:referenceable
             // => try to retrieve references
             try {
                 NodeInfo info = service.getNodeInfo(sessionInfo, nodeState.getNodeId());
@@ -338,10 +330,10 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
          */
         public Iterator iterator() {
             // shortcut
-            if (nodeState.getUUID() == null) {
+            if (nodeState.getUniqueID() == null) {
                 return Collections.EMPTY_SET.iterator();
             }
-            // nodestate has a uuid and is potentially mix:referenceable
+            // nodestate has a uniqueID and is potentially mix:referenceable
             // => try to retrieve references
             try {
                 NodeInfo info = service.getNodeInfo(sessionInfo, nodeState.getNodeId());

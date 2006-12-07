@@ -431,7 +431,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (value == null) {
             v = null;
         } else {
-            PropertyImpl.checkValidReference(value, PropertyType.REFERENCE, this);
+            PropertyImpl.checkValidReference(value, PropertyType.REFERENCE, session.getNamespaceResolver());
             v = session.getValueFactory().createValue(value);
         }
         return setProperty(name, v, PropertyType.REFERENCE);
@@ -544,7 +544,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public String getUUID() throws UnsupportedRepositoryOperationException, RepositoryException {
         checkStatus();
-        String uuid = getNodeState().getUUID();
+        String uuid = getNodeState().getUniqueID();
         if (uuid == null || !isNodeType(QName.MIX_REFERENCEABLE)) {
             throw new UnsupportedRepositoryOperationException();
         }

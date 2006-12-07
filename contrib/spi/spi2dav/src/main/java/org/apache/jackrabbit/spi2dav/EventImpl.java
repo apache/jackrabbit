@@ -67,10 +67,6 @@ public class EventImpl implements Event, ObservationConstants {
         return parentId;
     }
 
-    public String getUUID() {
-        return getItemId().getUUID();
-    }
-
     public QName getPrimaryNodeTypeName() {
         // TODO not available from XML_EVENT element
         return null;

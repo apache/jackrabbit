@@ -38,10 +38,10 @@ public interface Batch {
      * @param parentId
      * @param nodeName Name of the node to be created
      * @param nodetypeName
-     * @param uuid UUID of the node to be created or <code>null</code>. If due
-     * to an import the uuid of the resulting node is already defined, it must
-     * be passed as separate uuid parameter, indicating a binding value for
-     * the server. Otherwise the uuid must be <code>null</code>.
+     * @param uuid Value for the jcr:uuid property of the node to be created or
+     * <code>null</code>. If due to an import the uuid of the resulting node is
+     * already defined, it must be passed as separate uuid parameter, indicating
+     * a binding value for the server. Otherwise the uuid must be <code>null</code>.
      * @throws javax.jcr.ItemExistsException
      * @throws javax.jcr.PathNotFoundException
      * @throws javax.jcr.version.VersionException

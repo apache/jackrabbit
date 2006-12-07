@@ -26,12 +26,12 @@ class ChildInfoImpl implements ChildInfo {
 
     private final QName qName;
     private final int index;
-    private final String uuid;
+    private final String uniqueID;
 
-    ChildInfoImpl(QName qName, int index, String uuid) {
+    ChildInfoImpl(QName qName, int index, String uniqueID) {
         this.qName = qName;
         this.index = index;
-        this.uuid = uuid;
+        this.uniqueID = uniqueID;
     }
 
     /**
@@ -42,10 +42,10 @@ class ChildInfoImpl implements ChildInfo {
     }
 
     /**
-     * @see ChildInfo#getUUID()
+     * @see ChildInfo#getUniqueID()
      */
-    public String getUUID() {
-        return this.uuid;
+    public String getUniqueID() {
+        return this.uniqueID;
     }
 
     /**

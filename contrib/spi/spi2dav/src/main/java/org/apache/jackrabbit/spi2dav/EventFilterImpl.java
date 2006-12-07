@@ -58,7 +58,7 @@ class EventFilterImpl implements EventFilter {
      * @param eventTypes    the event types this filter is interested in.
      * @param absPath       filter events that are below this path.
      * @param isDeep        whether this filter is applied deep.
-     * @param uuids         the uuids of the nodes this filter allows.
+     * @param uuids         the jcr:uuid of the nodes this filter allows.
      * @param nodeTypeNames the QNames of the already resolved node types this
      *                      filter allows.
      * @param noLocal       whether this filter accepts local events or not.
@@ -93,7 +93,7 @@ class EventFilterImpl implements EventFilter {
         NodeId parentId = event.getParentId();
         if (uuids != null) {
             if (parentId.getPath() == null) {
-                if (!uuids.contains(parentId.getUUID())) {
+                if (!uuids.contains(parentId.getUniqueID())) {
                     return false;
                 }
             } else {

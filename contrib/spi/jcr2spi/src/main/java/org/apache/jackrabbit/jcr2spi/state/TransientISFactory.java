@@ -49,10 +49,10 @@ final class TransientISFactory implements TransientItemStateFactory {
      * @inheritDoc
      * @see TransientItemStateFactory#createNewNodeState(QName, String, NodeState, QName, QNodeDefinition)
      */
-    public NodeState createNewNodeState(QName name, String uuid,
+    public NodeState createNewNodeState(QName name, String uniqueID,
                                         NodeState parent, QName nodetypeName,
                                         QNodeDefinition definition) {
-        NodeState nodeState = new NodeState(name, uuid, parent, nodetypeName,
+        NodeState nodeState = new NodeState(name, uniqueID, parent, nodetypeName,
             definition, Status.NEW, this, idFactory, false);
 
         // notify listeners when this item state is saved or invalidated

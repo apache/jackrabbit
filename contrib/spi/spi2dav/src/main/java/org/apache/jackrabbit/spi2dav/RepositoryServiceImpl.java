@@ -100,6 +100,7 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
@@ -314,6 +315,38 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return parentId;
     }
 
+    String getUniqueID(DavPropertySet propSet) {
+        if (propSet.contains(ItemResourceConstants.JCR_UUID)) {
+            return propSet.get(ItemResourceConstants.JCR_UUID).getValue().toString();
+        } else {
+            return null;
+        }
+    }
+
+    QName getQName(DavPropertySet propSet) throws RepositoryException {
+        DavProperty nameProp = propSet.get(ItemResourceConstants.JCR_NAME);
+        if (nameProp != null && nameProp.getValue() != null) {
+            // not root node. Note that 'unespacing' is not required since
+            // the jcr:name property does not provide the value in escaped form.
+            String jcrName = nameProp.getValue().toString();
+            try {
+                return NameFormat.parse(jcrName, nsResolver);
+            } catch (NameException e) {
+                throw new RepositoryException(e);
+            }
+        } else {
+            return QName.ROOT;
+        }
+    }
+
+    int getIndex(DavPropertySet propSet) {
+        int index = Path.INDEX_UNDEFINED;
+        DavProperty indexProp = propSet.get(ItemResourceConstants.JCR_INDEX);
+        if (indexProp != null && indexProp.getValue() != null) {
+            index = Integer.parseInt(indexProp.getValue().toString());
+        }
+        return index;
+    }
     //--------------------------------------------------------------------------
 
     /**
@@ -766,9 +799,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     if (childProps.contains(DavPropertyName.RESOURCETYPE) &&
                         childProps.get(DavPropertyName.RESOURCETYPE).getValue() != null) {
 
-                        QName qName = uriResolver.getQName(childProps);
-                        int index = uriResolver.getIndex(childProps);
-                        String uuid = uriResolver.getUUID(childProps);
+                        QName qName = getQName(childProps);
+                        int index = getIndex(childProps);
+                        String uuid = getUniqueID(childProps);
 
                         ChildInfo childInfo = new ChildInfoImpl(qName, index, uuid);
                         childEntries.add(childInfo);
