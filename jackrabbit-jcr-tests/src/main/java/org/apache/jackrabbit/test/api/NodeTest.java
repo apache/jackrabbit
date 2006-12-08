@@ -888,7 +888,6 @@ public class NodeTest extends AbstractJCRTest {
 
             // save the changes
             session2.save();
-
             // call refresh on session 1
             defaultRootNode.refresh(false);
 
