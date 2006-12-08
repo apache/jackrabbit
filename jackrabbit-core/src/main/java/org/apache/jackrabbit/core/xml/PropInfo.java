@@ -133,18 +133,23 @@ public class PropInfo {
         }
 
         // multi- or single-valued property?
-        if (va.length == 1) {
-            // could be single- or multi-valued (n == 1)
+        if (va.length == 1 && !def.isMultiple()) {
+            Exception e = null;
             try {
-                // try setting single-value
+                // set single-value
                 node.setProperty(name, va[0]);
             } catch (ValueFormatException vfe) {
-                // try setting value array
-                node.setProperty(name, va, type);
+                e = vfe;
             } catch (ConstraintViolationException cve) {
-                // try setting value array
+                e = cve;
+            }
+            if (e != null) {
+                // setting single-value failed, try setting value array
+                // as a last resort (in case there are ambiguous property
+                // definitions)
                 node.setProperty(name, va, type);
             }
+            //
         } else {
             // can only be multi-valued (n == 0 || n > 1)
             node.setProperty(name, va, type);
