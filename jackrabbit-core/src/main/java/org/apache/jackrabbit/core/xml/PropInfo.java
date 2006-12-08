@@ -149,7 +149,6 @@ public class PropInfo {
                 // definitions)
                 node.setProperty(name, va, type);
             }
-            //
         } else {
             // can only be multi-valued (n == 0 || n > 1)
             node.setProperty(name, va, type);
