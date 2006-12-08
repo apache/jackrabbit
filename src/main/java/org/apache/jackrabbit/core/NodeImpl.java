@@ -2548,6 +2548,17 @@ public class NodeImpl extends ItemImpl implements Node {
      * {@inheritDoc}
      */
     public boolean isNodeType(String nodeTypeName) throws RepositoryException {
+
+        // try shortcut first (avoids parsing of name)...
+        try {
+            if (NameFormat.format(primaryTypeName, session.getNamespaceResolver())
+                    .equals(nodeTypeName)) {
+                return true;
+            }
+        } catch (NoPrefixDeclaredException npde) {
+            throw new RepositoryException("invalid node type name: " + nodeTypeName, npde);
+        }
+
         QName ntName;
         try {
             ntName = NameFormat.parse(nodeTypeName, session.getNamespaceResolver());
