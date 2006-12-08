@@ -52,7 +52,8 @@
       </item>
       <item name="Configuring"                href="/doc/config.html" />
       <item name="Node Types"                 href="/doc/nodetype/index.html" collapse="true">
-          <item name="Compact Notation"       href="/doc/nodetype/cnd.html" />
+         <item name="Compact Notation"        href="/doc/nodetype/cnd.html" />
+         <item name="Visualization"           href="/doc/nodetype/visualization.html" />
       </item>
     </menu>
     ${reports}
