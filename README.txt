@@ -57,22 +57,19 @@ or with ViewVC at
 
    http://svn.apache.org/viewvc/jackrabbit/trunk/
 
-The Jackrabbit main project is located in the "jackrabbit" subdirectory
-and the "contrib" subdirectory contains various additional modules and
-contributed projects.
-
 To checkout the main Jackrabbit source tree, run
 
    svn checkout http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit
 
 Once you have a copy of the source code tree, you can use Apache Maven
 
-   http://maven.apache.org/maven-1.x/
+   http://maven.apache.org/
 
-to build the project. You should use Maven 1.0.2 to build Jackrabbit.
-The minimal command to build and test all the Jackrabbit sources is:
+to build the project. You should use Maven 2 to build Jackrabbit.
+The minimal command to build, test, and package all the main Jackrabbit
+components is:
 
-   maven
+   mvn install
 
 For more instructions, please see the documentation at:
 
