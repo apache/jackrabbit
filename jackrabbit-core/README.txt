@@ -1,6 +1,21 @@
-=============================================================
-Welcome to Apache Jackrabbit  <http://jackrabbit.apache.org/>
-=============================================================
+==========================
+Welcome to Jackrabbit Core
+==========================
+
+This is the Core component of the Apache Jackrabbit project.
+This component contains the core of the fully JSR-170 compliant
+Apache Jackrabbit content repository implementation.
+
+See the Apache Jackrabbit web site (http://jackrabbit.apache.org/)
+for documentation and other information. You are welcome to join the
+Jackrabbit mailing lists (http://jackrabbit.apache.org/mail-lists.html)
+to discuss this compoment and to use the Jackrabbit issue tracker
+(http://issues.apache.org/jira/browse/JCR) to report issues or request
+new features.
+
+Apache Jackrabbit is a project of the Apache Software Foundation
+(http://www.apache.org).
+
 
 License (see also LICENSE.txt)
 ==============================
@@ -26,60 +41,19 @@ limitations under the License.
 Getting Started
 ===============
 
-Mailing Lists
--------------
+This compoment uses a Maven 2 (http://maven.apache.org/) build
+environment. If you have Maven 2 installed, you can compile and
+package the jacrabbit-core jar using the following command:
 
-To get involved with the Apache Jackrabbit project, start by having a
-look at our website (link at top of page) and join our mailing
-lists by sending an empty message to
+    mvn package
 
-   dev-subscribe     :at: jackrabbit.apache.org
-and
-   commits-subscribe :at: jackrabbit.apache.org
+See the Maven 2 documentation for other build features.
 
-and the dev mailing list archives can be found at
+The latest source code for this compoment is available in the
+Subversion (http://subversion.tigris.org/) source repository of
+the Apache Software Foundation. If you have Subversion installed,
+you can checkout the latest source using the following command:
 
-   http://jackrabbit.apache.org/mail/dev/
+    svn checkout http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-core
 
-
-Downloading
------------
-
-The Jackrabbit source code is available via Subversion at
-
-   https://svn.apache.org/repos/asf/jackrabbit/trunk
-
-and anonymous access is available at
-
-   http://svn.apache.org/repos/asf/jackrabbit/trunk
-
-or with ViewVC at
-
-   http://svn.apache.org/viewvc/jackrabbit/trunk/
-
-The Jackrabbit main project is located in the "jackrabbit" subdirectory
-and the "contrib" subdirectory contains various additional modules and
-contributed projects.
-
-To checkout the main Jackrabbit source tree, run
-
-   svn checkout http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit
-
-Once you have a copy of the source code tree, you can use Apache Maven
-
-   http://maven.apache.org/maven-1.x/
-
-to build the project. You should use Maven 1.0.2 to build Jackrabbit.
-The minimal command to build and test all the Jackrabbit sources is:
-
-   maven
-
-For more instructions, please see the documentation at:
-
-   http://jackrabbit.apache.org/doc/building.html
-
-Credits
-=======
-
-See http://jackrabbit.apache.org/team-list.html for the list of 
-Jackrabbit committers and main contributors.
+See the Subversion documentation for other source control features.
