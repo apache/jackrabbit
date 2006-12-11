@@ -76,7 +76,7 @@ public class FileJournal implements Journal {
     /**
      * Log extension.
      */
-    private static final String LOG_EXTENSION = ".log";
+    private static final String LOG_EXTENSION = "log";
 
     /**
      * Default base name for journal files.
@@ -132,6 +132,11 @@ public class FileJournal implements Journal {
      * Journal root directory.
      */
     private File root;
+
+    /**
+     * Journal file.
+     */
+    private File journal;
 
     /**
      * Instance counter.
@@ -254,6 +259,8 @@ public class FileJournal implements Journal {
             String msg = "Directory specified does either not exist or is not a directory: " + directory;
             throw new JournalException(msg);
         }
+        journal = new File(root, basename + "." + LOG_EXTENSION);
+
         instanceRevision = new FileRevision(new File(revision));
         globalRevision = new FileRevision(new File(root, REVISION_NAME));
 
@@ -646,13 +653,11 @@ public class FileJournal implements Journal {
 
             long nextRevision = record.getNextRevision();
 
-            File journalFile = new File(root, basename + LOG_EXTENSION);
-
-            FileRecordLog recordLog = new FileRecordLog(journalFile);
+            FileRecordLog recordLog = new FileRecordLog(journal);
             if (!recordLog.isNew()) {
                 if (nextRevision - recordLog.getFirstRevision() > maximumSize) {
                     switchLogs();
-                    recordLog = new FileRecordLog(journalFile);
+                    recordLog = new FileRecordLog(journal);
                 }
             }
             recordLog.append(record);
