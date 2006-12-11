@@ -30,13 +30,17 @@ public interface HierarchyManager {
 
     /**
      * Resolves a path into an item id.
-     * @param path
-     * @return
-     * @throws PathNotFoundException
-     * @throws RepositoryException
+     * <p/>
+     * Note that, for performance reasons, this method returns <code>null</code>
+     * rather than throwing a <code>PathNotFoundException</code> if there's no
+     * item to be found at <code>path</code>.
+     *  
+     * @param path path to resolve
+     * @return item id refered to by <code>path</code> or <code>null</code>
+     *         if there's no item at <code>path</code>.
+     * @throws RepositoryException if an error occurs
      */
-    ItemId resolvePath(Path path)
-            throws PathNotFoundException, RepositoryException;
+    ItemId resolvePath(Path path) throws RepositoryException;
 
     /**
      * Returns the path to the given item.

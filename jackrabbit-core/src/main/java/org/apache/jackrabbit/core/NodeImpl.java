@@ -179,15 +179,15 @@ public class NodeImpl extends ItemImpl implements Node {
              */
             Path p = PathFormat.parse(getPrimaryPath(), relPath,
                     session.getNamespaceResolver()).getCanonicalPath();
-            try {
-                ItemId id = session.getHierarchyManager().resolvePath(p);
-                if (!id.denotesNode()) {
-                    return (PropertyId) id;
-                } else {
-                    // not a property
-                    return null;
-                }
-            } catch (PathNotFoundException pnfe) {
+            ItemId id = session.getHierarchyManager().resolvePath(p);
+            if (id == null) {
+                // path not found
+                return null;
+            }
+            if (!id.denotesNode()) {
+                return (PropertyId) id;
+            } else {
+                // not a property
                 return null;
             }
         } catch (NameException e) {
@@ -240,15 +240,15 @@ public class NodeImpl extends ItemImpl implements Node {
              * build and resolve absolute path
              */
             p = Path.create(getPrimaryPath(), p, true);
-            try {
-                ItemId id = session.getHierarchyManager().resolvePath(p);
-                if (id.denotesNode()) {
-                    return (NodeId) id;
-                } else {
-                    // not a node
-                    return null;
-                }
-            } catch (PathNotFoundException pnfe) {
+            ItemId id = session.getHierarchyManager().resolvePath(p);
+            if (id == null) {
+                // path not found
+                return null;
+            }
+            if (id.denotesNode()) {
+                return (NodeId) id;
+            } else {
+                // not a node
                 return null;
             }
         } catch (MalformedPathException e) {

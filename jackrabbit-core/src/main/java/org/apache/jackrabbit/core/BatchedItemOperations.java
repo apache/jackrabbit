@@ -1377,7 +1377,7 @@ public class BatchedItemOperations extends ItemValidator {
             throws PathNotFoundException, RepositoryException {
         try {
             ItemId id = srcHierMgr.resolvePath(nodePath);
-            if (!id.denotesNode()) {
+            if (id == null || !id.denotesNode()) {
                 throw new PathNotFoundException(safeGetJCRPath(nodePath));
             }
             return (NodeState) getItemState(srcStateMgr, id);

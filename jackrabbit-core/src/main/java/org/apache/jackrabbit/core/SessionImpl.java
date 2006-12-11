@@ -610,10 +610,11 @@ public class SessionImpl implements Session, Dumpable {
         if (set.contains(READ_ACTION)) {
             try {
                 targetId = hierMgr.resolvePath(targetPath);
+                if (targetId == null) {
+                    // target does not exist, throw exception
+                    throw new AccessControlException(READ_ACTION);
+                }
                 accessMgr.checkPermission(targetId, AccessManager.READ);
-            } catch (PathNotFoundException pnfe) {
-                // target does not exist, throw exception
-                throw new AccessControlException(READ_ACTION);
             } catch (AccessDeniedException re) {
                 // otherwise the RepositoryException catch clause will
                 // log a warn message, which is not appropriate in this case.
@@ -632,10 +633,11 @@ public class SessionImpl implements Session, Dumpable {
             try {
                 parentPath = targetPath.getAncestor(1);
                 parentId = hierMgr.resolvePath(parentPath);
+                if (parentId == null) {
+                    // parent does not exist (i.e. / was specified), throw exception
+                    throw new AccessControlException(ADD_NODE_ACTION);
+                }
                 accessMgr.checkPermission(parentId, AccessManager.WRITE);
-            } catch (PathNotFoundException pnfe) {
-                // parent does not exist (i.e. / was specified), throw exception
-                throw new AccessControlException(ADD_NODE_ACTION);
             } catch (AccessDeniedException re) {
                 // otherwise the RepositoryException catch clause will
                 // log a warn message, which is not appropriate in this case.
@@ -651,11 +653,12 @@ public class SessionImpl implements Session, Dumpable {
             try {
                 if (targetId == null) {
                     targetId = hierMgr.resolvePath(targetPath);
+                    if (targetId == null) {
+                        // parent does not exist, throw exception
+                        throw new AccessControlException(REMOVE_ACTION);
+                    }
                 }
                 accessMgr.checkPermission(targetId, AccessManager.REMOVE);
-            } catch (PathNotFoundException pnfe) {
-                // parent does not exist, throw exception
-                throw new AccessControlException(REMOVE_ACTION);
             } catch (AccessDeniedException re) {
                 // otherwise the RepositoryException catch clause will
                 // log a warn message, which is not appropriate in this case.
@@ -672,12 +675,8 @@ public class SessionImpl implements Session, Dumpable {
         if (set.contains(SET_PROPERTY_ACTION)) {
             try {
                 if (targetId == null) {
-                    try {
-                        targetId = hierMgr.resolvePath(targetPath);
-                        // property does already exist,
-                        // check WRITE permission on target
-                        accessMgr.checkPermission(targetId, AccessManager.WRITE);
-                    } catch (PathNotFoundException pnfe) {
+                    targetId = hierMgr.resolvePath(targetPath);
+                    if (targetId == null) {
                         // property does not exist yet,
                         // check WRITE permission on parent
                         if (parentPath == null) {
@@ -685,13 +684,18 @@ public class SessionImpl implements Session, Dumpable {
                         }
                         if (parentId == null) {
                             parentId = hierMgr.resolvePath(parentPath);
+                            if (parentId == null) {
+                                // parent does not exist, throw exception
+                                throw new AccessControlException(SET_PROPERTY_ACTION);
+                            }
                         }
                         accessMgr.checkPermission(parentId, AccessManager.WRITE);
+                    } else {
+                        // property does already exist,
+                        // check WRITE permission on target
+                        accessMgr.checkPermission(targetId, AccessManager.WRITE);
                     }
                 }
-            } catch (PathNotFoundException pnfe) {
-                // parent does not exist, throw exception
-                throw new AccessControlException(SET_PROPERTY_ACTION);
             } catch (AccessDeniedException re) {
                 // otherwise the RepositoryException catch clause will
                 // log a warn message, which is not appropriate in this case.
