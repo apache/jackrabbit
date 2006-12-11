@@ -112,7 +112,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * Cache the intermediate item inside our cache.
      */
     protected ItemId resolvePath(Path path, ItemState state, int next)
-            throws PathNotFoundException, ItemStateException {
+            throws ItemStateException {
 
         if (state.isNode() && !isCached(state.getId())) {
             try {
@@ -175,8 +175,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * <p/>
      * Check the path indicated inside our cache first.
      */
-    public ItemId resolvePath(Path path)
-            throws PathNotFoundException, RepositoryException {
+    public ItemId resolvePath(Path path) throws RepositoryException {
 
         // Run base class shortcut and sanity checks first
         if (path.denotesRoot()) {
@@ -614,7 +613,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * @param path child path
      * @param id   node id
      *
-     * @throws PathNotFoundException if hte path was not found
+     * @throws PathNotFoundException if the path was not found
      */
     private void insert(Path path, ItemId id) throws PathNotFoundException {
         synchronized (cacheMonitor) {

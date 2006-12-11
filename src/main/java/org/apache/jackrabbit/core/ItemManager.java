@@ -218,6 +218,9 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
             session.sanityCheck();
 
             ItemId id = hierMgr.resolvePath(path);
+            if (id == null) {
+                return false;
+            }
 
             // check if state exists for the given item
             if (!itemStateProvider.hasItemState(id)) {
@@ -232,8 +235,6 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
                 return false;
             }
             return true;
-        } catch (PathNotFoundException pnfe) {
-            return false;
         } catch (ItemNotFoundException infe) {
             return false;
         } catch (RepositoryException re) {
@@ -287,9 +288,12 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    public synchronized ItemImpl getItem(Path path)
+    public ItemImpl getItem(Path path)
             throws PathNotFoundException, AccessDeniedException, RepositoryException {
         ItemId id = hierMgr.resolvePath(path);
+        if (id == null) {
+            throw new PathNotFoundException(safeGetJCRPath(path));
+        }
         try {
             return getItem(id);
         } catch (ItemNotFoundException infe) {
