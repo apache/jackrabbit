@@ -215,7 +215,9 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <skip>true</skip>
+          <excludes>
+            <exclude>**</exclude>
+          </excludes>
           <forkMode>once</forkMode>
           <argLine>-Xmx128m -enableassertions</argLine>
           <systemProperties>
