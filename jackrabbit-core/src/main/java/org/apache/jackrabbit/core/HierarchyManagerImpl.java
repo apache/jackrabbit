@@ -32,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.ItemNotFoundException;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 
 /**
@@ -221,10 +220,11 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * @param path  full path of item to resolve
      * @param state intermediate state
      * @param next  next path element index to resolve
-     * @return the id of the item denoted by <code>path</code>
+     * @return the id of the item denoted by <code>path</code> or
+     *         <code>null</code> if no item exists at <code>path</code>.
      */
     protected ItemId resolvePath(Path path, ItemState state, int next)
-            throws PathNotFoundException, ItemStateException {
+            throws ItemStateException {
 
         Path.PathElement[] elements = path.getElements();
         if (elements.length == next) {
@@ -251,18 +251,18 @@ public class HierarchyManagerImpl implements HierarchyManager {
             // property
             if (index > 1) {
                 // properties can't have same name siblings
-                throw new PathNotFoundException(safeGetJCRPath(path));
+                return null;
 
             } else if (next < elements.length - 1) {
                 // property is not the last element in the path
-                throw new PathNotFoundException(safeGetJCRPath(path));
+                return null;
             }
 
             childId = new PropertyId(parentState.getNodeId(), name);
 
         } else {
             // no such item
-            throw new PathNotFoundException(safeGetJCRPath(path));
+            return null;
         }
         return resolvePath(path, getItemState(childId), next + 1);
     }
@@ -326,8 +326,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
     /**
      * {@inheritDoc}
      */
-    public ItemId resolvePath(Path path)
-            throws PathNotFoundException, RepositoryException {
+    public ItemId resolvePath(Path path) throws RepositoryException {
         // shortcut
         if (path.denotesRoot()) {
             return rootNodeId;
