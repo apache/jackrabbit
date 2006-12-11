@@ -923,6 +923,17 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for fn:upper-case()"));
                 }
+            } else if (queryNode.getType() == QueryNode.TYPE_RELATION) {
+                // use function name as name of a pseudo property in a relation
+                try {
+                    QName name = NameFormat.parse(fName + "()", resolver);
+                    RelationQueryNode relNode = (RelationQueryNode) queryNode;
+                    relNode.setRelativePath(Path.create(name, 0));
+                } catch (IllegalNameException e) {
+                    exceptions.add(e);
+                } catch (UnknownPrefixException e) {
+                    exceptions.add(e);
+                }
             } else {
                 exceptions.add(new InvalidQueryException("Unsupported function: " + fName));
             }
