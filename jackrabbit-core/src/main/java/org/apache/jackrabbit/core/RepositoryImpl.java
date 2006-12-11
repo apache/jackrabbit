@@ -149,7 +149,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
 
     private final NamespaceRegistryImpl nsReg;
     private final NodeTypeRegistry ntReg;
-    private final VersionManager vMgr;
+    private final VersionManagerImpl vMgr;
     private final VirtualNodeTypeStateManager virtNTMgr;
 
     /**
@@ -281,6 +281,9 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         // init version manager
         vMgr = createVersionManager(repConfig.getVersioningConfig(),
                 delegatingDispatcher);
+        if (clusterNode != null) {
+            vMgr.setEventChannel(clusterNode);
+        }
 
         // init virtual node type manager
         virtNTMgr = new VirtualNodeTypeStateManager(getNodeTypeRegistry(),
@@ -351,8 +354,8 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      * @return the newly created version manager
      * @throws RepositoryException if an error occurrs
      */
-    protected VersionManager createVersionManager(VersioningConfig vConfig,
-                                                  DelegatingObservationDispatcher delegatingDispatcher)
+    protected VersionManagerImpl createVersionManager(VersioningConfig vConfig,
+                                                      DelegatingObservationDispatcher delegatingDispatcher)
             throws RepositoryException {
 
 
@@ -364,12 +367,8 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                 nsReg,
                 ntReg);
 
-        VersionManagerImpl vMgr = new VersionManagerImpl(pm, fs, ntReg, delegatingDispatcher,
+        return new VersionManagerImpl(pm, fs, ntReg, delegatingDispatcher,
                 VERSION_STORAGE_NODE_ID, SYSTEM_ROOT_NODE_ID, cacheFactory);
-        if (clusterNode != null) {
-            vMgr.setEventChannel(clusterNode);
-        }
-        return vMgr;
     }
 
     /**
