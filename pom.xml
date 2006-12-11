@@ -543,6 +543,23 @@
       </roles>
       <timezone>+1</timezone>
     </contributor>
+    <contributor>
+      <name>Przemo Pakulski</name>
+      <organization>Cognifide</organization>
+      <organizationUrl>www.cognifide.com</organizationUrl>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </contributor>
+    <contributor>
+      <name>Christoph Kiehl</name>
+      <email>christoph@sulu3000.de</email>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </contributor>
   </contributors>
 
   <licenses>
