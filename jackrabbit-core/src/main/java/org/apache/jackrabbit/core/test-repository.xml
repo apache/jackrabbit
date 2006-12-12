@@ -15,6 +15,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
+<!DOCTYPE Repository SYSTEM "http://jackrabbit.apache.org/dtd/repository-1.2.dtd">
 <Repository>
     <!--
         virtual file system where the repository stores global state
@@ -91,7 +92,7 @@
         <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
             <param name="path" value="${rep.home}/version" />
         </FileSystem>
-        
+
         <!--
             Configures the persistence manager to be used for persisting version state.
             Please note that the current versioning implementation is based on
