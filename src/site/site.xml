@@ -16,6 +16,7 @@
    limitations under the License.
   -->
 <project name="Apache Jackrabbit">
+  <publishDate position="none"/>
   <bannerLeft>
     <name>Apache Jackrabbit</name>
     <src>/images/logos/jackrabbitlogo.gif</src>
