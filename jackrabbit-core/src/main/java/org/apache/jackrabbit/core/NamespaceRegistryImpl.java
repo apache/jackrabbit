@@ -16,28 +16,29 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.cluster.NamespaceEventChannel;
 import org.apache.jackrabbit.core.cluster.NamespaceEventListener;
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.name.AbstractNamespaceResolver;
-import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameCache;
+import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.util.XMLChar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.NamespaceException;
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Properties;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.NamespaceException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 
 /**
  * A <code>NamespaceRegistryImpl</code> ...
@@ -48,6 +49,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
     private static Logger log = LoggerFactory.getLogger(NamespaceRegistryImpl.class);
 
     private static final String NS_REG_RESOURCE = "ns_reg.properties";
+    private static final String NS_IDX_RESOURCE = "ns_idx.properties";
 
     private static final HashSet reservedPrefixes = new HashSet();
     private static final HashSet reservedURIs = new HashSet();
@@ -76,6 +78,11 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
     private HashMap prefixToURI = new HashMap();
     private HashMap uriToPrefix = new HashMap();
 
+    private HashMap indexToURI = new HashMap();
+    private HashMap uriToIndex = new HashMap();
+
+    private int lastIndex = 0;
+
     private final CachingNamespaceResolver resolver;
 
     private final FileSystem nsRegStore;
@@ -99,41 +106,90 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         load();
     }
 
+    /**
+     * Clears all mappings.
+     */
+    private void clear() {
+        prefixToURI.clear();
+        uriToPrefix.clear();
+        indexToURI.clear();
+        uriToIndex.clear();
+    }
+
+    /**
+     * Adds a new mapping and automatically assigns a new index.
+     *
+     * @param prefix the namespace prefix
+     * @param uri the namespace uri
+     */
+    private void map(String prefix, String uri) {
+        map(prefix, uri, null);
+    }
+
+    /**
+     * Adds a new mapping and uses the given index if specified.
+     *
+     * @param prefix the namespace prefix
+     * @param uri the namespace uri
+     * @param idx the index or <code>null</code>.
+     */
+    private void map(String prefix, String uri, Integer idx) {
+        prefixToURI.put(prefix, uri);
+        uriToPrefix.put(uri, prefix);
+        if (!uriToIndex.containsKey(uri)) {
+            if (idx == null) {
+                idx = new Integer(++lastIndex);
+            } else {
+                if (idx.intValue() > lastIndex) {
+                    lastIndex = idx.intValue();
+                }
+            }
+            indexToURI.put(idx, uri);
+            uriToIndex.put(uri, idx);
+        }
+    }
+
     private void load() throws RepositoryException {
         FileSystemResource propFile =
                 new FileSystemResource(nsRegStore, NS_REG_RESOURCE);
+        FileSystemResource idxFile =
+                new FileSystemResource(nsRegStore, NS_IDX_RESOURCE);
         try {
             if (!propFile.exists()) {
                 // clear existing mappings
-                prefixToURI.clear();
-                uriToPrefix.clear();
+                clear();
 
                 // default namespace (if no prefix is specified)
-                prefixToURI.put(QName.NS_EMPTY_PREFIX, QName.NS_DEFAULT_URI);
-                uriToPrefix.put(QName.NS_DEFAULT_URI, QName.NS_EMPTY_PREFIX);
+                map(QName.NS_EMPTY_PREFIX, QName.NS_DEFAULT_URI);
+
                 // declare the predefined mappings
                 // rep:
-                prefixToURI.put(QName.NS_REP_PREFIX, QName.NS_REP_URI);
-                uriToPrefix.put(QName.NS_REP_URI, QName.NS_REP_PREFIX);
+                map(QName.NS_REP_PREFIX, QName.NS_REP_URI);
                 // jcr:
-                prefixToURI.put(QName.NS_JCR_PREFIX, QName.NS_JCR_URI);
-                uriToPrefix.put(QName.NS_JCR_URI, QName.NS_JCR_PREFIX);
+                map(QName.NS_JCR_PREFIX, QName.NS_JCR_URI);
                 // nt:
-                prefixToURI.put(QName.NS_NT_PREFIX, QName.NS_NT_URI);
-                uriToPrefix.put(QName.NS_NT_URI, QName.NS_NT_PREFIX);
+                map(QName.NS_NT_PREFIX, QName.NS_NT_URI);
                 // mix:
-                prefixToURI.put(QName.NS_MIX_PREFIX, QName.NS_MIX_URI);
-                uriToPrefix.put(QName.NS_MIX_URI, QName.NS_MIX_PREFIX);
+                map(QName.NS_MIX_PREFIX, QName.NS_MIX_URI);
                 // sv:
-                prefixToURI.put(QName.NS_SV_PREFIX, QName.NS_SV_URI);
-                uriToPrefix.put(QName.NS_SV_URI, QName.NS_SV_PREFIX);
+                map(QName.NS_SV_PREFIX, QName.NS_SV_URI);
                 // xml:
-                prefixToURI.put(QName.NS_XML_PREFIX, QName.NS_XML_URI);
-                uriToPrefix.put(QName.NS_XML_URI, QName.NS_XML_PREFIX);
+                map(QName.NS_XML_PREFIX, QName.NS_XML_URI);
 
                 // persist mappings
                 store();
                 return;
+            }
+
+            // check if index file exists
+            Properties indexes = new Properties();
+            if (idxFile.exists()) {
+                InputStream in = idxFile.getInputStream();
+                try {
+                    indexes.load(in);
+                } finally {
+                    in.close();
+                }
             }
 
             InputStream in = propFile.getInputStream();
@@ -142,20 +198,25 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
                 props.load(in);
 
                 // clear existing mappings
-                prefixToURI.clear();
-                uriToPrefix.clear();
+                clear();
 
                 // read mappings from properties
                 Iterator iter = props.keySet().iterator();
                 while (iter.hasNext()) {
                     String prefix = (String) iter.next();
                     String uri = props.getProperty(prefix);
-
-                    prefixToURI.put(prefix, uri);
-                    uriToPrefix.put(uri, prefix);
+                    String idx = indexes.getProperty(uri);
+                    if (idx != null) {
+                        map(prefix, uri, Integer.decode(idx));
+                    } else {
+                        map(prefix, uri);
+                    }
                 }
             } finally {
                 in.close();
+            }
+            if (!idxFile.exists()) {
+                store();
             }
         } catch (Exception e) {
             String msg = "failed to load namespace registry";
@@ -188,6 +249,33 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
             }
         } catch (Exception e) {
             String msg = "failed to persist namespace registry";
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+
+        FileSystemResource indexFile =
+                new FileSystemResource(nsRegStore, NS_IDX_RESOURCE);
+        try {
+            indexFile.makeParentDirs();
+            OutputStream os = indexFile.getOutputStream();
+            Properties props = new Properties();
+
+            // store mappings in properties
+            Iterator iter = uriToIndex.keySet().iterator();
+            while (iter.hasNext()) {
+                String uri = (String) iter.next();
+                String index = uriToIndex.get(uri).toString();
+                props.setProperty(uri, index);
+            }
+
+            try {
+                props.store(os, null);
+            } finally {
+                // make sure stream is closed
+                os.close();
+            }
+        } catch (Exception e) {
+            String msg = "failed to persist namespace registry index.";
             log.debug(msg);
             throw new RepositoryException(msg, e);
         }
@@ -266,6 +354,36 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         eventChannel.setListener(this);
     }
 
+    /**
+     * Returns the index (i.e. stable prefix) for the given uri.
+     *
+     * @param uri the uri to retrieve the index for
+     * @return the index
+     * @throws NamespaceException if the URI is not registered.
+     */
+    public int getURIIndex(String uri) throws NamespaceException {
+        Integer idx = (Integer) uriToIndex.get(uri);
+        if (idx == null) {
+            throw new NamespaceException("URI " + uri + " is not registered.");
+        }
+        return idx.intValue();
+    }
+
+    /**
+     * Returns the URI for a given index (i.e. stable prefix).
+     *
+     * @param idx the index to retrieve the uri for.
+     * @return the uri
+     * @throws NamespaceException if the URI is not registered.
+     */
+    public String getURI(int idx) throws NamespaceException {
+        String uri = (String) indexToURI.get(new Integer(idx));
+        if (uri == null) {
+            throw new NamespaceException("URI for index " + idx +  " not registered.");
+        }
+        return uri;
+    }
+    
     //----------------------------------------------------< NamespaceRegistry >
     /**
      * {@inheritDoc}
@@ -323,8 +441,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         }
 
         // add new prefix mapping
-        prefixToURI.put(prefix, uri);
-        uriToPrefix.put(uri, prefix);
+        map(prefix, uri);
 
         if (eventChannel != null) {
             eventChannel.remapped(oldPrefix, prefix, uri);
@@ -450,8 +567,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         }
 
         // add new prefix mapping
-        prefixToURI.put(newPrefix, uri);
-        uriToPrefix.put(uri, newPrefix);
+        map(newPrefix, uri);
 
         // persist mappings
         store();
