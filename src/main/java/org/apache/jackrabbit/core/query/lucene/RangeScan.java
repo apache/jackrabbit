@@ -50,7 +50,7 @@ class RangeScan extends FilteredTermEnum {
         return compare <= 0;
     }
 
-    protected float difference() {
+    public float difference() {
         return 1.0f;
     }
 

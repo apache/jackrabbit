@@ -190,7 +190,7 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
             return true;
         }
 
-        protected float difference() {
+        public float difference() {
             return 1.0f;
         }
 
