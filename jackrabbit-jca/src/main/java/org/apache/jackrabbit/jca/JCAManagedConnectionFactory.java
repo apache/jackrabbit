@@ -53,7 +53,7 @@ public final class JCAManagedConnectionFactory
      * In other words, if this flag is true the handle
      * will be closed when the transaction ends.
      */
-    private Boolean bindSessionToTrasaction = Boolean.TRUE;
+    private Boolean bindSessionToTransaction = Boolean.TRUE;
 
     /**
      * Repository.
@@ -291,12 +291,12 @@ public final class JCAManagedConnectionFactory
         mgr.autoShutdownRepository(homeDir, configFile);
     }
 
-    public Boolean getBindSessionToTrasaction() {
-        return bindSessionToTrasaction;
+    public Boolean getBindSessionToTransaction() {
+        return bindSessionToTransaction;
     }
 
-    public void setBindSessionToTrasaction(Boolean bindSessionToTrasaction) {
-        this.bindSessionToTrasaction = bindSessionToTrasaction;
+    public void setBindSessionToTransaction(Boolean bindSessionToTransaction) {
+        this.bindSessionToTransaction = bindSessionToTransaction;
     }
 
 }
