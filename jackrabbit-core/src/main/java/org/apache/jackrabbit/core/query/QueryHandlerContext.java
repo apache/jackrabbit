@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 
 /**
  * Acts as an argument for the {@link QueryHandler} to keep the interface
@@ -42,6 +43,11 @@ public class QueryHandlerContext {
      * The node type registry of the repository
      */
     private final NodeTypeRegistry ntRegistry;
+
+    /**
+     * The namespace registry of the repository.
+     */
+    private final NamespaceRegistryImpl nsRegistry;
 
     /**
      * The id of the root node.
@@ -73,6 +79,7 @@ public class QueryHandlerContext {
      * @param stateMgr         provides persistent item states.
      * @param rootId           the id of the root node.
      * @param ntRegistry       the node type registry.
+     * @param nsRegistry       the namespace registry.
      * @param parentHandler    the parent query handler or <code>null</code> it
      *                         there is no parent handler.
      * @param excludedNodeId   id of the node that should be excluded from
@@ -83,12 +90,14 @@ public class QueryHandlerContext {
                                ItemStateManager stateMgr,
                                NodeId rootId,
                                NodeTypeRegistry ntRegistry,
+                               NamespaceRegistryImpl nsRegistry,
                                QueryHandler parentHandler,
                                NodeId excludedNodeId) {
         this.fs = fs;
         this.stateMgr = stateMgr;
         this.rootId = rootId;
         this.ntRegistry = ntRegistry;
+        this.nsRegistry = nsRegistry;
         propRegistry = new PropertyTypeRegistry(ntRegistry);
         this.parentHandler = parentHandler;
         this.excludedNodeId = excludedNodeId;
@@ -140,6 +149,14 @@ public class QueryHandlerContext {
      */
     public NodeTypeRegistry getNodeTypeRegistry() {
         return ntRegistry;
+    }
+
+    /**
+     * Returns the NamespaceRegistryImpl for this repository.
+     * @return the NamespaceRegistryImpl for this repository.
+     */
+    public NamespaceRegistryImpl getNamespaceRegistry() {
+        return nsRegistry;
     }
 
     /**

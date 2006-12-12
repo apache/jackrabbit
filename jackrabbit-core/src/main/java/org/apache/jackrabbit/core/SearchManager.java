@@ -30,8 +30,6 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateIterator;
-import org.apache.jackrabbit.name.AbstractNamespaceResolver;
-import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
@@ -39,7 +37,6 @@ import org.apache.jackrabbit.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.NamespaceException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
@@ -150,9 +147,9 @@ public class SearchManager implements SynchronousEventListener {
     private final QueryHandler parentHandler;
 
     /**
-     * Namespace resolver that is based on the namespace registry itself.
+     * The namespace registry of the repository.
      */
-    private final NamespaceResolver nsResolver;
+    private final NamespaceRegistryImpl nsReg;
 
     /**
      * ID of the node that should be excluded from indexing or <code>null</code>
@@ -223,27 +220,11 @@ public class SearchManager implements SynchronousEventListener {
         }
         this.config = config;
         this.ntReg = ntReg;
+        this.nsReg = nsReg;
         this.itemMgr = itemMgr;
         this.rootNodeId = rootNodeId;
         this.parentHandler = (parentMgr != null) ? parentMgr.handler : null;
         this.excludedNodeId = excludedNodeId;
-        this.nsResolver = new AbstractNamespaceResolver() {
-            public String getURI(String prefix) throws NamespaceException {
-                try {
-                    return nsReg.getURI(prefix);
-                } catch (RepositoryException e) {
-                    throw new NamespaceException(e.getMessage());
-                }
-            }
-
-            public String getPrefix(String uri) throws NamespaceException {
-                try {
-                    return nsReg.getPrefix(uri);
-                } catch (RepositoryException e) {
-                    throw new NamespaceException(e.getMessage());
-                }
-            }
-        };
 
         // register namespaces
         nsReg.safeRegisterNamespace(NS_XS_PREFIX, NS_XS_URI);
@@ -259,7 +240,7 @@ public class SearchManager implements SynchronousEventListener {
         }
 
         if (excludedNodeId != null) {
-            HierarchyManagerImpl hmgr = new HierarchyManagerImpl(rootNodeId, itemMgr, nsResolver);
+            HierarchyManagerImpl hmgr = new HierarchyManagerImpl(rootNodeId, itemMgr, nsReg);
             excludePath = hmgr.getPath(excludedNodeId);
         }
 
@@ -363,7 +344,7 @@ public class SearchManager implements SynchronousEventListener {
         String exclude = "";
         if (excludePath != null) {
             try {
-                exclude = PathFormat.format(excludePath, nsResolver);
+                exclude = PathFormat.format(excludePath, nsReg);
             } catch (NoPrefixDeclaredException e) {
                 log.error("Error filtering events.", e);
             }
@@ -519,7 +500,7 @@ public class SearchManager implements SynchronousEventListener {
             handler = (QueryHandler) config.newInstance();
             QueryHandlerContext context
                     = new QueryHandlerContext(fs, itemMgr, rootNodeId,
-                            ntReg, parentHandler, excludedNodeId);
+                            ntReg, nsReg, parentHandler, excludedNodeId);
             handler.init(context);
         } catch (Exception e) {
             throw new RepositoryException(e.getMessage(), e);
