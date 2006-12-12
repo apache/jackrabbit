@@ -23,8 +23,8 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.InputStream;
-import org.apache.lucene.store.OutputStream;
+import org.apache.lucene.store.IndexInput;
+import org.apache.lucene.store.IndexOutput;
 
 import java.io.IOException;
 import java.io.File;
@@ -166,9 +166,9 @@ class PersistentIndex extends AbstractIndex {
         Directory dest = getDirectory();
         String[] files = dir.list();
         for (int i = 0; i < files.length; i++) {
-            InputStream in = dir.openFile(files[i]);
+            IndexInput in = dir.openInput(files[i]);
             try {
-                OutputStream out = dest.createFile(files[i]);
+                IndexOutput out = dest.createOutput(files[i]);
                 try {
                     long remaining = in.length();
                     while (remaining > 0) {

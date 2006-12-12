@@ -127,19 +127,19 @@ public class NodeIndexer {
 
         // special fields
         // UUID
-        doc.add(new Field(FieldNames.UUID, node.getNodeId().getUUID().toString(), true, true, false));
+        doc.add(new Field(FieldNames.UUID, node.getNodeId().getUUID().toString(), Field.Store.YES, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
         try {
             // parent UUID
             if (node.getParentId() == null) {
                 // root node
-                doc.add(new Field(FieldNames.PARENT, "", true, true, false));
-                doc.add(new Field(FieldNames.LABEL, "", false, true, false));
+                doc.add(new Field(FieldNames.PARENT, "", Field.Store.YES, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
+                doc.add(new Field(FieldNames.LABEL, "", Field.Store.NO, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
             } else {
-                doc.add(new Field(FieldNames.PARENT, node.getParentId().toString(), true, true, false));
+                doc.add(new Field(FieldNames.PARENT, node.getParentId().toString(), Field.Store.YES, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
                 NodeState parent = (NodeState) stateProvider.getItemState(node.getParentId());
                 NodeState.ChildNodeEntry child = parent.getChildNodeEntry(node.getNodeId());
                 String name = NameFormat.format(child.getName(), mappings);
-                doc.add(new Field(FieldNames.LABEL, name, false, true, false));
+                doc.add(new Field(FieldNames.LABEL, name, Field.Store.NO, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
             }
         } catch (NoSuchItemStateException e) {
             throwRepositoryException(e);
@@ -196,7 +196,7 @@ public class NodeIndexer {
     private void addMVPName(Document doc, QName name) {
         try {
             String propName = NameFormat.format(name, mappings);
-            doc.add(new Field(FieldNames.MVP, propName, false, true, false));
+            doc.add(new Field(FieldNames.MVP, propName, Field.Store.NO, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
         } catch (NoPrefixDeclaredException e) {
             // will never happen, prefixes are created dynamically
         }
@@ -299,7 +299,7 @@ public class NodeIndexer {
                 for (Iterator it = fields.keySet().iterator(); it.hasNext();) {
                     String field = (String) it.next();
                     Reader r = (Reader) fields.get(field);
-                    doc.add(Field.Text(field, r));
+                    doc.add(new Field(field, r));
                 }
             }
         } catch (Exception e) {
@@ -320,9 +320,9 @@ public class NodeIndexer {
     protected void addBooleanValue(Document doc, String fieldName, Object internalValue) {
         doc.add(new Field(FieldNames.PROPERTIES,
                 FieldNames.createNamedValue(fieldName, internalValue.toString()),
-                false,
-                true,
-                false));
+                Field.Store.NO,
+                Field.Index.UN_TOKENIZED,
+                Field.TermVector.NO));
     }
 
     /**
@@ -338,9 +338,9 @@ public class NodeIndexer {
         long millis = ((Calendar) internalValue).getTimeInMillis();
         doc.add(new Field(FieldNames.PROPERTIES,
                 FieldNames.createNamedValue(fieldName, DateField.timeToString(millis)),
-                false,
-                true,
-                false));
+                Field.Store.NO,
+                Field.Index.UN_TOKENIZED,
+                Field.TermVector.NO));
     }
 
     /**
@@ -356,9 +356,9 @@ public class NodeIndexer {
         double doubleVal = ((Double) internalValue).doubleValue();
         doc.add(new Field(FieldNames.PROPERTIES,
                 FieldNames.createNamedValue(fieldName, DoubleField.doubleToString(doubleVal)),
-                false,
-                true,
-                false));
+                Field.Store.NO,
+                Field.Index.UN_TOKENIZED,
+                Field.TermVector.NO));
     }
 
     /**
@@ -374,9 +374,9 @@ public class NodeIndexer {
         long longVal = ((Long) internalValue).longValue();
         doc.add(new Field(FieldNames.PROPERTIES,
                 FieldNames.createNamedValue(fieldName, LongField.longToString(longVal)),
-                false,
-                true,
-                false));
+                Field.Store.NO,
+                Field.Index.UN_TOKENIZED,
+                Field.TermVector.NO));
     }
 
     /**
@@ -392,9 +392,9 @@ public class NodeIndexer {
         String uuid = internalValue.toString();
         doc.add(new Field(FieldNames.PROPERTIES,
                 FieldNames.createNamedValue(fieldName, uuid),
-                true, // store
-                true,
-                false));
+                Field.Store.YES, // store
+                Field.Index.UN_TOKENIZED,
+                Field.TermVector.NO));
     }
 
     /**
@@ -416,9 +416,9 @@ public class NodeIndexer {
         }
         doc.add(new Field(FieldNames.PROPERTIES,
                 FieldNames.createNamedValue(fieldName, pathString),
-                false,
-                true,
-                false));
+                Field.Store.NO,
+                Field.Index.UN_TOKENIZED,
+                Field.TermVector.NO));
     }
 
     /**
@@ -435,23 +435,23 @@ public class NodeIndexer {
         // simple String
         doc.add(new Field(FieldNames.PROPERTIES,
                 FieldNames.createNamedValue(fieldName, stringValue),
-                false,
-                true,
-                false));
+                Field.Store.NO,
+                Field.Index.UN_TOKENIZED,
+                Field.TermVector.NO));
         // also create fulltext index of this value
         doc.add(new Field(FieldNames.FULLTEXT,
                 stringValue,
-                false,
-                true,
-                true));
+                Field.Store.NO,
+                Field.Index.TOKENIZED,
+                Field.TermVector.NO));
         // create fulltext index on property
         int idx = fieldName.indexOf(':');
         fieldName = fieldName.substring(0, idx + 1)
                 + FieldNames.FULLTEXT_PREFIX + fieldName.substring(idx + 1);
         doc.add(new Field(fieldName, stringValue,
-                false,
-                true,
-                true));
+                Field.Store.NO,
+                Field.Index.TOKENIZED,
+                Field.TermVector.NO));
     }
 
     /**
@@ -475,8 +475,8 @@ public class NodeIndexer {
         }
         doc.add(new Field(FieldNames.PROPERTIES,
                 FieldNames.createNamedValue(fieldName, normValue),
-                false,
-                true,
-                false));
+                Field.Store.NO,
+                Field.Index.UN_TOKENIZED,
+                Field.TermVector.NO));
     }
 }

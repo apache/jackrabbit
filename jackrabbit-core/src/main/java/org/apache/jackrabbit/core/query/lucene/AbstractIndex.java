@@ -144,7 +144,7 @@ abstract class AbstractIndex {
      * @return number of documents deleted
      */
     int removeDocument(Term idTerm) throws IOException {
-        return getIndexReader().delete(idTerm);
+        return getIndexReader().deleteDocuments(idTerm);
     }
 
     /**
@@ -207,12 +207,13 @@ abstract class AbstractIndex {
         }
         if (indexWriter == null) {
             indexWriter = new IndexWriter(getDirectory(), analyzer, false);
-            indexWriter.minMergeDocs = minMergeDocs;
-            indexWriter.maxMergeDocs = maxMergeDocs;
-            indexWriter.mergeFactor = mergeFactor;
-            indexWriter.maxFieldLength = maxFieldLength;
+			// since lucene 2.0 setMaxBuffereDocs is equivalent to previous minMergeDocs attribute
+			indexWriter.setMaxBufferedDocs(minMergeDocs);
+            indexWriter.setMaxMergeDocs(maxMergeDocs);
+            indexWriter.setMergeFactor(mergeFactor);
+            indexWriter.setMaxFieldLength(maxFieldLength);
             indexWriter.setUseCompoundFile(useCompoundFile);
-            indexWriter.infoStream = STREAM_LOGGER;
+            indexWriter.setInfoStream(STREAM_LOGGER);
         }
         return indexWriter;
     }
@@ -322,7 +323,8 @@ abstract class AbstractIndex {
     void setMinMergeDocs(int minMergeDocs) {
         this.minMergeDocs = minMergeDocs;
         if (indexWriter != null) {
-            indexWriter.minMergeDocs = minMergeDocs;
+			// since lucene 2.0 setMaxBuffereDocs is equivalent to previous minMergeDocs attribute
+			indexWriter.setMaxBufferedDocs(minMergeDocs);
         }
     }
 
@@ -332,7 +334,7 @@ abstract class AbstractIndex {
     void setMaxMergeDocs(int maxMergeDocs) {
         this.maxMergeDocs = maxMergeDocs;
         if (indexWriter != null) {
-            indexWriter.maxMergeDocs = maxMergeDocs;
+            indexWriter.setMaxMergeDocs(maxMergeDocs);
         }
     }
 
@@ -342,7 +344,7 @@ abstract class AbstractIndex {
     void setMergeFactor(int mergeFactor) {
         this.mergeFactor = mergeFactor;
         if (indexWriter != null) {
-            indexWriter.mergeFactor = mergeFactor;
+            indexWriter.setMergeFactor(mergeFactor);
         }
     }
 
@@ -352,7 +354,7 @@ abstract class AbstractIndex {
     void setMaxFieldLength(int maxFieldLength) {
         this.maxFieldLength = maxFieldLength;
         if (indexWriter != null) {
-            indexWriter.maxFieldLength = maxFieldLength;
+            indexWriter.setMaxFieldLength(maxFieldLength);
         }
     }
 

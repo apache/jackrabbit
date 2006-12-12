@@ -135,7 +135,7 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
     /**
      * @inheritDoc
      */
-    protected float difference() {
+    public float difference() {
         return 1.0f;
     }
 
