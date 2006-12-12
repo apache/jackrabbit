@@ -26,16 +26,16 @@ public interface UpdateEventChannel {
 
     /**
      * Called when an a update operation has been created.
+     */
+    public void updateCreated();
+
+    /**
+     * Called when an a update operation has been prepared.
      *
      * @param changes changes
      * @param esc events as they will be delivered on success
      */
-    public void updateCreated(ChangeLog changes, EventStateCollection esc);
-
-    /**
-     * Called when an a update operation has been prepared.
-     */
-    public void updatePrepared();
+    public void updatePrepared(ChangeLog changes, EventStateCollection esc);
 
     /**
      * Called when an a update operation has been committed.

@@ -670,6 +670,7 @@ public class FileJournal implements Journal {
             String msg = "Unable to close journal log " + tempLog + ": " + e.getMessage();
             throw new JournalException(msg);
         } finally {
+            out = null;
             globalRevision.unlock();
             writeMutex.release();
         }
@@ -678,16 +679,19 @@ public class FileJournal implements Journal {
     /**
      * {@inheritDoc}
      */
-    public void cancel() throws JournalException {
-        try {
-            out.close();
-            tempLog.delete();
-        } catch (IOException e) {
-            String msg = "Unable to close journal log " + tempLog + ": " + e.getMessage();
-            log.warn(msg);
-        } finally {
-            globalRevision.unlock();
-            writeMutex.release();
+    public void cancel() {
+        if (out != null) {
+            try {
+                out.close();
+                tempLog.delete();
+            } catch (IOException e) {
+                String msg = "Unable to close journal log " + tempLog + ": " + e.getMessage();
+                log.warn(msg);
+            } finally {
+                out = null;
+                globalRevision.unlock();
+                writeMutex.release();
+            }
         }
     }
 
