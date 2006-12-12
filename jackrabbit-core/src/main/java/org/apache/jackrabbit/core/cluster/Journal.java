@@ -117,8 +117,6 @@ public interface Journal {
 
     /**
      * End this update operation and discards changes made to the journal.
-     *
-     * @throws JournalException if an error occurs
      */
-    public void cancel() throws JournalException;
+    public void cancel();
 }

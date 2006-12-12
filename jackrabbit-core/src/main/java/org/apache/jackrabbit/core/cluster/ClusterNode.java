@@ -217,17 +217,24 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
      * @param owner lock owner
      */
     private void locked(String workspace, NodeId nodeId, boolean deep, String owner) {
+        boolean succeeded = false;
+
         try {
             journal.begin(workspace);
             journal.log(nodeId, deep, owner);
             journal.prepare();
             journal.commit();
+            succeeded = true;
         } catch (JournalException e) {
             String msg = "Unable to create log entry: " + e.getMessage();
             log.error(msg);
         } catch (Throwable e) {
             String msg = "Unexpected error while creating log entry.";
             log.error(msg, e);
+        } finally {
+            if (!succeeded) {
+                journal.cancel();
+            }
         }
     }
 
@@ -238,17 +245,24 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
      * @param nodeId node id
      */
     private void unlocked(String workspace, NodeId nodeId) {
+        boolean succeeded = false;
+
         try {
             journal.begin(workspace);
             journal.log(nodeId);
             journal.prepare();
             journal.commit();
+            succeeded = true;
         } catch (JournalException e) {
             String msg = "Unable to create log entry: " + e.getMessage();
             log.error(msg);
         } catch (Throwable e) {
             String msg = "Unexpected error while creating log entry.";
             log.error(msg, e);
+        } finally {
+            if (!succeeded) {
+                journal.cancel();
+            }
         }
     }
 
@@ -308,27 +322,12 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
 
     /**
      * {@inheritDoc}
-     * <p/>
-     * Invoked when an update has been created inside versioning. Delegate
-     * to common method with <code>null</code> workspace.
      */
-    public void updateCreated(ChangeLog changes, EventStateCollection esc) {
-        updateCreated(null, changes, esc);
-    }
-
-    /**
-     * Called when an a update operation has been created.
-     *
-     * @param workspace workspace to use when writing journal entry
-     * @param changes changes
-     * @param esc events as they will be delivered on success
-     */
-    private void updateCreated(String workspace, ChangeLog changes, EventStateCollection esc) {
+    public void updateCreated() {
         try {
-            journal.begin(workspace);
-            journal.log(changes, esc);
-        } catch (JournalException e) {
-            String msg = "Unable to create log entry: " + e.getMessage();
+            sync();
+        } catch (ClusterException e) {
+            String msg = "Unable to sync with journal: " + e.getMessage();
             log.error(msg);
         } catch (Throwable e) {
             String msg = "Unexpected error while creating log entry.";
@@ -338,16 +337,39 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
 
     /**
      * {@inheritDoc}
+     * <p/>
+     * Invoked when an update has been prepared inside versioning. Delegate
+     * to common method with <code>null</code> workspace.
      */
-    public void updatePrepared() {
+    public void updatePrepared(ChangeLog changes, EventStateCollection esc) {
+        updatePrepared(null, changes, esc);
+    }
+
+    /**
+     * Called when an a update operation has been prepared.
+     *
+     * @param workspace workspace to use when writing journal entry
+     * @param changes changes
+     * @param esc events as they will be delivered on success
+     */
+    private void updatePrepared(String workspace, ChangeLog changes, EventStateCollection esc) {
+        boolean succeeded = false;
+
         try {
+            journal.begin(workspace);
+            journal.log(changes, esc);
             journal.prepare();
+            succeeded = true;
         } catch (JournalException e) {
             String msg = "Unable to create log entry: " + e.getMessage();
             log.error(msg);
         } catch (Throwable e) {
             String msg = "Unexpected error while preparing log entry.";
             log.error(msg, e);
+        } finally {
+            if (!succeeded) {
+                journal.cancel();
+            }
         }
     }
 
@@ -370,15 +392,7 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
      * {@inheritDoc}
      */
     public void updateCancelled() {
-        try {
-            journal.cancel();
-        } catch (JournalException e) {
-            String msg = "Unable to create log entry: " + e.getMessage();
-            log.error(msg);
-        } catch (Throwable e) {
-            String msg = "Unexpected error while cancelling log entry.";
-            log.error(msg, e);
-        }
+        journal.cancel();
     }
 
     /**
@@ -396,17 +410,24 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
      * {@inheritDoc}
      */
     public void remapped(String oldPrefix, String newPrefix, String uri) {
+        boolean succeeded = false;
+
         try {
             journal.begin(null);
             journal.log(oldPrefix, newPrefix, uri);
             journal.prepare();
             journal.commit();
+            succeeded = true;
         } catch (JournalException e) {
             String msg = "Unable to create log entry: " + e.getMessage();
             log.error(msg);
         } catch (Throwable e) {
             String msg = "Unexpected error while creating log entry.";
             log.error(msg, e);
+        } finally {
+            if (!succeeded) {
+                journal.cancel();
+            }
         }
     }
 
@@ -420,17 +441,24 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
      * {@inheritDoc}
      */
     public void registered(Collection ntDefs) {
+        boolean succeeded = false;
+
         try {
             journal.begin(null);
             journal.log(ntDefs);
             journal.prepare();
             journal.commit();
+            succeeded = true;
         } catch (JournalException e) {
             String msg = "Unable to create log entry: " + e.getMessage();
             log.error(msg);
         } catch (Throwable e) {
             String msg = "Unexpected error while creating log entry.";
             log.error(msg, e);
+        } finally {
+            if (!succeeded) {
+                journal.cancel();
+            }
         }
     }
 
@@ -464,15 +492,15 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
         /**
          * {@inheritDoc}
          */
-        public void updateCreated(ChangeLog changes, EventStateCollection esc) {
-            ClusterNode.this.updateCreated(workspace, changes, esc);
+        public void updateCreated() {
+            ClusterNode.this.updateCreated();
         }
 
         /**
          * {@inheritDoc}
          */
-        public void updatePrepared() {
-            ClusterNode.this.updatePrepared();
+        public void updatePrepared(ChangeLog changes, EventStateCollection esc) {
+            ClusterNode.this.updatePrepared(workspace, changes, esc);
         }
 
         /**

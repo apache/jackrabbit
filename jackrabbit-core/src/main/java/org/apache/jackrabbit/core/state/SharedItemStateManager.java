@@ -518,7 +518,12 @@ public class SharedItemStateManager
 
             virtualNodeReferences = new List[virtualProviders.length];
 
+            /* let listener know about change */
+            if (eventChannel != null) {
+                eventChannel.updateCreated();
+            }
             acquireWriteLock();
+
             holdingWriteLock = true;
 
             boolean succeeded = false;
@@ -639,10 +644,8 @@ public class SharedItemStateManager
 
                 /* let listener know about change */
                 if (eventChannel != null) {
-                    eventChannel.updateCreated(local, events);
+                    eventChannel.updatePrepared(local, events);
                 }
-
-                //todo check whether local states are now stale...
 
                 /* Push all changes from the local items to the shared items */
                 local.push();
@@ -667,11 +670,6 @@ public class SharedItemStateManager
             boolean succeeded = false;
 
             try {
-                /* let listener know about preparation */
-                if (eventChannel != null) {
-                    eventChannel.updatePrepared();
-                }
-
                 /* Store items in the underlying persistence manager */
                 long t0 = System.currentTimeMillis();
                 persistMgr.store(shared);
@@ -831,7 +829,9 @@ public class SharedItemStateManager
                 state = cache.retrieve(state.getId());
                 if (state != null) {
                     try {
-                        state.copy(loadItemState(state.getId()));
+                        ItemState currentState = loadItemState(state.getId());
+                        state.copy(currentState);
+                        state.setModCount(currentState.getModCount());
                         shared.modified(state);
                     } catch (ItemStateException e) {
                         String msg = "Unable to retrieve state: " + state.getId();
