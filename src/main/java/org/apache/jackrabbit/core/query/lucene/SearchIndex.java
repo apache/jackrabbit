@@ -230,7 +230,16 @@ public class SearchIndex extends AbstractQueryHandler {
         } else {
             // read local namespace mappings
             File mapFile = new File(indexDir, NS_MAPPING_FILE);
-             nsMappings = new NamespaceMappings(mapFile);
+            if (mapFile.exists()) {
+                // be backward compatible and use ns_mappings.properties from
+                // index folder
+                nsMappings = new FileBasedNamespaceMappings(mapFile);
+            } else {
+                // otherwise use repository wide stable index prefix from
+                // namespace registry
+                nsMappings = new NSRegistryBasedNamespaceMappings(
+                        context.getNamespaceRegistry());
+            }
         }
 
         index = new MultiIndex(indexDir, this, context.getItemStateManager(),
