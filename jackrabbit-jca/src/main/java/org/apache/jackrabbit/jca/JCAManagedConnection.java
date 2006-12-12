@@ -85,7 +85,7 @@ public final class JCAManagedConnection
         this.session = session;
         this.listeners = new LinkedList();
         this.handles = new LinkedList();
-        if (this.mcf.getBindSessionToTrasaction().booleanValue()) {
+        if (this.mcf.getBindSessionToTransaction().booleanValue()) {
             this.xaResource =  new TransactionBoundXAResource(this, session.getXAResource());
         } else {
             this.xaResource = session.getXAResource();
