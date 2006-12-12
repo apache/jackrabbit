@@ -19,8 +19,8 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.lucene.util.Constants;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.Lock;
-import org.apache.lucene.store.OutputStream;
-import org.apache.lucene.store.InputStream;
+import org.apache.lucene.store.IndexOutput;
+import org.apache.lucene.store.IndexInput;
 
 import java.io.IOException;
 import java.io.File;
@@ -156,9 +156,9 @@ class FSDirectory extends Directory {
     /**
      * @inheritDoc
      */
-    public OutputStream createFile(String name)
+    public IndexOutput createOutput(String name)
             throws IOException {
-        return delegatee.createFile(name);
+        return delegatee.createOutput(name);
     }
 
     /**
@@ -204,9 +204,9 @@ class FSDirectory extends Directory {
     /**
      * @inheritDoc
      */
-    public InputStream openFile(String name)
+    public IndexInput openInput(String name)
             throws IOException {
-        return delegatee.openFile(name);
+        return delegatee.openInput(name);
     }
 
     /**

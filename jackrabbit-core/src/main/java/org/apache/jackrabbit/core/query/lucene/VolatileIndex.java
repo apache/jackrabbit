@@ -108,7 +108,7 @@ class VolatileIndex extends AbstractIndex {
             num = 1;
         } else {
             // remove document from index
-            num = super.getIndexReader().delete(idTerm);
+            num = super.getIndexReader().deleteDocuments(idTerm);
         }
         numDocs -= num;
         return num;

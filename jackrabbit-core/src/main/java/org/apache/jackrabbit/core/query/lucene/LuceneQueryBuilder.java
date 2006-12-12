@@ -55,6 +55,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.BooleanClause.Occur;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
@@ -204,7 +205,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         Object[] result = node.acceptOperands(this, null);
         for (int i = 0; i < result.length; i++) {
             Query operand = (Query) result[i];
-            orQuery.add(operand, false, false);
+            orQuery.add(operand, Occur.SHOULD);
         }
         return orQuery;
     }
@@ -217,7 +218,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         BooleanQuery andQuery = new BooleanQuery();
         for (int i = 0; i < result.length; i++) {
             Query operand = (Query) result[i];
-            andQuery.add(operand, true, false);
+            andQuery.add(operand, Occur.MUST);
         }
         return andQuery;
     }
@@ -230,7 +231,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         // join the results
         BooleanQuery b = new BooleanQuery();
         for (int i = 0; i < result.length; i++) {
-            b.add((Query) result[i], false, false);
+            b.add((Query) result[i], Occur.SHOULD);
         }
         // negate
         return new NotQuery(b);
@@ -311,7 +312,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         } else {
             BooleanQuery b = new BooleanQuery();
             for (Iterator it = terms.iterator(); it.hasNext();) {
-                b.add(new TermQuery((Term) it.next()), false, false);
+                b.add(new TermQuery((Term) it.next()), Occur.SHOULD);
             }
             return b;
         }
@@ -383,8 +384,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                                 || (!node.getReferencesProperty() && i == elements.length - 1))) {
                         Query q = new TermQuery(new Term(FieldNames.LABEL, name));
                         BooleanQuery and = new BooleanQuery();
-                        and.add(q, true, false);
-                        and.add(context, true, false);
+                        and.add(q, Occur.MUST);
+                        and.add(context, Occur.MUST);
                         context = and;
                     } else if ((node.getReferencesProperty() && i < elements.length - 2)
                             || (!node.getReferencesProperty() && i < elements.length - 1)) {
@@ -429,8 +430,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         exceptions.add(e);
                     }
                     BooleanQuery and = new BooleanQuery();
-                    and.add(new TermQuery(new Term(FieldNames.PARENT, "")), true, false);
-                    and.add(new TermQuery(new Term(FieldNames.LABEL, name)), true, false);
+                    and.add(new TermQuery(new Term(FieldNames.PARENT, "")), Occur.MUST);
+                    and.add(new TermQuery(new Term(FieldNames.LABEL, name)), Occur.MUST);
                     context = and;
                 }
                 LocationStepQueryNode[] tmp = new LocationStepQueryNode[steps.length - 1];
@@ -451,7 +452,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         if (data instanceof BooleanQuery) {
             BooleanQuery constraint = (BooleanQuery) data;
             if (constraint.getClauses().length > 0) {
-                constraint.add(context, true, false);
+                constraint.add(context, Occur.MUST);
                 context = constraint;
             }
         }
@@ -469,7 +470,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         // predicate on step?
         Object[] predicates = node.acceptOperands(this, data);
         for (int i = 0; i < predicates.length; i++) {
-            andQuery.add((Query) predicates[i], true, false);
+            andQuery.add((Query) predicates[i], Occur.MUST);
         }
 
         // check for position predicate
@@ -496,7 +497,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 
         if (node.getIncludeDescendants()) {
             if (nameTest != null) {
-                andQuery.add(new DescendantSelfAxisQuery(context, nameTest), true, false);
+                andQuery.add(new DescendantSelfAxisQuery(context, nameTest), Occur.MUST);
             } else {
                 // descendant-or-self with nametest=*
                 if (predicates.length > 0) {
@@ -509,7 +510,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     if (pathNode.getPathSteps()[0] != node) {
                         Query subQuery = new DescendantSelfAxisQuery(context, andQuery, false);
                         andQuery = new BooleanQuery();
-                        andQuery.add(subQuery, true, false);
+                        andQuery.add(subQuery, Occur.MUST);
                     }
                 } else {
                     // todo this will traverse the whole index, optimize!
@@ -523,19 +524,19 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     PathQueryNode pathNode = (PathQueryNode) node.getParent();
                     if (pathNode.getPathSteps()[0] != node) {
                         context = new DescendantSelfAxisQuery(context, subQuery);
-                        andQuery.add(new ChildAxisQuery(sharedItemMgr, context, null, node.getIndex()), true, false);
+                        andQuery.add(new ChildAxisQuery(sharedItemMgr, context, null, node.getIndex()), Occur.MUST);
                     } else {
-                        andQuery.add(subQuery, true, false);
+                        andQuery.add(subQuery, Occur.MUST);
                     }
                 }
             }
         } else {
             // name test
             if (nameTest != null) {
-                andQuery.add(new ChildAxisQuery(sharedItemMgr, context, nameTest.getTerm().text(), node.getIndex()), true, false);
+                andQuery.add(new ChildAxisQuery(sharedItemMgr, context, nameTest.getTerm().text(), node.getIndex()), Occur.MUST);
             } else {
                 // select child nodes
-                andQuery.add(new ChildAxisQuery(sharedItemMgr, context, null, node.getIndex()), true, false);
+                andQuery.add(new ChildAxisQuery(sharedItemMgr, context, null, node.getIndex()), Occur.MUST);
             }
         }
 
@@ -567,9 +568,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             if (predicates.length > 0) {
                 BooleanQuery andQuery = new BooleanQuery();
                 for (int i = 0; i < predicates.length; i++) {
-                    andQuery.add((Query) predicates[i], true, false);
+                    andQuery.add((Query) predicates[i], Occur.MUST);
                 }
-                andQuery.add(context, true, false);
+                andQuery.add(context, Occur.MUST);
                 context = andQuery;
             }
 
@@ -659,7 +660,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     } else {
                         q = new TermQuery(t);
                     }
-                    or.add(q, false, false);
+                    or.add(q, Occur.SHOULD);
                 }
                 query = or;
                 if (node.getOperation() == QueryConstants.OPERATION_EQ_VALUE) {
@@ -672,7 +673,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 for (int i = 0; i < stringValues.length; i++) {
                     Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
                     Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, "\uFFFF"));
-                    or.add(new RangeQuery(lower, upper, true, transform[0]), false, false);
+                    or.add(new RangeQuery(lower, upper, true, transform[0]), Occur.SHOULD);
                 }
                 query = or;
                 if (node.getOperation() == QueryConstants.OPERATION_GE_VALUE) {
@@ -685,7 +686,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 for (int i = 0; i < stringValues.length; i++) {
                     Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
                     Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, "\uFFFF"));
-                    or.add(new RangeQuery(lower, upper, false, transform[0]), false, false);
+                    or.add(new RangeQuery(lower, upper, false, transform[0]), Occur.SHOULD);
                 }
                 query = or;
                 if (node.getOperation() == QueryConstants.OPERATION_GT_VALUE) {
@@ -698,7 +699,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 for (int i = 0; i < stringValues.length; i++) {
                     Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, ""));
                     Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
-                    or.add(new RangeQuery(lower, upper, true, transform[0]), false, false);
+                    or.add(new RangeQuery(lower, upper, true, transform[0]), Occur.SHOULD);
                 }
                 query = or;
                 if (node.getOperation() == QueryConstants.OPERATION_LE_VALUE) {
@@ -720,7 +721,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 for (int i = 0; i < stringValues.length; i++) {
                     Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, ""));
                     Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
-                    or.add(new RangeQuery(lower, upper, false, transform[0]), false, false);
+                    or.add(new RangeQuery(lower, upper, false, transform[0]), Occur.SHOULD);
                 }
                 query = or;
                 if (node.getOperation() == QueryConstants.OPERATION_LT_VALUE) {
@@ -730,7 +731,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             case QueryConstants.OPERATION_NE_VALUE:      // !=
                 // match nodes with property 'field' that includes svp and mvp
                 BooleanQuery notQuery = new BooleanQuery();
-                notQuery.add(new MatchAllQuery(field), false, false);
+                notQuery.add(new MatchAllQuery(field), Occur.SHOULD);
                 // exclude all nodes where 'field' has the term in question
                 for (int i = 0; i < stringValues.length; i++) {
                     Term t = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
@@ -742,10 +743,10 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     } else {
                         q = new TermQuery(t);
                     }
-                    notQuery.add(q, false, true);
+                    notQuery.add(q, Occur.MUST_NOT);
                 }
                 // and exclude all nodes where 'field' is multi valued
-                notQuery.add(new TermQuery(new Term(FieldNames.MVP, field)), false, true);
+                notQuery.add(new TermQuery(new Term(FieldNames.MVP, field)), Occur.MUST_NOT);
                 query = notQuery;
                 break;
             case QueryConstants.OPERATION_NE_GENERAL:    // !=
@@ -756,7 +757,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 // minus the nodes that have a multi-valued property 'field' and
                 //    all values are equal to term in question
                 notQuery = new BooleanQuery();
-                notQuery.add(new MatchAllQuery(field), false, false);
+                notQuery.add(new MatchAllQuery(field), Occur.SHOULD);
                 for (int i = 0; i < stringValues.length; i++) {
                     // exclude the nodes that have the term and are single valued
                     Term t = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
@@ -770,9 +771,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     } else {
                         q = new TermQuery(t);
                     }
-                    and.add(q, true, false);
-                    and.add(svp, true, false);
-                    notQuery.add(and, false, true);
+                    and.add(q, Occur.MUST);
+                    and.add(svp, Occur.MUST);
+                    notQuery.add(and, Occur.MUST_NOT);
                 }
                 // todo above also excludes multi-valued properties that contain
                 //      multiple instances of only stringValues. e.g. text={foo, foo}
@@ -805,8 +806,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         if (name != null) {
                             Query nameTest = new TermQuery(new Term(FieldNames.LABEL, name));
                             BooleanQuery and = new BooleanQuery();
-                            and.add(query, true, false);
-                            and.add(nameTest, true, false);
+                            and.add(query, Occur.MUST);
+                            and.add(nameTest, Occur.MUST);
                             query = and;
                         } else {
                             // otherwise the query can be used as is
@@ -855,8 +856,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         // only contains a single value. This works because q already restricts
         // the result to those nodes that have a property propName
         BooleanQuery and = new BooleanQuery();
-        and.add(q, true, false);
-        and.add(svp, true, false);
+        and.add(q, Occur.MUST);
+        and.add(svp, Occur.MUST);
         return and;
     }
 
