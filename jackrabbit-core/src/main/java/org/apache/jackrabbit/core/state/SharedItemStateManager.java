@@ -820,6 +820,9 @@ public class SharedItemStateManager
         ChangeLog shared = new ChangeLog();
 
         try {
+            // Build a copy of the external change log, consisting of shared
+            // states we have in our cache. Inform listeners about this
+            // change.
             acquireWriteLock();
             holdingWriteLock = true;
 
@@ -833,6 +836,12 @@ public class SharedItemStateManager
                         state.copy(currentState);
                         state.setModCount(currentState.getModCount());
                         shared.modified(state);
+                    } catch (NoSuchItemStateException e) {
+                        // This is likely to happen because a subsequent delete
+                        // of this very state has not yet been transmitted.
+                        String msg = "Unable to retrieve state: " + state.getId() + ", ignored.";
+                        log.info(msg);
+                        state.discard();
                     } catch (ItemStateException e) {
                         String msg = "Unable to retrieve state: " + state.getId();
                         log.warn(msg);

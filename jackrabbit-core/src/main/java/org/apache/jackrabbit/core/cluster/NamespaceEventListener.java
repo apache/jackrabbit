@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.cluster;
 
-import org.apache.jackrabbit.core.NodeId;
-
 import javax.jcr.RepositoryException;
 
 /**
