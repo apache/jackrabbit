@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.util.PathMap;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
+import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.cluster.LockEventChannel;
 import org.apache.jackrabbit.core.cluster.LockEventListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
@@ -53,13 +54,15 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
  * Provides the functionality needed for locking and unlocking nodes.
  */
-public class LockManagerImpl implements LockManager, SynchronousEventListener, LockEventListener {
+public class LockManagerImpl implements LockManager, SynchronousEventListener,
+        LockEventListener, Dumpable {
 
     /**
      * Logger
@@ -1005,5 +1008,31 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener, L
         } finally {
             release();
         }
+    }
+
+    /**
+     * Dump contents of path map and elements included to <code>PrintStream</code> given.
+     *
+     * @param ps print stream to dump to
+     */
+    public void dump(final PrintStream ps) {
+        lockMap.traverse(new PathMap.ElementVisitor() {
+            public void elementVisited(PathMap.Element element) {
+                StringBuffer line = new StringBuffer();
+                for (int i = 0; i < element.getDepth(); i++) {
+                    line.append("--");
+                }
+                line.append(element.getName());
+                int index = element.getIndex();
+                if (index != 0 && index != 1) {
+                    line.append('[');
+                    line.append(index);
+                    line.append(']');
+                }
+                line.append("  ");
+                line.append(element.get());
+                ps.println(line.toString());
+            }
+        }, true);
     }
 }
