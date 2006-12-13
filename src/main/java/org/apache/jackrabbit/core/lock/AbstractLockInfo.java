@@ -143,4 +143,26 @@ abstract class AbstractLockInfo {
     public boolean isSessionScoped() {
         return sessionScoped;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String toString() {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append('(');
+        if (deep) {
+            buffer.append("deep ");
+        }
+        if (sessionScoped) {
+            buffer.append("session ");
+        }
+        buffer.append("holder:");
+        if (lockHolder != null) {
+            buffer.append(lockHolder.getUserID());
+        } else {
+            buffer.append("none");
+        }
+        buffer.append(')');
+        return buffer.toString();
+    }
 }
