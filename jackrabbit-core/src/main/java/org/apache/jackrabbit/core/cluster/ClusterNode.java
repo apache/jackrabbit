@@ -56,6 +56,21 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
     private static final String SHORT_PADDING = "0000";
 
     /**
+     * Status constant.
+     */
+    private static final int NONE = 0;
+
+    /**
+     * Status constant.
+     */
+    private static final int STARTED = 1;
+
+    /**
+     * Status constant.
+     */
+    private static final int STOPPED = 2;
+
+    /**
      * Logger.
      */
     private static Logger log = LoggerFactory.getLogger(ClusterNode.class);
@@ -86,9 +101,9 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
     private final Mutex syncLock = new Mutex();
 
     /**
-     * Flag indicating whether this cluster node is stopped.
+     * Status flag, one of {@link #NONE}, {@link #STARTED} or {@link #STOPPED}.
      */
-    private boolean stopped;
+    private int status;
 
     /**
      * Map of available lock listeners, indexed by workspace name.
@@ -150,11 +165,15 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
      * @throws ClusterException if an error occurs
      */
     public synchronized void start() throws ClusterException {
-        sync();
+        if (status == NONE) {
+            sync();
 
-        Thread t = new Thread(this, "ClusterNode-" + clusterNodeId);
-        t.setDaemon(true);
-        t.start();
+            Thread t = new Thread(this, "ClusterNode-" + clusterNodeId);
+            t.setDaemon(true);
+            t.start();
+
+            status = STARTED;
+        }
     }
 
     /**
@@ -167,7 +186,7 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
                     wait(syncDelay * 1000);
                 } catch (InterruptedException e) {}
 
-                if (stopped) {
+                if (status == STOPPED) {
                     return;
                 }
             }
@@ -203,7 +222,7 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
      * {@inheritDoc}
      */
     public synchronized void stop() {
-        stopped = true;
+        status = STOPPED;
 
         notifyAll();
     }
@@ -217,6 +236,10 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
      * @param owner lock owner
      */
     private void locked(String workspace, NodeId nodeId, boolean deep, String owner) {
+        if (status != STARTED) {
+            log.info("not started: lock operation ignored.");
+            return;
+        }
         boolean succeeded = false;
 
         try {
@@ -245,6 +268,10 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
      * @param nodeId node id
      */
     private void unlocked(String workspace, NodeId nodeId) {
+        if (status != STARTED) {
+            log.info("not started: unlock operation ignored.");
+            return;
+        }
         boolean succeeded = false;
 
         try {
@@ -324,6 +351,10 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
      * {@inheritDoc}
      */
     public void updateCreated() {
+        if (status != STARTED) {
+            log.info("not started: update create ignored.");
+            return;
+        }
         try {
             sync();
         } catch (ClusterException e) {
@@ -353,6 +384,10 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
      * @param esc events as they will be delivered on success
      */
     private void updatePrepared(String workspace, ChangeLog changes, EventStateCollection esc) {
+        if (status != STARTED) {
+            log.info("not started: update prepare ignored.");
+            return;
+        }
         boolean succeeded = false;
 
         try {
@@ -377,6 +412,10 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
      * {@inheritDoc}
      */
     public void updateCommitted() {
+        if (status != STARTED) {
+            log.info("not started: update commit ignored.");
+            return;
+        }
         try {
             journal.commit();
         } catch (JournalException e) {
@@ -392,6 +431,10 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
      * {@inheritDoc}
      */
     public void updateCancelled() {
+        if (status != STARTED) {
+            log.info("not started: update cancel ignored.");
+            return;
+        }
         journal.cancel();
     }
 
@@ -410,6 +453,10 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
      * {@inheritDoc}
      */
     public void remapped(String oldPrefix, String newPrefix, String uri) {
+        if (status != STARTED) {
+            log.info("not started: namespace operation ignored.");
+            return;
+        }
         boolean succeeded = false;
 
         try {
@@ -441,6 +488,10 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
      * {@inheritDoc}
      */
     public void registered(Collection ntDefs) {
+        if (status != STARTED) {
+            log.info("not started: nodetype operation ignored.");
+            return;
+        }
         boolean succeeded = false;
 
         try {

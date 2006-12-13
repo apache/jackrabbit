@@ -19,9 +19,7 @@ package org.apache.jackrabbit.core.cluster;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
 
 import java.util.Collection;
 
