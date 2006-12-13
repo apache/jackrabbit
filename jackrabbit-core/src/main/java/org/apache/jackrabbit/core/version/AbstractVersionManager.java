@@ -383,8 +383,13 @@ abstract class AbstractVersionManager implements VersionManager {
             String versionName = best.getName().getLocalName();
             int pos = versionName.lastIndexOf('.');
             if (pos > 0) {
-                versionName = versionName.substring(0, pos + 1)
+                String newVersionName = versionName.substring(0, pos + 1)
                     + (Integer.parseInt(versionName.substring(pos + 1)) + 1);
+                if (history.hasVersion(new QName("", newVersionName))) {
+                    versionName += ".1";
+            	} else {
+                    versionName = newVersionName;
+            	}
             } else {
                 versionName = String.valueOf(best.getSuccessors().length + 1) + ".0";
             }
