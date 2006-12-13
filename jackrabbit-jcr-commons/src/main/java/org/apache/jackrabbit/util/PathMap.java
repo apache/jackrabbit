@@ -112,7 +112,8 @@ public class PathMap {
     }
 
     /**
-     * Traverse the path map and call back requester.
+     * Traverse the path map and call back requester. This method visits the root
+     * first, then its children.
      * @param includeEmpty if <code>true</code> invoke call back on every child
      *                     regardless, whether the associated object is empty
      *                     or not; otherwise call back on non-empty children
@@ -471,13 +472,17 @@ public class PathMap {
         }
 
         /**
-         * Recursively invoked traversal method.
+         * Recursively invoked traversal method. This method visits the element
+         * first, then its children.
          * @param visitor visitor to invoke
          * @param includeEmpty if <code>true</code> invoke call back on every
          *        element regardless, whether the associated object is empty
          *        or not; otherwise call back on non-empty children only
          */
         public void traverse(ElementVisitor visitor, boolean includeEmpty) {
+            if (includeEmpty || obj != null) {
+                visitor.elementVisited(this);
+            }
             if (children != null) {
                 Iterator iter = children.values().iterator();
                 while (iter.hasNext()) {
@@ -489,9 +494,6 @@ public class PathMap {
                         }
                     }
                 }
-            }
-            if (includeEmpty || obj != null) {
-                visitor.elementVisited(this);
             }
         }
 
