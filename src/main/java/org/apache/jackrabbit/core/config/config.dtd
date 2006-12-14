@@ -125,11 +125,15 @@
 <!--
     the Workspace element serves as a workspace configuration template;
     it is used to create the initial workspace if there's no workspace yet
-    and for creating additional workspaces through the api
+    and for creating additional workspaces through the api; the clustered
+    attribute indicates whether the workspace should participate in an
+    optionally configured cluster
 -->
 <!ELEMENT Workspace (FileSystem,PersistenceManager,SearchIndex?)>
 <!ATTLIST Workspace
-  name CDATA #REQUIRED>
+  name CDATA #REQUIRED
+  clustered (true|false) "true"
+>
 
 <!--
     the PersistenceManager element configures the persistence manager
