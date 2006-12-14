@@ -112,6 +112,9 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     public static final String DEFAULT_QUERY_HANDLER =
         "org.apache.jackrabbit.core.query.lucene.SearchIndex";
 
+    /** Name of the clustered configuration attribute. */
+    public static final String CLUSTERED_ATTRIBUTE = "clustered";
+
     /**
      * Creates a new configuration parser with the given parser variables.
      *
@@ -330,6 +333,10 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         String name =
             getAttribute(root, NAME_ATTRIBUTE, new File(home).getName());
 
+        // Clustered attribute
+        boolean clustered = Boolean.valueOf(
+                getAttribute(root, CLUSTERED_ATTRIBUTE, "true")).booleanValue();
+
         // Create a temporary parser that contains the ${wsp.name} variable
         Properties tmpVariables = (Properties) getVariables().clone();
         tmpVariables.put(WORKSPACE_NAME_VARIABLE, name);
@@ -345,7 +352,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         // Search implementation (optional)
         SearchConfig sc = tmpParser.parseSearchConfig(root);
 
-        return new WorkspaceConfig(home, name, fsc, pmc, sc);
+        return new WorkspaceConfig(home, name, clustered, fsc, pmc, sc);
     }
 
     /**

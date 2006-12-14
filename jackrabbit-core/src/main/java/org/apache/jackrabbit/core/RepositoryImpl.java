@@ -289,32 +289,11 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         virtNTMgr = new VirtualNodeTypeStateManager(getNodeTypeRegistry(),
                 delegatingDispatcher, NODETYPES_NODE_ID, SYSTEM_ROOT_NODE_ID);
 
-        // initialize default workspace
-        String wspName = repConfig.getDefaultWorkspaceName();
-        try {
-            initWorkspace((WorkspaceInfo) wspInfos.get(wspName));
-        } catch (RepositoryException e) {
-            // if default workspace failed to initialize, shutdown again
-            log.error("Failed to initialize workspace '" + wspName + "'", e);
-            log.error("Unable to start repository, forcing shutdown...");
-            shutdown();
-            throw e;
-        }
+        // initialize startup workspaces
+        initStartupWorkspaces();
 
         // initialize system search manager
-        getSystemSearchManager(wspName);
-
-        // amount of time in seconds before an idle workspace is automatically
-        // shut down
-        int maxIdleTime = repConfig.getWorkspaceMaxIdleTime();
-        if (maxIdleTime != 0) {
-            // start workspace janitor thread
-            Thread wspJanitor = new Thread(new WorkspaceJanitor(maxIdleTime * 1000));
-            wspJanitor.setName("WorkspaceJanitor");
-            wspJanitor.setPriority(Thread.MIN_PRIORITY);
-            wspJanitor.setDaemon(true);
-            wspJanitor.start();
-        }
+        getSystemSearchManager(repConfig.getDefaultWorkspaceName());
 
         // after the workspace is initialized we pass a system session to
         // the virtual node type manager
@@ -333,6 +312,18 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                 shutdown();
                 throw new RepositoryException(msg, e);
             }
+        }
+
+        // amount of time in seconds before an idle workspace is automatically
+        // shut down
+        int maxIdleTime = repConfig.getWorkspaceMaxIdleTime();
+        if (maxIdleTime != 0) {
+            // start workspace janitor thread
+            Thread wspJanitor = new Thread(new WorkspaceJanitor(maxIdleTime * 1000));
+            wspJanitor.setName("WorkspaceJanitor");
+            wspJanitor.setPriority(Thread.MIN_PRIORITY);
+            wspJanitor.setDaemon(true);
+            wspJanitor.start();
         }
 
         log.info("Repository started");
@@ -369,6 +360,26 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
 
         return new VersionManagerImpl(pm, fs, ntReg, delegatingDispatcher,
                 VERSION_STORAGE_NODE_ID, SYSTEM_ROOT_NODE_ID, cacheFactory);
+    }
+
+    /**
+     * Initialize startup workspaces. Base implementation will initialize the
+     * default workspace. Derived classes may initialize their own startup
+     * workspaces <b>after</b> having called the base implementation.
+     *
+     * @throws RepositoryException if an error occurs
+     */
+    protected void initStartupWorkspaces() throws RepositoryException {
+        String wspName = repConfig.getDefaultWorkspaceName();
+        try {
+            initWorkspace((WorkspaceInfo) wspInfos.get(wspName));
+        } catch (RepositoryException e) {
+            // if default workspace failed to initialize, shutdown again
+            log.error("Failed to initialize workspace '" + wspName + "'", e);
+            log.error("Unable to start repository, forcing shutdown...");
+            shutdown();
+            throw e;
+        }
     }
 
     /**
@@ -1168,6 +1179,29 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             throw new RepositoryException(msg, e);
         }
     }
+    
+    /**
+     * Creates a <code>SharedItemStateManager</code> or derivative.
+     *
+     * @param persistMgr     persistence manager
+     * @param rootNodeId     root node id
+     * @param ntReg          node type registry
+     * @param usesReferences <code>true</code> if the item state manager should use
+     *                       node references to verify integrity of its reference properties;
+     *                       <code>false</code> otherwise
+     * @param cacheFactory   cache factory
+     * @return item state manager
+     * @throws ItemStateException if an error occurs
+     */ 
+    protected SharedItemStateManager createItemStateManager(PersistenceManager persistMgr,
+                                                            NodeId rootNodeId,
+                                                            NodeTypeRegistry ntReg,
+                                                            boolean usesReferences,
+                                                            ItemStateCacheFactory cacheFactory)
+            throws ItemStateException {
+
+        return new SharedItemStateManager(persistMgr, rootNodeId, ntReg, true, cacheFactory);
+    }
 
     //-----------------------------------------------------------< Repository >
     /**
@@ -1630,7 +1664,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                 // 'chicken & egg' bootstrap problems
                 if (lockMgr == null) {
                     lockMgr = new LockManagerImpl(getSystemSession(), fs);
-                    if (clusterNode != null) {
+                    if (clusterNode != null && config.isClustered()) {
                         lockChannel = clusterNode.createLockChannel(getName());
                         lockMgr.setEventChannel(lockChannel);
                     }
@@ -1725,8 +1759,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
 
                 // create item state manager
                 try {
-                    itemStateMgr =
-                            new SharedItemStateManager(persistMgr, rootNodeId, ntReg, true, cacheFactory);
+                    itemStateMgr = createItemStateManager(persistMgr, rootNodeId, ntReg, true, cacheFactory);
                     try {
                         itemStateMgr.addVirtualItemStateProvider(
                                 vMgr.getVirtualItemStateProvider());
@@ -1735,7 +1768,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                     } catch (Exception e) {
                         log.error("Unable to add vmgr: " + e.toString(), e);
                     }
-                    if (clusterNode != null) {
+                    if (clusterNode != null && config.isClustered()) {
                         updateChannel = clusterNode.createUpdateChannel(getName());
                         itemStateMgr.setEventChannel(updateChannel);
                         updateChannel.setListener(this);

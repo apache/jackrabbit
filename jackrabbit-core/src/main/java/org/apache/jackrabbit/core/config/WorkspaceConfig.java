@@ -38,6 +38,11 @@ public class WorkspaceConfig {
     private final String name;
 
     /**
+     * Flag indicating whether this workspace participates in a cluster.
+     */
+    private final boolean clustered;
+
+    /**
      * Workspace file system configuration.
      */
     private FileSystemConfig fsc;
@@ -61,10 +66,12 @@ public class WorkspaceConfig {
      * @param pmc persistence manager configuration
      * @param sc search index configuration
      */
-    public WorkspaceConfig(String home, String name, FileSystemConfig fsc,
-            PersistenceManagerConfig pmc, SearchConfig sc) {
+    public WorkspaceConfig(String home, String name, boolean clustered,
+                           FileSystemConfig fsc, PersistenceManagerConfig pmc,
+                           SearchConfig sc) {
         this.home = home;
         this.name = name;
+        this.clustered = clustered;
         this.fsc = fsc;
         this.pmc = pmc;
         this.sc = sc;
@@ -86,6 +93,16 @@ public class WorkspaceConfig {
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * Returns a flag indicating whether this workspace participates in a cluster.
+     *
+     * @return <code>true</code> if this workspace participates in a cluster;
+     *         <code>false</code> otherwise
+     */
+    public boolean isClustered() {
+        return clustered;
     }
 
     /**
