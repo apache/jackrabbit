@@ -817,48 +817,11 @@ public class SharedItemStateManager
     public void externalUpdate(ChangeLog external, EventStateCollection events) {
         boolean holdingWriteLock = false;
 
-        ChangeLog shared = new ChangeLog();
-
         try {
-            // Build a copy of the external change log, consisting of shared
-            // states we have in our cache. Inform listeners about this
-            // change.
             acquireWriteLock();
             holdingWriteLock = true;
 
-            Iterator modifiedStates = external.modifiedStates();
-            while (modifiedStates.hasNext()) {
-                ItemState state = (ItemState) modifiedStates.next();
-                state = cache.retrieve(state.getId());
-                if (state != null) {
-                    try {
-                        ItemState currentState = loadItemState(state.getId());
-                        state.copy(currentState);
-                        state.setModCount(currentState.getModCount());
-                        shared.modified(state);
-                    } catch (NoSuchItemStateException e) {
-                        // This is likely to happen because a subsequent delete
-                        // of this very state has not yet been transmitted.
-                        String msg = "Unable to retrieve state: " + state.getId() + ", ignored.";
-                        log.info(msg);
-                        state.discard();
-                    } catch (ItemStateException e) {
-                        String msg = "Unable to retrieve state: " + state.getId();
-                        log.warn(msg);
-                        state.discard();
-                    }
-                }
-            }
-            Iterator deletedStates = external.deletedStates();
-            while (deletedStates.hasNext()) {
-                ItemState state = (ItemState) deletedStates.next();
-                state = cache.retrieve(state.getId());
-                if (state != null) {
-                    shared.deleted(state);
-                }
-            }
-            shared.persisted();
-
+            doExternalUpdate(external);
         } catch (ItemStateException e) {
             String msg = "Unable to acquire write lock.";
             log.error(msg);
@@ -882,6 +845,52 @@ public class SharedItemStateManager
             }
         }
 
+    }
+
+    /**
+     * Perform the external update. While executing this method, the <code>writeLock</code>
+     * on this manager is held.
+     *
+     * @param external external change containing only node and property ids.
+     */
+    protected void doExternalUpdate(ChangeLog external) {
+        ChangeLog shared = new ChangeLog();
+
+        // Build a copy of the external change log, consisting of shared
+        // states we have in our cache. Inform listeners about this
+        // change.
+        Iterator modifiedStates = external.modifiedStates();
+        while (modifiedStates.hasNext()) {
+            ItemState state = (ItemState) modifiedStates.next();
+            state = cache.retrieve(state.getId());
+            if (state != null) {
+                try {
+                    ItemState currentState = loadItemState(state.getId());
+                    state.copy(currentState);
+                    state.setModCount(currentState.getModCount());
+                    shared.modified(state);
+                } catch (NoSuchItemStateException e) {
+                    // This is likely to happen because a subsequent delete
+                    // of this very state has not yet been transmitted.
+                    String msg = "Unable to retrieve state: " + state.getId() + ", ignored.";
+                    log.info(msg);
+                    state.discard();
+                } catch (ItemStateException e) {
+                    String msg = "Unable to retrieve state: " + state.getId();
+                    log.warn(msg);
+                    state.discard();
+                }
+            }
+        }
+        Iterator deletedStates = external.deletedStates();
+        while (deletedStates.hasNext()) {
+            ItemState state = (ItemState) deletedStates.next();
+            state = cache.retrieve(state.getId());
+            if (state != null) {
+                shared.deleted(state);
+            }
+        }
+        shared.persisted();
     }
 
     /**

@@ -157,8 +157,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
                 cl.added(pt);
                 pMgr.store(cl);
             }
-            sharedStateMgr =
-                    new VersionItemStateManager(pMgr, rootId, ntReg, cacheFactory);
+            sharedStateMgr = createSharedStateManager(pMgr, rootId, ntReg, cacheFactory);
 
             stateMgr = new LocalItemStateManager(sharedStateMgr, escFactory, cacheFactory);
             stateMgr.addListener(this);
@@ -463,6 +462,25 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      */
     SharedItemStateManager getSharedStateMgr() {
         return sharedStateMgr;
+    }
+
+    /**
+     * Creates a <code>SharedItemStateManager</code> or derivative.
+     *
+     * @param pMgr          persistence manager
+     * @param rootId        root node id
+     * @param ntReg         node type registry
+     * @param cacheFactory  cache factory
+     * @return item state manager
+     * @throws ItemStateException if an error occurs
+     */
+    protected SharedItemStateManager createSharedStateManager(PersistenceManager pMgr,
+                                                              NodeId rootId,
+                                                              NodeTypeRegistry ntReg,
+                                                              ItemStateCacheFactory cacheFactory)
+            throws ItemStateException {
+
+        return new VersionItemStateManager(pMgr, rootId, ntReg, cacheFactory);
     }
 
     /**
