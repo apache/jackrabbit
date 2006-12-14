@@ -20,6 +20,7 @@ import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.apache.jackrabbit.name.NamespaceListener;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameCache;
 import org.apache.jackrabbit.util.XMLChar;
 
 import javax.jcr.NamespaceException;
@@ -43,7 +44,7 @@ import java.util.HashSet;
  * underlying namespace registry.
  */
 class LocalNamespaceMappings extends AbstractNamespaceResolver
-        implements NamespaceListener {
+        implements NamespaceListener, NameCache {
 
     /** The underlying global and persistent namespace registry. */
     private final NamespaceRegistryImpl nsReg;
@@ -154,6 +155,46 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
      */
     void dispose() {
         nsReg.removeListener(this);
+    }
+
+    //-------------------------------------------------------------< NameCache >
+
+    /**
+     * {@inheritDoc}
+     */
+    public QName retrieveName(String jcrName) {
+        if (prefixToURI.size() == 0) {
+            return nsReg.retrieveName(jcrName);
+        }
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String retrieveName(QName name) {
+        if (prefixToURI.size() == 0
+                || !uriToPrefix.containsKey(name.getNamespaceURI())) {
+            return nsReg.retrieveName(name);
+        }
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void cacheName(String jcrName, QName name) {
+        if (prefixToURI.size() == 0
+                || !uriToPrefix.containsKey(name.getNamespaceURI())) {
+            nsReg.cacheName(jcrName, name);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void evictAllNames() {
+        nsReg.evictAllNames();
     }
 
     //-----------------------------------------------------< NamespaceResolver >
