@@ -240,7 +240,9 @@ public class NodeIndexer {
                 addPathValue(doc, fieldName, internalValue);
                 break;
             case PropertyType.STRING:
-                addStringValue(doc, fieldName, internalValue);
+                // do not fulltext index jcr:uuid String
+                boolean tokenize = !name.equals(QName.JCR_UUID);
+                addStringValue(doc, fieldName, internalValue, tokenize);
                 break;
             case PropertyType.NAME:
                 addNameValue(doc, fieldName, internalValue);
@@ -428,8 +430,25 @@ public class NodeIndexer {
      * @param doc           The document to which to add the field
      * @param fieldName     The name of the field to add
      * @param internalValue The value for the field to add to the document.
+     * @deprecated Use {@link #addStringValue(Document, String, Object, boolean)
+     *             addStringValue(Document, String, Object, boolean)} instead.
      */
     protected void addStringValue(Document doc, String fieldName, Object internalValue) {
+        addStringValue(doc, fieldName, internalValue, true);
+    }
+
+    /**
+     * Adds the string value to the document both as the named field and
+     * optionally for full text indexing if <code>tokenized</code> is
+     * <code>true</code>.
+     *
+     * @param doc           The document to which to add the field
+     * @param fieldName     The name of the field to add
+     * @param internalValue The value for the field to add to the document.
+     * @param tokenized     If <code>true</code> the string is also tokenized
+     *                      and fulltext indexed.
+     */
+    protected void addStringValue(Document doc, String fieldName, Object internalValue, boolean tokenized) {
         String stringValue = String.valueOf(internalValue);
 
         // simple String
@@ -438,20 +457,22 @@ public class NodeIndexer {
                 Field.Store.NO,
                 Field.Index.UN_TOKENIZED,
                 Field.TermVector.NO));
-        // also create fulltext index of this value
-        doc.add(new Field(FieldNames.FULLTEXT,
-                stringValue,
-                Field.Store.NO,
-                Field.Index.TOKENIZED,
-                Field.TermVector.NO));
-        // create fulltext index on property
-        int idx = fieldName.indexOf(':');
-        fieldName = fieldName.substring(0, idx + 1)
-                + FieldNames.FULLTEXT_PREFIX + fieldName.substring(idx + 1);
-        doc.add(new Field(fieldName, stringValue,
-                Field.Store.NO,
-                Field.Index.TOKENIZED,
-                Field.TermVector.NO));
+        if (tokenized) {
+            // also create fulltext index of this value
+            doc.add(new Field(FieldNames.FULLTEXT,
+                    stringValue,
+                    Field.Store.NO,
+                    Field.Index.TOKENIZED,
+                    Field.TermVector.NO));
+            // create fulltext index on property
+            int idx = fieldName.indexOf(':');
+            fieldName = fieldName.substring(0, idx + 1)
+                    + FieldNames.FULLTEXT_PREFIX + fieldName.substring(idx + 1);
+            doc.add(new Field(fieldName, stringValue,
+                    Field.Store.NO,
+                    Field.Index.TOKENIZED,
+                    Field.TermVector.NO));
+        }
     }
 
     /**
