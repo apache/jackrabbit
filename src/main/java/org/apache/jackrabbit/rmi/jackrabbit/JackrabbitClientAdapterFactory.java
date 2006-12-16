@@ -20,12 +20,29 @@ import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.nodetype.NodeTypeManager;
 
+import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
+import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.rmi.client.ClientAdapterFactory;
+import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 
+/**
+ * Jackrabbit-specific {@link LocalAdapterFactory}. This factory extends
+ * the default {@link ClientAdapterFactory} implementation with adapter
+ * classes that implement the Jackrabbit API extension interfaces. The
+ * implementation degrades gracefully when used with other repositories.
+ */
 public class JackrabbitClientAdapterFactory extends ClientAdapterFactory {
 
+    /**
+     * Returns a {@link JackrabbitNodeTypeManager} adapter if given a
+     * {@link RemoteJackrabbitNodeTypeManager} reference. Alternatively falls
+     * back to the default adapter from the parent class.
+     *
+     * @param remote remote node type manager
+     * @return adapted node type manager
+     */
     public NodeTypeManager getNodeTypeManager(RemoteNodeTypeManager remote) {
         if (remote instanceof RemoteJackrabbitNodeTypeManager) {
             return new ClientJackrabbitNodeTypeManager(
@@ -35,6 +52,14 @@ public class JackrabbitClientAdapterFactory extends ClientAdapterFactory {
         }
     }
 
+    /**
+     * Returns a {@link JackrabbitWorkspace} adapter if given a
+     * {@link RemoteJackrabbitWorkspace} reference. Alternatively falls back
+     * to the default adapter from the parent class.
+     *
+     * @param remote remote workspace
+     * @return adapted workspace
+     */
     public Workspace getWorkspace(Session session, RemoteWorkspace remote) {
         if (remote instanceof RemoteJackrabbitWorkspace) {
             return new ClientJackrabbitWorkspace(
