@@ -20,10 +20,22 @@ import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 
+/**
+ * Remote version of the {@link JackrabbitWorkspace} extension interface.
+ */
 public interface RemoteJackrabbitWorkspace extends RemoteWorkspace {
 
+    /**
+     * Creates a new workspace.
+     *
+     * @param name workspace name
+     * @param template workspace configuration template, or <code>null</code>
+     * @throws RepositoryException if a repository error occurs
+     * @throws RemoteException if a remote exception occurs
+     */
     void createWorkspace(String name, byte[] template)
         throws RepositoryException, RemoteException;
 

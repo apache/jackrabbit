@@ -16,20 +16,41 @@
  */
 package org.apache.jackrabbit.rmi.jackrabbit;
 
-import java.io.IOException;
 import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
 
+/**
+ * Remote version of the {@link JackrabbitNodeTypeManager} extension interface.
+ */
 public interface RemoteJackrabbitNodeTypeManager extends RemoteNodeTypeManager {
 
+    /**
+     * Checks if the named node type exists.
+     *
+     * @param name node type name
+     * @return <code>true</code> if the named node type exists,
+     *         <code>false</code> otherwise
+     * @throws RepositoryException if a repository error occurs
+     * @throws RemoteException if a remote error occurs.
+     */
     boolean hasNodeType(String name)
         throws RepositoryException, RemoteException;
 
+    /**
+     * Registers node types defined in the given node type definitions.
+     *
+     * @param content node type definitions
+     * @param contentType type of the node type definitions
+     * @return registered node types
+     * @throws RepositoryException if a repository error occurs
+     * @throws RemoteException if a remote error occurs.
+     */
     RemoteNodeType[] registerNodeTypes(byte[] content, String contentType)
-        throws IOException, RepositoryException, RemoteException;
+        throws RepositoryException, RemoteException;
 
 }

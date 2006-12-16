@@ -46,15 +46,18 @@ public class ServerJackrabbitNodeTypeManager extends ServerNodeTypeManager
     }
 
     public RemoteNodeType[] registerNodeTypes(
-            byte[] content, String type)
-            throws IOException, RepositoryException {
-        InputStream stream = new ByteArrayInputStream(content);
-        NodeType[] types = manager.registerNodeTypes(stream, type);
-        RemoteNodeType[] remotes = new RemoteNodeType[types.length];
-        for (int i = 0; i < types.length; i++) {
-            remotes[i] = getFactory().getRemoteNodeType(types[i]);
+            byte[] content, String type) throws RepositoryException {
+        try {
+            InputStream stream = new ByteArrayInputStream(content);
+            NodeType[] types = manager.registerNodeTypes(stream, type);
+            RemoteNodeType[] remotes = new RemoteNodeType[types.length];
+            for (int i = 0; i < types.length; i++) {
+                remotes[i] = getFactory().getRemoteNodeType(types[i]);
+            }
+            return remotes;
+        } catch (IOException e) {
+            throw new RepositoryException(e);
         }
-        return remotes;
     }
 
 }

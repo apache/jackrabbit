@@ -25,10 +25,27 @@ import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
+import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 import org.apache.jackrabbit.rmi.server.ServerAdapterFactory;
 
+/**
+ * Jackrabbit-specific {@link RemoteAdapterFactory}. This factory extends
+ * the default {@link ServerAdapterFactory} implementation with adapter
+ * classes that implement remote versions of the Jackrabbit API extension
+ * interfaces. The implementation degrades gracefully when used with other
+ * repositories.
+ */
 public class JackrabbitServerAdapterFactory extends ServerAdapterFactory {
 
+    /**
+     * Returns a {@link RemoteJackrabbitNodeTypeManager} adapter if given a
+     * {@link JackrabbitNodeTypeManager} reference. Alternatively falls
+     * back to the default adapter from the parent class.
+     *
+     * @param manager local node type manager
+     * @return remote node type manager
+     * @throws RemoteException if the remote adapter could not be created
+     */
     public RemoteNodeTypeManager getRemoteNodeTypeManager(
             NodeTypeManager manager) throws RemoteException {
         if (manager instanceof JackrabbitNodeTypeManager) {
@@ -39,6 +56,15 @@ public class JackrabbitServerAdapterFactory extends ServerAdapterFactory {
         }
     }
 
+    /**
+     * Returns a {@link RemoteJackrabbitWorkspace} adapter if given a
+     * {@link JackrabbitWorkspace} reference. Alternatively falls
+     * back to the default adapter from the parent class.
+     *
+     * @param workspace local workspace
+     * @return remote node type manager
+     * @throws RemoteException if the remote adapter could not be created
+     */
     public RemoteWorkspace getRemoteWorkspace(Workspace workspace)
             throws RemoteException {
         if (workspace instanceof JackrabbitWorkspace) {
