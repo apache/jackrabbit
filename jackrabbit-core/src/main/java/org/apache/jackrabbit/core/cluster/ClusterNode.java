@@ -195,6 +195,13 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
             } catch (ClusterException e) {
                 String msg = "Periodic sync of journal failed: " + e.getMessage();
                 log.error(msg);
+            } catch (Exception e) {
+                String msg = "Unexpected error while syncing of journal: " + e.getMessage();
+                log.error(msg, e);
+            } catch (Error e) {
+                String msg = "Unexpected error while syncing of journal: " + e.getMessage();
+                log.error(msg, e);
+                throw e;
             }
         }
     }
