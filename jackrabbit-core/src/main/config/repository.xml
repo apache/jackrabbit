@@ -104,6 +104,7 @@
               a lot of nodes set to 'false'.
             - resultFetchSize: The number of results the query handler should
               initially fetch when a query is executed.
+              Default value: Integer.MAX_VALUE (-> all)
 
             Note: all parameters (except path) in this SearchIndex config are default
             values and can be omitted.
@@ -124,7 +125,7 @@
             <param name="queryClass" value="org.apache.jackrabbit.core.query.QueryImpl"/>
             <param name="idleTime" value="-1"/>
             <param name="respectDocumentOrder" value="true"/>
-            <param name="resultFetchSize" value="50" />
+            <param name="resultFetchSize" value="2147483647"/>
         </SearchIndex>
     </Workspace>
 
