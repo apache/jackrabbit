@@ -184,9 +184,9 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * The number of documents that are pre fetched when a query is executed.
      * <p/>
-     * Default value is: <code>50</code>.
+     * Default value is: {@link Integer#MAX_VALUE}.
      */
-    private int resultFetchSize = 50;
+    private int resultFetchSize = Integer.MAX_VALUE;
 
     /**
      * Indicates if this <code>SearchIndex</code> is closed and cannot be used
