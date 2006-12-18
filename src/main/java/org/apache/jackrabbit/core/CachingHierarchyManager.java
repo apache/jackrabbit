@@ -374,14 +374,22 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     /**
      * {@inheritDoc}
      * <p/>
-     * Generate subsequent add and remove notifications for every replacement.
+     * Generate subsequent add and remove notifications for every replacement. This method
+     * currently assumes that the reordering is detectable by comparing the state's child
+     * node entries to the overlayed state's child node entries. It is not able to handle
+     * a transient reordering and will therefore evict its cached entry if such a situation
+     * is detected.
      */
     public void nodesReplaced(NodeState state) {
         List entries = state.getReorderedChildNodeEntries();
         if (entries.size() == 0) {
+            synchronized (cacheMonitor) {
+                if (idCache.containsKey(state.getNodeId())) {
+                    evict(state.getNodeId());
+                }
+            }
             return;
         }
-
         Iterator iter = entries.iterator();
         while (iter.hasNext()) {
             NodeState.ChildNodeEntry now = (NodeState.ChildNodeEntry) iter.next();
@@ -806,6 +814,13 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
          */
         public PathMap.Element getElement() {
             return element;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public String toString() {
+            return id.toString();
         }
     }
 }
