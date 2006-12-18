@@ -31,7 +31,6 @@
     <menu name="Apache Jackrabbit">
       <item name="Home"                       href="/index.html" />
       <item name="Downloads"                  href="/downloads.cgi"/>
-      <item name="Layout"                     href="/layout.html"/>
       <item name="FAQ"                        href="/faq.html"/>
       <item name="Wiki"                       href="http://wiki.apache.org/jackrabbit/FrontPage"/>
       <item name="Thanks"                     href="/thanks.html"/>
