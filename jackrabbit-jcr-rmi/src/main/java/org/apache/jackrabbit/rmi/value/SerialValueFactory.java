@@ -85,14 +85,14 @@ public class SerialValueFactory implements ValueFactory {
     /**
      * Utility method for decorating a value. Note that the contents of the
      * original values will only be copied when the decorators are serialized.
+     * Null referenced and already serializable values are passed as-is.
      *
-     * @param value the value to be decorated
-     * @return the decorated value
+     * @param value the value to be decorated, or <code>null</code>
+     * @return the decorated value, or <code>null</code>
      */
     public static Value makeSerialValue(Value value) {
-        // if the value is already serializable, just return it
-        // - or should we test for SerialValue ??
-        if (value instanceof SerialValue) {
+        // if the value is null or already serializable, just return it
+        if (value == null || value instanceof SerialValue) {
             return value;
         }
 
@@ -224,7 +224,7 @@ public class SerialValueFactory implements ValueFactory {
      * @throws ValueFormatException if the string is not a synthactically
      *      correct JCR path.
      */
-    protected PathValue createPathValue(String value) 
+    protected PathValue createPathValue(String value)
             throws ValueFormatException {
         return new PathValue(value);
     }
@@ -241,7 +241,7 @@ public class SerialValueFactory implements ValueFactory {
      * @throws ValueFormatException if the string is not a synthactically
      *      correct JCR reference.
      */
-    protected ReferenceValue createReferenceValue(String value) 
+    protected ReferenceValue createReferenceValue(String value)
             throws ValueFormatException {
         return new ReferenceValue(value);
     }
