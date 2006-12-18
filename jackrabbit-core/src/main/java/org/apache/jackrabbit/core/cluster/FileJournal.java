@@ -189,7 +189,7 @@ public class FileJournal implements Journal {
      * @return revision file
      */
     public String getRevision() {
-        return directory;
+        return revision;
     }
 
     /**
@@ -639,6 +639,7 @@ public class FileJournal implements Journal {
         } finally {
             if (!prepared) {
                 globalRevision.unlock();
+                writeMutex.release();
             }
         }
     }
