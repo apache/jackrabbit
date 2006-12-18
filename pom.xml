@@ -570,9 +570,9 @@
     </license>
   </licenses>
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk</developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/trunk</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/branches/1.2</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/branches/1.2</developerConnection>
+    <url>http://svn.apache.org/viewvc/jackrabbit/branches/1.2</url>
   </scm>
   <organization>
     <name>The Apache Software Foundation</name>
