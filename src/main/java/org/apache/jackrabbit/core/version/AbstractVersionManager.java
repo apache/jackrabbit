@@ -29,12 +29,13 @@ import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
-import java.util.List;
 
 /**
  * Base implementation of the {@link VersionManager} interface.
@@ -168,7 +169,7 @@ abstract class AbstractVersionManager implements VersionManager {
         private boolean success = false;
 
         /**
-         * Saves the pending operations in the {@link StateManager}.
+         * Saves the pending operations in the {@link LocalItemStateManager}.
          *
          * @throws ItemStateException if the pending state is invalid
          * @throws RepositoryException if the pending state could not be persisted
@@ -360,6 +361,7 @@ abstract class AbstractVersionManager implements VersionManager {
     /**
      * Checks in a node
      *
+     * @param history the version history
      * @param node node to checkin
      * @return internal version
      * @throws javax.jcr.RepositoryException if an error occurs
@@ -369,36 +371,7 @@ abstract class AbstractVersionManager implements VersionManager {
             throws RepositoryException {
         WriteOperation operation = startWriteOperation();
         try {
-            // 1. search a predecessor, suitable for generating the new name
-            Value[] values = node.getProperty(QName.JCR_PREDECESSORS).getValues();
-            InternalVersion best = null;
-            for (int i = 0; i < values.length; i++) {
-                InternalVersion pred = history.getVersion(NodeId.valueOf(values[i].getString()));
-                if (best == null || pred.getSuccessors().length < best.getSuccessors().length) {
-                    best = pred;
-                }
-            }
-
-            // 2. generate version name (assume no namespaces in version names)
-            String versionName = best.getName().getLocalName();
-            int pos = versionName.lastIndexOf('.');
-            if (pos > 0) {
-                String newVersionName = versionName.substring(0, pos + 1)
-                    + (Integer.parseInt(versionName.substring(pos + 1)) + 1);
-                if (history.hasVersion(new QName("", newVersionName))) {
-                    versionName += ".1";
-            	} else {
-                    versionName = newVersionName;
-            	}
-            } else {
-                versionName = String.valueOf(best.getSuccessors().length + 1) + ".0";
-            }
-
-            // 3. check for colliding names
-            while (history.hasVersion(new QName("", versionName))) {
-                versionName += ".1";
-            }
-
+            String versionName = calculateCheckinVersionName(history, node);
             InternalVersionImpl v = history.checkin(new QName("", versionName), node);
             operation.save();
             return v;
@@ -409,6 +382,76 @@ abstract class AbstractVersionManager implements VersionManager {
         }
     }
 
+    /**
+     * Calculates the name of the new version that will be created by a
+     * checkin call. The name is determined as follows:
+     * <ul>
+     * <li> first the predecessor version with the shortes name is searched.
+     * <li> if that predecessor version is the root version, the new version gets
+     *      the name "{number of successors}+1" + ".0"
+     * <li> if that predecessor version has no successor, the last digit of it's
+     *      version number is incremented.
+     * <li> if that predecessor version has successors but the incremented name
+     *      does not exist, that name is used.
+     * <li> otherwise a ".0" is added to the name until a non conflicting name
+     *      is found.
+     * <ul>
+     *
+     * Example Graph:
+     * <xmp>
+     * jcr:rootVersion
+     *  |     |
+     * 1.0   2.0
+     *  |
+     * 1.1
+     *  |
+     * 1.2 ---\  ------\
+     *  |      \        \
+     * 1.3   1.2.0   1.2.0.0
+     *  |      |
+     * 1.4   1.2.1 ----\
+     *  |      |        \
+     * 1.5   1.2.2   1.2.1.0
+     *  |      |        |
+     * 1.6     |     1.2.1.1
+     *  |-----/
+     * 1.7
+     * </xmp>
+     *
+     * @param history the version history
+     * @param node the node to checkin
+     * @return the new version name
+     * @throws RepositoryException if an error occurs.
+     */
+    protected String calculateCheckinVersionName(InternalVersionHistoryImpl history,
+                                                 NodeImpl node)
+            throws RepositoryException {
+        // 1. search a predecessor, suitable for generating the new name
+        Value[] values = node.getProperty(QName.JCR_PREDECESSORS).getValues();
+        InternalVersion best = null;
+        for (int i = 0; i < values.length; i++) {
+            InternalVersion pred = history.getVersion(NodeId.valueOf(values[i].getString()));
+            if (best == null
+                    || pred.getName().getLocalName().length() < best.getName().getLocalName().length()) {
+                best = pred;
+            }
+        }
+        // 2. generate version name (assume no namespaces in version names)
+        String versionName = best.getName().getLocalName();
+        int pos = versionName.lastIndexOf('.');
+        if (pos > 0) {
+            String newVersionName = versionName.substring(0, pos + 1)
+                + (Integer.parseInt(versionName.substring(pos + 1)) + 1);
+            while (history.hasVersion(new QName("", newVersionName))) {
+                versionName += ".0";
+                newVersionName = versionName;
+            }
+            return newVersionName;
+        } else {
+            // best is root version
+            return String.valueOf(best.getSuccessors().length + 1) + ".0";
+        }
+    }
 
     /**
      * Removes the specified version from the history
