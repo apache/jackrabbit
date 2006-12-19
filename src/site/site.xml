@@ -37,6 +37,18 @@
     </menu>
     <menu name="Documentation">
       <item name="Getting Started"            href="/doc/index.html"/>
+      <item name="Components"                 href="/doc/components/index.html" collapse="true">
+        <item name="API"                        href="/doc/components/api.html"/>
+        <item name="JCR Commons"                href="/doc/components/jcr-commons.html"/>
+        <item name="JCR Tests"                  href="/doc/components/jcr-tests.html"/>
+        <item name="Core"                       href="/doc/components/core.html"/>
+        <item name="Index Filters"              href="/doc/components/index-filters.html"/>
+        <item name="JCR-RMI"                    href="/doc/components/jcr-rmi.html"/>
+        <item name="WebDAV Library"             href="/doc/components/webdav.html"/>
+        <item name="JCR Server"                 href="/doc/components/jcr-server.html"/>
+        <item name="Web Application"            href="/doc/components/webapp.html"/>
+        <item name="JCA Resource Adapter"       href="/doc/components/jca.html"/>
+      </item>
       <item name="Building Jackrabbit"        href="/doc/building.html" />
       <item name="First Hops"                 href="/doc/firststeps.html" />
       <item name="JCR &amp; API"              href="/doc/arch/overview/jcrlevels.html"/>
