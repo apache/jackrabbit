@@ -52,6 +52,7 @@
     <module>jackrabbit-jcr-tests</module>
     <module>jackrabbit-core</module>
     <module>jackrabbit-index-filters</module>
+    <module>jackrabbit-text-extractors</module>
     <module>jackrabbit-jcr-rmi</module>
     <module>jackrabbit-webdav</module>
     <module>jackrabbit-jcr-server</module>
