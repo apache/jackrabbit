@@ -1077,7 +1077,7 @@ public class XATest extends AbstractJCRTest {
         check(v1_2, phase, "1.0", 2);
         check(v2_2, phase, "1.0", 1);
         check(v2_3, phase, "1.1", 0);
-        check(v1_3, phase, "1.1.1", 0);
+        check(v1_3, phase, "1.0.0", 0);
 
         //log.println("--------checkout/checkin n1 (committed) ----------");
         phase="checkin N1 committed.";
@@ -1089,7 +1089,7 @@ public class XATest extends AbstractJCRTest {
         check(v1_2, phase, "1.0", 2);
         check(v2_2, phase, "1.0", 2);
         check(v2_3, phase, "1.1", 0);
-        check(v1_3, phase, "1.1.1", 0);
+        check(v1_3, phase, "1.0.0", 0);
 
         //log.println("--------remove n1-1.0 (uncommitted) ----------");
         phase="remove N1 1.0 uncommitted.";
@@ -1104,7 +1104,7 @@ public class XATest extends AbstractJCRTest {
         check(v1_2, phase, "1.0", -1);
         check(v2_2, phase, "1.0", 2);
         check(v2_3, phase, "1.1", 0);
-        check(v1_3, phase, "1.1.1", 0);
+        check(v1_3, phase, "1.0.0", 0);
 
         //log.println("--------remove n1-1.0  (committed) ----------");
         phase="remove N1 1.0 committed.";
@@ -1116,7 +1116,7 @@ public class XATest extends AbstractJCRTest {
         check(v1_2, phase, "1.0", -1);
         check(v2_2, phase, "1.0", -1);
         check(v2_3, phase, "1.1", 0);
-        check(v1_3, phase, "1.1.1", 0);
+        check(v1_3, phase, "1.0.0", 0);
 
         //s1.logout();
         s2.logout();
