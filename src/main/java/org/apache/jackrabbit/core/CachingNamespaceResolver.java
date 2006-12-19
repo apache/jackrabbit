@@ -84,7 +84,7 @@ class CachingNamespaceResolver
     /**
      * @deprecated use {@link NameFormat#parse(String, NamespaceResolver)}
      */
-    public synchronized QName getQName(String name)
+    public QName getQName(String name)
             throws IllegalNameException, UnknownPrefixException {
         return NameFormat.parse(name, this);
     }
@@ -92,7 +92,7 @@ class CachingNamespaceResolver
     /**
      * @deprecated use {@link NameFormat#format(QName, NamespaceResolver)}
      */
-    public synchronized String getJCRName(QName name)
+    public String getJCRName(QName name)
             throws NoPrefixDeclaredException {
         return NameFormat.format(name, this);
     }
