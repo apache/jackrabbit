@@ -29,6 +29,9 @@ import java.util.Map;
  * mime type ({@link #canFilter(String)} and if one of them returns
  * <code>true</code> the text representation is created with
  * {@link #doFilter(PropertyState, String)}
+ *
+ * @deprecated use the {@link org.apache.jackrabbit.extractor.TextExtractor}
+ *             interface
  */
 public interface TextFilter {
 
