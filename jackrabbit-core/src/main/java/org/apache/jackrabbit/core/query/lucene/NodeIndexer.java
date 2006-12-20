@@ -96,26 +96,6 @@ public class NodeIndexer {
     }
 
     /**
-     * Creates a lucene Document from a node.
-     *
-     * @param node          the node state to index.
-     * @param stateProvider the state provider to retrieve property values.
-     * @param mappings      internal namespace mappings.
-     * @param extractor     text extractor
-     * @return the lucene Document.
-     * @throws RepositoryException if an error occurs while reading property
-     *                             values from the <code>ItemStateProvider</code>.
-     */
-    public static Document createDocument(NodeState node,
-                                          ItemStateManager stateProvider,
-                                          NamespaceMappings mappings,
-                                          TextExtractor extractor)
-            throws RepositoryException {
-        NodeIndexer indexer = new NodeIndexer(node, stateProvider, mappings, extractor);
-        return indexer.createDoc();
-    }
-
-    /**
      * Returns the <code>NodeId</code> of the indexed node.
      * @return the <code>NodeId</code> of the indexed node.
      */
