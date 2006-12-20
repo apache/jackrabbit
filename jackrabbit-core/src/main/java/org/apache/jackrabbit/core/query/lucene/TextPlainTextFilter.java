@@ -16,65 +16,21 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.query.TextFilter;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.value.BLOBFileValue;
-import org.apache.jackrabbit.core.value.InternalValue;
-
-import javax.jcr.RepositoryException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.Map;
+import org.apache.jackrabbit.extractor.PlainTextExtractor;
 
 /**
- * Implements a {@link org.apache.jackrabbit.core.query.TextFilter} that handles binary properties of mime-type
- * text/plain.
+ * Text filter for <code>text/plain</code> content.
+ *
+ * @deprecated use {@link PlainTextExtractor}, this class is kept for
+ *             backwards compatibility with existing configuration files
  */
-public class TextPlainTextFilter implements TextFilter {
+public class TextPlainTextFilter extends TextExtractorFilter {
 
     /**
-     * Returns <code>true</code> for <code>text/plain</code>; <code>false</code>
-     * in all other cases.
-     * @param mimeType the mime-type.
-     * @return <code>true</code> for <code>text/plain</code>; <code>false</code>
-     * in all other cases.
+     * Creates a text filter for <code>text/plain</code> content.
      */
-    public boolean canFilter(String mimeType) {
-        return "text/plain".equalsIgnoreCase(mimeType);
+    public TextPlainTextFilter() {
+        super(new PlainTextExtractor());
     }
 
-    /**
-     * Returns a map with a single entry for field {@link FieldNames#FULLTEXT}.
-     * @param data the data property.
-     * @param encoding the encoding
-     * @return a map with a single Reader value for field
-     *  {@link FieldNames#FULLTEXT}.
-     * @throws RepositoryException if encoding is not supported or data is a
-     *  multi-value property.
-     */
-    public Map doFilter(PropertyState data, String encoding) throws RepositoryException {
-        InternalValue[] values = data.getValues();
-        if (values.length == 1) {
-            BLOBFileValue blob = (BLOBFileValue) values[0].internalValue();
-            try {
-                Reader reader;
-                if (encoding == null) {
-                    // use platform default
-                    reader = new InputStreamReader(blob.getStream());
-                } else {
-                    reader = new InputStreamReader(blob.getStream(), encoding);
-                }
-                Map result = new HashMap();
-                result.put(FieldNames.FULLTEXT, reader);
-                return result;
-            } catch (UnsupportedEncodingException e) {
-                throw new RepositoryException(e);
-            }
-        } else {
-            // multi value not supported
-            throw new RepositoryException("Multi-valued binary properties not supported.");
-        }
-    }
 }
