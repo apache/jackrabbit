@@ -23,10 +23,11 @@ import org.apache.jackrabbit.core.NodeIdIterator;
 import org.apache.jackrabbit.core.query.AbstractQueryHandler;
 import org.apache.jackrabbit.core.query.ExecutableQuery;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
-import org.apache.jackrabbit.core.query.TextFilter;
 import org.apache.jackrabbit.core.query.QueryHandler;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateIterator;
+import org.apache.jackrabbit.extractor.DefaultTextExtractor;
+import org.apache.jackrabbit.extractor.TextExtractor;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
@@ -50,9 +51,7 @@ import java.io.IOException;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
-import java.util.StringTokenizer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -91,11 +90,6 @@ public class SearchIndex extends AbstractQueryHandler {
     public static final int DEFAULT_MAX_FIELD_LENGTH = 10000;
 
     /**
-     * Default text filters.
-     */
-    public static final String DEFAULT_TEXT_FILTERS = TextPlainTextFilter.class.getName();
-
-    /**
      * The actual index
      */
     private MultiIndex index;
@@ -106,9 +100,17 @@ public class SearchIndex extends AbstractQueryHandler {
     private Analyzer analyzer;
 
     /**
-     * List of {@link org.apache.jackrabbit.core.query.TextFilter} instance.
+     * List of text extractor and text filter class names. The configured
+     * classes will be instantiated and used to extract text content from
+     * binary properties.
      */
-    private List textFilters;
+    private String textFilterClasses =
+        DefaultTextExtractor.class.getName();
+
+    /**
+     * Text extractor for extracting text content of binary properties.
+     */
+    private TextExtractor extractor;
 
     /**
      * The location of the search index.
@@ -199,7 +201,6 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public SearchIndex() {
         this.analyzer = new StandardAnalyzer(new String[]{});
-        setTextFilterClasses(DEFAULT_TEXT_FILTERS);
     }
 
     /**
@@ -241,6 +242,8 @@ public class SearchIndex extends AbstractQueryHandler {
                         context.getNamespaceRegistry());
             }
         }
+
+        extractor = new JackrabbitTextExtractor(textFilterClasses);
 
         index = new MultiIndex(indexDir, this, context.getItemStateManager(),
                 context.getRootId(), excludedIDs, nsMappings);
@@ -413,13 +416,12 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
-     * Returns an unmodifiable list of {@link TextFilter} configured for
-     * this search index.
+     * Returns the text extractor in use for indexing.
      *
-     * @return unmodifiable list of text filters.
+     * @return the text extractor in use for indexing.
      */
-    protected List getTextFilters() {
-        return textFilters;
+    public TextExtractor getTextExtractor() {
+        return extractor;
     }
 
     /**
@@ -473,7 +475,7 @@ public class SearchIndex extends AbstractQueryHandler {
     protected Document createDocument(NodeState node, NamespaceMappings nsMappings)
             throws RepositoryException {
         return NodeIndexer.createDocument(node, getContext().getItemStateManager(),
-                nsMappings, textFilters);
+                nsMappings, extractor);
     }
 
     /**
@@ -753,34 +755,17 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
-     * Sets a new set of text filter classes that are in use for indexing
-     * binary properties. The <code>filterClasses</code> must be a comma
-     * separated <code>String</code> of fully qualified class names implementing
-     * {@link org.apache.jackrabbit.core.query.TextFilter}. Each class must
-     * provide a default constructor.
-     * </p>
-     * Filter class names that cannot be resolved are skipped and a warn message
-     * is logged.
+     * Sets the list of text extractors (and text filters) to use for
+     * extracting text content from binary properties. The list must be
+     * comma (or whitespace) separated, and contain fully qualified class
+     * names of the {@link TextExtractor} (and {@link org.apache.jackrabbit.core.query.TextFilter}) classes
+     * to be used. The configured classes must all have a public default
+     * constructor.
      *
-     * @param filterClasses comma separated list of filter class names
+     * @param filterClasses comma separated list of class names
      */
     public void setTextFilterClasses(String filterClasses) {
-        List filters = new ArrayList();
-        StringTokenizer tokenizer = new StringTokenizer(filterClasses, ", \t\n\r\f");
-        while (tokenizer.hasMoreTokens()) {
-            String className = tokenizer.nextToken();
-            try {
-                Class filterClass = Class.forName(className);
-                TextFilter filter = (TextFilter) filterClass.newInstance();
-                filters.add(filter);
-            } catch (Exception e) {
-                log.warn("Invalid TextFilter class: " + className, e);
-            } catch (LinkageError e) {
-                log.warn("Missing dependency for text filter: " + className);
-                log.warn(e.toString());
-            }
-        }
-        textFilters = Collections.unmodifiableList(filters);
+        this.textFilterClasses = filterClasses;
     }
 
     /**
@@ -790,14 +775,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * @return class names of the text filters in use.
      */
     public String getTextFilterClasses() {
-        StringBuffer names = new StringBuffer();
-        String delim = "";
-        for (Iterator it = textFilters.iterator(); it.hasNext();) {
-            names.append(delim);
-            names.append(it.next().getClass().getName());
-            delim = ",";
-        }
-        return names.toString();
+        return textFilterClasses;
     }
 
     /**

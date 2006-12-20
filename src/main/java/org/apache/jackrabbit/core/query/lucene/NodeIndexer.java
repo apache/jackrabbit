@@ -17,13 +17,14 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.query.TextFilter;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.extractor.TextExtractor;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
@@ -37,12 +38,11 @@ import org.apache.lucene.document.Field;
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+
+import java.io.InputStream;
 import java.io.Reader;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -72,9 +72,9 @@ public class NodeIndexer {
     protected final NamespaceMappings mappings;
 
     /**
-     * List of text filters in use.
+     * Content extractor.
      */
-    protected final List textFilters;
+    protected final TextExtractor extractor;
 
     /**
      * Creates a new node indexer.
@@ -82,16 +82,16 @@ public class NodeIndexer {
      * @param node          the node state to index.
      * @param stateProvider the persistent item state manager to retrieve properties.
      * @param mappings      internal namespace mappings.
-     * @param textFilters   List of {@link org.apache.jackrabbit.core.query.TextFilter}s.
+     * @param extractor     content extractor
      */
     protected NodeIndexer(NodeState node,
                           ItemStateManager stateProvider,
                           NamespaceMappings mappings,
-                          List textFilters) {
+                          TextExtractor extractor) {
         this.node = node;
         this.stateProvider = stateProvider;
         this.mappings = mappings;
-        this.textFilters = textFilters;
+        this.extractor = extractor;
     }
 
     /**
@@ -100,8 +100,7 @@ public class NodeIndexer {
      * @param node          the node state to index.
      * @param stateProvider the state provider to retrieve property values.
      * @param mappings      internal namespace mappings.
-     * @param textFilters   list of text filters to use for indexing binary
-     *                      properties.
+     * @param extractor     text extractor
      * @return the lucene Document.
      * @throws RepositoryException if an error occurs while reading property
      *                             values from the <code>ItemStateProvider</code>.
@@ -109,9 +108,9 @@ public class NodeIndexer {
     public static Document createDocument(NodeState node,
                                           ItemStateManager stateProvider,
                                           NamespaceMappings mappings,
-                                          List textFilters)
+                                          TextExtractor extractor)
             throws RepositoryException {
-        NodeIndexer indexer = new NodeIndexer(node, stateProvider, mappings, textFilters);
+        NodeIndexer indexer = new NodeIndexer(node, stateProvider, mappings, extractor);
         return indexer.createDoc();
     }
 
@@ -256,14 +255,16 @@ public class NodeIndexer {
      * Adds the binary value to the document as the named field.
      * <p/>
      * This implementation checks if this {@link #node} is of type nt:resource
-     * and if that is the case, tries to extract text from the data atom using
-     * the {@link #textFilters}.
+     * and if that is the case, tries to extract text from the binary property
+     * using the {@link #extractor}.
      *
      * @param doc           The document to which to add the field
      * @param fieldName     The name of the field to add
      * @param internalValue The value for the field to add to the document.
      */
-    protected void addBinaryValue(Document doc, String fieldName, Object internalValue) {
+    protected void addBinaryValue(Document doc,
+                                  String fieldName,
+                                  Object internalValue) {
         // 'check' if node is of type nt:resource
         try {
             String jcrData = mappings.getPrefix(QName.NS_JCR_URI) + ":data";
@@ -271,43 +272,53 @@ public class NodeIndexer {
                 // don't know how to index
                 return;
             }
-            if (node.hasPropertyName(QName.JCR_MIMETYPE)) {
-                PropertyState dataProp = (PropertyState) stateProvider.getItemState(
-                        new PropertyId(node.getNodeId(), QName.JCR_DATA));
-                PropertyState mimeTypeProp =
-                        (PropertyState) stateProvider.getItemState(
-                                new PropertyId(node.getNodeId(), QName.JCR_MIMETYPE));
+
+            InternalValue typeValue = getValue(QName.JCR_MIMETYPE);
+            if (typeValue != null) {
+                String type = typeValue.internalValue().toString();
 
                 // jcr:encoding is not mandatory
                 String encoding = null;
-                if (node.hasPropertyName(QName.JCR_ENCODING)) {
-                    PropertyState encodingProp =
-                            (PropertyState) stateProvider.getItemState(
-                                    new PropertyId(node.getNodeId(), QName.JCR_ENCODING));
-                    encoding = encodingProp.getValues()[0].internalValue().toString();
+                InternalValue encodingValue = getValue(QName.JCR_ENCODING);
+                if (encodingValue != null) {
+                    encoding = encodingValue.internalValue().toString();
                 }
 
-                String mimeType = mimeTypeProp.getValues()[0].internalValue().toString();
-                Map fields = Collections.EMPTY_MAP;
-                for (Iterator it = textFilters.iterator(); it.hasNext();) {
-                    TextFilter filter = (TextFilter) it.next();
-                    // use the first filter that can handle the mimeType
-                    if (filter.canFilter(mimeType)) {
-                        fields = filter.doFilter(dataProp, encoding);
-                        break;
-                    }
-                }
-
-                for (Iterator it = fields.keySet().iterator(); it.hasNext();) {
-                    String field = (String) it.next();
-                    Reader r = (Reader) fields.get(field);
-                    doc.add(new Field(field, r));
-                }
+                InputStream stream =
+                        ((BLOBFileValue) internalValue).getStream();
+                Reader reader =
+                        new TextExtractorReader(extractor, stream, type, encoding);
+                doc.add(new Field(FieldNames.FULLTEXT, reader));
             }
         } catch (Exception e) {
             // TODO: How to recover from a transient indexing failure?
             log.warn("Exception while indexing binary property: " + e.toString());
             log.debug("Dump: ", e);
+        }
+    }
+
+    /**
+     * Utility method that extracts the first value of the named property
+     * of the current node. Returns <code>null</code> if the property does
+     * not exist or contains no values.
+     *
+     * @param name property name
+     * @return value of the named property, or <code>null</code>
+     * @throws ItemStateException if the property can not be accessed
+     */
+    protected InternalValue getValue(QName name) throws ItemStateException {
+        try {
+            PropertyId id = new PropertyId(node.getNodeId(), name);
+            PropertyState property =
+                (PropertyState) stateProvider.getItemState(id);
+            InternalValue[] values = property.getValues();
+            if (values.length > 0) {
+                return values[0];
+            } else {
+                return null;
+            }
+        } catch (NoSuchItemStateException e) {
+            return null;
         }
     }
 
