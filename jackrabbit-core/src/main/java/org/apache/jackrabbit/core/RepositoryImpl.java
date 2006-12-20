@@ -992,17 +992,17 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             }
         }
 
+        // shutdown system search manager if there is one
+        if (systemSearchMgr != null) {
+            systemSearchMgr.close();
+        }
+
         // shut down workspaces
         synchronized (wspInfos) {
             for (Iterator it = wspInfos.values().iterator(); it.hasNext();) {
                 WorkspaceInfo wspInfo = (WorkspaceInfo) it.next();
                 wspInfo.dispose();
             }
-        }
-
-        // shutdown system search manager if there is one
-        if (systemSearchMgr != null) {
-            systemSearchMgr.close();
         }
 
         try {

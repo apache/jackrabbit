@@ -316,14 +316,7 @@ public class SearchIndex extends AbstractQueryHandler {
                 if (state == null) {
                     return null;
                 }
-                Document doc = null;
-                try {
-                    doc = createDocument(state, getNamespaceMappings());
-                } catch (RepositoryException e) {
-                    log.error("Exception while creating document for node: "
-                            + state.getNodeId() + ": " + e.toString());
-                }
-                return doc;
+                return createNodeIndexer(state, getNamespaceMappings());
             }
         });
     }
@@ -463,18 +456,15 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
-     * Creates a lucene <code>Document</code> from a node state using the
-     * namespace mappings <code>nsMappings</code>.
-     * @param node the node state to index.
+     * Creates a <code>NodeIndexer</code> for a node state using the namespace
+     * mappings <code>nsMappings</code>.
+     *
+     * @param node       the node state to index.
      * @param nsMappings the namespace mappings of the search index.
-     * @return a lucene <code>Document</code> that contains all properties
-     *  of <code>node</code>.
-     * @throws RepositoryException if an error occurs while indexing the
-     *  <code>node</code>.
+     * @return a <code>NodeIndexer</code> for the given <code>node</code>.
      */
-    protected Document createDocument(NodeState node, NamespaceMappings nsMappings)
-            throws RepositoryException {
-        return NodeIndexer.createDocument(node, getContext().getItemStateManager(),
+    protected NodeIndexer createNodeIndexer(NodeState node, NamespaceMappings nsMappings) {
+        return new NodeIndexer(node, getContext().getItemStateManager(),
                 nsMappings, extractor);
     }
 

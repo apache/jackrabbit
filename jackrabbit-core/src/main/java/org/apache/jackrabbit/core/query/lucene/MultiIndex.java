@@ -300,10 +300,7 @@ public class MultiIndex {
      *
      * @param remove Iterator of <code>UUID</code>s that identify documents to
      *               remove
-     * @param add    Iterator of <code>Document</code>s to add. Calls to
-     *               <code>next()</code> on this iterator may return
-     *               <code>null</code>, to indicate that a node could not be
-     *               indexed successfully.
+     * @param add    Iterator of <code>NodeIndexer</code>s to add.
      */
     synchronized void update(Iterator remove, Iterator add) throws IOException {
         synchronized (updateMonitor) {
@@ -318,12 +315,10 @@ public class MultiIndex {
                 executeAndLog(new DeleteNode(transactionId, (UUID) remove.next()));
             }
             while (add.hasNext()) {
-                Document doc = (Document) add.next();
-                if (doc != null) {
-                    executeAndLog(new AddNode(transactionId, doc));
-                    // commit volatile index if needed
-                    flush |= checkVolatileCommit();
-                }
+                NodeIndexer nodeIdx = (NodeIndexer) add.next();
+                executeAndLog(new AddNode(transactionId, nodeIdx));
+                // commit volatile index if needed
+                flush |= checkVolatileCommit();
             }
             executeAndLog(new Commit(transactionId));
 
@@ -679,15 +674,15 @@ public class MultiIndex {
     }
 
     /**
-     * Returns a lucene Document for the <code>node</code>.
+     * Returns a <code>NodeIndexer</code> for the <code>node</code>.
      *
      * @param node the node to index.
-     * @return the index document.
+     * @return the node indexer.
      * @throws RepositoryException if an error occurs while reading from the
      *                             workspace.
      */
-    Document createDocument(NodeState node) throws RepositoryException {
-        return handler.createDocument(node, nsMappings);
+    NodeIndexer createNodeIndexer(NodeState node) throws RepositoryException {
+        return handler.createNodeIndexer(node, nsMappings);
     }
 
     /**
@@ -767,18 +762,18 @@ public class MultiIndex {
     }
 
     /**
-     * Returns a lucene Document for the Node with <code>id</code>.
+     * Returns a <code>NodeIndexer</code> for the Node with <code>id</code>.
      *
      * @param id the id of the node to index.
-     * @return the index document.
+     * @return the node indexer.
      * @throws RepositoryException if an error occurs while reading from the
      *                             workspace or if there is no node with
      *                             <code>id</code>.
      */
-    private Document createDocument(NodeId id) throws RepositoryException {
+    private NodeIndexer createNodeIndexer(NodeId id) throws RepositoryException {
         try {
             NodeState state = (NodeState) handler.getContext().getItemStateManager().getItemState(id);
-            return createDocument(state);
+            return createNodeIndexer(state);
         } catch (NoSuchItemStateException e) {
             throw new RepositoryException("Node " + id + " does not exist", e);
         } catch (ItemStateException e) {
@@ -1290,9 +1285,10 @@ public class MultiIndex {
         private final UUID uuid;
 
         /**
-         * The document to add to the index, or <code>null</code> if not available.
+         * The node indexer for a node to add to the index, or <code>null</code>
+         * if not available.
          */
-        private Document doc;
+        private NodeIndexer nodeIndexer;
 
         /**
          * Creates a new AddNode action.
@@ -1309,11 +1305,11 @@ public class MultiIndex {
          * Creates a new AddNode action.
          *
          * @param transactionId the id of the transaction that executes this action.
-         * @param doc the document to add.
+         * @param nodeIdx the node indexer to add.
          */
-        AddNode(long transactionId, Document doc) {
-            this(transactionId, UUID.fromString(doc.get(FieldNames.UUID)));
-            this.doc = doc;
+        AddNode(long transactionId, NodeIndexer nodeIdx) {
+            this(transactionId, nodeIdx.getNodeId().getUUID());
+            this.nodeIndexer = nodeIdx;
         }
 
         /**
@@ -1342,16 +1338,16 @@ public class MultiIndex {
          * @inheritDoc
          */
         public void execute(MultiIndex index) throws IOException {
-            if (doc == null) {
+            if (nodeIndexer == null) {
                 try {
-                    doc = index.createDocument(new NodeId(uuid));
+                    nodeIndexer = index.createNodeIndexer(new NodeId(uuid));
                 } catch (RepositoryException e) {
                     // node does not exist anymore
                     log.debug(e.getMessage());
                 }
             }
-            if (doc != null) {
-                index.volatileIndex.addDocument(doc);
+            if (nodeIndexer != null) {
+                index.volatileIndex.addNode(nodeIndexer);
             }
         }
 

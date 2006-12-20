@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
@@ -84,7 +85,7 @@ public class NodeIndexer {
      * @param mappings      internal namespace mappings.
      * @param extractor     content extractor
      */
-    protected NodeIndexer(NodeState node,
+    public NodeIndexer(NodeState node,
                           ItemStateManager stateProvider,
                           NamespaceMappings mappings,
                           TextExtractor extractor) {
@@ -112,6 +113,14 @@ public class NodeIndexer {
             throws RepositoryException {
         NodeIndexer indexer = new NodeIndexer(node, stateProvider, mappings, extractor);
         return indexer.createDoc();
+    }
+
+    /**
+     * Returns the <code>NodeId</code> of the indexed node.
+     * @return the <code>NodeId</code> of the indexed node.
+     */
+    public NodeId getNodeId() {
+        return node.getNodeId();
     }
 
     /**
@@ -286,8 +295,7 @@ public class NodeIndexer {
 
                 InputStream stream =
                         ((BLOBFileValue) internalValue).getStream();
-                Reader reader =
-                        new TextExtractorReader(extractor, stream, type, encoding);
+                Reader reader = extractor.extractText(stream, type, encoding);
                 doc.add(new Field(FieldNames.FULLTEXT, reader));
             }
         } catch (Exception e) {
