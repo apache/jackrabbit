@@ -26,6 +26,7 @@ import org.apache.lucene.store.RAMDirectory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.RepositoryException;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
@@ -72,17 +73,14 @@ class VolatileIndex extends AbstractIndex {
     }
 
     /**
-     * Overwrites the default implementation by adding the document to a pending
-     * list and commits the pending list if needed.
+     * Overwrites the default implementation by adding the node indexer to a
+     * pending list and commits the pending list if needed.
      *
-     * @param doc the document to add to the index.
+     * @param nodeIndexer the node indexer of the node to add.
      * @throws IOException if an error occurs while writing to the index.
      */
-    void addDocument(Document doc) throws IOException {
-        Document old = (Document) pending.put(doc.get(FieldNames.UUID), doc);
-        if (old != null) {
-            disposeDocument(old);
-        }
+    void addNode(NodeIndexer nodeIndexer) throws IOException {
+        pending.put(nodeIndexer.getNodeId().getUUID().toString(), nodeIndexer);
         if (pending.size() >= bufferSize) {
             commitPending();
         }
@@ -100,10 +98,9 @@ class VolatileIndex extends AbstractIndex {
      *                     the index.
      */
     int removeDocument(Term idTerm) throws IOException {
-        Document doc = (Document) pending.remove(idTerm.text());
+        NodeIndexer indexer = (NodeIndexer) pending.remove(idTerm.text());
         int num;
-        if (doc != null) {
-            disposeDocument(doc);
+        if (indexer != null) {
             // pending document has been removed
             num = 1;
         } else {
@@ -161,28 +158,9 @@ class VolatileIndex extends AbstractIndex {
      */
     private void commitPending() throws IOException {
         for (Iterator it = pending.values().iterator(); it.hasNext();) {
-            Document doc = (Document) it.next();
-            super.addDocument(doc);
+            NodeIndexer indexer = (NodeIndexer) it.next();
+            super.addNode(indexer);
             it.remove();
-        }
-    }
-
-    /**
-     * Disposes the document <code>old</code>. Closes any potentially open
-     * readers held by the document.
-     *
-     * @param old the document to dispose.
-     */
-    private void disposeDocument(Document old) {
-        for (Enumeration e = old.fields(); e.hasMoreElements();) {
-            Field f = (Field) e.nextElement();
-            if (f.readerValue() != null) {
-                try {
-                    f.readerValue().close();
-                } catch (IOException ex) {
-                    log.warn("Exception while disposing index document: " + ex);
-                }
-            }
         }
     }
 }
