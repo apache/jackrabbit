@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
@@ -25,6 +24,7 @@ import org.apache.lucene.store.Directory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.RepositoryException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -124,13 +124,19 @@ abstract class AbstractIndex {
     }
 
     /**
-     * Adds a document to this index and invalidates the shared reader.
+     * Adds a node to this index and invalidates the shared reader.
      *
-     * @param doc the document to add.
+     * @param nodeIndexer the node indexer of the node to add.
      * @throws IOException if an error occurs while writing to the index.
      */
-    void addDocument(Document doc) throws IOException {
-        getIndexWriter().addDocument(doc);
+    void addNode(NodeIndexer nodeIndexer) throws IOException {
+        try {
+            getIndexWriter().addDocument(nodeIndexer.createDoc());
+        } catch (RepositoryException e) {
+            IOException iex = new IOException(e.getMessage());
+            iex.initCause(e);
+            throw iex;
+        }
         invalidateSharedReader();
     }
 
