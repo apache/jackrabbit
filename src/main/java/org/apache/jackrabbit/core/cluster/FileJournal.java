@@ -45,6 +45,9 @@ import java.util.Collection;
 
 import EDU.oswego.cs.dl.util.concurrent.Mutex;
 
+import javax.jcr.observation.Event;
+import javax.jcr.Session;
+
 /**
  * File-based journal implementation. A directory specified as <code>directory</code>
  * bean property will contain log files and a global revision file, containing the
@@ -167,6 +170,11 @@ public class FileJournal implements Journal {
      * Current file record.
      */
     private FileRecord record;
+
+    /**
+     * Last used session for event sources.
+     */
+    private Session lastSession;
 
     /**
      * Bean getter for journal directory.
@@ -302,7 +310,7 @@ public class FileJournal implements Journal {
                 }
             } catch (IOException e) {
                 String msg = "Unable to iterate over modified records: " + e.getMessage();
-                throw new JournalException(msg);
+                throw new JournalException(msg, e);
 
             } finally {
                 try {
@@ -359,8 +367,8 @@ public class FileJournal implements Journal {
                         mixins.add(in.readQName());
                     }
                     String userId = in.readString();
-                    processor.process(type, parentId, parentPath, childId,
-                            childRelPath, ntName, mixins, userId);
+                    processor.process(createEventState(type, parentId, parentPath, childId,
+                            childRelPath, ntName, mixins, userId));
                 } else if (c == 'L') {
                     NodeId nodeId = in.readNodeId();
                     boolean isLock = in.readBoolean();
@@ -694,6 +702,62 @@ public class FileJournal implements Journal {
                 writeMutex.release();
             }
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void close() {}
+
+    /**
+     * Create an event state.
+     *
+     * @param type event type
+     * @param parentId parent id
+     * @param parentPath parent path
+     * @param childId child id
+     * @param childRelPath child relative path
+     * @param ntName ndoe type name
+     * @param userId user id
+     * @return event
+     */
+    protected EventState createEventState(int type, NodeId parentId, Path parentPath,
+                                          NodeId childId, Path.PathElement childRelPath,
+                                          QName ntName, Set mixins, String userId) {
+        switch (type) {
+            case Event.NODE_ADDED:
+                return EventState.childNodeAdded(parentId, parentPath, childId, childRelPath,
+                        ntName, mixins, getOrCreateSession(userId));
+            case Event.NODE_REMOVED:
+                return EventState.childNodeRemoved(parentId, parentPath, childId, childRelPath,
+                        ntName, mixins, getOrCreateSession(userId));
+            case Event.PROPERTY_ADDED:
+                return EventState.propertyAdded(parentId, parentPath, childRelPath,
+                        ntName, mixins, getOrCreateSession(userId));
+            case Event.PROPERTY_CHANGED:
+                return EventState.propertyChanged(parentId, parentPath, childRelPath,
+                        ntName, mixins, getOrCreateSession(userId));
+            case Event.PROPERTY_REMOVED:
+                return EventState.propertyRemoved(parentId, parentPath, childRelPath,
+                        ntName, mixins, getOrCreateSession(userId));
+            default:
+                String msg = "Unexpected event type: " + type;
+                throw new IllegalArgumentException(msg);
+        }
+    }
+
+
+    /**
+     * Return a session matching a certain user id.
+     *
+     * @param userId user id
+     * @return session
+     */
+    protected Session getOrCreateSession(String userId) {
+        if (lastSession == null || !lastSession.getUserID().equals(userId)) {
+            lastSession = new ClusterSession(userId);
+        }
+        return lastSession;
     }
 
     /**
