@@ -20,16 +20,21 @@ import EDU.oswego.cs.dl.util.concurrent.Mutex;
 import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.WriterPreferenceReadWriteLock;
-
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.api.JackrabbitRepository;
+import org.apache.jackrabbit.core.cluster.ClusterContext;
+import org.apache.jackrabbit.core.cluster.ClusterException;
+import org.apache.jackrabbit.core.cluster.ClusterNode;
+import org.apache.jackrabbit.core.cluster.LockEventChannel;
+import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
+import org.apache.jackrabbit.core.cluster.UpdateEventListener;
+import org.apache.jackrabbit.core.config.ClusterConfig;
 import org.apache.jackrabbit.core.config.FileSystemConfig;
 import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.config.VersioningConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.config.ClusterConfig;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
@@ -39,45 +44,27 @@ import org.apache.jackrabbit.core.lock.LockManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.virtual.VirtualNodeTypeStateManager;
 import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
-import org.apache.jackrabbit.core.observation.ObservationDispatcher;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
-import org.apache.jackrabbit.core.security.AuthContext;
-import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.observation.ObservationDispatcher;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
+import org.apache.jackrabbit.core.security.AuthContext;
 import org.apache.jackrabbit.core.state.CacheManager;
+import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
+import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ManagedMLRUItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
-import org.apache.jackrabbit.core.cluster.ClusterNode;
-import org.apache.jackrabbit.core.cluster.ClusterException;
-import org.apache.jackrabbit.core.cluster.ClusterContext;
-import org.apache.jackrabbit.core.cluster.LockEventChannel;
-import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
-import org.apache.jackrabbit.core.cluster.UpdateEventListener;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.Credentials;
-import javax.jcr.LoginException;
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
-import javax.jcr.observation.EventListener;
-import javax.jcr.observation.ObservationManager;
-import javax.security.auth.Subject;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -93,9 +80,22 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.List;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.Credentials;
+import javax.jcr.LoginException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+import javax.jcr.observation.EventListener;
+import javax.jcr.observation.ObservationManager;
+import javax.security.auth.Subject;
 
 /**
  * A <code>RepositoryImpl</code> ...
@@ -673,28 +673,28 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         }
     }
 
-    NamespaceRegistryImpl getNamespaceRegistry() {
+    protected NamespaceRegistryImpl getNamespaceRegistry() {
         // check sanity of this instance
         sanityCheck();
 
         return nsReg;
     }
 
-    NodeTypeRegistry getNodeTypeRegistry() {
+    protected NodeTypeRegistry getNodeTypeRegistry() {
         // check sanity of this instance
         sanityCheck();
 
         return ntReg;
     }
 
-    VersionManager getVersionManager() {
+    protected VersionManager getVersionManager() {
         // check sanity of this instance
         sanityCheck();
 
         return vMgr;
     }
 
-    NodeId getRootNodeId() {
+    protected NodeId getRootNodeId() {
         // check sanity of this instance
         sanityCheck();
 
@@ -707,7 +707,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      * @return the names of all workspaces in this repository.
      * @see javax.jcr.Workspace#getAccessibleWorkspaceNames()
      */
-    String[] getWorkspaceNames() {
+    protected String[] getWorkspaceNames() {
         synchronized (wspInfos) {
             return (String[]) wspInfos.keySet().toArray(new String[wspInfos.keySet().size()]);
         }
@@ -929,7 +929,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      * Adds the given session to the list of active sessions and registers this
      * repository as listener.
      *
-     * @param session
+     * @param session the session to register
      */
     protected void onSessionCreated(SessionImpl session) {
         synchronized (activeSessions) {
@@ -1497,7 +1497,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          *
          * @return the workspace name
          */
-        String getName() {
+        protected String getName() {
             return config.getName();
         }
 
@@ -1538,7 +1538,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          *
          * @return <code>true</code> if this workspace info is initialized.
          */
-        boolean isInitialized() {
+        protected boolean isInitialized() {
             try {
                 if (!initLock.readLock().attempt(0)) {
                     return false;
@@ -1679,7 +1679,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          * @return the system session for this workspace
          * @throws RepositoryException if the system session could not be created
          */
-        SystemSession getSystemSession() throws RepositoryException {
+        protected SystemSession getSystemSession() throws RepositoryException {
             if (!isInitialized()) {
                 throw new IllegalStateException("workspace '" + getName()
                         + "' not initialized");
@@ -1831,7 +1831,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         /**
          * Disposes all objects this <code>WorkspaceInfo</code> is holding.
          */
-        void dispose() {
+        protected void dispose() {
             try {
                 initLock.writeLock().acquire();
             } catch (InterruptedException e) {

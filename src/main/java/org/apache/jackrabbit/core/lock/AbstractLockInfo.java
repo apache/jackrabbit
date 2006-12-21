@@ -24,7 +24,7 @@ import javax.jcr.Session;
 /**
  * Common information about a lock.
  */
-abstract class AbstractLockInfo {
+public abstract class AbstractLockInfo {
 
     /**
      * Lock token
