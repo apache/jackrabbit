@@ -25,14 +25,9 @@ import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.state.ChangeLog;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
 import EDU.oswego.cs.dl.util.concurrent.Mutex;
 
-import javax.jcr.observation.Event;
-import javax.jcr.Session;
 import javax.jcr.RepositoryException;
-import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -195,6 +190,13 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
             } catch (ClusterException e) {
                 String msg = "Periodic sync of journal failed: " + e.getMessage();
                 log.error(msg);
+            } catch (Exception e) {
+                String msg = "Unexpected error while syncing of journal: " + e.getMessage();
+                log.error(msg, e);
+            } catch (Error e) {
+                String msg = "Unexpected error while syncing of journal: " + e.getMessage();
+                log.error(msg, e);
+                throw e;
             }
         }
     }
@@ -219,12 +221,15 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
     }
 
     /**
-     * {@inheritDoc}
+     * Stops this cluster node.
      */
     public synchronized void stop() {
-        status = STOPPED;
+        if (status == STARTED) {
+            status = STOPPED;
 
-        notifyAll();
+            journal.close();
+            notifyAll();
+        }
     }
 
     /**
@@ -644,11 +649,6 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
         private List events;
 
         /**
-         * Last used session for event sources.
-         */
-        private Session lastSession;
-
-        /**
          * {@inheritDoc}
          */
         public void start(String workspace) {
@@ -668,36 +668,7 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
         /**
          * {@inheritDoc}
          */
-        public void process(int type, NodeId parentId, Path parentPath, NodeId childId,
-                            Path.PathElement childRelPath, QName ntName, Set mixins, String userId) {
-
-            EventState event = null;
-
-            switch (type) {
-                case Event.NODE_ADDED:
-                    event = EventState.childNodeAdded(parentId, parentPath, childId, childRelPath,
-                            ntName, mixins, getOrCreateSession(userId));
-                    break;
-                case Event.NODE_REMOVED:
-                    event = EventState.childNodeRemoved(parentId, parentPath, childId, childRelPath,
-                            ntName, mixins, getOrCreateSession(userId));
-                    break;
-                case Event.PROPERTY_ADDED:
-                    event = EventState.propertyAdded(parentId, parentPath, childRelPath,
-                            ntName, mixins, getOrCreateSession(userId));
-                    break;
-                case Event.PROPERTY_CHANGED:
-                    event = EventState.propertyChanged(parentId, parentPath, childRelPath,
-                            ntName, mixins, getOrCreateSession(userId));
-                    break;
-                case Event.PROPERTY_REMOVED:
-                    event = EventState.propertyRemoved(parentId, parentPath, childRelPath,
-                            ntName, mixins, getOrCreateSession(userId));
-                    break;
-                default:
-                    String msg = "Unexpected event type: " + type;
-                    log.warn(msg);
-            }
+        public void process(EventState event) {
             events.add(event);
         }
 
@@ -831,19 +802,6 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
                 String msg = "Unable to deliver update events: " + e.getMessage();
                 log.error(msg);
             }
-        }
-
-        /**
-         * Return a session matching a certain user id.
-         *
-         * @param userId user id
-         * @return session
-         */
-        private Session getOrCreateSession(String userId) {
-            if (lastSession == null || !lastSession.getUserID().equals(userId)) {
-                lastSession = new ClusterSession(userId);
-            }
-            return lastSession;
         }
     }
 }

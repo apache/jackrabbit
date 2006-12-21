@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.cluster;
 
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 
@@ -45,16 +46,9 @@ public interface RecordProcessor {
     /**
      * Process an event.
      *
-     * @param type event type
-     * @param parentId parent id
-     * @param parentPath parent path
-     * @param childId child id
-     * @param childRelPath child relative path
-     * @param ntName ndoe type name
-     * @param userId user id
+     * @param event event
      */
-    public void process(int type, NodeId parentId, Path parentPath, NodeId childId,
-                        Path.PathElement childRelPath, QName ntName, Set mixins, String userId);
+    public void process(EventState event);
 
     /**
      * Process a lock operation.

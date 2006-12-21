@@ -117,4 +117,9 @@ public interface Journal {
      * End this update operation and discards changes made to the journal.
      */
     public void cancel();
+
+    /**
+     * Close this journal. This should release any resources still held by this journal.
+     */
+    public void close();
 }
