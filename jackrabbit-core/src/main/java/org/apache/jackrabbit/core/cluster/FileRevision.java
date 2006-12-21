@@ -93,6 +93,7 @@ class FileRevision {
                         String msg = "I/O error while closing file " + file.getPath() + ": " + e.getMessage();
                         log.warn(msg);
                     }
+                    raf = null;
                 }
             }
         }
@@ -109,17 +110,16 @@ class FileRevision {
             } catch (IOException e) {
                 String msg = "I/O error while releasing lock: " + e.getMessage();
                 log.warn(msg);
-            } finally {
-                lock = null;
             }
+            lock = null;
+
             try {
                 raf.close();
             } catch (IOException e) {
                 String msg = "I/O error while closing file: " + e.getMessage();
                 log.warn(msg);
-            } finally {
-                raf = null;
             }
+            raf = null;
         }
     }
 
@@ -130,9 +130,9 @@ class FileRevision {
      * @throws JournalException if some error occurs
      */
     public long get() throws JournalException {
-        try {
-            lock(true);
+        lock(true);
 
+        try {
             long value = 0;
             if (raf.length() > 0) {
                 raf.seek(0L);
@@ -154,9 +154,9 @@ class FileRevision {
      * @throws JournalException if some error occurs
      */
     public void set(long value) throws JournalException {
-        try {
-            lock(false);
+        lock(false);
 
+        try {
             raf.seek(0L);
             raf.writeLong(value);
         } catch (IOException e) {
