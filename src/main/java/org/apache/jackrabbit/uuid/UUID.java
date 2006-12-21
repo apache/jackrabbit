@@ -85,7 +85,7 @@ public class UUID implements Constants, Serializable, Comparable {
      *
      * @param input the datainput with 16 bytes to read in from.
      * @throws java.io.IOException exception if there is an IO problem also
-     *         argument must contain 16 bytes.
+     *                             argument must contain 16 bytes.
      */
     public UUID(DataInput input) throws IOException {
         msb = input.readLong();
@@ -96,10 +96,10 @@ public class UUID implements Constants, Serializable, Comparable {
      * Constructs a UUID from two long values in most significant byte, and
      * least significant bytes order.
      *
-     * @param mostSignificant the most significant 8 bytes of the uuid to be
-     *        constructed.
+     * @param mostSignificant  the most significant 8 bytes of the uuid to be
+     *                         constructed.
      * @param leastSignificant the least significant 8 bytes of the uuid to be
-     *        constructed.
+     *                         constructed.
      */
     public UUID(long mostSignificant, long leastSignificant) {
         msb = mostSignificant;
@@ -111,7 +111,7 @@ public class UUID implements Constants, Serializable, Comparable {
      *
      * @param uuidString the String representing a UUID to construct this UUID
      * @throws IllegalArgumentException String must be a properly formatted UUID
-     *         string
+     *                                  string
      */
     public UUID(String uuidString) throws IllegalArgumentException {
         // e.g. f81d4fae-7dec-11d0-a765-00a0c91e6bf6
@@ -122,22 +122,22 @@ public class UUID implements Constants, Serializable, Comparable {
         }
         long[] words = new long[2];
         int b = 0;
-        for (int i=0; i<UUID_FORMATTED_LENGTH; i++) {
+        for (int i = 0; i < UUID_FORMATTED_LENGTH; i++) {
             int c = uuidString.charAt(i) | 0x20; // to lowercase (will lose some error checking)
-            if (i==8 || i==13 || i==23) {
-                if (c!='-') {
+            if (i == 8 || i == 13 || i == 23) {
+                if (c != '-') {
                     throw new IllegalArgumentException(String.valueOf(i));
                 }
-            } else if (i==18) {
-                if (c!='-') {
+            } else if (i == 18) {
+                if (c != '-') {
                     throw new IllegalArgumentException(String.valueOf(i));
                 }
-                b=1;
+                b = 1;
             } else {
                 byte h = (byte) (c & 0x0f);
-                if (c>='a' && c<='f') {
-                    h+=9;
-                } else if (c<'0' || c>'9') {
+                if (c >= 'a' && c <= 'f') {
+                    h += 9;
+                } else if (c < '0' || c > '9') {
                     throw new IllegalArgumentException();
                 }
                 words[b] = words[b] << 4 | h;
@@ -154,7 +154,7 @@ public class UUID implements Constants, Serializable, Comparable {
      * @return Returns a UUID or <code>null</code> if the formatted string could
      *         not be parsed.
      * @throws IllegalArgumentException the String must be a properly formatted
-     *         UUID String.
+     *                                  UUID String.
      */
     public static UUID fromString(String uuidString)
             throws IllegalArgumentException {
@@ -169,13 +169,13 @@ public class UUID implements Constants, Serializable, Comparable {
      */
     public String toString() {
         char[] chars = new char[UUID_FORMATTED_LENGTH];
-        for (int i = 60, j = 0; i >= 0; i-=4) {
+        for (int i = 60, j = 0; i >= 0; i -= 4) {
             chars[j++] = hexDigits[(int) (msb >> i) & 0x0f];
             if (j == 8 || j == 13 || j == 18) {
                 chars[j++] = '-';
             }
         }
-        for (int i = 60, j = 19; i >= 0; i-=4) {
+        for (int i = 60, j = 19; i >= 0; i -= 4) {
             chars[j++] = hexDigits[(int) (lsb >> i) & 0x0f];
             if (j == 23) {
                 chars[j++] = '-';
@@ -203,20 +203,23 @@ public class UUID implements Constants, Serializable, Comparable {
      * @see Object#hashCode()
      */
     public int hashCode() {
-        int result;
-        result = (int) (lsb ^ (lsb >>> 32));
-        result = 29 * result + (int) (msb ^ (msb >>> 32));
-        return result;
+        return (int) ((msb >>> 32) ^ msb ^ (lsb >>> 32) ^ lsb);
     }
 
     /**
-     * Compares two UUID's for equality
+     * Compares two UUIDs.
      *
      * @see Comparable#compareTo(Object)
      */
     public int compareTo(Object compareTo) throws ClassCastException {
         final UUID u = (UUID) compareTo;
-        return (int) (u.msb == msb ? lsb - u.lsb : msb - u.msb);
+        if (msb == u.msb) {
+            if (lsb == u.lsb) {
+                return 0;
+            }
+            return lsb > u.lsb ? 1 : -1;
+        }
+        return msb > u.msb ? 1 : -1;
     }
 
     /**
