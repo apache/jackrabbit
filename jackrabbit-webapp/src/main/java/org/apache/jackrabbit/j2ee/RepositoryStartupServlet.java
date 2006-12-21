@@ -23,12 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
-import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -48,6 +42,13 @@ import java.rmi.registry.Registry;
 import java.rmi.server.RMIServerSocketFactory;
 import java.util.Enumeration;
 import java.util.Properties;
+
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 
 /**
  * The RepositoryStartupServlet starts a jackrabbit repository and registers it
@@ -560,26 +561,27 @@ public class RepositoryStartupServlet extends HttpServlet {
         }
     }
 
-}
+    /**
+     * optional class for RMI, will only be used, if RMI server is present
+     */
+    protected static abstract class RemoteFactoryDelegater {
 
-/**
- * optional class for RMI, will only be used, if RMI server is present
- */
-abstract class RemoteFactoryDelegater {
-
-    public abstract Remote createRemoteRepository(Repository repository)
-            throws RemoteException;
-}
-/**
- * optional class for RMI, will only be used, if RMI server is present
- */
-class RMIRemoteFactoryDelegater extends RemoteFactoryDelegater {
-
-    // only used to enforce linking upon Class.forName()
-    static String FactoryClassName = ServerAdapterFactory.class.getName();
-
-    public Remote createRemoteRepository(Repository repository)
-            throws RemoteException {
-        return new ServerAdapterFactory().getRemoteRepository(repository);
+        public abstract Remote createRemoteRepository(Repository repository)
+                throws RemoteException;
     }
+    /**
+     * optional class for RMI, will only be used, if RMI server is present
+     */
+    protected static class RMIRemoteFactoryDelegater extends RemoteFactoryDelegater {
+
+        // only used to enforce linking upon Class.forName()
+        static String FactoryClassName = ServerAdapterFactory.class.getName();
+
+        public Remote createRemoteRepository(Repository repository)
+                throws RemoteException {
+            return new ServerAdapterFactory().getRemoteRepository(repository);
+        }
+    }
+
 }
+
