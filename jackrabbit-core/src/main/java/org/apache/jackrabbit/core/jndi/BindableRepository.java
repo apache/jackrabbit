@@ -17,8 +17,13 @@
 package org.apache.jackrabbit.core.jndi;
 
 import org.apache.jackrabbit.core.RepositoryImpl;
-import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.config.ConfigurationException;
+import org.apache.jackrabbit.core.config.RepositoryConfig;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
@@ -29,10 +34,6 @@ import javax.jcr.Session;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
 import javax.naming.StringRefAddr;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 
 /**
  * A referenceable and serializable content repository proxy.
@@ -59,7 +60,7 @@ import java.io.Serializable;
  * method should be used to explicitly close the repository if
  * needed.
  */
-class BindableRepository implements Repository, Referenceable, Serializable {
+public class BindableRepository implements Repository, Referenceable, Serializable {
 
     /**
      * The serialization UID of this class.
@@ -79,11 +80,11 @@ class BindableRepository implements Repository, Referenceable, Serializable {
     /**
      * type of <code>configFilePath</code> reference address (@see <code>{@link Reference#get(String)}</code>
      */
-    static final String CONFIGFILEPATH_ADDRTYPE = "configFilePath";
+    public static final String CONFIGFILEPATH_ADDRTYPE = "configFilePath";
     /**
      * type of <code>repHomeDir</code> reference address (@see <code>{@link Reference#get(String)}</code>
      */
-    static final String REPHOMEDIR_ADDRTYPE = "repHomeDir";
+    public static final String REPHOMEDIR_ADDRTYPE = "repHomeDir";
 
     /**
      * The delegate repository instance. Created by {@link #init() init}.

@@ -48,6 +48,11 @@ import org.apache.jackrabbit.name.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+
 import javax.jcr.PropertyType;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
@@ -55,10 +60,6 @@ import javax.jcr.Session;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * This Class implements a VersionManager.
@@ -460,7 +461,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
     /**
      * Return the shared item state manager.
      */
-    SharedItemStateManager getSharedStateMgr() {
+    protected SharedItemStateManager getSharedStateMgr() {
         return sharedStateMgr;
     }
 
@@ -536,7 +537,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      * Spezialized SharedItemStateManager that filters out NodeReferences to
      * non-versioning states.
      */
-    class VersionItemStateManager extends SharedItemStateManager {
+    protected class VersionItemStateManager extends SharedItemStateManager {
 
         public VersionItemStateManager(PersistenceManager persistMgr,
                                        NodeId rootNodeId,
