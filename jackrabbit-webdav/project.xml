@@ -88,7 +88,7 @@
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
-            <version>1.2</version>
+            <version>1.2-rc1</version>
             <url>http://jakarta.apache.org/commons/codec/</url>
         </dependency>
         <dependency>

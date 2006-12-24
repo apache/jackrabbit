@@ -200,3 +200,40 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+
+
+APACHE JACKRABBIT SUBCOMPONENTS:
+
+Apache Jackrabbit includes an XPath parser subcomponent with separate
+copyright notices and license terms. Your use of the source code for
+this subcomponent is subject to the terms and conditions of the
+following licenses.
+
+<!--
+ * Copyright (c) 2002 World Wide Web Consortium,
+ * (Massachusetts Institute of Technology, Institut National de
+ * Recherche en Informatique et en Automatique, Keio University). All
+ * Rights Reserved. This program is distributed under the W3C's Software
+ * Intellectual Property License. This program is distributed in the
+ * hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.
+ * See W3C License http://www.w3.org/Consortium/Legal/ for more details.
+-->
+
+<!--
+Copyright (c) 2002 W3C(r) (http://www.w3.org/) (MIT (http://www.lcs.mit.edu/), 
+INRIA (http://www.inria.fr/), Keio (http://www.keio.ac.jp/)), 
+All Rights Reserved.
+See http://www.w3.org/Consortium/Legal/ipr-notice-20000612#Copyright.
+W3C liability 
+(http://www.w3.org/Consortium/Legal/ipr-notice-20000612#Legal_Disclaimer), 
+trademark 
+(http://www.w3.org/Consortium/Legal/ipr-notice-20000612#W3C_Trademarks), 
+document use 
+(http://www.w3.org/Consortium/Legal/copyright-documents-19990405), 
+and software licensing rules 
+(http://www.w3.org/Consortium/Legal/copyright-software-19980720) 
+apply.
+-->

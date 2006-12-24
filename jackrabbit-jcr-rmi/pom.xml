@@ -29,7 +29,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit</artifactId>
-    <version>1.2</version>
+    <version>1.2-rc1</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>jackrabbit-jcr-rmi</artifactId>
