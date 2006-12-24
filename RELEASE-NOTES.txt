@@ -1,135 +1,219 @@
-Release Notes -- Apache Jackrabbit -- Version 1.1
-
+Release Notes -- Apache Jackrabbit -- Version 1.2
 
 Introduction
 ------------
 
-The Apache Jackrabbit project is an effort to build and maintain
-an open source implementation of the Content Repository for Java
-Technology API (JCR) specified in the Java Specification Request 170
-(JSR-170). The project also produces a various tools and components
-related to the JCR API.
+Apache Jackrabbit is a fully conforming implementation of the Content
+Repository for Java Technology API (JCR). A content repository is a
+hierarchical content store with support for structured and unstructured
+content, full text search, versioning, transactions, observation, and
+more. Typical applications that use content repositories include content
+management, document management, and records management systems.
 
-Apache Jackrabbit 1.1 is an incremental release that fixes
-a number of issues and introduces some new features. The most
-notable changes in this release include the  See the
-included change history for details.
+Apache Jackrabbit 1.2 is an incremental release that introduces a number
+of new features, improvements, and bug fixes. The most notable changes in
+this release are the introduction of a clustering feature and various query
+improvements. The build environment has been upgraded to Maven 2 along
+with updates to the project structure and new versions of the Apache
+Lucene and Apache Derby dependencies. See below for the complete list
+of changes.
 
-See the Apache Jackrabbit website at http://jackrabbit.apache.org/
-for more information.
+See the Apache Jackrabbit website at http://jackrabbit.apache.org/ for more
+information.
 
+Changes in this release
+-----------------------
+
+New features
+
+    * [JCR-332] - Upgrade to Maven 2
+    * [JCR-585] - Create jackrabbit-api(.jar) and the respective ...
+    * [JCR-613] - Implementation of a memory file system
+    * [JCR-619] - CacheManager (Memory Management in Jackrabbit)
+    * [JCR-623] - Clustering
+    * [JCR-638] - Support lower-/upper-case functions
+    * [JCR-676] - Participation of a workspace in a cluster should ...
+
+Improvements
+
+    * [JCR-247] - Child axis support for XPath predicates
+    * [JCR-352] - Upgrade to Lucene 2.0
+    * [JCR-545] - New method on NodeTypeManagerImpl to reregister nodetypes
+    * [JCR-584] - Improve handling of concurrent node modifications
+    * [JCR-592] - Use only the standard Maven repository for dependencies
+    * [JCR-595] - Refactoring of the Persistence Managers
+    * [JCR-610] - Upgrade to Derby 10.2
+    * [JCR-612] - Restructure the Jackrabbit source tree
+    * [JCR-618] - Replace WeakIdentityCollection in StateChangeDispacher
+    * [JCR-626] - Move document type definition out of repository.xml
+    * [JCR-633] - DerbyPersistenceManager only usable for embedded ...
+    * [JCR-645] - DatabasePersistenceManager & DatabaseFileSystem: ...
+    * [JCR-651] - Improve performance for queries with large result sets
+    * [JCR-660] - SQL Parser fails with SQL 92 timestamp format
+    * [JCR-667] - Variant spelling "Trasaction" and "Transaction" ...
+    * [JCR-668] - Allow pseudo properties in query relation
+    * [JCR-669] - Move NamespaceMappings/Index from lucene to ...
+    * [JCR-670] - LocalNamespaceMappings does not make use of ...
+    * [JCR-677] - Do not fulltext index jcr:uuid property
+    * [JCR-684] - The servlet-api dependency scope should be ...
+    * [JCR-685] - Remove some synchronization on CachingNamespaceResolver
+    * [JCR-686] - change some access-level modifiers to allow for ...
+
+Bug fixes
+
+    * [JCR-441] - Session logout doesn't release locks acquired using ...
+    * [JCR-529] - New versions added after a restore have bad version ...
+    * [JCR-544] - JCR-Server: Workspace.restore not mapped correctly
+    * [JCR-546] - Deadlock during checkin
+    * [JCR-614] - Weird locking behaviour in CachingHierarchyManager
+    * [JCR-617] - CachingHieraarchyManager may serve moved items
+    * [JCR-627] - Deprecated Serializer does not properly delegate ...
+    * [JCR-628] - OutOfMemory problem: HandleMonitor does not release ...
+    * [JCR-632] - VersionManager lock not released in some circumstances
+    * [JCR-641] - can't add lock token to session after 3 login/logout
+    * [JCR-648] - NullpointerException in SessionItemStateManager
+    * [JCR-656] - JCR-Server: Allow header misses colong ...
+    * [JCR-659] - import of multivalue properties with single value ...
+    * [JCR-661] - RMIC not working in subprojects when compiling ...
+    * [JCR-681] - NullPointerException in ServerRow
+    * [JCR-682] - AccessManager + CachingHierarchyManager problem
+    * [JCR-683] - Bad transitive dependencies in commons-httpclient
+    * [JCR-687] - UUID compareTo and hashCode
 
 Release Contents
 ----------------
 
-The main contents of this release are the Apache Jackrabbit core
-content repository implementation and the related general-purpose
-JCR utilities:
+The release consists of a single source archive and a number of
+pre-compiled binary component archives.
 
-     jackrabbit-core-1.1-src.jar
+    * Jackrabbit source code (jackrabbit-1.2-src.jar)
 
-     jackrabbit-core-1.1.jar
-     jackrabbit-jcr-commons-1.1.jar
+        The main source archive contains a "jackrabbit-1.2-src" directory
+        with the full released source code and build environment. Use the
+        following commands (or the equivalent in your system) to build all
+        the released components with Maven 2:
 
-This release contains also additional components that offer extra
-functionality for use with either Apache Jackrabbit core or any
-JCR compliant content repository. These modules should be considered
-beta quality:
+          $ jar xf jackrabbit-1.2-src.jar
+          $ cd jackrabbit-1.2-src
+          $ mvn install
 
- * RMI network layer for the JCR API.
+The components contained in the released source archive are listed below
+(with the pre-compiled binary archives in parenthesis):
 
-     jackrabbit-jcr-rmi-1.1-src.jar
-     jackrabbit-jcr-rmi-1.1.jar
+    * Jackrabbit API (jackrabbit-api-1.2.jar)
 
- * Deployable Jackrabbit installation with WebDAV support for JCR.
+        Interface extensions that Apache Jackrabbit supports in
+        addition to the standard JCR API.
 
-     jackrabbit-jcr-server-1.1-src.jar
+    * Jackrabbit JCR Commons (jackrabbit-jcr-commons-1.2.jar)
 
-     jackrabbit-jcr-webdav-1.1.jar
-     jackrabbit-jcr-client-1.1.jar
-     jackrabbit-jcr-server-1.1.jar
-     jackrabbit-server-1.1.war
+        General-purpose classes for use with the JCR API.
 
- * J2EE Connector Architecture (JCA) resource adapter for Jackrabbit.
+    * Jackrabbit JCR Tests (jackrabbit-jcr-tests-1.2.jar)
 
-     jackrabbit-jca-1.1-src.jar
-     jackrabbit-jca-1.1.rar
+        Set of JCR API test cases designed for testing the compliance
+        of an implementation. Note that this is not the official JCR TCK!
 
- * Text indexing filters for Jackrabbit. Includes example filters
-   for Adobe PDF and MS Excel, PowerPoint, and Word.
+    * Jackrabbit Core (jackrabbit-core-1.2.jar)
 
-     jackrabbit-index-filters-1.1-src.jar
-     jackrabbit-index-filters-1.1.jar
+        Core of the Apache Jackrabbit content repository implementation.
 
-All components are released as a source jar file and one or more compiled
-binary files. All files contain a README.txt file with more information.
-Note that external runtime dependencies are only included for the war
-and rar archives. Other dependencies can be downloaded either manually
-or automatically using the Maven build system.
+    * Jackrabbit Index Filters (jackrabbit-index-filters-1.2.jar)
+
+        Text indexing filters for Jackrabbit. Includes example filters
+        for Adobe PDF and MS Excel, PowerPoint, and Word.
+
+    * Jackrabbit JCR-RMI (jackrabbit-jcr-rmi-1.2.jar)
+
+        RMI network layer for the JCR API.
+
+    * Jackrabbit WebDAV Library (jackrabbit-webdav-1.2.jar)
+
+        Interfaces and common utility classes used for building a
+        WebDAV server or client.
+
+    * Jackrabbit JCR Server (jackrabbit-jcr-server-1.2.jar)
+
+        WebDAV servlet implementations based on JCR.
+
+    * Jackrabbit Web Application (jackrabbit-webapp-1.2.war)
+
+        Deployable Jackrabbit installation with WebDAV support for JCR.
+
+    * Jackrabbit JCA Resource Adapter (jackrabbit-jca-1.2.rar)
+
+        J2EE Connector Architecture (JCA) resource adapter for Jackrabbit.
+
+All files contain a README.txt file with more information. Note that
+external runtime dependencies are only included for the war and rar
+archives. Other dependencies can be downloaded either manually or
+automatically using the Maven build system.
 
 Each release file is accompanied by SHA1 and MD5 checksums and a PGP
 signature. The public key used for the signatures can be found
 in the KEYS file located in the parent directory.
 
+Upgrading from previous 1.x releases
+------------------------------------
 
-Upgrading from 1.0
-------------------
+Apache Jackrabbit 1.2 is fully compatible with the previous 1.x releases.
+A previous Apache Jackrabbit 1.x installation can be upgraded by replacing
+the relevant jar files with the new versions (see below). No changes to
+repository contents are needed.
 
-Apache Jackrabbit 1.1 is fully compatible with the 1.0 release. An
-Apache Jackrabbit 1.0 installation can be upgraded by replacing
-the relevant jar files with the new versions. No changes to repository
-contents are needed.
+The most notable effect of the component restructuring in this release is
+that the previous jackrabbit-core component has been split in three pieces:
+jackrabbit-api, jackrabbit-jcr-commons, and jackrabbit-core. Thus you need
+to replace the previous jackrabbit-core-1.x.jar file with the three new
+jar archives.
 
+The structure of the WebDAV components have also changed. WebDAV support
+now consists of the webapp component jackrabbit-webapp-1.2.war and the
+library archives jackrabbit-webdav-1.2.jar and jackrabbit-jcr-server-1.2.jar.
 
-Known Issues
-------------
+The Apache Lucene dependency used for full text indexing has been upgraded
+to version 2.0 in this release. Lucene 2.0 is able to continue using
+existing index files, but you can also manually recreate the index with
+Lucene 2.0 extensions by removing the "index" directories of a closed
+repository. Jackrabbit will automatically re-index content when the
+repository is next started.
+
+Also the Apache Derby dependency has been upgraded to version 10.2.
+Like Lucene, the new Derby version can keep using existing database files.
+New repositories and workspaces will however be created using extensions
+and improvements introduced in the 10.2 version.
+
+Known issues in this release
+----------------------------
 
 The known issues in this release are listed below:
 
+    * [JCR-18] - Multithreading issue with versioning
+    * [JCR-43] - Restore on nodes creates same-name-sibling of ...
+    * [JCR-320] - BinaryValue equals fails for two objects with ...
+    * [JCR-385] - ClassCastException when executing union queries
+    * [JCR-392] - Querying element by number does not work
+    * [JCR-406] - If header evaluation compliance problems
+    * [JCR-435] - Node.update() does not work correct for SNS
+    * [JCR-449] - inconsistency in internal version items during commits
+    * [JCR-509] - TCK:NodeTest#testNodeIdentity fails if versioning ...
+    * [JCR-517] - Reserved status of namespace jcr not enforced
+    * [JCR-522] - XPath parser too tolerant
+    * [JCR-537] - Failure to remove a versionable node
+    * [JCR-538] - failing Node.checkin() or Node.checkout() might leave ...
+    * [JCR-566] - Versioning bug with restore and transactions
+    * [JCR-575] - unicode escapes in files generated by JJTree
+    * [JCR-591] - XPath position function does not work
+    * [JCR-604] - After saving over Webdav the jcr:encoding property ...
+    * [JCR-607] - Importing XML at root level using a session from JCA ...
+    * [JCR-609] - Empty custom_nodetypes.xml after restart
+    * [JCR-622] - Auto Reconnect for RepositoryAccessServlet
+    * [JCR-625] - Memory is not freed up when jackrabbit-server war is ...
+    * [JCR-639] - Allow modification of OPV=IGNORE items even if parent ...
+    * [JCR-647] - Own AccessManager + VersionManager : AccessDenied problem
+    * [JCR-672] - Deadlock on concurrent save/checkin operations possible
+    * [JCR-674] - String properties with invalid XML characters export ...
+    * [JCR-690] - Nodes' and properties' names with invalid XML ...
 
 See the issue tracker at http://issues.apache.org/jira/browse/JCR for
 more details.
-
-Change History
---------------
-
-Changes since 1.0.1:
-
-
-Changes since 1.0:
-
-  [JCR-443] Deadlock when concurrently committing and reading versioning ...
-  [JCR-439] Workspace.clone() fails the second time, if cloning referenceables
-  [JCR-437] Restoring a node which has OPV=Version children fails if they ...
-  [JCR-434] ArrayIndexOutOfBoundsException in NodeTypeDefDiff
-  [JCR-430] Memory leak when using transactions
-  [JCR-429] Session scoped lock not always removed on Session.logout()
-  [JCR-428] BLOBFileValue() might be discarded to early
-  [JCR-426] WorkspaceInfo.dispose() does not deregister from obs dispatcher
-  [JCR-424] PropertyState binary type desirialsation only returns half ...
-  [JCR-423] Node.restore() fails for existing non-versioned OPV=Version ...
-  [JCR-422] charset in Content-Type header shouldn't be in quotes
-  [JCR-421] PROPPATCH does not send multistatus after revision 397835
-  [JCR-420] NullPointerException when deleting a property of type REFERENCE
-  [JCR-411] Binding repository to a nameserver with RegistryHelper causes ...
-  [JCR-408] RowIterator view of result for query '//*' only returns ...
-  [JCR-405] PROPPATCH doesn't respect document order
-  [JCR-400] PROPPATCH error marshalling when the resource can't be ...
-  [JCR-396] RMI published Repository using the jcr-rmi library gets lost ...
-  [JCR-395] Using transactions leads to memory leak
-  [JCR-393] WebDAV Library: VersionControlledResource constant lists ...
-  [JCR-391] WebDAV method invocation trying to create a new resource ...
-  [JCR-386] Query dump failed with deep query tree
-  [JCR-383] Default namespaces in JackrabbitNodeTypeManager.registerNodetypes
-  [JCR-382] Setting WebDAV property without value causes NPE in ...
-  [JCR-381] Repository does not start if text filter dependencies are missing
-  [JCR-374] Missing 'node removed' event when removing a version
-  [JCR-371] ItemStateException on concurrently committing transactions of ...
-  [JCR-369] IllegalNameException when importing document view with two mixins
-  [JCR-362] restore sometime throws error about missing tmp files
-  [JCR-336] Concurrent locking operations fail
-  [JCR-335] Deadlock caused by versioning operations within transaction
-  [JCR-285] Line-separator differences cause PredefinedNodeTypeTest to ...
-  [JCR-264] TextFilters get called three times within checkin() method
-  [JCR-140] Versioning might no be thread safe
-  [JCR-50]  Persistence data of versioning not cleaned up correctly
