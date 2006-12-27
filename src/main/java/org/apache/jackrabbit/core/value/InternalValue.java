@@ -17,13 +17,12 @@
 package org.apache.jackrabbit.core.value;
 
 import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.util.ISO8601;
@@ -124,10 +123,8 @@ public class InternalValue {
             case PropertyType.NAME:
                 try {
                     return new InternalValue(NameFormat.parse(value.getString(), nsResolver));
-                } catch (IllegalNameException ine) {
-                    throw new ValueFormatException(ine.getMessage());
-                } catch (UnknownPrefixException upe) {
-                    throw new ValueFormatException(upe.getMessage());
+                } catch (NameException e) {
+                    throw new ValueFormatException(e.getMessage());
                 }
             case PropertyType.PATH:
                 try {
