@@ -41,13 +41,11 @@ import org.apache.jackrabbit.core.version.VersionSelector;
 import org.apache.jackrabbit.core.version.DateVersionSelector;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.lock.LockManager;
-import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.util.ChildrenCollectorFilter;
@@ -399,10 +397,8 @@ public class NodeImpl extends ItemImpl implements Node {
         QName qName;
         try {
             qName = NameFormat.parse(name, session.getNamespaceResolver());
-        } catch (IllegalNameException ine) {
-            throw new RepositoryException("invalid property name: " + name, ine);
-        } catch (UnknownPrefixException upe) {
-            throw new RepositoryException("invalid property name: " + name, upe);
+        } catch (NameException e) {
+            throw new RepositoryException("invalid property name: " + name, e);
         }
         return getOrCreateProperty(qName, type, multiValued, exactTypeMatch, status);
     }
@@ -576,12 +572,9 @@ public class NodeImpl extends ItemImpl implements Node {
         QName qName;
         try {
             qName = NameFormat.parse(propName, session.getNamespaceResolver());
-        } catch (IllegalNameException ine) {
-            throw new RepositoryException("invalid property name: "
-                    + propName, ine);
-        } catch (UnknownPrefixException upe) {
-            throw new RepositoryException("invalid property name: "
-                    + propName, upe);
+        } catch (NameException e) {
+            throw new RepositoryException(
+                    "invalid property name: " + propName, e);
         }
         removeChildProperty(qName);
     }
@@ -2562,10 +2555,9 @@ public class NodeImpl extends ItemImpl implements Node {
         QName ntName;
         try {
             ntName = NameFormat.parse(nodeTypeName, session.getNamespaceResolver());
-        } catch (IllegalNameException ine) {
-            throw new RepositoryException("invalid node type name: " + nodeTypeName, ine);
-        } catch (UnknownPrefixException upe) {
-            throw new RepositoryException("invalid node type name: " + nodeTypeName, upe);
+        } catch (NameException e) {
+            throw new RepositoryException(
+                    "invalid node type name: " + nodeTypeName, e);
         }
         return isNodeType(ntName);
     }
@@ -2609,10 +2601,9 @@ public class NodeImpl extends ItemImpl implements Node {
         QName ntName;
         try {
             ntName = NameFormat.parse(mixinName, session.getNamespaceResolver());
-        } catch (IllegalNameException ine) {
-            throw new RepositoryException("invalid mixin type name: " + mixinName, ine);
-        } catch (UnknownPrefixException upe) {
-            throw new RepositoryException("invalid mixin type name: " + mixinName, upe);
+        } catch (NameException e) {
+            throw new RepositoryException(
+                    "invalid mixin type name: " + mixinName, e);
         }
 
         addMixin(ntName);
@@ -2627,10 +2618,9 @@ public class NodeImpl extends ItemImpl implements Node {
         QName ntName;
         try {
             ntName = NameFormat.parse(mixinName, session.getNamespaceResolver());
-        } catch (IllegalNameException ine) {
-            throw new RepositoryException("invalid mixin type name: " + mixinName, ine);
-        } catch (UnknownPrefixException upe) {
-            throw new RepositoryException("invalid mixin type name: " + mixinName, upe);
+        } catch (NameException e) {
+            throw new RepositoryException(
+                    "invalid mixin type name: " + mixinName, e);
         }
 
         removeMixin(ntName);
@@ -2664,12 +2654,9 @@ public class NodeImpl extends ItemImpl implements Node {
         QName ntName;
         try {
             ntName = NameFormat.parse(mixinName, session.getNamespaceResolver());
-        } catch (IllegalNameException ine) {
-            throw new RepositoryException("invalid mixin type name: "
-                    + mixinName, ine);
-        } catch (UnknownPrefixException upe) {
-            throw new RepositoryException("invalid mixin type name: "
-                    + mixinName, upe);
+        } catch (NameException e) {
+            throw new RepositoryException(
+                    "invalid mixin type name: " + mixinName, e);
         }
 
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
