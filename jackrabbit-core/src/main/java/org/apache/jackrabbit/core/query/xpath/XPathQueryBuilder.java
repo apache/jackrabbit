@@ -32,11 +32,10 @@ import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
 import org.apache.jackrabbit.core.query.PropertyFunctionQueryNode;
 import org.apache.jackrabbit.core.query.DefaultQueryNodeVisitor;
-import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.util.ISO8601;
@@ -410,10 +409,8 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                         QName nt = NameFormat.parse(ntName, resolver);
                         NodeTypeQueryNode nodeType = new NodeTypeQueryNode(loc, nt);
                         loc.addPredicate(nodeType);
-                    } catch (IllegalNameException e) {
+                    } catch (NameException e) {
                         exceptions.add(new InvalidQueryException("Not a valid name: " + ntName));
-                    } catch (UnknownPrefixException e) {
-                        exceptions.add(new InvalidQueryException("Unknown prefix in name: " + ntName));
                     }
                 }
                 break;
@@ -562,10 +559,8 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                             ts.setReferencesProperty(true);
                         }
                     }
-                } catch (IllegalNameException e) {
+                } catch (NameException e) {
                     exceptions.add(new InvalidQueryException("Illegal name: " + child.getValue()));
-                } catch (UnknownPrefixException e) {
-                    exceptions.add(new InvalidQueryException("Unknown prefix: " + child.getValue()));
                 }
             } else if (child.getId() == JJTSTAR) {
                 if (queryNode.getType() == QueryNode.TYPE_LOCATION) {
@@ -862,10 +857,8 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                                 QName name = null;
                                 try {
                                     name = ISO9075.decode(NameFormat.parse(value, resolver));
-                                } catch (IllegalNameException e) {
+                                } catch (NameException e) {
                                     exceptions.add(new InvalidQueryException("Illegal name: " + value));
-                                } catch (UnknownPrefixException e) {
-                                    exceptions.add(new InvalidQueryException("Unknown prefix: " + value));
                                 }
                                 derefNode.setNameTest(name);
                             }
@@ -929,9 +922,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     QName name = NameFormat.parse(fName + "()", resolver);
                     RelationQueryNode relNode = (RelationQueryNode) queryNode;
                     relNode.setRelativePath(Path.create(name, 0));
-                } catch (IllegalNameException e) {
-                    exceptions.add(e);
-                } catch (UnknownPrefixException e) {
+                } catch (NameException e) {
                     exceptions.add(e);
                 }
             } else {
@@ -957,10 +948,8 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             QName name = ISO9075.decode(NameFormat.parse(propName, resolver));
             spec = new OrderQueryNode.OrderSpec(name, true);
             queryNode.addOrderSpec(spec);
-        } catch (IllegalNameException e) {
+        } catch (NameException e) {
             exceptions.add(new InvalidQueryException("Illegal name: " + child.getValue()));
-        } catch (UnknownPrefixException e) {
-            exceptions.add(new InvalidQueryException("Unknown prefix: " + child.getValue()));
         }
         return spec;
     }

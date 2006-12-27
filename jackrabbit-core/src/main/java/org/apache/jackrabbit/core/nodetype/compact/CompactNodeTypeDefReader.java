@@ -25,10 +25,9 @@ import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.PropDefImpl;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.util.name.NamespaceMapping;
 import org.apache.jackrabbit.value.ValueHelper;
@@ -634,10 +633,7 @@ public class CompactNodeTypeDefReader {
     private QName toQName(String stringName) throws ParseException {
         try {
             return NameFormat.parse(stringName, nsMapping);
-        } catch (IllegalNameException e) {
-            lexer.fail("Error while parsing '" + stringName + "'", e);
-            return null;
-        } catch (UnknownPrefixException e) {
+        } catch (NameException e) {
             lexer.fail("Error while parsing '" + stringName + "'", e);
             return null;
         }

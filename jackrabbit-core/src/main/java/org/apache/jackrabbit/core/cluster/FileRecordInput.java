@@ -21,11 +21,10 @@ import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
 import org.apache.jackrabbit.core.nodetype.compact.ParseException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -144,10 +143,9 @@ class FileRecordInput {
      *
      * @return name
      * @throws IOException if an I/O error occurs
-     * @throws IllegalNameException if the name retrieved is illegal
-     * @throws UnknownPrefixException if the prefix is unknown
+     * @throws NameException if the name retrieved is illegal
      */
-    public QName readQName() throws IOException, IllegalNameException, UnknownPrefixException {
+    public QName readQName() throws IOException, NameException {
         checkOpen();
 
         return NameFormat.parse(readString(), resolver);
@@ -158,10 +156,9 @@ class FileRecordInput {
      *
      * @return path element
      * @throws IOException if an I/O error occurs
-     * @throws IllegalNameException if the name retrieved is illegal
-     * @throws UnknownPrefixException if the prefix is unknown
+     * @throws NameException if the name retrieved is illegal
      */
-    public Path.PathElement readPathElement() throws IOException, IllegalNameException, UnknownPrefixException {
+    public Path.PathElement readPathElement() throws IOException, NameException {
         checkOpen();
 
         QName name = NameFormat.parse(readString(), resolver);
@@ -220,10 +217,9 @@ class FileRecordInput {
      *
      * @return property id
      * @throws IOException if an I/O error occurs
-     * @throws IllegalNameException if the name retrieved is illegal
-     * @throws UnknownPrefixException if the prefix is unknown
+     * @throws NameException if the name retrieved is illegal
      */
-    public PropertyId readPropertyId() throws IOException, IllegalNameException, UnknownPrefixException  {
+    public PropertyId readPropertyId() throws IOException, NameException  {
         checkOpen();
 
         return new PropertyId(readNodeId(), readQName());

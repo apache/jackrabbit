@@ -30,10 +30,9 @@ import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
 import org.apache.jackrabbit.core.query.PropertyFunctionQueryNode;
-import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -654,10 +653,8 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 if (name != null) {
                     try {
                         qName = NameFormat.parse(name, resolver);
-                    } catch (IllegalNameException e) {
+                    } catch (NameException e) {
                         throw new IllegalArgumentException("Illegal name: " + name);
-                    } catch (UnknownPrefixException e) {
-                        throw new IllegalArgumentException("Unknown prefix: " + name);
                     }
                 }
                 // if name test is % this means also search descendants

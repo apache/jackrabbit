@@ -18,10 +18,9 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
-import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.value.LongValue;
 import org.apache.jackrabbit.value.PathValue;
@@ -273,9 +272,7 @@ class RowIteratorImpl implements RowIterator {
                         return null;
                     }
                 }
-            } catch (IllegalNameException e) {
-                throw new RepositoryException(e.getMessage(), e);
-            } catch (UnknownPrefixException e) {
+            } catch (NameException e) {
                 throw new RepositoryException(e.getMessage(), e);
             }
         }

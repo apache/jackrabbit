@@ -17,11 +17,9 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.util.name.NamespaceMapping;
@@ -237,10 +235,8 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
 
                     NodeTypeDef[] defs = ntr.getNodeTypeDefs();
                     nodeTypeDefs.addAll(Arrays.asList(defs));
-                } catch (IllegalNameException e) {
-                    throw new RepositoryException("Illegal JCR name syntax", e);
-                } catch (UnknownPrefixException e) {
-                    throw new RepositoryException("Unknown namespace prefix", e);
+                } catch (NameException e) {
+                    throw new RepositoryException("Illegal JCR name", e);
                 }
             } else if (contentType.equalsIgnoreCase(TEXT_X_JCR_CND)) {
                 try {
@@ -412,10 +408,8 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
             throws NoSuchNodeTypeException {
         try {
             return getNodeType(NameFormat.parse(nodeTypeName, nsResolver));
-        } catch (UnknownPrefixException upe) {
-            throw new NoSuchNodeTypeException(nodeTypeName, upe);
-        } catch (IllegalNameException ine) {
-            throw new NoSuchNodeTypeException(nodeTypeName, ine);
+        } catch (NameException e) {
+            throw new NoSuchNodeTypeException(nodeTypeName, e);
         }
     }
 
@@ -490,7 +484,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
             return getNodeTypeRegistry().isRegistered(qname);
         } catch (NameException e) {
            throw new RepositoryException();
-        }      
+        }
     }
 
     //-------------------------------------------------------------< Dumpable >
@@ -501,5 +495,5 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
         ps.println("NodeTypeManager (" + this + ")");
         ps.println();
         ntReg.dump(ps);
-    }  
+    }
 }

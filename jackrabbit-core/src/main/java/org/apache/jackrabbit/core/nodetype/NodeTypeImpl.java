@@ -17,12 +17,10 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
@@ -256,11 +254,8 @@ public class NodeTypeImpl implements NodeType {
         QName ntName;
         try {
             ntName = NameFormat.parse(nodeTypeName, nsResolver);
-        } catch (IllegalNameException ine) {
-            log.warn("invalid node type name: " + nodeTypeName, ine);
-            return false;
-        } catch (UnknownPrefixException upe) {
-            log.warn("invalid node type name: " + nodeTypeName, upe);
+        } catch (NameException e) {
+            log.warn("invalid node type name: " + nodeTypeName, e);
             return false;
         }
         return (getQName().equals(ntName) || isDerivedFrom(ntName));

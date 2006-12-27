@@ -38,12 +38,11 @@ import org.apache.jackrabbit.core.query.DefaultQueryNodeVisitor;
 import org.apache.jackrabbit.core.query.lucene.fulltext.QueryParser;
 import org.apache.jackrabbit.core.query.lucene.fulltext.ParseException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.util.ISO8601;
@@ -294,12 +293,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     terms.add(t);
                 }
             }
-        } catch (IllegalNameException e) {
-            exceptions.add(e);
-        } catch (UnknownPrefixException e) {
-            exceptions.add(e);
-        } catch (NoPrefixDeclaredException e) {
-            // should never happen
+        } catch (NameException e) {
             exceptions.add(e);
         } catch (RepositoryException e) {
             exceptions.add(e);
@@ -883,9 +877,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     try {
                         values.add(nsMappings.translatePropertyName(literal, session.getNamespaceResolver()));
                         log.debug("Coerced " + literal + " into NAME.");
-                    } catch (IllegalNameException e) {
-                        log.warn("Unable to coerce '" + literal + "' into a NAME: " + e.toString());
-                    } catch (UnknownPrefixException e) {
+                    } catch (NameException e) {
                         log.warn("Unable to coerce '" + literal + "' into a NAME: " + e.toString());
                     }
                     break;

@@ -18,13 +18,12 @@ package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.value.DateValue;
@@ -622,16 +621,11 @@ class NameConstraint extends ValueConstraint {
         try {
             NameFormat.checkFormat(definition);
             name = NameFormat.parse(definition, nsResolver);
-        } catch (IllegalNameException ine) {
+        } catch (NameException e) {
             String msg = "invalid name specified as value constraint: "
                     + definition;
             log.debug(msg);
-            throw new InvalidConstraintException(msg, ine);
-        } catch (UnknownPrefixException upe) {
-            String msg = "invalid name specified as value constraint: "
-                    + definition;
-            log.debug(msg);
-            throw new InvalidConstraintException(msg, upe);
+            throw new InvalidConstraintException(msg, e);
         }
     }
 
@@ -680,16 +674,11 @@ class ReferenceConstraint extends ValueConstraint {
         // format: node type name
         try {
             ntName = NameFormat.parse(definition, nsResolver);
-        } catch (IllegalNameException ine) {
+        } catch (NameException e) {
             String msg = "invalid node type name specified as value constraint: "
                     + definition;
             log.debug(msg);
-            throw new InvalidConstraintException(msg, ine);
-        } catch (UnknownPrefixException upe) {
-            String msg = "invalid node type name specified as value constraint: "
-                    + definition;
-            log.debug(msg);
-            throw new InvalidConstraintException(msg, upe);
+            throw new InvalidConstraintException(msg, e);
         }
     }
 

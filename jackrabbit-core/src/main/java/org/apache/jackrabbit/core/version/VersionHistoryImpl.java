@@ -22,10 +22,9 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NameFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,9 +110,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
                 throw new VersionException("No version with name '" + versionName + "' exists in this version history.");
             }
             return (Version) session.getNodeById(v.getId());
-        } catch (IllegalNameException e) {
-            throw new VersionException(e);
-        } catch (UnknownPrefixException e) {
+        } catch (NameException e) {
             throw new VersionException(e);
         }
     }
@@ -129,9 +126,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
                 throw new VersionException("No version with label '" + label + "' exists in this version history.");
             }
             return (Version) session.getNodeById(v.getId());
-        } catch (IllegalNameException e) {
-            throw new VersionException(e);
-        } catch (UnknownPrefixException e) {
+        } catch (NameException e) {
             throw new VersionException(e);
         }
     }
@@ -146,9 +141,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
                     NameFormat.parse(versionName, session.getNamespaceResolver()),
                     NameFormat.parse(label, session.getNamespaceResolver()),
                     move);
-        } catch (IllegalNameException e) {
-            throw new VersionException(e);
-        } catch (UnknownPrefixException e) {
+        } catch (NameException e) {
             throw new VersionException(e);
         }
     }
@@ -165,9 +158,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             if (existing == null) {
                 throw new VersionException("No version with label '" + label + "' exists in this version history.");
             }
-        } catch (IllegalNameException e) {
-            throw new VersionException(e);
-        } catch (UnknownPrefixException e) {
+        } catch (NameException e) {
             throw new VersionException(e);
         }
     }
@@ -214,9 +205,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             QName qLabel = NameFormat.parse(label, session.getNamespaceResolver());
             return getInternalVersionHistory().getVersionByLabel(qLabel) != null;
-        } catch (IllegalNameException e) {
-            throw new IllegalArgumentException("Unable to resolve label: " + e);
-        } catch (UnknownPrefixException e) {
+        } catch (NameException e) {
             throw new IllegalArgumentException("Unable to resolve label: " + e);
         }
     }
@@ -230,9 +219,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             QName qLabel = NameFormat.parse(label, session.getNamespaceResolver());
             return ((VersionImpl) version).getInternalVersion().hasLabel(qLabel);
-        } catch (IllegalNameException e) {
-            throw new VersionException(e);
-        } catch (UnknownPrefixException e) {
+        } catch (NameException e) {
             throw new VersionException(e);
         }
     }
@@ -246,9 +233,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             session.getVersionManager().removeVersion(this,
                     NameFormat.parse(versionName, session.getNamespaceResolver()));
-        } catch (IllegalNameException e) {
-            throw new RepositoryException(e);
-        } catch (UnknownPrefixException e) {
+        } catch (NameException e) {
             throw new RepositoryException(e);
         }
     }

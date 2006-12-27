@@ -16,9 +16,8 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.core.NodeId;
 import org.xml.sax.Attributes;
@@ -137,10 +136,8 @@ class SysViewImportHandler extends TargetImportHandler {
             ImportState state = new ImportState();
             try {
                 state.nodeName = NameFormat.parse(name, nsContext);
-            } catch (IllegalNameException ine) {
-                throw new SAXException(new InvalidSerializedDataException("illegal node name: " + name, ine));
-            } catch (UnknownPrefixException upe) {
-                throw new SAXException(new InvalidSerializedDataException("illegal node name: " + name, upe));
+            } catch (NameException e) {
+                throw new SAXException(new InvalidSerializedDataException("illegal node name: " + name, e));
             }
             stack.push(state);
         } else if (SysViewSAXEventGenerator.PROPERTY_ELEMENT.equals(localName)) {
@@ -157,10 +154,8 @@ class SysViewImportHandler extends TargetImportHandler {
             }
             try {
                 currentPropName = NameFormat.parse(name, nsContext);
-            } catch (IllegalNameException ine) {
-                throw new SAXException(new InvalidSerializedDataException("illegal property name: " + name, ine));
-            } catch (UnknownPrefixException upe) {
-                throw new SAXException(new InvalidSerializedDataException("illegal property name: " + name, upe));
+            } catch (NameException e) {
+                throw new SAXException(new InvalidSerializedDataException("illegal property name: " + name, e));
             }
             // property type (sv:type attribute)
             String type = atts.getValue(SysViewSAXEventGenerator.PREFIXED_TYPE_ATTRIBUTE);
@@ -247,10 +242,8 @@ class SysViewImportHandler extends TargetImportHandler {
                     state.nodeTypeName = NameFormat.parse(s, nsContext);
                 } catch (IOException ioe) {
                     throw new SAXException("error while retrieving value", ioe);
-                } catch (IllegalNameException ine) {
-                    throw new SAXException(new InvalidSerializedDataException("illegal node type name: " + s, ine));
-                } catch (UnknownPrefixException upe) {
-                    throw new SAXException(new InvalidSerializedDataException("illegal node type name: " + s, upe));
+                } catch (NameException e) {
+                    throw new SAXException(new InvalidSerializedDataException("illegal node type name: " + s, e));
                 }
             } else if (currentPropName.equals(QName.JCR_MIXINTYPES)) {
                 if (state.mixinNames == null) {
@@ -266,10 +259,8 @@ class SysViewImportHandler extends TargetImportHandler {
                         state.mixinNames.add(mixin);
                     } catch (IOException ioe) {
                         throw new SAXException("error while retrieving value", ioe);
-                    } catch (IllegalNameException ine) {
-                        throw new SAXException(new InvalidSerializedDataException("illegal mixin type name: " + s, ine));
-                    } catch (UnknownPrefixException upe) {
-                        throw new SAXException(new InvalidSerializedDataException("illegal mixin type name: " + s, upe));
+                    } catch (NameException e) {
+                        throw new SAXException(new InvalidSerializedDataException("illegal mixin type name: " + s, e));
                     }
                 }
             } else if (currentPropName.equals(QName.JCR_UUID)) {
