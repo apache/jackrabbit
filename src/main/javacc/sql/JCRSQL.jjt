@@ -41,11 +41,10 @@ PARSER_BEGIN(JCRSQLParser)
  */
 package org.apache.jackrabbit.core.query.sql;
 
-import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.core.query.QueryConstants;
 
 public class JCRSQLParser {
@@ -564,9 +563,7 @@ QName Identifier() :
       {
         try {
           jjtThis.setName(NameFormat.parse(t.image, resolver));
-        } catch (IllegalNameException e) {
-          throw new ParseException(e.getMessage());
-        } catch (UnknownPrefixException e) {
+        } catch (NameException e) {
           throw new ParseException(e.getMessage());
         }
       }
@@ -575,9 +572,7 @@ QName Identifier() :
       {
         try {
           jjtThis.setName(NameFormat.parse(t.image.substring(1, t.image.length()-1), resolver));
-        } catch (IllegalNameException e) {
-          throw new ParseException(e.getMessage());
-        } catch (UnknownPrefixException e) {
+        } catch (NameException e) {
           throw new ParseException(e.getMessage());
         }
       }
@@ -602,9 +597,7 @@ QName Identifier() :
       {
         try {
           jjtThis.setName(NameFormat.parse(t.image, resolver));
-        } catch (IllegalNameException e) {
-          throw new ParseException(e.getMessage());
-        } catch (UnknownPrefixException e) {
+        } catch (NameException e) {
           throw new ParseException(e.getMessage());
         }
       }
