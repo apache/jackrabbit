@@ -53,11 +53,20 @@
 
   <build>
     <plugins>
+      <!-- JCR-683: Explicitly enable building of the jar. -->
       <plugin>
-        <artifactId>maven-rar-plugin</artifactId>
-        <configuration>
-          <includeJar>true</includeJar>
-        </configuration>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>package-jca-jar</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <!-- The jar needs to be built *before* the package
+                 phase for it to be included in the rar archive. -->
+            <phase>test</phase>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
