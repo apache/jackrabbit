@@ -96,9 +96,6 @@
             - analyzer: class name of a lucene analyzer to use for fulltext indexing of text.
             - queryClass: class name that implements the javax.jcr.query.Query interface.
               this class must extend the class: org.apache.jackrabbit.core.query.AbstractQueryImpl
-            - idleTime: idle time in seconds after which an unused query handler is shut down.
-              If the query handler is later used again it is automatically started.
-              Default value -1 disables this feature.
             - respectDocumentOrder: If true and the query does not contain an 'order by' clause,
               result nodes will be in document order. For better performance when queries return
               a lot of nodes set to 'false'.
@@ -123,7 +120,6 @@
             <param name="autoRepair" value="true"/>
             <param name="analyzer" value="org.apache.lucene.analysis.standard.StandardAnalyzer"/>
             <param name="queryClass" value="org.apache.jackrabbit.core.query.QueryImpl"/>
-            <param name="idleTime" value="-1"/>
             <param name="respectDocumentOrder" value="true"/>
             <param name="resultFetchSize" value="2147483647"/>
         </SearchIndex>

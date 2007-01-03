@@ -33,7 +33,6 @@ import org.apache.jackrabbit.core.state.NodeStateIterator;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
-import org.apache.jackrabbit.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,15 +44,12 @@ import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Set;
-import java.util.WeakHashMap;
 
 /**
  * Acts as a global entry point to execute queries and index nodes.
@@ -92,23 +88,6 @@ public class SearchManager implements SynchronousEventListener {
      * Name of the default query implementation class.
      */
     private static final String DEFAULT_QUERY_IMPL_CLASS = QueryImpl.class.getName();
-
-    /**
-     * Class instance that is shared for all <code>SearchManager</code> instances.
-     * Each workspace will schedule a task to check if the query handler can
-     * be shutdown after it had been idle for some time.
-     */
-    private static final Timer IDLE_TIMER = new Timer(true);
-
-    /**
-     * Idle time in seconds after which the query handler is shut down.
-     */
-    private static final int DEFAULT_IDLE_TIME = -1;
-
-    /**
-     * The time when the query handler was last accessed.
-     */
-    private long lastAccess = System.currentTimeMillis();
 
     /**
      * The search configuration.
@@ -169,29 +148,6 @@ public class SearchManager implements SynchronousEventListener {
     private final String queryImplClassName;
 
     /**
-     * Task that checks if the query handler can be shut down because it
-     * had been idle for {@link #idleTime} seconds.
-     */
-    private final Timer.Task idleChecker;
-
-    /**
-     * Idle time in seconds. After the query handler had been idle for this
-     * amount of time it is shut down. Defaults to -1 and causes the search
-     * manager to never shut down.
-     */
-    private int idleTime;
-
-    /**
-     * Weakly references all {@link javax.jcr.query.Query} instances created
-     * by this <code>SearchManager</code>.
-     * If this map is empty and this search manager had been idle for at least
-     * {@link #idleTime} seconds, then the query handler is shut down.
-     */
-    private final Map activeQueries = Collections.synchronizedMap(new WeakHashMap() {
-
-    });
-
-    /**
      * Creates a new <code>SearchManager</code>.
      *
      * @param config the search configuration.
@@ -232,11 +188,10 @@ public class SearchManager implements SynchronousEventListener {
 
         Properties params = config.getParameters();
         queryImplClassName = params.getProperty(PARAM_QUERY_IMPL, DEFAULT_QUERY_IMPL_CLASS);
-        String idleTimeString = params.getProperty(PARAM_IDLE_TIME, String.valueOf(DEFAULT_IDLE_TIME));
-        try {
-            idleTime = Integer.decode(idleTimeString).intValue();
-        } catch (NumberFormatException e) {
-            idleTime = DEFAULT_IDLE_TIME;
+        if (params.containsKey(PARAM_IDLE_TIME)) {
+            String msg = "Parameter 'idleTime' is not supported anymore. " +
+                    "Please use 'maxIdleTime' in the repository configuration.";
+            log.warn(msg);
         }
 
         if (excludedNodeId != null) {
@@ -246,28 +201,6 @@ public class SearchManager implements SynchronousEventListener {
 
         // initialize query handler
         initializeQueryHandler();
-
-        idleChecker = new Timer.Task() {
-            public void run() {
-                if (lastAccess + (idleTime * 1000) < System.currentTimeMillis()) {
-                    int inUse = activeQueries.size();
-                    if (inUse == 0) {
-                        try {
-                            shutdownQueryHandler();
-                        } catch (IOException e) {
-                            log.warn("Unable to shutdown idle query handler", e);
-                        }
-                    } else {
-                        log.debug("SearchManager is idle but " + inUse
-                                + " queries are still in use.");
-                    }
-                }
-            }
-        };
-
-        if (idleTime > -1) {
-            IDLE_TIMER.schedule(idleChecker, 0, 1000);
-        }
     }
 
     /**
@@ -276,7 +209,6 @@ public class SearchManager implements SynchronousEventListener {
      */
     public void close() {
         try {
-            idleChecker.cancel();
             shutdownQueryHandler();
 
             if (fs != null) {
@@ -307,7 +239,6 @@ public class SearchManager implements SynchronousEventListener {
                              String statement,
                              String language)
             throws InvalidQueryException, RepositoryException {
-        ensureInitialized();
         AbstractQueryImpl query = createQueryInstance();
         query.init(session, itemMgr, handler, statement, language);
         return query;
@@ -329,7 +260,6 @@ public class SearchManager implements SynchronousEventListener {
                              ItemManager itemMgr,
                              Node node)
             throws InvalidQueryException, RepositoryException {
-        ensureInitialized();
         AbstractQueryImpl query = createQueryInstance();
         query.init(session, itemMgr, handler, node);
         return query;
@@ -447,7 +377,6 @@ public class SearchManager implements SynchronousEventListener {
 
         if (removedNodes.size() > 0 || addedNodes.size() > 0) {
             try {
-                ensureInitialized();
                 handler.updateNodes(removedIds, addedStates);
             } catch (RepositoryException e) {
                 log.error("Error indexing node.", e);
@@ -475,8 +404,6 @@ public class SearchManager implements SynchronousEventListener {
         try {
             Object obj = Class.forName(queryImplClassName).newInstance();
             if (obj instanceof AbstractQueryImpl) {
-                // track query instances
-                activeQueries.put(obj, null);
                 return (AbstractQueryImpl) obj;
             } else {
                 throw new IllegalArgumentException(queryImplClassName
@@ -514,23 +441,10 @@ public class SearchManager implements SynchronousEventListener {
      * @throws IOException if an error occurs while shutting down the query
      *                     handler.
      */
-    private synchronized void shutdownQueryHandler() throws IOException {
+    private void shutdownQueryHandler() throws IOException {
         if (handler != null) {
             handler.close();
             handler = null;
-        }
-    }
-
-    /**
-     * Ensures that the query handler is initialized and updates the last
-     * access to the current time.
-     *
-     * @throws RepositoryException if the query handler cannot be initialized.
-     */
-    private synchronized void ensureInitialized() throws RepositoryException {
-        lastAccess = System.currentTimeMillis();
-        if (handler == null) {
-            initializeQueryHandler();
         }
     }
 }
