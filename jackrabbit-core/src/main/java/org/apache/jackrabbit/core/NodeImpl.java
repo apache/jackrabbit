@@ -421,6 +421,17 @@ public class NodeImpl extends ItemImpl implements Node {
             throws ConstraintViolationException, RepositoryException {
         status.clear();
 
+        if (isNew() && !hasProperty(name)) {
+            // this is a new node and the property does not exist yet
+            // -> no need to check item manager
+            PropertyDefinitionImpl def = getApplicablePropertyDefinition(
+                    name, type, multiValued, exactTypeMatch);
+            PropertyImpl prop = createChildProperty(name, type, def);
+            status.set(CREATED);
+            return prop;
+        }
+
+
         /*
          * Please note, that this implementation does not win a price for beauty
          * or speed. It's never a good idea to use exceptions for semantical
