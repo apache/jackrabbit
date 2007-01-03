@@ -36,11 +36,6 @@
   -->
   <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
     <param name="path" value="${wsp.home}/index" />
-    <!--
-        Set to zero for test purpose. This is *not* recommended at all for a
-        real system!
-    -->
-    <param name="idleTime" value="0"/>
   </SearchIndex>
 </Workspace>
 
