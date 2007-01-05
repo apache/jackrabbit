@@ -79,6 +79,8 @@ Bug fixes
     * [JCR-682] - AccessManager + CachingHierarchyManager problem
     * [JCR-683] - Bad transitive dependencies in commons-httpclient
     * [JCR-687] - UUID compareTo and hashCode
+    * [JCR-692] - jackrabbit-jca rar archive misses required classes
+    * [JCR-695] - Repository requires access to external resources
 
 Release Contents
 ----------------
