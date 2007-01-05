@@ -46,6 +46,7 @@
           <include>**/*.ddl</include>
           <include>META-INF/services/*</include>
           <include>**/*.cnd</include>
+          <include>**/*.dtd</include>
         </includes>
       </resource>
     </resources>
