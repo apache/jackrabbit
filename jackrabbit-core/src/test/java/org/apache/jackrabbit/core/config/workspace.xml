@@ -15,7 +15,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<!DOCTYPE Workspace SYSTEM "http://jackrabbit.apache.org/dtd/repository-1.2.dtd">
+<!DOCTYPE Workspace PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 1.2//EN"
+                           "http://jackrabbit.apache.org/dtd/repository-1.2.dtd">
 <Workspace name="default">
   <!--
       virtual file system of the workspace:
