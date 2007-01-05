@@ -189,7 +189,7 @@ public class ConfigurationParser {
             DocumentBuilderFactory factory =
                 DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
-            builder.setEntityResolver(new ConfigurationEntityResolver());
+            builder.setEntityResolver(ConfigurationEntityResolver.INSTANCE);
             Document document = builder.parse(xml);
             return document.getDocumentElement();
         } catch (ParserConfigurationException e) {
