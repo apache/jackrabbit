@@ -66,6 +66,24 @@
       <groupId>nekohtml</groupId>
       <artifactId>nekohtml</artifactId>
       <version>0.9.4</version>
+      <exclusions>
+        <!-- JCR-700: Incomplete dependency from nekohtml 0.9.4 -->
+        <exclusion>
+          <groupId>xerces</groupId>
+          <artifactId>xerces</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- JCR-700: Replacements for the nekohtml xerces dependency -->
+    <dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xercesImpl</artifactId>
+      <version>2.6.2</version>
+    </dependency>
+    <dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xmlParserAPIs</artifactId>
+      <version>2.0.2</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
