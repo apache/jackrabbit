@@ -509,7 +509,7 @@ public class RepositoryStartupServlet extends HttpServlet {
      * {@link RemoteFactoryDelegater} interface.
      */
     protected String getRemoteFactoryDelegaterClass() {
-        return "org.apache.jackrabbit.j2ee.RMIRemoteFactoryDelegater";
+        return "org.apache.jackrabbit.j2ee.RepositoryStartupServlet$RMIRemoteFactoryDelegater";
     }
 
     /**
