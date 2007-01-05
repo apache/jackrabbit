@@ -22,42 +22,68 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Entity resolver for Jackrabbit configuration files.
  * This simple resolver contains mappings for the following
- * public identifiers used for the Jackrabbit configuration files.
+ * public identifiers used for the Jackrabbit configuration files:
  * <ul>
- * <li><code>-//The Apache Software Foundation//DTD Workspace//EN</code></li>
- * <li><code>-//The Apache Software Foundation//DTD Repository//EN</code></li>
+ * <li><code>-//The Apache Software Foundation//DTD Jackrabbit 1.0//EN</code></li>
+ * <li><code>-//The Apache Software Foundation//DTD Jackrabbit 1.2//EN</code></li>
  * </ul>
  * <p>
- * The public identifiers are mapped to a document type definition
- * file included in the Jackrabbit jar archive.
+ * Also the following system identifiers are mapped to local resources:
+ * <ul>
+ * <li><code>http://jackrabbit.apache.org/dtd/repository-1.2.dtd</code></li>
+ * <li><code>http://jackrabbit.apache.org/dtd/repository-1.0.dtd</code></li>
+ * </ul>
+ * <p>
+ * The public identifiers are mapped to document type definition
+ * files included in the Jackrabbit jar archive.
  */
 class ConfigurationEntityResolver implements EntityResolver {
 
     /**
-     * Public identifier of the repository configuration DTD.
+     * The singleton instance of this class.
      */
-    public static final String REPOSITORY_ID =
-        "-//The Apache Software Foundation//DTD Repository//EN";
+    public static final EntityResolver INSTANCE =
+        new ConfigurationEntityResolver();
 
     /**
-     * Public identifier of the workspace configuration DTD.
+     * Public identifiers.
      */
-    public static final String WORKSPACE_ID =
-        "-//The Apache Software Foundation//DTD Workspace//EN";
+    private final Map publicIds = new HashMap();
 
     /**
-     * Resource path of the internal configuration DTD file.
+     * System identifiers.
      */
-    private static final String CONFIG_DTD =
-            "org/apache/jackrabbit/core/config/config.dtd";
+    private final Map systemIds = new HashMap();
+
+    /**
+     * Creates the singleton instance of this class.
+     */
+    private ConfigurationEntityResolver() {
+        // Apache Jackrabbit 1.2 DTD
+        publicIds.put(
+                "-//The Apache Software Foundation//DTD Jackrabbit 1.2//EN",
+                "repository-1.2.dtd");
+        systemIds.put(
+                "http://jackrabbit.apache.org/dtd/repository-1.2.dtd",
+                "repository-1.2.dtd");
+
+        // Apache Jackrabbit 1.0 DTD
+        publicIds.put(
+                "-//The Apache Software Foundation//DTD Jackrabbit 1.0//EN",
+                "repository-1.0.dtd");
+        systemIds.put(
+                "http://jackrabbit.apache.org/dtd/repository-1.0.dtd",
+                "repository-1.0.dtd");
+    }
 
     /**
      * Resolves an entity to the corresponding input source.
-     * {@inheritDoc}
      *
      * @param publicId public identifier
      * @param systemId system identifier
@@ -67,13 +93,25 @@ class ConfigurationEntityResolver implements EntityResolver {
      */
     public InputSource resolveEntity(String publicId, String systemId)
             throws SAXException, IOException {
-        if (REPOSITORY_ID.equals(publicId) || WORKSPACE_ID.equals(publicId)) {
-            InputStream dtd =
-                getClass().getClassLoader().getResourceAsStream(CONFIG_DTD);
-            return new InputSource(dtd);
-        } else {
-            return null;
+        String name;
+
+        name = (String) publicIds.get(publicId);
+        if (name != null) {
+            InputStream stream = getClass().getResourceAsStream(name);
+            if (stream != null) {
+                return new InputSource(stream);
+            }
         }
+
+        name = (String) systemIds.get(systemId);
+        if (name != null) {
+            InputStream stream = getClass().getResourceAsStream(name);
+            if (stream != null) {
+                return new InputSource(stream);
+            }
+        }
+
+        return null;
     }
 
 }
