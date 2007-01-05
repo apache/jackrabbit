@@ -1,0 +1,130 @@
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<!--
+    the Repository element configures a repository instance; individual 
+    workspaces of the repository are configured through separate configuration 
+    files called workspace.xml which are located in a subfolder of the 
+    workspaces root directory (see Workspaces element).
+
+    it consists of
+
+        a FileSystem element (the virtual file system
+        used by the repository to persist global state such as
+        registered namespaces, custom node types, etc..
+
+        a Security element that specifies the name of the app-entry
+        in the JAAS config and the access manager
+
+        a Workspaces element that specifies the location of the 
+        workspaces root directory, the name of the default workspace,
+        the maximum idle time before a workspace is automatically
+        shutdown (optional) and the workspace configuration root directory
+        within the virtual repository file system (optional)
+
+        a Workspace element that is used as a workspace configuration
+        template; it is used to create the initial workspace if there's
+        no workspace yet and for creating additional workspaces through
+        the api
+
+        a SearchIndex element that is used for configuring per workspace
+        Indexing-related settings
+
+        a Versioning element that is used for configuring
+        versioning-related settings
+-->
+<!ELEMENT Repository (FileSystem,Security,Workspaces,Workspace,Versioning,SearchIndex?)>
+
+<!--
+    a virtual file system
+-->
+<!ELEMENT FileSystem (param*)>
+<!ATTLIST FileSystem class CDATA #REQUIRED>
+
+<!--
+    the Security element specifies the name (appName attribute)
+    of the JAAS configuration app-entry for this repository. 
+
+    it also specifies the access manager to be used (AccessManager element).
+-->
+<!ELEMENT Security (AccessManager, LoginModule?)>
+<!ATTLIST Security appName CDATA #REQUIRED>
+
+<!--
+    the AccessManager element configures the access manager to be used by
+    this repository instance; the class attribute specifies the FQN of the
+    class implementing the AccessManager interface
+-->
+<!ELEMENT AccessManager (param*)>
+<!ATTLIST AccessManager class CDATA #REQUIRED>
+
+<!--
+    generic parameter (name/value pair)
+-->
+<!ELEMENT param EMPTY>
+<!ATTLIST param name  CDATA #REQUIRED
+                value CDATA #REQUIRED>
+
+<!--
+    the LoginModule element optionally specifies a JAAS login module to
+    authenticate users. This feature allows the use of Jackrabbit in a
+    non-JAAS environment.
+-->
+<!ELEMENT LoginModule (param*)>
+<!ATTLIST LoginModule class CDATA #REQUIRED>
+
+<!--
+    the Workspaces element specifies the workspaces root directory
+    (rootPath attribute) and the name of the default workspace
+    (defaultWorkspace attribute).
+
+    individual workspaces are configured through individual workspace.xml
+    files located in a subfolder each of the workspaces root directory.
+-->
+<!ELEMENT Workspaces EMPTY>
+<!ATTLIST Workspaces rootPath         CDATA #REQUIRED
+                     defaultWorkspace CDATA #REQUIRED>
+
+<!--
+    the Workspace element serves as a workspace configuration template;
+    it is used to create the initial workspace if there's no workspace yet
+    and for creating additional workspaces through the api
+-->
+<!ELEMENT Workspace (FileSystem,PersistenceManager,SearchIndex?)>
+<!ATTLIST Workspace name CDATA #REQUIRED>
+
+<!--
+    the PersistenceManager element configures the persistence manager
+    to be used for the workspace; the class attribute specifies the
+    FQN of the class implementing the PersistenceManager interface
+-->
+<!ELEMENT PersistenceManager (param*)>
+<!ATTLIST PersistenceManager class CDATA #REQUIRED>
+
+<!--
+    the SearchIndex element specifies the locaction of the search index
+    (used by the QueryHandler); the class attribute specifies the
+    FQN of the class implementing the QueryHandler interface.
+-->
+<!ELEMENT SearchIndex (param*,FileSystem?)>
+<!ATTLIST SearchIndex class CDATA #REQUIRED>
+
+<!--
+    the Versioning element configures the persistence manager
+    to be used for persisting version state
+-->
+<!ELEMENT Versioning (FileSystem, PersistenceManager)>
+<!ATTLIST Versioning rootPath CDATA #REQUIRED>
