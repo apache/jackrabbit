@@ -21,7 +21,11 @@ import org.apache.jackrabbit.core.cluster.NamespaceEventListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.name.AbstractNamespaceResolver;
+import org.apache.jackrabbit.name.CachingNameResolver;
 import org.apache.jackrabbit.name.NameCache;
+import org.apache.jackrabbit.name.NameException;
+import org.apache.jackrabbit.name.NameResolver;
+import org.apache.jackrabbit.name.ParsingNameResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.util.XMLChar;
 import org.slf4j.Logger;
@@ -83,7 +87,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
 
     private int lastIndex = 0;
 
-    private final CachingNamespaceResolver resolver;
+    private NameResolver resolver;
 
     private final FileSystem nsRegStore;
 
@@ -102,7 +106,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
             throws RepositoryException {
         super(true); // enable listener support
         this.nsRegStore = nsRegStore;
-        resolver = new CachingNamespaceResolver(this, 1000);
+        resolver = new ParsingNameResolver(this);
         load();
     }
 
@@ -383,7 +387,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         }
         return uri;
     }
-    
+
     //----------------------------------------------------< NamespaceRegistry >
     /**
      * {@inheritDoc}
@@ -524,23 +528,27 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
      * {@inheritDoc}
      */
     public QName retrieveName(String jcrName) {
-        // just delegate to internal cache
-        return resolver.retrieveName(jcrName);
+        try {
+            return resolver.getQName(jcrName);
+        } catch (NameException e) {
+            return null;
+        } catch (NamespaceException e) {
+            return null;
+        }
     }
 
     public String retrieveName(QName name) {
-        // just delegate to internal cache
-        return resolver.retrieveName(name);
+        try {
+            return resolver.getJCRName(name);
+        } catch (NamespaceException e) {
+            return null;
+        }
     }
 
     public void cacheName(String jcrName, QName name) {
-        // just delegate to internal cache
-        resolver.cacheName(jcrName, name);
     }
 
     public void evictAllNames() {
-        // just delegate to internal cache
-        resolver.evictAllNames();
     }
 
     //-----------------------------------------------< NamespaceEventListener >
