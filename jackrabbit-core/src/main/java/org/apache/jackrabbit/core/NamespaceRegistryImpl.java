@@ -106,7 +106,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
             throws RepositoryException {
         super(true); // enable listener support
         this.nsRegStore = nsRegStore;
-        resolver = new ParsingNameResolver(this);
+        resolver = new CachingNameResolver(new ParsingNameResolver(this));
         load();
     }
 
