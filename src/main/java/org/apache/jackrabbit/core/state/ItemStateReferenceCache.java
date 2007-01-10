@@ -46,7 +46,7 @@ import java.io.PrintStream;
 public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
 
     /** Logger instance */
-    private static Logger log = LoggerFactory.getLogger(LRUItemStateCache.class);
+    private static Logger log = LoggerFactory.getLogger(ItemStateReferenceCache.class);
 
     /**
      * primary cache storing weak references to <code>ItemState</code>

@@ -31,12 +31,12 @@ import java.util.Iterator;
 /**
  * An <code>ItemStateCache</code> implementation that internally uses a
  * {@link LRUMap} to maintain a cache of <code>ItemState</code> objects. the
- * cache uses a rough estimate of the memory consuption of the cache item
+ * cache uses a rough estimate of the memory consumption of the cached item
  * states for calculating the maximum number of entries.
  */
 public class MLRUItemStateCache implements ItemStateCache, Cache {
     /** Logger instance */
-    private static Logger log = LoggerFactory.getLogger(LRUItemStateCache.class);
+    private static Logger log = LoggerFactory.getLogger(MLRUItemStateCache.class);
 
     /** default maximum memory to use */
     public static final int DEFAULT_MAX_MEM = 4 * 1024 * 1024;
