@@ -322,7 +322,7 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
      * Return the instance id to be used for this node in the cluster.
      * @param id configured id, <code>null</code> to take random id
      */
-    private String getClusterNodeId(String id) throws ClusterException {
+    private String getClusterNodeId(String id) {
         if (id == null) {
             id = System.getProperty(SYSTEM_PROPERTY_NODE_ID);
             if (id == null) {
