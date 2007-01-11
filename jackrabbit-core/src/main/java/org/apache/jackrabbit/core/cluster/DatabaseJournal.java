@@ -38,7 +38,10 @@ import java.sql.DatabaseMetaData;
 import java.sql.Statement;
 
 /**
- * Database-based journal implementation. Stores records inside a database.
+ * Database-based journal implementation. Stores records inside a database table named
+ * <code>JOURNAL</code>, whereas the table <code>GLOBAL_REVISION</code> contains the
+ * highest available revision number. These tables are located inside the schema specified
+ * in <code>schemaObjectPrefix</code>.
  * <p/>
  * It is configured through the following properties:
  * <ul>
@@ -54,10 +57,7 @@ import java.sql.Statement;
  * defaults to an empty string</li>
  * <li><code>user</code>: username to specify when connecting</li>
  * <li><code>password</code>: password to specify when connecting</li>
- * <li><code>schema</code>: </li>
  * </ul>
- * This implementation maintains a database table, containing exactly one record with the
- * last available revision.
  */
 public class DatabaseJournal extends AbstractJournal {
 
@@ -233,7 +233,7 @@ public class DatabaseJournal extends AbstractJournal {
      */
     public void init(String id, RecordProcessor processor, NamespaceResolver resolver)
             throws JournalException {
-        
+
         super.init(id, processor, resolver);
 
         if (driver == null) {
