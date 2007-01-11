@@ -96,9 +96,9 @@ class FileRecordCursor {
         }
         if (recordLog == null) {
             recordLog = getRecordLog(nextRevision);
-            recordLog.seek(nextRevision);
         }
-        record = new FileRecord(nextRevision, recordLog.getInputStream());
+        record = recordLog.read();
+        record.setRevision(nextRevision);
         nextRevision = record.getNextRevision();
         return record;
     }
@@ -114,6 +114,7 @@ class FileRecordCursor {
         for (int i = 0; i < logFiles.length; i++) {
             FileRecordLog recordLog = new FileRecordLog(logFiles[i]);
             if (recordLog.contains(revision)) {
+                recordLog.seek(revision);
                 return recordLog;
             }
         }
@@ -123,10 +124,8 @@ class FileRecordCursor {
 
     /**
      * Close this cursor, releasing its resources.
-     *
-     * @throws IOException if an I/O error occurs
      */
-    public void close() throws IOException {
+    public void close() {
         if (recordLog != null) {
             recordLog.close();
         }
