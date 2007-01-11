@@ -62,7 +62,7 @@
 
   <build>
     <plugins>
-      <!-- User Java 1.4 everywhere -->
+      <!-- Use Java 1.4 everywhere -->
       <plugin>
         <inherited>true</inherited>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -71,10 +71,22 @@
           <source>1.4</source>
         </configuration>
       </plugin>
+      <!-- JCR-704: Enable maven-source-plugin -->
+      <plugin>
+        <inherited>true</inherited>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <!-- Interoperate with Maven 1 -->
       <plugin>
         <inherited>true</inherited>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-one-plugin</artifactId>
         <executions>
           <execution>
