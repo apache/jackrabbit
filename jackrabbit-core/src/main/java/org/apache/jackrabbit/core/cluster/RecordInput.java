@@ -38,9 +38,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Allows reading data from a <code>FileRecord</code>.
+ * Allows reading data from a <code>DataInputStream</code>.
  */
-class FileRecordInput {
+class RecordInput {
 
     /**
      * Underlying input stream.
@@ -68,7 +68,7 @@ class FileRecordInput {
      * @param in       underlying input stream
      * @param resolver namespace resolver
      */
-    public FileRecordInput(DataInputStream in, NamespaceResolver resolver) {
+    public RecordInput(DataInputStream in, NamespaceResolver resolver) {
         this.in = in;
         this.resolver = resolver;
     }
@@ -193,14 +193,14 @@ class FileRecordInput {
         checkOpen();
 
         byte uuidType = readByte();
-        if (uuidType == FileRecord.UUID_INDEX) {
+        if (uuidType == Record.UUID_INDEX) {
             int index = readInt();
             if (index == -1) {
                 return null;
             } else {
                 return (NodeId) uuidIndex.get(index);
             }
-        } else if (uuidType == FileRecord.UUID_LITERAL) {
+        } else if (uuidType == Record.UUID_LITERAL) {
             byte[] b = new byte[Constants.UUID_BYTE_LENGTH];
             in.readFully(b);
             NodeId nodeId = new NodeId(new UUID(b));
