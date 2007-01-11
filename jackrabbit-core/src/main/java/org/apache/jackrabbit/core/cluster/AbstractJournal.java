@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.io.FileOutputStream;
 import java.io.DataOutputStream;
 import java.util.Iterator;

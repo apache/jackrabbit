@@ -18,10 +18,6 @@ package org.apache.jackrabbit.core.cluster;
 
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.observation.EventState;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
-
-import java.util.Set;
 import java.util.Collection;
 
 /**
