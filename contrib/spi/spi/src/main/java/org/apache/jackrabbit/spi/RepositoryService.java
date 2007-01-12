@@ -583,7 +583,7 @@ public interface RepositoryService {
             throws UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
-     * Retrieves the external events that occurred since the last call to this
+     * Retrieves the events that occurred since the last call to this
      * method. When this method returns without an exception the bundle
      * identfier in <code>sessionInfo</code> will be updated to reference the
      * most recent event bundle returned by this call. In case an empty array is
@@ -598,14 +598,14 @@ public interface RepositoryService {
      * server.<p/>
      * Note, that an SPI implementation may support observation even if
      * the corresponding {@link javax.jcr.Repository#OPTION_OBSERVATION_SUPPORTED repository descriptor}
-     * does not return 'true'.
+     * does return 'false'.
      *
      * @param sessionInfo the session info.
      * @param timeout     a timeout in milliseconds to wait at most for an
-     *                    external event bundle. If <code>timeout</code> is up
+     *                    event bundle. If <code>timeout</code> is up
      *                    and no event occurred meanwhile an empty array is
      *                    returned.
-     * @param filters     the filters that are applied to the external events as
+     * @param filters     the filters that are applied to the events as
      *                    they occurred on the repository. An event is included
      *                    in an event bundle if it is {@link EventFilter#accept(Event, boolean)
      *                    accept}ed by at least one of the supplied filters. If
