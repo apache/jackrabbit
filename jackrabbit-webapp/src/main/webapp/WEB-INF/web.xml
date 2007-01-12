@@ -50,6 +50,17 @@
         <servlet-class>org.apache.jackrabbit.j2ee.RepositoryStartupServlet</servlet-class>
 
         <init-param>
+            <param-name>bootstrap-config</param-name>
+            <param-value>jackrabbit/bootstrap.properties</param-value>
+            <description>
+                Property file that hold the same initialization properties than
+                the init-params below. If a parameter is specified in both
+                places the one in the bootstrap-config wins.
+            </description>
+        </init-param>
+
+        <!--
+        <init-param>
             <param-name>repository-config</param-name>
             <param-value>/WEB-INF/repository/repository.xml</param-value>
             <description>the repository config location</description>
@@ -66,6 +77,7 @@
             <param-value>jackrabbit.repository</param-value>
             <description>Repository Name under which the repository is registered via JNDI/RMI</description>
         </init-param>
+        -->
 
         <!--
             the following 3 parameters deal with registering the repository to
@@ -103,6 +115,7 @@
             JNDI environment variables for creating the initial context
             (all init parameters starting with java.naming.* will be added to the initial context environment).
         -->
+        <!--
         <init-param>
             <param-name>java.naming.provider.url</param-name>
             <param-value>http://www.apache.org/jackrabbit</param-value>
@@ -111,7 +124,7 @@
             <param-name>java.naming.factory.initial</param-name>
             <param-value>org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory</param-value>
         </init-param>
-
+        -->
         <load-on-startup>2</load-on-startup>
     </servlet>
 
@@ -128,15 +141,26 @@
         <servlet-class>org.apache.jackrabbit.j2ee.RepositoryAccessServlet</servlet-class>
 
         <init-param>
+            <param-name>bootstrap-config</param-name>
+            <param-value>jackrabbit/bootstrap.properties</param-value>
+            <description>
+                Property file that hold the same initialization properties than
+                the init-params below. If a parameter is specified in both
+                places the one in the bootstrap-config wins.
+            </description>
+        </init-param>
+        <!--
+        <init-param>
             <param-name>repository-name</param-name>
             <param-value>jackrabbit.repository</param-value>
             <description>Repository Name that is used to retrieve it via JNDI</description>
         </init-param>
-
+        -->
         <!--
             JNDI environment variables for creating the initial context
             (all init parameters starting with java.naming.* will be added to the initial context environment).
         -->
+        <!--
         <init-param>
             <param-name>java.naming.provider.url</param-name>
             <param-value>http://www.apache.org/jackrabbit</param-value>
@@ -145,7 +169,7 @@
             <param-name>java.naming.factory.initial</param-name>
             <param-value>org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory</param-value>
         </init-param>
-
+        -->
         <!--
             RMI url, if RMI remoting is needed
         -->
@@ -277,6 +301,10 @@
     <!-- S E R V L E T   M A P P I N G                                          -->
     <!-- ====================================================================== -->
     <servlet-mapping>
+        <servlet-name>RepositoryStartup</servlet-name>
+        <url-pattern>/admin/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>Webdav</servlet-name>
         <url-pattern>/repository/*</url-pattern>
     </servlet-mapping>
@@ -284,4 +312,11 @@
         <servlet-name>JCRWebdavServer</servlet-name>
         <url-pattern>/server/*</url-pattern>
     </servlet-mapping>
+
+    <!-- ====================================================================== -->
+    <!-- W E L C O M E   F I L E S                                              -->
+    <!-- ====================================================================== -->
+    <welcome-file-list>
+      <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
 </web-app>

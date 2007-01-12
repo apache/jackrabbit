@@ -23,7 +23,17 @@
 <title>Jackrabbit JCR-Server</title>
 </head>
 <body style="font-family:monospace">
-<h1>JCR-Server</h1>
+<%
+    Repository rep;
+    try {
+        rep = RepositoryAccessServlet.getRepository(pageContext.getServletContext());
+    } catch (Throwable e) {
+        %>Error while accessing the repository: <font color="red"><%= e.getMessage() %></font><br><%
+        %>Check the configuration or use the <a href="admin/">easy setup</a> wizard.<%
+        return;
+    }
+
+%><h1>JCR-Server</h1>
 <h3>JCR-Server provides 2 views</h3><p/>
 <ol>
     <li>
@@ -69,9 +79,6 @@
     </li>
 </ol>
 <p/>
-<%
-    Repository rep = RepositoryAccessServlet.getRepository(pageContext.getServletContext());
-
-%><hr size="1"><em>Powered by <a href="<%= rep.getDescriptor(Repository.REP_VENDOR_URL_DESC) %>"><%= rep.getDescriptor(Repository.REP_NAME_DESC)%></a> version <%= rep.getDescriptor(Repository.REP_VERSION_DESC) %>.</em>
+<hr size="1"><em>Powered by <a href="<%= rep.getDescriptor(Repository.REP_VENDOR_URL_DESC) %>"><%= rep.getDescriptor(Repository.REP_NAME_DESC)%></a> version <%= rep.getDescriptor(Repository.REP_VERSION_DESC) %>.</em>
 </body>
 </html>

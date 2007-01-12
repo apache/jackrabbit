@@ -20,21 +20,26 @@ import org.apache.jackrabbit.rmi.client.ClientRepositoryFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.util.Properties;
+
 import javax.jcr.Repository;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
-import java.net.MalformedURLException;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
-import java.util.Enumeration;
-import java.util.Properties;
 
 /**
  * This Class implements a servlet that is used as unified mechanism to retrieve
- * a jcr repository either through JNID, RMI or JCRWebdavServer.
+ * a jcr repository either through JNDI or RMI.
  */
 public class RepositoryAccessServlet extends HttpServlet {
 
@@ -44,92 +49,147 @@ public class RepositoryAccessServlet extends HttpServlet {
     private static final Logger log = LoggerFactory.getLogger(RepositoryAccessServlet.class);
 
     /**
-     * the 'repository-name' init parameter
+     * initial param name for the bootstrap config location
      */
-    public final static String INIT_PARAM_REPOSITORY_NAME = "repository-name";
+    public final static String INIT_PARAM_BOOTSTRAP_CONFIG = "bootstrap-config";
 
     /**
-     * the 'rmi-uri' init parameter
+     * Context parameter name for 'this' instance.
      */
-    public final static String INIT_PARAM_RMI_URI = "rmi-uri";
+    private final static String CTX_PARAM_THIS = "repository.access.servlet";
 
     /**
-     * the 'missing-auth-mapping' init parameter
+     * the bootstrap config
      */
-    //public final static String INIT_PARAM_MISSING_AUTH_MAPPING = "missing-auth-mapping";
-
-    private static final String CTX_ATTR_REPOSITORY = "jcr.repository";
-
-    private static final String CTX_ATTR_REPOSITORY_NAME = "jcr.repository.name";
-
-    private static final String CTX_ATTR_REPOSITORY_RMI_URI = "jcr.repository.rmiURI";
-
-    private static final String CTX_ATTR_REPOSITORY_JNDI_CONTEXT = "jcr.repository.jndiContext";
+    private BootstrapConfig config;
 
     /**
-     * Initializes this servlet
+     * the initialized initial context
+     */
+    private InitialContext jndiContext;
+
+    /**
+     * the repository
+     */
+    private Repository repository;
+
+    /**
+     * Initializes the servlet.<br>
+     * Please note that only one repository startup servlet may exist per
+     * webapp. it registers itself as context attribute and acts as singleton.
      *
-     * @throws javax.servlet.ServletException
+     * @throws ServletException if a same servlet is already registered or of
+     * another initialization error occurs.
      */
     public void init() throws ServletException {
-        log.info("RepositoryAccessServlet initializing...");
-        // fetching the name
-        String repositoryName = getServletConfig().getInitParameter(INIT_PARAM_REPOSITORY_NAME);
-        if (repositoryName == null) {
-            repositoryName = "default";
+        // check if servlet is defined twice
+        if (getServletContext().getAttribute(CTX_PARAM_THIS) !=  null) {
+            throw new ServletException("Only one repository access servlet allowed per web-app.");
         }
-        getServletContext().setAttribute(CTX_ATTR_REPOSITORY_NAME, repositoryName);
-
-        // fetching the rmiuri
-        getServletContext().setAttribute(CTX_ATTR_REPOSITORY_RMI_URI, getRMIUri());
-
-        // setup initial context
-        getServletContext().setAttribute(CTX_ATTR_REPOSITORY_JNDI_CONTEXT, getInitialContext());
-
+        getServletContext().setAttribute(CTX_PARAM_THIS, this);
         log.info("RepositoryAccessServlet initialized.");
     }
 
-    private InitialContext getInitialContext() {
-        // retrieve JNDI Context environment
-        try {
-            Properties env = new Properties();
-            Enumeration names = getServletConfig().getInitParameterNames();
-            while (names.hasMoreElements()) {
-                String name = (String) names.nextElement();
-                if (name.startsWith("java.naming.")) {
-                    String initParam = getServletConfig().getInitParameter(name);
-                    if (initParam.equals("")) {
-                        log.info("  ignoring empty JNDI init param: " + name);
-                    } else {
-                        env.put(name, initParam);
-                        log.info("  adding property to JNDI environment: " + name + "=" + initParam);
-                    }
-                }
-            }
-            return new InitialContext(env);
-        } catch (NamingException e) {
-            log.error("Create initial context: " + e.toString());
-            return null;
-        }
-    }
-
-    private String getRMIUri() {
-        // setup repository name
-        return getServletConfig().getInitParameter(INIT_PARAM_RMI_URI);
+    /**
+     * Returns the instance of this servlet
+     * @param ctx the servlet context
+     * @return this servlet
+     */
+    private static RepositoryAccessServlet getInstance(ServletContext ctx) {
+        return (RepositoryAccessServlet) ctx.getAttribute(CTX_PARAM_THIS);
     }
 
     /**
-     * tries to retrieve the repository using RMI
+     * Returns the bootstrap config
+     * @return the bootstrap config
+     * @throws ServletException if the config is not valid
      */
-    private static Repository getRepositoryByJNDI(ServletContext ctx) {
+    private BootstrapConfig getConfig() throws ServletException {
+        if (config == null) {
+            // check if there is a loadable bootstrap config
+            Properties bootstrapProps = new Properties();
+            String bstrp = getServletConfig().getInitParameter(INIT_PARAM_BOOTSTRAP_CONFIG);
+            if (bstrp != null) {
+                // check if it's a web-resource
+                InputStream in = getServletContext().getResourceAsStream(bstrp);
+                if (in == null) {
+                    // check if it's a file
+                    File file = new File(bstrp);
+                    if (file.canRead()) {
+                        try {
+                            in = new FileInputStream(file);
+                        } catch (FileNotFoundException e) {
+                            log.error("Error while opening bootstrap properties: {}", e.toString());
+                            throw new ServletException("Error while opening bootstrap properties: " + e.toString());
+                        }
+                    }
+                }
+                if (in != null) {
+                    try {
+                        bootstrapProps.load(in);
+                    } catch (IOException e) {
+                        log.error("Error while loading bootstrap properties: {}", e.toString());
+                        throw new ServletException("Error while loading bootstrap properties: " + e.toString());
+                    } finally {
+                        try {
+                            in.close();
+                        } catch (IOException e) {
+                            // ignore
+                        }
+                    }
+                }
+            }
+
+            // read bootstrap config
+            BootstrapConfig tmpConfig = new BootstrapConfig();
+            tmpConfig.init(getServletConfig());
+            tmpConfig.init(bootstrapProps);
+            tmpConfig.validate();
+            if (!tmpConfig.isValid()) {
+                log.error("Repository acesss configuration is not valid.");
+                throw new ServletException("Repository access configuration is not valid.");
+            }
+            tmpConfig.logInfos();
+            config = tmpConfig;
+        }
+        return config;
+    }
+
+    /**
+     * Returns the initial jndi context or <code>null</code> if the jndi access
+     * is not configured or erroous.
+     * @return the initial context or <code>null</code>
+     */
+    private InitialContext getInitialContext() {
+        if (jndiContext == null && config.getJndiConfig().enabled()) {
+            // retrieve JNDI Context environment
+            try {
+                jndiContext = new InitialContext(config.getJndiConfig().getJndiEnv());
+            } catch (NamingException e) {
+                log.error("Create initial context: " + e.toString());
+            }
+        }
+        return jndiContext;
+    }
+
+    /**
+     * Checks if the repository is available via JNDI and returns it.
+     * @return the repository or <code>null</code>
+     * @throws ServletException if this servlet is not properly configured.
+     */
+    private Repository getRepositoryByJNDI() throws ServletException {
+        BootstrapConfig config = getConfig();
+        if (!config.getJndiConfig().isValid() || !config.getJndiConfig().enabled()) {
+            return null;
+        }
         // acquire via JNDI
-        String repositoryName = (String) ctx.getAttribute(CTX_ATTR_REPOSITORY_NAME);
-        InitialContext jndiContext = (InitialContext) ctx.getAttribute(CTX_ATTR_REPOSITORY_JNDI_CONTEXT);
-        if (jndiContext == null) {
+        String repositoryName = config.getRepositoryName();
+        InitialContext ctx = getInitialContext();
+        if (ctx == null) {
             return null;
         }
         try {
-            Repository r = (Repository) jndiContext.lookup(repositoryName);
+            Repository r = (Repository) ctx.lookup(repositoryName);
             log.info("Acquired repository via JNDI.");
             return r;
         } catch (NamingException e) {
@@ -139,18 +199,25 @@ public class RepositoryAccessServlet extends HttpServlet {
     }
 
     /**
-     * tries to retrieve the repository using RMI
+     * Checks if the repository is available via RMI and returns it.
+     * @return the repository or <code>null</code>
+     * @throws ServletException if this servlet is not properly configured.
      */
-    private static Repository getRepositoryByRMI(ServletContext ctx) {
+    private Repository getRepositoryByRMI() throws ServletException {
+        BootstrapConfig config = getConfig();
+        if (!config.getRmiConfig().isValid() || !config.getRmiConfig().enabled()) {
+            return null;
+        }
+
         // acquire via RMI
-        String rmiURI = (String) ctx.getAttribute(CTX_ATTR_REPOSITORY_RMI_URI);
+        String rmiURI = config.getRmiConfig().getRmiUri();
         if (rmiURI == null) {
             return null;
         }
         log.info("  trying to retrieve repository using rmi. uri=" + rmiURI);
         ClientFactoryDelegater cfd;
         try {
-            Class clazz = Class.forName("org.apache.jackrabbit.j2ee.RMIClientFactoryDelegater");
+            Class clazz = Class.forName(getServerFactoryDelegaterClass());
             cfd = (ClientFactoryDelegater) clazz.newInstance();
         } catch (NoClassDefFoundError e) {
             log.error("Unable to locate RMI ClientRepositoryFactory. jcr-rmi.jar missing? " + e.toString());
@@ -171,54 +238,75 @@ public class RepositoryAccessServlet extends HttpServlet {
     }
 
     /**
-     * Returns the JSR170 repository
+     * Return the fully qualified name of the class providing the client
+     * repository. The class whose name is returned must implement the
+     * {@link ClientFactoryDelegater} interface.
      *
-     * @return a jsr170 repository
+     * @return the qfn of the factory class.
+     */
+    protected String getServerFactoryDelegaterClass() {
+        return getClass().getName() + "$RMIClientFactoryDelegater";
+    }
+
+    /**
+     * Returns the JCR repository
+     *
+     * @return a JCR repository
+     * @throws IllegalStateException if the repository is not available in the context.
+     */
+    public Repository getRepository() {
+        try {
+            if (repository == null) {
+                // try to retrieve via jndi
+                repository = getRepositoryByJNDI();
+            }
+            if (repository == null) {
+                // try to get via rmi
+                repository = getRepositoryByRMI();
+            }
+            if (repository == null) {
+                throw new ServletException("N/A");
+            }
+            return repository;
+        } catch (ServletException e) {
+            log.error("The repository is not available. Check config of 'RepositoryAccessServlet'.");
+            throw new IllegalStateException("The repository is not available.");
+        }
+    }
+
+    /**
+     * Returns the JCR repository
+     *
+     * @param ctx the servlet context
+     * @return a JCR repository
      * @throws IllegalStateException if the repository is not available in the context.
      */
     public static Repository getRepository(ServletContext ctx) {
-        Repository repository = (Repository) ctx.getAttribute(CTX_ATTR_REPOSITORY);
-        if (repository != null) {
-            return repository;
-        } else {
-            repository = getRepositoryByRMI(ctx);
-        }
-        // try to retrieve via jndi
-        if (repository == null) {
-            repository = getRepositoryByJNDI(ctx);
-        }
-        // error
-        if (repository == null) {
-            log.error("The repository is not available. Check config of 'RepositoryAccessServlet'.");
-            throw new IllegalStateException("The repository is not available.");
-        } else {
-            ctx.setAttribute(CTX_ATTR_REPOSITORY, repository);
-            log.info(repository.getDescriptor(Repository.REP_NAME_DESC) + " v" + repository.getDescriptor(Repository.REP_VERSION_DESC));
-            return repository;
+        return getInstance(ctx).getRepository();
+    }
+
+    /**
+     * optional class for RMI, will only be used, if RMI client is present
+     */
+    protected static abstract class ClientFactoryDelegater {
+
+        public abstract Repository getRepository(String uri)
+                throws RemoteException, MalformedURLException, NotBoundException;
+    }
+
+    /**
+     * optional class for RMI, will only be used, if RMI server is present
+     */
+    protected static class RMIClientFactoryDelegater extends ClientFactoryDelegater {
+
+        // only used to enforce linking upon Class.forName()
+        static String FactoryClassName = ClientRepositoryFactory.class.getName();
+
+        public Repository getRepository(String uri)
+                throws MalformedURLException, NotBoundException, RemoteException {
+            System.setProperty("java.rmi.server.useCodebaseOnly", "true");
+            return new ClientRepositoryFactory().getRepository(uri);
         }
     }
 }
 
-/**
- * optional class for RMI, will only be used, if RMI client is present
- */
-abstract class ClientFactoryDelegater {
-
-    public abstract Repository getRepository(String uri)
-            throws RemoteException, MalformedURLException, NotBoundException;
-}
-
-/**
- * optional class for RMI, will only be used, if RMI server is present
- */
-class RMIClientFactoryDelegater extends ClientFactoryDelegater {
-
-    // only used to enforce linking upon Class.forName()
-    static String FactoryClassName = ClientRepositoryFactory.class.getName();
-
-    public Repository getRepository(String uri)
-            throws MalformedURLException, NotBoundException, RemoteException {
-        System.setProperty("java.rmi.server.useCodebaseOnly", "true");
-        return new ClientRepositoryFactory().getRepository(uri);
-    }
-}

@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.j2ee;
 
+import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.rmi.server.ServerAdapterFactory;
@@ -30,8 +31,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.Naming;
@@ -40,22 +39,24 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RMIServerSocketFactory;
-import java.util.Enumeration;
 import java.util.Properties;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * The RepositoryStartupServlet starts a jackrabbit repository and registers it
  * to the JNDI environment and optional to the RMI registry.
  * <p id="registerAlgo">
  * <b>Registration with RMI</b>
- * <p>
+ * <p/>
  * Upon successfull creation of the repository in the {@link #init()} method,
  * the repository is registered with an RMI registry if the web application is
  * so configured. To register with RMI, the following web application
@@ -66,36 +67,36 @@ import javax.servlet.http.HttpServlet;
  * repository is to be bound in the registry, and <code>rmi-uri</code>
  * designating an RMI URI complete with host, optional port and name to which
  * the object is bound.
- * <p>
+ * <p/>
  * If the <code>rmi-uri</code> parameter is configured with a non-empty value,
  * the <code>rmi-port</code> and <code>rmi-host</code> parameters are ignored.
  * The <code>repository-name</code> parameter is only considered if a non-empty
  * <code>rmi-uri</code> parameter is configured if the latter does not contain
  * a name to which to bind the repository.
- * <p>
+ * <p/>
  * This is the algorithm used to find out the host, port and name for RMI
  * registration:
  * <ol>
  * <li>If neither a <code>rmi-uri</code> nor a <code>rmi-host</code> nor a
- *      <code>rmi-port</code> parameter is configured, the repository is not
- *      registered with any RMI registry.
+ * <code>rmi-port</code> parameter is configured, the repository is not
+ * registered with any RMI registry.
  * <li>If a non-empty <code>rmi-uri</code> parameter is configured extract the
- *      host name (or IP address), port number and name to bind to from the
- *      URI. If the URI is not valid, host defaults to <code>0.0.0.0</code>
- *      meaning all interfaces on the local host, port defaults to the RMI
- *      default port (<code>1099</code>) and the name defaults to the value
- *      of the <code>repository-name</code> parameter.
+ * host name (or IP address), port number and name to bind to from the
+ * URI. If the URI is not valid, host defaults to <code>0.0.0.0</code>
+ * meaning all interfaces on the local host, port defaults to the RMI
+ * default port (<code>1099</code>) and the name defaults to the value
+ * of the <code>repository-name</code> parameter.
  * <li>If a non-empty <code>rmi-uri</code> is not configured, the host is taken
- *      from the <code>rmi-host</code> parameter, the port from the
- *      <code>rmi-port</code> parameter and the name to bind the repository to
- *      from the <code>repository-name</code> parameter. If the
- *      <code>rmi-host</code> parameter is empty or not configured, the host
- *      defaults to <code>0.0.0.0</code> meaning all interfaces on the local
- *      host. If the <code>rmi-port</code> parameter is empty, not configured,
- *      zero or a negative value, the default port for the RMI registry
- *      (<code>1099</code>) is used.
+ * from the <code>rmi-host</code> parameter, the port from the
+ * <code>rmi-port</code> parameter and the name to bind the repository to
+ * from the <code>repository-name</code> parameter. If the
+ * <code>rmi-host</code> parameter is empty or not configured, the host
+ * defaults to <code>0.0.0.0</code> meaning all interfaces on the local
+ * host. If the <code>rmi-port</code> parameter is empty, not configured,
+ * zero or a negative value, the default port for the RMI registry
+ * (<code>1099</code>) is used.
  * </ol>
- * <p>
+ * <p/>
  * After finding the host and port of the registry, the RMI registry itself
  * is acquired. It is assumed, that host and port primarily designate an RMI
  * registry, which should be active on the local host but has not been started
@@ -105,69 +106,67 @@ import javax.servlet.http.HttpServlet;
  * method is called to get a remote instance of the registry. Note, that
  * <code>getRegistry</code> does not create an actual registry on the given
  * host/port nor does it check, whether an RMI registry is active.
- * <p>
+ * <p/>
  * When the registry has been retrieved, either by creation or by just creating
  * a remote instance, the repository is bound to the configured name in the
  * registry.
- * <p>
+ * <p/>
  * Possible causes for registration failures include:
  * <ul>
  * <li>The web application is not configured to register with an RMI registry at
- *      all.
+ * all.
  * <li>The registry is expected to be running on a remote host but does not.
  * <li>The registry is expected to be running on the local host but cannot be
- *      accessed. Reasons include another application which does not act as an
- *      RMI registry is running on the configured port and thus blocks creation
- *      of a new RMI registry.
+ * accessed. Reasons include another application which does not act as an
+ * RMI registry is running on the configured port and thus blocks creation
+ * of a new RMI registry.
  * <li>An object may already be bound to the same name as is configured to be
- *      used for the repository.
+ * used for the repository.
  * </ul>
+ * <p/>
+ * <b>Note:</b> if a <code>bootstrap-config</code> init parameter is specified the
+ * servlet tries to read the respective resource, either as context resource or
+ * as file. The properties specified in this file override the init params
+ * specified in the <code>web.xml</code>.
+ * <p/>
+ * <p/>
+ * <b>Setup Wizard Functionality</b><br>
+ * When using the first time, the configuraition can miss the relevant
+ * repository parameters in the web.xml. if so, it must contain a
+ * <code>bootstrap-config</code> parameter that referrs to a propertiy file.
+ * This file must exsit for proper working. If not, the repository is not
+ * started.<br>
+ * If the servlet is not configured correctly and accessed via http, it will
+ * provide a simple wizard for the first time configuration. It propmpts for
+ * a new (or existing) repository home and will copy the templates of the
+ * repository.xml and bootstrap.properties to the respective location.
  */
 public class RepositoryStartupServlet extends HttpServlet {
 
-    /** the default logger */
+    /**
+     * the default logger
+     */
     private static final Logger log = LoggerFactory.getLogger(RepositoryStartupServlet.class);
 
-    /** initial param name for the repository config location */
-    public final static String INIT_PARAM_REPOSITORY_CONFIG = "repository-config";
-
-    /** initial param name for the repository home directory */
-    public final static String INIT_PARAM_REPOSITORY_HOME = "repository-home";
-
-    /** initial param name for the repository name */
-    public final static String INIT_PARAM_REPOSITORY_NAME = "repository-name";
-
-    /** initial param name for the rmi port */
-    public final static String INIT_PARAM_RMI_PORT = "rmi-port";
-
-    /** initial param name for the rmi host */
-    public final static String INIT_PARAM_RMI_HOST = "rmi-host";
-
-    /** initial param name for the rmi uri */
-    public final static String INIT_PARAM_RMI_URI = "rmi-uri";
-
-    /** initial param name for the log4j config properties */
-    public final static String INIT_PARAM_LOG4J_CONFIG = "log4j-config";
-
-    /** the registered repository */
-    private Repository repository;
-
-    /** the name of the repository as configured */
-    private String repositoryName;
-
-    /** the jndi context, created base on configuration */
-    private InitialContext jndiContext;
+    /**
+     * the context attribute name foe 'this' instance.
+     */
+    private final static String CTX_PARAM_THIS = "repository.startup.servet";
 
     /**
-     * The rmi uri, in the form of  '//${rmi-host}:${rmi-port}/${repository-name}'
-     * This field is only set to a non-<code>null</code> value, if registration
-     * of the repository to an RMI registry succeeded in the
-     * {@link #registerRMI()} method.
-     *
-     * @see #registerRMI()
-     * @see #unregisterRMI()
+     * initial param name for the bootstrap config location
      */
-    private String rmiURI;
+    public final static String INIT_PARAM_BOOTSTRAP_CONFIG = "bootstrap-config";
+
+    /**
+     * the registered repository
+     */
+    private Repository repository;
+
+    /**
+     * the jndi context; created based on configuration
+     */
+    private InitialContext jndiContext;
 
     /**
      * Keeps a strong reference to the server side RMI repository instance to
@@ -183,23 +182,95 @@ public class RepositoryStartupServlet extends HttpServlet {
     private Remote rmiRepository;
 
     /**
-     * Initializes the servlet
-     * @throws ServletException
+     * the file to the bootstrap config
+     */
+    private File bootstrapConfigFile;
+
+    /**
+     * The bootstrap configuration
+     */
+    private BootstrapConfig config;
+
+    /**
+     * Initializes the servlet.<br>
+     * Please note that only one repository startup servlet may exist per
+     * webapp. it registers itself as context attribute and acts as singleton.
+     *
+     * @throws ServletException if a same servlet is already registered or of
+     * another initialization error occurs.
      */
     public void init() throws ServletException {
         super.init();
+        // check if servlet is defined twice
+        if (getServletContext().getAttribute(CTX_PARAM_THIS) !=  null) {
+            throw new ServletException("Only one repository startup servlet allowed per web-app.");
+        }
+        getServletContext().setAttribute(CTX_PARAM_THIS, this);
+        startup();
+    }
+
+    /**
+     * Returns an instance of this servlet. Please note, that only 1
+     * repository startup servlet can exist per webapp.
+     *
+     * @param context the servlet context
+     * @return this servlet
+     */
+    public static RepositoryStartupServlet getInstance(ServletContext context) {
+        return (RepositoryStartupServlet) context.getAttribute(CTX_PARAM_THIS);
+    }
+
+    /**
+     * Configures and starts the repository. It registers it then to the
+     * RMI registry and bind is to the JNDI context if so configured.
+     * @throws ServletException if an error occurs.
+     */
+    public void startup() throws ServletException {
+        if (repository != null) {
+            log.error("Startup: Repository already running.");
+            throw new ServletException("Repository already running.");
+        }
         log.info("RepositoryStartupServlet initializing...");
-        initRepository();
         try {
-        registerRMI();
+            configure();
+            initRepository();
+            registerRMI();
             registerJNDI();
+            log.info("RepositoryStartupServlet initialized.");
         } catch (ServletException e) {
             // shutdown repository
             shutdownRepository();
-            log.error("RepositoryStartupServlet initializing failed: "+ e, e);
-            throw e;
+            log.error("RepositoryStartupServlet initializing failed: " + e, e);
         }
-        log.info("RepositoryStartupServlet initialized.");
+    }
+
+    /**
+     * Does a shutdown of the repository and deregisters it from the RMI
+     * registry and unbinds if from the JNDI context if so configured.
+     */
+    public void shutdown() {
+        if (repository == null) {
+            log.info("Shutdown: Repository already stopped.");
+        } else {
+            log.info("RepositoryStartupServlet shutting down...");
+            shutdownRepository();
+            unregisterRMI();
+            unregisterJNDI();
+            log.info("RepositoryStartupServlet shut down.");
+        }
+    }
+
+    /**
+     * Restarts the repository.
+     * @throws ServletException if an error occurs.
+     * @see #shutdown()
+     * @see #startup()
+     */
+    public void restart() throws ServletException {
+        if (repository != null) {
+            shutdown();
+        }
+        startup();
     }
 
     /**
@@ -207,90 +278,139 @@ public class RepositoryStartupServlet extends HttpServlet {
      */
     public void destroy() {
         super.destroy();
-        if (log == null) {
-            log("RepositoryStartupServlet shutting down...");
-        } else {
-            log.info("RepositoryStartupServlet shutting down...");
-        }
-        shutdownRepository();
-        unregisterRMI();
-        unregisterJNDI();
-        if (log == null) {
-            log("RepositoryStartupServlet shut down.");
-        } else {
-            log.info("RepositoryStartupServlet shut down.");
-        }
+        shutdown();
     }
 
     /**
-     * Creates a new Repository based on configuration
-     * @throws ServletException
+     * Returns the started repository or <code>null</code> if not started
+     * yet.
+     * @return the JCR repository
      */
-    private void initRepository() throws ServletException {
-        // setup home directory
-        String repHome = getServletConfig().getInitParameter(INIT_PARAM_REPOSITORY_HOME);
-        if (repHome==null) {
-            log.error(INIT_PARAM_REPOSITORY_HOME + " missing.");
-            throw new ServletException(INIT_PARAM_REPOSITORY_HOME + " missing.");
-        }
-        File repositoryHome;
-        try {
-            repositoryHome = new File(repHome).getCanonicalFile();
-        } catch (IOException e) {
-            log.error(INIT_PARAM_REPOSITORY_HOME + " invalid." + e.toString());
-            throw new ServletException(INIT_PARAM_REPOSITORY_HOME + " invalid." + e.toString());
-        }
-        log.info("  repository-home = " + repositoryHome.getPath());
+    public Repository getRepository() {
+        return repository;
+    }
 
-        // get repository config
-        String repConfig = getServletConfig().getInitParameter(INIT_PARAM_REPOSITORY_CONFIG);
-        if (repConfig==null) {
-            log.error(INIT_PARAM_REPOSITORY_CONFIG + " missing.");
-            throw new ServletException(INIT_PARAM_REPOSITORY_CONFIG + " missing.");
-        }
-        log.info("  repository-config = " + repConfig);
-
-        InputStream in = getServletContext().getResourceAsStream(repConfig);
-        if (in==null) {
-            try {
-                in = new FileInputStream(new File(repositoryHome, repConfig));
-            } catch (FileNotFoundException e) {
-                log.error(INIT_PARAM_REPOSITORY_CONFIG + " invalid." + e.toString());
-                throw new ServletException(INIT_PARAM_REPOSITORY_CONFIG + " invalid." + e.toString());
+    /**
+     * Reads the configuration and initializes the {@link #config} field if
+     * successful.
+     * @throws ServletException if an error occurs.
+     */
+    private void configure() throws ServletException {
+        // check if there is a loadable bootstrap config
+        Properties bootstrapProps = new Properties();
+        String bstrp = getServletConfig().getInitParameter(INIT_PARAM_BOOTSTRAP_CONFIG);
+        if (bstrp != null) {
+            // check if it's a web-resource
+            InputStream in = getServletContext().getResourceAsStream(bstrp);
+            if (in == null) {
+                // check if it's a file
+                bootstrapConfigFile = new File(bstrp);
+                if (bootstrapConfigFile.canRead()) {
+                    try {
+                        in = new FileInputStream(bootstrapConfigFile);
+                    } catch (FileNotFoundException e) {
+                        log.error("Error while opening bootstrap properties: {}", e.toString());
+                        throw new ServletException("Error while opening bootstrap properties: " + e.toString());
+                    }
+                }
+            }
+            if (in != null) {
+                try {
+                    bootstrapProps.load(in);
+                } catch (IOException e) {
+                    log.error("Error while loading bootstrap properties: {}", e.toString());
+                    throw new ServletException("Error while loading bootstrap properties: " + e.toString());
+                } finally {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        // ignore
+                    }
+                }
             }
         }
 
-        // get repository name
-        repositoryName = getServletConfig().getInitParameter(INIT_PARAM_REPOSITORY_NAME);
-        if (repositoryName==null) {
-            repositoryName="default";
+        // read bootstrap config
+        config = new BootstrapConfig();
+        config.init(getServletConfig());
+        config.init(bootstrapProps);
+        config.validate();
+        if (!config.isValid()
+                || config.getRepositoryHome() == null
+                || config.getRepositoryConfig() == null) {
+            if (bstrp == null) {
+                log.error("Repository startup configuration is not valid.");
+                throw new ServletException("Repository startup configuration is not valid.");
+            } else {
+                log.error("Repository startup configuration is not valid but a bootstrap config is specified.");
+                log.error("Either create the {} file or", bstrp);
+                log.error("use the '/config/index.jsp' for easy configuration.");
+                throw new ServletException("Repository startup configuration is not valid.");
+            }
         }
-        log.info("  repository-name = " + repositoryName);
+        config.logInfos();
+    }
+
+    /**
+     * Creates a new Repository based on the configuration and initializes the
+     * {@link #repository} field if successful.
+     *
+     * @throws ServletException if an error occurs
+     */
+    private void initRepository() throws ServletException {
+        // get repository config
+        File repHome;
+        try {
+            repHome = new File(config.getRepositoryHome()).getCanonicalFile();
+        } catch (IOException e) {
+            log.error("Repository startup configuration invalid: " + e.toString());
+            throw new ServletException("Repository startup configuration invalid: " + e.toString());
+        }
+        String repConfig = config.getRepositoryConfig();
+        InputStream in = getServletContext().getResourceAsStream(repConfig);
+        if (in == null) {
+            try {
+                in = new FileInputStream(new File(repConfig));
+            } catch (FileNotFoundException e) {
+                // fallback to old config
+                try {
+                    in = new FileInputStream(new File(repHome, repConfig));
+                } catch (FileNotFoundException e1) {
+                    log.error("Repository startup configuration invalid: " + e1.toString());
+                    throw new ServletException("Repository startup configuration invalid: " + e.toString());
+                }
+            }
+        }
 
         try {
-            repository = createRepository(new InputSource(in), repositoryHome);
+            repository = createRepository(new InputSource(in), repHome);
         } catch (RepositoryException e) {
             throw new ServletException("Error while creating repository", e);
         }
     }
 
     /**
-     * Shuts down the repository
+     * Shuts down the repository. If the repository is an instanceof
+     * {@link JackrabbitRepository} it's {@link JackrabbitRepository#shutdown()}
+     * method is called. in any case, the {@link #repository} field is
+     * <code>nulled</code>.
      */
     private void shutdownRepository() {
-        if (repository instanceof RepositoryImpl) {
-            ((RepositoryImpl) repository).shutdown();
-            repository = null;
+        if (repository instanceof JackrabbitRepository) {
+            ((JackrabbitRepository) repository).shutdown();
         }
+        repository = null;
     }
 
     /**
-     * Creates the repository for the given config and homedir.
+     * Creates the repository instance for the given config and homedir.
+     * Subclasses may override this method of providing own implementations of
+     * a {@link Repository}.
      *
-     * @param is
-     * @param homedir
-     * @return
-     * @throws RepositoryException
+     * @param is input source of the repository config
+     * @param homedir the repository home directory
+     * @return a new jcr repository.
+     * @throws RepositoryException if an error during creation occurs.
      */
     protected Repository createRepository(InputSource is, File homedir)
             throws RepositoryException {
@@ -299,40 +419,29 @@ public class RepositoryStartupServlet extends HttpServlet {
     }
 
     /**
-     * Registers the repository in the JNDI context
+     * Binds the repository to the JNDI context
+     * @throws ServletException if an error occurs.
      */
     private void registerJNDI() throws ServletException {
-        // registering via jndi
-        Properties env = new Properties();
-        Enumeration names = getServletConfig().getInitParameterNames();
-        while (names.hasMoreElements()) {
-            String name = (String) names.nextElement();
-            if (name.startsWith("java.naming.")) {
-                String initParam = getServletConfig().getInitParameter(name);
-                if (initParam.equals("")) {
-                    log.info("  ignoring empty JNDI init param: " + name);
-                } else {
-                    env.put(name, initParam);
-                    log.info("  adding property to JNDI environment: " + name + "=" + initParam);
-                }
+        JNDIConfig jc = config.getJndiConfig();
+        if (jc.isValid() && jc.enabled()) {
+            try {
+                jndiContext = new InitialContext(jc.getJndiEnv());
+                jndiContext.bind(jc.getJndiName(), repository);
+                log.info("Repository bound to JNDI with name: " + jc.getJndiName());
+            } catch (NamingException e) {
+                throw new ServletException("Unable to bind repository using JNDI.", e);
             }
-        }
-        try {
-            jndiContext = new InitialContext(env);
-            jndiContext.bind(repositoryName, repository);
-            log.info("Repository bound to JNDI with name: " + repositoryName);
-        } catch (NamingException e) {
-            throw new ServletException("Unable to bind repository using JNDI.", e);
         }
     }
 
     /**
-     * Unregisters the repository from the JNDI context
+     * Unbinds the repository from the JNDI context.
      */
     private void unregisterJNDI() {
         if (jndiContext != null) {
             try {
-                jndiContext.unbind(repositoryName);
+                jndiContext.unbind(config.getJndiConfig().getJndiName());
             } catch (NamingException e) {
                 log("Error while unbinding repository from JNDI: " + e);
             }
@@ -344,76 +453,13 @@ public class RepositoryStartupServlet extends HttpServlet {
      * application. See <a href="#registerAlgo">Registration with RMI</a> in the
      * class documentation for a description of the algorithms used to register
      * the repository with an RMI registry.
+     * @throws ServletException if an error occurs.
      */
     private void registerRMI() throws ServletException {
-        // check registering via RMI
-        String rmiPortStr = getServletConfig().getInitParameter(INIT_PARAM_RMI_PORT);
-        String rmiHost = getServletConfig().getInitParameter(INIT_PARAM_RMI_HOST);
-        String rmiURI = getServletConfig().getInitParameter(INIT_PARAM_RMI_URI);
-
-        // no registration if neither port nor host nor URI is configured
-        if (rmiPortStr == null && rmiHost == null && rmiURI == null) {
+        RMIConfig rc = config.getRmiConfig();
+        if (!rc.isValid() || !rc.enabled()) {
             return;
         }
-
-        // URI takes precedences, so check whether the configuration has to
-        // be set from the URI
-        int rmiPort = -1;
-        String rmiName = null;
-        if (rmiURI != null && rmiURI.length() > 0) {
-            URI uri = null;
-            try {
-                uri = new URI(rmiURI);
-
-                // extract values from the URI, check later
-                rmiHost = uri.getHost();
-                rmiPort = uri.getPort();
-                rmiName = uri.getPath();
-
-            } catch (URISyntaxException use) {
-                log.warn("Cannot parse RMI URI '" + rmiURI + "'.", use);
-                rmiURI = null; // clear RMI URI use another one
-                rmiHost = null; // use default host, ignore rmi-host param
-            }
-
-            // cut of leading slash from name if defined at all
-            if (rmiName != null && rmiName.startsWith("/")) {
-                rmiName = rmiName.substring(1);
-            }
-        } else {
-            // convert RMI port configuration
-        if (rmiPortStr != null) {
-            try {
-                rmiPort = Integer.parseInt(rmiPortStr);
-            } catch (NumberFormatException e) {
-                log.warn("Invalid port in rmi-port param: " + e + ". using default port.");
-                    rmiPort = Registry.REGISTRY_PORT;
-            }
-        }
-        }
-
-        // check RMI port
-        if (rmiPort == -1 || rmiPort == 0) {
-            // accept -1 or 0 as a hint to use the default
-            rmiPort = Registry.REGISTRY_PORT;
-        } else if (rmiPort < -1 || rmiPort > 0xFFFF) {
-            // emit a warning if out of range, use defualt in this case
-            log.warn("Invalid port in rmi-port param " + rmiPort + ". using default port.");
-            rmiPort = Registry.REGISTRY_PORT;
-        }
-
-        // check host - use an empty name if null (i.e. not configured)
-        if (rmiHost == null) {
-            rmiHost = "";
-        }
-
-        // check name - use repositoryName if empty or null
-        if (rmiName == null || rmiName.length() ==0) {
-            rmiName = repositoryName;
-        }
-
-        // reconstruct the rmiURI now because values might have been changed
-        rmiURI = "//" + rmiHost + ":" + rmiPort + "/" + rmiName;
 
         // try to create remote repository
         Remote remote;
@@ -440,9 +486,9 @@ public class RepositoryStartupServlet extends HttpServlet {
                 // find the server socket factory: use the default if the
                 // rmiHost is not configured
                 RMIServerSocketFactory sf;
-                if (rmiHost.length() > 0) {
-                    log.debug("Creating RMIServerSocketFactory for host " + rmiHost);
-                    InetAddress hostAddress = InetAddress.getByName(rmiHost);
+                if (rc.getRmiHost().length() > 0) {
+                    log.debug("Creating RMIServerSocketFactory for host " + rc.getRmiHost());
+                    InetAddress hostAddress = InetAddress.getByName(rc.getRmiHost());
                     sf = getRMIServerSocketFactory(hostAddress);
                 } else {
                     // have the RMI implementation decide which factory is the
@@ -454,7 +500,7 @@ public class RepositoryStartupServlet extends HttpServlet {
                 // create a registry using the default client socket factory
                 // and the server socket factory retrieved above. This also
                 // binds to the server socket to the rmiHost:rmiPort.
-                reg = LocateRegistry.createRegistry(rmiPort, null, sf);
+                reg = LocateRegistry.createRegistry(rc.rmiPort(), null, sf);
 
             } catch (UnknownHostException uhe) {
                 // thrown if the rmiHost cannot be resolved into an IP-Address
@@ -471,27 +517,26 @@ public class RepositoryStartupServlet extends HttpServlet {
             // potentially active registry. We do not check yet, whether the
             // registry is actually accessible.
             if (reg == null) {
-                log.debug("Trying to access existing registry at " + rmiHost
-                    + ":"+ rmiPort);
+                log.debug("Trying to access existing registry at " + rc.getRmiHost()
+                        + ":" + rc.getRmiPort());
                 try {
-                    reg = LocateRegistry.getRegistry(rmiHost, rmiPort);
+                    reg = LocateRegistry.getRegistry(rc.getRmiHost(), rc.rmiPort());
                 } catch (RemoteException re) {
                     log.error("Cannot create the reference to the registry at "
-                        + rmiHost + ":" + rmiPort, re);
-            }
+                            + rc.getRmiHost() + ":" + rc.getRmiPort(), re);
+                }
             }
 
             // if we finally have a registry, register the repository with the
             // rmiName
             if (reg != null) {
-                log.debug("Registering repository as " + rmiName
-                    + " to registry " + reg);
-                reg.bind(rmiName, remote);
+                log.debug("Registering repository as " + rc.getRmiName()
+                        + " to registry " + reg);
+                reg.bind(rc.getRmiName(), remote);
 
                 // when successfull, keep references
-                this.rmiURI = rmiURI;
                 this.rmiRepository = remote;
-            log.info("Repository bound via RMI with name: " + rmiURI);
+                log.info("Repository bound via RMI with name: " + rc.getRmiUri());
             } else {
                 log.info("RMI registry missing, cannot bind repository via RMI");
             }
@@ -504,18 +549,41 @@ public class RepositoryStartupServlet extends HttpServlet {
     }
 
     /**
+     * Unregisters the repository from the RMI registry, if it has previously
+     * been registered.
+     */
+    private void unregisterRMI() {
+        if (rmiRepository != null) {
+            // drop strong referenece to remote repository
+            rmiRepository = null;
+
+            // unregister repository
+            try {
+                Naming.unbind(config.getRmiConfig().getRmiUri());
+            } catch (Exception e) {
+                log("Error while unbinding repository from JNDI: " + e);
+            }
+        }
+    }
+
+    /**
      * Return the fully qualified name of the class providing the remote
      * repository. The class whose name is returned must implement the
      * {@link RemoteFactoryDelegater} interface.
+     * <p/>
+     * Subclasses may override this method for providing a name of a own
+     * implementation.
+     *
+     * @return getClass().getName() + "$RMIRemoteFactoryDelegater"
      */
     protected String getRemoteFactoryDelegaterClass() {
-        return "org.apache.jackrabbit.j2ee.RepositoryStartupServlet$RMIRemoteFactoryDelegater";
+        return getClass().getName() + "$RMIRemoteFactoryDelegater";
     }
 
     /**
      * Returns an <code>RMIServerSocketFactory</code> used to create the server
      * socket for a locally created RMI registry.
-     * <p>
+     * <p/>
      * This implementation returns a new instance of a simple
      * <code>RMIServerSocketFactory</code> which just creates instances of
      * the <code>java.net.ServerSocket</code> class bound to the given
@@ -524,12 +592,11 @@ public class RepositoryStartupServlet extends HttpServlet {
      * creation, such as SSL server sockets.
      *
      * @param hostAddress The <code>InetAddress</code> instance representing the
-     *      the interface on the local host to which the server sockets are
-     *      bound.
-     *
+     *                    the interface on the local host to which the server sockets are
+     *                    bound.
      * @return A new instance of a simple <code>RMIServerSocketFactory</code>
-     *      creating <code>java.net.ServerSocket</code> instances bound to
-     *      the <code>rmiHost</code>.
+     *         creating <code>java.net.ServerSocket</code> instances bound to
+     *         the <code>rmiHost</code>.
      */
     protected RMIServerSocketFactory getRMIServerSocketFactory(
             final InetAddress hostAddress) {
@@ -541,27 +608,6 @@ public class RepositoryStartupServlet extends HttpServlet {
     }
 
     /**
-     * Unregisters the repository from the RMI registry, if it has previously
-     * been registered.
-     */
-    private void unregisterRMI() {
-        // drop strong referenece to remote repository
-        rmiRepository = null;
-
-        // unregister repository
-        if (rmiURI != null) {
-            try {
-                Naming.unbind(rmiURI);
-            } catch (Exception e) {
-                log("Error while unbinding repository from JNDI: " + e);
-            } finally {
-                // do not try again to unregister
-                rmiURI = null;
-            }
-        }
-    }
-
-    /**
      * optional class for RMI, will only be used, if RMI server is present
      */
     protected static abstract class RemoteFactoryDelegater {
@@ -569,6 +615,7 @@ public class RepositoryStartupServlet extends HttpServlet {
         public abstract Remote createRemoteRepository(Repository repository)
                 throws RemoteException;
     }
+
     /**
      * optional class for RMI, will only be used, if RMI server is present
      */
@@ -583,5 +630,76 @@ public class RepositoryStartupServlet extends HttpServlet {
         }
     }
 
+    //-------------------------------------------------< Installer Routines >---
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        if (repository == null) {
+            redirect(req, resp, "/bootstrap/missing.html");
+        } else {
+            redirect(req, resp, "/bootstrap/running.html");
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        if (repository != null) {
+            redirect(req, resp, "/bootstrap/reconfigure.html");
+        } else {
+            int rc = new Installer(bootstrapConfigFile,
+                    getServletContext()).installRepository(req);
+            switch (rc) {
+                case Installer.C_INSTALL_OK:
+                    // restart rep
+                    restart();
+                    if (repository == null) {
+                        redirect(req, resp, "/bootstrap/error.html");
+                    } else {
+                        redirect(req, resp, "/bootstrap/success.html");
+                    }
+                    break;
+                case Installer.C_INVALID_INPUT:
+                    redirect(req, resp, "/bootstrap/missing.html");
+                    break;
+                case Installer.C_CONFIG_EXISTS:
+                case Installer.C_BOOTSTRAP_EXISTS:
+                case Installer.C_HOME_EXISTS:
+                    redirect(req, resp, "/bootstrap/exists.html");
+                    break;
+                case Installer. C_HOME_MISSING:
+                case Installer.C_CONFIG_MISSING:
+                    redirect(req, resp, "/bootstrap/notexists.html");
+                    break;
+                case Installer.C_INSTALL_ERROR:
+                    redirect(req, resp, "/bootstrap/error.html");
+                    break;
+            }
+        }
+    }
+
+    /**
+     * Helper function to send a redirect response respecting the context path.
+     *
+     * @param req the request
+     * @param resp the response
+     * @param loc the location for the redirect
+     * @throws ServletException if an servlet error occurs.
+     * @throws IOException if an I/O error occurs.
+     */
+    private void redirect(HttpServletRequest req,
+                          HttpServletResponse resp, String loc)
+            throws ServletException, IOException {
+        String cp = req.getContextPath();
+        if (cp == null || cp.equals("/")) {
+            cp = "";
+        }
+        resp.sendRedirect(cp + loc);
+    }
 }
 
