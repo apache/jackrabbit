@@ -45,7 +45,6 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
-import org.apache.jackrabbit.BaseException;
 import org.apache.commons.httpclient.URI;
 import org.w3c.dom.Document;
 
@@ -218,7 +217,7 @@ class URIResolverImpl implements URIResolver {
 
             cache.add(response.getHref(), propertyId);
             return propertyId;
-        } catch (BaseException e) {
+        } catch (NameException e) {
             throw new RepositoryException(e);
         }
     }
