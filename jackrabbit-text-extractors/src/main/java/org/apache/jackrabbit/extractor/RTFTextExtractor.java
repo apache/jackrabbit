@@ -33,7 +33,7 @@ public class RTFTextExtractor extends AbstractTextExtractor {
      * Creates a new <code>RTFTextExtractor</code> instance.
      */
     public RTFTextExtractor() {
-        super(new String[]{"application/rtf"});
+        super(new String[]{"application/rtf", "text/rtf"});
     }
 
     //-------------------------------------------------------< TextExtractor >
