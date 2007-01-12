@@ -133,7 +133,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     private final NodeTypeRegistry ntRegistry;
 
     /**
-     * Monitor object to synchronize the external feed thread with client
+     * Monitor object to synchronize the feed thread with client
      * threads that call {@link #execute(Operation)} or {@link
      * #execute(ChangeLog)}.
      */
@@ -147,10 +147,10 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     private final Channel immediateEventRequests = new LinkedQueue();
 
     /**
-     * This is the event polling for external changes. If <code>null</code>
+     * This is the event polling for changes. If <code>null</code>
      * then the underlying repository service does not support observation.
      */
-    private final Thread externalChangeFeed;
+    private final Thread changeFeed;
 
     /**
      * List of event listener that are set on this WorkspaceManager to get
@@ -171,7 +171,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
         nsRegistry = createNamespaceRegistry(repositoryDescriptors);
         ntRegistry = createNodeTypeRegistry(nsRegistry, repositoryDescriptors);
-        externalChangeFeed = createChangeFeed(pollingInterval);
+        changeFeed = createChangeFeed(pollingInterval);
     }
 
     public NamespaceRegistryImpl getNamespaceRegistryImpl() {
@@ -280,6 +280,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     /**
      * Sets the <code>InternalEventListener</code> that gets notifications about
      * local and external changes.
+     * 
      * @param listener the new listener.
      */
     public void addEventListener(InternalEventListener listener) {
@@ -323,7 +324,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     private ItemStateManager createItemStateManager() {
         ItemStateFactory isf = new WorkspaceItemStateFactory(service, sessionInfo, this);
         WorkspaceItemStateManager ism = new WorkspaceItemStateManager(this, cacheBehaviour, isf, service.getIdFactory());
-        addEventListener(ism);
         return ism;
     }
 
@@ -364,8 +364,8 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      *         <code>RepositoryService</code> does not support observation.
      */
     private Thread createChangeFeed(int pollingInterval) {
-        Thread t = new Thread(new ExternalChangePolling(pollingInterval));
-        t.setName("External Change Polling");
+        Thread t = new Thread(new ChangePolling(pollingInterval));
+        t.setName("Change Polling");
         t.setDaemon(true);
         t.start();
         return t;
@@ -488,10 +488,10 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * Dispose this <code>WorkspaceManager</code>
      */
     public void dispose() {
-        if (externalChangeFeed != null) {
-            externalChangeFeed.interrupt();
+        if (changeFeed != null) {
+            changeFeed.interrupt();
             try {
-                externalChangeFeed.join();
+                changeFeed.join();
             } catch (InterruptedException e) {
                 log.warn("Interrupted while waiting for external change thread to terminate.");
             }
@@ -700,12 +700,21 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             log.info("executing: " + workspaceOperation);
             workspaceOperation.accept(this);
         }
+
         //-----------------------< OperationVisitor >---------------------------
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(AddNode)
+         */
         public void visit(AddNode operation) throws RepositoryException {
             NodeId parentId = operation.getParentState().getNodeId();
             batch.addNode(parentId, operation.getNodeName(), operation.getNodeTypeName(), operation.getUuid());
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(AddProperty)
+         */
         public void visit(AddProperty operation) throws RepositoryException {
             NodeId parentId = operation.getParentState().getNodeId();
             QName propertyName = operation.getPropertyName();
@@ -735,18 +744,30 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             }
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(Clone)
+         */
         public void visit(Clone operation) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
             NodeId nId = operation.getNodeState().getNodeId();
             NodeId destParentId = operation.getDestinationParentState().getNodeId();
             service.clone(sessionInfo, operation.getWorkspaceName(), nId, destParentId, operation.getDestinationName(), operation.isRemoveExisting());
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(Copy)
+         */
         public void visit(Copy operation) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
             NodeId nId = operation.getNodeState().getNodeId();
             NodeId destParentId = operation.getDestinationParentState().getNodeId();
             service.copy(sessionInfo, operation.getWorkspaceName(), nId, destParentId, operation.getDestinationName());
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(Move)
+         */
         public void visit(Move operation) throws LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
             NodeId moveId = operation.getSourceId();
             NodeId destParentId = operation.getDestinationParentState().getNodeId();
@@ -757,20 +778,36 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             }
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(Update)
+         */
         public void visit(Update operation) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException {
             NodeId nId = operation.getNodeState().getNodeId();
             service.update(sessionInfo, nId, operation.getSourceWorkspaceName());
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(Remove)
+         */
         public void visit(Remove operation) throws RepositoryException {
             ItemId id = operation.getRemoveState().getId();
             batch.remove(id);
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(SetMixin)
+         */
         public void visit(SetMixin operation) throws RepositoryException {
             batch.setMixins(operation.getNodeState().getNodeId(), operation.getMixinNames());
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(SetPropertyValue)
+         */
         public void visit(SetPropertyValue operation) throws RepositoryException {
             PropertyState pState = operation.getPropertyState();
             PropertyId id = pState.getPropertyId();
@@ -800,6 +837,10 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             }
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(ReorderNodes)
+         */
         public void visit(ReorderNodes operation) throws RepositoryException {
             NodeId parentId = operation.getParentState().getNodeId();
             NodeId insertId = operation.getInsertNode().getNodeId();
@@ -810,14 +851,26 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             batch.reorderNodes(parentId, insertId, beforeId);
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(Checkout)
+         */
         public void visit(Checkout operation) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
             service.checkout(sessionInfo, operation.getNodeState().getNodeId());
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(Checkin)
+         */
         public void visit(Checkin operation) throws UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
             service.checkin(sessionInfo, operation.getNodeState().getNodeId());
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(Restore)
+         */
         public void visit(Restore operation) throws VersionException, PathNotFoundException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
             NodeState nState = operation.getNodeState();
             NodeState[] versionStates = operation.getVersionStates();
@@ -848,12 +901,20 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             }
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(Merge)
+         */
         public void visit(Merge operation) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
             NodeId nId = operation.getNodeState().getNodeId();
             IdIterator failed = service.merge(sessionInfo, nId, operation.getSourceWorkspaceName(), operation.bestEffort());
             operation.setFailedIds(failed);
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(ResolveMergeConflict)
+         */
         public void visit(ResolveMergeConflict operation) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException {
             try {
                 NodeId nId = operation.getNodeState().getNodeId();
@@ -899,34 +960,58 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             }
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(LockOperation)
+         */
         public void visit(LockOperation operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
             NodeId nId = operation.getNodeState().getNodeId();
             LockInfo lInfo = service.lock(sessionInfo, nId, operation.isDeep(), operation.isSessionScoped());
             operation.setLockInfo(lInfo);
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(LockRefresh)
+         */
         public void visit(LockRefresh operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
             NodeId nId = operation.getNodeState().getNodeId();
             service.refreshLock(sessionInfo, nId);
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(LockRelease)
+         */
         public void visit(LockRelease operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
             NodeId nId = operation.getNodeState().getNodeId();
             service.unlock(sessionInfo, nId);
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(AddLabel)
+         */
         public void visit(AddLabel operation) throws VersionException, RepositoryException {
             NodeId vhId = operation.getVersionHistoryState().getNodeId();
             NodeId vId = operation.getVersionState().getNodeId();
             service.addVersionLabel(sessionInfo, vhId, vId, operation.getLabel(), operation.moveLabel());
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(RemoveLabel)
+         */
         public void visit(RemoveLabel operation) throws VersionException, RepositoryException {
             NodeId vhId = operation.getVersionHistoryState().getNodeId();
             NodeId vId = operation.getVersionState().getNodeId();
             service.removeVersionLabel(sessionInfo, vhId, vId, operation.getLabel());
         }
 
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(RemoveVersion)
+         */
         public void visit(RemoveVersion operation) throws VersionException, AccessDeniedException, ReferentialIntegrityException, RepositoryException {
             NodeState versionState = (NodeState) operation.getRemoveState();
             NodeState vhState = operation.getParentState();
@@ -940,7 +1025,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      */
     private Sync getEventPollingRequest() {
         Sync signal;
-        if (externalChangeFeed != null) {
+        if (changeFeed != null) {
             // observation supported
             signal = new Latch();
             try {
@@ -965,9 +1050,9 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     }
 
     /**
-     * Implements the polling for external changes on the repository service.
+     * Implements the polling for changes on the repository service.
      */
-    private final class ExternalChangePolling implements Runnable {
+    private final class ChangePolling implements Runnable {
 
         /**
          * The polling interval in milliseconds.
@@ -975,11 +1060,11 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         private final int pollingInterval;
 
         /**
-         * Creates a new external change polling with a given polling interval.
+         * Creates a new change polling with a given polling interval.
          *
          * @param pollingInterval the interval in milliseconds.
          */
-        private ExternalChangePolling(int pollingInterval) {
+        private ChangePolling(int pollingInterval) {
             this.pollingInterval = pollingInterval;
         }
 

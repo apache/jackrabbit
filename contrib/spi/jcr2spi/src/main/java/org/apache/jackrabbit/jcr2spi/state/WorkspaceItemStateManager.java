@@ -63,6 +63,7 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
         } else {
             this.eventFilter = Collections.EMPTY_LIST;
         }
+        wspManager.addEventListener(this);
     }
 
     //-------------------------------< InternalEventListener >------------------
