@@ -57,10 +57,9 @@ public class PdfTextExtractor extends AbstractTextExtractor {
                               String encoding) throws IOException {
         try {
             PDFParser parser = new PDFParser(new BufferedInputStream(stream));
-            parser.parse();
-
-            PDDocument document = parser.getPDDocument();
             try {
+                parser.parse();
+                PDDocument document = parser.getPDDocument();
                 CharArrayWriter writer = new CharArrayWriter();
 
                 PDFTextStripper stripper = new PDFTextStripper();
@@ -69,7 +68,10 @@ public class PdfTextExtractor extends AbstractTextExtractor {
 
                 return new CharArrayReader(writer.toCharArray());
             } finally {
-                document.close();
+                PDDocument doc = parser.getPDDocument();
+                if (doc != null) {
+                    doc.close();
+                }
             }
         } catch (Exception e) {
             // it may happen that PDFParser throws a runtime
