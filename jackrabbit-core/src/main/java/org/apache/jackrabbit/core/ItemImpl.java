@@ -33,6 +33,7 @@ import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.state.StaleItemStateException;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
@@ -1368,15 +1369,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
     public String getPath() throws RepositoryException {
         // check state of this instance
         sanityCheck();
-
-        try {
-            return PathFormat.format(getPrimaryPath(), session.getNamespaceResolver());
-        } catch (NoPrefixDeclaredException npde) {
-            // should never get here...
-            String msg = "internal error: encountered unregistered namespace";
-            log.debug(msg);
-            throw new RepositoryException(msg, npde);
-        }
+        return session.getJCRPath(getPrimaryPath());
     }
 
     /**
@@ -1415,7 +1408,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         }
         if (otherItem instanceof ItemImpl) {
             ItemImpl other = (ItemImpl) otherItem;
-            return id.equals(other.id) 
+            return id.equals(other.id)
                     && session.getWorkspace().getName().equals(
                             other.getSession().getWorkspace().getName());
         }

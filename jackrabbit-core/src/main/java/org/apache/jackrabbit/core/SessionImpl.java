@@ -39,8 +39,13 @@ import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NameException;
+import org.apache.jackrabbit.name.NameResolver;
 import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.ParsingNameResolver;
+import org.apache.jackrabbit.name.ParsingPathResolver;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.uuid.UUID;
@@ -100,7 +105,8 @@ import java.util.Set;
 /**
  * A <code>SessionImpl</code> ...
  */
-public class SessionImpl implements Session, Dumpable {
+public class SessionImpl
+        implements Session, NameResolver, PathResolver, Dumpable {
 
     private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
 
@@ -573,6 +579,26 @@ public class SessionImpl implements Session, Dumpable {
         listeners.remove(listener);
     }
 
+    //--------------------------------------------------------< NameResolver >
+
+    public String getJCRName(QName name) throws NamespaceException {
+        return nsMappings.getNameResolver().getJCRName(name);
+    }
+
+    public QName getQName(String name) throws NameException, NamespaceException {
+        return nsMappings.getNameResolver().getQName(name);
+    }
+
+    //--------------------------------------------------------< PathResolver >
+
+    public String getJCRPath(Path path) throws NamespaceException {
+        return nsMappings.getPathResolver().getJCRPath(path);
+    }
+
+    public Path getQPath(String path) throws NameException, NamespaceException {
+        return nsMappings.getPathResolver().getQPath(path);
+    }
+
     //--------------------------------------------------------------< Session >
     /**
      * {@inheritDoc}
@@ -591,11 +617,11 @@ public class SessionImpl implements Session, Dumpable {
 
         Path targetPath;
         try {
-            targetPath = PathFormat.parse(absPath, getNamespaceResolver()).getNormalizedPath();
-        } catch (MalformedPathException mpe) {
+            targetPath = getQPath(absPath).getNormalizedPath();
+        } catch (NameException e) {
             String msg = "invalid path: " + absPath;
-            log.debug(msg, mpe);
-            throw new RepositoryException(msg);
+            log.debug(msg, e);
+            throw new RepositoryException(msg, e);
         }
         if (!targetPath.isAbsolute()) {
             throw new RepositoryException("not an absolute path: " + absPath);
@@ -773,17 +799,17 @@ public class SessionImpl implements Session, Dumpable {
         sanityCheck();
 
         try {
-            Path p = PathFormat.parse(absPath, getNamespaceResolver()).getNormalizedPath();
+            Path p = getQPath(absPath).getNormalizedPath();
             if (!p.isAbsolute()) {
                 throw new RepositoryException("not an absolute path: " + absPath);
             }
             return getItemManager().getItem(p);
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(absPath);
-        } catch (MalformedPathException mpe) {
+        } catch (NameException e) {
             String msg = "invalid path:" + absPath;
             log.debug(msg);
-            throw new RepositoryException(msg, mpe);
+            throw new RepositoryException(msg, e);
         }
     }
 
@@ -795,15 +821,15 @@ public class SessionImpl implements Session, Dumpable {
         sanityCheck();
 
         try {
-            Path p = PathFormat.parse(absPath, getNamespaceResolver()).getNormalizedPath();
+            Path p = getQPath(absPath).getNormalizedPath();
             if (!p.isAbsolute()) {
                 throw new RepositoryException("not an absolute path: " + absPath);
             }
             return getItemManager().itemExists(p);
-        } catch (MalformedPathException mpe) {
+        } catch (NameException e) {
             String msg = "invalid path:" + absPath;
             log.debug(msg);
-            throw new RepositoryException(msg, mpe);
+            throw new RepositoryException(msg, e);
         }
     }
 
@@ -864,7 +890,7 @@ public class SessionImpl implements Session, Dumpable {
         NodeImpl targetNode;
         NodeImpl srcParentNode;
         try {
-            srcPath = PathFormat.parse(srcAbsPath, getNamespaceResolver()).getNormalizedPath();
+            srcPath = getQPath(srcAbsPath).getNormalizedPath();
             if (!srcPath.isAbsolute()) {
                 throw new RepositoryException("not an absolute path: " + srcAbsPath);
             }
@@ -878,10 +904,10 @@ public class SessionImpl implements Session, Dumpable {
             srcParentNode = (NodeImpl) getItemManager().getItem(srcParentPath);
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(srcAbsPath);
-        } catch (MalformedPathException mpe) {
+        } catch (NameException e) {
             String msg = srcAbsPath + ": invalid path";
             log.debug(msg);
-            throw new RepositoryException(msg, mpe);
+            throw new RepositoryException(msg, e);
         }
 
         Path destPath;
@@ -889,7 +915,7 @@ public class SessionImpl implements Session, Dumpable {
         Path destParentPath;
         NodeImpl destParentNode;
         try {
-            destPath = PathFormat.parse(destAbsPath, getNamespaceResolver()).getNormalizedPath();
+            destPath = getQPath(destAbsPath).getNormalizedPath();
             if (!destPath.isAbsolute()) {
                 throw new RepositoryException("not an absolute path: " + destAbsPath);
             }
@@ -903,10 +929,10 @@ public class SessionImpl implements Session, Dumpable {
             destParentNode = (NodeImpl) getItemManager().getItem(destParentPath);
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(destAbsPath);
-        } catch (MalformedPathException mpe) {
+        } catch (NameException e) {
             String msg = destAbsPath + ": invalid path";
             log.debug(msg);
-            throw new RepositoryException(msg, mpe);
+            throw new RepositoryException(msg, e);
         }
         int ind = destName.getIndex();
         if (ind > 0) {
@@ -1027,15 +1053,15 @@ public class SessionImpl implements Session, Dumpable {
 
         Item item;
         try {
-            Path p = PathFormat.parse(parentAbsPath, getNamespaceResolver()).getNormalizedPath();
+            Path p = getQPath(parentAbsPath).getNormalizedPath();
             if (!p.isAbsolute()) {
                 throw new RepositoryException("not an absolute path: " + parentAbsPath);
             }
             item = getItemManager().getItem(p);
-        } catch (MalformedPathException mpe) {
+        } catch (NameException e) {
             String msg = parentAbsPath + ": invalid path";
             log.debug(msg);
-            throw new RepositoryException(msg, mpe);
+            throw new RepositoryException(msg, e);
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(parentAbsPath);
         }
@@ -1395,4 +1421,5 @@ public class SessionImpl implements Session, Dumpable {
         ps.println();
         itemStateMgr.dump(ps);
     }
+
 }

@@ -32,6 +32,7 @@ import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.Importer;
 import org.apache.jackrabbit.core.xml.WorkspaceImporter;
 import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
 import org.slf4j.Logger;
@@ -257,11 +258,11 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
 
         Path srcPath;
         try {
-            srcPath = PathFormat.parse(srcAbsPath, session.getNamespaceResolver()).getNormalizedPath();
-        } catch (MalformedPathException mpe) {
+            srcPath = session.getQPath(srcAbsPath).getNormalizedPath();
+        } catch (NameException e) {
             String msg = "invalid path: " + srcAbsPath;
             log.debug(msg);
-            throw new RepositoryException(msg, mpe);
+            throw new RepositoryException(msg, e);
         }
         if (!srcPath.isAbsolute()) {
             throw new RepositoryException("not an absolute path: " + srcAbsPath);
@@ -269,11 +270,11 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
 
         Path destPath;
         try {
-            destPath = PathFormat.parse(destAbsPath, session.getNamespaceResolver()).getNormalizedPath();
-        } catch (MalformedPathException mpe) {
+            destPath = session.getQPath(destAbsPath).getNormalizedPath();
+        } catch (NameException e) {
             String msg = "invalid path: " + destAbsPath;
             log.debug(msg);
-            throw new RepositoryException(msg, mpe);
+            throw new RepositoryException(msg, e);
         }
         if (!destPath.isAbsolute()) {
             throw new RepositoryException("not an absolute path: " + destAbsPath);
@@ -484,11 +485,11 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
 
         Path srcPath;
         try {
-            srcPath = PathFormat.parse(srcAbsPath, session.getNamespaceResolver()).getNormalizedPath();
-        } catch (MalformedPathException mpe) {
+            srcPath = session.getQPath(srcAbsPath).getNormalizedPath();
+        } catch (NameException e) {
             String msg = "invalid path: " + srcAbsPath;
             log.debug(msg);
-            throw new RepositoryException(msg, mpe);
+            throw new RepositoryException(msg, e);
         }
         if (!srcPath.isAbsolute()) {
             throw new RepositoryException("not an absolute path: " + srcAbsPath);
@@ -496,11 +497,11 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
 
         Path destPath;
         try {
-            destPath = PathFormat.parse(destAbsPath, session.getNamespaceResolver()).getNormalizedPath();
-        } catch (MalformedPathException mpe) {
+            destPath = session.getQPath(destAbsPath).getNormalizedPath();
+        } catch (NameException e) {
             String msg = "invalid path: " + destAbsPath;
             log.debug(msg);
-            throw new RepositoryException(msg, mpe);
+            throw new RepositoryException(msg, e);
         }
         if (!destPath.isAbsolute()) {
             throw new RepositoryException("not an absolute path: " + destAbsPath);
@@ -700,11 +701,11 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
 
         Path parentPath;
         try {
-            parentPath = PathFormat.parse(parentAbsPath, session.getNamespaceResolver()).getNormalizedPath();
-        } catch (MalformedPathException mpe) {
+            parentPath = session.getQPath(parentAbsPath).getNormalizedPath();
+        } catch (NameException e) {
             String msg = "invalid path: " + parentAbsPath;
             log.debug(msg);
-            throw new RepositoryException(msg, mpe);
+            throw new RepositoryException(msg, e);
         }
         if (!parentPath.isAbsolute()) {
             throw new RepositoryException("not an absolute path: " + parentAbsPath);
