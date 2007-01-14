@@ -134,7 +134,11 @@ public class ParsingPathResolver implements PathResolver {
                 buffer.append("..");
             } else {
                 buffer.append(resolver.getJCRName(elements[i].getName()));
-                if (elements[i].getIndex() != 0) {
+                /**
+                 * FIXME the [1] subscript should only be suppressed if the
+                 * item in question can't have same-name siblings.
+                 */
+                if (elements[i].getIndex() > Path.INDEX_DEFAULT) {
                     buffer.append('[');
                     buffer.append(elements[i].getIndex());
                     buffer.append(']');
