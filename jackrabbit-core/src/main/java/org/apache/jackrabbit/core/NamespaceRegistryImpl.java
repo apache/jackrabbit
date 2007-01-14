@@ -22,10 +22,13 @@ import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.apache.jackrabbit.name.CachingNameResolver;
+import org.apache.jackrabbit.name.CachingPathResolver;
 import org.apache.jackrabbit.name.NameCache;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NameResolver;
 import org.apache.jackrabbit.name.ParsingNameResolver;
+import org.apache.jackrabbit.name.ParsingPathResolver;
+import org.apache.jackrabbit.name.PathResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.util.XMLChar;
 import org.slf4j.Logger;
@@ -87,7 +90,9 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
 
     private int lastIndex = 0;
 
-    private NameResolver resolver;
+    private NameResolver nameResolver;
+
+    private PathResolver pathResolver;
 
     private final FileSystem nsRegStore;
 
@@ -106,8 +111,8 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
             throws RepositoryException {
         super(true); // enable listener support
         this.nsRegStore = nsRegStore;
-        resolver = new CachingNameResolver(new ParsingNameResolver(this));
         load();
+        evictAllNames();
     }
 
     /**
@@ -285,6 +290,14 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         }
     }
 
+    public NameResolver getNameResolver() {
+        return nameResolver;
+    }
+
+    public PathResolver getPathResolver() {
+        return pathResolver;
+    }
+
     /**
      * Returns a prefix that is unique among the already registered prefixes.
      *
@@ -447,6 +460,9 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         // add new prefix mapping
         map(prefix, uri);
 
+        // Clear cache
+        evictAllNames();
+
         if (eventChannel != null) {
             eventChannel.remapped(oldPrefix, prefix, uri);
         }
@@ -529,7 +545,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
      */
     public QName retrieveName(String jcrName) {
         try {
-            return resolver.getQName(jcrName);
+            return nameResolver.getQName(jcrName);
         } catch (NameException e) {
             return null;
         } catch (NamespaceException e) {
@@ -539,7 +555,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
 
     public String retrieveName(QName name) {
         try {
-            return resolver.getJCRName(name);
+            return nameResolver.getJCRName(name);
         } catch (NamespaceException e) {
             return null;
         }
@@ -549,6 +565,9 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
     }
 
     public void evictAllNames() {
+        nameResolver = new CachingNameResolver(new ParsingNameResolver(this));
+        pathResolver =
+            new CachingPathResolver(new ParsingPathResolver(nameResolver));
     }
 
     //-----------------------------------------------< NamespaceEventListener >
@@ -576,6 +595,9 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
 
         // add new prefix mapping
         map(newPrefix, uri);
+
+        // Clear cache
+        evictAllNames();
 
         // persist mappings
         store();

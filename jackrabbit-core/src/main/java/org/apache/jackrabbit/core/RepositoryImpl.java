@@ -636,23 +636,17 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
     private SearchManager getSystemSearchManager(String wspName)
             throws RepositoryException {
         if (systemSearchMgr == null) {
-            try {
-                if (repConfig.getSearchConfig() != null) {
-                    SystemSession defSysSession = getSystemSession(wspName);
-                    systemSearchMgr = new SearchManager(repConfig.getSearchConfig(),
-                            nsReg, ntReg, defSysSession.getItemStateManager(),
-                            SYSTEM_ROOT_NODE_ID, null, null);
-                    ObservationManager obsMgr = defSysSession.getWorkspace().getObservationManager();
-                    obsMgr.addEventListener(systemSearchMgr, Event.NODE_ADDED
-                            | Event.NODE_REMOVED | Event.PROPERTY_ADDED
-                            | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED,
-                            "/" + NameFormat.format(QName.JCR_SYSTEM, defSysSession.getNamespaceResolver()),
-                            true, null, null, false);
-                } else {
-                    systemSearchMgr = null;
-                }
-            } catch (NoPrefixDeclaredException e) {
-                throw new RepositoryException(e);
+            if (repConfig.getSearchConfig() != null) {
+                SystemSession defSysSession = getSystemSession(wspName);
+                systemSearchMgr = new SearchManager(repConfig.getSearchConfig(),
+                        nsReg, ntReg, defSysSession.getItemStateManager(),
+                        SYSTEM_ROOT_NODE_ID, null, null);
+                ObservationManager obsMgr = defSysSession.getWorkspace().getObservationManager();
+                obsMgr.addEventListener(systemSearchMgr, Event.NODE_ADDED
+                        | Event.NODE_REMOVED | Event.PROPERTY_ADDED
+                        | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED,
+                        "/" + defSysSession.getJCRName(QName.JCR_SYSTEM),
+                        true, null, null, false);
             }
         }
         return systemSearchMgr;
@@ -1179,7 +1173,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             throw new RepositoryException(msg, e);
         }
     }
-    
+
     /**
      * Creates a <code>SharedItemStateManager</code> or derivative.
      *
@@ -1192,7 +1186,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      * @param cacheFactory   cache factory
      * @return item state manager
      * @throws ItemStateException if an error occurs
-     */ 
+     */
     protected SharedItemStateManager createItemStateManager(PersistenceManager persistMgr,
                                                             NodeId rootNodeId,
                                                             NodeTypeRegistry ntReg,

@@ -256,7 +256,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             String primaryTypeField = NameFormat.format(QName.JCR_PRIMARYTYPE, nsMappings);
 
             NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
-            NodeType base = ntMgr.getNodeType(NameFormat.format(node.getValue(), session.getNamespaceResolver()));
+            NodeType base = ntMgr.getNodeType(session.getJCRName(node.getValue()));
 
             if (base.isMixin()) {
                 // search for nodes where jcr:mixinTypes is set to this mixin
@@ -884,12 +884,12 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 case PropertyType.PATH:
                     // try to translate path
                     try {
-                        Path p = PathFormat.parse(literal, session.getNamespaceResolver());
+                        Path p = session.getQPath(literal);
                         values.add(PathFormat.format(p, nsMappings));
                         log.debug("Coerced " + literal + " into PATH.");
-                    } catch (MalformedPathException e) {
+                    } catch (NameException e) {
                         log.warn("Unable to coerce '" + literal + "' into a PATH: " + e.toString());
-                    } catch (NoPrefixDeclaredException e) {
+                    } catch (NamespaceException e) {
                         log.warn("Unable to coerce '" + literal + "' into a PATH: " + e.toString());
                     }
                     break;
@@ -938,8 +938,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 // might be a path
                 try {
                     values.add(PathFormat.format(
-                            PathFormat.parse(literal, session.getNamespaceResolver()),
-                            nsMappings));
+                            session.getQPath(literal), nsMappings));
                     log.debug("Coerced " + literal + " into PATH.");
                 } catch (Exception e) {
                     // not a path

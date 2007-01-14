@@ -91,13 +91,9 @@ public final class EventImpl implements Event {
             } else {
                 p = Path.create(eventState.getParentPath(), eventState.getChildRelPath().getName(), false);
             }
-            return PathFormat.format(p, session.getNamespaceResolver());
+            return session.getJCRPath(p);
         } catch (MalformedPathException e) {
             String msg = "internal error: malformed path for event";
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        } catch (NoPrefixDeclaredException e) {
-            String msg = "internal error: encountered unregistered namespace in path";
             log.debug(msg);
             throw new RepositoryException(msg, e);
         }

@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.NamespaceException;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.PropertyIterator;
@@ -611,8 +612,8 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      */
     String safeGetJCRPath(Path path) {
         try {
-            return PathFormat.format(path, session.getNamespaceResolver());
-        } catch (NoPrefixDeclaredException npde) {
+            return session.getJCRPath(path);
+        } catch (NamespaceException e) {
             log.error("failed to convert " + path.toString() + " to JCR path.");
             // return string representation of internal path as a fallback
             return path.toString();
