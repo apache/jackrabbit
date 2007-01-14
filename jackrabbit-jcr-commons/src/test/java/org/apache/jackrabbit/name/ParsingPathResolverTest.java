@@ -70,7 +70,7 @@ public class ParsingPathResolverTest extends TestCase {
         assertValidPath("..");
         assertValidPath("x");
         assertValidPath("x:y");
-        assertValidPath("x[1]");
+        assertValidPath("x[2]");
         assertValidPath("x:y[123]");
 
         assertValidPath("/a/b/c");
