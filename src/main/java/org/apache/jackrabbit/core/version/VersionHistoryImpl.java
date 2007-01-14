@@ -104,7 +104,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public Version getVersion(String versionName)
             throws VersionException, RepositoryException {
         try {
-            QName name = NameFormat.parse(versionName, session.getNamespaceResolver());
+            QName name = session.getQName(versionName);
             InternalVersion v = getInternalVersionHistory().getVersion(name);
             if (v == null) {
                 throw new VersionException("No version with name '" + versionName + "' exists in this version history.");
@@ -120,8 +120,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public Version getVersionByLabel(String label) throws RepositoryException {
         try {
-            QName qLabel = NameFormat.parse(label, session.getNamespaceResolver());
-            InternalVersion v = getInternalVersionHistory().getVersionByLabel(qLabel);
+            QName qLabel = session.getQName(label);
+            InternalVersion v =
+                getInternalVersionHistory().getVersionByLabel(qLabel);
             if (v == null) {
                 throw new VersionException("No version with label '" + label + "' exists in this version history.");
             }
@@ -137,10 +138,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public void addVersionLabel(String versionName, String label, boolean move)
             throws VersionException, RepositoryException {
         try {
-            session.getVersionManager().setVersionLabel(this,
-                    NameFormat.parse(versionName, session.getNamespaceResolver()),
-                    NameFormat.parse(label, session.getNamespaceResolver()),
-                    move);
+            session.getVersionManager().setVersionLabel(
+                    this, session.getQName(versionName),
+                    session.getQName(label), move);
         } catch (NameException e) {
             throw new VersionException(e);
         }
@@ -151,10 +151,8 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public void removeVersionLabel(String label) throws RepositoryException {
         try {
-            Version existing = session.getVersionManager().setVersionLabel(this,
-                    null,
-                    NameFormat.parse(label, session.getNamespaceResolver()),
-                    true);
+            Version existing = session.getVersionManager().setVersionLabel(
+                    this, null, session.getQName(label), true);
             if (existing == null) {
                 throw new VersionException("No version with label '" + label + "' exists in this version history.");
             }
@@ -168,16 +166,12 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see javax.jcr.version.VersionHistory#getVersionLabels
      */
     public String[] getVersionLabels() throws RepositoryException {
-        try {
-            QName[] labels = getInternalVersionHistory().getVersionLabels();
-            String[] ret = new String[labels.length];
-            for (int i = 0; i < labels.length; i++) {
-                ret[i] = NameFormat.format(labels[i], session.getNamespaceResolver());
-            }
-            return ret;
-        } catch (NoPrefixDeclaredException e) {
-            throw new IllegalArgumentException("Unable to resolve label name: " + e.toString());
+        QName[] labels = getInternalVersionHistory().getVersionLabels();
+        String[] ret = new String[labels.length];
+        for (int i = 0; i < labels.length; i++) {
+            ret[i] = session.getJCRName(labels[i]);
         }
+        return ret;
     }
 
     /**
@@ -186,16 +180,12 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public String[] getVersionLabels(Version version)
             throws VersionException, RepositoryException {
         checkOwnVersion(version);
-        try {
-            QName[] labels = ((VersionImpl) version).getInternalVersion().getLabels();
-            String[] ret = new String[labels.length];
-            for (int i = 0; i < labels.length; i++) {
-                ret[i] = NameFormat.format(labels[i], session.getNamespaceResolver());
-            }
-            return ret;
-        } catch (NoPrefixDeclaredException e) {
-            throw new IllegalArgumentException("Unable to resolve label name: " + e.toString());
+        QName[] labels = ((VersionImpl) version).getInternalVersion().getLabels();
+        String[] ret = new String[labels.length];
+        for (int i = 0; i < labels.length; i++) {
+            ret[i] = session.getJCRName(labels[i]);
         }
+        return ret;
     }
 
     /**
@@ -203,7 +193,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public boolean hasVersionLabel(String label) throws RepositoryException {
         try {
-            QName qLabel = NameFormat.parse(label, session.getNamespaceResolver());
+            QName qLabel = session.getQName(label);
             return getInternalVersionHistory().getVersionByLabel(qLabel) != null;
         } catch (NameException e) {
             throw new IllegalArgumentException("Unable to resolve label: " + e);
@@ -217,7 +207,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             throws VersionException, RepositoryException {
         checkOwnVersion(version);
         try {
-            QName qLabel = NameFormat.parse(label, session.getNamespaceResolver());
+            QName qLabel = session.getQName(label);
             return ((VersionImpl) version).getInternalVersion().hasLabel(qLabel);
         } catch (NameException e) {
             throw new VersionException(e);
@@ -231,8 +221,8 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             throws UnsupportedRepositoryOperationException, VersionException,
             RepositoryException {
         try {
-            session.getVersionManager().removeVersion(this,
-                    NameFormat.parse(versionName, session.getNamespaceResolver()));
+            session.getVersionManager().removeVersion(
+                    this, session.getQName(versionName));
         } catch (NameException e) {
             throw new RepositoryException(e);
         }

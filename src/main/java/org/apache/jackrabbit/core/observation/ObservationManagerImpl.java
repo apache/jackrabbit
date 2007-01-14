@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
 import org.slf4j.Logger;
@@ -117,11 +118,11 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
 
         Path path;
         try {
-            path = PathFormat.parse(absPath, session.getNamespaceResolver()).getNormalizedPath();
-        } catch (MalformedPathException mpe) {
+            path = session.getQPath(absPath).getNormalizedPath();
+        } catch (NameException e) {
             String msg = "invalid path syntax: " + absPath;
             log.debug(msg);
-            throw new RepositoryException(msg, mpe);
+            throw new RepositoryException(msg, e);
         }
         NodeId[] ids = null;
         if (uuid != null) {

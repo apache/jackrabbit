@@ -171,27 +171,11 @@ public class PropertyImpl extends ItemImpl implements Property {
 
             case PropertyType.NAME:
                 QName name = (QName) value.internalValue();
-                try {
-                    return NameFormat.format(name, session.getNamespaceResolver()).length();
-                } catch (NoPrefixDeclaredException npde) {
-                    // should never happen...
-                    String msg = safeGetJCRPath()
-                            + ": the value represents an invalid name";
-                    log.debug(msg);
-                    throw new RepositoryException(msg, npde);
-                }
+                return session.getJCRName(name).length();
 
             case PropertyType.PATH:
                 Path path = (Path) value.internalValue();
-                try {
-                    return PathFormat.format(path, session.getNamespaceResolver()).length();
-                } catch (NoPrefixDeclaredException npde) {
-                    // should never happen...
-                    String msg = safeGetJCRPath()
-                            + ": the value represents an invalid path";
-                    log.debug(msg);
-                    throw new RepositoryException(msg, npde);
-                }
+                return session.getJCRPath(path).length();
 
             case PropertyType.BINARY:
                 BLOBFileValue blob = (BLOBFileValue) value.internalValue();
@@ -1152,16 +1136,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     public String getName() throws RepositoryException {
         // check state of this instance
         sanityCheck();
-
-        QName name = ((PropertyId) id).getName();
-        try {
-            return NameFormat.format(name, session.getNamespaceResolver());
-        } catch (NoPrefixDeclaredException npde) {
-            // should never get here...
-            String msg = "internal error: encountered unregistered namespace " + name.getNamespaceURI();
-            log.debug(msg);
-            throw new RepositoryException(msg, npde);
-        }
+        return session.getJCRName(((PropertyId) id).getName());
     }
 
     /**
