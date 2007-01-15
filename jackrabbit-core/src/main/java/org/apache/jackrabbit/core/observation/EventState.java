@@ -105,6 +105,12 @@ public class EventState {
      * Cached hashCode value for this <code>Event</code>.
      */
     private int hashCode;
+    
+    /**
+     * Flag indicating whether this is an external event, e.g. originating from
+     * another node in a clustered environment.
+     */ 
+    private final boolean external;
 
     /**
      * Creates a new <code>EventState</code> instance.
@@ -123,14 +129,10 @@ public class EventState {
      * @param mixins     mixins assigned to the parent node.
      * @param session    the {@link javax.jcr.Session} that caused this event.
      */
-    private EventState(int type,
-                       NodeId parentId,
-                       Path parentPath,
-                       NodeId childId,
-                       Path.PathElement childPath,
-                       QName nodeType,
-                       Set mixins,
-                       Session session) {
+    private EventState(int type, NodeId parentId, Path parentPath,
+                       NodeId childId, Path.PathElement childPath, QName nodeType,
+                       Set mixins, Session session, boolean external) {
+
         int mask = (Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED);
         if ((type & mask) > 0) {
             if (childId != null) {
@@ -149,6 +151,7 @@ public class EventState {
         this.nodeType = nodeType;
         this.mixins = mixins;
         this.session = session;
+        this.external = external;
     }
 
     //-----------------< factory methods >--------------------------------------
@@ -175,16 +178,40 @@ public class EventState {
                                             QName nodeType,
                                             Set mixins,
                                             Session session) {
-        return new EventState(Event.NODE_ADDED,
-                parentId,
-                parentPath,
-                childId,
-                childPath,
-                nodeType,
-                mixins,
-                session);
+        
+        return childNodeAdded(parentId, parentPath, childId,
+                childPath, nodeType, mixins, session, false);
     }
 
+    /**
+     * Creates a new {@link javax.jcr.observation.Event} of type
+     * {@link javax.jcr.observation.Event#NODE_ADDED}.
+     *
+     * @param parentId   the id of the parent node associated with
+     *                   this <code>EventState</code>.
+     * @param parentPath the path of the parent node associated with
+     *                   this <code>EventState</code>.
+     * @param childId    the id of the child node associated with this event.
+     * @param childPath  the relative path of the child node that was added.
+     * @param nodeType   the node type of the parent node.
+     * @param mixins     mixins assigned to the parent node.
+     * @param session    the session that added the node.
+     * @param external   flag indicating whether this is an external event
+     * @return an <code>EventState</code> instance.
+     */
+    public static EventState childNodeAdded(NodeId parentId,
+                                            Path parentPath,
+                                            NodeId childId,
+                                            Path.PathElement childPath,
+                                            QName nodeType,
+                                            Set mixins,
+                                            Session session,
+                                            boolean external) {
+
+        return new EventState(Event.NODE_ADDED, parentId, parentPath,
+                childId, childPath, nodeType, mixins, session, external);
+    }
+    
     /**
      * Creates a new {@link javax.jcr.observation.Event} of type
      * {@link javax.jcr.observation.Event#NODE_REMOVED}.
@@ -207,16 +234,40 @@ public class EventState {
                                               QName nodeType,
                                               Set mixins,
                                               Session session) {
-        return new EventState(Event.NODE_REMOVED,
-                parentId,
-                parentPath,
-                childId,
-                childPath,
-                nodeType,
-                mixins,
-                session);
+
+        return childNodeRemoved(parentId, parentPath, childId,
+                childPath, nodeType, mixins, session, false);
     }
 
+    /**
+     * Creates a new {@link javax.jcr.observation.Event} of type
+     * {@link javax.jcr.observation.Event#NODE_REMOVED}.
+     *
+     * @param parentId   the id of the parent node associated with
+     *                   this <code>EventState</code>.
+     * @param parentPath the path of the parent node associated with
+     *                   this <code>EventState</code>.
+     * @param childId    the id of the child node associated with this event.
+     * @param childPath  the relative path of the child node that was removed.
+     * @param nodeType   the node type of the parent node.
+     * @param mixins     mixins assigned to the parent node.
+     * @param session    the session that removed the node.
+     * @param external   flag indicating whether this is an external event
+     * @return an <code>EventState</code> instance.
+     */
+    public static EventState childNodeRemoved(NodeId parentId,
+                                              Path parentPath,
+                                              NodeId childId,
+                                              Path.PathElement childPath,
+                                              QName nodeType,
+                                              Set mixins,
+                                              Session session,
+                                              boolean external) {
+
+        return new EventState(Event.NODE_REMOVED, parentId, parentPath,
+                childId, childPath, nodeType, mixins, session, external);
+    }
+    
     /**
      * Creates a new {@link javax.jcr.observation.Event} of type
      * {@link javax.jcr.observation.Event#PROPERTY_ADDED}.
@@ -237,14 +288,36 @@ public class EventState {
                                            QName nodeType,
                                            Set mixins,
                                            Session session) {
-        return new EventState(Event.PROPERTY_ADDED,
-                parentId,
-                parentPath,
-                null,
-                childPath,
-                nodeType,
-                mixins,
-                session);
+        
+        return propertyAdded(parentId, parentPath, childPath, 
+                nodeType, mixins, session, false);
+    }
+
+    /**
+     * Creates a new {@link javax.jcr.observation.Event} of type
+     * {@link javax.jcr.observation.Event#PROPERTY_ADDED}.
+     *
+     * @param parentId   the id of the parent node associated with
+     *                   this <code>EventState</code>.
+     * @param parentPath the path of the parent node associated with
+     *                   this <code>EventState</code>.
+     * @param childPath  the relative path of the property that was added.
+     * @param nodeType   the node type of the parent node.
+     * @param mixins     mixins assigned to the parent node.
+     * @param session    the session that added the property.
+     * @param external   flag indicating whether this is an external event
+     * @return an <code>EventState</code> instance.
+     */
+    public static EventState propertyAdded(NodeId parentId,
+                                           Path parentPath,
+                                           Path.PathElement childPath,
+                                           QName nodeType,
+                                           Set mixins,
+                                           Session session,
+                                           boolean external) {
+        
+        return new EventState(Event.PROPERTY_ADDED, parentId, parentPath,
+                null, childPath, nodeType, mixins, session, external);
     }
 
     /**
@@ -267,14 +340,36 @@ public class EventState {
                                              QName nodeType,
                                              Set mixins,
                                              Session session) {
-        return new EventState(Event.PROPERTY_REMOVED,
-                parentId,
-                parentPath,
-                null,
-                childPath,
-                nodeType,
-                mixins,
-                session);
+        
+        return propertyRemoved(parentId, parentPath, childPath,
+                nodeType, mixins, session, false);
+    }
+
+    /**
+     * Creates a new {@link javax.jcr.observation.Event} of type
+     * {@link javax.jcr.observation.Event#PROPERTY_REMOVED}.
+     *
+     * @param parentId   the id of the parent node associated with
+     *                   this <code>EventState</code>.
+     * @param parentPath the path of the parent node associated with
+     *                   this <code>EventState</code>.
+     * @param childPath  the relative path of the property that was removed.
+     * @param nodeType   the node type of the parent node.
+     * @param mixins     mixins assigned to the parent node.
+     * @param session    the session that removed the property.
+     * @param external   flag indicating whether this is an external event
+     * @return an <code>EventState</code> instance.
+     */
+    public static EventState propertyRemoved(NodeId parentId,
+                                             Path parentPath,
+                                             Path.PathElement childPath,
+                                             QName nodeType,
+                                             Set mixins,
+                                             Session session,
+                                             boolean external) {
+
+        return new EventState(Event.PROPERTY_REMOVED, parentId, parentPath,
+                null, childPath, nodeType, mixins, session, external);
     }
 
     /**
@@ -297,14 +392,36 @@ public class EventState {
                                              QName nodeType,
                                              Set mixins,
                                              Session session) {
-        return new EventState(Event.PROPERTY_CHANGED,
-                parentId,
-                parentPath,
-                null,
-                childPath,
-                nodeType,
-                mixins,
-                session);
+
+        return propertyChanged(parentId, parentPath, childPath,
+                nodeType, mixins, session, false);
+    }
+
+    /**
+     * Creates a new {@link javax.jcr.observation.Event} of type
+     * {@link javax.jcr.observation.Event#PROPERTY_CHANGED}.
+     *
+     * @param parentId   the id of the parent node associated with
+     *                   this <code>EventState</code>.
+     * @param parentPath the path of the parent node associated with
+     *                   this <code>EventState</code>.
+     * @param childPath  the relative path of the property that changed.
+     * @param nodeType   the node type of the parent node.
+     * @param mixins     mixins assigned to the parent node.
+     * @param session    the session that changed the property.
+     * @param external   flag indicating whether this is an external event
+     * @return an <code>EventState</code> instance.
+     */
+    public static EventState propertyChanged(NodeId parentId,
+                                             Path parentPath,
+                                             Path.PathElement childPath,
+                                             QName nodeType,
+                                             Set mixins,
+                                             Session session,
+                                             boolean external) {
+
+        return new EventState(Event.PROPERTY_CHANGED, parentId, parentPath,
+                null, childPath, nodeType, mixins, session, external);
     }
 
     /**
@@ -432,6 +549,16 @@ public class EventState {
             // node event
             return childId;
         }
+    }
+
+    /**
+     * Return a flag indicating whether this is an externally generated event.
+     *
+     * @return <code>true</code> if this is an external event;
+     *         <code>false</code> otherwise
+     */
+    boolean isExternal() {
+        return external;
     }
 
     /**
