@@ -316,9 +316,11 @@ public class MultiIndex {
             }
             while (add.hasNext()) {
                 NodeIndexer nodeIdx = (NodeIndexer) add.next();
-                executeAndLog(new AddNode(transactionId, nodeIdx));
-                // commit volatile index if needed
-                flush |= checkVolatileCommit();
+                if (nodeIdx != null) {
+                    executeAndLog(new AddNode(transactionId, nodeIdx));
+                    // commit volatile index if needed
+                    flush |= checkVolatileCommit();
+                }
             }
             executeAndLog(new Commit(transactionId));
 

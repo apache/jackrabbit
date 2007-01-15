@@ -577,19 +577,19 @@ public abstract class AbstractJournal implements Journal {
         switch (type) {
             case Event.NODE_ADDED:
                 return EventState.childNodeAdded(parentId, parentPath, childId, childRelPath,
-                        ntName, mixins, getOrCreateSession(userId));
+                        ntName, mixins, getOrCreateSession(userId), true);
             case Event.NODE_REMOVED:
                 return EventState.childNodeRemoved(parentId, parentPath, childId, childRelPath,
-                        ntName, mixins, getOrCreateSession(userId));
+                        ntName, mixins, getOrCreateSession(userId), true);
             case Event.PROPERTY_ADDED:
                 return EventState.propertyAdded(parentId, parentPath, childRelPath,
-                        ntName, mixins, getOrCreateSession(userId));
+                        ntName, mixins, getOrCreateSession(userId), true);
             case Event.PROPERTY_CHANGED:
                 return EventState.propertyChanged(parentId, parentPath, childRelPath,
-                        ntName, mixins, getOrCreateSession(userId));
+                        ntName, mixins, getOrCreateSession(userId), true);
             case Event.PROPERTY_REMOVED:
                 return EventState.propertyRemoved(parentId, parentPath, childRelPath,
-                        ntName, mixins, getOrCreateSession(userId));
+                        ntName, mixins, getOrCreateSession(userId), true);
             default:
                 String msg = "Unexpected event type: " + type;
                 throw new IllegalArgumentException(msg);

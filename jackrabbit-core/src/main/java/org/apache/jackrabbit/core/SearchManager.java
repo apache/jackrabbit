@@ -50,6 +50,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Acts as a global entry point to execute queries and index nodes.
@@ -283,7 +285,7 @@ public class SearchManager implements SynchronousEventListener {
         // nodes that need to be removed from the index.
         final Set removedNodes = new HashSet();
         // nodes that need to be added to the index.
-        final Set addedNodes = new HashSet();
+        final Map addedNodes = new HashMap();
         // property events
         List propEvents = new ArrayList();
 
@@ -298,7 +300,7 @@ public class SearchManager implements SynchronousEventListener {
             }
             long type = e.getType();
             if (type == Event.NODE_ADDED) {
-                addedNodes.add(e.getChildId());
+                addedNodes.put(e.getChildId(), e);
             } else if (type == Event.NODE_REMOVED) {
                 removedNodes.add(e.getChildId());
             } else {
@@ -308,29 +310,29 @@ public class SearchManager implements SynchronousEventListener {
 
         // sort out property events
         for (int i = 0; i < propEvents.size(); i++) {
-            EventImpl event = (EventImpl) propEvents.get(i);
-            NodeId nodeId = event.getParentId();
-            if (event.getType() == Event.PROPERTY_ADDED) {
-                if (addedNodes.add(nodeId)) {
+            EventImpl e = (EventImpl) propEvents.get(i);
+            NodeId nodeId = e.getParentId();
+            if (e.getType() == Event.PROPERTY_ADDED) {
+                if (addedNodes.put(nodeId, e) == null) {
                     // only property added
                     // need to re-index
                     removedNodes.add(nodeId);
                 } else {
                     // the node where this prop belongs to is also new
                 }
-            } else if (event.getType() == Event.PROPERTY_CHANGED) {
+            } else if (e.getType() == Event.PROPERTY_CHANGED) {
                 // need to re-index
-                addedNodes.add(nodeId);
+                addedNodes.put(nodeId, e);
                 removedNodes.add(nodeId);
             } else {
                 // property removed event is only generated when node still exists
-                addedNodes.add(nodeId);
+                addedNodes.put(nodeId, e);
                 removedNodes.add(nodeId);
             }
         }
 
         NodeStateIterator addedStates = new NodeStateIterator() {
-            private final Iterator iter = addedNodes.iterator();
+            private final Iterator iter = addedNodes.keySet().iterator();
 
             public void remove() {
                 throw new UnsupportedOperationException();
@@ -349,8 +351,15 @@ public class SearchManager implements SynchronousEventListener {
                 NodeId id = (NodeId) iter.next();
                 try {
                     item = (NodeState) itemMgr.getItemState(id);
-                } catch (ItemStateException e) {
-                    log.error("Unable to index node " + id + ": does not exist");
+                } catch (ItemStateException ise) {
+                    // check whether this item state change originated from
+                    // an external event
+                    EventImpl e = (EventImpl) addedNodes.get(id);
+                    if (e == null || !e.isExternal()) {
+                        log.error("Unable to index node " + id + ": does not exist");
+                    } else {
+                        log.info("Node no longer available " + id + ", skipped.");
+                    }
                 }
                 return item;
             }

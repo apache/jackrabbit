@@ -113,11 +113,13 @@ class FileRevision {
             }
             lock = null;
 
-            try {
-                raf.close();
-            } catch (IOException e) {
-                String msg = "I/O error while closing file: " + e.getMessage();
-                log.warn(msg);
+            if (raf != null) {
+                try {
+                    raf.close();
+                } catch (IOException e) {
+                    String msg = "I/O error while closing file: " + e.getMessage();
+                    log.warn(msg);
+                }
             }
             raf = null;
         }
