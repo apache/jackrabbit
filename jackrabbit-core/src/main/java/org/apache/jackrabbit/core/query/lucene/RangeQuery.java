@@ -410,7 +410,9 @@ public class RangeQuery extends Query implements TransformConstants {
                     try {
                         do {
                             Term term = terms.term();
-                            if (term != null && term.field() == testField) {
+                            if (term != null
+                                    && term.field() == testField
+                                    && term.text().startsWith(namePrefix)) {
                                 if (checkLower) {
                                     int compare = termCompare(term.text(), lowerTerm.text(), propNameLength);
                                     if (compare > 0 || compare == 0 && inclusive) {
