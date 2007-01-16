@@ -51,9 +51,9 @@ public class Status {
     public static final int STALE_DESTROYED = 6;
 
     /**
-     * a state is permanently modified either by saving transient changes or
-     * by wsp operations or be external modification
-     * TODO: improve. status only temporarily used to indicate to a SessionISM-state to copy changes
+     * Temporary status used to mark a state, this is permanently modified
+     * either by saving transient changes, by workspace operations or by
+     * external modification.
      */
     public static final int MODIFIED = 7;
 
