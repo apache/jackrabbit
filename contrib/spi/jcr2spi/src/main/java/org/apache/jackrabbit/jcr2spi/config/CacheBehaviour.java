@@ -24,16 +24,6 @@ package org.apache.jackrabbit.jcr2spi.config;
 public final class CacheBehaviour {
 
     /**
-     * Cache maintenance is stictly done on a manual basis even though the
-     * repository implementation might support observation. Only the result of a
-     * <code>save()</code> upon a transient modification is reflected in the
-     * cache. The client has to call {@link javax.jcr.Item#refresh(boolean)}
-     * <i>manually</i> to get the full effect of his action. E.g. workspace
-     * operations will not change any cached state.
-     */
-    public static final CacheBehaviour MANUAL = new CacheBehaviour();
-
-    /**
      * Cache maintenance is done by invalidating affected items of an operation
      * and forcing the jcr2spi implementation to reload the item states when
      * they are accessed next time. No event listener is used for cache
