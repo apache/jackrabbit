@@ -81,6 +81,7 @@ Bug fixes
     * [JCR-687] - UUID compareTo and hashCode
     * [JCR-692] - jackrabbit-jca rar archive misses required classes
     * [JCR-695] - Repository requires access to external resources
+    * [JCR-707] - Range queries fail on large repositories
 
 Release Contents
 ----------------
