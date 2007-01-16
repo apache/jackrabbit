@@ -40,7 +40,6 @@ public interface AccessManager {
 
     public String[] READ = new String[] {READ_ACTION};
     public String[] REMOVE = new String[] {REMOVE_ACTION};
-    // TODO public String[] WRITE = new String[0];
 
     /**
      * Determines whether the specified <code>permissions</code> are granted
@@ -78,8 +77,6 @@ public interface AccessManager {
      * @throws RepositoryException
      */
     boolean canRead(ItemState itemState) throws ItemNotFoundException, RepositoryException;
-
-    // TODO need for canWrite(ItemId ?)
 
     /**
      * Returns true if the existing item state can be removed.
