@@ -206,6 +206,9 @@ public class Installer {
         props.setProperty("repository.home", repHome);
         props.setProperty("repository.config", repXml);
         in.close();
+        if (!dest.getParentFile().exists()) {
+            dest.getParentFile().mkdirs();
+        }
         OutputStream out = new FileOutputStream(dest);
         props.store(out, "bootstrap properties for the repository startup servlet.");
         out.close();
