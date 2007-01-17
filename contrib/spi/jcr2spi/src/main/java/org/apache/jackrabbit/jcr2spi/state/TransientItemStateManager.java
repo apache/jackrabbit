@@ -103,7 +103,6 @@ public class TransientItemStateManager extends CachingItemStateManager
     }
 
     /**
-     * TODO: throw ItemExistsException? how to check?
      * Creates a new transient {@link NodeState} that does not overlay any other
      * {@link NodeState}.
      *
