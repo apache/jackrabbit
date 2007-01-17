@@ -445,14 +445,19 @@ public class SessionImporter implements Importer, SessionListener {
             log.debug("Skipping protected nodeState (" + nodeInfo.getName() + ")");
             return null;
         } else {
-            Operation an = AddNode.create(parent, nodeInfo.getName(), nodeInfo.getNodeTypeName(), nodeInfo.getUUID());
+            QName ntName = nodeInfo.getNodeTypeName();
+            if (ntName == null) {
+                // use default node type
+                ntName = def.getDefaultPrimaryType();
+            }
+            Operation an = AddNode.create(parent, nodeInfo.getName(), ntName, nodeInfo.getUUID());
             stateMgr.execute(an);
             // retrieve id of state that has been created during execution of AddNode
             NodeState childState;
             try {
                 List cne = parent.getChildNodeEntries(nodeInfo.getName());
                 if (def.allowsSameNameSiblings()) {
-                    // TODO: find proper solution. problem with same-name-siblings
+                    // TODO TOBEFIXED find proper solution. problem with same-name-siblings
                     childState = ((ChildNodeEntry)cne.get(cne.size()-1)).getNodeState();
                 } else {
                     childState = ((ChildNodeEntry)cne.get(0)).getNodeState();
