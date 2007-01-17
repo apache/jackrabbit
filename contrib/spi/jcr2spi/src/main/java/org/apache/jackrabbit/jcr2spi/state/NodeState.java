@@ -104,7 +104,7 @@ public class NodeState extends ItemState {
      * Constructs a new node state that is not connected.
      *
      * @param name          the name of this NodeState
-     * @param uuid          the uniqueID of this NodeState or <code>null</code> if
+     * @param uniqueID      the uniqueID of this NodeState or <code>null</code> if
      *                      this node state cannot be identified with a UUID.
      * @param parent        the parent of this NodeState
      * @param nodeTypeName  node type of this node
@@ -233,7 +233,15 @@ public class NodeState extends ItemState {
         if (isWorkspaceState()) {
             // reload from persistent storage ('keepChanges' not relevant).
             try {
+                /* TODO: TOBEFIXED.
+                   recreating nodestate not correct. parent still has entry pointing
+                   to this state and subsequently retrieving the childentries fails,
+                   since id of tmp state cannot be resolved.
+                   -> add workaround until state hierarchy has been modified
+                */
                 NodeState tmp = isf.createNodeState(getNodeId(), getParent());
+                tmp.childNodeEntries = isf.getChildNodeEntries(this);
+
                 if (merge(tmp, false) || getStatus() == Status.INVALIDATED) {
                     setStatus(Status.MODIFIED);
                 }
@@ -260,7 +268,7 @@ public class NodeState extends ItemState {
     }
 
     boolean merge(ItemState another, boolean keepChanges) {
-        if (another == null) {
+        if (another == null || another == this) {
             return false;
         }
         if (!another.isNode()) {
@@ -889,8 +897,10 @@ public class NodeState extends ItemState {
                 NodeState overlayedParent = (NodeState) parent.overlayedState;
                 if (state.isNode()) {
                     overlayedParent.childNodeEntries().remove((NodeState)state.overlayedState);
+                    parent.childNodeEntries().remove((NodeState)state);
                 } else {
                     overlayedParent.removePropertyEntry(state.overlayedState.getQName());
+                    parent.removePropertyEntry(state.getQName());
                 }
                 modifiedParent(parent, state, modParents);
             }
@@ -940,7 +950,6 @@ public class NodeState extends ItemState {
                 if (parent.getStatus() == Status.EXISTING_MODIFIED) {
                     modifiedParent(parent, addedState, modParents);
                 }
-
                 it.remove();
             } catch (ItemStateException e) {
                 log.error("Internal error.", e);
@@ -965,7 +974,6 @@ public class NodeState extends ItemState {
                     // and mark the moved state existing
                     modNodeState.setStatus(Status.EXISTING);
                     it.remove();
-
                 } else {
                     modifiedParent((NodeState)modState, null, modParents);
                 }
@@ -1010,8 +1018,7 @@ public class NodeState extends ItemState {
             if (!(state.getStatus() == Status.EXISTING ||
                   state.getStatus() == Status.REMOVED ||
                   state.getStatus() == Status.INVALIDATED)) {
-                // should not occur: state has not been processed
-                log.error("State " + state + " has not been processed upon ChangeLog.persisted => invalidate");
+                log.info("State " + state + " with Status " + Status.getName(state.getStatus()) + " has not been processed upon ChangeLog.persisted => invalidate");
                 state.invalidate(false);
             }
         }
