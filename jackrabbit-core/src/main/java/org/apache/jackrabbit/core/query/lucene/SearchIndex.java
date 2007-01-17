@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.search.Hits;
@@ -43,6 +42,7 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.document.Document;
 import org.apache.commons.collections.iterators.AbstractIteratorDecorator;
 
 import javax.jcr.RepositoryException;
@@ -65,7 +65,7 @@ public class SearchIndex extends AbstractQueryHandler {
     private static final Logger log = LoggerFactory.getLogger(SearchIndex.class);
 
     /**
-     * Name of the file to persist search internal namespace mappings
+     * Name of the file to persist search internal namespace mappings.
      */
     private static final String NS_MAPPING_FILE = "ns_mappings.properties";
 
@@ -88,6 +88,23 @@ public class SearchIndex extends AbstractQueryHandler {
      * the default value for property {@link #maxFieldLength}.
      */
     public static final int DEFAULT_MAX_FIELD_LENGTH = 10000;
+
+    /**
+     * The default value for property {@link #extractorPoolSize}.
+     */
+    public static final int DEFAULT_EXTRACTOR_POOL_SIZE = 0;
+
+    /**
+     * The default value for property {@link #extractorBackLog}.
+     */
+    public static final int DEFAULT_EXTRACTOR_BACK_LOG = 10;
+
+    /**
+     * The default timeout in milliseconds which is granted to the text
+     * extraction process until fulltext indexing is deferred to a background
+     * thread.
+     */
+    public static final long DEFAULT_EXTRACTOR_TIMEOUT = 100;
 
     /**
      * The actual index
@@ -143,6 +160,21 @@ public class SearchIndex extends AbstractQueryHandler {
      * maxFieldLength config parameter
      */
     private int maxFieldLength = DEFAULT_MAX_FIELD_LENGTH;
+
+    /**
+     * extractorPoolSize config parameter
+     */
+    private int extractorPoolSize = DEFAULT_EXTRACTOR_POOL_SIZE;
+
+    /**
+     * extractorBackLog config parameter
+     */
+    private int extractorBackLog = DEFAULT_EXTRACTOR_BACK_LOG;
+
+    /**
+     * extractorTimeout config parameter
+     */
+    private long extractorTimeout = DEFAULT_EXTRACTOR_TIMEOUT;
 
     /**
      * Number of documents that are buffered before they are added to the index.
@@ -221,6 +253,13 @@ public class SearchIndex extends AbstractQueryHandler {
             excludedIDs.add(context.getExcludedNodeId());
         }
 
+        extractor = new JackrabbitTextExtractor(textFilterClasses);
+        if (extractorPoolSize > 0) {
+            // wrap with pool
+            extractor = new PooledTextExtractor(extractor, extractorPoolSize,
+                    extractorBackLog, extractorTimeout);
+        }
+
         File indexDir = new File(path);
 
         NamespaceMappings nsMappings;
@@ -242,8 +281,6 @@ public class SearchIndex extends AbstractQueryHandler {
                         context.getNamespaceRegistry());
             }
         }
-
-        extractor = new JackrabbitTextExtractor(textFilterClasses);
 
         index = new MultiIndex(indexDir, this, context.getItemStateManager(),
                 context.getRootId(), excludedIDs, nsMappings);
@@ -316,7 +353,14 @@ public class SearchIndex extends AbstractQueryHandler {
                 if (state == null) {
                     return null;
                 }
-                return createNodeIndexer(state, getNamespaceMappings());
+                Document doc = null;
+                try {
+                    doc = createDocument(state, getNamespaceMappings());
+                } catch (RepositoryException e) {
+                    log.error("Exception while creating document for node: "
+                            + state.getNodeId() + ": " + e.toString());
+                }
+                return doc;
             }
         });
     }
@@ -352,6 +396,10 @@ public class SearchIndex extends AbstractQueryHandler {
      * to this handler.
      */
     public void close() {
+        // shutdown extractor
+        if (extractor instanceof PooledTextExtractor) {
+            ((PooledTextExtractor) extractor).shutdown();
+        }
         index.close();
         getContext().destroy();
         closed = true;
@@ -456,16 +504,21 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
-     * Creates a <code>NodeIndexer</code> for a node state using the namespace
-     * mappings <code>nsMappings</code>.
+     * Creates a lucene <code>Document</code> for a node state using the
+     * namespace mappings <code>nsMappings</code>.
      *
      * @param node       the node state to index.
      * @param nsMappings the namespace mappings of the search index.
-     * @return a <code>NodeIndexer</code> for the given <code>node</code>.
+     * @return a lucene <code>Document</code> that contains all properties of
+     *         <code>node</code>.
+     * @throws RepositoryException if an error occurs while indexing the
+     *                             <code>node</code>.
      */
-    protected NodeIndexer createNodeIndexer(NodeState node, NamespaceMappings nsMappings) {
+    protected Document createDocument(NodeState node,
+                                      NamespaceMappings nsMappings)
+            throws RepositoryException {
         return new NodeIndexer(node, getContext().getItemStateManager(),
-                nsMappings, extractor);
+                nsMappings, extractor).createDoc();
     }
 
     /**
@@ -784,6 +837,60 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public int getResultFetchSize() {
         return resultFetchSize;
+    }
+
+    /**
+     * The number of background threads for the extractor pool.
+     *
+     * @param numThreads the number of threads.
+     */
+    public void setExtractorPoolSize(int numThreads) {
+        if (numThreads < 0) {
+            numThreads = 0;
+        }
+        extractorPoolSize = numThreads;
+    }
+
+    /**
+     * @return the size of the thread pool which is used to run the text
+     *         extractors when binary content is indexed.
+     */
+    public int getExtractorPoolSize() {
+        return extractorPoolSize;
+    }
+
+    /**
+     * The number of extractor jobs that are queued until a new job is executed
+     * with the current thread instead of using the thread pool.
+     *
+     * @param backLog size of the extractor job queue.
+     */
+    public void setExtractorBackLogSize(int backLog) {
+        extractorBackLog = backLog;
+    }
+
+    /**
+     * @return the size of the extractor queue back log.
+     */
+    public int getExtractorBackLogSize() {
+        return extractorBackLog;
+    }
+
+    /**
+     * The timeout in milliseconds which is granted to the text extraction
+     * process until fulltext indexing is deferred to a background thread.
+     *
+     * @param timeout the timeout in milliseconds.
+     */
+    public void setExtractorTimeout(long timeout) {
+        extractorTimeout = timeout;
+    }
+
+    /**
+     * @return the extractor timeout in milliseconds.
+     */
+    public long getExtractorTimeout() {
+        return extractorTimeout;
     }
 
     //----------------------------< internal >----------------------------------

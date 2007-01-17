@@ -21,14 +21,17 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.StringReader;
 import java.util.BitSet;
+import java.util.Enumeration;
 
 /**
  * Implements common functionality for a lucene index.
@@ -88,21 +91,30 @@ abstract class AbstractIndex {
     private SharedIndexReader sharedReader;
 
     /**
+     * The indexing queue.
+     */
+    private IndexingQueue indexingQueue;
+
+    /**
      * Constructs an index with an <code>analyzer</code> and a
      * <code>directory</code>.
      *
-     * @param analyzer  the analyzer for text tokenizing.
-     * @param directory the underlying directory.
-     * @param cache     the document number cache if this index should use one;
-     *                  otherwise <code>cache</code> is <code>null</code>.
+     * @param analyzer      the analyzer for text tokenizing.
+     * @param directory     the underlying directory.
+     * @param cache         the document number cache if this index should use
+     *                      one; otherwise <code>cache</code> is
+     *                      <code>null</code>.
+     * @param indexingQueue the indexing queue.
      * @throws IOException if the index cannot be initialized.
      */
     AbstractIndex(Analyzer analyzer,
                   Directory directory,
-                  DocNumberCache cache) throws IOException {
+                  DocNumberCache cache,
+                  IndexingQueue indexingQueue) throws IOException {
         this.analyzer = analyzer;
         this.directory = directory;
         this.cache = cache;
+        this.indexingQueue = indexingQueue;
 
         if (!IndexReader.indexExists(directory)) {
             indexWriter = new IndexWriter(directory, analyzer, true);
@@ -124,19 +136,15 @@ abstract class AbstractIndex {
     }
 
     /**
-     * Adds a node to this index and invalidates the shared reader.
+     * Adds a document to this index and invalidates the shared reader.
      *
-     * @param nodeIndexer the node indexer of the node to add.
+     * @param doc the document to add.
      * @throws IOException if an error occurs while writing to the index.
      */
-    void addNode(NodeIndexer nodeIndexer) throws IOException {
-        try {
-            getIndexWriter().addDocument(nodeIndexer.createDoc());
-        } catch (RepositoryException e) {
-            IOException iex = new IOException(e.getMessage());
-            iex.initCause(e);
-            throw iex;
-        }
+    void addDocument(Document doc) throws IOException {
+        // check if text extractor completed its work
+        doc = getFinishedDocument(doc);
+        getIndexWriter().addDocument(doc);
         invalidateSharedReader();
     }
 
@@ -309,6 +317,68 @@ abstract class AbstractIndex {
             sharedReader.close();
             sharedReader = null;
         }
+    }
+
+    /**
+     * Returns a document that is finished with text extraction and is ready to
+     * be added to the index.
+     *
+     * @param doc the document to check.
+     * @return <code>doc</code> if it is finished already or a stripped down
+     *         copy of <code>doc</code> without text extractors.
+     * @throws IOException if the document cannot be added to the indexing
+     *                     queue.
+     */
+    private Document getFinishedDocument(Document doc) throws IOException {
+        if (!Util.isDocumentReady(doc)) {
+            Document copy = new Document();
+            for (Enumeration fields = doc.fields(); fields.hasMoreElements(); ) {
+                Field f = (Field) fields.nextElement();
+                Field field = null;
+                Field.TermVector tv;
+                if (f.isTermVectorStored()) {
+                    tv = Field.TermVector.YES;
+                } else {
+                    tv = Field.TermVector.NO;
+                }
+                Field.Store stored;
+                if (f.isStored()) {
+                    stored = Field.Store.YES;
+                } else {
+                    stored = Field.Store.NO;
+                }
+                Field.Index indexed;
+                if (!f.isIndexed()) {
+                    indexed = Field.Index.NO;
+                } else if (f.isTokenized()) {
+                    indexed = Field.Index.TOKENIZED;
+                } else {
+                    indexed = Field.Index.UN_TOKENIZED;
+                }
+                if (f.readerValue() != null) {
+                    // replace all readers with empty string reader
+                    field = new Field(f.name(), new StringReader(""), tv);
+                } else if (f.stringValue() != null) {
+                    field = new Field(f.name(), f.stringValue(),
+                            stored, indexed, tv);
+                } else if (f.isBinary()) {
+                    field = new Field(f.name(), f.binaryValue(), stored);
+                }
+                if (field != null) {
+                    copy.add(field);
+                }
+            }
+            // schedule the original document for later indexing
+            Document existing = indexingQueue.addDocument(doc);
+            if (existing != null) {
+                // the queue already contained a pending document for this
+                // node. -> dispose the document
+                Util.disposeDocument(existing);
+            }
+            // use the stripped down copy for now
+            doc = copy;
+        }
+        return doc;
     }
 
     //-------------------------< properties >-----------------------------------
