@@ -21,8 +21,8 @@ import javax.jcr.ValueFormatException;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
 
-import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.IdFactory;
@@ -191,7 +191,7 @@ public class PropertyState extends ItemState {
      * @see ItemState#merge(ItemState, boolean)
      */
     boolean merge(ItemState another, boolean keepChanges) {
-        if (another == null) {
+        if (another == null || another == this) {
             return false;
         }
         if (another.isNode()) {
@@ -354,7 +354,7 @@ public class PropertyState extends ItemState {
         checkIsSessionState();
         // make sure the arguements are consistent and do not violate the
         // given property definition.
-        validate(values, type, this.def);
+        validate(values, type, def);
         init(type, values);
 
         markModified();
