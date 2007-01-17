@@ -32,6 +32,7 @@ import org.apache.jackrabbit.value.QValue;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
 
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
@@ -141,8 +142,9 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
                 // special case for root state
                 definition = wspManager.getNodeTypeRegistry().getRootNodeDef();
             } else {
-                EffectiveNodeType ent = wspManager.getNodeTypeRegistry().getEffectiveNodeType(parent.getNodeTypeNames());
-                definition = ent.getApplicableNodeDefinition(info.getQName(), info.getNodetype());
+                NodeTypeRegistry ntReg = wspManager.getNodeTypeRegistry();
+                EffectiveNodeType ent = ntReg.getEffectiveNodeType(parent.getNodeTypeNames());
+                definition = ent.getApplicableNodeDefinition(info.getQName(), info.getNodetype(), ntReg);
             }
 
             // build the node state

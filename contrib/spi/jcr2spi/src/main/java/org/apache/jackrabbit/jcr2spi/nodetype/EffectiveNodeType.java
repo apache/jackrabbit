@@ -43,7 +43,17 @@ public interface EffectiveNodeType {
      *         <code>false</code>
      */
     public boolean includesNodeType(QName nodeTypeName);
-    
+
+    /**
+     * Determines whether this effective node type representation includes
+     * (either through inheritance or aggregation) all of the given node types.
+     *
+     * @param nodeTypeNames array of node type names
+     * @return <code>true</code> if all of the given node types are included,
+     *         otherwise <code>false</code>
+     */
+    public boolean includesNodeTypes(QName[] nodeTypeNames);
+
     public QNodeDefinition[] getAllNodeDefs();
 
     public QPropertyDefinition[] getAllPropDefs();
@@ -67,7 +77,8 @@ public interface EffectiveNodeType {
      * @throws ConstraintViolationException if no applicable child node definition
      * could be found
      */
-    public QNodeDefinition getApplicableNodeDefinition(QName name, QName nodeTypeName)
+    public QNodeDefinition getApplicableNodeDefinition(QName name, QName nodeTypeName,
+                                                       NodeTypeRegistry ntReg)
             throws NoSuchNodeTypeException, ConstraintViolationException;
 
     /**
@@ -88,7 +99,7 @@ public interface EffectiveNodeType {
      *                                      could be found
      */
     public QPropertyDefinition getApplicablePropertyDefinition(QName name, int type,
-                                            boolean multiValued)
+                                                               boolean multiValued)
             throws ConstraintViolationException;
 
     /**
@@ -117,18 +128,20 @@ public interface EffectiveNodeType {
 
     /**
      * @param name
+     * @param ntReg
      * @throws ConstraintViolationException
      */
-    public void checkAddNodeConstraints(QName name)
+    public void checkAddNodeConstraints(QName name, NodeTypeRegistry ntReg)
             throws ConstraintViolationException;
 
     /**
      * @param name
      * @param nodeTypeName
+     * @param ntReg
      * @throws ConstraintViolationException
      * @throws NoSuchNodeTypeException
      */
-    public void checkAddNodeConstraints(QName name, QName nodeTypeName)
+    public void checkAddNodeConstraints(QName name, QName nodeTypeName, NodeTypeRegistry ntReg)
             throws ConstraintViolationException, NoSuchNodeTypeException;
 
     /**

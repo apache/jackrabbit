@@ -22,8 +22,6 @@ import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFormat;
 import org.apache.jackrabbit.value.QValue;
 import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.QName;
@@ -281,10 +279,11 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property setProperty(String name, Value value, int type) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
         checkIsWritable();
+        QName propQName = getQName(name);
         Property prop;
-        if (hasProperty(name)) {
+        if (hasProperty(propQName)) {
             // property already exists: pass call to property
-            prop = getProperty(name);
+            prop = getProperty(propQName);
             Value v = (type == PropertyType.UNDEFINED) ? value : ValueHelper.convert(value, type, session.getValueFactory());
             prop.setValue(v);
         } else {
@@ -294,7 +293,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 prop = null;
             } else {
                 // new property to be added
-                prop = createProperty(getQName(name), value, type);
+                prop = createProperty(propQName, value, type);
             }
         }
         return prop;
@@ -319,10 +318,11 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property setProperty(String name, Value[] values, int type) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
         checkIsWritable();
+        QName propName = getQName(name);
         Property prop;
-        if (hasProperty(name)) {
+        if (hasProperty(propName)) {
             // property already exists: pass call to property
-            prop = getProperty(name);
+            prop = getProperty(propName);
             Value[] vs = (type == PropertyType.UNDEFINED) ? values : ValueHelper.convert(values, type, session.getValueFactory());
             prop.setValue(vs);
         } else {
@@ -332,7 +332,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 prop = null;
             } else {
                 // new property to be added
-                prop = createProperty(getQName(name), values, type);
+                prop = createProperty(propName, values, type);
             }
         }
         return prop;
@@ -652,6 +652,15 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public boolean isNodeType(String nodeTypeName) throws RepositoryException {
         checkStatus();        
+        // try shortcut first (avoids parsing of name)
+        try {
+            if (NameFormat.format(primaryTypeName, session.getNamespaceResolver()).equals(nodeTypeName)) {
+                return true;
+            }
+        } catch (NoPrefixDeclaredException npde) {
+            throw new RepositoryException("Invalid node type name: " + nodeTypeName, npde);
+        }
+        // parse to QName and check against effective nodetype
         return isNodeType(getQName(nodeTypeName));
     }
 
@@ -1319,7 +1328,7 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             List cne = getNodeState().getChildNodeEntries(nodeName);
             if (definition.allowsSameNameSiblings()) {
-                // TODO: find proper solution. problem with SNSs
+                // TODO TOBEFIXED find proper solution. problem with SNSs
                 childState = ((ChildNodeEntry)cne.get(cne.size()-1)).getNodeState();
             } else {
                 childState = ((ChildNodeEntry)cne.get(0)).getNodeState();
@@ -1452,9 +1461,7 @@ public class NodeImpl extends ItemImpl implements Node {
         QName qName;
         try {
             qName = NameFormat.parse(jcrName, session.getNamespaceResolver());
-        } catch (IllegalNameException ine) {
-            throw new RepositoryException("invalid name: " + jcrName, ine);
-        } catch (UnknownPrefixException upe) {
+        } catch (NameException upe) {
             throw new RepositoryException("invalid name: "+ jcrName, upe);
         }
         return qName;

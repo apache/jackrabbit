@@ -42,7 +42,6 @@ import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
 import java.util.ArrayList;
-import java.util.HashSet;
 
 /**
  * A <code>NodeTypeImpl</code> ...
@@ -90,35 +89,6 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * Returns the applicable child node definition for a child node with the
-     * specified name.
-     *
-     * @param nodeName
-     * @return
-     * @throws RepositoryException if no applicable child node definition
-     *                             could be found
-     */
-    private QNodeDefinition getApplicableNodeDef(QName nodeName)
-            throws RepositoryException {
-        return getApplicableNodeDef(nodeName, null);
-    }
-
-    /**
-     * Returns the applicable child node definition for a child node with the
-     * specified name and node type.
-     *
-     * @param nodeName
-     * @param nodeTypeName
-     * @return
-     * @throws RepositoryException if no applicable child node definition
-     *                             could be found
-     */
-    private QNodeDefinition getApplicableNodeDef(QName nodeName, QName nodeTypeName)
-            throws RepositoryException {
-        return ent.getApplicableNodeDefinition(nodeName, nodeTypeName);
-    }
-
-    /**
      * Returns the applicable property definition for a property with the
      * specified name and type.
      *
@@ -144,78 +114,6 @@ public class NodeTypeImpl implements NodeType {
      */
     public boolean isNodeType(QName nodeTypeName) {
         return getQName().equals(nodeTypeName) ||  ent.includesNodeType(nodeTypeName);
-    }
-
-    /**
-     * Returns an array containing only those child node definitions of this
-     * node type (including the child node definitions inherited from supertypes
-     * of this node type) where <code>{@link NodeDefinition#isAutoCreated()}</code>
-     * returns <code>true</code>.
-     *
-     * @return an array of child node definitions.
-     * @see NodeDefinition#isAutoCreated
-     */
-    private NodeDefinition[] getAutoCreatedNodeDefinitions() {
-        QNodeDefinition[] cnda = ent.getAutoCreateNodeDefs();
-        NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
-        for (int i = 0; i < cnda.length; i++) {
-            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i]);
-        }
-        return nodeDefs;
-    }
-
-    /**
-     * Returns an array containing only those property definitions of this
-     * node type (including the property definitions inherited from supertypes
-     * of this node type) where <code>{@link PropertyDefinition#isAutoCreated()}</code>
-     * returns <code>true</code>.
-     *
-     * @return an array of property definitions.
-     * @see PropertyDefinition#isAutoCreated
-     */
-    private PropertyDefinition[] getAutoCreatedPropertyDefinitions() {
-        QPropertyDefinition[] pda = ent.getAutoCreatePropDefs();
-        PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
-        for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = ntMgr.getPropertyDefinition(pda[i]);
-        }
-        return propDefs;
-    }
-
-    /**
-     * Returns an array containing only those property definitions of this
-     * node type (including the property definitions inherited from supertypes
-     * of this node type) where <code>{@link PropertyDefinition#isMandatory()}</code>
-     * returns <code>true</code>.
-     *
-     * @return an array of property definitions.
-     * @see PropertyDefinition#isMandatory
-     */
-    private PropertyDefinition[] getMandatoryPropertyDefinitions() {
-        QPropertyDefinition[] pda = ent.getMandatoryPropDefs();
-        PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
-        for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = ntMgr.getPropertyDefinition(pda[i]);
-        }
-        return propDefs;
-    }
-
-    /**
-     * Returns an array containing only those child node definitions of this
-     * node type (including the child node definitions inherited from supertypes
-     * of this node type) where <code>{@link NodeDefinition#isMandatory()}</code>
-     * returns <code>true</code>.
-     *
-     * @return an array of child node definitions.
-     * @see NodeDefinition#isMandatory
-     */
-    private NodeDefinition[] getMandatoryNodeDefinitions() {
-        QNodeDefinition[] cnda = ent.getMandatoryNodeDefs();
-        NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
-        for (int i = 0; i < cnda.length; i++) {
-            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i]);
-        }
-        return nodeDefs;
     }
 
     /**
@@ -246,41 +144,7 @@ public class NodeTypeImpl implements NodeType {
         return ntd.getQName();
     }
 
-    /**
-     * Returns all <i>inherited</i> supertypes of this node type.
-     *
-     * @return an array of <code>NodeType</code> objects.
-     * @see #getSupertypes
-     * @see #getDeclaredSupertypes
-     */
-    private NodeType[] getInheritedSupertypes() {
-        // declared supertypes
-        QName[] ntNames = ntd.getSupertypes();
-        HashSet declared = new HashSet();
-        for (int i = 0; i < ntNames.length; i++) {
-            declared.add(ntNames[i]);
-        }
-        // all supertypes
-        ntNames = ent.getInheritedNodeTypes();
-
-        // filter from all supertypes those that are not declared
-        ArrayList inherited = new ArrayList();
-        for (int i = 0; i < ntNames.length; i++) {
-            if (!declared.contains(ntNames[i])) {
-                try {
-                    inherited.add(ntMgr.getNodeType(ntNames[i]));
-                } catch (NoSuchNodeTypeException e) {
-                    // should never get here
-                    log.error("undefined supertype", e);
-                    return new NodeType[0];
-                }
-            }
-        }
-
-        return (NodeType[]) inherited.toArray(new NodeType[inherited.size()]);
-    }
-
-    //-------------------------------------------------------------< NodeType >
+    //-----------------------------------------------------------< NodeType >---
     /**
      * {@inheritDoc}
      */
@@ -539,7 +403,8 @@ public class NodeTypeImpl implements NodeType {
      */
     public boolean canAddChildNode(String childNodeName) {
         try {
-            ent.checkAddNodeConstraints(NameFormat.parse(childNodeName, nsResolver));
+            ent.checkAddNodeConstraints(NameFormat.parse(childNodeName, nsResolver),
+                ntMgr.getNodeTypeRegistry());
             return true;
         } catch (NameException be) {
             // implementation specific exception, fall through
@@ -554,7 +419,8 @@ public class NodeTypeImpl implements NodeType {
      */
     public boolean canAddChildNode(String childNodeName, String nodeTypeName) {
         try {
-            ent.checkAddNodeConstraints(NameFormat.parse(childNodeName, nsResolver), NameFormat.parse(nodeTypeName, nsResolver));
+            ent.checkAddNodeConstraints(NameFormat.parse(childNodeName, nsResolver),
+                NameFormat.parse(nodeTypeName, nsResolver), ntMgr.getNodeTypeRegistry());
             return true;
         } catch (NameException be) {
             // implementation specific exception, fall through

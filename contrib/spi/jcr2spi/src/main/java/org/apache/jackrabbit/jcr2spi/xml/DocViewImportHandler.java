@@ -175,22 +175,17 @@ class DocViewImportHandler extends TargetImportHandler {
 
             ArrayList props = new ArrayList(atts.getLength());
             for (int i = 0; i < atts.getLength(); i++) {
+                if (atts.getURI(i).equals(QName.NS_XMLNS_URI)) {
+                    // skip namespace declarations reported as attributes
+                    // see http://issues.apache.org/jira/browse/JCR-620#action_12448164
+                    continue;
+                }
                 QName propName = new QName(atts.getURI(i), atts.getLocalName(i));
                 // decode property name
                 propName = ISO9075.decode(propName);
 
-                // value(s)
+                // attribute value
                 String attrValue = atts.getValue(i);
-                Importer.TextValue[] propValues;
-
-                // always assume single-valued property for the time being
-                // until a way of properly serializing/detecting multi-valued
-                // properties on re-import is found (see JCR-325);
-                // see also DocViewSAXEventGenerator#leavingProperties(Node, int)
-                // TODO: proper multi-value serialization support
-                propValues = new Importer.TextValue[1];
-                propValues[0] = new StringValue(attrValue);
-
                 if (propName.equals(QName.JCR_PRIMARYTYPE)) {
                     // jcr:primaryType
                     if (attrValue.length() > 0) {
@@ -203,24 +198,20 @@ class DocViewImportHandler extends TargetImportHandler {
                     }
                 } else if (propName.equals(QName.JCR_MIXINTYPES)) {
                     // jcr:mixinTypes
-                    if (propValues.length > 0) {
-                        mixinTypes = new QName[propValues.length];
-                        for (int j = 0; j < propValues.length; j++) {
-                            String val = ((StringValue) propValues[j]).retrieve();
-                            try {
-                                mixinTypes[j] = NameFormat.parse(val, nsContext);
-                            } catch (NameException ne) {
-                                throw new SAXException("illegal jcr:mixinTypes value: "
-                                        + val, ne);
-                            }
-                        }
-                    }
+                    mixinTypes = parseNames(attrValue);
                 } else if (propName.equals(QName.JCR_UUID)) {
                     // jcr:uuid
                     if (attrValue.length() > 0) {
                         uuid = attrValue;
                     }
                 } else {
+                    // always assume single-valued property for the time being
+                    // until a way of properly serializing/detecting multi-valued
+                    // properties on re-import is found (see JCR-325);
+                    // see also DocViewSAXEventGenerator#leavingProperties(Node, int)
+                    // TODO: proper multi-value serialization support
+                    Importer.TextValue[] propValues = new Importer.TextValue[1];
+                    propValues[0] = new StringValue(attrValue);
                     props.add(new Importer.PropInfo(propName, PropertyType.UNDEFINED, propValues));
                 }
             }
@@ -233,6 +224,29 @@ class DocViewImportHandler extends TargetImportHandler {
         } catch (RepositoryException re) {
             throw new SAXException(re);
         }
+    }
+
+    /**
+     * Parses the given string as a list of JCR names. Any whitespace sequence
+     * is supported as a names separator instead of just a single space to
+     * be more liberal in what we accept. The current namespace context is
+     * used to convert the prefixed name strings to QNames.
+     *
+     * @param value string value
+     * @return the parsed names
+     * @throws SAXException if an invalid name was encountered
+     */
+    private QName[] parseNames(String value) throws SAXException {
+        String[] names = value.split("\\p{Space}+");
+        QName[] qnames = new QName[names.length];
+        for (int i = 0; i < names.length; i++) {
+            try {
+                qnames[i] = NameFormat.parse(names[i], nsContext);
+            } catch (NameException ne) {
+                throw new SAXException("Invalid name: " + names[i], ne);
+            }
+        }
+        return qnames;
     }
 
     /**
