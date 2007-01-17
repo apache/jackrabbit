@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
@@ -81,6 +83,11 @@ public class MultiIndex {
      * Default name of the redo log file
      */
     private static final String REDO_LOG = "redo.log";
+
+    /**
+     * Name of the file that contains the indexing queue log.
+     */
+    private static final String INDEXING_QUEUE_FILE = "indexing_queue.log";
 
     /**
      * Names of active persistent index directories.
@@ -174,6 +181,11 @@ public class MultiIndex {
     private final RedoLog redoLog;
 
     /**
+     * The indexing queue with pending text extraction jobs.
+     */
+    private IndexingQueue indexingQueue;
+
+    /**
      * Set&lt;NodeId> of uuids that should not be indexed.
      */
     private final Set excludedIDs;
@@ -235,6 +247,22 @@ public class MultiIndex {
         merger.setMergeFactor(handler.getMergeFactor());
         merger.setMinMergeDocs(handler.getMinMergeDocs());
 
+        IndexingQueueStore store;
+        try {
+            LocalFileSystem fs = new LocalFileSystem();
+            fs.setRoot(indexDir);
+            fs.init();
+            store = new IndexingQueueStore(fs, INDEXING_QUEUE_FILE);
+        } catch (FileSystemException e) {
+            IOException ex = new IOException();
+            ex.initCause(e);
+            throw ex;
+        }
+
+        // initialize indexing queue
+        this.indexingQueue = new IndexingQueue(store, this);
+
+
         try {
             // open persistent indexes
             for (int i = 0; i < indexNames.size(); i++) {
@@ -248,8 +276,9 @@ public class MultiIndex {
                     // move on to next index
                     continue;
                 }
-                PersistentIndex index = new PersistentIndex(indexNames.getName(i),
-                        sub, false, handler.getTextAnalyzer(), cache);
+                PersistentIndex index = new PersistentIndex(
+                        indexNames.getName(i), sub, false,
+                        handler.getTextAnalyzer(), cache, indexingQueue);
                 index.setMaxMergeDocs(handler.getMaxMergeDocs());
                 index.setMergeFactor(handler.getMergeFactor());
                 index.setMinMergeDocs(handler.getMinMergeDocs());
@@ -289,6 +318,9 @@ public class MultiIndex {
         lastFlushTime = System.currentTimeMillis();
         flushTask = new Timer.Task() {
             public void run() {
+                // check if there are any indexing jobs finished
+                checkIndexingQueue();
+                // check if volatile index should be flushed
                 checkFlush();
             }
         };
@@ -296,11 +328,15 @@ public class MultiIndex {
     }
 
     /**
-     * Atomically updates the index by removing some documents and adding others.
+     * Atomically updates the index by removing some documents and adding
+     * others.
      *
      * @param remove Iterator of <code>UUID</code>s that identify documents to
      *               remove
-     * @param add    Iterator of <code>NodeIndexer</code>s to add.
+     * @param add    Iterator of <code>Document</code>s to add. Calls to
+     *               <code>next()</code> on this iterator may return
+     *               <code>null</code>, to indicate that a node could not be
+     *               indexed successfully.
      */
     synchronized void update(Iterator remove, Iterator add) throws IOException {
         synchronized (updateMonitor) {
@@ -315,9 +351,9 @@ public class MultiIndex {
                 executeAndLog(new DeleteNode(transactionId, (UUID) remove.next()));
             }
             while (add.hasNext()) {
-                NodeIndexer nodeIdx = (NodeIndexer) add.next();
-                if (nodeIdx != null) {
-                    executeAndLog(new AddNode(transactionId, nodeIdx));
+                Document doc = (Document) add.next();
+                if (doc != null) {
+                    executeAndLog(new AddNode(transactionId, doc));
                     // commit volatile index if needed
                     flush |= checkVolatileCommit();
                 }
@@ -481,7 +517,7 @@ public class MultiIndex {
             sub = new File(indexDir, indexName);
         }
         PersistentIndex index = new PersistentIndex(indexName, sub, create,
-                handler.getTextAnalyzer(), cache);
+                handler.getTextAnalyzer(), cache, indexingQueue);
         index.setMaxMergeDocs(handler.getMaxMergeDocs());
         index.setMergeFactor(handler.getMergeFactor());
         index.setMinMergeDocs(handler.getMinMergeDocs());
@@ -664,6 +700,13 @@ public class MultiIndex {
             for (int i = 0; i < indexes.size(); i++) {
                 ((PersistentIndex) indexes.get(i)).close();
             }
+
+            // finally close indexing queue
+            try {
+                indexingQueue.close();
+            } catch (IOException e) {
+                log.error("Exception while closing search index.", e);
+            }
         }
     }
 
@@ -676,15 +719,43 @@ public class MultiIndex {
     }
 
     /**
-     * Returns a <code>NodeIndexer</code> for the <code>node</code>.
+     * Returns the indexing queue for this multi index.
+     * @return the indexing queue for this multi index.
+     */
+    IndexingQueue getIndexingQueue() {
+        return indexingQueue;
+    }
+
+    /**
+     * Returns a lucene Document for the <code>node</code>.
      *
      * @param node the node to index.
-     * @return the node indexer.
+     * @return the index document.
      * @throws RepositoryException if an error occurs while reading from the
      *                             workspace.
      */
-    NodeIndexer createNodeIndexer(NodeState node) throws RepositoryException {
-        return handler.createNodeIndexer(node, nsMappings);
+    Document createDocument(NodeState node) throws RepositoryException {
+        return handler.createDocument(node, nsMappings);
+    }
+
+    /**
+     * Returns a lucene Document for the Node with <code>id</code>.
+     *
+     * @param id the id of the node to index.
+     * @return the index document.
+     * @throws RepositoryException if an error occurs while reading from the
+     *                             workspace or if there is no node with
+     *                             <code>id</code>.
+     */
+    Document createDocument(NodeId id) throws RepositoryException {
+        try {
+            NodeState state = (NodeState) handler.getContext().getItemStateManager().getItemState(id);
+            return createDocument(state);
+        } catch (NoSuchItemStateException e) {
+            throw new RepositoryException("Node " + id + " does not exist", e);
+        } catch (ItemStateException e) {
+            throw new RepositoryException("Error retrieving node: " + id, e);
+        }
     }
 
     /**
@@ -757,30 +828,11 @@ public class MultiIndex {
      * Resets the volatile index to a new instance.
      */
     private void resetVolatileIndex() throws IOException {
-        volatileIndex = new VolatileIndex(handler.getTextAnalyzer());
+        volatileIndex = new VolatileIndex(
+                handler.getTextAnalyzer(), indexingQueue);
         volatileIndex.setUseCompoundFile(handler.getUseCompoundFile());
         volatileIndex.setMaxFieldLength(handler.getMaxFieldLength());
         volatileIndex.setBufferSize(handler.getBufferSize());
-    }
-
-    /**
-     * Returns a <code>NodeIndexer</code> for the Node with <code>id</code>.
-     *
-     * @param id the id of the node to index.
-     * @return the node indexer.
-     * @throws RepositoryException if an error occurs while reading from the
-     *                             workspace or if there is no node with
-     *                             <code>id</code>.
-     */
-    private NodeIndexer createNodeIndexer(NodeId id) throws RepositoryException {
-        try {
-            NodeState state = (NodeState) handler.getContext().getItemStateManager().getItemState(id);
-            return createNodeIndexer(state);
-        } catch (NoSuchItemStateException e) {
-            throw new RepositoryException("Node " + id + " does not exist", e);
-        } catch (ItemStateException e) {
-            throw new RepositoryException("Error retrieving node: " + id, e);
-        }
     }
 
     /**
@@ -811,6 +863,8 @@ public class MultiIndex {
         // after a crash.
         if (a.getType() == Action.TYPE_COMMIT || a.getType() == Action.TYPE_ADD_INDEX) {
             redoLog.flush();
+            // also flush indexing queue
+            indexingQueue.commit();
         }
         return a;
     }
@@ -987,6 +1041,42 @@ public class MultiIndex {
                 }
             } catch (IOException e) {
                 log.error("Unable to commit volatile index", e);
+            }
+        }
+    }
+
+    /**
+     * Checks the indexing queue for finished text extrator jobs and
+     * updates the index accordingly if there are any new ones.
+     */
+    private synchronized void checkIndexingQueue() {
+        Document[] docs = indexingQueue.getFinishedDocuments();
+        Map finished = new HashMap();
+        for (int i = 0; i < docs.length; i++) {
+            String uuid = docs[i].get(FieldNames.UUID);
+            finished.put(UUID.fromString(uuid), docs[i]);
+        }
+
+        // now update index with the remaining ones if there are any
+        if (!finished.isEmpty()) {
+            log.debug("updating index with {} nodes from indexing queue.",
+                    new Long(finished.size()));
+
+            // remove documents from the queue
+            for (Iterator it = finished.keySet().iterator(); it.hasNext(); ) {
+                try {
+                    indexingQueue.removeDocument(it.next().toString());
+                } catch (IOException e) {
+                    log.error("Failed to remove node from indexing queue", e);
+                }
+            }
+
+            try {
+                update(finished.keySet().iterator(),
+                        finished.values().iterator());
+            } catch (IOException e) {
+                // update failed
+                log.warn("Failed to update index with deferred text extraction", e);
             }
         }
     }
@@ -1287,10 +1377,9 @@ public class MultiIndex {
         private final UUID uuid;
 
         /**
-         * The node indexer for a node to add to the index, or <code>null</code>
-         * if not available.
+         * The document to add to the index, or <code>null</code> if not available.
          */
-        private NodeIndexer nodeIndexer;
+        private Document doc;
 
         /**
          * Creates a new AddNode action.
@@ -1307,11 +1396,11 @@ public class MultiIndex {
          * Creates a new AddNode action.
          *
          * @param transactionId the id of the transaction that executes this action.
-         * @param nodeIdx the node indexer to add.
+         * @param doc the document to add.
          */
-        AddNode(long transactionId, NodeIndexer nodeIdx) {
-            this(transactionId, nodeIdx.getNodeId().getUUID());
-            this.nodeIndexer = nodeIdx;
+        AddNode(long transactionId, Document doc) {
+            this(transactionId, UUID.fromString(doc.get(FieldNames.UUID)));
+            this.doc = doc;
         }
 
         /**
@@ -1340,16 +1429,16 @@ public class MultiIndex {
          * @inheritDoc
          */
         public void execute(MultiIndex index) throws IOException {
-            if (nodeIndexer == null) {
+            if (doc == null) {
                 try {
-                    nodeIndexer = index.createNodeIndexer(new NodeId(uuid));
+                    doc = index.createDocument(new NodeId(uuid));
                 } catch (RepositoryException e) {
                     // node does not exist anymore
                     log.debug(e.getMessage());
                 }
             }
-            if (nodeIndexer != null) {
-                index.volatileIndex.addNode(nodeIndexer);
+            if (doc != null) {
+                index.volatileIndex.addDocument(doc);
             }
         }
 
@@ -1621,7 +1710,14 @@ public class MultiIndex {
          * @inheritDoc
          */
         public void execute(MultiIndex index) throws IOException {
-            Term idTerm = new Term(FieldNames.UUID, uuid.toString());
+            String uuidString = uuid.toString();
+            // check if indexing queue is still working on
+            // this node from a previous update
+            Document doc = index.indexingQueue.removeDocument(uuidString);
+            if (doc != null) {
+                Util.disposeDocument(doc);
+            }
+            Term idTerm = new Term(FieldNames.UUID, uuidString);
             // if the document cannot be deleted from the volatile index
             // delete it from one of the persistent indexes.
             int num = index.volatileIndex.removeDocument(idTerm);
