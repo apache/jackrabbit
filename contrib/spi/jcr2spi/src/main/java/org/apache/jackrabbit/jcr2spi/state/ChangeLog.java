@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
+import org.apache.jackrabbit.jcr2spi.operation.AddNode;
+import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 
 import javax.jcr.nodetype.ConstraintViolationException;
@@ -232,9 +234,20 @@ public class ChangeLog {
                 if (previousStatus == Status.NEW) {
                     // was new and now removed again
                     addedStates.remove(state);
-                    // TODO: remove 'addNode' or 'setProperty' operation
                     deletedStates.remove(state);
+                    // remove operations performed on the removed state
                     removeAffectedOperations(state);
+                    // remove add-operation (parent affected) as well
+                    NodeState parent = state.getParent();
+                    if (parent != null && parent.getStatus() != Status.REMOVED) {
+                        for (Iterator it = operations.iterator(); it.hasNext();) {
+                            Operation op = (Operation) it.next();
+                            if ((op instanceof AddNode || op instanceof AddProperty)
+                                && op.getAffectedItemStates().contains(parent)) {
+                                it.remove();
+                            }
+                        }
+                    }
                 } else if (previousStatus == Status.EXISTING_REMOVED) {
                     // was removed and is now saved
                     deletedStates.remove(state);
