@@ -16,7 +16,7 @@ package org.apache.jackrabbit.jcr2spi.state;
 /**
  * <code>Status</code>...
  */
-public class Status {
+public final class Status {
 
     /**
      * A state once read from persistent storage has been set to invalid. This
@@ -63,6 +63,18 @@ public class Status {
      * by an external modification.
      */
     public static final int REMOVED = 8;
+
+    private static final String[] STATUS_NAMES = new String[] {
+        "INVALIDATED",
+        "EXISTING",
+        "EXISTING_MODIFIED",
+        "EXISTING_REMOVED",
+        "NEW",
+        "STALE_MODIFIED",
+        "STALE_DESTROYED",
+        "MODIFIED",
+        "REMOVED"
+    };
 
     /**
      * Returns <code>true</code> if the given status is a terminal status, i.e.
@@ -202,5 +214,16 @@ public class Status {
             }
         }
         return isValid;
+    }
+
+    /**
+     * @param status A valid status constant.
+     * @return Human readable status name for the given int.
+     */
+    public static String getName(int status) {
+        if (status < 0 || status >= STATUS_NAMES.length) {
+            throw new IllegalArgumentException("Invalid status " + status);
+        }
+        return STATUS_NAMES[status];
     }
 }
