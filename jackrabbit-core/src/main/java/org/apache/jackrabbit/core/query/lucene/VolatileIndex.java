@@ -19,28 +19,18 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.commons.collections.map.LinkedMap;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.RAMDirectory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Enumeration;
 
 /**
  * Implements an in-memory index with a pending buffer.
  */
 class VolatileIndex extends AbstractIndex {
-
-    /**
-     * Logger instance for this class.
-     */
-    private static final Logger log = LoggerFactory.getLogger(VolatileIndex.class);
 
     /**
      * Default value for {@link #bufferSize}.
@@ -66,21 +56,25 @@ class VolatileIndex extends AbstractIndex {
      * Creates a new <code>VolatileIndex</code> using an <code>analyzer</code>.
      *
      * @param analyzer the analyzer to use.
+     * @param indexingQueue the indexing queue.
      * @throws IOException if an error occurs while opening the index.
      */
-    VolatileIndex(Analyzer analyzer) throws IOException {
-        super(analyzer, new RAMDirectory(), null);
+    VolatileIndex(Analyzer analyzer, IndexingQueue indexingQueue) throws IOException {
+        super(analyzer, new RAMDirectory(), null, indexingQueue);
     }
 
     /**
-     * Overwrites the default implementation by adding the node indexer to a
+     * Overwrites the default implementation by adding the document to a
      * pending list and commits the pending list if needed.
      *
-     * @param nodeIndexer the node indexer of the node to add.
+     * @param doc the document to add to the index.
      * @throws IOException if an error occurs while writing to the index.
      */
-    void addNode(NodeIndexer nodeIndexer) throws IOException {
-        pending.put(nodeIndexer.getNodeId().getUUID().toString(), nodeIndexer);
+    void addDocument(Document doc) throws IOException {
+        Document old = (Document) pending.put(doc.get(FieldNames.UUID), doc);
+        if (old != null) {
+            Util.disposeDocument(old);
+        }
         if (pending.size() >= bufferSize) {
             commitPending();
         }
@@ -98,9 +92,10 @@ class VolatileIndex extends AbstractIndex {
      *                     the index.
      */
     int removeDocument(Term idTerm) throws IOException {
-        NodeIndexer indexer = (NodeIndexer) pending.remove(idTerm.text());
+        Document doc = (Document) pending.remove(idTerm.text());
         int num;
-        if (indexer != null) {
+        if (doc != null) {
+            Util.disposeDocument(doc);
             // pending document has been removed
             num = 1;
         } else {
@@ -158,8 +153,8 @@ class VolatileIndex extends AbstractIndex {
      */
     private void commitPending() throws IOException {
         for (Iterator it = pending.values().iterator(); it.hasNext();) {
-            NodeIndexer indexer = (NodeIndexer) it.next();
-            super.addNode(indexer);
+            Document doc = (Document) it.next();
+            super.addDocument(doc);
             it.remove();
         }
     }

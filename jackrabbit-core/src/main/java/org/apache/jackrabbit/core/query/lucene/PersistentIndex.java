@@ -64,15 +64,18 @@ class PersistentIndex extends AbstractIndex {
      * @param create if <code>true</code> an existing index is deleted.
      * @param analyzer the analyzer for text tokenizing.
      * @param cache the document number cache
+     * @param indexingQueue the indexing queue.
      * @throws IOException if an error occurs while opening / creating the
      *  index.
      * @throws IOException if an error occurs while opening / creating
      *  the index.
      */
     PersistentIndex(String name, File indexDir, boolean create,
-                    Analyzer analyzer, DocNumberCache cache)
+                    Analyzer analyzer, DocNumberCache cache,
+                    IndexingQueue indexingQueue)
             throws IOException {
-        super(analyzer, FSDirectory.getDirectory(indexDir, create), cache);
+        super(analyzer, FSDirectory.getDirectory(indexDir, create),
+                cache, indexingQueue);
         this.name = name;
 
         // check if index is locked, probably from an unclean repository

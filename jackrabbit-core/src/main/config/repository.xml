@@ -103,6 +103,16 @@
             - resultFetchSize: The number of results the query handler should
               initially fetch when a query is executed.
               Default value: Integer.MAX_VALUE (-> all)
+            - extractorPoolSize: defines the maximum number of background threads that are
+              used to extract text from binary properties. If set to zero (default) no
+              background threads are allocated and text extractors run in the current thread.
+            - extractorTimeout: a text extractor is executed using a background thread if it
+              doesn't finish within this timeout defined in milliseconds. This parameter has
+              no effect if extractorPoolSize is zero.
+            - extractorBackLogSize: the size of the extractor pool back log. If all threads in
+              the pool are busy, incomming work is put into a wait queue. If the wait queue
+              reaches the back log size incomming extractor work will not be queued anymore
+              but will be executed with the current thread.
 
             Note: all parameters (except path) in this SearchIndex config are default
             values and can be omitted.
@@ -123,6 +133,9 @@
             <param name="queryClass" value="org.apache.jackrabbit.core.query.QueryImpl"/>
             <param name="respectDocumentOrder" value="true"/>
             <param name="resultFetchSize" value="2147483647"/>
+            <param name="extractorPoolSize" value="0"/>
+            <param name="extractorTimeout" value="100"/>
+            <param name="extractorBackLogSize" value="10"/>
         </SearchIndex>
     </Workspace>
 
