@@ -56,9 +56,6 @@ import org.slf4j.Logger;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.helpers.XMLReaderFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -87,6 +84,9 @@ import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerException;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.ParserConfigurationException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -440,17 +440,15 @@ public class SessionImpl implements Session, ManagerProvider {
      */
     public void importXML(String parentAbsPath, InputStream in, int uuidBehavior) throws IOException, PathNotFoundException, ItemExistsException, ConstraintViolationException, VersionException, InvalidSerializedDataException, LockException, RepositoryException {
         // NOTE: checks are performed by 'getImportContentHandler'
-        ContentHandler handler = getImportContentHandler(parentAbsPath, uuidBehavior);
+        ImportHandler handler = (ImportHandler) getImportContentHandler(parentAbsPath, uuidBehavior);
         try {
-            XMLReader parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
-            parser.setContentHandler(handler);
-            if (handler instanceof ErrorHandler) {
-                parser.setErrorHandler((ErrorHandler)handler);
-            }
-            // being paranoid...
-            parser.setFeature("http://xml.org/sax/features/namespaces", true);
-            parser.setFeature("http://xml.org/sax/features/namespace-prefixes", false);
-            parser.parse(new InputSource(in));
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            factory.setFeature(
+                    "http://xml.org/sax/features/namespace-prefixes", false);
+
+            SAXParser parser = factory.newSAXParser();
+            parser.parse(new InputSource(in), handler);
         } catch (SAXException se) {
             // check for wrapped repository exception
             Exception e = se.getException();
@@ -461,6 +459,8 @@ public class SessionImpl implements Session, ManagerProvider {
                 log.debug(msg);
                 throw new InvalidSerializedDataException(msg, se);
             }
+        } catch (ParserConfigurationException e) {
+            throw new RepositoryException("SAX parser configuration error", e);
         }
     }
 

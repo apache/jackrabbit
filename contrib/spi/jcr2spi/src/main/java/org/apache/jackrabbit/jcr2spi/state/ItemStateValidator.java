@@ -245,7 +245,7 @@ public class ItemStateValidator {
                                                        NodeState parentState)
         throws NoSuchNodeTypeException, ConstraintViolationException, RepositoryException {
         EffectiveNodeType entParent = getEffectiveNodeType(parentState);
-        return entParent.getApplicableNodeDefinition(name, nodeTypeName);
+        return entParent.getApplicableNodeDefinition(name, nodeTypeName, ntReg);
     }
 
     /**
@@ -510,7 +510,7 @@ public class ItemStateValidator {
         if ((options & CHECK_CONSTRAINTS) == CHECK_CONSTRAINTS) {
             // make sure there's an applicable definition for new child node
             EffectiveNodeType entParent = getEffectiveNodeType(parentState);
-            entParent.checkAddNodeConstraints(nodeName, nodeTypeName);
+            entParent.checkAddNodeConstraints(nodeName, nodeTypeName, ntReg);
         }
         // collisions
         if ((options & CHECK_COLLISION) == CHECK_COLLISION) {

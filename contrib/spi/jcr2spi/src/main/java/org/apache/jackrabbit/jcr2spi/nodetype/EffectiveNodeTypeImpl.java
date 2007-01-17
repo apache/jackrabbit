@@ -47,9 +47,6 @@ import java.util.Map;
 public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     private static Logger log = LoggerFactory.getLogger(EffectiveNodeTypeImpl.class);
 
-    // node type registry
-    private final NodeTypeRegistry ntReg;
-
     // list of explicitly aggregated {i.e. merged) node types
     private final TreeSet mergedNodeTypes;
     // list of implicitly aggregated {through inheritance) node types
@@ -65,8 +62,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     /**
      * private constructor.
      */
-    private EffectiveNodeTypeImpl(NodeTypeRegistry ntReg) {
-        this.ntReg = ntReg;
+    private EffectiveNodeTypeImpl() {
         mergedNodeTypes = new TreeSet();
         inheritedNodeTypes = new TreeSet();
         allNodeTypes = new TreeSet();
@@ -82,7 +78,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
      *
      * @param ntReg
      * @param ntd
-     * @param ntdMap
+     * @param ntdMap 
      * @return
      * @throws NodeTypeConflictException
      * @throws NoSuchNodeTypeException
@@ -90,7 +86,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     static EffectiveNodeTypeImpl create(NodeTypeRegistry ntReg, QNodeTypeDefinition ntd, Map ntdMap)
             throws NodeTypeConflictException, NoSuchNodeTypeException {
         // create empty effective node type instance
-        EffectiveNodeTypeImpl ent = new EffectiveNodeTypeImpl(ntReg);
+        EffectiveNodeTypeImpl ent = new EffectiveNodeTypeImpl();
         QName ntName = ntd.getQName();
 
         // prepare new instance
@@ -213,10 +209,10 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     /**
      * Factory method: creates a new 'empty' effective node type instance
      *
-     * @return
+     * @return a new EffectiveNodeType
      */
-    static EffectiveNodeType create(NodeTypeRegistryImpl ntReg) {
-        return new EffectiveNodeTypeImpl(ntReg);
+    static EffectiveNodeType create() {
+        return new EffectiveNodeTypeImpl();
     }
 
     //--------------------------------------------------< EffectiveNodeType >---
@@ -423,10 +419,17 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     /**
      * @inheritDoc
      */
-    public void checkAddNodeConstraints(QName name)
+    public boolean includesNodeTypes(QName[] nodeTypeNames) {
+        return allNodeTypes.containsAll(Arrays.asList(nodeTypeNames));
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public void checkAddNodeConstraints(QName name, NodeTypeRegistry ntReg)
             throws ConstraintViolationException {
         try {
-            getApplicableNodeDefinition(name, null);
+            getApplicableNodeDefinition(name, null, ntReg);
         } catch (NoSuchNodeTypeException nsnte) {
             String msg = "internal eror: inconsistent node type";
             log.debug(msg);
@@ -437,9 +440,9 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     /**
      * @inheritDoc
      */
-    public void checkAddNodeConstraints(QName name, QName nodeTypeName)
+    public void checkAddNodeConstraints(QName name, QName nodeTypeName, NodeTypeRegistry ntReg)
             throws ConstraintViolationException, NoSuchNodeTypeException {
-        QNodeDefinition nd = getApplicableNodeDefinition(name, nodeTypeName);
+        QNodeDefinition nd = getApplicableNodeDefinition(name, nodeTypeName, ntReg);
         if (nd.isProtected()) {
             throw new ConstraintViolationException(name + " is protected");
         }
@@ -472,26 +475,30 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     /**
      * @inheritDoc
      */
-    public QNodeDefinition getApplicableNodeDefinition(QName name, QName nodeTypeName)
+    public QNodeDefinition getApplicableNodeDefinition(QName name, QName nodeTypeName,
+                                                       NodeTypeRegistry ntReg)
             throws NoSuchNodeTypeException, ConstraintViolationException {
+        EffectiveNodeType entTarget;
+        if (nodeTypeName != null) {
+            entTarget = ntReg.getEffectiveNodeType(nodeTypeName);
+        } else {
+            entTarget = null;
+        }
+
         // try named node definitions first
         QItemDefinition[] defs = getNamedItemDefs(name);
         if (defs != null) {
             for (int i = 0; i < defs.length; i++) {
-                QItemDefinition qDef = defs[i];
-                if (qDef.definesNode()) {
-                    QNodeDefinition nd = (QNodeDefinition) qDef;
+                QItemDefinition def = defs[i];
+                if (def.definesNode()) {
+                    QNodeDefinition nd = (QNodeDefinition) def;
                     // node definition with that name exists
-                    if (nodeTypeName != null) {
-                        try {
-                            // check node type constraints
-                            checkRequiredPrimaryType(nodeTypeName, nd.getRequiredPrimaryTypes());
-                        } catch (ConstraintViolationException cve) {
-                            // ignore and try next
-                            continue;
+                    if (entTarget != null && nd.getRequiredPrimaryTypes() != null) {
+                        // check 'required primary types' constraint
+                        if (entTarget.includesNodeTypes(nd.getRequiredPrimaryTypes())) {
+                            // found named node definition
+                            return nd;
                         }
-                        // found node definition
-                        return nd;
                     } else {
                         if (nd.getDefaultPrimaryType() != null) {
                             // found node definition with default node type
@@ -507,16 +514,12 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         QNodeDefinition[] nda = getUnnamedNodeDefs();
         for (int i = 0; i < nda.length; i++) {
             QNodeDefinition nd = nda[i];
-            if (nodeTypeName != null) {
-                try {
-                    // check node type constraint
-                    checkRequiredPrimaryType(nodeTypeName, nd.getRequiredPrimaryTypes());
-                } catch (ConstraintViolationException e) {
-                    // ignore and try next
-                    continue;
+            if (entTarget != null && nd.getRequiredPrimaryTypes() != null) {
+                // check 'required primary types' constraint
+                if (entTarget.includesNodeTypes(nd.getRequiredPrimaryTypes())) {
+                    // found residual node definition
+                    return nd;
                 }
-                // found residual node definition
-                return nd;
             } else {
                 // since no node type has been specified for the new node,
                 // it must be determined from the default node type;
@@ -535,8 +538,8 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
      * @inheritDoc
      */
     public QPropertyDefinition getApplicablePropertyDefinition(QName name, int type,
-                                            boolean multiValued)
-            throws ConstraintViolationException {
+                                                               boolean multiValued)
+        throws ConstraintViolationException {
         // try named property definitions first
         QPropertyDefinition match =
                 getMatchingPropDef(getNamedPropDefs(name), type, multiValued);
@@ -578,21 +581,6 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     }
 
     //---------------------------------------------< impl. specific methods >---
-    private QItemDefinition[] getAllItemDefs() {
-        if (namedItemDefs.size() == 0 && unnamedItemDefs.size() == 0) {
-            return QItemDefinition.EMPTY_ARRAY;
-        }
-        ArrayList defs = new ArrayList(namedItemDefs.size() + unnamedItemDefs.size());
-        Iterator iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            defs.addAll((List) iter.next());
-        }
-        defs.addAll(unnamedItemDefs);
-        if (defs.size() == 0) {
-            return QItemDefinition.EMPTY_ARRAY;
-        }
-        return (QItemDefinition[]) defs.toArray(new QItemDefinition[defs.size()]);
-    }
 
     private QItemDefinition[] getNamedItemDefs() {
         if (namedItemDefs.size() == 0) {
@@ -616,57 +604,12 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         return (QItemDefinition[]) unnamedItemDefs.toArray(new QItemDefinition[unnamedItemDefs.size()]);
     }
 
-    private boolean hasNamedItemDef(QName name) {
-        return namedItemDefs.containsKey(name);
-    }
-
     private QItemDefinition[] getNamedItemDefs(QName name) {
         List defs = (List) namedItemDefs.get(name);
         if (defs == null || defs.size() == 0) {
             return QItemDefinition.EMPTY_ARRAY;
         }
         return (QItemDefinition[]) defs.toArray(new QItemDefinition[defs.size()]);
-    }
-
-    private QNodeDefinition[] getNamedNodeDefs() {
-        if (namedItemDefs.size() == 0) {
-            return QNodeDefinition.EMPTY_ARRAY;
-        }
-        ArrayList defs = new ArrayList(namedItemDefs.size());
-        Iterator iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            List list = (List) iter.next();
-            Iterator iter1 = list.iterator();
-            while (iter1.hasNext()) {
-                QItemDefinition qDef = (QItemDefinition) iter1.next();
-                if (qDef.definesNode()) {
-                    defs.add(qDef);
-                }
-            }
-        }
-        if (defs.size() == 0) {
-            return QNodeDefinition.EMPTY_ARRAY;
-        }
-        return (QNodeDefinition[]) defs.toArray(new QNodeDefinition[defs.size()]);
-    }
-
-    private QNodeDefinition[] getNamedNodeDefs(QName name) {
-        List list = (List) namedItemDefs.get(name);
-        if (list == null || list.size() == 0) {
-            return QNodeDefinition.EMPTY_ARRAY;
-        }
-        ArrayList defs = new ArrayList(list.size());
-        Iterator iter = list.iterator();
-        while (iter.hasNext()) {
-            QItemDefinition qDef = (QItemDefinition) iter.next();
-            if (qDef.definesNode()) {
-                defs.add(qDef);
-            }
-        }
-        if (defs.size() == 0) {
-            return QNodeDefinition.EMPTY_ARRAY;
-        }
-        return (QNodeDefinition[]) defs.toArray(new QNodeDefinition[defs.size()]);
     }
 
     private QNodeDefinition[] getUnnamedNodeDefs() {
@@ -685,28 +628,6 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
             return QNodeDefinition.EMPTY_ARRAY;
         }
         return (QNodeDefinition[]) defs.toArray(new QNodeDefinition[defs.size()]);
-    }
-
-    private QPropertyDefinition[] getNamedPropDefs() {
-        if (namedItemDefs.size() == 0) {
-            return QPropertyDefinition.EMPTY_ARRAY;
-        }
-        ArrayList defs = new ArrayList(namedItemDefs.size());
-        Iterator iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            List list = (List) iter.next();
-            Iterator iter1 = list.iterator();
-            while (iter1.hasNext()) {
-                QItemDefinition qDef = (QItemDefinition) iter1.next();
-                if (!qDef.definesNode()) {
-                    defs.add(qDef);
-                }
-            }
-        }
-        if (defs.size() == 0) {
-            return QPropertyDefinition.EMPTY_ARRAY;
-        }
-        return (QPropertyDefinition[]) defs.toArray(new QPropertyDefinition[defs.size()]);
     }
 
     private QPropertyDefinition[] getNamedPropDefs(QName name) {
@@ -813,26 +734,6 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
             }
         }
         return match;
-    }
-
-    /**
-     * @param nodeTypeName
-     * @param requiredPrimaryTypes
-     * @throws ConstraintViolationException
-     * @throws NoSuchNodeTypeException
-     */
-    private void checkRequiredPrimaryType(QName nodeTypeName, QName[] requiredPrimaryTypes)
-            throws ConstraintViolationException, NoSuchNodeTypeException {
-        if (requiredPrimaryTypes == null) {
-            // no constraint
-            return;
-        }
-        EffectiveNodeType ent = ntReg.getEffectiveNodeType(nodeTypeName);
-        for (int i = 0; i < requiredPrimaryTypes.length; i++) {
-            if (!ent.includesNodeType(requiredPrimaryTypes[i])) {
-                throw new ConstraintViolationException("node type constraint not satisfied: " + requiredPrimaryTypes[i]);
-            }
-        }
     }
 
     /**
@@ -1037,7 +938,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     }
 
     protected Object clone() {
-        EffectiveNodeTypeImpl clone = new EffectiveNodeTypeImpl(ntReg);
+        EffectiveNodeTypeImpl clone = new EffectiveNodeTypeImpl();
 
         clone.mergedNodeTypes.addAll(mergedNodeTypes);
         clone.inheritedNodeTypes.addAll(inheritedNodeTypes);

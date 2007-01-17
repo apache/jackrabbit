@@ -183,7 +183,13 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
             return pdi;
         }
     }
-    
+
+    /**
+     * @return the NodeTypeRegistry
+     */
+    NodeTypeRegistry getNodeTypeRegistry() {
+        return ntReg;
+    }
     //-------------------------------------------< NodeTypeRegistryListener >---
     /**
      * {@inheritDoc}

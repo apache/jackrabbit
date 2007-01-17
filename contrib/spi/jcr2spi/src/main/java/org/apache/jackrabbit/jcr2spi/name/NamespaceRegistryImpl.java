@@ -23,6 +23,10 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameCache;
 import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.CachingNameResolver;
+import org.apache.jackrabbit.name.ParsingNameResolver;
+import org.apache.jackrabbit.name.NameResolver;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.util.XMLChar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +75,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
     private final HashMap prefixToURI = new HashMap();
     private final HashMap uriToPrefix = new HashMap();
 
-    private final CachingNamespaceResolver resolver;
+    private final NameResolver resolver;
     private final NamespaceStorage storage;
 
     private final boolean level2Repository;
@@ -87,7 +91,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         throws RepositoryException {
         super(true); // enable listener support
 
-        resolver = new CachingNamespaceResolver(this, 1000);
+        resolver = new CachingNameResolver(new ParsingNameResolver(this));
         this.storage = storage;
         this.level2Repository = level2Repository;
 
@@ -330,31 +334,35 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
      * {@inheritDoc}
      */
     public QName retrieveName(String jcrName) {
-        // just delegate to internal cache
-        return resolver.retrieveName(jcrName);
+        try {
+            return resolver.getQName(jcrName);
+        } catch (NameException e) {
+            return null;
+        } catch (NamespaceException e) {
+            return null;
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     public String retrieveName(QName name) {
-        // just delegate to internal cache
-        return resolver.retrieveName(name);
+        try {
+            return resolver.getJCRName(name);
+        } catch (NamespaceException e) {
+            return null;
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     public void cacheName(String jcrName, QName name) {
-        // just delegate to internal cache
-        resolver.cacheName(jcrName, name);
     }
 
     /**
      * {@inheritDoc}
      */
     public void evictAllNames() {
-        // just delegate to internal cache
-        resolver.evictAllNames();
     }
 }

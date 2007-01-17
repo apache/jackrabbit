@@ -20,6 +20,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.apache.jackrabbit.name.NamespaceListener;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameCache;
 import org.apache.jackrabbit.jcr2spi.SessionImpl;
 import org.apache.jackrabbit.util.XMLChar;
 
@@ -46,7 +47,7 @@ import java.util.Map;
  * underlying namespace registry.
  */
 public class LocalNamespaceMappings extends AbstractNamespaceResolver
-    implements NamespaceListener {
+    implements NamespaceListener, NameCache {
 
     /** The underlying global and persistent namespace registry. */
     private final NamespaceRegistryImpl nsReg;
@@ -166,6 +167,46 @@ public class LocalNamespaceMappings extends AbstractNamespaceResolver
         return new HashMap(prefixToURI);
     }
 
+    //-------------------------------------------------------------< NameCache >
+
+    /**
+     * {@inheritDoc}
+     */
+    public QName retrieveName(String jcrName) {
+        if (prefixToURI.size() == 0) {
+            return nsReg.retrieveName(jcrName);
+        }
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String retrieveName(QName name) {
+        if (prefixToURI.size() == 0
+                || !uriToPrefix.containsKey(name.getNamespaceURI())) {
+            return nsReg.retrieveName(name);
+        }
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void cacheName(String jcrName, QName name) {
+        if (prefixToURI.size() == 0
+                || !uriToPrefix.containsKey(name.getNamespaceURI())) {
+            nsReg.cacheName(jcrName, name);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void evictAllNames() {
+        nsReg.evictAllNames();
+    }
+
     //--------------------------------------------------< NamespaceResolver >---
     /**
      * {@inheritDoc}
@@ -264,6 +305,9 @@ public class LocalNamespaceMappings extends AbstractNamespaceResolver
 
     /**
      * @inheritDoc
+     * This method gets called when an existing namespace is removed
+     * in the global NamespaceRegistry. Overridden in order to check
+     * for/resolve collision of new global prefix with existing local prefix.
      */
     public void namespaceRemoved(String uri) {
         if (uriToPrefix.containsKey(uri)) {
