@@ -253,12 +253,7 @@ public class SearchIndex extends AbstractQueryHandler {
             excludedIDs.add(context.getExcludedNodeId());
         }
 
-        extractor = new JackrabbitTextExtractor(textFilterClasses);
-        if (extractorPoolSize > 0) {
-            // wrap with pool
-            extractor = new PooledTextExtractor(extractor, extractorPoolSize,
-                    extractorBackLog, extractorTimeout);
-        }
+        extractor = createTextExtractor();
 
         File indexDir = new File(path);
 
@@ -528,6 +523,21 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     protected MultiIndex getIndex() {
         return index;
+    }
+
+    /**
+     * Factory method to create the <code>TextExtractor</code> instance.
+     *
+     * @return the <code>TextExtractor</code> instance this index should use.
+     */
+    protected TextExtractor createTextExtractor() {
+        TextExtractor txtExtr = new JackrabbitTextExtractor(textFilterClasses);
+        if (extractorPoolSize > 0) {
+            // wrap with pool
+            txtExtr = new PooledTextExtractor(txtExtr, extractorPoolSize,
+                    extractorBackLog, extractorTimeout);
+        }
+        return txtExtr;
     }
 
     //----------------------------< internal >----------------------------------
