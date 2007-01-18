@@ -1007,7 +1007,6 @@ public class DatabaseFileSystem implements FileSystem {
         for (Iterator it = preparedStatements.values().iterator(); it.hasNext(); ) {
             closeStatement((PreparedStatement) it.next());
         }
-        preparedStatements.clear();
         try {
             closeConnection(con);
         } catch (Exception ignore) {
