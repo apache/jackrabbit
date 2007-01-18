@@ -29,6 +29,7 @@ import org.apache.jackrabbit.core.query.PathQueryNode;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
 import org.apache.jackrabbit.core.query.QueryParser;
 import org.apache.jackrabbit.core.query.QueryRootNode;
+import org.apache.jackrabbit.core.query.AndQueryNode;
 import org.apache.jackrabbit.name.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -207,6 +208,11 @@ public class QueryImpl implements ExecutableQuery {
             LocationStepQueryNode[] steps = root.getLocationNode().getPathSteps();
             final QName[] ntName = new QName[1];
             steps[steps.length - 1].acceptOperands(new DefaultQueryNodeVisitor() {
+
+                public Object visit(AndQueryNode node, Object data) {
+                    return node.acceptOperands(this, data);
+                }
+
                 public Object visit(NodeTypeQueryNode node, Object data) {
                     ntName[0] = node.getValue();
                     return data;
