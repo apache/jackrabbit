@@ -1611,30 +1611,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * @throws UnsupportedRepositoryOperationException
-     * @see RepositoryService#registerNodeTypes(SessionInfo, QNodeTypeDefinition[])
-     */
-    public void registerNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodetypeDefs) throws NoSuchNodeTypeException, UnsupportedRepositoryOperationException, RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JSR170 does not defined methods to register nodetypes.");
-    }
-
-    /**
-     * @throws UnsupportedRepositoryOperationException
-     * @see RepositoryService#reregisterNodeTypes(SessionInfo, QNodeTypeDefinition[])
-     */
-    public void reregisterNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodetypeDefs) throws NoSuchNodeTypeException, UnsupportedRepositoryOperationException, RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JSR170 does not defined methods to reregister nodetypes.");
-    }
-
-    /**
-     * @throws UnsupportedRepositoryOperationException
-     * @see RepositoryService#unregisterNodeTypes(SessionInfo, QName[])
-     */
-    public void unregisterNodeTypes(SessionInfo sessionInfo, QName[] nodetypeNames) throws NoSuchNodeTypeException, UnsupportedRepositoryOperationException, RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JSR170 does not defined methods to unregister nodetypes.");
-    }
-
-    /**
      * The XML elements and attributes used in serialization
      */
     private static final Namespace SV_NAMESPACE = Namespace.getNamespace(QName.NS_SV_PREFIX, QName.NS_SV_URI);

@@ -687,28 +687,4 @@ public interface RepositoryService {
      * @see javax.jcr.nodetype.NodeTypeManager#getNodeType(String)
      */
     public QNodeTypeDefinitionIterator getNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException;
-
-    /**
-     * @param sessionInfo
-     * @param nodetypeDefs
-     * @throws javax.jcr.nodetype.NoSuchNodeTypeException
-     * @throws javax.jcr.RepositoryException
-     */
-    public void registerNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodetypeDefs) throws NoSuchNodeTypeException, UnsupportedRepositoryOperationException, RepositoryException;
-
-    /**
-     * @param sessionInfo
-     * @param nodetypeDefs
-     * @throws javax.jcr.nodetype.NoSuchNodeTypeException
-     * @throws javax.jcr.RepositoryException
-     */
-    public void reregisterNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodetypeDefs) throws NoSuchNodeTypeException, UnsupportedRepositoryOperationException, RepositoryException;
-
-    /**
-     * @param sessionInfo
-     * @param nodetypeNames
-     * @throws javax.jcr.nodetype.NoSuchNodeTypeException
-     * @throws javax.jcr.RepositoryException
-     */
-    public void unregisterNodeTypes(SessionInfo sessionInfo, QName[] nodetypeNames) throws NoSuchNodeTypeException, UnsupportedRepositoryOperationException, RepositoryException;
 }
