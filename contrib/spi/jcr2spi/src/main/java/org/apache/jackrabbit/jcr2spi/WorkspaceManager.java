@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistryImpl;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeStorage;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeStorage;
 import org.apache.jackrabbit.jcr2spi.name.NamespaceStorage;
 import org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryImpl;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
@@ -70,12 +70,12 @@ import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinitionIterator;
 import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.IdIterator;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.value.QValue;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -119,7 +119,7 @@ import EDU.oswego.cs.dl.util.concurrent.LinkedQueue;
 /**
  * <code>WorkspaceManager</code>...
  */
-public class WorkspaceManager implements UpdatableItemStateManager, NamespaceStorage, NodeTypeStorage, AccessManager {
+public class WorkspaceManager implements UpdatableItemStateManager, NamespaceStorage, AccessManager {
 
     private static Logger log = LoggerFactory.getLogger(WorkspaceManager.class);
 
@@ -352,7 +352,18 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         while (it.hasNext()) {
             ntDefs.add(it.nextDefinition());
         }
-        return NodeTypeRegistryImpl.create(ntDefs, this, rootNodeDef, nsRegistry);
+        NodeTypeStorage ntst = new NodeTypeStorage() {
+            public void registerNodeTypes(QNodeTypeDefinition[] nodeTypeDefs) throws NoSuchNodeTypeException, RepositoryException {
+                throw new UnsupportedOperationException("NodeType registration not yet defined by the SPI");
+            }
+            public void reregisterNodeTypes(QNodeTypeDefinition[] nodeTypeDefs) throws NoSuchNodeTypeException, RepositoryException {
+                throw new UnsupportedOperationException("NodeType registration not yet defined by the SPI");
+            }
+            public void unregisterNodeTypes(QName[] nodeTypeNames) throws NoSuchNodeTypeException, RepositoryException {
+                throw new UnsupportedOperationException("NodeType registration not yet defined by the SPI");
+            }
+        };
+        return NodeTypeRegistryImpl.create(ntDefs, ntst, rootNodeDef, nsRegistry);
     }
 
     /**
@@ -611,28 +622,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      */
     public void unregisterNamespace(String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
         service.unregisterNamespace(sessionInfo, uri);
-    }
-
-    //----------------------------------------------------< NodetypeStorage >---
-    /**
-     * @inheritDoc
-     */
-    public void registerNodeTypes(QNodeTypeDefinition[] nodeTypeDefs) throws NoSuchNodeTypeException, UnsupportedRepositoryOperationException, RepositoryException {
-        service.registerNodeTypes(sessionInfo, nodeTypeDefs);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public void reregisterNodeTypes(QNodeTypeDefinition[] nodeTypeDefs) throws NoSuchNodeTypeException, UnsupportedRepositoryOperationException, RepositoryException {
-        service.reregisterNodeTypes(sessionInfo, nodeTypeDefs);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public void unregisterNodeTypes(QName[] nodeTypeNames) throws NoSuchNodeTypeException, UnsupportedRepositoryOperationException, RepositoryException {
-        service.unregisterNodeTypes(sessionInfo, nodeTypeNames);
     }
 
     //--------------------------------------------------------------------------
