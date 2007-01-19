@@ -16,23 +16,17 @@
  */
 package org.apache.jackrabbit.spi;
 
-import org.apache.jackrabbit.name.QName;
+import javax.jcr.RangeIterator;
 
 /**
- * QueryInfo...
+ * <code>QueryResultRowIterator</code>...
  */
-public interface QueryInfo {
-
+public interface QueryResultRowIterator extends RangeIterator {
     /**
-     * @return an iterator over the {@link QueryResultRow}s
-     * @see javax.jcr.query.QueryResult#getRows()
+     * Returns the next query result row in the iteration.
+     *
+     * @return the next query result row in the iteration.
+     * @throws java.util.NoSuchElementException if no more rows are left.
      */
-    public QueryResultRowIterator getRows();
-
-    /**
-     * @return an array of QName representing the column names of the query
-     *         result.
-     * @see javax.jcr.query.QueryResult#getColumnNames()
-     */
-    public QName[] getColumnNames();
+    public QueryResultRow nextQueryResultRow();
 }

@@ -16,36 +16,31 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
-import org.apache.jackrabbit.webdav.property.DavProperty;
-import org.apache.jackrabbit.webdav.jcr.search.SearchResultProperty;
-import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.MultiStatus;
-import org.apache.jackrabbit.util.ISO9075;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.spi.QueryInfo;
-import org.apache.jackrabbit.spi.IdIterator;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.SessionInfo;
-import org.apache.jackrabbit.value.ValueFormat;
-import org.apache.jackrabbit.value.QValue;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
+import java.util.AbstractCollection;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.PropertyType;
 import javax.jcr.ValueFactory;
-import java.io.InputStream;
-import java.util.Iterator;
-import java.util.AbstractCollection;
-import java.util.NoSuchElementException;
-import java.util.Map;
-import java.util.LinkedHashMap;
+
+import org.apache.jackrabbit.name.NameException;
+import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.QueryInfo;
+import org.apache.jackrabbit.spi.QueryResultRowIterator;
+import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.util.ISO9075;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.MultiStatus;
+import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.jcr.search.SearchResultProperty;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>QueryInfoImpl</code>...
@@ -97,8 +92,10 @@ public class QueryInfoImpl implements QueryInfo {
         }
     }
 
-    public IdIterator getNodeIds() {
-        return new IteratorHelper(new AbstractCollection() {
+    public QueryResultRowIterator getRows() {
+      // TODO: objects need to implement QueryResultRow
+      
+      return new IteratorHelper(new AbstractCollection() {
             public int size() {
                 return results.size();
             }
@@ -113,49 +110,49 @@ public class QueryInfoImpl implements QueryInfo {
         return columnNames;
     }
 
-    public String[] getValues(NodeId nodeId) {
-        SearchResultProperty prop = (SearchResultProperty) results.get(nodeId);
-        if (prop == null) {
-            throw new NoSuchElementException();
-        } else {
-            Value[] values = prop.getValues();
-            String[] ret = new String[values.length];
-            for (int i = 0; i < values.length; i++) {
-                try {
-                    QValue qValue = (values[i] == null) ?  null : ValueFormat.getQValue(values[i], nsResolver);
-                    ret[i] = qValue.getString();
-                } catch (RepositoryException e) {
-                    // should not occur
-                    log.error("malformed value: " + values[i].toString());
-                }
-            }
-            return ret;
-        }
-    }
-
-    public InputStream[] getValuesAsStream(NodeId nodeId) {
-        SearchResultProperty prop = (SearchResultProperty) results.get(nodeId);
-        if (prop == null) {
-            throw new NoSuchElementException();
-        } else {
-            Value[] values = prop.getValues();
-            InputStream[] ret = new InputStream[values.length];
-            for (int i = 0; i < ret.length; i++) {
-                try {
-                    // make sure we return the qualified value if the type is
-                    // name or path.
-                    if (values[i].getType() == PropertyType.NAME || values[i].getType() == PropertyType.PATH) {
-                        ret[i] = ValueFormat.getQValue(values[i], nsResolver).getStream();
-                    } else {
-                        ret[i] = values[i].getStream();
-                    }
-                } catch (RepositoryException e) {
-                    // ignore this value
-                    log.warn("unable to get stream value: " + values[i].toString());
-                }
-            }
-            return ret;
-        }
-    }
+//    public String[] getValues(NodeId nodeId) {
+//        SearchResultProperty prop = (SearchResultProperty) results.get(nodeId);
+//        if (prop == null) {
+//            throw new NoSuchElementException();
+//        } else {
+//            Value[] values = prop.getValues();
+//            String[] ret = new String[values.length];
+//            for (int i = 0; i < values.length; i++) {
+//                try {
+//                    QValue qValue = (values[i] == null) ?  null : ValueFormat.getQValue(values[i], nsResolver);
+//                    ret[i] = qValue.getString();
+//                } catch (RepositoryException e) {
+//                    // should not occur
+//                    log.error("malformed value: " + values[i].toString());
+//                }
+//            }
+//            return ret;
+//        }
+//    }
+//
+//    public InputStream[] getValuesAsStream(NodeId nodeId) {
+//        SearchResultProperty prop = (SearchResultProperty) results.get(nodeId);
+//        if (prop == null) {
+//            throw new NoSuchElementException();
+//        } else {
+//            Value[] values = prop.getValues();
+//            InputStream[] ret = new InputStream[values.length];
+//            for (int i = 0; i < ret.length; i++) {
+//                try {
+//                    // make sure we return the qualified value if the type is
+//                    // name or path.
+//                    if (values[i].getType() == PropertyType.NAME || values[i].getType() == PropertyType.PATH) {
+//                        ret[i] = ValueFormat.getQValue(values[i], nsResolver).getStream();
+//                    } else {
+//                        ret[i] = values[i].getStream();
+//                    }
+//                } catch (RepositoryException e) {
+//                    // ignore this value
+//                    log.warn("unable to get stream value: " + values[i].toString());
+//                }
+//            }
+//            return ret;
+//        }
+//    }
 
 }

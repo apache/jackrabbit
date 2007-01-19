@@ -16,23 +16,30 @@
  */
 package org.apache.jackrabbit.spi;
 
-import org.apache.jackrabbit.name.QName;
-
 /**
- * QueryInfo...
+ * <code>QueryResultRow</code>...
  */
-public interface QueryInfo {
-
+public interface QueryResultRow {
+  
     /**
-     * @return an iterator over the {@link QueryResultRow}s
-     * @see javax.jcr.query.QueryResult#getRows()
+     * Returns {@link NodeId} of node this result row represents.
+     * 
+     * @return node id 
      */
-    public QueryResultRowIterator getRows();
-
+    public NodeId getNodeId();
+    
     /**
-     * @return an array of QName representing the column names of the query
-     *         result.
-     * @see javax.jcr.query.QueryResult#getColumnNames()
+     * Returns score of this result row.
+     * 
+     * @return score
      */
-    public QName[] getColumnNames();
+    public double getScore();
+    
+    /**
+     * @return an array of String representing the values present in this result row
+     * @see javax.jcr.query.Row#getValue(String)
+     * @see javax.jcr.query.Row#getValues()
+     * TODO: switch type to QValue[] when available
+     */
+    public String[] getValues(); 
 }

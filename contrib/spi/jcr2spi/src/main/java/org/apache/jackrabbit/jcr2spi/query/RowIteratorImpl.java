@@ -16,30 +16,32 @@
  */
 package org.apache.jackrabbit.jcr2spi.query;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Set;
+
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.PropertyType;
+import javax.jcr.RangeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.query.Row;
+import javax.jcr.query.RowIterator;
+
 import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.value.DoubleValue;
 import org.apache.jackrabbit.value.LongValue;
 import org.apache.jackrabbit.value.PathValue;
 import org.apache.jackrabbit.value.StringValue;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Property;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.Node;
-import javax.jcr.RangeIterator;
-import javax.jcr.query.Row;
-import javax.jcr.query.RowIterator;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.Iterator;
 
 /**
  * Implements the {@link javax.jcr.query.RowIterator} interface returned by
@@ -169,7 +171,7 @@ class RowIteratorImpl implements RowIterator {
         /**
          * The score for this result row
          */
-        private final float score;
+        private final double score;
 
         /**
          * The underlying <code>Node</code> of this result row.
@@ -192,7 +194,7 @@ class RowIteratorImpl implements RowIterator {
          * @param score the score value for this result row
          * @param node  the underlying <code>Node</code> for this <code>Row</code>.
          */
-        private RowImpl(float score, Node node) {
+        private RowImpl(double score, Node node) {
             this.score = score;
             this.node = node;
         }
@@ -235,7 +237,7 @@ class RowIteratorImpl implements RowIterator {
                         if (QName.JCR_PATH.equals(properties[i])) {
                             tmp[i] = PathValue.valueOf(node.getPath());
                         } else if (QName.JCR_SCORE.equals(properties[i])) {
-                            tmp[i] = new LongValue((int) (score * 1000f));
+                            tmp[i] = new DoubleValue(score);
                         } else {
                             tmp[i] = null;
                         }

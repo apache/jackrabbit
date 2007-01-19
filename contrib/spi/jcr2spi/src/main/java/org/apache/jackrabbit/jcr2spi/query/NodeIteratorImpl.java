@@ -16,22 +16,21 @@
  */
 package org.apache.jackrabbit.jcr2spi.query;
 
-import org.apache.jackrabbit.jcr2spi.ItemManager;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.spi.IdIterator;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.QueryInfo;
-import org.apache.jackrabbit.spi.ItemId;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
+import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.Item;
 
-import java.util.NoSuchElementException;
-import java.util.Iterator;
+import org.apache.jackrabbit.jcr2spi.ItemManager;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.QueryInfo;
+import org.apache.jackrabbit.spi.QueryResultRow;
+import org.apache.jackrabbit.spi.QueryResultRowIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implements a {@link javax.jcr.NodeIterator} returned by
@@ -48,14 +47,8 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
     /** ItemManager to turn Ids into Node instances */
     private final ItemStateManager itemStateMgr;
 
-    /** The query result info */
-    private final QueryInfo queryInfo;
-
-    /** The ItemId's of the result nodes */
-    private final IdIterator ids;
-
-    /** Index of the jcr:score column. */
-    private final int scoreIndex;
+    /** The QueryResultRows */
+    private final QueryResultRowIterator rows;
 
     /** Current position of this node iterator */
     private int pos = -1;
@@ -68,6 +61,9 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
 
     /** Reference to the next node instance */
     private Node next;
+
+    /** Score for the next node */
+    private double nextScore;
 
     /**
      * Creates a new <code>NodeIteratorImpl</code> instance.
@@ -82,22 +78,8 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
                             QueryInfo queryInfo) throws RepositoryException {
         this.itemMgr = itemMgr;
         this.itemStateMgr = itemStateMgr;
-        this.queryInfo = queryInfo;
-        this.ids = queryInfo.getNodeIds();
+        this.rows = queryInfo.getRows();
         
-        QName[] columnNames = queryInfo.getColumnNames();
-        int idx = -1;
-        for (int i = 0; i < columnNames.length; i++) {
-            if (columnNames[i].getNamespaceURI().equals(QName.NS_JCR_URI)
-                && columnNames[i].getLocalName().startsWith(QName.JCR_SCORE.getLocalName())) {
-                idx = i;
-                break;
-            }
-        }
-        if (idx == -1) {
-            throw new RepositoryException("no jcr:score column in query result");
-        }
-        this.scoreIndex = idx;
         fetchNext();
     }
 
@@ -110,16 +92,11 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
      * @throws NoSuchElementException if there is no next node.
      * @see ScoreNodeIterator#getScore()
      */
-    public float getScore() throws NoSuchElementException {
+    public double getScore() throws NoSuchElementException {
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
-        String scoreString = queryInfo.getValues(nextId)[scoreIndex];
-        try {
-            return Float.parseFloat(scoreString);
-        } catch (NumberFormatException e) {
-            throw new NoSuchElementException();
-        }
+        return nextScore;
     }
 
     //-------------------------------------------------------< NodeIterator >---
@@ -155,7 +132,7 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
         if (skipNum == 0) {
             // do nothing
         } else {
-            ids.skip(skipNum - 1);
+            rows.skip(skipNum - 1);
             pos += skipNum - 1;
             fetchNext();
         }
@@ -175,8 +152,8 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
      * @see javax.jcr.RangeIterator#getSize()
      */
     public long getSize() {
-        if (ids.getSize() != -1) {
-            return ids.getSize() - invalid;
+        if (rows.getSize() != -1) {
+            return rows.getSize() - invalid;
         } else {
             return -1;
         }
@@ -233,18 +210,17 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
     private void fetchNext() {
         // reset
         next = null;
-        while (next == null && ids.hasNext()) {
+        nextScore = 0;
+        
+        while (next == null && rows.hasNext()) {
             try {
-                ItemId id = ids.nextId();
-                if (!id.denotesNode()) {
-                    log.error("NodeId expected. Found PropertyId: " + id);
-                    continue;
-                }
-                nextId = (NodeId)id;
+                QueryResultRow row = rows.nextQueryResultRow();
+                nextId = row.getNodeId();
                 Item tmp = itemMgr.getItem(itemStateMgr.getItemState(nextId));
 
                 if (tmp.isNode()) {
                     next = (Node) tmp;
+                    nextScore = row.getScore();
                 } else {
                     log.warn("Item with Id is not a Node: " + nextId);
                     // try next
