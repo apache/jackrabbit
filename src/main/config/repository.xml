@@ -135,7 +135,7 @@
             <param name="resultFetchSize" value="2147483647"/>
             <param name="extractorPoolSize" value="0"/>
             <param name="extractorTimeout" value="100"/>
-            <param name="extractorBackLogSize" value="10"/>
+            <param name="extractorBackLogSize" value="100"/>
         </SearchIndex>
     </Workspace>
 
