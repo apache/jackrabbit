@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.value.QValue;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 
 import javax.jcr.RepositoryException;

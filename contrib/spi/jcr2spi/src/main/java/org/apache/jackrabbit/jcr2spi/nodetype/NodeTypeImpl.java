@@ -26,7 +26,8 @@ import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.value.QValue;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFormat;
 import org.slf4j.LoggerFactory;
@@ -65,6 +66,11 @@ public class NodeTypeImpl implements NodeType {
      * @see NodeType#canSetProperty(String, Value[])
      */
     private final ValueFactory valueFactory;
+    /**
+     * ValueFactory used to convert JCR values to qualified ones in order to
+     * determine value constraints within the NodeType interface.
+     */
+    private final QValueFactory qValueFactory;
 
     /**
      * Package private constructor
@@ -80,11 +86,12 @@ public class NodeTypeImpl implements NodeType {
      */
     NodeTypeImpl(EffectiveNodeType ent, QNodeTypeDefinition ntd,
                  NodeTypeManagerImpl ntMgr, NamespaceResolver nsResolver,
-                 ValueFactory valueFactory) {
+                 ValueFactory valueFactory, QValueFactory qValueFactory) {
         this.ent = ent;
         this.ntMgr = ntMgr;
         this.nsResolver = nsResolver;
         this.valueFactory = valueFactory;
+        this.qValueFactory = qValueFactory;
         this.ntd = ntd;
     }
 
@@ -303,19 +310,17 @@ public class NodeTypeImpl implements NodeType {
             if (def.isMultiple()) {
                 return false;
             }
-            int targetType;
+            Value v;
             if (def.getRequiredType() != PropertyType.UNDEFINED
                     && def.getRequiredType() != value.getType()) {
                 // type conversion required
-                targetType = def.getRequiredType();
+                v =  ValueHelper.convert(value, def.getRequiredType(), valueFactory);
             } else {
                 // no type conversion required
-                targetType = value.getType();
+                v = value;
             }
-            // create QValue from Value and perform
-            // type conversion as necessary
-            Value v = ValueHelper.convert(value, targetType, valueFactory);
-            QValue qValue = ValueFormat.getQValue(v, nsResolver);
+            // create QValue from Value
+            QValue qValue = ValueFormat.getQValue(v, nsResolver, qValueFactory);
             checkSetPropertyValueConstraints(def, new QValue[]{qValue});
             return true;
         } catch (NameException be) {
@@ -383,7 +388,7 @@ public class NodeTypeImpl implements NodeType {
                     // create QValue from Value and perform
                     // type conversion as necessary
                     Value v = ValueHelper.convert(values[i], targetType, valueFactory);
-                    QValue qValue = ValueFormat.getQValue(v, nsResolver);
+                    QValue qValue = ValueFormat.getQValue(v, nsResolver, qValueFactory);
                     list.add(qValue);
                 }
             }

@@ -28,7 +28,6 @@ import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.ChildInfo;
-import org.apache.jackrabbit.value.QValue;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
@@ -36,17 +35,14 @@ import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
 
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.PropertyType;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Collections;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Collection;
 
 /**
  * <code>WorkspaceItemStateFactory</code>...
@@ -213,9 +209,9 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
         throws NoSuchItemStateException, ItemStateException {
         try {
             ChildNodeEntries entries = new ChildNodeEntries(nodeState);
-            Collection childInfos = service.getChildInfos(sessionInfo, nodeState.getNodeId());
-            for (Iterator it = childInfos.iterator(); it.hasNext();) {
-                ChildInfo ci = (ChildInfo) it.next();
+            Iterator childInfos = service.getChildInfos(sessionInfo, nodeState.getNodeId());
+            while (childInfos.hasNext()) {
+                ChildInfo ci = (ChildInfo) childInfos.next();
                 entries.add(ci.getName(), ci.getUniqueID(), ci.getIndex());
             }
             return entries;
@@ -247,22 +243,11 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
             // build the PropertyState
             PropertyState state = new PropertyState(info.getQName(), parent,
                 def, Status.EXISTING, this, service.getIdFactory(), true);
-
-            QValue[] qValues;
-            if (info.getType() == PropertyType.BINARY) {
-                qValues = QValue.create(info.getValuesAsStream(), PropertyType.BINARY);
-            } else {
-                String[] str = info.getValues();
-                qValues = QValue.create(str, info.getType());
-            }
-
-            state.init(info.getType(), qValues);
+            state.init(info.getType(), info.getValues());
             state.addListener(cache);
             cache.created(state);
 
             return state;
-        } catch (IOException e) {
-            throw new ItemStateException(e.getMessage(), e);
         } catch (NodeTypeConflictException e) {
             String msg = "internal error: failed to build property state.";
             log.debug(msg);

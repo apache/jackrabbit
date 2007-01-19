@@ -22,6 +22,7 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.QValue;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -661,7 +662,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
                     }
                 }
                 ps.println("\t\tValueConstraints\t" + constraints.toString());
-                String[] defVals = pd[i].getDefaultValues();
+                QValue[] defVals = pd[i].getDefaultValues();
                 StringBuffer defaultValues = new StringBuffer();
                 if (defVals == null) {
                     defaultValues.append("<null>");
@@ -670,7 +671,11 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
                         if (defaultValues.length() > 0) {
                             defaultValues.append(", ");
                         }
-                        defaultValues.append(defVals[n]);
+                        try {
+                            defaultValues.append(defVals[n].getString());
+                        } catch (RepositoryException e) {
+                            defaultValues.append(defVals[n].toString());
+                        }
                     }
                 }
                 ps.println("\t\tDefaultValue\t" + defaultValues.toString());

@@ -20,7 +20,7 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.value.QValue;
+import org.apache.jackrabbit.spi.QValue;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -35,8 +35,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.io.InputStream;
-import java.io.IOException;
 
 /**
  * <code>DefinitionValidator</code>...
@@ -246,7 +244,7 @@ class DefinitionValidator {
              * Note: default internal values are built from the required type,
              * thus check for match with pd.getRequiredType is redundant.
              */
-            QValue[] defVals = getQValues(pd);
+            QValue[] defVals = pd.getDefaultValues();
 
             /* check that default values satisfy value constraints.
              * Note however, that no check is performed if autocreated property-
@@ -562,37 +560,5 @@ class DefinitionValidator {
             // make sure namespace uri denotes a registered namespace
             nsRegistry.getPrefix(name.getNamespaceURI());
         }
-    }
-
-    private static QValue[] getQValues(QPropertyDefinition propDef) throws RepositoryException {
-        int reqType = propDef.getRequiredType();
-        // if no default values are specified, need to return null.
-        QValue[] ivs = null;
-        if (reqType == PropertyType.BINARY) {
-            InputStream[] dfv = propDef.getDefaultValuesAsStream();
-            if (dfv != null) {
-                ivs = new QValue[dfv.length];
-                for (int i = 0; i < dfv.length; i++) {
-                    try {
-                        ivs[i] = QValue.create(dfv[i]);
-                    } catch (IOException e) {
-                        String msg = "[" + propDef.getQName() + "] error while reading binary default values.";
-                        throw new RepositoryException(msg);
-                    }
-                }
-            }
-        } else {
-            String[] dfv = propDef.getDefaultValues();
-            if (dfv != null) {
-                ivs = new QValue[dfv.length];
-                if (reqType == PropertyType.UNDEFINED) {
-                    reqType = PropertyType.STRING;
-                }
-                for (int i = 0; i < dfv.length; i++) {
-                    ivs[i] = QValue.create(dfv[i], reqType);
-                }
-            }
-        }
-        return ivs;
     }
 }

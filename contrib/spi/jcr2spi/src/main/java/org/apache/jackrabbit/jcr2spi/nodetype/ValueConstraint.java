@@ -27,8 +27,8 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.value.DateValue;
-import org.apache.jackrabbit.value.QValue;
 import org.apache.jackrabbit.util.ISO8601;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -169,7 +169,7 @@ public abstract class ValueConstraint {
     }
 
     /**
-     * 
+     *
      * @param type
      * @param definition
      * @param nsResolver

@@ -20,7 +20,6 @@ import org.apache.jackrabbit.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFormat;
-import org.apache.jackrabbit.value.QValue;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.NameException;
@@ -53,6 +52,7 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.QValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1384,11 +1384,11 @@ public class NodeImpl extends ItemImpl implements Node {
         }
         QValue qvs;
         if (targetType == PropertyType.UNDEFINED) {
-            qvs = ValueFormat.getQValue(value, session.getNamespaceResolver());
+            qvs = ValueFormat.getQValue(value, session.getNamespaceResolver(), session.getQValueFactory());
             targetType = qvs.getType();
         } else {
             Value targetValue = ValueHelper.convert(value, targetType, session.getValueFactory());
-            qvs = ValueFormat.getQValue(targetValue, session.getNamespaceResolver());
+            qvs = ValueFormat.getQValue(targetValue, session.getNamespaceResolver(), session.getQValueFactory());
         }
         return createProperty(qName, targetType, def, new QValue[] {qvs});
     }
@@ -1428,7 +1428,7 @@ public class NodeImpl extends ItemImpl implements Node {
             }
         }
         Value[] targetValues = ValueHelper.convert(values, targetType, session.getValueFactory());
-        QValue[] qvs = ValueFormat.getQValues(targetValues, session.getNamespaceResolver());
+        QValue[] qvs = ValueFormat.getQValues(targetValues, session.getNamespaceResolver(), session.getQValueFactory());
         return createProperty(qName, targetType, def, qvs);
     }
 

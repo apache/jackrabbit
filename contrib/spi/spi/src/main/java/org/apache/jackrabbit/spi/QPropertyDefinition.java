@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.spi;
 
 import javax.jcr.nodetype.PropertyDefinition;
-import java.io.InputStream;
 
 /**
  * <code>QPropertyDefinition</code> is the qualified SPI representation of
@@ -46,18 +45,12 @@ public interface QPropertyDefinition extends QItemDefinition {
     String[] getValueConstraints();
 
     /**
-     * Returns the array of default values.
+     * Returns the array of default values or <code>null</code> if no default
+     * values are defined.
      *
-     * @return the array of default values.
+     * @return the array of default values or <code>null</code>
      */
-    String[] getDefaultValues();
-
-    /**
-     * Returns the array of default values.
-     *
-     * @return the array of default values.
-     */
-    InputStream[] getDefaultValuesAsStream();
+    QValue[] getDefaultValues();
 
     /**
      * Reports whether this property can have multiple values.

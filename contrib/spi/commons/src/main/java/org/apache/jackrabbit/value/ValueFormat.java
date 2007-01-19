@@ -23,6 +23,8 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
@@ -37,35 +39,65 @@ import java.util.ArrayList;
  */
 public class ValueFormat {
 
-    public static QValue getQValue(Value jcrValue, NamespaceResolver nsResolver) throws RepositoryException {
+    /**
+     *
+     * @param jcrValue
+     * @param nsResolver
+     * @param factory
+     * @return
+     * @throws RepositoryException
+     */
+    public static QValue getQValue(Value jcrValue, NamespaceResolver nsResolver,
+                                   QValueFactory factory) throws RepositoryException {
         if (jcrValue == null) {
             throw new IllegalArgumentException("null value");
         }
         if (jcrValue.getType() == PropertyType.BINARY) {
             try {
-                return QValue.create(jcrValue.getStream());
+                return factory.create(jcrValue.getStream());
             } catch (IOException e) {
                 throw new RepositoryException(e);
             }
         } else {
-            return getQValue(jcrValue.getString(), jcrValue.getType(), nsResolver);
+            return getQValue(jcrValue.getString(), jcrValue.getType(), nsResolver, factory);
         }
     }
 
-    public static QValue[] getQValues(Value[] jcrValues, NamespaceResolver nsResolver) throws RepositoryException {
+    /**
+     *
+     * @param jcrValues
+     * @param nsResolver
+     * @param factory
+     * @return
+     * @throws RepositoryException
+     */
+    public static QValue[] getQValues(Value[] jcrValues,
+                                      NamespaceResolver nsResolver,
+                                      QValueFactory factory) throws RepositoryException {
         if (jcrValues == null) {
             throw new IllegalArgumentException("null value");
         }
         List qValues = new ArrayList();
         for (int i = 0; i < jcrValues.length; i++) {
             if (jcrValues[i] != null) {
-                qValues.add(getQValue(jcrValues[i], nsResolver));
+                qValues.add(getQValue(jcrValues[i], nsResolver, factory));
             }
         }
         return (QValue[]) qValues.toArray(new QValue[qValues.size()]);
     }
 
-    public static QValue getQValue(String jcrValue, int propertyType, NamespaceResolver nsResolver) throws RepositoryException {
+    /**
+     * 
+     * @param jcrValue
+     * @param propertyType
+     * @param nsResolver
+     * @param factory
+     * @return
+     * @throws RepositoryException
+     */
+    public static QValue getQValue(String jcrValue, int propertyType,
+                                   NamespaceResolver nsResolver,
+                                   QValueFactory factory) throws RepositoryException {
         QValue qValue;
         switch (propertyType) {
             case PropertyType.STRING:
@@ -74,15 +106,15 @@ public class ValueFormat {
             case PropertyType.LONG:
             case PropertyType.DATE:
             case PropertyType.REFERENCE:
-                qValue = QValue.create(jcrValue, propertyType);
+                qValue = factory.create(jcrValue, propertyType);
                 break;
             case PropertyType.BINARY:
-                qValue = QValue.create(jcrValue.getBytes());
+                qValue = factory.create(jcrValue.getBytes());
                 break;
             case PropertyType.NAME:
                 try {
                     QName qName = NameFormat.parse(jcrValue, nsResolver);
-                    qValue = QValue.create(qName);
+                    qValue = factory.create(qName);
                 } catch (NameException e) {
                     throw new RepositoryException(e);
                 }
@@ -90,7 +122,7 @@ public class ValueFormat {
             case PropertyType.PATH:
                 try {
                     Path qPath = PathFormat.parse(jcrValue, nsResolver).getNormalizedPath();
-                    qValue = QValue.create(qPath);
+                    qValue = factory.create(qPath);
                 } catch (NameException e) {
                     throw new RepositoryException(e);
                 }
@@ -108,8 +140,7 @@ public class ValueFormat {
      */
     public static Value getJCRValue(QValue qualifiedValue,
                                     NamespaceResolver nsResolver,
-                                    ValueFactory factory)
-        throws RepositoryException {
+                                    ValueFactory factory) throws RepositoryException {
         Value jcrValue;
         int propertyType = qualifiedValue.getType();
         switch (propertyType) {

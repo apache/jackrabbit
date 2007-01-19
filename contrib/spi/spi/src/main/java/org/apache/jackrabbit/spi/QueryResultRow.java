@@ -36,10 +36,10 @@ public interface QueryResultRow {
     public double getScore();
     
     /**
-     * @return an array of String representing the values present in this result row
+     * @return an array of <code>QValue</code> representing the values present
+     * in this result row.
      * @see javax.jcr.query.Row#getValue(String)
      * @see javax.jcr.query.Row#getValues()
-     * TODO: switch type to QValue[] when available
      */
-    public String[] getValues(); 
+    public QValue[] getValues();
 }

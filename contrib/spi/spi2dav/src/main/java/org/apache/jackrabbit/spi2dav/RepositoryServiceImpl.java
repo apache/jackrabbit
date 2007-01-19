@@ -22,6 +22,7 @@ import org.apache.commons.httpclient.URI;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
+import org.apache.commons.httpclient.HttpConnectionManager;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
@@ -122,10 +123,12 @@ import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.ChildInfo;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.ValueFormat;
-import org.apache.jackrabbit.value.QValue;
+import org.apache.jackrabbit.value.QValueFactoryImpl;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.w3c.dom.Element;
@@ -268,10 +271,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     HttpClient getClient(SessionInfo sessionInfo) throws RepositoryException {
-        if (clients.containsKey(sessionInfo)) {
-            return (HttpClient) clients.get(sessionInfo);
-        } else {
-            HttpClient client = new HttpClient(new MultiThreadedHttpConnectionManager());
+        HttpClient client = (HttpClient) clients.get(sessionInfo);
+        if (client == null) {
+            HttpConnectionManager connMgr = new MultiThreadedHttpConnectionManager();
+            client = new HttpClient(connMgr);
             client.setHostConfiguration(hostConfig);
             // always send authentication not waiting for 401
             client.getParams().setAuthenticationPreemptive(true);
@@ -283,10 +286,18 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 creds = ((SessionInfoImpl) sessionInfo).getCredentials().getCredentials();
             }
             client.getState().setCredentials(AuthScope.ANY, creds);
-
             clients.put(sessionInfo, client);
-            return client;
+            log.debug("Created Client " + client + " for SessionInfo " + sessionInfo);
         }
+        return client;
+    }
+
+    private void removeClient(SessionInfo sessionInfo) {
+        HttpClient cl = (HttpClient) clients.remove(sessionInfo);
+        if (cl != null) {
+            ((MultiThreadedHttpConnectionManager) cl.getHttpConnectionManager()).shutdown();
+        }
+        log.debug("Removed Client " + cl + " for SessionInfo " + sessionInfo);
     }
 
     private String getItemUri(ItemId itemId, SessionInfo sessionInfo) throws RepositoryException {
@@ -381,6 +392,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      */
     public IdFactory getIdFactory() {
         return idFactory;
+    }
+
+    public QValueFactory getQValueFactory() {
+        return QValueFactoryImpl.getInstance();
     }
 
     /**
@@ -492,6 +507,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             String rootUri = uriResolver.getRootItemUri(sessionInfo.getWorkspaceName());
             unsubscribe(rootUri, subscriptionId, sessionInfo);
         }
+        removeClient(sessionInfo);
     }
 
     /**
@@ -639,7 +655,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     if (itemId.denotesNode()) {
                         definition = new QNodeDefinitionImpl(null, idfElem, nsResolver);
                     } else {
-                        definition = new QPropertyDefinitionImpl(null, idfElem, nsResolver);
+                        definition = new QPropertyDefinitionImpl(null, idfElem, nsResolver, getQValueFactory());
                     }
                 }
             }
@@ -764,7 +780,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#getChildInfos(SessionInfo, NodeId)
      */
-    public Collection getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws ItemNotFoundException, RepositoryException {
+    public Iterator getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws ItemNotFoundException, RepositoryException {
         // set of properties to be retrieved
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
         nameSet.add(ItemResourceConstants.JCR_NAME);
@@ -788,10 +804,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 throw new ItemNotFoundException("Unable to retrieve the node with id " + parentId);
             } else if (responses.length == 1) {
                 // no child nodes nor properties
-                return Collections.EMPTY_LIST;
+                return Collections.EMPTY_LIST.iterator();
             }
 
-            Set childEntries = new HashSet();
+            List childEntries = new ArrayList();
             for (int i = 0; i < responses.length; i++) {
                 if (!isSameResource(uri, responses[i])) {
                     MultiStatusResponse resp = responses[i];
@@ -808,7 +824,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     } // else: property -> ignore
                 } // else: ignore the response related to the parent
             }
-            return childEntries;
+            return childEntries.iterator();
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -850,7 +866,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             NodeId parentId = getParentId(propSet, sessionInfo);
             PropertyId id = uriResolver.buildPropertyId(parentId, responses[0], sessionInfo.getWorkspaceName());
 
-            PropertyInfo pInfo = new PropertyInfoImpl(id, parentId, propSet, nsResolver, valueFactory);
+            PropertyInfo pInfo = new PropertyInfoImpl(id, parentId, propSet, nsResolver, valueFactory, getQValueFactory());
             return pInfo;
         } catch (IOException e) {
             throw new RepositoryException(e);
@@ -1248,7 +1264,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             MultiStatus ms = method.getResponseBodyAsMultiStatus();
             return new QueryInfoImpl(ms, sessionInfo, uriResolver,
-                nsResolver, valueFactory);
+                nsResolver, valueFactory, getQValueFactory());
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1588,7 +1604,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             ElementIterator it = DomUtil.getChildren(reportDoc.getDocumentElement(), NodeTypeConstants.NODETYPE_ELEMENT, null);
             List ntDefs = new ArrayList();
             while (it.hasNext()) {
-                ntDefs.add(new QNodeTypeDefinitionImpl(it.nextElement(), nsResolver));
+                ntDefs.add(new QNodeTypeDefinitionImpl(it.nextElement(), nsResolver, getQValueFactory()));
             }
             // refresh node type definitions map
             synchronized (nodeTypeDefinitions) {
@@ -1753,61 +1769,26 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
 
         /**
-         * @see Batch#addProperty(NodeId, QName, String, int)
+         * @see Batch#addProperty(NodeId, QName, QValue)
          */
-        public void addProperty(NodeId parentId, QName propertyName, String value, int propertyType) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+        public void addProperty(NodeId parentId, QName propertyName, QValue value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
             checkConsumed();
-            QValue qV = QValue.create(value, propertyType);
-            Value jcrValue = ValueFormat.getJCRValue(qV, nsResolver, valueFactory);
+            Value jcrValue = ValueFormat.getJCRValue(value, nsResolver, valueFactory);
             ValuesProperty vp = new ValuesProperty(jcrValue);
             internalAddProperty(parentId, propertyName, vp);
         }
 
         /**
-         * @see Batch#addProperty(NodeId, QName, String[], int)
+         * @see Batch#addProperty(NodeId, QName, QValue[])
          */
-        public void addProperty(NodeId parentId, QName propertyName, String[] values, int propertyType) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+        public void addProperty(NodeId parentId, QName propertyName, QValue[] values) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
             checkConsumed();
             Value[] jcrValues = new Value[values.length];
             for (int i = 0; i < values.length; i++) {
-                QValue v = QValue.create(values[i], propertyType);
-                jcrValues[i] = ValueFormat.getJCRValue(v, nsResolver, valueFactory);
+                jcrValues[i] = ValueFormat.getJCRValue(values[i], nsResolver, valueFactory);
             }
             ValuesProperty vp = new ValuesProperty(jcrValues);
             internalAddProperty(parentId, propertyName, vp);
-        }
-
-        /**
-         * @see Batch#addProperty(NodeId, QName, InputStream, int)
-         */
-        public void addProperty(NodeId parentId, QName propertyName, InputStream value, int propertyType) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
-            checkConsumed();
-            try {
-                QValue qV = QValue.create(value, propertyType);
-                Value jcrValue = ValueFormat.getJCRValue(qV, nsResolver, valueFactory);
-                ValuesProperty vp = new ValuesProperty(jcrValue);
-                internalAddProperty(parentId, propertyName, vp);
-            } catch (IOException e) {
-                throw new ValueFormatException(e);
-            }
-        }
-
-        /**
-         * @see Batch#addProperty(NodeId, QName, InputStream[], int)
-         */
-        public void addProperty(NodeId parentId, QName propertyName, InputStream[] values, int propertyType) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
-            checkConsumed();
-            try {
-                Value[] jcrValues = new Value[values.length];
-                for (int i = 0; i < values.length; i++) {
-                    QValue qV = QValue.create(values[i], propertyType);
-                    jcrValues[i] = ValueFormat.getJCRValue(qV, nsResolver, valueFactory);
-                }
-                ValuesProperty vp = new ValuesProperty(jcrValues);
-                internalAddProperty(parentId, propertyName, vp);
-            } catch (IOException e) {
-                throw new ValueFormatException(e);
-            }
         }
 
         private void internalAddProperty(NodeId parentId, QName propertyName, ValuesProperty vp) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
@@ -1824,9 +1805,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
 
         /**
-         * @see Batch#setValue(PropertyId, String, int)
+         * @see Batch#setValue(PropertyId, QValue)
          */
-        public void setValue(PropertyId propertyId, String value, int propertyType) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+        public void setValue(PropertyId propertyId, QValue value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
             checkConsumed();
             DavPropertySet setProperties = new DavPropertySet();
             if (value == null) {
@@ -1834,8 +1815,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 remove(propertyId);
             } else {
                 // qualified value must be converted to jcr value
-                QValue qV = QValue.create(value, propertyType);
-                Value jcrValue = ValueFormat.getJCRValue(qV, nsResolver, valueFactory);
+                Value jcrValue = ValueFormat.getJCRValue(value, nsResolver, valueFactory);
                 ValuesProperty vp = new ValuesProperty(jcrValue);
                 setProperties.add(vp);
             }
@@ -1843,9 +1823,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
 
         /**
-         * @see Batch#setValue(PropertyId, String[], int)
+         * @see Batch#setValue(PropertyId, QValue[])
          */
-        public void setValue(PropertyId propertyId, String[] values, int propertyType) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+        public void setValue(PropertyId propertyId, QValue[] values) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
             checkConsumed();
             DavPropertySet setProperties = new DavPropertySet();
             if (values == null) {
@@ -1855,60 +1835,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 // qualified values must be converted to jcr values
                 Value[] jcrValues = new Value[values.length];
                 for (int i = 0; i < values.length; i++) {
-                    QValue qV = QValue.create(values[i], propertyType);
-                    jcrValues[i] = ValueFormat.getJCRValue(qV, nsResolver, valueFactory);
+                    jcrValues[i] = ValueFormat.getJCRValue(values[i], nsResolver, valueFactory);
                 }
                 setProperties.add(new ValuesProperty(jcrValues));
             }
             internalSetValue(propertyId, setProperties);
-        }
-
-        /**
-         * @see Batch#setValue(PropertyId, InputStream, int)
-         */
-        public void setValue(PropertyId propertyId, InputStream value, int propertyType) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
-            checkConsumed();
-            try {
-                DavPropertySet setProperties = new DavPropertySet();
-                if (value == null) {
-                    // setting property value to 'null' is identical to a removal
-                    remove(propertyId);
-                } else {
-                    // qualified value must be converted to jcr value
-                    QValue qV = QValue.create(value, propertyType);
-                    Value jcrValue = ValueFormat.getJCRValue(qV, nsResolver, valueFactory);
-                    ValuesProperty vp = new ValuesProperty(jcrValue);
-                    setProperties.add(vp);
-                }
-                internalSetValue(propertyId, setProperties);
-            } catch (IOException e) {
-                throw new ValueFormatException(e);
-            }
-        }
-
-        /**
-         * @see Batch#setValue(PropertyId, InputStream[], int)
-         */
-        public void setValue(PropertyId propertyId, InputStream[] values, int propertyType) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
-            checkConsumed();
-            try {
-                DavPropertySet setProperties = new DavPropertySet();
-                if (values == null) {
-                    // setting property value to 'null' is identical to a removal
-                    remove(propertyId);
-                } else {
-                    // qualified values must be converted to jcr values
-                    Value[] jcrValues = new Value[values.length];
-                    for (int i = 0; i < values.length; i++) {
-                        QValue qV = QValue.create(values[i], propertyType);
-                        jcrValues[i] = ValueFormat.getJCRValue(qV, nsResolver, valueFactory);
-                    }
-                    setProperties.add(new ValuesProperty(jcrValues));
-                }
-                internalSetValue(propertyId, setProperties);
-            }   catch (IOException e) {
-                throw new ValueFormatException(e);
-            }
         }
 
         /**
