@@ -216,12 +216,9 @@ public abstract class ItemImpl implements Item, ItemStateListener {
      */
     private void notifyCreated() {
         // copy listeners to array to avoid ConcurrentModificationException
-        ItemLifeCycleListener[] la = new ItemLifeCycleListener[listeners.size()];
-        Iterator iter = listeners.values().iterator();
-        int cnt = 0;
-        while (iter.hasNext()) {
-            la[cnt++] = (ItemLifeCycleListener) iter.next();
-        }
+        ItemLifeCycleListener[] la =
+                (ItemLifeCycleListener[]) listeners.values().toArray(
+                        new ItemLifeCycleListener[listeners.size()]);
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
                 la[i].itemCreated(this);
@@ -235,12 +232,9 @@ public abstract class ItemImpl implements Item, ItemStateListener {
      */
     protected void notifyInvalidated() {
         // copy listeners to array to avoid ConcurrentModificationException
-        ItemLifeCycleListener[] la = new ItemLifeCycleListener[listeners.size()];
-        Iterator iter = listeners.values().iterator();
-        int cnt = 0;
-        while (iter.hasNext()) {
-            la[cnt++] = (ItemLifeCycleListener) iter.next();
-        }
+        ItemLifeCycleListener[] la =
+                (ItemLifeCycleListener[]) listeners.values().toArray(
+                        new ItemLifeCycleListener[listeners.size()]);
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
                 la[i].itemInvalidated(id, this);
@@ -254,12 +248,9 @@ public abstract class ItemImpl implements Item, ItemStateListener {
      */
     protected void notifyDestroyed() {
         // copy listeners to array to avoid ConcurrentModificationException
-        ItemLifeCycleListener[] la = new ItemLifeCycleListener[listeners.size()];
-        Iterator iter = listeners.values().iterator();
-        int cnt = 0;
-        while (iter.hasNext()) {
-            la[cnt++] = (ItemLifeCycleListener) iter.next();
-        }
+        ItemLifeCycleListener[] la =
+                (ItemLifeCycleListener[]) listeners.values().toArray(
+                        new ItemLifeCycleListener[listeners.size()]);
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
                 la[i].itemDestroyed(id, this);
@@ -1080,7 +1071,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             Collection removed = getRemovedStates();
 
             /**
-             * build set of item id's who are within the scope of
+             * build set of item id's which are within the scope of
              * (i.e. affected by) this save operation
              */
             Set affectedIds = new HashSet(dirty.size() + removed.size());

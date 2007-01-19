@@ -528,12 +528,9 @@ public class SessionImpl
      */
     protected void notifyLoggingOut() {
         // copy listeners to array to avoid ConcurrentModificationException
-        SessionListener[] la = new SessionListener[listeners.size()];
-        Iterator iter = listeners.values().iterator();
-        int cnt = 0;
-        while (iter.hasNext()) {
-            la[cnt++] = (SessionListener) iter.next();
-        }
+        SessionListener[] la =
+                (SessionListener[]) listeners.values().toArray(
+                        new SessionListener[listeners.size()]);
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
                 la[i].loggingOut(this);
@@ -546,12 +543,9 @@ public class SessionImpl
      */
     protected void notifyLoggedOut() {
         // copy listeners to array to avoid ConcurrentModificationException
-        SessionListener[] la = new SessionListener[listeners.size()];
-        Iterator iter = listeners.values().iterator();
-        int cnt = 0;
-        while (iter.hasNext()) {
-            la[cnt++] = (SessionListener) iter.next();
-        }
+        SessionListener[] la =
+                (SessionListener[]) listeners.values().toArray(
+                        new SessionListener[listeners.size()]);
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
                 la[i].loggedOut(this);
