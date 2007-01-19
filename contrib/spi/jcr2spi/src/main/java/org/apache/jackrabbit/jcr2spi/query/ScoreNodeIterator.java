@@ -33,5 +33,5 @@ public interface ScoreNodeIterator extends NodeIterator {
      * @return the score of the node returned by {@link #nextNode()}.
      * @throws java.util.NoSuchElementException if there is no next node.
      */
-    public float getScore();
+    public double getScore();
 }
