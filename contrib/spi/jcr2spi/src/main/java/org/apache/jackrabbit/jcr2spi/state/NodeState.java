@@ -17,19 +17,19 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.commons.collections.iterators.IteratorChain;
-import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.state.entry.ChildPropertyEntry;
 import org.apache.jackrabbit.jcr2spi.state.entry.PropertyReference;
 import org.apache.jackrabbit.jcr2spi.state.entry.ChildItemEntry;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
-import org.apache.jackrabbit.value.QValue;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.Event;
+import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QValue;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 

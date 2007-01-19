@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
-import java.util.AbstractCollection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFactory;
+import javax.jcr.Value;
 
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NameFormat;
@@ -32,6 +32,9 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.QueryResultRowIterator;
 import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.QValueFactory;
+import org.apache.jackrabbit.spi.QueryResultRow;
+import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatus;
@@ -39,6 +42,7 @@ import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.jcr.search.SearchResultProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.value.ValueFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,15 +56,16 @@ public class QueryInfoImpl implements QueryInfo {
      */
     private static final Logger log = LoggerFactory.getLogger(QueryInfoImpl.class);
 
-    private final Map results = new LinkedHashMap();
+    private static final double UNDEFINED_SCORE = -1;
 
     private final QName[] columnNames;
-    private final NamespaceResolver nsResolver;
+    private int scoreIndex = -1;
+    private final Map results = new LinkedHashMap();
 
     public QueryInfoImpl(MultiStatus ms, SessionInfo sessionInfo, URIResolver uriResolver,
-                         NamespaceResolver nsResolver, ValueFactory valueFactory)
+                         NamespaceResolver nsResolver, ValueFactory valueFactory,
+                         QValueFactory qValueFactory)
         throws RepositoryException {
-        this.nsResolver = nsResolver;
 
         String responseDescription = ms.getResponseDescription();
         if (responseDescription != null) {
@@ -70,6 +75,9 @@ public class QueryInfoImpl implements QueryInfo {
                 String jcrColumnNames = ISO9075.decode(cn[i]);
                 try {
                     columnNames[i] = NameFormat.parse(jcrColumnNames, nsResolver);
+                    if (QName.JCR_SCORE.equals(columnNames[i])) {
+                        scoreIndex = i;
+                    }
                 } catch (NameException e) {
                     throw new RepositoryException(e);
                 }
@@ -86,73 +94,107 @@ public class QueryInfoImpl implements QueryInfo {
 
             DavProperty davProp = okSet.get(SearchResultProperty.SEARCH_RESULT_PROPERTY);
             SearchResultProperty resultProp = new SearchResultProperty(davProp, valueFactory);
+            Value[] values = resultProp.getValues();
+            QValue[] qValues = new QValue[values.length];
+            for (int j = 0; j < values.length; j++) {
+                try {
+                    qValues[j] = (values[j] == null) ?  null : ValueFormat.getQValue(values[j], nsResolver, qValueFactory);
+                } catch (RepositoryException e) {
+                    // should not occur
+                    log.error("Malformed value: " + values[j].toString());
+                }
+            }
 
             NodeId nodeId = uriResolver.getNodeId(href, sessionInfo);
-            this.results.put(nodeId, resultProp);
+            results.put(nodeId, qValues);
         }
     }
 
+    /**
+     * @see QueryInfo#getRows()
+     */
     public QueryResultRowIterator getRows() {
-      // TODO: objects need to implement QueryResultRow
-      
-      return new IteratorHelper(new AbstractCollection() {
-            public int size() {
-                return results.size();
-            }
-
-            public Iterator iterator() {
-                return results.keySet().iterator();
-            }
-        });
+        return new QueryResultRowIteratorImpl();
     }
 
+    /**
+     * @see QueryInfo#getColumnNames()
+     */
     public QName[] getColumnNames() {
         return columnNames;
     }
 
-//    public String[] getValues(NodeId nodeId) {
-//        SearchResultProperty prop = (SearchResultProperty) results.get(nodeId);
-//        if (prop == null) {
-//            throw new NoSuchElementException();
-//        } else {
-//            Value[] values = prop.getValues();
-//            String[] ret = new String[values.length];
-//            for (int i = 0; i < values.length; i++) {
-//                try {
-//                    QValue qValue = (values[i] == null) ?  null : ValueFormat.getQValue(values[i], nsResolver);
-//                    ret[i] = qValue.getString();
-//                } catch (RepositoryException e) {
-//                    // should not occur
-//                    log.error("malformed value: " + values[i].toString());
-//                }
-//            }
-//            return ret;
-//        }
-//    }
-//
-//    public InputStream[] getValuesAsStream(NodeId nodeId) {
-//        SearchResultProperty prop = (SearchResultProperty) results.get(nodeId);
-//        if (prop == null) {
-//            throw new NoSuchElementException();
-//        } else {
-//            Value[] values = prop.getValues();
-//            InputStream[] ret = new InputStream[values.length];
-//            for (int i = 0; i < ret.length; i++) {
-//                try {
-//                    // make sure we return the qualified value if the type is
-//                    // name or path.
-//                    if (values[i].getType() == PropertyType.NAME || values[i].getType() == PropertyType.PATH) {
-//                        ret[i] = ValueFormat.getQValue(values[i], nsResolver).getStream();
-//                    } else {
-//                        ret[i] = values[i].getStream();
-//                    }
-//                } catch (RepositoryException e) {
-//                    // ignore this value
-//                    log.warn("unable to get stream value: " + values[i].toString());
-//                }
-//            }
-//            return ret;
-//        }
-//    }
+    private class QueryResultRowIteratorImpl implements QueryResultRowIterator {
 
+        private final Iterator keyIterator;
+        private long pos = 0;
+
+        private QueryResultRowIteratorImpl() {
+            keyIterator = results.keySet().iterator();
+        }
+
+        public QueryResultRow nextQueryResultRow() {
+            final NodeId nId = (NodeId) keyIterator.next();
+            final QValue[] qValues = (QValue[]) results.get(nId);
+            pos++;
+
+            return new QueryResultRow() {
+                /**
+                 * @see QueryResultRow#getNodeId()
+                 */
+                public NodeId getNodeId() {
+                    return nId;
+                }
+
+                /**
+                 * @see QueryResultRow#getScore()
+                 */
+                public double getScore() {
+                    if (scoreIndex != -1 && qValues[scoreIndex] != null) {
+                        try {
+                            return Double.parseDouble(qValues[scoreIndex].getString());
+                        } catch (RepositoryException e) {
+                            log.error("Error while building query score", e);
+                        }   return UNDEFINED_SCORE;
+                    } else {
+                        log.error("Cannot determined jcr:score from query results.");
+                        return UNDEFINED_SCORE;
+                    }
+                }
+
+                /**
+                 * @see QueryResultRow#getValues()
+                 */
+                public QValue[] getValues() {
+                    return qValues;
+                }
+            };
+        }
+
+        public void skip(long skipNum) {
+            while (skipNum-- > 0) {
+                nextQueryResultRow();
+            }
+        }
+
+        public long getSize() {
+            return results.size();
+        }
+
+        public long getPosition() {
+            return pos;
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException("Remove not implemented");
+        }
+
+        public boolean hasNext() {
+            return keyIterator.hasNext();
+        }
+
+        public Object next() {
+            return nextQueryResultRow();
+        }
+    }
 }

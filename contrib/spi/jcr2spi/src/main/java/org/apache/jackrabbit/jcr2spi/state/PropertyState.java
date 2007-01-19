@@ -27,7 +27,7 @@ import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.Event;
-import org.apache.jackrabbit.value.QValue;
+import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.jcr2spi.nodetype.ValueConstraint;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.slf4j.Logger;

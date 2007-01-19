@@ -20,19 +20,20 @@ import org.w3c.dom.Element;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.value.ValueFormat;
-import org.apache.jackrabbit.value.QValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
-import java.io.InputStream;
 
 /**
  * This class implements the <code>QPropertyDefinition</code> interface and additionally
@@ -68,7 +69,8 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
     /**
      * Default constructor.
      */
-    QPropertyDefinitionImpl(QName declaringNodeType, Element pdefElement, NamespaceResolver nsResolver)
+    QPropertyDefinitionImpl(QName declaringNodeType, Element pdefElement,
+                            NamespaceResolver nsResolver, QValueFactory qValueFactory)
         throws RepositoryException {
         // TODO: webdav server sends jcr names -> nsResolver required. improve this.
         // NOTE: the server should send the namespace-mappings as addition ns-defininitions
@@ -88,12 +90,21 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
 
         Element child = DomUtil.getChildElement(pdefElement, DEFAULTVALUES_ELEMENT, null);
         if (child == null) {
-            defaultValues = new QValue[0];
+            // No default value defined at all.
+            defaultValues = null;
         } else {
             List vs = new ArrayList();
             ElementIterator it = DomUtil.getChildren(child, DEFAULTVALUE_ELEMENT, null);
             while (it.hasNext()) {
-                QValue qValue = ValueFormat.getQValue(DomUtil.getText(it.nextElement()), requiredType, nsResolver);
+                String jcrVal = DomUtil.getText(it.nextElement());
+                QValue qValue;
+                if (requiredType == PropertyType.BINARY) {
+                    // TODO: improve
+                    Value v = ValueFactoryImpl.getInstance().createValue(jcrVal, requiredType);
+                    qValue = ValueFormat.getQValue(v, nsResolver, qValueFactory);
+                } else {
+                    qValue = ValueFormat.getQValue(jcrVal, requiredType, nsResolver, qValueFactory);
+                }
                 vs.add(qValue);
             }
             defaultValues = (QValue[]) vs.toArray(new QValue[vs.size()]);
@@ -108,8 +119,10 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
             while (it.hasNext()) {
                 int constType = (requiredType == PropertyType.REFERENCE) ?  PropertyType.NAME : requiredType;
                 String qValue = DomUtil.getText(it.nextElement());
+                // in case of name and path constraint, the value must be
+                // converted to be in qualified format
                 if (constType == PropertyType.NAME || constType == PropertyType.PATH) {
-                   qValue = ValueFormat.getQValue(qValue, constType, nsResolver).getString();
+                   qValue = ValueFormat.getQValue(qValue, constType, nsResolver, qValueFactory).getString();
                 }
                 vc.add(qValue);
             }
@@ -135,28 +148,8 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
     /**
      * {@inheritDoc}
      */
-    public String[] getDefaultValues() {
-        String[] strs = new String[defaultValues.length];
-        for (int i = 0; i < defaultValues.length; i++) {
-            try {
-                strs[i] = defaultValues[i].getString();
-            } catch (RepositoryException e) {
-                log.error("Internal error while retrieving default values.", e);
-            }
-        }
-        return strs;
-    }
-
-    public InputStream[] getDefaultValuesAsStream() {
-        InputStream[] ins = new InputStream[defaultValues.length];
-        for (int i = 0; i < defaultValues.length; i++) {
-            try {
-                ins[i] = defaultValues[i].getStream();
-            } catch (RepositoryException e) {
-                log.error("Internal error while retrieving default values.", e);
-            }
-        }
-        return ins;
+    public QValue[] getDefaultValues() {
+        return defaultValues;
     }
 
     /**

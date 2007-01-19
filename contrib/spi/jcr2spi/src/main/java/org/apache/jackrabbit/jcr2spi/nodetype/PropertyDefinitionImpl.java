@@ -18,7 +18,7 @@ package org.apache.jackrabbit.jcr2spi.nodetype;
 
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.value.QValue;
+import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.value.ValueFormat;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -26,10 +26,7 @@ import org.slf4j.Logger;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
-import javax.jcr.PropertyType;
 import javax.jcr.nodetype.PropertyDefinition;
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * This class implements the <code>PropertyDefinition</code> interface.
@@ -65,27 +62,9 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
      */
     public Value[] getDefaultValues() {
         QPropertyDefinition pDef = ((QPropertyDefinition) itemDef);
-        QValue[] defVals;
-        if (pDef.getRequiredType() == PropertyType.BINARY) {
-            try {
-                InputStream[] ins = pDef.getDefaultValuesAsStream();
-                if (ins == null) {
-                    return null;
-                } else {
-                    defVals = QValue.create(ins, pDef.getRequiredType());
-                }
-            } catch (IOException e) {
-                String propName = (getName() == null) ? "[null]" : getName();
-                log.error("Illegal default value specified for property " + propName + " in node type " + getDeclaringNodeType(), e);
-                return null;
-            }
-        } else {
-            String[] ss = pDef.getDefaultValues();
-            if (ss == null) {
-                return null;
-            } else {
-                defVals = QValue.create(ss, pDef.getRequiredType());
-            }
+        QValue[] defVals = pDef.getDefaultValues();
+        if (defVals == null) {
+            return null;
         }
 
         Value[] values = new Value[defVals.length];

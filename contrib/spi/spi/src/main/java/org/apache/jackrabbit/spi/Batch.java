@@ -27,7 +27,6 @@ import javax.jcr.ValueFormatException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
-import java.io.InputStream;
 
 /**
  * <code>Batch</code>...
@@ -63,7 +62,6 @@ public interface Batch {
      * @param parentId
      * @param propertyName Name of the property to be created
      * @param value
-     * @param propertyType
      * @throws ValueFormatException
      * @throws VersionException
      * @throws LockException
@@ -85,13 +83,12 @@ public interface Batch {
      * @see javax.jcr.Session#importXML(String, java.io.InputStream, int)
      * @see javax.jcr.query.Query#storeAsNode(String)
      */
-    public void addProperty(NodeId parentId, QName propertyName, String value, int propertyType) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
+    public void addProperty(NodeId parentId, QName propertyName, QValue value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
      * @param parentId
      * @param propertyName Name of the property to be created
      * @param values
-     * @param propertyType the property type
      * @throws javax.jcr.ValueFormatException
      * @throws javax.jcr.version.VersionException
      * @throws javax.jcr.lock.LockException
@@ -107,57 +104,12 @@ public interface Batch {
      * @see javax.jcr.Node#setProperty(String, String[], int)
      * @see javax.jcr.Session#importXML(String, java.io.InputStream, int)
      */
-    public void addProperty(NodeId parentId, QName propertyName, String[] values, int propertyType) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
-
-    /**
-     *
-     * @param parentId
-     * @param propertyName Name of the property to be created
-     * @param value
-     * @param propertyType
-     * @throws ValueFormatException
-     * @throws VersionException
-     * @throws LockException
-     * @throws ConstraintViolationException
-     * @throws PathNotFoundException
-     * @throws ItemExistsException
-     * @throws AccessDeniedException
-     * @throws UnsupportedRepositoryOperationException
-     * @throws RepositoryException
-     * @see javax.jcr.Node#setProperty(String, javax.jcr.Value, int)
-     * @see javax.jcr.Node#setProperty(String, String, int)
-     * @see javax.jcr.Node#setProperty(String, java.io.InputStream)
-     * @see javax.jcr.Session#importXML(String, java.io.InputStream, int)
-     */
-    public void addProperty(NodeId parentId, QName propertyName, InputStream value, int propertyType) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
-
-    /**
-     * @param parentId
-     * @param propertyName Name of the property to be created
-     * @param values
-     * @param propertyType the property type
-     * @throws javax.jcr.ValueFormatException
-     * @throws javax.jcr.version.VersionException
-     * @throws javax.jcr.lock.LockException
-     * @throws javax.jcr.nodetype.ConstraintViolationException
-     * @throws javax.jcr.PathNotFoundException
-     * @throws javax.jcr.ItemExistsException
-     * @throws javax.jcr.AccessDeniedException
-     * @throws javax.jcr.UnsupportedRepositoryOperationException
-     * @throws javax.jcr.RepositoryException
-     * @see javax.jcr.Node#setProperty(String, javax.jcr.Value[])
-     * @see javax.jcr.Node#setProperty(String, javax.jcr.Value[], int)
-     * @see javax.jcr.Node#setProperty(String, String[])
-     * @see javax.jcr.Node#setProperty(String, String[], int)
-     * @see javax.jcr.Session#importXML(String, java.io.InputStream, int)
-     */
-    public void addProperty(NodeId parentId, QName propertyName, InputStream[] values, int propertyType) throws RepositoryException;
+    public void addProperty(NodeId parentId, QName propertyName, QValue[] values) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
      *
      * @param propertyId
      * @param value
-     * @param propertyType
      * @throws ValueFormatException
      * @throws VersionException
      * @throws LockException
@@ -173,12 +125,11 @@ public interface Batch {
      * @see javax.jcr.Property#setValue(boolean)
      * @see javax.jcr.Property#setValue(javax.jcr.Node)
      */
-    public void setValue(PropertyId propertyId, String value, int propertyType) throws RepositoryException;
+    public void setValue(PropertyId propertyId, QValue value) throws RepositoryException;
 
     /**
      * @param propertyId
      * @param values
-     * @param propertyType the type of the property
      * @throws javax.jcr.ValueFormatException
      * @throws javax.jcr.version.VersionException
      * @throws javax.jcr.lock.LockException
@@ -189,39 +140,7 @@ public interface Batch {
      * @see javax.jcr.Property#setValue(javax.jcr.Value[])
      * @see javax.jcr.Property#setValue(String[])
      */
-    public void setValue(PropertyId propertyId, String[] values, int propertyType) throws RepositoryException;
-
-    /**
-     *
-     * @param propertyId
-     * @param value
-     * @param propertyType
-     * @throws ValueFormatException
-     * @throws VersionException
-     * @throws LockException
-     * @throws ConstraintViolationException
-     * @throws AccessDeniedException
-     * @throws UnsupportedRepositoryOperationException
-     * @throws RepositoryException
-     * @see javax.jcr.Property#setValue(javax.jcr.Value)
-     * @see javax.jcr.Property#setValue(java.io.InputStream)
-     */
-    public void setValue(PropertyId propertyId, InputStream value, int propertyType) throws RepositoryException;
-
-    /**
-     * @param propertyId
-     * @param values
-     * @param propertyType the type of the property
-     * @throws javax.jcr.ValueFormatException
-     * @throws javax.jcr.version.VersionException
-     * @throws javax.jcr.lock.LockException
-     * @throws javax.jcr.nodetype.ConstraintViolationException
-     * @throws javax.jcr.AccessDeniedException
-     * @throws javax.jcr.UnsupportedRepositoryOperationException
-     * @throws javax.jcr.RepositoryException
-     * @see javax.jcr.Property#setValue(javax.jcr.Value[])
-     */
-    public void setValue(PropertyId propertyId, InputStream[] values, int propertyType) throws RepositoryException;
+    public void setValue(PropertyId propertyId, QValue[] values) throws RepositoryException;
 
     /**
      * @param itemId

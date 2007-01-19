@@ -59,7 +59,7 @@ import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.value.QValue;
+import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFormat;
 
@@ -606,7 +606,7 @@ public class SessionImporter implements Importer, SessionListener {
                         Base64.decode(tv.retrieve(), baos);
                         // no need to close ByteArrayOutputStream
                         //baos.close();
-                        iv = QValue.create(baos.toByteArray());
+                        iv = session.getQValueFactory().create(baos.toByteArray());
                     } else {
                         // >= 65kb: deserialize BINARY type
                         // using Reader and temporay file
@@ -620,13 +620,13 @@ public class SessionImporter implements Importer, SessionListener {
                             reader.close();
                             out.close();
                         }
-                        iv = QValue.create(tmpFile);
+                        iv = session.getQValueFactory().create(tmpFile);
                     }
                     break;
                 default:
                     // build iv using namespace context of xml document
                     Value v = ValueHelper.convert(tv.retrieve(), targetType, session.getValueFactory());
-                    iv = ValueFormat.getQValue(v, nsResolver);
+                    iv = ValueFormat.getQValue(v, nsResolver, session.getQValueFactory());
                     break;
             }
             return iv;

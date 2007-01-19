@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.spi;
 
-import java.io.InputStream;
-
 /**
  * <code>PropertyInfo</code>...
  */
@@ -31,7 +29,10 @@ public interface PropertyInfo extends ItemInfo {
     public PropertyId getId();
 
     /**
-     * @return
+     * @return The {@link javax.jcr.PropertyType type} of the <code>Property</code>
+     * base on this <code>PropertyInfo</code>. Note, that
+     * {@link javax.jcr.PropertyType#UNDEFINED} will never be returned as the
+     * value of a <code>Property</code> always has a defined type.
      * @see javax.jcr.PropertyType
      */
     public int getType();
@@ -44,12 +45,7 @@ public interface PropertyInfo extends ItemInfo {
     public boolean isMultiValued();
 
     /**
-     * @return String representation of the property value(s)
+     * @return Qualified values present on this <code>PropertyInfo</code>.
      */
-    public String[] getValues();
-
-    /**
-     * @return InputStream representation of the property value(s)
-     */
-    public InputStream[] getValuesAsStream();
+    public QValue[] getValues();
 }

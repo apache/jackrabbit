@@ -6,7 +6,7 @@ NOTE: This list only contains major open issues.
       Minor known issues and problems are marked throughout the code with TODO.
 
 
-1) RepositoryService  (missing)
+1) RepositoryServiceImpl in Spi2Dav  (missing)
    
    missing implementation for:
    > Clone
@@ -17,20 +17,12 @@ NOTE: This list only contains major open issues.
    > UnregisterNodeType
    
    
-2) RepositoryService  (improve)
+2) SPI: interfaces  (improve)
 
-   param consistency
-   while in the very first draft ids, values and names were represented
-   by String and Stream only, we currently have a inconsistent mixture
-   of separate interfaces/classes for ids and names, while values are
-   still represented by String/Stream only mentioning in the comments
-   that values are meant to be in a qualified form in case of property
-   type Name and Path.
-   Second it seems inconsistent that an interface is defined for ItemId,
-   while the QName class from jackrabbit commons is used (see also FAQ).
+   > review usage of jackrabbit-commons classes (QName, Path)
 
 
-3) RepositoryService, Batch (improve)
+3) SPI: RepositoryService, Batch (improve)
 
    > check consistency of throw clauses.
 

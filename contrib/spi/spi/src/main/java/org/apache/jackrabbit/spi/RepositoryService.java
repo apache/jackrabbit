@@ -42,6 +42,7 @@ import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.query.InvalidQueryException;
 import java.util.Map;
 import java.util.Collection;
+import java.util.Iterator;
 import java.io.InputStream;
 
 /**
@@ -50,11 +51,18 @@ import java.io.InputStream;
 public interface RepositoryService {
 
     /**
-     * Return the <code>IdFactory</code>
+     * Return the <code>IdFactory</code>.
      *
      * @return
      */
     public IdFactory getIdFactory();
+
+    /**
+     * Return the <code>QValueFactory</code> defined with this SPI implementation.
+     *
+     * @return
+     */
+    public QValueFactory getQValueFactory();
 
     //--------------------------------------------------------------------------
     /**
@@ -197,7 +205,7 @@ public interface RepositoryService {
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    public Collection getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws ItemNotFoundException, RepositoryException;
+    public Iterator getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws ItemNotFoundException, RepositoryException;
 
     /**
      * @param sessionInfo

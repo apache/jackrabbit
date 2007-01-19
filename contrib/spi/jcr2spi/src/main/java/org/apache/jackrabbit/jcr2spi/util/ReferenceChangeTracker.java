@@ -17,7 +17,8 @@
 package org.apache.jackrabbit.jcr2spi.util;
 
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
-import org.apache.jackrabbit.value.QValue;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,18 +80,19 @@ public class ReferenceChangeTracker {
      * Returns the new UUID to which <code>oldUUID</code> has been mapped
      * or <code>null</code> if no such mapping exists.
      *
-     * @param oldReference old uuid represented by the given <code>QValue</code>
+     * @param oldReference old uuid represented by the given <code>QValue</code>.
+     * @param factory
      * @return mapped new QValue of the reference value or <code>null</code> if no such mapping exists
      * @see #mappedUUIDs(String,String)
      */
-    public QValue getMappedReference(QValue oldReference) {
+    public QValue getMappedReference(QValue oldReference, QValueFactory factory) {
         QValue remapped = null;
         if (oldReference.getType() == PropertyType.REFERENCE) {
             try {
                 String oldValue = oldReference.getString();
                 if (uuidMap.containsKey(oldValue)) {
                     String newValue = uuidMap.get(oldValue).toString();
-                    remapped = QValue.create(newValue, PropertyType.REFERENCE);
+                    remapped = factory.create(newValue, PropertyType.REFERENCE);
                 }
             } catch (RepositoryException e) {
                 log.error("Unexpected error while creating internal value.", e);

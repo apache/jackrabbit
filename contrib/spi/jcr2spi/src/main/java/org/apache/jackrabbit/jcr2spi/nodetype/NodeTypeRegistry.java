@@ -77,8 +77,7 @@ public interface NodeTypeRegistry {
      * @throws NodeTypeConflictException
      * @throws NoSuchNodeTypeException
      */
-    EffectiveNodeType getEffectiveNodeType(QName[] ntNames,
-                                           Map ntdMap)
+    EffectiveNodeType getEffectiveNodeType(QName[] ntNames, Map ntdMap)
             throws NodeTypeConflictException, NoSuchNodeTypeException;
 
 

@@ -50,7 +50,8 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.value.QValue;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.commons.collections.iterators.IteratorChain;
 
@@ -78,7 +79,6 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.io.InputStream;
-import java.io.IOException;
 
 /**
  * <code>SessionItemStateManager</code> ...
@@ -97,12 +97,9 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      */
     private final TransientItemStateManager transientStateMgr;
 
-    /**
-     * Hierarchy manager
-     */
-    //private final HierarchyManager hierMgr;
-    //private final NamespaceResolver nsResolver;
     private final ItemStateValidator validator;
+
+    private final QValueFactory qValueFactory;
 
     /**
      * Creates a new <code>SessionItemStateManager</code> instance.
@@ -111,10 +108,12 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      */
     public SessionItemStateManager(UpdatableItemStateManager workspaceItemStateMgr,
                                    IdFactory idFactory,
-                                   ItemStateValidator validator) {
+                                   ItemStateValidator validator,
+                                   QValueFactory qValueFactory) {
         this.workspaceItemStateMgr = workspaceItemStateMgr;
         this.transientStateMgr = new TransientItemStateManager(idFactory, workspaceItemStateMgr);
         this.validator = validator;
+        this.qValueFactory = qValueFactory;
     }
 
     //---------------------------------------------------< ItemStateManager >---
@@ -324,7 +323,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             QValue[] newVals = new QValue[values.length];
             for (int i = 0; i < values.length; i++) {
                 QValue val = values[i];
-                QValue adjusted = refTracker.getMappedReference(val);
+                QValue adjusted = refTracker.getMappedReference(val, qValueFactory);
                 if (adjusted != null) {
                     newVals[i] = adjusted;
                     modified = true;
@@ -483,7 +482,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 try {
                     PropertyState pState = nState.getPropertyState(QName.JCR_MIXINTYPES);
                     int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
-                    setPropertyStateValue(pState, QValue.create(mixinNames), PropertyType.NAME, options);
+                    setPropertyStateValue(pState, getQValues(mixinNames, qValueFactory), PropertyType.NAME, options);
                 } catch (ItemStateException e) {
                     // should not occur, since existance has been asserted before
                     throw new RepositoryException(e);
@@ -492,7 +491,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 // create new jcr:mixinTypes property
                 EffectiveNodeType ent = validator.getEffectiveNodeType(nState);
                 QPropertyDefinition pd = ent.getApplicablePropertyDefinition(QName.JCR_MIXINTYPES, PropertyType.NAME, true);
-                QValue[] mixinValue = QValue.create(mixinNames);
+                QValue[] mixinValue = getQValues(mixinNames, qValueFactory);
                 int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
                 addPropertyState(nState, pd.getQName(), pd.getRequiredType(), mixinValue, pd, options);
             }
@@ -730,18 +729,9 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     private QValue[] computeSystemGeneratedPropertyValues(NodeState parent,
                                                           QPropertyDefinition def) {
         QValue[] genValues = null;
-        String[] qDefaultValues = def.getDefaultValues();
+        QValue[] qDefaultValues = def.getDefaultValues();
         if (qDefaultValues != null && qDefaultValues.length > 0) {
-            if (def.getRequiredType() == PropertyType.BINARY) {
-                try {
-                    genValues = QValue.create(def.getDefaultValuesAsStream(), def.getRequiredType());
-                } catch (IOException e) {
-                    log.error("Internal error while build QValue from property definition: ", e.getMessage());
-                    return null;
-                }
-            } else {
-               genValues = QValue.create(qDefaultValues, def.getRequiredType());
-            }
+            genValues = qDefaultValues;
         } else if (def.isAutoCreated()) {
             // handle known predefined nodetypes that declare auto-created
             // properties without default values
@@ -753,34 +743,44 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 if (uniqueID == null) {
                     uniqueID = UUID.randomUUID().toString();
                 }
-                genValues = new QValue[]{QValue.create(uniqueID)};
+                genValues = new QValue[]{qValueFactory.create(uniqueID, PropertyType.REFERENCE)};
             } else if (QName.NT_BASE.equals(declaringNT)) {
                 // nt:base node type
                 if (QName.JCR_PRIMARYTYPE.equals(name)) {
                     // jcr:primaryType property
-                    genValues = new QValue[]{QValue.create(parent.getNodeTypeName())};
+                    genValues = new QValue[]{qValueFactory.create(parent.getNodeTypeName())};
                 } else if (QName.JCR_MIXINTYPES.equals(name)) {
                     // jcr:mixinTypes property
                     QName[] mixins = parent.getMixinTypeNames();
-                    genValues = new QValue[mixins.length];
-                    for (int i = 0; i < mixins.length; i++) {
-                        genValues[i] = QValue.create(mixins[i]);
-                    }
+                    genValues = getQValues(mixins, qValueFactory);
                 }
             } else if (QName.NT_HIERARCHYNODE.equals(declaringNT) && QName.JCR_CREATED.equals(name)) {
                 // nt:hierarchyNode node type defines jcr:created property
-                genValues = new QValue[]{QValue.create(Calendar.getInstance())};
+                genValues = new QValue[]{qValueFactory.create(Calendar.getInstance())};
             } else if (QName.NT_RESOURCE.equals(declaringNT) && QName.JCR_LASTMODIFIED.equals(name)) {
                 // nt:resource node type defines jcr:lastModified property
-                genValues = new QValue[]{QValue.create(Calendar.getInstance())};
+                genValues = new QValue[]{qValueFactory.create(Calendar.getInstance())};
             } else if (QName.NT_VERSION.equals(declaringNT) && QName.JCR_CREATED.equals(name)) {
                 // nt:version node type defines jcr:created property
-                genValues = new QValue[]{QValue.create(Calendar.getInstance())};
+                genValues = new QValue[]{qValueFactory.create(Calendar.getInstance())};
             } else {
                 // TODO: TOBEFIXED. other nodetype -> build some default value
                 log.warn("Missing implementation. Nodetype " + def.getDeclaringNodeType() + " defines autocreated property " + def.getQName() + " without default value.");
             }
         }
         return genValues;
+    }
+
+    /**
+     * @param qNames
+     * @param factory
+     * @return An array of QValue objects from the given <code>QName</code>s
+     */
+    private static QValue[] getQValues(QName[] qNames, QValueFactory factory) {
+        QValue[] ret = new QValue[qNames.length];
+        for (int i = 0; i < qNames.length; i++) {
+            ret[i] = factory.create(qNames[i]);
+        }
+        return ret;
     }
 }

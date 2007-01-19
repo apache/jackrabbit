@@ -50,6 +50,7 @@ import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.XASessionInfo;
+import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -136,7 +137,7 @@ public class SessionImpl implements Session, ManagerProvider {
         nsMappings = new LocalNamespaceMappings(workspace.getNamespaceRegistryImpl());
 
         // build nodetype manager
-        ntManager = new NodeTypeManagerImpl(workspace.getNodeTypeRegistry(), getNamespaceResolver(), internalGetValueFactory());
+        ntManager = new NodeTypeManagerImpl(workspace.getNodeTypeRegistry(), getNamespaceResolver(), internalGetValueFactory(), getQValueFactory());
 
         validator = new ItemStateValidator(workspace.getNodeTypeRegistry(), this);
 
@@ -677,8 +678,8 @@ public class SessionImpl implements Session, ManagerProvider {
         return new WorkspaceImpl(sessionInfo.getWorkspaceName(), this, config, sessionInfo);
     }
 
-    protected SessionItemStateManager createSessionItemStateManager(UpdatableItemStateManager workspaceStateManager) {
-        return new SessionItemStateManager(workspaceStateManager, getIdFactory(), getValidator());
+    protected SessionItemStateManager createSessionItemStateManager(UpdatableItemStateManager workspaceStateManager) throws RepositoryException {
+        return new SessionItemStateManager(workspaceStateManager, getIdFactory(), getValidator(), getQValueFactory());
     }
 
     protected HierarchyManager createHierarchyManager() {
@@ -742,6 +743,10 @@ public class SessionImpl implements Session, ManagerProvider {
     // TODO public for SessionImport only. review
     public IdFactory getIdFactory() {
         return workspace.getIdFactory();
+    }
+
+    public QValueFactory getQValueFactory() throws RepositoryException {
+        return config.getRepositoryService().getQValueFactory();
     }
 
     /**

@@ -27,6 +27,7 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QValueFactory;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -58,7 +59,8 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
     /**
      * Default constructor.
      */
-    public QNodeTypeDefinitionImpl(Element ntdElement, NamespaceResolver nsResolver)
+    public QNodeTypeDefinitionImpl(Element ntdElement, NamespaceResolver nsResolver,
+                                   QValueFactory qValueFactory)
         throws RepositoryException {
         // TODO: webdav-server currently sends jcr-names -> conversion needed
         // NOTE: the server should send the namespace-mappings as addition ns-defininitions
@@ -111,7 +113,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
         it = DomUtil.getChildren(ntdElement, PROPERTYDEFINITION_ELEMENT, null);
         itemDefs = new ArrayList();
         while (it.hasNext()) {
-            itemDefs.add(new QPropertyDefinitionImpl(name, it.nextElement(), nsResolver));
+            itemDefs.add(new QPropertyDefinitionImpl(name, it.nextElement(), nsResolver, qValueFactory));
         }
         propDefs = (QPropertyDefinition[]) itemDefs.toArray(new QPropertyDefinition[itemDefs.size()]);
         } catch (NameException e) {

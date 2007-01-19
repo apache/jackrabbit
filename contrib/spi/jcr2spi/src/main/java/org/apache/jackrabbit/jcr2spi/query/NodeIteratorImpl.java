@@ -21,7 +21,6 @@ import java.util.NoSuchElementException;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
@@ -72,10 +71,9 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
      * @param itemStateMgr The <code>ItemStateManager</code> used to build
      * <code>ItemState</code>s from the ids returned by the query.
      * @param queryInfo the query result.
-     * @throws RepositoryException if an error occurs while creating a node iterator.
      */
     public NodeIteratorImpl(ItemManager itemMgr, ItemStateManager itemStateMgr,
-                            QueryInfo queryInfo) throws RepositoryException {
+                            QueryInfo queryInfo) {
         this.itemMgr = itemMgr;
         this.itemStateMgr = itemStateMgr;
         this.rows = queryInfo.getRows();

@@ -76,7 +76,7 @@ import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.value.QValue;
+import org.apache.jackrabbit.spi.QValue;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -86,7 +86,6 @@ import javax.jcr.NamespaceException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.PathNotFoundException;
-import javax.jcr.PropertyType;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.ItemExistsException;
@@ -709,27 +708,10 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             QName propertyName = operation.getPropertyName();
             int type = operation.getPropertyType();
             if (operation.isMultiValued()) {
-                QValue[] values = operation.getValues();
-                if (type == PropertyType.BINARY) {
-                    InputStream[] ins = new InputStream[values.length];
-                    for (int i = 0; i < values.length; i++) {
-                        ins[i] = values[i].getStream();
-                    }
-                    batch.addProperty(parentId, propertyName, ins, type);
-                } else {
-                    String[] strs = new String[values.length];
-                    for (int i = 0; i < values.length; i++) {
-                        strs[i] = values[i].getString();
-                    }
-                    batch.addProperty(parentId, propertyName, strs, type);
-                }
+                batch.addProperty(parentId, propertyName, operation.getValues());
             } else {
                 QValue value = operation.getValues()[0];
-                if (type == PropertyType.BINARY) {
-                    batch.addProperty(parentId, propertyName, value.getStream(), type);
-                } else {
-                    batch.addProperty(parentId, propertyName, value.getString(), type);
-                }
+                batch.addProperty(parentId, propertyName, value);
             }
         }
 
@@ -800,29 +782,10 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         public void visit(SetPropertyValue operation) throws RepositoryException {
             PropertyState pState = operation.getPropertyState();
             PropertyId id = pState.getPropertyId();
-            int type = operation.getPropertyType();
             if (pState.isMultiValued()) {
-                QValue[] values = operation.getValues();
-                if (type == PropertyType.BINARY) {
-                    InputStream[] ins = new InputStream[values.length];
-                    for (int i = 0; i < values.length; i++) {
-                        ins[i] = values[i].getStream();
-                    }
-                    batch.setValue(id, ins, type);
-                } else {
-                    String[] strs = new String[values.length];
-                    for (int i = 0; i < values.length; i++) {
-                        strs[i] = values[i].getString();
-                    }
-                    batch.setValue(id, strs, type);
-                }
+                batch.setValue(id, operation.getValues());
             } else {
-                QValue value = operation.getValues()[0];
-                if (operation.getPropertyType() == PropertyType.BINARY) {
-                    batch.setValue(id, value.getStream(), type);
-                } else {
-                    batch.setValue(id, value.getString(), type);
-                }
+                batch.setValue(id, operation.getValues()[0]);
             }
         }
 

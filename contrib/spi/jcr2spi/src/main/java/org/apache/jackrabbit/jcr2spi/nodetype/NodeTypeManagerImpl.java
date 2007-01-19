@@ -28,6 +28,7 @@ import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.QValueFactory;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -75,6 +76,11 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
     private final ValueFactory valueFactory;
 
     /**
+     * The QValueFactory used to convert JCR values to qualified ones.
+     */
+    private final QValueFactory qValueFactory;
+
+    /**
      * A cache for <code>NodeType</code> instances created by this
      * <code>NodeTypeManager</code>
      */
@@ -99,11 +105,12 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
      * @param nsResolver namespace resolver
      */
     public NodeTypeManagerImpl(NodeTypeRegistry ntReg, NamespaceResolver nsResolver,
-                               ValueFactory valueFactory) {
+                               ValueFactory valueFactory, QValueFactory qValueFactory) {
         this.nsResolver = nsResolver;
         this.ntReg = ntReg;
         this.ntReg.addListener(this);
         this.valueFactory = valueFactory;
+        this.qValueFactory = qValueFactory;
 
         // setup caches with soft references to node type
         ntCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
@@ -128,7 +135,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
             if (nt == null) {
                 EffectiveNodeType ent = ntReg.getEffectiveNodeType(name);
                 QNodeTypeDefinition def = ntReg.getNodeTypeDefinition(name);
-                nt = new NodeTypeImpl(ent, def, this, nsResolver, valueFactory);
+                nt = new NodeTypeImpl(ent, def, this, nsResolver, valueFactory, qValueFactory);
                 ntCache.put(name, nt);
             }
             return nt;
