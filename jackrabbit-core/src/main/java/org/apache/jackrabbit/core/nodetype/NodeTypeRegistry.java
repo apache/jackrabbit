@@ -905,7 +905,6 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         eventChannel.setListener(this);
     }
 
-
     /**
      * @param ntName
      * @param entCache
@@ -1741,12 +1740,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     private void notifyRegistered(QName ntName) {
         // copy listeners to array to avoid ConcurrentModificationException
         NodeTypeRegistryListener[] la =
-                new NodeTypeRegistryListener[listeners.size()];
-        Iterator iter = listeners.values().iterator();
-        int cnt = 0;
-        while (iter.hasNext()) {
-            la[cnt++] = (NodeTypeRegistryListener) iter.next();
-        }
+                (NodeTypeRegistryListener[]) listeners.values().toArray(
+                        new NodeTypeRegistryListener[listeners.size()]); 
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
                 la[i].nodeTypeRegistered(ntName);
@@ -1760,12 +1755,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     private void notifyReRegistered(QName ntName) {
         // copy listeners to array to avoid ConcurrentModificationException
         NodeTypeRegistryListener[] la =
-                new NodeTypeRegistryListener[listeners.size()];
-        Iterator iter = listeners.values().iterator();
-        int cnt = 0;
-        while (iter.hasNext()) {
-            la[cnt++] = (NodeTypeRegistryListener) iter.next();
-        }
+                (NodeTypeRegistryListener[]) listeners.values().toArray(
+                        new NodeTypeRegistryListener[listeners.size()]);
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
                 la[i].nodeTypeReRegistered(ntName);
@@ -1779,12 +1770,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     private void notifyUnregistered(QName ntName) {
         // copy listeners to array to avoid ConcurrentModificationException
         NodeTypeRegistryListener[] la =
-                new NodeTypeRegistryListener[listeners.size()];
-        Iterator iter = listeners.values().iterator();
-        int cnt = 0;
-        while (iter.hasNext()) {
-            la[cnt++] = (NodeTypeRegistryListener) iter.next();
-        }
+                (NodeTypeRegistryListener[]) listeners.values().toArray(
+                        new NodeTypeRegistryListener[listeners.size()]);
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
                 la[i].nodeTypeUnregistered(ntName);
