@@ -36,7 +36,6 @@ import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.uuid.UUID;
@@ -126,15 +125,13 @@ public class BatchedItemOperations extends ItemValidator {
      * @param lockMgr    lock manager
      * @param session    current session
      * @param hierMgr    hierarchy manager
-     * @param nsResolver namespace resolver
      */
     public BatchedItemOperations(UpdatableItemStateManager stateMgr,
                                  NodeTypeRegistry ntReg,
                                  LockManager lockMgr,
                                  SessionImpl session,
-                                 HierarchyManager hierMgr,
-                                 NamespaceResolver nsResolver) {
-        super(ntReg, hierMgr, nsResolver);
+                                 HierarchyManager hierMgr) {
+        super(ntReg, hierMgr, session);
         this.stateMgr = stateMgr;
         this.lockMgr = lockMgr;
         this.session = session;
@@ -1622,7 +1619,7 @@ public class BatchedItemOperations extends ItemValidator {
                         NodeState existingState = (NodeState) stateMgr.getItemState(id);
                         // make sure existing node is not the parent
                         // or an ancestor thereof
-                        if (id.equals(destParentId) 
+                        if (id.equals(destParentId)
                                 || hierMgr.isAncestor(id, destParentId)) {
                             String msg = "cannot remove ancestor node";
                             log.debug(msg);
