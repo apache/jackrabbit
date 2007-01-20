@@ -38,16 +38,12 @@ import org.apache.jackrabbit.core.xml.SessionImporter;
 import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.lock.LockManager;
-import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NameResolver;
 import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.ParsingNameResolver;
-import org.apache.jackrabbit.name.ParsingPathResolver;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathResolver;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -266,8 +262,7 @@ public class SessionImpl
      * @return session item state manager
      */
     protected SessionItemStateManager createSessionItemStateManager(LocalItemStateManager manager) {
-        return new SessionItemStateManager(rep.getRootNodeId(),
-                manager, getNamespaceResolver());
+        return new SessionItemStateManager(rep.getRootNodeId(), manager, this);
     }
 
     /**

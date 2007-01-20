@@ -28,8 +28,8 @@ import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
-import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathResolver;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
@@ -56,18 +56,17 @@ class ChangeLogBasedHierarchyMgr extends HierarchyManagerImpl {
      * @param rootNodeId the id of the root node.
      * @param manager the item state manager.
      * @param changes the changes that will be applied on the item state manager.
-     * @param resolver the namespace resolver of the current session.
+     * @param resolver path resolver for outputting user friendly paths
      */
     ChangeLogBasedHierarchyMgr(NodeId rootNodeId,
                                ItemStateManager manager,
                                ChangeLog changes,
-                               NamespaceResolver resolver) {
+                               PathResolver resolver) {
         super(rootNodeId,
                 new ChangeLogItemStateManager(manager, changes),
                 resolver);
-        zombieHierMgr =
-                new ZombieHierarchyManager(rootNodeId, provider,
-                        new AtticItemStateManager(changes), resolver);
+        zombieHierMgr = new ZombieHierarchyManager(
+                this, provider, new AtticItemStateManager(changes));
     }
 
     /**

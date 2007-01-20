@@ -123,9 +123,8 @@ public final class EventStateCollection {
         // create a hierarchy manager, that is based on the ChangeLog and
         // the ItemStateProvider
         // todo use CachingHierarchyManager ?
-        ChangeLogBasedHierarchyMgr hmgr =
-                new ChangeLogBasedHierarchyMgr(rootNodeId, stateMgr, changes,
-                        session.getNamespaceResolver());
+        ChangeLogBasedHierarchyMgr hmgr = new ChangeLogBasedHierarchyMgr(
+                rootNodeId, stateMgr, changes, session);
 
         /**
          * Important:

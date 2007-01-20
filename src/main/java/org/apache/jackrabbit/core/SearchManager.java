@@ -197,7 +197,8 @@ public class SearchManager implements SynchronousEventListener {
         }
 
         if (excludedNodeId != null) {
-            HierarchyManagerImpl hmgr = new HierarchyManagerImpl(rootNodeId, itemMgr, nsReg);
+            HierarchyManagerImpl hmgr = new HierarchyManagerImpl(
+                    rootNodeId, itemMgr, nsReg.getPathResolver());
             excludePath = hmgr.getPath(excludedNodeId);
         }
 
