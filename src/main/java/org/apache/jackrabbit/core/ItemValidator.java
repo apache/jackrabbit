@@ -24,14 +24,13 @@ import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathResolver;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.PathFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
@@ -61,13 +60,11 @@ public class ItemValidator {
      * @see #safeGetJCRPath(ItemId)
      */
     protected final HierarchyManager hierMgr;
+
     /**
-     * namespace resolver used for generating error msg's
-     * that contain human readable paths
-     *
-     * @see #safeGetJCRPath(Path)
+     * Path resolver for outputting user-friendly error messages.
      */
-    protected final NamespaceResolver nsResolver;
+    protected final PathResolver resolver;
 
     /**
      * Creates a new <code>ItemValidator</code> instance.
@@ -78,10 +75,10 @@ public class ItemValidator {
      */
     public ItemValidator(NodeTypeRegistry ntReg,
                          HierarchyManager hierMgr,
-                         NamespaceResolver nsResolver) {
+                         PathResolver resolver) {
         this.ntReg = ntReg;
         this.hierMgr = hierMgr;
-        this.nsResolver = nsResolver;
+        this.resolver = resolver;
     }
 
     /**
@@ -219,9 +216,9 @@ public class ItemValidator {
      */
     public String safeGetJCRPath(Path path) {
         try {
-            return PathFormat.format(path, nsResolver);
-        } catch (NoPrefixDeclaredException npde) {
-            log.error("failed to convert " + path.toString() + " to JCR path.");
+            return resolver.getJCRPath(path);
+        } catch (NamespaceException e) {
+            log.error("failed to convert {} to a JCR path", path);
             // return string representation of internal path as a fallback
             return path.toString();
         }

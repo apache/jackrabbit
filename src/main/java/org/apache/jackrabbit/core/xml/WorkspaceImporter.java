@@ -114,7 +114,7 @@ public class WorkspaceImporter implements Importer {
 
         itemOps = new BatchedItemOperations(
                 wsp.getItemStateManager(), ntReg, session.getLockManager(),
-                session, wsp.getHierarchyManager(), session.getNamespaceResolver());
+                session, wsp.getHierarchyManager());
         hierMgr = wsp.getHierarchyManager();
 
         // perform preliminary checks
