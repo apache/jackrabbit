@@ -39,10 +39,9 @@ import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NameResolver;
+import org.apache.jackrabbit.name.NamePathResolver;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
@@ -101,8 +100,7 @@ import java.util.Set;
 /**
  * A <code>SessionImpl</code> ...
  */
-public class SessionImpl
-        implements Session, NameResolver, PathResolver, Dumpable {
+public class SessionImpl implements Session, NamePathResolver, Dumpable {
 
     private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
 
