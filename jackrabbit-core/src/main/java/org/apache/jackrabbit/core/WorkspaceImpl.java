@@ -278,10 +278,9 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
             throw new RepositoryException("not an absolute path: " + destAbsPath);
         }
 
-        BatchedItemOperations ops =
-                new BatchedItemOperations(stateMgr, rep.getNodeTypeRegistry(),
-                        session.getLockManager(), session, hierMgr,
-                        session.getNamespaceResolver());
+        BatchedItemOperations ops = new BatchedItemOperations(
+                stateMgr, rep.getNodeTypeRegistry(), session.getLockManager(),
+                session, hierMgr);
 
         try {
             ops.edit();
@@ -505,10 +504,9 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
             throw new RepositoryException("not an absolute path: " + destAbsPath);
         }
 
-        BatchedItemOperations ops =
-                new BatchedItemOperations(stateMgr, rep.getNodeTypeRegistry(),
-                        session.getLockManager(), session, hierMgr,
-                        session.getNamespaceResolver());
+        BatchedItemOperations ops = new BatchedItemOperations(
+                stateMgr, rep.getNodeTypeRegistry(), session.getLockManager(),
+                session, hierMgr);
 
         try {
             ops.edit();
