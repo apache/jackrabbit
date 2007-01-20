@@ -21,7 +21,6 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 
 import java.util.Iterator;
@@ -40,11 +39,10 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
      */
     protected ItemStateManager attic;
 
-    public ZombieHierarchyManager(NodeId rootNodeId,
+    public ZombieHierarchyManager(HierarchyManagerImpl parent,
                                   ItemStateManager provider,
-                                  ItemStateManager attic,
-                                  NamespaceResolver nsResolver) {
-        super(rootNodeId, provider, nsResolver);
+                                  ItemStateManager attic) {
+        super(parent.getRootNodeId(), provider, parent.resolver);
         this.attic = attic;
     }
 

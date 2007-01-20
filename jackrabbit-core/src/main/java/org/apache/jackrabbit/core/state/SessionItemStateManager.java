@@ -24,7 +24,7 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.ZombieHierarchyManager;
 import org.apache.jackrabbit.core.util.Dumpable;
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.PathResolver;
 import org.apache.jackrabbit.name.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,11 +85,11 @@ public class SessionItemStateManager
      *
      * @param rootNodeId the root node id
      * @param stateMgr the local item state manager
-     * @param nsResolver the namespace resolver
+     * @param resolver path resolver for outputting user-friendly paths
      */
     public SessionItemStateManager(NodeId rootNodeId,
                                    LocalItemStateManager stateMgr,
-                                   NamespaceResolver nsResolver) {
+                                   PathResolver resolver) {
         transientStore = new ItemStateMap();
         atticStore = new ItemStateMap();
 
@@ -97,7 +97,7 @@ public class SessionItemStateManager
         stateMgr.addListener(this);
 
         // create hierarchy manager that uses both transient and persistent state
-        hierMgr = new CachingHierarchyManager(rootNodeId, this, nsResolver);
+        hierMgr = new CachingHierarchyManager(rootNodeId, this, resolver);
         addListener(hierMgr);
     }
 
@@ -447,10 +447,7 @@ public class SessionItemStateManager
 
         // use a special attic-aware hierarchy manager
         ZombieHierarchyManager zombieHierMgr =
-                new ZombieHierarchyManager(hierMgr.getRootNodeId(),
-                        this,
-                        getAttic(),
-                        hierMgr.getNamespaceResolver());
+            new ZombieHierarchyManager(hierMgr, this, getAttic());
 
         // use an array of lists to group the descendants by relative depth;
         // the depth is used as array index

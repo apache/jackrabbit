@@ -24,8 +24,8 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateListener;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.util.PathMap;
 import org.slf4j.Logger;
@@ -102,8 +102,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      */
     public CachingHierarchyManager(NodeId rootNodeId,
                                    ItemStateManager provider,
-                                   NamespaceResolver nsResolver) {
-        super(rootNodeId, provider, nsResolver);
+                                   PathResolver resolver) {
+        super(rootNodeId, provider, resolver);
         upperLimit = DEFAULT_UPPER_LIMIT;
     }
 
