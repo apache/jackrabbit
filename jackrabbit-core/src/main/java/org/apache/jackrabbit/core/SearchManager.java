@@ -30,9 +30,8 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateIterator;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -268,20 +267,33 @@ public class SearchManager implements SynchronousEventListener {
         return query;
     }
 
+    /**
+     * Checks if the given event should be excluded based on the
+     * {@link #excludePath} setting.
+     *
+     * @param event observation event
+     * @return <code>true</code> if the event should be excluded,
+     *         <code>false</code> otherwise
+     */
+    private boolean isExcluded(EventImpl event) {
+        try {
+            return excludePath != null
+                && excludePath.isAncestorOf(event.getQPath());
+        } catch (MalformedPathException ex) {
+            log.error("Error filtering events.", ex);
+            return false;
+        } catch (RepositoryException ex) {
+            log.error("Error filtering events.", ex);
+            return false;
+        }
+
+    }
+
     //---------------< EventListener interface >--------------------------------
 
     public void onEvent(EventIterator events) {
         log.debug("onEvent: indexing started");
         long time = System.currentTimeMillis();
-
-        String exclude = "";
-        if (excludePath != null) {
-            try {
-                exclude = PathFormat.format(excludePath, nsReg);
-            } catch (NoPrefixDeclaredException e) {
-                log.error("Error filtering events.", e);
-            }
-        }
 
         // nodes that need to be removed from the index.
         final Set removedNodes = new HashSet();
@@ -292,20 +304,15 @@ public class SearchManager implements SynchronousEventListener {
 
         while (events.hasNext()) {
             EventImpl e = (EventImpl) events.nextEvent();
-            try {
-                if (excludePath != null && e.getPath().startsWith(exclude)) {
-                    continue;
+            if (!isExcluded(e)) {
+                long type = e.getType();
+                if (type == Event.NODE_ADDED) {
+                    addedNodes.put(e.getChildId(), e);
+                } else if (type == Event.NODE_REMOVED) {
+                    removedNodes.add(e.getChildId());
+                } else {
+                    propEvents.add(e);
                 }
-            } catch (RepositoryException ex) {
-                log.error("Error filtering events.", ex);
-            }
-            long type = e.getType();
-            if (type == Event.NODE_ADDED) {
-                addedNodes.put(e.getChildId(), e);
-            } else if (type == Event.NODE_REMOVED) {
-                removedNodes.add(e.getChildId());
-            } else {
-                propEvents.add(e);
             }
         }
 

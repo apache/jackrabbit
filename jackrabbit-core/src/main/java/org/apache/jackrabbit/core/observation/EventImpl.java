@@ -19,9 +19,7 @@ package org.apache.jackrabbit.core.observation;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,6 +70,8 @@ public final class EventImpl implements Event {
         this.eventState = eventState;
     }
 
+    //---------------------------------------------------------------< Event >
+
     /**
      * {@inheritDoc}
      */
@@ -83,20 +83,7 @@ public final class EventImpl implements Event {
      * {@inheritDoc}
      */
     public String getPath() throws RepositoryException {
-        try {
-            Path p;
-            if (eventState.getChildRelPath().getIndex() > 0) {
-                p = Path.create(eventState.getParentPath(), eventState.getChildRelPath().getName(),
-                        eventState.getChildRelPath().getIndex(), false);
-            } else {
-                p = Path.create(eventState.getParentPath(), eventState.getChildRelPath().getName(), false);
-            }
-            return session.getJCRPath(p);
-        } catch (MalformedPathException e) {
-            String msg = "internal error: malformed path for event";
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
+        return session.getJCRPath(getQPath());
     }
 
     /**
@@ -104,6 +91,31 @@ public final class EventImpl implements Event {
      */
     public String getUserID() {
         return eventState.getUserId();
+    }
+
+    //-----------------------------------------------------------< EventImpl >
+
+    /**
+     * Returns the qualified path of this event.
+     *
+     * @return qualified path
+     * @throws RepositoryException if the path can't be constructed
+     */
+    public Path getQPath() throws RepositoryException {
+        try {
+            Path parent = eventState.getParentPath();
+            Path.PathElement child = eventState.getChildRelPath();
+            int index = child.getIndex();
+            if (index > 0) {
+                return Path.create(parent, child.getName(), index, false);
+            } else {
+                return Path.create(parent, child.getName(), false);
+            }
+        } catch (MalformedPathException e) {
+            String msg = "internal error: malformed path for event";
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
     }
 
     /**
