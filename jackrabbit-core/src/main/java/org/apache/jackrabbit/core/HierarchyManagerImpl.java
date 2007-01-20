@@ -23,15 +23,14 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathResolver;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.PathFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 
 /**
@@ -49,26 +48,26 @@ public class HierarchyManagerImpl implements HierarchyManager {
 
     protected final NodeId rootNodeId;
     protected final ItemStateManager provider;
-    // used for outputting user-friendly paths and names
-    protected final NamespaceResolver nsResolver;
+
+    /**
+     * Path resolver for outputting user-friendly paths in error messages.
+     */
+    protected final PathResolver resolver;
 
     public HierarchyManagerImpl(NodeId rootNodeId,
                                 ItemStateManager provider,
-                                NamespaceResolver nsResolver) {
+                                PathResolver resolver) {
         this.rootNodeId = rootNodeId;
         this.provider = provider;
-        this.nsResolver = nsResolver;
+        this.resolver = resolver;
     }
 
     public NodeId getRootNodeId() {
         return rootNodeId;
     }
 
-    public NamespaceResolver getNamespaceResolver() {
-        return nsResolver;
-    }
-
     //-------------------------------------------------< misc. helper methods >
+
     /**
      * Failsafe conversion of internal <code>Path</code> to JCR path for use in
      * error messages etc.
@@ -78,9 +77,9 @@ public class HierarchyManagerImpl implements HierarchyManager {
      */
     public String safeGetJCRPath(Path path) {
         try {
-            return PathFormat.format(path, nsResolver);
-        } catch (NoPrefixDeclaredException npde) {
-            log.error("failed to convert " + path.toString() + " to JCR path.");
+            return resolver.getJCRPath(path);
+        } catch (NamespaceException e) {
+            log.error("failed to convert {} to a JCR path", path);
             // return string representation of internal path as a fallback
             return path.toString();
         }

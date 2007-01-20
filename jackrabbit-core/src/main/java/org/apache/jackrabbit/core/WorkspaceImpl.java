@@ -31,10 +31,8 @@ import org.apache.jackrabbit.core.version.VersionSelector;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.Importer;
 import org.apache.jackrabbit.core.xml.WorkspaceImporter;
-import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
@@ -133,8 +131,8 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
         this.wspConfig = wspConfig;
         this.rep = rep;
         this.stateMgr = createItemStateManager(stateMgr);
-        this.hierMgr = new CachingHierarchyManager(rep.getRootNodeId(),
-                this.stateMgr, session.getNamespaceResolver());
+        this.hierMgr = new CachingHierarchyManager(
+                rep.getRootNodeId(), this.stateMgr, session);
         this.stateMgr.addListener(hierMgr);
         this.session = session;
     }
