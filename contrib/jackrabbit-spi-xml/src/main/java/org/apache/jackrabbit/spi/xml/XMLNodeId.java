@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.spi.xml;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -52,7 +54,15 @@ public class XMLNodeId implements NodeId, PropertyId, ChildInfo {
     }
 
     public Iterator getChildInfos() {
-        return new XMLNodeIdIterator(node.getChildNodes());
+        Collection infos = new ArrayList();
+        NodeList nodes = node.getChildNodes();
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node child = nodes.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                infos.add(new XMLNodeId(child));
+            }
+        }
+        return infos.iterator();
     }
 
     public XMLNodeId getNodeId(Path path) {
@@ -75,7 +85,8 @@ public class XMLNodeId implements NodeId, PropertyId, ChildInfo {
                 NodeList nodes = current.getChildNodes();
                 for (int j = 0; index > 0 && j < nodes.getLength(); j++) {
                     Node child = nodes.item(j);
-                    if (name.equals(new XMLNodeId(child).getName())) {
+                    if (child.getNodeType() == Node.ELEMENT_NODE
+                            && name.equals(new XMLNodeId(child).getName())) {
                         if (--index == 0) {
                             current = child;
                         }
@@ -152,10 +163,11 @@ public class XMLNodeId implements NodeId, PropertyId, ChildInfo {
             NodeList nodes = parent.getChildNodes();
             for (int i = 0; i < nodes.getLength(); i++) {
                 Node current = nodes.item(i);
-                if (current == node) {
-                    index = i + 1;
-                } else if (node.getNamespaceURI().equals(current.getNamespaceURI())
-                        && node.getLocalName().equals(current.getLocalName())) {
+                if (current.getNodeType() != Node.ELEMENT_NODE) {
+                    // skip
+                } else if (current == node) {
+                    index = count + 1;
+                } else if (getName().equals(new XMLNodeId(current).getName())) {
                     count++;
                 }
             }
