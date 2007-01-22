@@ -374,10 +374,19 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      *         <code>RepositoryService</code> does not support observation.
      */
     private Thread createChangeFeed(int pollingInterval) {
-        Thread t = new Thread(new ChangePolling(pollingInterval));
-        t.setName("Change Polling");
-        t.setDaemon(true);
-        t.start();
+        Thread t = null;
+        try {
+            String desc = (String) service.getRepositoryDescriptors().get(
+                    Repository.OPTION_OBSERVATION_SUPPORTED);
+            if ("true".equals(desc)) {
+                t = new Thread(new ChangePolling(pollingInterval));
+                t.setName("Change Polling");
+                t.setDaemon(true);
+                t.start();
+            }
+        } catch (RepositoryException e) {
+            log.warn("Unable to get repository descriptors: " + e);
+        }
         return t;
     }
 
