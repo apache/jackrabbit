@@ -29,8 +29,12 @@ import javax.jcr.RepositoryException;
 public interface NamespaceStorage {
 
     public Map getRegisteredNamespaces() throws RepositoryException;
-  
-    public void	registerNamespace(String prefix, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException;
+
+    public String getPrefix(String uri) throws NamespaceException, RepositoryException;
+
+    public String getURI(String prefix) throws NamespaceException, RepositoryException;
+
+    public void registerNamespace(String prefix, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException;
 
     public void unregisterNamespace(String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException;
 

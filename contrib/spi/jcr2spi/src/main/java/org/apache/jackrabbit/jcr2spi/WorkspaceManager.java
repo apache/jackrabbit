@@ -612,6 +612,20 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     /**
      * @inheritDoc
      */
+    public String getPrefix(String uri) throws NamespaceException, RepositoryException {
+        return service.getNamespacePrefix(sessionInfo, uri);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public String getURI(String prefix) throws NamespaceException, RepositoryException {
+        return service.getNamespaceURI(sessionInfo, prefix);
+    }
+
+    /**
+     * @inheritDoc
+     */
     public void registerNamespace(String prefix, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
         service.registerNamespace(sessionInfo, prefix, uri);
     }
