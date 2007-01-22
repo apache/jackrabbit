@@ -339,7 +339,7 @@ class StringConstraint extends ValueConstraint {
         }
         switch (value.getType()) {
             case PropertyType.STRING:
-                String text = value.toString();
+                String text = value.getString();
                 Matcher matcher = pattern.matcher(text);
                 if (!matcher.matches()) {
                     throw new ConstraintViolationException("'" + text  + "' does not satisfy the constraint '" + getQualifiedDefinition() + "'");
