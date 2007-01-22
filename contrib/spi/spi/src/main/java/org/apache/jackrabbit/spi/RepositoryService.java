@@ -649,10 +649,34 @@ public interface RepositoryService {
      * @see javax.jcr.Workspace#getNamespaceRegistry()
      * @see javax.jcr.NamespaceRegistry#getPrefixes()
      * @see javax.jcr.NamespaceRegistry#getURIs()
-     * @see javax.jcr.NamespaceRegistry#getPrefix(String)
-     * @see javax.jcr.NamespaceRegistry#getURI(String)
      */
     public Map getRegisteredNamespaces(SessionInfo sessionInfo) throws RepositoryException;
+
+    /**
+     * Returns the namespace URI for the given namespace <code>prefix</code>.
+     *
+     * @param sessionInfo the session info.
+     * @param prefix a namespace prefix to resolve.
+     * @return the namespace URI for the given namespace <code>prefix</code>.
+     * @throws NamespaceException if prefix is not mapped to a namespace URI.
+     * @throws RepositoryException if another error occurs.
+     * @see javax.jcr.NamespaceRegistry#getURI(String)
+     */
+    public String getNamespaceURI(SessionInfo sessionInfo, String prefix)
+            throws NamespaceException, RepositoryException;
+
+    /**
+     * Returns the namespace prefix for the given namespace <code>uri</code>.
+     *
+     * @param sessionInfo the session info.
+     * @param uri the namespace URI.
+     * @return the namespace prefix.
+     * @throws NamespaceException if the URI unknown.
+     * @throws RepositoryException if another error occurs.
+     * @see javax.jcr.NamespaceRegistry#getPrefix(String)
+     */
+    public String getNamespacePrefix(SessionInfo sessionInfo, String uri)
+            throws NamespaceException, RepositoryException;
 
     /**
      * Register a new namespace with the given prefix and uri

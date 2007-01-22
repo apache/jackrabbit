@@ -39,6 +39,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.Collection;
 
 /**
  * <code>NamespaceRegistryImpl</code>...
@@ -48,28 +50,37 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
 
     private static Logger log = LoggerFactory.getLogger(NamespaceRegistryImpl.class);
 
-    private static final HashSet reservedPrefixes = new HashSet();
-    private static final HashSet reservedURIs = new HashSet();
+    private static final Set RESERVED_PREFIXES = new HashSet();
+    private static final Set RESERVED_URIS = new HashSet();
+    private static final Map RESERVED_NAMESPACES = new HashMap();
 
     static {
         // reserved prefixes
-        reservedPrefixes.add(QName.NS_XML_PREFIX);
-        reservedPrefixes.add(QName.NS_XMLNS_PREFIX);
+        RESERVED_PREFIXES.add(QName.NS_XML_PREFIX);
+        RESERVED_PREFIXES.add(QName.NS_XMLNS_PREFIX);
         // predefined (e.g. built-in) prefixes
-        reservedPrefixes.add(QName.NS_REP_PREFIX);
-        reservedPrefixes.add(QName.NS_JCR_PREFIX);
-        reservedPrefixes.add(QName.NS_NT_PREFIX);
-        reservedPrefixes.add(QName.NS_MIX_PREFIX);
-        reservedPrefixes.add(QName.NS_SV_PREFIX);
+        RESERVED_PREFIXES.add(QName.NS_REP_PREFIX);
+        RESERVED_PREFIXES.add(QName.NS_JCR_PREFIX);
+        RESERVED_PREFIXES.add(QName.NS_NT_PREFIX);
+        RESERVED_PREFIXES.add(QName.NS_MIX_PREFIX);
+        RESERVED_PREFIXES.add(QName.NS_SV_PREFIX);
         // reserved namespace URI's
-        reservedURIs.add(QName.NS_XML_URI);
-        reservedURIs.add(QName.NS_XMLNS_URI);
+        RESERVED_URIS.add(QName.NS_XML_URI);
+        RESERVED_URIS.add(QName.NS_XMLNS_URI);
         // predefined (e.g. built-in) namespace URI's
-        reservedURIs.add(QName.NS_REP_URI);
-        reservedURIs.add(QName.NS_JCR_URI);
-        reservedURIs.add(QName.NS_NT_URI);
-        reservedURIs.add(QName.NS_MIX_URI);
-        reservedURIs.add(QName.NS_SV_URI);
+        RESERVED_URIS.add(QName.NS_REP_URI);
+        RESERVED_URIS.add(QName.NS_JCR_URI);
+        RESERVED_URIS.add(QName.NS_NT_URI);
+        RESERVED_URIS.add(QName.NS_MIX_URI);
+        RESERVED_URIS.add(QName.NS_SV_URI);
+        // reserved and predefined namespaces
+        RESERVED_NAMESPACES.put(QName.NS_XML_PREFIX, QName.NS_XML_URI);
+        RESERVED_NAMESPACES.put(QName.NS_XMLNS_PREFIX, QName.NS_XMLNS_URI);
+        RESERVED_NAMESPACES.put(QName.NS_REP_PREFIX, QName.NS_REP_URI);
+        RESERVED_NAMESPACES.put(QName.NS_JCR_PREFIX, QName.NS_JCR_URI);
+        RESERVED_NAMESPACES.put(QName.NS_NT_PREFIX, QName.NS_NT_URI);
+        RESERVED_NAMESPACES.put(QName.NS_MIX_PREFIX, QName.NS_MIX_URI);
+        RESERVED_NAMESPACES.put(QName.NS_SV_PREFIX, QName.NS_SV_URI);
     }
 
     private final HashMap prefixToURI = new HashMap();
@@ -85,32 +96,20 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
      *
      * @param storage
      * @param level2Repository
-     * @throws RepositoryException
      */
-    public NamespaceRegistryImpl(NamespaceStorage storage, boolean level2Repository)
-        throws RepositoryException {
+    public NamespaceRegistryImpl(NamespaceStorage storage,
+                                 boolean level2Repository) {
         super(true); // enable listener support
 
         resolver = new CachingNameResolver(new ParsingNameResolver(this));
         this.storage = storage;
         this.level2Repository = level2Repository;
 
-        load();
-    }
-
-    /**
-     * Load all mappings from the <code>NamespaceStorage</code> and update this
-     * registry.
-     *
-     * @throws RepositoryException
-     */
-    private void load() throws RepositoryException {
-        Map nsValues = storage.getRegisteredNamespaces();
-        Iterator prefixes = nsValues.keySet().iterator();
-        while (prefixes.hasNext()) {
-            String prefix = (String) prefixes.next();
-            String uri = (String) nsValues.get(prefix);
-            addMapping(prefix, uri);
+        // prefill with reserved namespaces
+        prefixToURI.putAll(RESERVED_NAMESPACES);
+        for (Iterator it = RESERVED_NAMESPACES.keySet().iterator(); it.hasNext(); ) {
+            String prefix = (String) it.next();
+            uriToPrefix.put(prefixToURI.get(prefix), prefix);
         }
     }
 
@@ -141,7 +140,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
      * @param uri
      */
     private void removeMapping(String prefix, String uri) {
-        prefixToURI.remove(prefix).toString();
+        prefixToURI.remove(prefix);
         uriToPrefix.remove(uri);
         // notify listeners
         notifyNamespaceRemoved(uri);
@@ -168,6 +167,22 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         notifyNamespaceRemapped(oldPrefix, prefix, uri);
     }
 
+    /**
+     * Syncs the cached namespace mappings with the given namespaces map.
+     *
+     * @param namespaces the up-to-date namespace mapping.
+     */
+    private void syncNamespaces(Map namespaces) {
+        prefixToURI.clear();
+        prefixToURI.putAll(namespaces);
+        uriToPrefix.clear();
+        for (Iterator it = namespaces.keySet().iterator(); it.hasNext(); ) {
+            String prefix = (String) it.next();
+            String uri = (String) namespaces.get(prefix);
+            uriToPrefix.put(uri, prefix);
+        }
+    }
+
     //--------------------------------------------------< NamespaceRegistry >---
     /**
      * @see NamespaceRegistry#registerNamespace(String, String)
@@ -183,11 +198,11 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         if (QName.NS_EMPTY_PREFIX.equals(prefix) || QName.NS_DEFAULT_URI.equals(uri)) {
             throw new NamespaceException("default namespace is reserved and can not be changed");
         }
-        if (reservedURIs.contains(uri)) {
+        if (RESERVED_URIS.contains(uri)) {
             throw new NamespaceException("failed to register namespace "
                 + prefix + " -> " + uri + ": reserved URI");
         }
-        if (reservedPrefixes.contains(prefix)) {
+        if (RESERVED_PREFIXES.contains(prefix)) {
             throw new NamespaceException("failed to register namespace "
                 + prefix + " -> " + uri + ": reserved prefix");
         }
@@ -203,12 +218,18 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         }
 
         // check existing mappings
-        String oldPrefix = (String) uriToPrefix.get(uri);
+        String oldPrefix = null;
+        try {
+            oldPrefix = getPrefix(uri);
+        } catch (NamespaceException e) {
+            // does not exist
+        }
         if (prefix.equals(oldPrefix)) {
             throw new NamespaceException("failed to register namespace "
                 + prefix + " -> " + uri + ": mapping already exists");
         }
-        if (prefixToURI.containsKey(prefix)) {
+        try {
+            getURI(prefix);
             /**
              * prevent remapping of existing prefixes because this would in effect
              * remove the previously assigned namespace;
@@ -218,6 +239,8 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
             throw new NamespaceException("failed to register namespace "
                 + prefix + " -> " + uri
                 + ": remapping existing prefixes is not supported.");
+        } catch (NamespaceException e) {
+            // ok
         }
 
         // inform storage before mappings are added to maps and propagated to listeners
@@ -237,15 +260,12 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
             throw new UnsupportedRepositoryOperationException("Repository is Level1 only.");
         }
 
-        if (reservedPrefixes.contains(prefix)) {
+        if (RESERVED_PREFIXES.contains(prefix)) {
             throw new NamespaceException("reserved prefix: " + prefix);
         }
-        if (!prefixToURI.containsKey(prefix)) {
-            throw new NamespaceException("unknown prefix: " + prefix);
-        }
 
+        String uri = getURI(prefix);
         // inform storage before mappings are added to maps and propagated to listeners
-        String uri = prefixToURI.get(prefix).toString();
         storage.unregisterNamespace(uri);
 
         // update caches and notify listeners
@@ -256,15 +276,20 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
      * @see javax.jcr.NamespaceRegistry#getPrefixes()
      */
     public String[] getPrefixes() throws RepositoryException {
-        return (String[]) prefixToURI.keySet().toArray(new String[prefixToURI.keySet().size()]);
-
+        Map namespaces = storage.getRegisteredNamespaces();
+        syncNamespaces(namespaces);
+        Set prefixes = namespaces.keySet();
+        return (String[]) prefixes.toArray(new String[prefixes.size()]);
     }
 
     /**
      * @see javax.jcr.NamespaceRegistry#getURIs()
      */
     public String[] getURIs() throws RepositoryException {
-        return (String[]) uriToPrefix.keySet().toArray(new String[uriToPrefix.keySet().size()]);
+        Map namespaces = storage.getRegisteredNamespaces();
+        syncNamespaces(namespaces);
+        Collection uris = namespaces.values();
+        return (String[]) uris.toArray(new String[uris.size()]);
     }
 
     /**
@@ -272,17 +297,17 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
      * @see org.apache.jackrabbit.name.NamespaceResolver#getURI(String)
      */
     public String getURI(String prefix) throws NamespaceException {
-        if (!prefixToURI.containsKey(prefix)) {
-            // reload mappings in order to make sure, the NamespaceRegistry is
-            // up to date, and try to retrieve the uri again.
+        String uri = (String) prefixToURI.get(prefix);
+        if (uri == null) {
+            // try to load the uri
             try {
-                load();
+                uri = storage.getURI(prefix);
+                prefixToURI.put(prefix, uri);
             } catch (RepositoryException ex) {
                 log.warn("Internal error while loading registered namespaces.");
             }
         }
 
-        String uri = (String) prefixToURI.get(prefix);
         if (uri == null) {
             throw new NamespaceException(prefix + ": is not a registered namespace prefix.");
         }
@@ -295,16 +320,17 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
      * @see org.apache.jackrabbit.name.NamespaceResolver#getPrefix(String)
      */
     public String getPrefix(String uri) throws NamespaceException {
-        if (!uriToPrefix.containsKey(uri)) {
-            // reload mappings in order to make sure, the NamespaceRegistry is
-            // up to date, and try to retrieve the prefix again.
+        String prefix = (String) uriToPrefix.get(uri);
+        if (prefix == null) {
+            // try to load the prefix
             try {
-                load();
+                prefix = storage.getPrefix(uri);
+                uriToPrefix.put(uri, prefix);
             } catch (RepositoryException ex) {
                 log.warn("Internal error while loading registered namespaces.");
             }
         }
-        String prefix = (String) uriToPrefix.get(uri);
+
         if (prefix == null) {
             throw new NamespaceException(uri + ": is not a registered namespace uri.");
         }

@@ -102,6 +102,10 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.NameException;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
@@ -193,7 +197,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private final ValueFactory valueFactory;
 
     private final Document domFactory;
-    private final NamespaceResolverImpl nsResolver;
+    private final NamespaceCache nsCache;
     private final URIResolverImpl uriResolver;
 
     private final HostConfiguration hostConfig;
@@ -224,8 +228,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             hostConfig = new HostConfiguration();
             hostConfig.setHost(repositoryUri);
 
-            nsResolver = new NamespaceResolverImpl();
-            uriResolver = new URIResolverImpl(repositoryUri, this, nsResolver, domFactory);
+            nsCache = new NamespaceCache();
+            uriResolver = new URIResolverImpl(repositoryUri, this, nsCache, domFactory);
 
         } catch (URIException e) {
             throw new RepositoryException(e);
@@ -307,7 +311,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private String getItemUri(NodeId parentId, QName childName, SessionInfo sessionInfo) throws RepositoryException {
         String parentUri = uriResolver.getItemUri(parentId, sessionInfo.getWorkspaceName(), sessionInfo);
         try {
-            return parentUri + "/" + Text.escape(NameFormat.format(childName, nsResolver));
+            NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
+            return parentUri + "/" + Text.escape(NameFormat.format(childName, resolver));
         } catch (NoPrefixDeclaredException e) {
             throw new RepositoryException(e);
         }
@@ -334,7 +339,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    QName getQName(DavPropertySet propSet) throws RepositoryException {
+    QName getQName(DavPropertySet propSet, NamespaceResolver nsResolver) throws RepositoryException {
         DavProperty nameProp = propSet.get(ItemResourceConstants.JCR_NAME);
         if (nameProp != null && nameProp.getValue() != null) {
             // not root node. Note that 'unespacing' is not required since
@@ -384,7 +389,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         }
     }
-
 
     //--------------------------------------------------< RepositoryService >---
     /**
@@ -645,6 +649,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 throw new RepositoryException("Internal error: requested node definition and got property definition.");
             }
 
+            NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
+
             // build the definition
             QItemDefinition definition = null;
             if (propertySet.contains(ItemResourceConstants.JCR_DEFINITION)) {
@@ -653,9 +659,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 if (value != null && value instanceof Element) {
                     Element idfElem = (Element) value;
                     if (itemId.denotesNode()) {
-                        definition = new QNodeDefinitionImpl(null, idfElem, nsResolver);
+                        definition = new QNodeDefinitionImpl(null, idfElem, resolver);
                     } else {
-                        definition = new QPropertyDefinitionImpl(null, idfElem, nsResolver, getQValueFactory());
+                        definition = new QPropertyDefinitionImpl(null, idfElem, resolver, getQValueFactory());
                     }
                 }
             }
@@ -743,7 +749,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             NodeId parentId = getParentId(propSet, sessionInfo);
             NodeId id = uriResolver.buildNodeId(parentId, nodeResponse, sessionInfo.getWorkspaceName());
 
-            NodeInfoImpl nInfo = new NodeInfoImpl(id, parentId, propSet, nsResolver);
+            NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
+            NodeInfoImpl nInfo = new NodeInfoImpl(id, parentId, propSet, resolver);
             if (propSet.contains(ItemResourceConstants.JCR_REFERENCES)) {
                 HrefProperty refProp = new HrefProperty(propSet.get(ItemResourceConstants.JCR_REFERENCES));
                 Iterator hrefIter = refProp.getHrefs().iterator();
@@ -807,6 +814,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 return Collections.EMPTY_LIST.iterator();
             }
 
+            NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
+
             List childEntries = new ArrayList();
             for (int i = 0; i < responses.length; i++) {
                 if (!isSameResource(uri, responses[i])) {
@@ -815,7 +824,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     if (childProps.contains(DavPropertyName.RESOURCETYPE) &&
                         childProps.get(DavPropertyName.RESOURCETYPE).getValue() != null) {
 
-                        QName qName = getQName(childProps);
+                        QName qName = getQName(childProps, resolver);
                         int index = getIndex(childProps);
                         String uuid = getUniqueID(childProps);
 
@@ -866,7 +875,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             NodeId parentId = getParentId(propSet, sessionInfo);
             PropertyId id = uriResolver.buildPropertyId(parentId, responses[0], sessionInfo.getWorkspaceName());
 
-            PropertyInfo pInfo = new PropertyInfoImpl(id, parentId, propSet, nsResolver, valueFactory, getQValueFactory());
+            NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
+            PropertyInfo pInfo = new PropertyInfoImpl(id, parentId, propSet,
+                    resolver, valueFactory, getQValueFactory());
             return pInfo;
         } catch (IOException e) {
             throw new RepositoryException(e);
@@ -1194,9 +1205,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * @see RepositoryService#addVersionLabel(SessionInfo,NodeId,NodeId,QName,boolean)
      */
     public void addVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, QName label, boolean moveLabel) throws VersionException, RepositoryException {
-         try {
+        try {
             String uri = getItemUri(versionId, sessionInfo);
-            LabelMethod method = new LabelMethod(uri, NameFormat.format(label, nsResolver), (moveLabel) ? LabelInfo.TYPE_SET : LabelInfo.TYPE_ADD);
+            String strLabel = NameFormat.format(label, new NamespaceResolverImpl(sessionInfo));
+            LabelMethod method = new LabelMethod(uri, strLabel, (moveLabel) ? LabelInfo.TYPE_SET : LabelInfo.TYPE_ADD);
             execute(method, sessionInfo);
         } catch (IOException e) {
             throw new RepositoryException(e);
@@ -1211,7 +1223,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public void removeVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, QName label) throws VersionException, RepositoryException {
         try {
             String uri = getItemUri(versionId, sessionInfo);
-            LabelMethod method = new LabelMethod(uri, NameFormat.format(label, nsResolver), LabelInfo.TYPE_REMOVE);
+            String strLabel = NameFormat.format(label, new NamespaceResolverImpl(sessionInfo));
+            LabelMethod method = new LabelMethod(uri, strLabel, LabelInfo.TYPE_REMOVE);
             execute(method, sessionInfo);
         } catch (IOException e) {
             throw new RepositoryException(e);
@@ -1263,8 +1276,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             method.checkSuccess();
 
             MultiStatus ms = method.getResponseBodyAsMultiStatus();
+            NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
             return new QueryInfoImpl(ms, sessionInfo, uriResolver,
-                nsResolver, valueFactory, getQValueFactory());
+                resolver, valueFactory, getQValueFactory());
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1506,7 +1520,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     if (uri != null) {
                         namespaces.put(prefix, uri);
                         // TODO: not correct since nsRegistry is retrieved from each session
-                        nsResolver.add(prefix, uri);
+                        nsCache.add(prefix, uri);
                     } else {
                         log.error("Invalid prefix / uri pair: " + prefix + " -> " + uri);
                     }
@@ -1525,32 +1539,66 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
+     * @see RepositoryService#getNamespaceURI(SessionInfo, String)
+     */
+    public String getNamespaceURI(SessionInfo sessionInfo, String prefix)
+            throws NamespaceException, RepositoryException {
+        try {
+            return nsCache.getURI(prefix);
+        } catch (NamespaceException e) {
+            // refresh namespaces and try again
+            getRegisteredNamespaces(sessionInfo);
+            return nsCache.getURI(prefix);
+        }
+    }
+
+    /**
+     * @see RepositoryService#getNamespacePrefix(SessionInfo, String)
+     */
+    public String getNamespacePrefix(SessionInfo sessionInfo, String uri)
+            throws NamespaceException, RepositoryException {
+        try {
+            return nsCache.getPrefix(uri);
+        } catch (NamespaceException e) {
+            // refresh namespaces and try again
+            getRegisteredNamespaces(sessionInfo);
+            return nsCache.getPrefix(uri);
+        }
+    }
+
+    /**
      * @see RepositoryService#registerNamespace(SessionInfo, String, String)
      */
     public void registerNamespace(SessionInfo sessionInfo, String prefix, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
-        Map namespaces = new HashMap(nsResolver.getNamespaces());
+        // make sure we have them all
+        getRegisteredNamespaces(sessionInfo);
+
+        Map namespaces = new HashMap(nsCache.getNamespaces());
         // add new pair that needs to be registered.
         namespaces.put(prefix, uri);
 
         internalSetNamespaces(sessionInfo, namespaces);
         // adjust internal mappings:
         // TODO: not correct since nsRegistry is retrieved from each session
-        nsResolver.add(prefix, uri);
+        nsCache.add(prefix, uri);
     }
 
     /**
      * @see RepositoryService#unregisterNamespace(SessionInfo, String)
      */
     public void unregisterNamespace(SessionInfo sessionInfo, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
-        String prefix = nsResolver.getPrefix(uri);
-        Map namespaces = new HashMap(nsResolver.getNamespaces());
+        // make sure we have them all
+        getRegisteredNamespaces(sessionInfo);
+
+        String prefix = nsCache.getPrefix(uri);
+        Map namespaces = new HashMap(nsCache.getNamespaces());
         // remove pair that needs to be unregistered
         namespaces.remove(prefix);
 
         internalSetNamespaces(sessionInfo, namespaces);
         // adjust internal mappings:
         // TODO: not correct since nsRegistry is retrieved from each session
-        nsResolver.remove(prefix, uri);
+        nsCache.remove(prefix, uri);
     }
 
     /**
@@ -1603,8 +1651,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             Document reportDoc = method.getResponseBodyAsDocument();
             ElementIterator it = DomUtil.getChildren(reportDoc.getDocumentElement(), NodeTypeConstants.NODETYPE_ELEMENT, null);
             List ntDefs = new ArrayList();
+            NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
             while (it.hasNext()) {
-                ntDefs.add(new QNodeTypeDefinitionImpl(it.nextElement(), nsResolver, getQValueFactory()));
+                ntDefs.add(new QNodeTypeDefinitionImpl(it.nextElement(), resolver, getQValueFactory()));
             }
             // refresh node type definitions map
             synchronized (nodeTypeDefinitions) {
@@ -1642,6 +1691,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         private final SessionInfo sessionInfo;
         private final ItemId targetId;
         private final List methods = new ArrayList();
+        private final NamespaceResolver nsResolver;
 
         private String batchId;
 
@@ -1650,6 +1700,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         private BatchImpl(ItemId targetId, SessionInfo sessionInfo) {
             this.targetId = targetId;
             this.sessionInfo = sessionInfo;
+            this.nsResolver = new NamespaceResolverImpl(sessionInfo);
         }
 
         private HttpClient start() throws RepositoryException {
@@ -1946,6 +1997,103 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             MoveMethod method = new MoveMethod(uri, destUri, true);
 
             methods.add(method);
+        }
+    }
+
+    //----------------------------------------------< NamespaceResolverImpl >---
+
+    /**
+     * Implements a namespace resolver based on a session info.
+     */
+    private class NamespaceResolverImpl implements NamespaceResolver {
+
+        private final SessionInfo sessionInfo;
+
+        /**
+         * Creates a new namespace resolver using the given session info.
+         *
+         * @param sessionInfo the session info to contact the repository.
+         */
+        NamespaceResolverImpl(SessionInfo sessionInfo) {
+            this.sessionInfo = sessionInfo;
+        }
+
+        /**
+         * @inheritDoc
+         */
+        public String getURI(String prefix) throws NamespaceException {
+            try {
+                return getNamespaceURI(sessionInfo, prefix);
+            } catch (RepositoryException e) {
+                String msg = "Error retrieving namespace uri";
+                throw new NamespaceException(msg, e);
+            }
+        }
+
+        /**
+         * @inheritDoc
+         */
+        public String getPrefix(String uri) throws NamespaceException {
+            try {
+                return getNamespacePrefix(sessionInfo, uri);
+            } catch (RepositoryException e) {
+                String msg = "Error retrieving namespace prefix";
+                throw new NamespaceException(msg, e);
+            }
+        }
+
+        /**
+         * @inheritDoc
+         */
+        public QName getQName(String jcrName) throws IllegalNameException, UnknownPrefixException {
+            return NameFormat.parse(jcrName, this);
+        }
+
+        /**
+         * @inheritDoc
+         */
+        public String getJCRName(QName qName) throws NoPrefixDeclaredException {
+            return NameFormat.format(qName, this);
+        }
+    }
+
+    private static class NamespaceCache extends AbstractNamespaceResolver {
+
+        private final HashMap prefixToURI = new HashMap();
+        private final HashMap uriToPrefix = new HashMap();
+
+        public Map getNamespaces() {
+            return new HashMap(prefixToURI);
+        }
+
+        public void add(String prefix, String uri) {
+            prefixToURI.put(prefix, uri);
+            uriToPrefix.put(uri, prefix);
+        }
+
+        public void remove(String prefix, String uri) {
+            prefixToURI.remove(prefix);
+            uriToPrefix.remove(uri);
+        }
+
+        //----------------------------------------------< NamespaceResolver >---
+
+        public String getURI(String prefix) throws NamespaceException {
+            String uri = (String) prefixToURI.get(prefix);
+            if (uri != null) {
+                return uri;
+            } else {
+                throw new NamespaceException(prefix + ": is not a registered namespace prefix.");
+            }
+        }
+
+        public String getPrefix(String uri) throws NamespaceException {
+            String prefix = (String) uriToPrefix.get(uri);
+            if (prefix != null) {
+                return prefix;
+            } else {
+                throw new NamespaceException(uri + ": is not a registered namespace uri.");
+            }
         }
     }
 }

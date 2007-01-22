@@ -187,7 +187,7 @@ class URIResolverImpl implements URIResolver {
         if (uniqueID != null) {
             nodeId = service.getIdFactory().createNodeId(uniqueID);
         } else {
-            QName qName = service.getQName(propSet);
+            QName qName = service.getQName(propSet, nsResolver);
             if (qName == QName.ROOT) {
                 nodeId = service.getIdFactory().createNodeId((String) null, Path.ROOT);
             } else {
