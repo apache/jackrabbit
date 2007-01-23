@@ -27,6 +27,14 @@
       </p>
       <subsection name="News in 2006">
         <dl>
+          <dt><strong>January 23, 2007: Apache Jackrabbit 1.2.1 released</strong></dt>
+          <dd>
+            From the release notes: "<em>Apache Jackrabbit 1.2.1 is an
+            incremental release that introduces a number of new features,
+            improvements, and bug fixes. The most notable changes in this
+            release are the introduction of a clustering feature and various
+            query improvements.</em>"
+          </dd>
           <dt><strong>December 4, 2006: Apache Jackrabbit 1.1.1 released</strong></dt>
           <dd>
             From the release notes: "<em>Apache Jackrabbit 1.1.1 is a patch
