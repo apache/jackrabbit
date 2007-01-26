@@ -487,6 +487,9 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     exceptions.add(new InvalidQueryException("Unsupported location for predicate"));
                 }
                 break;
+            case JJTDOTDOT:
+                exceptions.add(new InvalidQueryException("Parent axis is not supported"));
+                break;
             default:
                 // per default traverse
                 node.childrenAccept(this, queryNode);
