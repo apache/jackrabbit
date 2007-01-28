@@ -638,7 +638,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         Node node = locateNodeWithoutPrimaryItem(testRootNode);
 
         if (node == null) {
-            throw new NotExecutableException("Workspace does not contain a node with primary item defined");
+            throw new NotExecutableException("Workspace does not contain a node without primary item defined");
         }
 
         try {
@@ -978,7 +978,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
 
         NodeIterator nodes = node.getNodes();
         while (nodes.hasNext()) {
-            Node n = locateNodeWithPrimaryItem(nodes.nextNode());
+            Node n = locateNodeWithoutPrimaryItem(nodes.nextNode());
             if (n != null) {
                 return n;
             }
