@@ -33,14 +33,9 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 
 /**
- * Allows writing data to a <code>FileRecord</code>.
+ * Allows writing data to a <code>DataOutputStream</code>.
  */
-class FileRecordOutput {
-
-    /**
-     * File record.
-     */
-    private final FileRecord record;
+class RecordOutput {
 
     /**
      * Underlying output stream.
@@ -65,12 +60,10 @@ class FileRecordOutput {
     /**
      * Create a new file record.
      *
-     * @param record   file record
      * @param out      outputstream to write to
      * @param resolver namespace resolver
      */
-    public FileRecordOutput(FileRecord record, DataOutputStream out, NamespaceResolver resolver) {
-        this.record = record;
+    public RecordOutput(DataOutputStream out, NamespaceResolver resolver) {
         this.out = out;
         this.resolver = resolver;
     }
@@ -192,15 +185,15 @@ class FileRecordOutput {
         checkOpen();
 
         if (nodeId == null) {
-            writeByte(FileRecord.UUID_INDEX);
+            writeByte(Record.UUID_INDEX);
             writeInt(-1);
         } else {
             int index = getOrCreateIndex(nodeId);
             if (index != -1) {
-                writeByte(FileRecord.UUID_INDEX);
+                writeByte(Record.UUID_INDEX);
                 writeInt(index);
             } else {
-                writeByte(FileRecord.UUID_LITERAL);
+                writeByte(Record.UUID_LITERAL);
                 out.write(nodeId.getUUID().getRawBytes());
             }
         }
@@ -246,7 +239,6 @@ class FileRecordOutput {
             out.close();
         } finally {
             closed = true;
-            record.closed();
         }
     }
 

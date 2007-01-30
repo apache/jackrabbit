@@ -133,7 +133,7 @@ class FileRevision {
         lock(true);
 
         try {
-            long value = 0;
+            long value = 0L;
             if (raf.length() > 0) {
                 raf.seek(0L);
                 value = raf.readLong();

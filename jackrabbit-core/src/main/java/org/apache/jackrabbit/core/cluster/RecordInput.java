@@ -21,11 +21,10 @@ import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
 import org.apache.jackrabbit.core.nodetype.compact.ParseException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -39,9 +38,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Allows reading data from a <code>FileRecord</code>.
+ * Allows reading data from a <code>DataInputStream</code>.
  */
-class FileRecordInput {
+class RecordInput {
 
     /**
      * Underlying input stream.
@@ -69,7 +68,7 @@ class FileRecordInput {
      * @param in       underlying input stream
      * @param resolver namespace resolver
      */
-    public FileRecordInput(DataInputStream in, NamespaceResolver resolver) {
+    public RecordInput(DataInputStream in, NamespaceResolver resolver) {
         this.in = in;
         this.resolver = resolver;
     }
@@ -144,10 +143,9 @@ class FileRecordInput {
      *
      * @return name
      * @throws IOException if an I/O error occurs
-     * @throws IllegalNameException if the name retrieved is illegal
-     * @throws UnknownPrefixException if the prefix is unknown
+     * @throws NameException if the name retrieved is illegal
      */
-    public QName readQName() throws IOException, IllegalNameException, UnknownPrefixException {
+    public QName readQName() throws IOException, NameException {
         checkOpen();
 
         return NameFormat.parse(readString(), resolver);
@@ -158,10 +156,9 @@ class FileRecordInput {
      *
      * @return path element
      * @throws IOException if an I/O error occurs
-     * @throws IllegalNameException if the name retrieved is illegal
-     * @throws UnknownPrefixException if the prefix is unknown
+     * @throws NameException if the name retrieved is illegal
      */
-    public Path.PathElement readPathElement() throws IOException, IllegalNameException, UnknownPrefixException {
+    public Path.PathElement readPathElement() throws IOException, NameException {
         checkOpen();
 
         QName name = NameFormat.parse(readString(), resolver);
@@ -196,14 +193,14 @@ class FileRecordInput {
         checkOpen();
 
         byte uuidType = readByte();
-        if (uuidType == FileRecord.UUID_INDEX) {
+        if (uuidType == Record.UUID_INDEX) {
             int index = readInt();
             if (index == -1) {
                 return null;
             } else {
                 return (NodeId) uuidIndex.get(index);
             }
-        } else if (uuidType == FileRecord.UUID_LITERAL) {
+        } else if (uuidType == Record.UUID_LITERAL) {
             byte[] b = new byte[Constants.UUID_BYTE_LENGTH];
             in.readFully(b);
             NodeId nodeId = new NodeId(new UUID(b));
@@ -220,10 +217,9 @@ class FileRecordInput {
      *
      * @return property id
      * @throws IOException if an I/O error occurs
-     * @throws IllegalNameException if the name retrieved is illegal
-     * @throws UnknownPrefixException if the prefix is unknown
+     * @throws NameException if the name retrieved is illegal
      */
-    public PropertyId readPropertyId() throws IOException, IllegalNameException, UnknownPrefixException  {
+    public PropertyId readPropertyId() throws IOException, NameException  {
         checkOpen();
 
         return new PropertyId(readNodeId(), readQName());
