@@ -131,6 +131,16 @@ public final class EventImpl implements Event {
     }
 
     /**
+     * Return a flag indicating whether this is an externally generated event.
+     *
+     * @return <code>true</code> if this is an external event;
+     *         <code>false</code> otherwise
+     */
+    public boolean isExternal() {
+        return eventState.isExternal();
+    }
+
+    /**
      * Returns a String representation of this <code>Event</code>.
      *
      * @return a String representation of this <code>Event</code>.
