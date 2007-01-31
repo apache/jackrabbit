@@ -188,10 +188,15 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
     public void testIsSame() throws RepositoryException {
         // access same property through different session
         Session otherSession = helper.getReadOnlySession();
-        Property otherProperty = otherSession.getRootNode().getNode(testPath).getProperty(property.getName());
-        assertTrue("isSame must return true for the same " +
-                "property retrieved through different sessions.",
-                property.isSame(otherProperty));
+        try {
+            Property otherProperty = otherSession.getRootNode().getNode(testPath).getProperty(property.getName());
+            assertTrue("isSame must return true for the same " +
+                    "property retrieved through different sessions.",
+                    property.isSame(otherProperty));
+        }
+        finally {
+            otherSession.logout();
+        }
     }
 
     /**
