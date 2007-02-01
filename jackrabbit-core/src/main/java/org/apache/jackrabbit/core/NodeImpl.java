@@ -860,12 +860,24 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException if an error occurs
      */
     public EffectiveNodeType getEffectiveNodeType() throws RepositoryException {
+        return getEffectiveNodeType(((NodeState) state).getMixinTypeNames());
+    }
+
+    /**
+     * Small optimization to void double call for mixin types.
+     *
+     * @param mixins the set of mixins
+     * @return the effective node type
+     * @throws RepositoryException if an error occurs
+     */
+    private EffectiveNodeType getEffectiveNodeType(Set mixins)
+            throws RepositoryException {
+
         // build effective node type of mixins & primary type
         NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
-        // mixin types
-        Set set = ((NodeState) state).getMixinTypeNames();
-        QName[] types = new QName[set.size() + 1];
-        set.toArray(types);
+
+        QName[] types = new QName[mixins.size() + 1];
+        mixins.toArray(types);
         // primary type
         types[types.length - 1] = primaryTypeName;
         try {
@@ -1242,12 +1254,13 @@ public class NodeImpl extends ItemImpl implements Node {
         if (ntName.equals(primaryTypeName)) {
             return true;
         }
-        if (((NodeState) state).getMixinTypeNames().contains(ntName)) {
+        Set mixins = ((NodeState) state).getMixinTypeNames();
+        if (mixins.contains(ntName)) {
             return true;
         }
 
         // check effective node type
-        return getEffectiveNodeType().includesNodeType(ntName);
+        return getEffectiveNodeType(mixins).includesNodeType(ntName);
     }
 
     /**

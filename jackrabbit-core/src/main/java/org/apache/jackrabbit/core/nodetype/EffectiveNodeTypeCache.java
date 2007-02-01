@@ -19,297 +19,106 @@ package org.apache.jackrabbit.core.nodetype;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.name.QName;
 
-import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.TreeSet;
-
 /**
- * <code>EffectiveNodeTypeCache</code> ...
+ * <code>EffectiveNodeTypeCache</code> defines the interface for a cache for
+ * effective node types. Effective node types are addressed by {@link Key}s.
  */
-class EffectiveNodeTypeCache implements Cloneable, Dumpable {
-    /**
-     * ordered set of keys
-     */
-    private final TreeSet sortedKeys;
+public interface EffectiveNodeTypeCache extends Cloneable, Dumpable {
 
     /**
-     * cache of pre-built aggregations of node types
+     * Puts an effective node type to the cache. The key is internally generated
+     * from the set of merged nodetypes.
+     * @param ent the effective node type to put to the cache
      */
-    private final HashMap aggregates;
-
-    EffectiveNodeTypeCache() {
-        sortedKeys = new TreeSet();
-        aggregates = new HashMap();
-    }
-
-    void put(EffectiveNodeType ent) {
-        // we define the weight as the total number of included node types
-        // (through aggregation and inheritance)
-        int weight = ent.getAllNodeTypes().length;
-        // the effective node type is identified by the list of merged
-        // (i.e. aggregated) node types
-        WeightedKey k = new WeightedKey(ent.getMergedNodeTypes(), weight);
-        aggregates.put(k, ent);
-        sortedKeys.add(k);
-    }
-
-    boolean contains(QName[] ntNames) {
-        return aggregates.containsKey(new WeightedKey(ntNames));
-    }
-
-    boolean contains(WeightedKey key) {
-        return aggregates.containsKey(key);
-    }
-
-    EffectiveNodeType get(QName[] ntNames) {
-        return (EffectiveNodeType) aggregates.get(new WeightedKey(ntNames));
-    }
-
-    EffectiveNodeType get(WeightedKey key) {
-        return (EffectiveNodeType) aggregates.get(key);
-    }
-
-    EffectiveNodeType remove(QName[] ntNames) {
-        return remove(new WeightedKey(ntNames));
-    }
-
-    EffectiveNodeType remove(WeightedKey key) {
-        EffectiveNodeType removed = (EffectiveNodeType) aggregates.remove(key);
-        if (removed != null) {
-            // remove index entry
-
-            // FIXME: can't simply call TreeSet.remove(key) because the entry
-            // in sortedKeys might have a different weight and would thus
-            // not be found
-            Iterator iter = sortedKeys.iterator();
-            while (iter.hasNext()) {
-                WeightedKey k = (WeightedKey) iter.next();
-                // WeightedKey.equals(Object) ignores the weight
-                if (key.equals(k)) {
-                    sortedKeys.remove(k);
-                    break;
-                }
-            }
-        }
-        return removed;
-    }
+    void put(EffectiveNodeType ent);
 
     /**
-     * Returns an iterator over the keys. The order of the returned keys is:
-     * <ol>
-     * <li>descending weight</li>
-     * <li>ascending key (i.e. unique identifier of aggregate)</li>
-     * </ol>
-     *
-     * @see WeightedKey#compareTo
+     * Puts an effective node type to the cache for the given key.
+     * @param key the key for the effective node type
+     * @param ent the effective node type to put to the cache
      */
-    Iterator keyIterator() {
-        return sortedKeys.iterator();
-    }
+    void put(Key key, EffectiveNodeType ent);
 
     /**
-     * Returns the set of keys.
-     *
-     * @return the set of keys.
+     * Checks if the effective node type for the given key exists.
+     * @param key the key to check
+     * @return <code>true</code> if the effective node type is cached;
+     *         <code>false</code> otherwise.
      */
-    Set keySet() {
-        return Collections.unmodifiableSet(sortedKeys);
-    }
+    boolean contains(Key key);
 
-    //-------------------------------------------< java.lang.Object overrides >
-    public Object clone() {
-        EffectiveNodeTypeCache clone = new EffectiveNodeTypeCache();
-        clone.sortedKeys.addAll(sortedKeys);
-        clone.aggregates.putAll(aggregates);
-        return clone;
-    }
+    /**
+     * Returns the effective node type for the given key or <code>null</code> if
+     * the desired node type is not cached.
+     * @param key the key for the effective node type.
+     * @return the effective node type or <code>null</code>
+     */
+    EffectiveNodeType get(Key key);
 
-    //-------------------------------------------------------------< Dumpable >
+    /**
+     * Returns a key for an effective node type that consists of the given
+     * node type names.
+     * @param ntNames the array of node type names for the effective node type
+     * @return the key to an effective node type.
+     */
+    Key getKey(QName[] ntNames);
+
+    /**
+     * Removes all effective node types that are aggregated with the node type
+     * of the given name.
+     * @param name the name of the node type.
+     */
+    void invalidate(QName name);
+
     /**
      * {@inheritDoc}
      */
-    public void dump(PrintStream ps) {
-        ps.println("EffectiveNodeTypeCache (" + this + ")");
-        ps.println();
-        ps.println("EffectiveNodeTypes in cache:");
-        ps.println();
-        Iterator iter = sortedKeys.iterator();
-        while (iter.hasNext()) {
-            WeightedKey k = (WeightedKey) iter.next();
-            //EffectiveNodeType ent = (EffectiveNodeType) aggregates.get(k);
-            ps.println(k);
-        }
-    }
+    Object clone();
 
-    //--------------------------------------------------------< inner classes >
     /**
-     * A <code>WeightedKey</code> uniquely identifies
-     * a combination (i.e. an aggregation) of one or more node types.
-     * The weight is an indicator for the cost involved in building such an
-     * aggregate (e.g. an aggregation of multiple complex node types with deep
-     * inheritance trees is more costly to build/validate than an agreggation
-     * of two very simple node types with just one property definition each).
-     * <p/>
-     * A very simple (and not very accurate) approximation of the weight would
-     * be the number of explicitly aggregated node types (ignoring inheritance
-     * and complexity of each involved node type). A better approximation would
-     * be the number of <b>all</b>, explicitly and implicitly (note that
-     * inheritance is also an aggregation) aggregated node types.
-     * <p/>
-     * The more accurate the weight definition, the more efficient is the
-     * the building of new aggregates.
-     * <p/>
-     * It is important to note that the weight is not part of the key value,
-     * i.e. it is not considered by the <code>hashCode()</code> and
-     * <code>equals(Object)</code> methods. It does however affect the order
-     * of <code>WeightedKey</code> instances. See
-     * <code>{@link #compareTo(Object)}</code> for more information.
-     * <p/>
-     * Let's assume we have an aggregation of node types named "b", "a" and "c".
-     * Its key would be "[a, b, c]" and the weight 3 (using the simple
-     * approximation).
+     * Searches the best key k for which the given <code>key</code> is a super
+     * set, i.e. for which {@link Key#contains(Key)}} returns
+     * <code>true</code>. If an already cached effective node type matches the
+     * key it is returned.
+     *
+     * @param key the key for which the subkey is to be searched
+     * @return the best key or <code>null</code> if no key could be found.
      */
-    static class WeightedKey implements Comparable {
+    Key findBest(Key key);
+
+    /**
+    * An <code>ENTKey</code> uniquely identifies
+    * a combination (i.e. an aggregation) of one or more node types.
+    */
+    interface Key extends Comparable {
 
         /**
-         * array of node type names, sorted in ascending order
+         * Returns the node type names of this key.
+         * @return the node type names of this key.
          */
-        private final QName[] names;
+        QName[] getNames();
 
         /**
-         * the weight of this key
+         * Checks if the <code>otherKey</code> is contained in this one. I.e. if
+         * this key contains all node type names of the other key.
+         * @param otherKey the other key to check
+         * @return <code>true</code> if this key contains the other key;
+         *         <code>false</code> otherwise.
          */
-        private final int weight;
+        boolean contains(Key otherKey);
 
         /**
-         * @param ntNames
-         */
-        WeightedKey(QName[] ntNames) {
-            this(ntNames, ntNames.length);
-        }
-
-        /**
-         * @param ntNames
-         * @param weight
-         */
-        WeightedKey(QName[] ntNames, int weight) {
-            this.weight = weight;
-            names = new QName[ntNames.length];
-            System.arraycopy(ntNames, 0, names, 0, names.length);
-            Arrays.sort(names);
-        }
-
-        /**
-         * @param ntNames
-         */
-        WeightedKey(Collection ntNames) {
-            this(ntNames, ntNames.size());
-        }
-
-        /**
-         * @param ntNames
-         * @param weight
-         */
-        WeightedKey(Collection ntNames, int weight) {
-            this((QName[]) ntNames.toArray(new QName[ntNames.size()]), weight);
-        }
-
-        /**
-         * @return the weight of this key
-         */
-        int getWeight() {
-            return weight;
-        }
-
-        /**
-         * @return the node type names of this key
-         */
-        QName[] getNames() {
-            return names;
-        }
-
-        boolean contains(WeightedKey otherKey) {
-            Set tmp = new HashSet(Arrays.asList(names));
-            for (int i = 0; i < otherKey.names.length; i++) {
-                if (!tmp.contains(otherKey.names[i])) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        WeightedKey subtract(WeightedKey otherKey) {
-            Set tmp = new HashSet(Arrays.asList(names));
-            tmp.removeAll(Arrays.asList(otherKey.names));
-            return new WeightedKey(tmp);
-
-        }
-
-        //-------------------------------------------------------< Comparable >
-        /**
-         * The resulting sort-order is: 1. descending weight, 2. ascending key
-         * (i.e. string representation of this sorted set).
+         * Creates a new key as a result of a subtract operation. i.e. removes all
+         * node type names that from the other key.
+         * <p/>
+         * Please note that no exception is thrown if the other key has node type
+         * names that are not contained in this key (i.e. {@link #contains(Key)}
+         * returns <code>false</code>).
          *
-         * @param o
-         * @return the result of the comparison
+         * @param otherKey the other key to subtract
+         * @return the new key of the subtraction operation.
          */
-        public int compareTo(Object o) {
-            WeightedKey other = (WeightedKey) o;
+        Key subtract(Key otherKey);
 
-            // compare weights
-            if (weight > other.weight) {
-                return -1;
-            } else if (weight < other.weight) {
-                return 1;
-            }
-
-            // compare arrays of names
-            int len1 = names.length;
-            int len2 = other.names.length;
-            int len = Math.min(len1, len2);
-
-            for (int i = 0; i < len; i++) {
-                QName name1 = names[i];
-                QName name2 = other.names[i];
-                int result = name1.compareTo(name2);
-                if (result != 0) {
-                    return result;
-                }
-            }
-            return len1 - len2;
-        }
-
-        //---------------------------------------< java.lang.Object overrides >
-        public int hashCode() {
-            int h = 17;
-            // ignore weight
-            for (int i = 0; i < names.length; i++) {
-                h *= 37;
-                h += names[i].hashCode();
-            }
-            return h;
-        }
-
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj instanceof WeightedKey) {
-                WeightedKey other = (WeightedKey) obj;
-                // ignore weight
-                return Arrays.equals(names, other.names);
-            }
-            return false;
-        }
-
-        public String toString() {
-            return Arrays.asList(names).toString() + " (" + weight + ")";
-        }
     }
 }
