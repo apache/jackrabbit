@@ -28,7 +28,7 @@ import EDU.oswego.cs.dl.util.concurrent.ConcurrentReaderHashMap;
 
 /**
  * Implements an effective node type cache that uses a bit set for storing the
- * information about participating nodetypes in a set.
+ * information about participating node types in a set.
  */
 public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
 
@@ -58,10 +58,10 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
     private final HashMap aggregates;
 
     /**
-     * An lookup table for bit numbers for a given name.
+     * A lookup table for bit numbers for a given name.
      *
-     * Note: further performance improvements could be made, if this index would
-     * be stored in the nodetype registry since only registered nodetype names
+     * Note: further performance improvements could be made if this index would
+     * be stored in the node type registry since only registered node type names
      * are allowed in the keys.
      */
     private final ConcurrentReaderHashMap nameIndex = new ConcurrentReaderHashMap();
@@ -244,7 +244,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
     private class BitsetKey implements Key {
 
         /**
-         * The names of the nodetypes that form this key.
+         * The names of the node types that form this key.
          */
         private final QName[] names;
 
@@ -260,7 +260,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
 
         /**
          * Creates a ew bitset key.
-         * @param names the nodetype names
+         * @param names the node type names
          * @param maxBit the approximative number of the geatest bit
          */
         public BitsetKey(QName[] names, int maxBit) {
