@@ -27,7 +27,7 @@ public interface EffectiveNodeTypeCache extends Cloneable, Dumpable {
 
     /**
      * Puts an effective node type to the cache. The key is internally generated
-     * from the set of merged nodetypes.
+     * from the set of merged node types.
      * @param ent the effective node type to put to the cache
      */
     void put(EffectiveNodeType ent);
