@@ -47,7 +47,7 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
     private static final String TEST_PREFIX = "tst";
 
     /** Default value of test namespace uri */
-    private static final String TEST_URI = "www.apache.org/jackrabbit/test/namespaceRegistryTest";
+    private static final String TEST_URI = "http://www.apache.org/jackrabbit/test/namespaceRegistryTest";
 
     /** The namespace registry of the superuser session */
     private NamespaceRegistry nsp;
