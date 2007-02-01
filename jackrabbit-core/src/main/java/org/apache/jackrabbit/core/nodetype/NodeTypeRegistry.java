@@ -16,29 +16,23 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
+import EDU.oswego.cs.dl.util.concurrent.ConcurrentReaderHashMap;
 import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.jackrabbit.core.cluster.NodeTypeEventChannel;
+import org.apache.jackrabbit.core.cluster.NodeTypeEventListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.cluster.NodeTypeEventChannel;
-import org.apache.jackrabbit.core.cluster.NodeTypeEventListener;
 import org.apache.jackrabbit.name.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.version.OnParentVersionAction;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,7 +42,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import EDU.oswego.cs.dl.util.concurrent.ConcurrentReaderHashMap;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.version.OnParentVersionAction;
 
 /**
  * A <code>NodeTypeRegistry</code> ...
@@ -76,7 +75,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     private final NodeTypeDefStore customNTDefs;
 
     // cache of pre-built aggregations of node types
-    private final EffectiveNodeTypeCache entCache;
+    private EffectiveNodeTypeCache entCache;
 
     // map of node type names and node type definitions
     private final ConcurrentReaderHashMap registeredNTDefs;
@@ -165,8 +164,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      *
      * @param ntd the definition of the new node type
      * @return an <code>EffectiveNodeType</code> instance
-     * @throws InvalidNodeTypeDefException
-     * @throws RepositoryException
+     * @throws InvalidNodeTypeDefException if the given node type definition is invalid.
+     * @throws RepositoryException if a repository error occurs.
      */
     public synchronized EffectiveNodeType registerNodeType(NodeTypeDef ntd)
             throws InvalidNodeTypeDefException, RepositoryException {
@@ -198,8 +197,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * dependencies on each other.
      *
      * @param ntDefs a collection of <code>NodeTypeDef<code> objects
-     * @throws InvalidNodeTypeDefException
-     * @throws RepositoryException
+     * @throws InvalidNodeTypeDefException if the given node type definition is invalid.
+     * @throws RepositoryException if a repository error occurs.
      */
     public synchronized void registerNodeTypes(Collection ntDefs)
             throws InvalidNodeTypeDefException, RepositoryException {
@@ -256,8 +255,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             dependents.removeAll(ntNames);
             if (dependents.size() > 0) {
                 StringBuffer msg = new StringBuffer();
-                msg.append(ntName
-                        + " can not be removed because the following node types depend on it: ");
+                msg.append(ntName).append(" can not be removed because the following node types depend on it: ");
                 for (Iterator depIter = dependents.iterator(); depIter.hasNext();) {
                     msg.append(depIter.next());
                     msg.append(" ");
@@ -643,7 +641,10 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             throw new RepositoryException(error, fse);
         }
 
-        entCache = new EffectiveNodeTypeCache();
+        // use the improved node type cache
+        // (replace with: entCache = new EffectiveNodeTypeCacheImpl();
+        // for the old one)
+        entCache = new BitsetENTCacheImpl();
         registeredNTDefs = new ConcurrentReaderHashMap();
         propDefs = new ConcurrentReaderHashMap();
         nodeDefs = new ConcurrentReaderHashMap();
@@ -922,7 +923,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                                                   Map ntdCache)
             throws NoSuchNodeTypeException {
         // 1. check if effective node type has already been built
-        EffectiveNodeType ent = entCache.get(new QName[]{ntName});
+        EffectiveNodeTypeCache.Key key = entCache.getKey(new QName[]{ntName});
+        EffectiveNodeType ent = entCache.get(key);
         if (ent != null) {
             return ent;
         }
@@ -955,7 +957,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @param ntNames  array of node type names
      * @param entCache cache of already-built effective node types
      * @param ntdCache cache of node type definitions
-     * @return
+     * @return the desired effective node type
      * @throws NodeTypeConflictException if the effective node type representation
      *                                   could not be built due to conflicting
      *                                   node type definitions.
@@ -967,8 +969,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                                                   Map ntdCache)
             throws NodeTypeConflictException, NoSuchNodeTypeException {
 
-        EffectiveNodeTypeCache.WeightedKey key =
-                new EffectiveNodeTypeCache.WeightedKey(ntNames);
+        EffectiveNodeTypeCache.Key key = entCache.getKey(ntNames);
 
         // 1. check if aggregate has already been built
         if (entCache.contains(key)) {
@@ -983,41 +984,25 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         }
 
         // 3. build aggregate
+        EffectiveNodeTypeCache.Key requested = key;
         EffectiveNodeType result = null;
         synchronized (entCache) {
             // build list of 'best' existing sub-aggregates
-            ArrayList tmpResults = new ArrayList();
             while (key.getNames().length > 0) {
-                // check if we've already built this aggregate
-                if (entCache.contains(key)) {
-                    tmpResults.add(entCache.get(key));
-                    // subtract the result from the temporary key
-                    // (which is 'empty' now)
-                    key = key.subtract(key);
-                    break;
-                }
-                /**
-                 * walk list of existing aggregates sorted by 'weight' of
-                 * aggregate (i.e. the cost of building it)
-                 */
-                boolean foundSubResult = false;
-                Iterator iter = entCache.keyIterator();
-                while (iter.hasNext()) {
-                    EffectiveNodeTypeCache.WeightedKey k =
-                            (EffectiveNodeTypeCache.WeightedKey) iter.next();
-                    /**
-                     * check if the existing aggregate is a 'subset' of the one
-                     * we're looking for
-                     */
-                    if (key.contains(k)) {
-                        tmpResults.add(entCache.get(k));
-                        // subtract the result from the temporary key
-                        key = key.subtract(k);
-                        foundSubResult = true;
-                        break;
+                // find the (sub) key that matches the current key the best
+                EffectiveNodeTypeCache.Key subKey = entCache.findBest(key);
+                if (subKey != null) {
+                    EffectiveNodeType ent = entCache.get(subKey);
+                    if (result == null) {
+                        result = ent;
+                    } else {
+                        result = result.merge(ent);
+                        // store intermediate result
+                        entCache.put(result);
                     }
-                }
-                if (!foundSubResult) {
+                    // subtract the result from the temporary key
+                    key = key.subtract(subKey);
+                } else {
                     /**
                      * no matching sub-aggregates found:
                      * build aggregate of remaining node types through iteration
@@ -1037,21 +1022,14 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                             entCache.put(result);
                         }
                     }
-                    // add aggregate of remaining node types to result list
-                    tmpResults.add(result);
                     break;
                 }
             }
-            // merge the sub-aggregates into new effective node type
-            for (int i = 0; i < tmpResults.size(); i++) {
-                if (result == null) {
-                    result = (EffectiveNodeType) tmpResults.get(i);
-                } else {
-                    result = result.merge((EffectiveNodeType) tmpResults.get(i));
-                    // store intermediate result
-                    entCache.put(result);
-                }
-            }
+        }
+        // also put the requested key, since the merge could have removed some
+        // the redundant nodetypes
+        if (!entCache.contains(requested)) {
+            entCache.put(requested, result);
         }
         // we're done
         return result;
@@ -1233,13 +1211,15 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             NodeTypeDef ntd = (NodeTypeDef) iter.next();
 
             EffectiveNodeType ent =
-                    validateNodeTypeDef(ntd, tmpENTCache, tmpNTDefCache, nsReg, lenient);
+                    validateNodeTypeDef(ntd, tmpENTCache, tmpNTDefCache, nsReg,
+                            lenient);
 
             // store new effective node type instance
             tmpENTCache.put(ent);
         }
 
-        // since no exception was thrown so far the definitions are assumed to be valid
+        // since no exception was thrown so far the definitions are assumed to
+        // be valid
         for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
             NodeTypeDef ntd = (NodeTypeDef) iter.next();
 
@@ -1258,13 +1238,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         }
 
         // finally add newly created effective node types to entCache
-        for (Iterator it = tmpENTCache.keyIterator(); it.hasNext(); ) {
-            EffectiveNodeTypeCache.WeightedKey k =
-                    (EffectiveNodeTypeCache.WeightedKey) it.next();
-            if (!entCache.contains(k)) {
-                entCache.put(tmpENTCache.get(k));
-            }
-        }
+        entCache = tmpENTCache;
     }
 
     private void internalUnregister(QName name) throws NoSuchNodeTypeException {
@@ -1273,19 +1247,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             throw new NoSuchNodeTypeException(name.toString());
         }
         registeredNTDefs.remove(name);
-        /**
-         * remove all affected effective node types from aggregates cache
-         * (copy keys first to prevent ConcurrentModificationException)
-         */
-        ArrayList keys = new ArrayList(entCache.keySet());
-        for (Iterator keysIter = keys.iterator(); keysIter.hasNext();) {
-            EffectiveNodeTypeCache.WeightedKey k =
-                    (EffectiveNodeTypeCache.WeightedKey) keysIter.next();
-            EffectiveNodeType ent = entCache.get(k);
-            if (ent.includesNodeType(name)) {
-                entCache.remove(k);
-            }
-        }
+        entCache.invalidate(name);
 
         // remove property & child node definitions
         PropDef[] pda = ntd.getPropertyDefs();
