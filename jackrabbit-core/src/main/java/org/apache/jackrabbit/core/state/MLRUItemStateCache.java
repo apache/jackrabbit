@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.collections.map.LinkedMap;
 import org.apache.jackrabbit.core.ItemId;
 import org.slf4j.Logger;
@@ -30,9 +29,13 @@ import java.util.Iterator;
 
 /**
  * An <code>ItemStateCache</code> implementation that internally uses a
- * {@link LRUMap} to maintain a cache of <code>ItemState</code> objects. the
+ * {@link LinkedMap} to maintain a cache of <code>ItemState</code> objects. The
  * cache uses a rough estimate of the memory consumption of the cached item
- * states for calculating the maximum number of entries.
+ * states for calculating the maximum number of entries. The oldest entries
+ * are flushed once the cache size has exceeded a certain limit.
+ * <p/>
+ * TODO rename class to something more appropriate, e.g. FIFOItemSateCache since
+ * it doesn't use a LRU eviction policy anymore.
  */
 public class MLRUItemStateCache implements ItemStateCache, Cache {
     /** Logger instance */

@@ -63,7 +63,7 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
 
     /**
      * Creates a new <code>ItemStateReferenceCache</code> that uses a
-     * <code>LRUItemStateCache</code> instance as internal secondary
+     * <code>MLRUItemStateCache</code> instance as internal secondary
      * cache.
      */
     public ItemStateReferenceCache(ItemStateCacheFactory cacheFactory) {
