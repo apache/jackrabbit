@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.query.InvalidQueryException;
@@ -65,9 +66,14 @@ public class SearchManager implements SynchronousEventListener {
     /**
      * Namespace URI for xpath functions
      */
-    // @todo this is not final! What should we use?
     private static final String NS_FN_PREFIX = "fn";
-    public static final String NS_FN_URI = "http://www.w3.org/2004/10/xpath-functions";
+    public static final String NS_FN_URI = "http://www.w3.org/2005/xpath-functions";
+
+    /**
+     * Deprecated namespace URI for xpath functions
+     */
+    private static final String NS_FN_OLD_PREFIX = "fn_old";
+    public static final String NS_FN_OLD_URI = "http://www.w3.org/2004/10/xpath-functions";
 
     /**
      * Namespace URI for XML schema
@@ -185,6 +191,26 @@ public class SearchManager implements SynchronousEventListener {
 
         // register namespaces
         nsReg.safeRegisterNamespace(NS_XS_PREFIX, NS_XS_URI);
+        try {
+            if (nsReg.getPrefix(NS_FN_OLD_URI).equals(NS_FN_PREFIX)) {
+                // old uri is mapped to 'fn' prefix -> re-map
+                String prefix;
+                for (int i = 0; ; i++) {
+                    try {
+                        nsReg.getURI(NS_FN_OLD_PREFIX + i);
+                    } catch (NamespaceException e) {
+                        // not mapped to uri
+                        prefix = NS_FN_OLD_PREFIX + i;
+                        break;
+                    }
+                }
+                nsReg.registerNamespace(prefix, NS_FN_OLD_URI);
+            }
+        } catch (NamespaceException e) {
+            // does not yet exist
+            nsReg.safeRegisterNamespace(NS_FN_OLD_PREFIX, NS_FN_OLD_URI);
+        }
+        // at this point the 'fn' prefix shouldn't be assigned anymore
         nsReg.safeRegisterNamespace(NS_FN_PREFIX, NS_FN_URI);
 
         Properties params = config.getParameters();
