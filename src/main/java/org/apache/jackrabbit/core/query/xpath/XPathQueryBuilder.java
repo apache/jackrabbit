@@ -57,7 +57,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     /**
      * Namespace uri for xpath functions. See also class SearchManager
      */
-    static final String NS_FN_URI = "http://www.w3.org/2004/10/xpath-functions";
+    static final String NS_FN_URI = "http://www.w3.org/2005/xpath-functions";
 
     /**
      * QName for 'fn:not'
