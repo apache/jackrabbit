@@ -32,6 +32,7 @@ import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
 import org.apache.jackrabbit.core.query.PropertyFunctionQueryNode;
+import org.apache.jackrabbit.core.query.DefaultQueryNodeVisitor;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
@@ -198,17 +199,8 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
     }
 
     public Object visit(NodeTypeQueryNode node, Object data) {
-        StringBuffer sb = (StringBuffer) data;
-        try {
-            sb.append("@");
-            NameFormat.format(QName.JCR_PRIMARYTYPE, resolver, sb);
-            sb.append("='");
-            NameFormat.format(node.getValue(), resolver, sb);
-            sb.append("'");
-        } catch (NoPrefixDeclaredException e) {
-            exceptions.add(e);
-        }
-        return sb;
+        // handled in location step visit
+        return data;
     }
 
     public Object visit(TextsearchQueryNode node, Object data) {
@@ -267,6 +259,18 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         if (node.getIncludeDescendants()) {
             sb.append('/');
         }
+        final QName[] nodeType = new QName[1];
+        node.acceptOperands(new DefaultQueryNodeVisitor() {
+            public Object visit(NodeTypeQueryNode node, Object data) {
+                nodeType[0] = node.getValue();
+                return data;
+            }
+        }, null);
+
+        if (nodeType[0] != null) {
+            sb.append("element(");
+        }
+
         if (node.getNameTest() == null) {
             sb.append("*");
         } else {
@@ -280,11 +284,26 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 exceptions.add(e);
             }
         }
+
+        if (nodeType[0] != null) {
+            sb.append(", ");
+            try {
+                NameFormat.format(ISO9075.encode(nodeType[0]), resolver, sb);
+            } catch (NoPrefixDeclaredException e) {
+                exceptions.add(e);
+            }
+            sb.append(")");
+        }
+
         if (node.getIndex() != LocationStepQueryNode.NONE) {
             sb.append('[').append(node.getIndex()).append(']');
         }
         QueryNode[] predicates = node.getPredicates();
         for (int i = 0; i < predicates.length; i++) {
+            // ignore node type query nodes
+            if (predicates[i].getType() == QueryNode.TYPE_NODETYPE) {
+                continue;
+            }
             sb.append('[');
             predicates[i].accept(this, sb);
             sb.append(']');
