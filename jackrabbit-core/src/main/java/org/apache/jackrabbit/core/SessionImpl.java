@@ -432,12 +432,20 @@ public class SessionImpl implements Session, NamePathResolver, Dumpable {
      */
     public Node getNodeByUUID(UUID uuid) throws ItemNotFoundException, RepositoryException {
         NodeImpl node = getNodeById(new NodeId(uuid));
+        // since the uuid of a node is only exposed through jcr:uuid declared
+        // by mix:referenceable it's rather unlikely that a client can possibly
+        // know the internal uuid of a non-referenceable node; omitting the
+        // check for mix:referenceable seems therefore to be a reasonable
+        // compromise in order to improve performance.
+/*
         if (node.isNodeType(QName.MIX_REFERENCEABLE)) {
             return node;
         } else {
             // there is a node with that uuid but the node does not expose it
             throw new ItemNotFoundException(uuid.toString());
         }
+*/
+        return node;
     }
 
     /**
