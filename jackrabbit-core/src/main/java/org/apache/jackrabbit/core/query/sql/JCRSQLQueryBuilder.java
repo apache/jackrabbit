@@ -96,6 +96,11 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     private final AndQueryNode constraintNode = new AndQueryNode(null);
 
     /**
+     * The QName of the node type in the from clause.
+     */
+    private QName nodeTypeName;
+
+    /**
      * List of PathQueryNode constraints that need to be merged
      */
     private final List pathConstraints = new ArrayList();
@@ -238,6 +243,14 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             steps[steps.length - 1].addPredicate(constraintNode);
         }
 
+        if (nodeTypeName != null) {
+            // add node type constraint
+            LocationStepQueryNode[] steps = pathNode.getPathSteps();
+            NodeTypeQueryNode nodeType
+                    = new NodeTypeQueryNode(steps[steps.length - 1], nodeTypeName);
+            steps[steps.length - 1].addPredicate(nodeType);
+        }
+
         return root;
     }
 
@@ -261,9 +274,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             public Object visit(ASTIdentifier node, Object data) {
                 if (!node.getName().equals(QName.NT_BASE)) {
                     // node is either primary or mixin node type
-                    NodeTypeQueryNode nodeType
-                            = new NodeTypeQueryNode(constraintNode, node.getName());
-                    constraintNode.addOperand(nodeType);
+                    nodeTypeName = node.getName();
                 }
                 return data;
             }

@@ -132,14 +132,19 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
             StringBuffer tmp = new StringBuffer();
             LocationStepQueryNode[] steps = node.getLocationNode().getPathSteps();
             QueryNode[] predicates = steps[steps.length - 1].getPredicates();
-            String and = "";
+            // are there any relevant predicates?
             for (int i = 0; i < predicates.length; i++) {
-                if (i == 0) {
+                if (predicates[i].getType() != QueryNode.TYPE_NODETYPE) {
                     tmp.append(" WHERE ");
                 }
-                tmp.append(and);
+            }
+            String and = "";
+            for (int i = 0; i < predicates.length; i++) {
+                if (predicates[i].getType() != QueryNode.TYPE_NODETYPE) {
+                    tmp.append(and);
+                    and = " AND ";
+                }
                 predicates[i].accept(this, tmp);
-                and = " AND ";
             }
 
             // node types have been collected by now
@@ -163,6 +168,10 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
             if (steps.length == 2
                     && steps[1].getIncludeDescendants()
                     && steps[1].getNameTest() == null) {
+                // then this query selects all paths
+            } else if (steps.length == 1
+                    && steps[0].getIncludeDescendants()
+                    && steps[0].getNameTest() == null) {
                 // then this query selects all paths
             } else {
                 if (predicates.length > 0) {
