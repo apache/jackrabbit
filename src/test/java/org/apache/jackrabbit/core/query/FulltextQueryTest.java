@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.query;
 
+import org.apache.jackrabbit.util.Text;
+
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.Query;
@@ -253,6 +255,11 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
     }
 
+    public void testPredefinedEntityReference() throws RepositoryException {
+        String content = "Max&Moritz";
+
+        executeContainsQuery("max&moritz", content, true);
+    }
 
     /**
      * Executes a query and checks if the query matched the test node.
@@ -273,7 +280,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         StringBuffer stmt = new StringBuffer();
         stmt.append("/jcr:root").append(testRoot).append("/*");
-        stmt.append("[jcr:contains(., '").append(statement);
+        stmt.append("[jcr:contains(., '").append(Text.encodeIllegalXMLCharacters(statement));
         stmt.append("')]");
 
         Query q = superuser.getWorkspace().getQueryManager().createQuery(stmt.toString(), Query.XPATH);
