@@ -136,7 +136,7 @@ public class XATest extends AbstractJCRTest {
 
         // assertion: node exists in this session
         try {
-            otherSuperuser.getNodeByUUID(n.getUUID());
+            superuser.getNodeByUUID(n.getUUID());
         } catch (ItemNotFoundException e) {
             fail("Committed node not visible in this session");
         }
