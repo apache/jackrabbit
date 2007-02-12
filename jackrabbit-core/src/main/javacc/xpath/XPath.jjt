@@ -285,13 +285,13 @@ TOKEN :
 <DEFAULT, OPERATOR>
 TOKEN :
 {
- < StringLiteral : (("\"" ((<PredefinedEntityRef> | <CharRef> | ("\"" "\"") | ~["\"", "&"]))* "\"") | ("'" ((<PredefinedEntityRef> | <CharRef> | ("'" "'") | ~["'", "&"]))* "'")) > : OPERATOR
+ < StringLiteral : (("\"" ((("\"" "\"") | ~["\""]))* "\"") | ("'" ((("'" "'") | ~["'"]))* "'")) > : OPERATOR
 }
 
 <KINDTESTFORPI>
 TOKEN :
 {
- < StringLiteralForKindTest : (("\"" ((<PredefinedEntityRef> | <CharRef> | ("\"" "\"") | ~["\"", "&"]))* "\"") | ("'" ((<PredefinedEntityRef> | <CharRef> | ("'" "'") | ~["'", "&"]))* "'")) > : KINDTESTFORPI
+ < StringLiteralForKindTest : (("\"" ((("\"" "\"") | ~["\""]))* "\"") | ("'" ((("'" "'") | ~["'"]))* "'")) > : KINDTESTFORPI
 }
 
 <DEFAULT>
@@ -303,7 +303,7 @@ TOKEN :
 <XQUERYVERSION>
 TOKEN :
 {
- < StringLiteralForVersion : (("\"" ((<PredefinedEntityRef> | <CharRef> | ("\"" "\"") | ~["\"", "&"]))* "\"") | ("'" ((<PredefinedEntityRef> | <CharRef> | ("'" "'") | ~["'", "&"]))* "'")) > : XQUERYVERSION
+ < StringLiteralForVersion : (("\"" ((("\"" "\"") | ~["\""]))* "\"") | ("'" ((("'" "'") | ~["'"]))* "'")) > : XQUERYVERSION
 }
 
 <XQUERYVERSION>
@@ -321,7 +321,7 @@ TOKEN :
 <NAMESPACEDECL, NAMESPACEKEYWORD>
 TOKEN :
 {
- < URLLiteral : (("\"" ((<PredefinedEntityRef> | <CharRef> | ("\"" "\"") | ~["\"", "&"]))* "\"") | ("'" ((<PredefinedEntityRef> | <CharRef> | ("'" "'") | ~["'", "&"]))* "'")) > : DEFAULT
+ < URLLiteral : (("\"" ((("\"" "\"") | ~["\""]))* "\"") | ("'" ((("'" "'") | ~["'"]))* "'")) > : DEFAULT
 }
 
 <DEFAULT>
