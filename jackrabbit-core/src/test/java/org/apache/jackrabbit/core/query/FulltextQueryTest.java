@@ -280,7 +280,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         StringBuffer stmt = new StringBuffer();
         stmt.append("/jcr:root").append(testRoot).append("/*");
-        stmt.append("[jcr:contains(., '").append(Text.encodeIllegalXMLCharacters(statement));
+        stmt.append("[jcr:contains(., '").append(statement);
         stmt.append("')]");
 
         Query q = superuser.getWorkspace().getQueryManager().createQuery(stmt.toString(), Query.XPATH);

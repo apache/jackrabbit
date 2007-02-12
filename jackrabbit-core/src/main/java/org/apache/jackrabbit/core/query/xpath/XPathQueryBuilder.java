@@ -666,8 +666,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      */
     private void assignValue(SimpleNode node, RelationQueryNode queryNode) {
         if (node.getId() == JJTSTRINGLITERAL) {
-            queryNode.setStringValue(unescapeQuotes(
-                    decodePredefinedEntities(node.getValue())));
+            queryNode.setStringValue(unescapeQuotes(node.getValue()));
         } else if (node.getId() == JJTDECIMALLITERAL) {
             queryNode.setDoubleValue(Double.parseDouble(node.getValue()));
         } else if (node.getId() == JJTDOUBLELITERAL) {
@@ -746,9 +745,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                         SimpleNode literal = (SimpleNode) node.jjtGetChild(2).jjtGetChild(0);
                         if (literal.getId() == JJTSTRINGLITERAL) {
                             TextsearchQueryNode contains = new TextsearchQueryNode(
-                                    queryNode,
-                                    unescapeQuotes(decodePredefinedEntities(
-                                            literal.getValue())));
+                                    queryNode, unescapeQuotes(literal.getValue()));
                             // assign property name
                             SimpleNode path = (SimpleNode) node.jjtGetChild(1);
                             path.jjtAccept(this, contains);
@@ -777,8 +774,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
 
                         SimpleNode literal = (SimpleNode) node.jjtGetChild(2).jjtGetChild(0);
                         if (literal.getId() == JJTSTRINGLITERAL) {
-                            like.setStringValue(unescapeQuotes(
-                                    decodePredefinedEntities(literal.getValue())));
+                            like.setStringValue(unescapeQuotes(literal.getValue()));
                         } else {
                             exceptions.add(new InvalidQueryException("Wrong second argument type for jcr:like"));
                         }
@@ -860,7 +856,6 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                             String value = literal.getValue();
                             // strip quotes
                             value = value.substring(1, value.length() - 1);
-                            value = decodePredefinedEntities(value);
                             if (!value.equals("*")) {
                                 QName name = null;
                                 try {
@@ -1027,57 +1022,5 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             value = value.replaceAll("''", "'");
         }
         return value;
-    }
-
-    /**
-     * Decodes a string literal with predefined entities. Predefined entities
-     * are:
-     * <ul>
-     * <li>&amp;lt; : &lt;</li>
-     * <li>&amp;gt; : &gt;</li>
-     * <li>&amp;amp; : &amp;</li>
-     * <li>&amp;quote; : "</li>
-     * <li>&amp;apos; : '</li>
-     * </ul>
-     * @param literal a string literal that may contain predefined entities.
-     * @return the decoded string.
-     * @throws IllegalArgumentException if the string <code>literal</code> is
-     *                                  malformed.
-     */
-    private String decodePredefinedEntities(String literal) throws IllegalArgumentException {
-        int idx = literal.indexOf('&');
-        if (idx == -1) {
-            return literal;
-        }
-        int endIndex = -1;
-        StringBuffer buf = new StringBuffer();
-        buf.append(literal.substring(0, idx));
-        while (idx != -1) {
-            endIndex = literal.indexOf(';', idx);
-            if (endIndex == -1) {
-                throw new IllegalArgumentException(literal);
-            }
-            String entity = literal.substring(idx + 1, endIndex);
-            if (entity.equals("lt")) {
-                buf.append('<');
-            } else if (entity.equals("gt")) {
-                buf.append('>');
-            } else if (entity.equals("amp")) {
-                buf.append('&');
-            } else if (entity.equals("quot")) {
-                buf.append('"');
-            } else if (entity.equals("apos")) {
-                buf.append('\'');
-            } else {
-                throw new IllegalArgumentException(literal);
-            }
-            idx = literal.indexOf('&', idx + 1);
-            if (idx != -1) {
-                buf.append(literal.substring(endIndex + 1, idx));
-            }
-        }
-        // write remaining
-        buf.append(literal.substring(endIndex + 1));
-        return buf.toString();
     }
 }
