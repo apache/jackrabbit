@@ -18,10 +18,10 @@ package org.apache.jackrabbit.server.jcr;
 
 import org.apache.jackrabbit.server.SessionProvider;
 import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.DavSessionProvider;
 import org.apache.jackrabbit.webdav.WebdavRequest;
+import org.apache.jackrabbit.webdav.header.IfHeader;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 import org.slf4j.Logger;
@@ -35,6 +35,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+
 /**
  * <code>JCRWebdavServer</code>...
  */
@@ -156,10 +158,6 @@ public class JCRWebdavServer implements DavSessionProvider {
             String subscriptionId = request.getSubscriptionId();
             String lockToken = request.getLockToken();
 
-            if ((lockToken != null || txId != null) && subscriptionId != null) {
-                throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED, "Ambiguous headers: either TransactionId/Lock-Token or SubscriptionId can be present, not both.");
-            }
-
             DavSession session = null;
             // try to retrieve a cached session
             if (lockToken != null && containsReference(lockToken)) {
@@ -169,6 +167,19 @@ public class JCRWebdavServer implements DavSessionProvider {
             } else if (subscriptionId != null && containsReference(subscriptionId)) {
                 session = getSessionByReference(subscriptionId);
             }
+
+            if (session == null) {
+                // try tokens present in the if-header
+                IfHeader ifHeader = new IfHeader(request);
+                for (Iterator it = ifHeader.getAllTokens(); it.hasNext();) {
+                    String token = it.next().toString();
+                    if (containsReference(token)) {
+                        session = getSessionByReference(token);
+                        break;
+                    }
+                }
+            }
+
             // no cached session present -> create new one.
             if (session == null) {
                 Session repSession = getRepositorySession(request);
