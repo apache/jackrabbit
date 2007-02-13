@@ -38,6 +38,11 @@ public interface ObservationConstants {
      */
     public static final String HEADER_SUBSCRIPTIONID = "SubscriptionId";
 
+    /**
+     * The PollTimeout request header.
+     */
+    public static final String HEADER_POLL_TIMEOUT = "PollTimeout";
+
     //---< XML Element, Attribute Names >---------------------------------------
     /**
      * subscription Xml element<br>

@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.observation.ObservationConstants;
@@ -44,8 +43,16 @@ public class PollMethod extends DavMethodBase implements ObservationConstants {
     private EventDiscovery eventDiscovery;
 
     public PollMethod(String uri, String subscriptionId) {
+        this(uri, subscriptionId, 0);
+    }
+
+    public PollMethod(String uri, String subscriptionId, long timeout) {
         super(uri);
         setRequestHeader(ObservationConstants.HEADER_SUBSCRIPTIONID, subscriptionId);
+        if (timeout > 0) {
+            setRequestHeader(ObservationConstants.HEADER_POLL_TIMEOUT,
+                    String.valueOf(timeout));
+        }
     }
 
     public EventDiscovery getResponseAsEventDiscovery() throws IOException, DavException {

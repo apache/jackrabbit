@@ -34,6 +34,14 @@ public interface ObservationDavServletRequest extends DavServletRequest {
     public String getSubscriptionId();
 
     /**
+     * Returns the {@link ObservationConstants#HEADER_POLL_TIMEOUT PollTimeout header}
+     * or 0 (zero) if no such header is present.
+     *
+     * @return milliseconds indicating length of the poll timeout.
+     */
+    public long getPollTimeout();
+
+    /**
      * Return a {@link SubscriptionInfo} object representing the subscription
      * info present in the SUBSCRIBE request body or <code>null</code> if
      * retrieving the subscription info fails.

@@ -59,9 +59,11 @@ public interface SubscriptionManager {
      * Retrieve the list of events that occured since the last poll.
      *
      * @param subscriptionId indentifier for the subscription
+     * @param timeout        the time in milliseconds to wait at most for events
+     *                       if none is present currently.
      * @param resource
      * @return
      */
-    public EventDiscovery poll(String subscriptionId, ObservationResource resource)
+    public EventDiscovery poll(String subscriptionId, long timeout, ObservationResource resource)
             throws DavException;
 }

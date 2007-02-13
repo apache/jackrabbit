@@ -64,7 +64,10 @@ public interface ObservationResource extends DavResource {
      *
      * @param subscriptionId as present in the
      * {@link ObservationConstants#HEADER_SUBSCRIPTIONID SubscriptionId} header.
+     * @param timeout as present in the
+     * {@link ObservationConstants#HEADER_POLL_TIMEOUT} header or 0 (zero) if
+     * none is present.
      * @return <code>EventDiscovery</code> object
      */
-    public EventDiscovery poll(String subscriptionId) throws DavException;
+    public EventDiscovery poll(String subscriptionId, long timeout) throws DavException;
 }
