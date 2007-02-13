@@ -21,8 +21,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -73,18 +73,14 @@ public class AddLabel extends AbstractOperation {
      * version history. If '<code>moveLabel</code>' is true, all decendant states
      * (property states) are invalidated as well.
      *
-     * @see Operation#persisted()
+     * @see Operation#persisted(CacheBehaviour)
+     * @param cacheBehaviour
      */
-    public void persisted() {
-        ChildNodeEntry lnEntry = versionHistoryState.getChildNodeEntry(QName.JCR_VERSIONLABELS, Path.INDEX_DEFAULT);
-        if (lnEntry.isAvailable()) {
-            try {
-                NodeState labelNodeState = lnEntry.getNodeState();
-                // if an existing label must be moved -> invalidate recursively
-                labelNodeState.invalidate(moveLabel);
-            } catch (ItemStateException e) {
-                // ignore
-            }
+    public void persisted(CacheBehaviour cacheBehaviour) {
+        if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
+            NodeEntry vhEntry = (NodeEntry) versionHistoryState.getHierarchyEntry();
+            NodeEntry lnEntry = vhEntry.getNodeEntry(QName.JCR_VERSIONLABELS, Path.INDEX_DEFAULT);
+            lnEntry.invalidate(moveLabel);
         }
     }
     //----------------------------------------< Access Operation Parameters >---

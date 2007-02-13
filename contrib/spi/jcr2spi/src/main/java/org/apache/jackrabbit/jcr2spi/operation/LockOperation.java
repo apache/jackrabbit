@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.spi.LockInfo;
 
 import javax.jcr.RepositoryException;
@@ -57,10 +58,14 @@ public class LockOperation extends AbstractOperation {
     /**
      * Invalidates the <code>NodeState</code> that has been locked.
      *
-     * @see Operation#persisted()
+     * @see Operation#persisted(CacheBehaviour)
+     * @param cacheBehaviour
      */
-    public void persisted() {
-        nodeState.invalidate(false);
+    public void persisted(CacheBehaviour cacheBehaviour) {
+        if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
+            // non-recursive invalidation
+            nodeState.getHierarchyEntry().invalidate(false);
+        }
     }
 
     //----------------------------------------< Access Operation Parameters >---

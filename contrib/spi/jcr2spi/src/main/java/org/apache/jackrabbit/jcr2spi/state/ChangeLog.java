@@ -19,7 +19,10 @@ package org.apache.jackrabbit.jcr2spi.state;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.AddNode;
 import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
+import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.Iterator;
@@ -237,15 +240,35 @@ public class ChangeLog {
                     deletedStates.remove(state);
                     // remove operations performed on the removed state
                     removeAffectedOperations(state);
-                    // remove add-operation (parent affected) as well
-                    NodeState parent = state.getParent();
-                    if (parent != null && parent.getStatus() != Status.REMOVED) {
-                        for (Iterator it = operations.iterator(); it.hasNext();) {
-                            Operation op = (Operation) it.next();
-                            if ((op instanceof AddNode || op instanceof AddProperty)
-                                && op.getAffectedItemStates().contains(parent)) {
-                                it.remove();
+                    /* remove the add-operation as well:
+                       since the affected state of an 'ADD' operation is the parent
+                       instead of the added-state, the set of operations
+                       need to be searched for the parent state && the proper
+                       operation type.
+                       SET_MIXIN can be is a special case of adding a property */
+                    NodeEntry parentEntry = state.getHierarchyEntry().getParent();
+                    if (parentEntry != null && parentEntry.isAvailable()) {
+                        try {
+                            NodeState parent = parentEntry.getNodeState();
+                            if (parent.getStatus() != Status.REMOVED) {
+                                for (Iterator it = operations.iterator(); it.hasNext();) {
+                                    Operation op = (Operation) it.next();
+                                    if (op instanceof AddNode && ((AddNode)op).getParentState() == parent) {
+                                        it.remove();
+                                        break;
+                                    } else if (op instanceof AddProperty && ((AddProperty)op).getParentState() == parent) {
+                                        it.remove();
+                                        break;
+                                    } else if (op instanceof SetMixin &&
+                                        QName.JCR_MIXINTYPES.equals(state.getQName()) &&
+                                        ((SetMixin)op).getNodeState() == parent) {
+                                        it.remove();
+                                        break;
+                                    }
+                                }
                             }
+                        } catch (ItemStateException e) {
+                            // should never occur -> ignore
                         }
                     }
                 } else if (previousStatus == Status.EXISTING_REMOVED) {

@@ -21,8 +21,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -70,17 +70,14 @@ public class RemoveLabel extends AbstractOperation {
      * Invalidates the jcr:versionlabel nodestate present with the given
      * version history and all decendant states (property states).
      *
-     * @see Operation#persisted()
+     * @see Operation#persisted(CacheBehaviour)
+     * @param cacheBehaviour
      */
-    public void persisted() {
-        ChildNodeEntry lnEntry = versionHistoryState.getChildNodeEntry(QName.JCR_VERSIONLABELS, Path.INDEX_DEFAULT);
-        if (lnEntry.isAvailable()) {
-            try {
-                NodeState labelNodeState = lnEntry.getNodeState();
-                labelNodeState.invalidate(true);
-            } catch (ItemStateException e) {
-                // ignore
-            }
+    public void persisted(CacheBehaviour cacheBehaviour) {
+        if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
+            NodeEntry vhEntry = (NodeEntry) versionHistoryState.getHierarchyEntry();
+            NodeEntry lnEntry = vhEntry.getNodeEntry(QName.JCR_VERSIONLABELS, Path.INDEX_DEFAULT);
+            lnEntry.invalidate(true);
         }
     }
 

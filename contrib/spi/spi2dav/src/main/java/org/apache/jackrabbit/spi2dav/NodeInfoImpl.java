@@ -25,6 +25,7 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.NodeId;
@@ -56,8 +57,8 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     private final List propertyIds = new ArrayList();
 
     public NodeInfoImpl(NodeId id, NodeId parentId, DavPropertySet propSet,
-                        NamespaceResolver nsResolver) throws RepositoryException {
-        super(parentId);
+                        NamespaceResolver nsResolver) throws RepositoryException, MalformedPathException {
+        super(parentId, propSet, nsResolver);
 
         // set id
         this.id = id;

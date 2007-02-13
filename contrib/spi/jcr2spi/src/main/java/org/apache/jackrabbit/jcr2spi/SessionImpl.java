@@ -16,17 +16,18 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.jcr2spi.security.SecurityConstants;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.apache.jackrabbit.jcr2spi.state.SessionItemStateManager;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.xml.DocViewSAXEventGenerator;
 import org.apache.jackrabbit.jcr2spi.xml.SysViewSAXEventGenerator;
 import org.apache.jackrabbit.jcr2spi.xml.ImportHandler;
@@ -119,7 +120,6 @@ public class SessionImpl implements Session, ManagerProvider {
     private final NodeTypeManagerImpl ntManager;
 
     private final SessionItemStateManager itemStateManager;
-    private final HierarchyManager hierarchyManager;
     private final ItemManager itemManager;
     private final ItemStateValidator validator;
 
@@ -138,12 +138,10 @@ public class SessionImpl implements Session, ManagerProvider {
 
         // build nodetype manager
         ntManager = new NodeTypeManagerImpl(workspace.getNodeTypeRegistry(), getNamespaceResolver(), internalGetValueFactory(), getQValueFactory());
-
         validator = new ItemStateValidator(workspace.getNodeTypeRegistry(), this);
 
-        itemStateManager = createSessionItemStateManager(workspace.getUpdatableItemStateManager());
-        hierarchyManager = createHierarchyManager();
-        itemManager = createItemManager();
+        itemStateManager = createSessionItemStateManager(workspace.getUpdatableItemStateManager(), workspace.getItemStateFactory());
+        itemManager = createItemManager(getHierarchyManager());
     }
 
     //--------------------------------------------------< Session interface >---
@@ -222,14 +220,9 @@ public class SessionImpl implements Session, ManagerProvider {
      */
     public Node getRootNode() throws RepositoryException {
         checkIsAlive();
-        try {
-            ItemState state = getItemStateManager().getRootState();
-            return (Node) itemManager.getItem(state);
-        } catch (ItemStateException e) {
-            String msg = "Failed to retrieve root node.";
-            log.error(msg, e);
-            throw new RepositoryException(msg, e);
-        }
+
+        NodeEntry re = getHierarchyManager().getRootEntry();
+        return (Node) itemManager.getItem(re);
     }
 
     /**
@@ -269,22 +262,18 @@ public class SessionImpl implements Session, ManagerProvider {
         // check sanity of this session
         checkIsAlive();
         try {
-            ItemState state = getItemStateManager().getItemState(id);
-            Item item = getItemManager().getItem(state);
+            HierarchyEntry hierarchyEntry = getHierarchyManager().getHierarchyEntry(id);
+            Item item = getItemManager().getItem(hierarchyEntry);
             if (item.isNode()) {
                 return (Node) item;
             } else {
                 log.error("NodeId '" + id + " does not point to a Node");
                 throw new ItemNotFoundException(id.toString());
             }
-        } catch (AccessDeniedException ade) {
+        } catch (PathNotFoundException e) {
             throw new ItemNotFoundException(id.toString());
-        } catch (NoSuchItemStateException e) {
+        } catch (AccessDeniedException e) {
             throw new ItemNotFoundException(id.toString());
-        } catch (ItemStateException e) {
-            String msg = "Failed to retrieve item state of item " + id;
-            log.error(msg, e);
-            throw new RepositoryException(msg, e);
         }
     }
 
@@ -622,7 +611,7 @@ public class SessionImpl implements Session, ManagerProvider {
         try {
             getLockManager().removeLockToken(lt);
         } catch (RepositoryException e) {
-            log.warn("Unable to remove lock token '" +lt+ "' from this session.", e);
+            log.warn("Unable to remove lock token '" +lt+ "' from this session. (" + e.getMessage() + ")");
         }
     }
 
@@ -678,31 +667,32 @@ public class SessionImpl implements Session, ManagerProvider {
         return new WorkspaceImpl(sessionInfo.getWorkspaceName(), this, config, sessionInfo);
     }
 
-    protected SessionItemStateManager createSessionItemStateManager(UpdatableItemStateManager workspaceStateManager) throws RepositoryException {
-        return new SessionItemStateManager(workspaceStateManager, getIdFactory(), getValidator(), getQValueFactory());
+    protected SessionItemStateManager createSessionItemStateManager(UpdatableItemStateManager workspaceStateManager, ItemStateFactory isf) throws RepositoryException {
+        return new SessionItemStateManager(workspaceStateManager, getValidator(), getQValueFactory(), isf);
     }
-
-    protected HierarchyManager createHierarchyManager() {
-        return new HierarchyManagerImpl(getItemStateManager(), getNamespaceResolver());
-    }
-
-    protected ItemManager createItemManager() {
-        return new ItemManagerImpl(getHierarchyManager(), this);
+    
+    protected ItemManager createItemManager(HierarchyManager hierarchyManager) {
+        return new ItemManagerImpl(hierarchyManager, this);
     }
 
     //---------------------------------------------------< ManagerProvider > ---
+    /**
+     * @see ManagerProvider#getNamespaceResolver()
+     */
     public NamespaceResolver getNamespaceResolver() {
         return nsMappings;
     }
 
+    /**
+     * @see ManagerProvider#getHierarchyManager()
+     */
     public HierarchyManager getHierarchyManager() {
-        return hierarchyManager;
+        return workspace.getHierarchyManager();
     }
 
-    public ItemStateManager getItemStateManager() {
-        return itemStateManager;
-    }
-
+    /**
+     * @see ManagerProvider#getLockManager()
+     */
     public LockManager getLockManager() {
         return workspace.getLockManager();
     }
@@ -711,6 +701,7 @@ public class SessionImpl implements Session, ManagerProvider {
      * Returns the <code>AccessManager</code> associated with this session.
      *
      * @return the <code>AccessManager</code> associated with this session
+     * @see ManagerProvider#getAccessManager()
      */
     public AccessManager getAccessManager() {
         return workspace.getAccessManager();
@@ -720,6 +711,7 @@ public class SessionImpl implements Session, ManagerProvider {
      * Returns the <code>VersionManager</code> associated with this session.
      *
      * @return the <code>VersionManager</code> associated with this session
+     * @see ManagerProvider#getVersionManager()
      */
     public VersionManager getVersionManager() {
         return workspace.getVersionManager();

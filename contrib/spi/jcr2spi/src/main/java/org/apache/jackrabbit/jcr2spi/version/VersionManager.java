@@ -19,6 +19,7 @@ package org.apache.jackrabbit.jcr2spi.version;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.spi.IdIterator;
 
 import javax.jcr.RepositoryException;
@@ -169,4 +170,18 @@ public interface VersionManager {
      * @see javax.jcr.Node#doneMerge(Version)
      */
     public void resolveMergeConflict(NodeState nodeState, NodeState versionState, boolean done) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException;
+
+    /**
+     *
+     * @param versionState
+     * @return
+     */
+    public NodeEntry getVersionableNodeState(NodeState versionState) throws RepositoryException;
+
+    /**
+     *
+     * @param versionableState
+     * @return
+     */
+    public NodeEntry getVersionHistoryNodeState(NodeState versionableState) throws RepositoryException;
 }

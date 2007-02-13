@@ -17,11 +17,12 @@
 package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.jcr2spi.query.QueryManagerImpl;
 import org.apache.jackrabbit.jcr2spi.operation.Move;
@@ -91,22 +92,14 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      */
     private final WorkspaceManager wspManager;
 
-    /**
-     * The hierarchy manager that reflects workspace state only
-     * (i.e. that is isolated from transient changes made through
-     * the session).
-     */
-    private HierarchyManager hierManager;
     private LockManager lockManager;
     private ObservationManager obsManager;
     private QueryManager qManager;
     private VersionManager versionManager;
-    private ItemStateValidator validator;
 
     public WorkspaceImpl(String name, SessionImpl session, RepositoryConfig config, SessionInfo sessionInfo) throws RepositoryException {
         this.name = name;
         this.session = session;
-
         wspManager = createManager(config.getRepositoryService(), sessionInfo, session.getCacheBehaviour(), config.getPollingInterval());
     }
 
@@ -261,7 +254,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         session.checkIsAlive();
         if (qManager == null) {
             qManager = new QueryManagerImpl(session, session.getLocalNamespaceMappings(),
-                session.getItemManager(), session.getItemStateManager(), wspManager);
+                session.getItemManager(), session.getHierarchyManager(), wspManager);
         }
         return qManager;
     }
@@ -366,17 +359,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      * @see ManagerProvider#getHierarchyManager()
      */
     public HierarchyManager getHierarchyManager() {
-        if (hierManager == null) {
-            hierManager = new HierarchyManagerImpl(getItemStateManager(), getNamespaceResolver());
-        }
-        return hierManager;
-    }
-
-    /**
-     * @see ManagerProvider#getItemStateManager()
-     */
-    public ItemStateManager getItemStateManager() {
-        return wspManager;
+        return wspManager.getHierarchyManager();
     }
 
     /**
@@ -433,17 +416,18 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     UpdatableItemStateManager getUpdatableItemStateManager() {
         return wspManager;
     }
+    
+    ItemStateFactory getItemStateFactory() {
+        return wspManager.getItemStateFactory();
+    }
 
     /**
-     * Validator for the <code>Workspace</code>. It contrast from {@link SessionImpl#getValidator()}
-     * in terms of <code>HierarchyManager</code> and <code>ItemManager</code>.
+     * Returns the validator of the session
+     *
      * @return validator
      */
     private ItemStateValidator getValidator() {
-        if (validator == null) {
-            validator = new ItemStateValidator(getNodeTypeRegistry(), this);
-        }
-        return validator;
+        return session.getValidator();
     }
     
     //-----------------------------------------------------< initialization >---
@@ -468,7 +452,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      * @return a new <code>LockManager</code> instance.
      */
     protected LockManager createLockManager(WorkspaceManager wspManager, ItemManager itemManager) {
-        LockManager lMgr = new LockManagerImpl(wspManager, itemManager);
+        LockManager lMgr = new LockManagerImpl(wspManager, itemManager, session.getCacheBehaviour());
         session.addListener((LockManagerImpl) lMgr);
         return lMgr;
     }

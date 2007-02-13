@@ -17,10 +17,10 @@
 package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.apache.jackrabbit.jcr2spi.lock.LockManager;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
 
 /**
  * <code>ManagerProvider</code>...
@@ -30,8 +30,6 @@ public interface ManagerProvider {
     public NamespaceResolver getNamespaceResolver();
 
     public HierarchyManager getHierarchyManager();
-
-    public ItemStateManager getItemStateManager();
 
     public AccessManager getAccessManager();
 

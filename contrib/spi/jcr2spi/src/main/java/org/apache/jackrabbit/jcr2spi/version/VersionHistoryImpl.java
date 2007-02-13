@@ -23,10 +23,10 @@ import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.SessionImpl;
 import org.apache.jackrabbit.jcr2spi.ItemLifeCycleListener;
 import org.apache.jackrabbit.jcr2spi.LazyItemIterator;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
-import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
@@ -44,12 +44,10 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.Property;
-import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  * <code>VersionHistoryImpl</code>...
@@ -58,23 +56,18 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
 
     private static Logger log = LoggerFactory.getLogger(VersionHistoryImpl.class);
 
-    private final NodeState vhState;
-    private final NodeState labelNodeState;
+    private final NodeEntry vhEntry;
+    private final NodeEntry labelNodeEntry;
 
     public VersionHistoryImpl(ItemManager itemMgr, SessionImpl session,
-                              NodeState state, NodeDefinition definition,
-                              ItemLifeCycleListener[] listeners) throws VersionException {
-        super(itemMgr, session, state, definition, listeners);
-        this.vhState = state;
+                              NodeState state, ItemLifeCycleListener[] listeners)
+        throws VersionException {
+        super(itemMgr, session, state, listeners);
+        this.vhEntry = (NodeEntry) state.getHierarchyEntry();
 
         // retrieve nodestate of the jcr:versionLabels node
-        if (state.hasChildNodeEntry(QName.JCR_VERSIONLABELS)) {
-            ChildNodeEntry lnEntry = state.getChildNodeEntry(QName.JCR_VERSIONLABELS, Path.INDEX_DEFAULT);
-            try {
-                labelNodeState = lnEntry.getNodeState();
-            } catch (ItemStateException e) {
-                throw new VersionException("nt:versionHistory requires a mandatory, autocreated child node jcr:versionLabels.");
-            }
+        if (vhEntry.hasNodeEntry(QName.JCR_VERSIONLABELS)) {
+            labelNodeEntry = vhEntry.getNodeEntry(QName.JCR_VERSIONLABELS, Path.INDEX_DEFAULT);
         } else {
             throw new VersionException("nt:versionHistory requires a mandatory, autocreated child node jcr:versionLabels.");
         }
@@ -100,17 +93,13 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public Version getRootVersion() throws RepositoryException {
         checkStatus();
-        try {
-            if (vhState.hasChildNodeEntry(QName.JCR_ROOTVERSION)) {
-                NodeState vState = vhState.getChildNodeEntry(QName.JCR_ROOTVERSION, Path.INDEX_DEFAULT).getNodeState();
-                return (Version) itemMgr.getItem(vState);
-            } else {
-                String msg = "Unexpected error: VersionHistory state does not contain a root version child node entry.";
-                log.error(msg);
-                throw new RepositoryException(msg);
-            }
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
+        if (vhEntry.hasNodeEntry(QName.JCR_ROOTVERSION)) {
+            NodeEntry vEntry = vhEntry.getNodeEntry(QName.JCR_ROOTVERSION, Path.INDEX_DEFAULT);
+            return (Version) itemMgr.getItem(vEntry);
+        } else {
+            String msg = "Unexpected error: VersionHistory state does not contain a root version child node entry.";
+            log.error(msg);
+            throw new RepositoryException(msg);
         }
     }
 
@@ -122,20 +111,17 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public VersionIterator getAllVersions() throws RepositoryException {
         checkStatus();
-        Iterator childIter = vhState.getChildNodeEntries().iterator();
-        List versionStates = new ArrayList();
+        refreshEntry(vhEntry);
+        Iterator childIter = vhEntry.getNodeEntries();
+        List versionEntries = new ArrayList();
         // all child-nodes except from jcr:versionLabels point to Versions.
         while (childIter.hasNext()) {
-            ChildNodeEntry entry = (ChildNodeEntry) childIter.next();
-            if (!QName.JCR_VERSIONLABELS.equals(entry.getName())) {
-                try {
-                    versionStates.add(entry.getNodeState());
-                } catch (ItemStateException e) {
-                    throw new RepositoryException(e);
-                }
+            NodeEntry entry = (NodeEntry) childIter.next();
+            if (!QName.JCR_VERSIONLABELS.equals(entry.getQName())) {
+                versionEntries.add(entry);
             }
         }
-        return new LazyItemIterator(itemMgr, versionStates);
+        return new LazyItemIterator(itemMgr, versionEntries.iterator());
     }
 
     /**
@@ -149,7 +135,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public Version getVersion(String versionName) throws VersionException, RepositoryException {
         checkStatus();
         NodeState vState = getVersionState(versionName);
-        return (Version) itemMgr.getItem(vState);
+        return (Version) itemMgr.getItem(vState.getHierarchyEntry());
     }
 
     /**
@@ -162,7 +148,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public Version getVersionByLabel(String label) throws RepositoryException {
         checkStatus();
         NodeState vState = getVersionStateByLabel(getQLabel(label));
-        return (Version) itemMgr.getItem(vState);
+        return (Version) itemMgr.getItem(vState.getHierarchyEntry());
     }
 
     /**
@@ -179,7 +165,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         QName qLabel = getQLabel(label);
         NodeState vState = getVersionState(versionName);
         // delegate to version manager that operates on workspace directely
-        session.getVersionManager().addVersionLabel(vhState, vState, qLabel, moveLabel);
+        session.getVersionManager().addVersionLabel((NodeState) getItemState(), vState, qLabel, moveLabel);
     }
 
     /**
@@ -194,7 +180,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         QName qLabel = getQLabel(label);
         NodeState vState = getVersionStateByLabel(getQLabel(label));
         // delegate to version manager that operates on workspace directely
-        session.getVersionManager().removeVersionLabel(vhState, vState, qLabel);
+        session.getVersionManager().removeVersionLabel((NodeState) getItemState(), vState, qLabel);
     }
 
     /**
@@ -306,7 +292,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         VersionException, RepositoryException {
         checkStatus();
         NodeState vState = getVersionState(versionName);
-        session.getVersionManager().removeVersion(vhState, vState);
+        session.getVersionManager().removeVersion((NodeState) getItemState(), vState);
     }
 
     //---------------------------------------------------------------< Item >---
@@ -322,7 +308,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             // since all version histories are referenceable, protected and live
             // in the same workspace, a simple comparison of the UUIDs is sufficient.
             VersionHistoryImpl other = ((VersionHistoryImpl) otherItem);
-            return vhState.getUniqueID().equals(other.vhState.getUniqueID());
+            return vhEntry.getUniqueID().equals(other.vhEntry.getUniqueID());
         }
         return false;
     }
@@ -339,13 +325,32 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         throw new ConstraintViolationException("VersionHistory is protected");
     }
 
+    /**
+     * Always returns false
+     *
+     * @throws RepositoryException
+     * @see NodeImpl#isWritable()
+     */
+    protected boolean isWritable() throws RepositoryException {
+        super.isWritable();
+        return false;
+    }
     //------------------------------------------------------------< private >---
     /**
      *
      * @return
      */
-    private QName[] getQLabels() {
-        Collection labelQNames = labelNodeState.getPropertyNames();
+    private QName[] getQLabels() throws RepositoryException {
+        refreshEntry(labelNodeEntry);
+        List labelQNames = new ArrayList();
+        Iterator it = labelNodeEntry.getPropertyEntries();
+        while (it.hasNext()) {
+            PropertyEntry pe = (PropertyEntry) it.next();
+            if (QName.JCR_PRIMARYTYPE.equals(pe.getQName())) {
+                continue;
+            }
+            labelQNames.add(pe.getQName());
+        }
         return (QName[]) labelQNames.toArray(new QName[labelQNames.size()]);
     }
 
@@ -359,7 +364,8 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     private NodeState getVersionState(String versionName) throws VersionException, RepositoryException {
         try {
             QName vQName = NameFormat.parse(versionName, session.getNamespaceResolver());
-            ChildNodeEntry vEntry = vhState.getChildNodeEntry(vQName, Path.INDEX_DEFAULT);
+            refreshEntry(vhEntry);
+            NodeEntry vEntry = vhEntry.getNodeEntry(vQName, Path.INDEX_DEFAULT);
             if (vEntry == null) {
                 throw new VersionException("Version '" + versionName + "' does not exist in this version history.");
             } else {
@@ -381,16 +387,12 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @throws RepositoryException
      */
     private NodeState getVersionStateByLabel(QName qLabel) throws VersionException, RepositoryException {
-        if (labelNodeState.hasPropertyName(qLabel)) {
-            // retrieve reference property value -> and convert it to a NodeId
-            try {
-                PropertyState pState = labelNodeState.getPropertyState(qLabel);
-                Node version = ((Property) itemMgr.getItem(pState)).getNode();
-                return getVersionState(version.getName());
-            } catch (ItemStateException e) {
-                // should not occur. existance of property state has been checked
-                throw new RepositoryException(e);
-            }
+        refreshEntry(labelNodeEntry);
+        if (labelNodeEntry.hasPropertyEntry(qLabel)) {
+            // retrieve reference property value -> and retrieve referenced node
+            PropertyEntry pEntry = labelNodeEntry.getPropertyEntry(qLabel);
+            Node version = ((Property) itemMgr.getItem(pEntry)).getNode();
+            return getVersionState(version.getName());
         } else {
             throw new VersionException("Version with label '" + qLabel + "' does not exist.");
         }
@@ -424,6 +426,15 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     private void checkValidVersion(Version version) throws VersionException, RepositoryException {
         if (!version.getContainingHistory().isSame(this)) {
             throw new VersionException("Specified version '" + version.getName() + "' is not part of this history.");
+        }
+    }
+
+    private void refreshEntry(NodeEntry entry) throws RepositoryException {
+        // TODO: check again.. is this correct? or should NodeEntry be altered
+        try {
+            entry.getNodeState();
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
         }
     }
 }

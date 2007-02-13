@@ -14,43 +14,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.jcr2spi.state;
+package org.apache.jackrabbit.jcr2spi.hierarchy;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
-import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventIterator;
-import org.apache.jackrabbit.spi.EventFilter;
+import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Collections;
 
 /**
- * <code>WorkspaceItemStateManager</code>
+ * <code>HierarchyEventListener</code>...
  */
-public class WorkspaceItemStateManager extends CachingItemStateManager
-    implements InternalEventListener {
+public class HierarchyEventListener implements InternalEventListener {
 
-    private static Logger log = LoggerFactory.getLogger(WorkspaceItemStateManager.class);
+    private static Logger log = LoggerFactory.getLogger(HierarchyEventListener.class);
 
+    private final HierarchyManager hierarchyMgr;
     private final Collection eventFilter;
 
-    public WorkspaceItemStateManager(WorkspaceManager wspManager,
-                                     CacheBehaviour cacheBehaviour,
-                                     ItemStateFactory isf, IdFactory idFactory) {
-        super(isf, idFactory);
+    public HierarchyEventListener(WorkspaceManager wspManager,
+                                  HierarchyManager hierarchyMgr,
+                                  CacheBehaviour cacheBehaviour) {
+        this.hierarchyMgr = hierarchyMgr;
         if (cacheBehaviour == CacheBehaviour.OBSERVATION) {
             EventFilter filter = null;
             try {
@@ -66,7 +66,7 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
         wspManager.addEventListener(this);
     }
 
-    //-------------------------------< InternalEventListener >------------------
+    //----------------------------------------------< InternalEventListener >---
     /**
      * @see InternalEventListener#getEventFilters()
      */
@@ -133,7 +133,7 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
             progress = false;
             for (Iterator it = addEvents.iterator(); it.hasNext();) {
                 Event ev = (Event) it.next();
-                NodeState parent = (ev.getParentId() != null) ? (NodeState) lookup(ev.getParentId()) : null;
+                NodeEntry parent = (ev.getParentId() != null) ? (NodeEntry) hierarchyMgr.lookup(ev.getParentId()) : null;
                 if (parent != null) {
                     parent.refresh(ev);
                     it.remove();
@@ -147,26 +147,21 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
             Event event = (Event) it.next();
             int type = event.getType();
 
-            ItemState state = lookup(event.getItemId());
-            NodeState parent = (event.getParentId() != null) ? (NodeState) lookup(event.getParentId()) : null;
-
+            NodeId parentId = event.getParentId();
+            NodeEntry parent = (parentId != null) ? (NodeEntry) hierarchyMgr.lookup(parentId) : null;
             if (type == Event.NODE_REMOVED || type == Event.PROPERTY_REMOVED) {
-                if (state != null) {
-                    state.refresh(event);
-                }
-                if (parent != null) {
-                    // invalidate parent only if it has not been removed
-                    // with the same event bundle.
-                    if (!removedEvents.contains(event.getParentId())) {
-                        parent.refresh(event);
-                    }
+                // notify parent about removal if its child-entry.
+                // - if parent is 'null' (i.e. not yet loaded) the child-entry does
+                //   not exist either -> no need to inform child-entry
+                // - if parent got removed with the same event-bundle
+                //   only remove the parent an skip this event.
+                if (parent != null && !removedEvents.contains(parentId)) {
+                    parent.refresh(event);
                 }
             } else if (type == Event.PROPERTY_CHANGED) {
-                if (state != null) {
-                    state.refresh(event);
-                }
-                // parent must be notified in case jcr:mixintypes or jcr:uuid
-                // was changed.
+                // notify parent in case jcr:mixintypes or jcr:uuid was changed.
+                // if parent is 'null' (i.e. not yet loaded) the prop-entry does
+                // not exist either -> no need to inform propEntry
                 if (parent != null) {
                     parent.refresh(event);
                 }

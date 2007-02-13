@@ -21,7 +21,7 @@ import java.util.Iterator;
 /**
  * <code>NodeReferences</code>...
  */
-interface NodeReferences {
+public interface NodeReferences {
 
     /**
      * Returns a flag indicating whether the <code>Node</code> identified by this

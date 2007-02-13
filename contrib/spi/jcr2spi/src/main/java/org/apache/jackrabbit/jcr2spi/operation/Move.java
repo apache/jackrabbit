@@ -17,10 +17,11 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
-import org.apache.jackrabbit.jcr2spi.HierarchyManager;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -77,15 +78,19 @@ public class Move extends AbstractOperation {
      * modification. Otherwise, the moved state as well as both parent states
      * are invalidated.
      *
-     * @see Operation#persisted()
+     * @see Operation#persisted(CacheBehaviour)
+     * @param cacheBehaviour
      */
-    public void persisted() {
-        if (srcState.isWorkspaceState()) {
-            srcParentState.invalidate(false);
-            destParentState.invalidate(false);
-            srcState.invalidate(false);
-        } else {
-            throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
+    public void persisted(CacheBehaviour cacheBehaviour) {
+        if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
+            if (srcState.isWorkspaceState()) {
+                // non-recursive invalidation
+                srcParentState.getHierarchyEntry().invalidate(false);
+                destParentState.getHierarchyEntry().invalidate(false);
+                srcState.getHierarchyEntry().invalidate(false);
+            } else {
+                throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
+            }
         }
     }
     //----------------------------------------< Access Operation Parameters >---
@@ -146,10 +151,11 @@ public class Move extends AbstractOperation {
         NodeState destParentState = getNodeState(destPath.getAncestor(1), hierMgr, nsResolver);
         QName destName = destElement.getName();
 
-        if (destParentState.hasPropertyName(destName)) {
+        NodeEntry destEntry = (NodeEntry) destParentState.getHierarchyEntry();
+        if (destEntry.hasPropertyEntry(destName)) {
             throw new ItemExistsException("Move destination already exists (Property).");
-        } else if (destParentState.hasChildNodeEntry(destName)) {
-            ChildNodeEntry existing = destParentState.getChildNodeEntry(destName, Path.INDEX_DEFAULT);
+        } else if (destEntry.hasNodeEntry(destName)) {
+            NodeEntry existing = destEntry.getNodeEntry(destName, Path.INDEX_DEFAULT);
             try {
                 if (!existing.getNodeState().getDefinition().allowsSameNameSiblings()) {
                     throw new ItemExistsException("Node existing at move destination does not allow same name siblings.");

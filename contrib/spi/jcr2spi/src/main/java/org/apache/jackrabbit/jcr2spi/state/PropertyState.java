@@ -21,15 +21,15 @@ import javax.jcr.ValueFormatException;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
 
-import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.jcr2spi.nodetype.ValueConstraint;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
+import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,14 +43,14 @@ public class PropertyState extends ItemState {
     private static Logger log = LoggerFactory.getLogger(PropertyState.class);
 
     /**
-     * The name of this property state.
+     * The PropertyEntry associated with the state
      */
-    private final QName name;
+    private final PropertyEntry hierarchyEntry;
 
     /**
      * Property definition
      */
-    private final QPropertyDefinition def;
+    private QPropertyDefinition definition;
 
     /**
      * The internal value(s)
@@ -63,19 +63,24 @@ public class PropertyState extends ItemState {
     private int type;
 
     /**
+     * True if this Property is multiValued
+     */
+    private final boolean multiValued;
+
+    /**
      * Constructs a new property state that is initially connected to an
      * overlayed state.
      *
      * @param overlayedState
-     * @param parent
      * @param initialStatus
-     * @param idFactory
      */
-    protected PropertyState(PropertyState overlayedState, NodeState parent,
-                            int initialStatus, ItemStateFactory isf, IdFactory idFactory) {
-        super(overlayedState, parent, initialStatus, isf, idFactory);
-        this.name = overlayedState.name;
-        this.def = overlayedState.def;
+    protected PropertyState(PropertyState overlayedState, int initialStatus,
+                            ItemStateFactory isf) {
+        super(overlayedState, initialStatus, isf);
+
+        this.hierarchyEntry = overlayedState.hierarchyEntry;
+        this.definition = overlayedState.definition;
+        this.multiValued = overlayedState.multiValued;
 
         init(overlayedState.getType(), overlayedState.getValues());
     }
@@ -83,18 +88,18 @@ public class PropertyState extends ItemState {
     /**
      * Create a new <code>PropertyState</code>
      *
-     * @param name
-     * @param parent
-     * @param definition
+     * @param entry
      * @param initialStatus
-     * @param idFactory
+     * @param isWorkspaceState
      */
-    protected PropertyState(QName name, NodeState parent, QPropertyDefinition definition,
-                            int initialStatus, ItemStateFactory isf, IdFactory idFactory,
-                            boolean isWorkspaceState) {
-        super(parent, initialStatus, isf, idFactory, isWorkspaceState);
-        this.name = name;
-        this.def = definition;
+    protected PropertyState(PropertyEntry entry, boolean multiValued, QPropertyDefinition definition,
+                            int initialStatus, boolean isWorkspaceState,
+                            ItemStateFactory isf, NodeTypeRegistry ntReg) {
+        super(initialStatus, isWorkspaceState, isf, ntReg);
+
+        this.hierarchyEntry = entry;
+        this.definition = definition;
+        this.multiValued = multiValued;
         init(PropertyType.UNDEFINED, QValue.EMPTY_ARRAY);
     }
 
@@ -120,7 +125,15 @@ public class PropertyState extends ItemState {
         this.values = (values == null) ? QValue.EMPTY_ARRAY : values;
     }
 
+
     //----------------------------------------------------------< ItemState >---
+    /**
+     * @see ItemState#getHierarchyEntry()
+     */
+    public HierarchyEntry getHierarchyEntry() {
+        return hierarchyEntry;
+    }
+
     /**
      * Always returns false.
      *
@@ -132,54 +145,11 @@ public class PropertyState extends ItemState {
     }
 
     /**
-     * Returns the name of this property.
-     *
-     * @return the name of this property.
-     * @see ItemState#getQName()
-     */
-    public QName getQName() {
-        return name;
-    }
-
-    /**
      * {@inheritDoc}
      * @see ItemState#getId()
      */
     public ItemId getId() {
         return getPropertyId();
-    }
-
-    /**
-     * {@inheritDoc}
-     * @see ItemState#reload(boolean)
-     */
-    public void reload(boolean keepChanges) {
-        if (isWorkspaceState()) {
-            // refresh from persistent storage ('keepChanges' not relevant).
-            try {
-                PropertyState tmp = isf.createPropertyState(getPropertyId(), getParent());
-                if (merge(tmp, false) || getStatus() == Status.INVALIDATED) {
-                    setStatus(Status.MODIFIED);
-                }
-            } catch (NoSuchItemStateException e) {
-                // TODO: improve. make sure the property-entry is removed from the parent state
-                // inform overlaying state and listeners
-                setStatus(Status.REMOVED);
-            } catch (ItemStateException e) {
-                // TODO: rather throw? remove from parent?
-                log.warn("Exception while refreshing property state: " + e);
-                log.debug("Stacktrace: ", e);
-            }
-        } else {
-            /* session-state: if keepChanges is true only existing or invalidated
-               states must be updated. otherwise the state gets updated and might
-               be marked 'Stale' if transient changes are present and the
-               workspace-state is modified. */
-            if (!keepChanges || getStatus() == Status.EXISTING || getStatus() == Status.INVALIDATED) {
-                // calling refresh on the workspace state will in turn reset this state
-                overlayedState.reload(keepChanges);
-            }
-        }
     }
 
     /**
@@ -190,7 +160,7 @@ public class PropertyState extends ItemState {
      *
      * @see ItemState#merge(ItemState, boolean)
      */
-    boolean merge(ItemState another, boolean keepChanges) {
+    public boolean merge(ItemState another, boolean keepChanges) {
         if (another == null || another == this) {
             return false;
         }
@@ -209,24 +179,6 @@ public class PropertyState extends ItemState {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     * @see ItemState#invalidate(boolean)
-     */
-    public void invalidate(boolean recursive) {
-        if (isWorkspaceState()) {
-            // workspace state
-            setStatus(Status.INVALIDATED);
-        } else {
-            // TODO: only invalidate if existing?
-            if (getStatus() == Status.EXISTING) {
-                // set workspace state invalidated, this will in turn invalidate
-                // this (session) state as well
-                overlayedState.invalidate(recursive);
-            }
-        }
-    }
-
     //------------------------------------------------------< PropertyState >---
     /**
      * Returns the identifier of this property.
@@ -234,7 +186,7 @@ public class PropertyState extends ItemState {
      * @return the id of this property.
      */
     public PropertyId getPropertyId() {
-        return idFactory.createPropertyId(getParent().getNodeId(), getQName());
+        return getPropertyEntry().getId();
     }
 
     /**
@@ -256,7 +208,7 @@ public class PropertyState extends ItemState {
      * @return true if this property is multi-valued, otherwise false.
      */
     public boolean isMultiValued() {
-        return def.isMultiple();
+        return multiValued;
     }
 
     /**
@@ -266,8 +218,11 @@ public class PropertyState extends ItemState {
      *
      * @return definition of this state
      */
-    public QPropertyDefinition getDefinition() {
-        return def;
+    public QPropertyDefinition getDefinition() throws RepositoryException {
+        if (definition == null) {
+            definition = getEffectiveNodeType().getApplicablePropertyDefinition(getQName(), getType(), isMultiValued());
+        }
+        return definition;
     }
 
     /**
@@ -296,32 +251,6 @@ public class PropertyState extends ItemState {
         }
     }
 
-    //----------------------------------------------------< Workspace State >---
-    /**
-     * @see ItemState#refresh(Event)
-     */
-    synchronized void refresh(Event event) {
-        checkIsWorkspaceState();
-
-        switch (event.getType()) {
-            case Event.PROPERTY_REMOVED:
-                setStatus(Status.REMOVED);
-                break;
-
-            case Event.PROPERTY_CHANGED:
-                // retrieve modified property value and type from server.
-                reload(false);
-                break;
-
-            case Event.PROPERTY_ADDED:
-            case Event.NODE_ADDED:
-            case Event.NODE_REMOVED:
-            default:
-                throw new IllegalArgumentException("Event type " + event.getType() + " cannot be applied to a PropertyState");
-        }
-    }
-
-    //----------------------------------------------------< Session - State >---
     /**
      * {@inheritDoc}
      * @see ItemState#persisted(ChangeLog, CacheBehaviour)
@@ -354,10 +283,19 @@ public class PropertyState extends ItemState {
         checkIsSessionState();
         // make sure the arguements are consistent and do not violate the
         // given property definition.
-        validate(values, type, def);
+        validate(values, type, getDefinition());
         init(type, values);
 
         markModified();
+    }
+
+    //------------------------------------------------------------< private >---
+    /**
+     *
+     * @return
+     */
+    private PropertyEntry getPropertyEntry() {
+        return (PropertyEntry) getHierarchyEntry();
     }
 
     /**
@@ -385,13 +323,13 @@ public class PropertyState extends ItemState {
         if (propertyType == PropertyType.UNDEFINED) {
             throw new RepositoryException("'Undefined' is not a valid property type for existing values.");
         }
-        if (definition.getRequiredType() != PropertyType.UNDEFINED && definition.getRequiredType() != propertyType) {
-            throw new ConstraintViolationException("RequiredType constraint is not satisfied");
-        }
         for (int i = 0; i < values.length; i++) {
             if (values[i] != null && propertyType != values[i].getType()) {
                 throw new ConstraintViolationException("Inconsistent value types: Required type = " + PropertyType.nameFromValue(propertyType) + "; Found value with type = " + PropertyType.nameFromValue(values[i].getType()));
             }
+        }
+        if (definition.getRequiredType() != PropertyType.UNDEFINED && definition.getRequiredType() != propertyType) {
+            throw new ConstraintViolationException("RequiredType constraint is not satisfied");
         }
         ValueConstraint.checkValueConstraints(definition, values);
     }

@@ -14,23 +14,66 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.jcr2spi;
+package org.apache.jackrabbit.jcr2spi.hierarchy;
 
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.spi.ItemId;
 
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
+import javax.jcr.ItemNotFoundException;
 
 /**
- * The <code>HierarchyManager</code> interface ...
+ * <code>HierarchyManager</code>...
  */
 public interface HierarchyManager {
 
     /**
-     * Resolves a path into an item state.
+     * Dispose this <code>HierarchyManager</code>
+     */
+    public void dispose();
+
+    /**
+     * 
+     * @return
+     */
+    public NodeEntry getRootEntry();
+
+    /**
+     * If the Hierarchy already lists the entry with the given itemId it is
+     * returned otherwise <code>null</code>. See {@link #getHierarchyEntry(ItemId)}
+     * for a method that resolves the ItemId including lookup in the persistence
+     * layer if the entry has not been loaded yet.
+     *
+     * @param itemId
+     * @return
+     */
+    public HierarchyEntry lookup(ItemId itemId);
+
+    /**
+     * Resolves a itemId into a <code>HierarchyEntry</code>.
+     *
+     * @param itemId
+     * @return
+     * @throws PathNotFoundException
+     * @throws RepositoryException
+     */
+    public HierarchyEntry getHierarchyEntry(ItemId itemId) throws PathNotFoundException, RepositoryException;
+
+    /**
+     * Resolves a path into a <code>HierarchyEntry</code>.
+     *
+     * @param qPath
+     * @return
+     * @throws PathNotFoundException
+     * @throws RepositoryException
+     */
+    public HierarchyEntry getHierarchyEntry(Path qPath) throws PathNotFoundException, RepositoryException;
+
+    /**
+     * Retrieves the <code>HierarchyEntry</code> corresponding to the given
+     * path and resolves it to the underlying <code>ItemState</code>. 
      *
      * @param qPath
      * @return
@@ -43,11 +86,11 @@ public interface HierarchyManager {
      * Returns the depth of the specified item. The depth reflects the
      * absolute hierarchy level.
      *
-     * @param itemState item state
+     * @param hierarchyEntry
      * @return the depth of the specified item
      * @throws RepositoryException if another error occurs
      */
-    public int getDepth(ItemState itemState) throws ItemNotFoundException, RepositoryException;
+    public int getDepth(HierarchyEntry hierarchyEntry) throws ItemNotFoundException, RepositoryException;
 
     /**
      * Returns the depth of the specified descendant relative to the given
@@ -55,8 +98,8 @@ public interface HierarchyManager {
      * denote the same item 0 is returned. If <code>ancestor</code> does not
      * denote an ancestor -1 is returned.
      *
-     * @param ancestor NodeState that must be an ancestor of the descendant
-     * @param descendant ItemState
+     * @param ancestor NodeEntry that must be an ancestor of the descendant
+     * @param descendant HierarchyEntry
      * @return the relative depth; -1 if <code>ancestor</code> does not
      * denote an ancestor of the item denoted by <code>descendant</code>
      * (or itself).
@@ -64,5 +107,5 @@ public interface HierarchyManager {
      * denote an existing item.
      * @throws RepositoryException If another error occurs.
      */
-    public int getRelativeDepth(NodeState ancestor, ItemState descendant) throws ItemNotFoundException, RepositoryException;
+    public int getRelativeDepth(NodeEntry ancestor, HierarchyEntry descendant) throws ItemNotFoundException, RepositoryException;
 }

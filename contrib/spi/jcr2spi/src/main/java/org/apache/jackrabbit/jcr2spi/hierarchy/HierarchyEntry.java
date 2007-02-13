@@ -1,0 +1,165 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.jcr2spi.hierarchy;
+
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
+import org.apache.jackrabbit.jcr2spi.state.StaleItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.Status;
+
+import javax.jcr.RepositoryException;
+
+/**
+ * <code>HierarchyEntry</code>...
+ */
+public interface HierarchyEntry {
+
+    /**
+     * True if this <code>HierarchyEntry</code> would resolve to a <code>NodeState</code>.
+     *
+     * @return
+     */
+    public boolean denotesNode();
+
+    /**
+     * @return the name of this hierarchy entry.
+     */
+    public QName getQName();
+
+    /**
+     * @return the path of this hierarchy entry.
+     */
+    public Path getPath() throws RepositoryException;
+
+    /**
+     * Returns the <code>NodeEntry</code> being parent to this
+     * <code>HierarchyEntry</code>.
+     *
+     * @return the parent <code>HierarchyEntry</code>
+     */
+    public NodeEntry getParent();
+
+    /**
+     * Unless this <code>HierarchyEntry</code> has been resolved this method
+     * returns {@link Status#_UNDEFINED_} otherwise it returns the status of
+     * the underlying ItemState.
+     *
+     * @return Status of the ItemState or {@link Status#_UNDEFINED_} if this
+     * entry has not been resolved yet.
+     * @see ItemState#getStatus()
+     */
+    public int getStatus();
+
+    /**
+     * Returns <code>true</code> if the referenced <code>ItemState</code> is
+     * available. That is, the referenced <code>ItemState</code> has already
+     * been resolved.<br>
+     * Note, that the validity of the ItemState is not checked.
+     *
+     * @return <code>true</code> if the <code>ItemState</code> is available;
+     * otherwise <code>false</code>.
+     * @see #getItemState()
+     */
+    public boolean isAvailable();
+
+    /**
+     * If this <code>HierarchyEntry</code> has already been resolved before
+     * (see {@link #isAvailable()}), that <code>ItemState</code> is returned.
+     * Note however, that the validity of the State is not asserted.<br>
+     * If the entry has not been resolved yet an attempt is made to resolve this
+     * entry, which may fail if there exists no accessible <code>ItemState</code>
+     * or if the corresponding state has been removed in the mean time.
+     *
+     * @return the referenced <code>ItemState</code>.
+     * @throws NoSuchItemStateException if the <code>ItemState</code> does not
+     * exist anymore.
+     * @throws ItemStateException If an error occurs while retrieving the
+     * <code>ItemState</code>.
+     */
+    public ItemState getItemState() throws NoSuchItemStateException, ItemStateException;
+
+    /**
+     * Invalidates the underlying <code>ItemState</code> if available. If the
+     * <code>recursive</code> flag is true, the hierarchy is traverses and
+     * {@link #invalidate(boolean)} is called on all child entries.<br>
+     * Note, that in contrast to {@link HierarchyEntry#reload(boolean, boolean)}
+     * this method only sets the status of this item state to {@link
+     * Status#INVALIDATED} and does not acutally update it with the persistent
+     * state in the repository.
+     */
+    public void invalidate(boolean recursive);
+
+    /**
+     * Traverses the hierarchy and reverts all transient modifications such as
+     * adding, modifying or removing item states. 'Existing' item states
+     * are reverted to their initial state and their status is reset to {@link Status#EXISTING}.
+     *
+     */
+    public void revert() throws ItemStateException;
+
+    /**
+     * Reloads this hierarchy entry and the corresponding ItemState, if this
+     * entry has already been resolved. If '<code>keepChanges</code>' is true,
+     * states with transient changes are left untouched in order to obtain stale
+     * item states. Otherwise this state gets its data reloaded from the
+     * persistent storage. If '<code>recursive</code>' the complete hierarchy
+     * below this entry is reloaded as well.
+     *
+     * @param keepChanges
+     */
+    public void reload(boolean keepChanges, boolean recursive);
+
+    /**
+     * Traverses the hierarchy and marks all available item states as transiently
+     * removed. They will change their status to either {@link Status#EXISTING_REMOVED} if
+     * the item is existing in the persistent storage or {@link Status#REMOVED}
+     * if the item has been transiently added before. In the latter case, the
+     * corresponding HierarchyEntries can be removed as well from their parent.
+     *
+     * @throws ItemStateException if an error occurs while removing any of the item
+     * state. e.g. an item state is not valid anymore.
+     */
+    public void transientRemove() throws ItemStateException;
+
+    /**
+     * Removes this <code>HierarchyEntry</code> from its parent and sets the
+     * status of the underlying ItemState to {@link Status#REMOVED} or to
+     * {@link Status#STALE_DESTROYED}, respectively. If this entry is a
+     * NodeEntry all descending ItemStates must get their status changed as well.
+     */
+    public void remove();
+
+    /**
+     * Checks if the underlying <code>ItemState</code> is available and if it
+     * has been transiently modified or if is new or stale modified. If either of
+     * the conditions is true, the state is added to the <code>ChangeLog</code>.
+     * If this <code>HierarchyEntry</code> has children it will call
+     * {@link #collectStates(ChangeLog, boolean)} recursively.
+     *
+     * @param changeLog the <code>ChangeLog</code> collecting the transient
+     * item states present in a given tree.
+     * @param throwOnStale If the given flag is true, this methods throws
+     * StaleItemStateException if this state is stale.
+     * @throws StaleItemStateException if <code>throwOnStale</code> is true and
+     * this state is stale.
+     */
+    public void collectStates(ChangeLog changeLog, boolean throwOnStale) throws StaleItemStateException;
+}

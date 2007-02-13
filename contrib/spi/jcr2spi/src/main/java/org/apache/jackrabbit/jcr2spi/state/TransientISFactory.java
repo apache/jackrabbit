@@ -18,185 +18,178 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
+
+import java.util.Iterator;
 
 /**
  * <code>TransientISFactory</code>...
  */
-final class TransientISFactory implements TransientItemStateFactory {
+public final class TransientISFactory extends AbstractItemStateFactory implements TransientItemStateFactory  {
 
     private static Logger log = LoggerFactory.getLogger(TransientISFactory.class);
 
-    private final IdFactory idFactory;
-    private final ItemStateManager workspaceItemStateMgr;
+    private final ItemStateFactory workspaceStateFactory;
+    private final NodeTypeRegistry ntReg;
 
-    private ItemStateCache cache;
-    private ItemStateCreationListener listener;
-
-    TransientISFactory(IdFactory idFactory, ItemStateManager workspaceItemStateMgr) {
-        this.idFactory = idFactory;
-        this.workspaceItemStateMgr = workspaceItemStateMgr;
+    public TransientISFactory(ItemStateFactory workspaceStateFactory, NodeTypeRegistry ntReg) {
+        this.workspaceStateFactory = workspaceStateFactory;
+        this.ntReg = ntReg;
     }
 
     //------------------------------------------< TransientItemStateFactory >---
     /**
      * @inheritDoc
-     * @see TransientItemStateFactory#createNewNodeState(QName, String, NodeState, QName, QNodeDefinition)
+     * @see TransientItemStateFactory#createNewNodeState(NodeEntry , QName, QNodeDefinition)
      */
-    public NodeState createNewNodeState(QName name, String uniqueID,
-                                        NodeState parent, QName nodetypeName,
+    public NodeState createNewNodeState(NodeEntry entry, QName nodetypeName,
                                         QNodeDefinition definition) {
-        NodeState nodeState = new NodeState(name, uniqueID, parent, nodetypeName,
-            definition, Status.NEW, this, idFactory, false);
 
-        // notify listeners when this item state is saved or invalidated
-        nodeState.addListener(cache);
-        nodeState.addListener(listener);
+        NodeState nodeState = new NodeState(entry, nodetypeName, QName.EMPTY_ARRAY, definition, Status.NEW, false, this, ntReg);
 
         // notify listeners that a node state has been created
-        cache.created(nodeState);
-        listener.created(nodeState);
+        notifyCreated(nodeState);
 
         return nodeState;
     }
 
     /**
      * @inheritDoc
-     * @see TransientItemStateFactory#createNewPropertyState(QName, NodeState, QPropertyDefinition)
+     * @see TransientItemStateFactory#createNewPropertyState(PropertyEntry, QPropertyDefinition)
      */
-    public PropertyState createNewPropertyState(QName name, NodeState parent, QPropertyDefinition definition) {
-        PropertyState propState = new PropertyState(name, parent,
-            definition, Status.NEW, this, idFactory, false);
-
-        // get a notification when this item state is saved or invalidated
-        propState.addListener(cache);
-        propState.addListener(listener);
+    public PropertyState createNewPropertyState(PropertyEntry entry, QPropertyDefinition definition) {
+        PropertyState propState = new PropertyState(entry, definition.isMultiple(), definition, Status.NEW, false, this, ntReg);
 
         // notify listeners that a property state has been created
-        cache.created(propState);
-        listener.created(propState);
+        notifyCreated(propState);
 
         return propState;
-    }
-
-    /**
-     * @inheritDoc
-     * @see TransientItemStateFactory#setListener(ItemStateCreationListener)
-     */
-    public void setListener(ItemStateCreationListener listener) {
-        this.listener = listener;
     }
 
     //---------------------------------------------------< ItemStateFactory >---
     /**
      * @inheritDoc
-     * @see ItemStateFactory#createRootState(ItemStateManager)
+     * @see ItemStateFactory#createRootState(NodeEntry)
+     * @param entry
      */
-    public NodeState createRootState(ItemStateManager ism) throws ItemStateException {
+    public NodeState createRootState(NodeEntry entry) throws ItemStateException {
         // retrieve state to overlay
-        NodeState overlayedState = (NodeState) workspaceItemStateMgr.getRootState();
-        NodeState nodeState = new NodeState(overlayedState, null, Status.EXISTING, this, idFactory);
-
-        nodeState.addListener(cache);
-        cache.created(nodeState);
-        return nodeState;
+        NodeState overlayedState = (NodeState) workspaceStateFactory.createRootState(entry);
+        return buildNodeState(overlayedState, Status.EXISTING);
     }
 
     /**
      * @inheritDoc
-     * @see ItemStateFactory#createNodeState(NodeId, ItemStateManager)
+     * @see ItemStateFactory#createNodeState(NodeId,NodeEntry)
      */
-    public NodeState createNodeState(NodeId nodeId, ItemStateManager ism)
+    public NodeState createNodeState(NodeId nodeId, NodeEntry entry)
         throws NoSuchItemStateException, ItemStateException {
-
-        NodeState nodeState = cache.getNodeState(nodeId);
-        if (nodeState == null) {
-            // retrieve state to overlay
-            NodeState overlayedState = (NodeState) workspaceItemStateMgr.getItemState(nodeId);
-            NodeState overlayedParent = overlayedState.getParent();
-
-            if (overlayedParent == null) {
-                // special case root state
-                return createRootState(ism);
-            }
-            
-            NodeState parentState = (NodeState) overlayedParent.getSessionState();
-            if (parentState == null) {
-                parentState = (NodeState) ism.getItemState(overlayedParent.getId());
-            }
-
-            ChildNodeEntry cne = parentState.getChildNodeEntry(nodeId);
-            if (cne != null) {
-                nodeState = cne.getNodeState();
-                nodeState.addListener(cache);
-                cache.created(nodeState);
-            } else {
-                throw new NoSuchItemStateException("No such item " + nodeId.toString());
-            }
-        }
-        return nodeState;
+        // retrieve state to overlay
+        NodeState overlayedState = (NodeState) workspaceStateFactory.createNodeState(nodeId, entry);
+        return buildNodeState(overlayedState, getInitialStatus(entry.getParent()));
     }
 
     /**
      * @inheritDoc
-     * @see ItemStateFactory#createNodeState(NodeId, NodeState)
+     * @see ItemStateFactory#createDeepNodeState(NodeId, NodeEntry)
      */
-    public NodeState createNodeState(NodeId nodeId, NodeState parentState)
-        throws NoSuchItemStateException, ItemStateException {
-
-        NodeState nodeState = cache.getNodeState(nodeId);
-        if (nodeState == null) {
-            // retrieve state to overlay
-            NodeState overlayedState = (NodeState) workspaceItemStateMgr.getItemState(nodeId);
-            nodeState = new NodeState(overlayedState, parentState, Status.EXISTING, this, idFactory);
-
-            nodeState.addListener(cache);
-            cache.created(nodeState);
-        }
-        return nodeState;
+    public NodeState createDeepNodeState(NodeId nodeId, NodeEntry anyParent) throws NoSuchItemStateException, ItemStateException {
+        NodeState overlayedState = (NodeState) workspaceStateFactory.createDeepNodeState(nodeId, anyParent);
+        return buildNodeState(overlayedState, getInitialStatus(anyParent));
     }
 
     /**
      * @inheritDoc
-     * @see ItemStateFactory#createPropertyState(PropertyId, NodeState)
+     * @see ItemStateFactory#createPropertyState(PropertyId, PropertyEntry)
      */
     public PropertyState createPropertyState(PropertyId propertyId,
-                                             NodeState parentState)
+                                             PropertyEntry entry)
         throws NoSuchItemStateException, ItemStateException {
+        // retrieve state to overlay
+        PropertyState overlayedState = (PropertyState) workspaceStateFactory.createPropertyState(propertyId, entry);
+        return buildPropertyState(overlayedState, getInitialStatus(entry.getParent()));
+    }
 
-        PropertyState propState = cache.getPropertyState(propertyId);
-        if (propState == null) {
-            // retrieve state to overlay
-            PropertyState overlayedState = (PropertyState) workspaceItemStateMgr.getItemState(propertyId);
-            propState = new PropertyState(overlayedState, parentState, Status.EXISTING, this, idFactory);
+    /**
+     * @see ItemStateFactory#createDeepPropertyState(PropertyId, NodeEntry)
+     */
+    public PropertyState createDeepPropertyState(PropertyId propertyId, NodeEntry anyParent) throws NoSuchItemStateException, ItemStateException {
+        PropertyState overlayedState = (PropertyState) workspaceStateFactory.createDeepPropertyState(propertyId, anyParent);
+        return buildPropertyState(overlayedState, getInitialStatus(anyParent));
+    }
 
-            propState.addListener(cache);
-            cache.created(propState);
+    /**
+     * @inheritDoc
+     * @see ItemStateFactory#getChildNodeInfos(NodeId)
+     * @param nodeId
+     */
+    public Iterator getChildNodeInfos(NodeId nodeId) throws NoSuchItemStateException, ItemStateException {
+        return workspaceStateFactory.getChildNodeInfos(nodeId);
+    }
+
+    /**
+     * @inheritDoc
+     * @see ItemStateFactory#getNodeReferences(NodeState)
+     * @param nodeState
+     */
+    public NodeReferences getNodeReferences(NodeState nodeState) {
+        if (nodeState.getStatus() == Status.NEW) {
+            return EmptyNodeReferences.getInstance();
         }
+
+        NodeState workspaceState = (NodeState) nodeState.getWorkspaceState();
+        return workspaceStateFactory.getNodeReferences(workspaceState);
+    }
+
+    //------------------------------------------------------------< private >---
+    /**
+     *
+     * @param overlayed
+     * @return
+     */
+    private NodeState buildNodeState(NodeState overlayed, int initialStatus) {
+        NodeState nodeState = new NodeState(overlayed, initialStatus, this);
+
+        notifyCreated(nodeState);
+        return nodeState;
+    }
+
+
+    /**
+     *
+     * @param overlayed
+     * @return
+     */
+    private PropertyState buildPropertyState(PropertyState overlayed, int initialStatus) {
+        PropertyState propState = new PropertyState(overlayed, initialStatus, this);
+
+        notifyCreated(propState);
         return propState;
     }
 
-    public ChildNodeEntries getChildNodeEntries(NodeState nodeState) throws NoSuchItemStateException, ItemStateException {
-        if (nodeState.getStatus() == Status.NEW) {
-            return new ChildNodeEntries(nodeState);
-        } else {
-            NodeState overlayed = (NodeState) nodeState.getWorkspaceState();
-            ChildNodeEntries overlayedEntries = overlayed.isf.getChildNodeEntries(overlayed);
-            return new ChildNodeEntries(nodeState, overlayedEntries);
-        }
-    }
-
     /**
-     * @inheritDoc
-     * @see ItemStateFactory#setCache(ItemStateCache)
+     *
+     * @param parent
+     * @return
      */
-    public void setCache(ItemStateCache cache) {
-        this.cache = cache;
+    private static int getInitialStatus(NodeEntry parent) {
+        int status = Status.EXISTING;
+        // walk up hiearchy and check if any of the parents is transiently
+        // removed, in which case the status must be set to EXISTING_REMOVED.
+        while (parent != null) {
+            if (parent.getStatus() == Status.EXISTING_REMOVED) {
+                status = Status.EXISTING_REMOVED;
+                break;
+            }
+            parent = parent.getParent();
+        }
+        return status;
     }
 }

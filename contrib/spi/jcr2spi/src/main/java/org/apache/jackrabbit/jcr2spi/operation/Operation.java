@@ -60,6 +60,8 @@ public interface Operation {
      * the result of the operation will not be pushed by observation events.
      * Instead the workspace operations must make sure, that the affected
      * item states are properly refreshed or invalidated.
+     *
+     * @param cacheBehaviour
      */
-    public void persisted();
+    public void persisted(CacheBehaviour cacheBehaviour);
 }

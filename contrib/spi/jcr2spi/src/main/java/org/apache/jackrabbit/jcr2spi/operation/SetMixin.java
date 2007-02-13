@@ -19,6 +19,9 @@ package org.apache.jackrabbit.jcr2spi.operation;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
+import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -42,9 +45,10 @@ public class SetMixin extends AbstractOperation {
         addAffectedItemState(nodeState);
         // add the jcr:mixinTypes property state as affected if it already exists
         // and therefore gets modified by this operation.
-        if (nodeState.hasPropertyName(QName.JCR_MIXINTYPES)) {
+        PropertyEntry pe = ((NodeEntry) nodeState.getHierarchyEntry()).getPropertyEntry(QName.JCR_MIXINTYPES);
+        if (pe != null) {
             try {
-                addAffectedItemState(nodeState.getPropertyState(QName.JCR_MIXINTYPES));
+                addAffectedItemState(pe.getPropertyState());
             } catch (ItemStateException e) {
                 // should never occur
             }
@@ -64,9 +68,10 @@ public class SetMixin extends AbstractOperation {
     /**
      * Throws UnsupportedOperationException
      *
-     * @see Operation#persisted()
+     * @see Operation#persisted(CacheBehaviour)
+     * @param cacheBehaviour
      */
-    public void persisted() {
+    public void persisted(CacheBehaviour cacheBehaviour) {
         throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
     }
 

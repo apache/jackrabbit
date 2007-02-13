@@ -17,9 +17,8 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
@@ -30,21 +29,17 @@ import javax.jcr.ItemExistsException;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.Iterator;
-import java.util.Collection;
 
 /**
- * <code>TransientItemStateManager</code> implements a {@link ItemStateManager}
- * and adds support for transient changes on {@link ItemState}s. This item
- * state manager also returns item states that are transiently deleted. It is
- * the responsiblity of the caller to check whether a certain item state is
- * still valid. This item state manager also provides methods to create new
- * item states. While all other modifications can be invoked on the item state
- * instances itself, creating a new node state is done using
+ * <code>TransientItemStateManager</code> adds support for transient changes on
+ * {@link ItemState}s and also provides methods to create new item states.
+ * While all other modifications can be invoked on the item state instances itself,
+ * creating a new node state is done using
  * {@link #createNewNodeState(QName, String, QName, QNodeDefinition, NodeState)}
- * and {@link #createNewPropertyState(QName, NodeState, QPropertyDefinition, QValue[], int)}.
+ * and
+ * {@link #createNewPropertyState(QName, NodeState, QPropertyDefinition, QValue[], int)}.
  */
-public class TransientItemStateManager extends CachingItemStateManager
-    implements ItemStateCreationListener {
+public class TransientItemStateManager implements ItemStateCreationListener {
 
     /**
      * Logger instance for this class.
@@ -58,24 +53,10 @@ public class TransientItemStateManager extends CachingItemStateManager
     private final ChangeLog changeLog;
 
     /**
-     * The root node state or <code>null</code> if it hasn't been retrieved yet.
-     */
-    private NodeState rootNodeState;
-
-    /**
      *
-     * @param idFactory
-     * @param parent
      */
-    TransientItemStateManager(IdFactory idFactory, ItemStateManager parent) {
-        super(new TransientISFactory(idFactory, parent), idFactory);
+    TransientItemStateManager() {
         this.changeLog = new ChangeLog(null);
-        getTransientFactory().setListener(this);
-    }
-
-
-    private TransientItemStateFactory getTransientFactory() {
-        return (TransientItemStateFactory) getItemStateFactory();
     }
 
     /**
@@ -116,11 +97,15 @@ public class TransientItemStateManager extends CachingItemStateManager
      * @return a new transient {@link NodeState}.
      */
     NodeState createNewNodeState(QName nodeName, String uniqueID, QName nodeTypeName,
-                                 QNodeDefinition definition, NodeState parent) {
-        NodeState nodeState = getTransientFactory().createNewNodeState(nodeName, uniqueID, parent, nodeTypeName, definition);
+                                 QNodeDefinition definition, NodeState parent)
+        throws ItemExistsException {
 
-        parent.addChildNodeState(nodeState);
-        changeLog.added(nodeState);
+        parent.checkIsSessionState();
+        NodeState nodeState = ((NodeEntry) parent.getHierarchyEntry()).addNewNodeEntry(nodeName, uniqueID, nodeTypeName, definition);
+        nodeState.addListener(this);
+
+        parent.markModified();
+
         return nodeState;
     }
 
@@ -141,12 +126,15 @@ public class TransientItemStateManager extends CachingItemStateManager
                                          QPropertyDefinition definition,
                                          QValue[] values, int propertyType)
         throws ItemExistsException, ConstraintViolationException, RepositoryException {
-        PropertyState propState = getTransientFactory().createNewPropertyState(propName, parent, definition);
+
+        parent.checkIsSessionState();
+        PropertyState propState = ((NodeEntry) parent.getHierarchyEntry()).addNewPropertyEntry(propName, definition);
         // NOTE: callers must make sure, the property type is not 'undefined'
         propState.init(propertyType, values);
+        propState.addListener(this);
 
-        parent.addPropertyState(propState);
-        changeLog.added(propState);
+        parent.markModified();
+
         return propState;
     }
 
@@ -168,71 +156,6 @@ public class TransientItemStateManager extends CachingItemStateManager
         changeLog.removeAll(subChangeLog);
     }
 
-    //---------------------------------------------------< ItemStateManager >---
-    /**
-     * Return the root node state.
-     *
-     * @return the root node state.
-     * @throws ItemStateException if an error occurs while retrieving the root
-     *                            node state.
-     * @see ItemStateManager#getRootState()
-     */
-    public NodeState getRootState() throws ItemStateException {
-        if (rootNodeState == null) {
-            rootNodeState = getItemStateFactory().createRootState(this);
-        }
-        return rootNodeState;
-    }
-
-    /**
-     * Return an item state given its id. Please note that this implementation
-     * also returns item states that are in removed state ({@link
-     * Status#EXISTING_REMOVED} but not yet saved.
-     *
-     * @return item state.
-     * @throws NoSuchItemStateException if there is no item state (not even a
-     *                                  removed item state) with the given id.
-     * @see ItemStateManager#getItemState(ItemId)
-     */
-    public ItemState getItemState(ItemId id) throws NoSuchItemStateException, ItemStateException {
-        return super.getItemState(id);
-    }
-
-    /**
-     * Return a flag indicating whether a given item state exists.
-     *
-     * @return <code>true</code> if item state exists within this item state
-     *         manager; <code>false</code> otherwise
-     * @see ItemStateManager#hasItemState(ItemId)
-     */
-    public boolean hasItemState(ItemId id) {
-        return super.hasItemState(id);
-    }
-
-    /**
-     * Always throws an {@link UnsupportedOperationException}. A transient item
-     * state manager cannot not maintain node references.
-     *
-     * @param nodeState
-     * @throws UnsupportedOperationException
-     * @see ItemStateManager#getReferingStates(NodeState)
-     */
-    public Collection getReferingStates(NodeState nodeState) {
-        throw new UnsupportedOperationException("getNodeReferences() not implemented");
-    }
-
-    /**
-     * Always throws an {@link UnsupportedOperationException}. A transient item
-     * state manager cannot not maintain node references.
-     *
-     * @param nodeState
-     * @throws UnsupportedOperationException
-     * @see ItemStateManager#hasReferingStates(NodeState)
-     */
-    public boolean hasReferingStates(NodeState nodeState) {
-        throw new UnsupportedOperationException("hasNodeReferences() not implemented");
-    }
-
     //-----------------------------------------< ItemStateLifeCycleListener >---
     /**
      * Depending on status of the given state adapt change log.
@@ -243,6 +166,9 @@ public class TransientItemStateManager extends CachingItemStateManager
      * @see ItemStateLifeCycleListener#statusChanged(ItemState, int)
      */
     public void statusChanged(ItemState state, int previousStatus) {
+        if (changeLog.isEmpty()) {
+            return;
+        }
         switch (state.getStatus()) {
             case Status.EXISTING:
             case Status.EXISTING_MODIFIED:
@@ -258,8 +184,7 @@ public class TransientItemStateManager extends CachingItemStateManager
                 // must not be any transient modifications for that state.
                 // we ignore it.
             case Status.INVALIDATED:
-                // only non transient states can change their status to
-                // invalidated -> nothing to do here.
+                // -> nothing to do here.
                 break;
             default:
                 log.error("ItemState has invalid status: " + state.getStatus());
@@ -267,7 +192,6 @@ public class TransientItemStateManager extends CachingItemStateManager
     }
 
     //-----------------------------------------< ItemStateCreationListener >---
-
     /**
      * @see ItemStateCreationListener#created(ItemState)
      */

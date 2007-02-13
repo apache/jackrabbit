@@ -21,10 +21,9 @@ import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import javax.jcr.RepositoryException;
 
 /**
- * Identifies an <code>ItemStateManager</code> that allows updating
- * items.
+ * An <code>ItemStateManager</code> that deals with state modifications.
  */
-public interface UpdatableItemStateManager extends ItemStateManager {
+public interface UpdatableItemStateManager {
 
     /**
      * Executes the given operation and modifies the affected item states accordingly.

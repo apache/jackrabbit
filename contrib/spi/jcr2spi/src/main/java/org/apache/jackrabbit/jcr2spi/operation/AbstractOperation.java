@@ -18,10 +18,10 @@ package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.jcr2spi.HierarchyManager;
-import org.apache.jackrabbit.jcr2spi.util.LogUtil;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;

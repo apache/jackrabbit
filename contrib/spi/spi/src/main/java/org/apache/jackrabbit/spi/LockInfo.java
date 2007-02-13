@@ -28,4 +28,11 @@ public interface LockInfo {
     public boolean isDeep();
 
     public boolean isSessionScoped();
+
+    /**
+     * Returns the <code>NodeID</code> of the lock-holding Node.
+     *
+     * @return the <code>NodeID</code> of the lock-holding Node.
+     */
+    public NodeId getNodeId();
 }

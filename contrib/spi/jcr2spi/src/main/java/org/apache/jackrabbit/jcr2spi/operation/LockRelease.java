@@ -17,9 +17,9 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.PropertyState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.entry.ChildPropertyEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -28,7 +28,6 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import java.util.Collection;
 import java.util.Iterator;
 
 /**
@@ -56,22 +55,20 @@ public class LockRelease extends AbstractOperation {
      * Invalidates the <code>NodeState</code> that has been unlocked and all its
      * child properties.
      *
-     * @see Operation#persisted()
+     * @see Operation#persisted(CacheBehaviour)
+     * @param cacheBehaviour
      */
-    public void persisted() {
-        Collection propEntries = nodeState.getPropertyEntries();
-        for (Iterator it = propEntries.iterator(); it.hasNext();) {
-            ChildPropertyEntry pe = (ChildPropertyEntry) it.next();
-            if (pe.isAvailable()) {
-                try {
-                    PropertyState st = pe.getPropertyState();
-                    st.invalidate(false);
-                } catch (ItemStateException e) {
-                    // ignore
-                }
+    public void persisted(CacheBehaviour cacheBehaviour) {
+        if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
+            // non-recursive invalidation but including all properties
+            NodeEntry nodeEntry = nodeState.getNodeEntry();
+            Iterator entries = nodeEntry.getPropertyEntries();
+            while (entries.hasNext()) {
+                PropertyEntry pe = (PropertyEntry) entries.next();
+                pe.invalidate(false);
             }
+            nodeEntry.invalidate(false);
         }
-        nodeState.invalidate(false);
     }
 
     //----------------------------------------< Access Operation Parameters >---

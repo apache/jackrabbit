@@ -22,6 +22,7 @@ import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.value.ValueFormat;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
@@ -53,9 +54,9 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
     public PropertyInfoImpl(PropertyId id, NodeId parentId, DavPropertySet propSet,
                             NamespaceResolver nsResolver, ValueFactory valueFactory,
                             QValueFactory qValueFactory)
-        throws RepositoryException, DavException, IOException {
+        throws RepositoryException, DavException, IOException, MalformedPathException {
 
-        super(parentId);
+        super(parentId, propSet, nsResolver);
         // set id
         this.id = id;
 

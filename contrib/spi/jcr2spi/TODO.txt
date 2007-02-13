@@ -1,0 +1,21 @@
+- IMPROVE: Replace ItemState-duality by copy on write behaviour
+
+- BUG: NodeEntryImpl needs an attic for transiently moved and removed
+       child entries in order not to access those from the persistent
+       storage again.
+       In addition: having an attic allows to properly handle events
+       notifying external modifications for those moved/removed
+       NodeEntries, that are not identified by a uniqueID
+       
+- BUG: Node.hasProperty currently returns false, if prop-entry has
+       not been loaded yet -> should use same mechanism as Node.getProperty.
+       
+- IMPROVE: Refreshing and reloading states, that are transiently modified.
+
+- IMPROVE: review if ItemStateExceptions are really needed. currently
+           they are created from RepositoryExceptions and rethrown as
+           RepositoryExceptions
+           
+- IMPROVE: consistency of PathNotFoundException and ItemNotFoundException.
+
+

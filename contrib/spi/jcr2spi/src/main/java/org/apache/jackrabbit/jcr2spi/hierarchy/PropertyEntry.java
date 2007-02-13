@@ -14,17 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.jcr2spi.state.entry;
+package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.spi.PropertyId;
 
 /**
- * <code>ChildPropertyEntry</code>...
+ * <code>PropertyEntry</code>...
  */
-public interface ChildPropertyEntry extends ChildItemEntry {
+public interface PropertyEntry extends HierarchyEntry {
 
     /**
      * @return the <code>NodeId</code> of this child node entry.
@@ -39,4 +39,5 @@ public interface ChildPropertyEntry extends ChildItemEntry {
      * <code>PropertyState</code>.
      */
     public PropertyState getPropertyState() throws NoSuchItemStateException, ItemStateException;
+
 }

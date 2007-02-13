@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -53,10 +54,13 @@ public class Update extends AbstractOperation {
      * Invalidates the <code>NodeState</code> that has been updated and all
      * its decendants.
      * 
-     * @see Operation#persisted()
+     * @see Operation#persisted(CacheBehaviour)
+     * @param cacheBehaviour
      */
-    public void persisted() {
-        nodeState.invalidate(true);
+    public void persisted(CacheBehaviour cacheBehaviour) {
+        if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
+            nodeState.getHierarchyEntry().invalidate(true);
+        }
     }
 
     //----------------------------------------< Access Operation Parameters >---

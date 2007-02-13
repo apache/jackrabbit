@@ -26,6 +26,7 @@ import javax.jcr.version.VersionException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.spi.IdIterator;
 
 /**
@@ -78,5 +79,13 @@ public class DefaultVersionManager implements VersionManager {
 
     public void resolveMergeConflict(NodeState nodeState, NodeState versionState, boolean done) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
+    }
+
+    public NodeEntry getVersionableNodeState(NodeState versionState) {
+        throw new UnsupportedOperationException();
+    }
+
+    public NodeEntry getVersionHistoryNodeState(NodeState versionableState) {
+        throw new UnsupportedOperationException();
     }
 }

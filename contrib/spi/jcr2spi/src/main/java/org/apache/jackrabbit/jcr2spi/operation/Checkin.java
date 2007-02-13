@@ -17,6 +17,12 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
+import org.apache.jackrabbit.jcr2spi.version.VersionManager;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -25,16 +31,21 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import java.util.Iterator;
 
 /**
  * <code>Checkin</code>...
  */
 public class Checkin extends AbstractOperation {
 
-    private final NodeState nodeState;
+    private static Logger log = LoggerFactory.getLogger(Checkin.class);
 
-    private Checkin(NodeState nodeState) {
+    private final NodeState nodeState;
+    private final VersionManager mgr;
+
+    private Checkin(NodeState nodeState, VersionManager mgr) {
         this.nodeState = nodeState;
+        this.mgr = mgr;
         // NOTE: affected-states only needed for transient modifications
     }
 
@@ -50,11 +61,23 @@ public class Checkin extends AbstractOperation {
     /**
      * Invalidate the target <code>NodeState</code>.
      *
-     * @see Operation#persisted()
+     * @see Operation#persisted(CacheBehaviour)
+     * @param cacheBehaviour
      */
-    public void persisted() {
-        nodeState.invalidate(false);
-        // TODO: invalidate the corresponding part of the version storage
+    public void persisted(CacheBehaviour cacheBehaviour) {
+        if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
+            try {
+                mgr.getVersionHistoryNodeState(nodeState).invalidate(true);
+            } catch (RepositoryException e) {
+                log.warn("Internal error", e);
+            }
+            Iterator entries = ((NodeEntry) nodeState.getHierarchyEntry()).getPropertyEntries();
+            while (entries.hasNext()) {
+                PropertyEntry pe = (PropertyEntry) entries.next();
+                pe.invalidate(false);
+            }
+            nodeState.getHierarchyEntry().invalidate(false);
+        }
     }
     //----------------------------------------< Access Operation Parameters >---
     /**
@@ -69,9 +92,10 @@ public class Checkin extends AbstractOperation {
     /**
      *
      * @param nodeState
+     * @param mgr
      * @return
      */
-    public static Operation create(NodeState nodeState) {
-        return new Checkin(nodeState);
+    public static Operation create(NodeState nodeState, VersionManager mgr) {
+        return new Checkin(nodeState, mgr);
     }
 }

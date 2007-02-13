@@ -17,7 +17,11 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
+import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.apache.jackrabbit.spi.IdIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -32,16 +36,20 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
  */
 public class Merge extends AbstractOperation {
 
+    private static Logger log = LoggerFactory.getLogger(Merge.class);
+
     private final NodeState nodeState;
     private final String srcWorkspaceName;
     private final boolean bestEffort;
+    private final VersionManager mgr;
 
     private IdIterator failedIds = null;
 
-    private Merge(NodeState nodeState, String srcWorkspaceName, boolean bestEffort) {
+    private Merge(NodeState nodeState, String srcWorkspaceName, boolean bestEffort, VersionManager mgr) {
         this.nodeState = nodeState;
         this.srcWorkspaceName = srcWorkspaceName;
         this.bestEffort = bestEffort;
+        this.mgr = mgr;
 
         // NOTE: affected-states only needed for transient modifications
     }
@@ -57,11 +65,18 @@ public class Merge extends AbstractOperation {
     /**
      * Invalidates the target nodestate and all descendants.
      *
-     * @see Operation#persisted()
+     * @see Operation#persisted(CacheBehaviour)
+     * @param cacheBehaviour
      */
-    public void persisted() {
-        nodeState.invalidate(true);
-        // TODO: invalidate the corresponding part of the version storage
+    public void persisted(CacheBehaviour cacheBehaviour) {
+        if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
+            try {
+                mgr.getVersionHistoryNodeState(nodeState).invalidate(true);
+            } catch (RepositoryException e) {
+                log.warn("Internal error", e);
+            }
+            nodeState.getHierarchyEntry().invalidate(true);
+        }
     }
 
     //----------------------------------------< Access Operation Parameters >---
@@ -100,7 +115,7 @@ public class Merge extends AbstractOperation {
      * @param srcWorkspaceName
      * @return
      */
-    public static Merge create(NodeState nodeState, String srcWorkspaceName, boolean bestEffort) {
-        return new Merge(nodeState, srcWorkspaceName, bestEffort);
+    public static Merge create(NodeState nodeState, String srcWorkspaceName, boolean bestEffort, VersionManager mgr) {
+        return new Merge(nodeState, srcWorkspaceName, bestEffort, mgr);
     }
 }
