@@ -1330,8 +1330,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         SessionInfoImpl sessionInfoImpl = (SessionInfoImpl)sessionInfo;
         String rootUri = uriResolver.getRootItemUri(sessionInfo.getWorkspaceName());
 
-        return poll(rootUri, sessionInfoImpl.getSubscriptionId(), sessionInfoImpl);
-        // todo timeout is not respected
+        return poll(rootUri, sessionInfoImpl.getSubscriptionId(), timeout, sessionInfoImpl);
     }
 
     private String subscribe(String uri, SubscriptionInfo subscriptionInfo,
@@ -1395,10 +1394,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    private EventBundle[] poll(String uri, String subscriptionId,  SessionInfoImpl sessionInfo) throws RepositoryException {
+    private EventBundle[] poll(String uri, String subscriptionId, long timeout, SessionInfoImpl sessionInfo) throws RepositoryException {
         PollMethod method = null;
         try {
-            method = new PollMethod(uri, subscriptionId);
+            method = new PollMethod(uri, subscriptionId, timeout);
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
 
