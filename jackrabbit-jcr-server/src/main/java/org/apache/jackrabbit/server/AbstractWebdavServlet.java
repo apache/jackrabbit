@@ -809,7 +809,8 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             response.sendError(DavServletResponse.SC_METHOD_NOT_ALLOWED);
             return;
         }
-        EventDiscovery ed = ((ObservationResource) resource).poll(request.getSubscriptionId());
+        EventDiscovery ed = ((ObservationResource) resource).poll(
+                request.getSubscriptionId(), request.getPollTimeout());
         response.sendPollResponse(ed);
     }
 

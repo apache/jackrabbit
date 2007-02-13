@@ -262,11 +262,20 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
      * recorded since the last call to this method and clears the list of event
      * bundles.
      *
+     * @param timeout time in milliseconds to wait at most for events if none
+     *                are present currently.
      * @return object listing all events that were recorded.
      * @see #onEvent(EventIterator)
      */
-    synchronized EventDiscovery discoverEvents() {
+    synchronized EventDiscovery discoverEvents(long timeout) {
         EventDiscovery ed = new EventDiscovery();
+        if (eventBundles.isEmpty() && timeout > 0) {
+            try {
+                wait(timeout);
+            } catch (InterruptedException e) {
+                // continue and possibly return empty event discovery
+            }
+        }
         Iterator it = eventBundles.iterator();
         while (it.hasNext()) {
             EventBundle eb = (EventBundle) it.next();
@@ -335,13 +344,13 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
     //--------------------------------------------< EventListener interface >---
     /**
      * Records the events passed as a new event bundle in order to make them
-     * available with the next {@link #discoverEvents()} request. If this
+     * available with the next {@link #discoverEvents(long)} request. If this
      * subscription is expired it will remove itself as listener from the
      * observation manager.
      *
      * @param events to be recorded.
      * @see EventListener#onEvent(EventIterator)
-     * @see #discoverEvents()
+     * @see #discoverEvents(long)
      */
     public synchronized void onEvent(EventIterator events) {
         if (!isExpired()) {
@@ -354,6 +363,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                 log.warn("Exception while unsubscribing: " + e);
             }
         }
+        notifyAll();
     }
 
     //--------------------------------------------------------------------------
@@ -445,7 +455,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
      * provides the possibility to retrieve the Xml representation of the
      * bundle and the events included in order to respond to a POLL request.
      *
-     * @see SubscriptionImpl#discoverEvents()
+     * @see SubscriptionImpl#discoverEvents(long)
      */
     private class EventBundleImpl implements EventBundle {
 
@@ -508,7 +518,10 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
             if (tId == null) {
                 tId = UUID.randomUUID().toString();
             }
-            eventBundles.add(new EventBundleImpl(events, tId));
+            synchronized (SubscriptionImpl.this) {
+                eventBundles.add(new EventBundleImpl(events, tId));
+                SubscriptionImpl.this.notifyAll();
+            }
         }
 
         //-----------------------------< TransactionListener >------------------
