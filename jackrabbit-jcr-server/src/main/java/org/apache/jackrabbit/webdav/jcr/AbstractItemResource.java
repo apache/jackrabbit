@@ -289,11 +289,11 @@ abstract class AbstractItemResource extends AbstractResource implements
     }
 
     /**
-     * @see ObservationResource#poll(String)
-     * @see SubscriptionManager#poll(String, org.apache.jackrabbit.webdav.observation.ObservationResource)
+     * @see ObservationResource#poll(String, long)
+     * @see SubscriptionManager#poll(String, long, org.apache.jackrabbit.webdav.observation.ObservationResource)
      */
-    public EventDiscovery poll(String subscriptionId) throws DavException {
-        return subsMgr.poll(subscriptionId, this);
+    public EventDiscovery poll(String subscriptionId, long timeout) throws DavException {
+        return subsMgr.poll(subscriptionId, timeout, this);
     }
 
     //--------------------------------------------------------------------------
