@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Arrays;
 
 /**
  * Implements a {@link org.apache.jackrabbit.core.query.QueryHandler} using
@@ -551,7 +552,7 @@ public class SearchIndex extends AbstractQueryHandler {
         /**
          * The sub readers.
          */
-        private CachingMultiReader[] subReaders;
+        final private CachingMultiReader[] subReaders;
 
         /**
          * Doc number starts for each sub reader
@@ -609,6 +610,21 @@ public class SearchIndex extends AbstractQueryHandler {
             return hi;
         }
 
+        public boolean equals(Object obj) {
+            if (obj instanceof CombinedIndexReader) {
+                CombinedIndexReader other = (CombinedIndexReader) obj;
+                return Arrays.equals(subReaders, other.subReaders);
+            }
+            return false;
+        }
+
+        public int hashCode() {
+            int hash = 0;
+            for (int i = 0; i < subReaders.length; i++) {
+                hash = 31 * hash + subReaders[i].hashCode();
+            }
+            return hash;
+        }
     }
 
     //--------------------------< properties >----------------------------------
