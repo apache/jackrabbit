@@ -71,7 +71,7 @@ public class AccessByRelativePathTest extends AbstractJCRTest {
          try {
              root.getNode(DOTDOT);
              fail("Root does not have a parent node. <root>.getNode(\"..\") must fail.");
-         } catch (PathNotFoundException e) {
+         } catch (RepositoryException e) {
              // ok.
          }
     }

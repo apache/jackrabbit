@@ -86,11 +86,11 @@ public class JCR2SPIRepositoryStub extends RepositoryStub {
                     }
 
                     public CacheBehaviour getCacheBehaviour() {
-                        return CacheBehaviour.OBSERVATION;
+                        return CacheBehaviour.INVALIDATE;
                     }
 
                     public int getPollingInterval() {
-                        return 3 * 1000;
+                        return 3 * 100000000;
                     }
                 };
 
