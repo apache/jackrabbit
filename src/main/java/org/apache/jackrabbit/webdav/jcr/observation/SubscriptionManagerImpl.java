@@ -184,14 +184,15 @@ public class SubscriptionManagerImpl implements SubscriptionManager, Transaction
      * by the given id.
      *
      * @param subscriptionId
+     * @param timeout timeout in milliseconds
      * @param resource
      * @return object encapsulating the events.
      */
-    public EventDiscovery poll(String subscriptionId, ObservationResource resource)
+    public EventDiscovery poll(String subscriptionId, long timeout, ObservationResource resource)
             throws DavException {
 
         SubscriptionImpl subs = validate(subscriptionId, resource);
-        return subs.discoverEvents();
+        return subs.discoverEvents(timeout);
     }
 
     /**
