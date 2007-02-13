@@ -17,8 +17,10 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 
 /**
  * <code>TransientItemStateFactory</code> extends the item state factory and
@@ -30,36 +32,22 @@ public interface TransientItemStateFactory extends ItemStateFactory {
      * Creates a transient child <code>NodeState</code> with the given
      * <code>name</code>.
      *
-     * @param name the name of the <code>NodeState</code> to create.
-     * @param uniqueID the unique ID of the <code>NodeState</code> to create or
-     * <code>null</code> if the created <code>NodeState</code> cannot be
-     * identified by a unique ID.
-     * @param parent the parent of the <code>NodeState</code> to create.
-     * @param nodeTypeName name of the primary nodetype
-     * @param definition the definition for this new NodeState
-     * @return the created <code>NodeState</code>.
+     * @param entry
+     * @param nodeTypeName
+     * @param definition
+     * @return the created <code>NodeState</code>
      */
-    public NodeState createNewNodeState(QName name, String uniqueID,
-                                        NodeState parent, QName nodeTypeName,
+    public NodeState createNewNodeState(NodeEntry entry,
+                                        QName nodeTypeName,
                                         QNodeDefinition definition);
 
     /**
-     * Creates a transient <code>PropertyState</code> with the given
-     * <code>name</code>.
+     * Creates a transient <code>PropertyState</code>.
      *
-     * @param name   the name of the <code>PropertyState</code> to create.
-     * @param parent the parent of the <code>PropertyState</code> to create.
-     * @param definition definition for this new property state.
+     * @param entry
+     * @param definition
      * @return the created <code>PropertyState</code>.
      */
-    public PropertyState createNewPropertyState(QName name,
-                                                NodeState parent,
+    public PropertyState createNewPropertyState(PropertyEntry entry,
                                                 QPropertyDefinition definition);
-
-    /**
-     * Set the listener that gets informed about NEW states.
-     *
-     * @param listener
-     */
-    public void setListener(ItemStateCreationListener listener);
 }

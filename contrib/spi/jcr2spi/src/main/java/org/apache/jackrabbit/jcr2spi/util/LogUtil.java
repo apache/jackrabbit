@@ -62,10 +62,9 @@ public class LogUtil {
      * @param nsResolver
      * @return JCR path
      */
-    public static String safeGetJCRPath(ItemState itemState, NamespaceResolver nsResolver
-    ) {
+    public static String safeGetJCRPath(ItemState itemState, NamespaceResolver nsResolver) {
         try {
-            return safeGetJCRPath(itemState.getQPath(), nsResolver);
+            return safeGetJCRPath(itemState.getHierarchyEntry().getPath(), nsResolver);
         } catch (RepositoryException e) {
             ItemId id = itemState.getId();
             log.error("failed to convert " + id + " to JCR path.");

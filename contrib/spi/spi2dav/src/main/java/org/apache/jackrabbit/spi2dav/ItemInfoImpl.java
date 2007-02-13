@@ -18,6 +18,13 @@ package org.apache.jackrabbit.spi2dav;
 
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -29,13 +36,25 @@ abstract class ItemInfoImpl implements ItemInfo {
     private static Logger log = LoggerFactory.getLogger(ItemInfoImpl.class);
 
     private final NodeId parentId;
+    private final Path path;
 
-    public ItemInfoImpl(NodeId parentId) {
+    public ItemInfoImpl(NodeId parentId, DavPropertySet propSet, NamespaceResolver nsResolver)
+        throws MalformedPathException {
         // set parentId
         this.parentId = parentId;
+
+        DavProperty pathProp = propSet.get(ItemResourceConstants.JCR_PATH);
+        String jcrPath = pathProp.getValue().toString();
+        path = PathFormat.parse(jcrPath, nsResolver);
+
     }
 
     public NodeId getParentId() {
         return parentId;
+    }
+
+
+    public Path getPath() {
+        return path;
     }
 }

@@ -78,6 +78,7 @@ import org.apache.jackrabbit.webdav.security.Privilege;
 import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.lock.Type;
 import org.apache.jackrabbit.webdav.lock.LockDiscovery;
+import org.apache.jackrabbit.webdav.lock.ActiveLock;
 import org.apache.jackrabbit.webdav.transaction.TransactionConstants;
 import org.apache.jackrabbit.webdav.transaction.TransactionInfo;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
@@ -106,6 +107,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.AbstractNamespaceResolver;
+import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
@@ -242,9 +244,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    private static boolean isLockMethod(DavMethod method) {
+    private static boolean isUnLockMethod(DavMethod method) {
         int code = DavMethods.getMethodCode(method.getName());
-        return DavMethods.DAV_LOCK == code || DavMethods.DAV_UNLOCK == code;
+        return DavMethods.DAV_UNLOCK == code;
     }
 
     private static void initMethod(DavMethod method, SessionInfo sessionInfo, boolean addIfHeader) {
@@ -374,7 +376,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      */
     private void execute(DavMethod method, SessionInfo sessionInfo) throws RepositoryException {
         try {
-            initMethod(method, sessionInfo, !isLockMethod(method));
+            initMethod(method, sessionInfo, !isUnLockMethod(method));
 
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
@@ -717,6 +719,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         nameSet.add(ItemResourceConstants.JCR_MIXINNODETYPES);
         nameSet.add(ItemResourceConstants.JCR_REFERENCES);
         nameSet.add(ItemResourceConstants.JCR_UUID);
+        nameSet.add(ItemResourceConstants.JCR_PATH);
         nameSet.add(DavPropertyName.RESOURCETYPE);
 
         DavMethodBase method = null;
@@ -746,6 +749,12 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
 
             DavPropertySet propSet = nodeResponse.getProperties(DavServletResponse.SC_OK);
+            Object type = propSet.get(DavPropertyName.RESOURCETYPE).getValue();
+            if (type == null) {
+                // the given id points to a Property instead of a Node
+                throw new ItemNotFoundException("No node for id " + nodeId);
+            }
+
             NodeId parentId = getParentId(propSet, sessionInfo);
             NodeId id = uriResolver.buildNodeId(parentId, nodeResponse, sessionInfo.getWorkspaceName());
 
@@ -777,6 +786,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw new RepositoryException(e);
         } catch (DavException e) {
             throw ExceptionConverter.generate(e);
+        } catch (MalformedPathException e) {
+            throw new RepositoryException(e);
         } finally {
             if (method != null) {
                 method.releaseConnection();
@@ -797,6 +808,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         nameSet.add(ItemResourceConstants.JCR_MIXINNODETYPES);
         nameSet.add(ItemResourceConstants.JCR_REFERENCES);
         nameSet.add(ItemResourceConstants.JCR_UUID);
+        nameSet.add(ItemResourceConstants.JCR_PATH);
         nameSet.add(DavPropertyName.RESOURCETYPE);
 
         DavMethodBase method = null;
@@ -856,6 +868,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         nameSet.add(ItemResourceConstants.JCR_TYPE);
         nameSet.add(ItemResourceConstants.JCR_VALUE);
         nameSet.add(ItemResourceConstants.JCR_VALUES);
+        nameSet.add(ItemResourceConstants.JCR_PATH);
         nameSet.add(DavPropertyName.RESOURCETYPE);
 
         PropFindMethod method = null;
@@ -870,7 +883,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 throw new ItemNotFoundException("Unable to retrieve the property with id " + propertyId);
             }
 
-
             DavPropertySet propSet = responses[0].getProperties(DavServletResponse.SC_OK);
             NodeId parentId = getParentId(propSet, sessionInfo);
             PropertyId id = uriResolver.buildPropertyId(parentId, responses[0], sessionInfo.getWorkspaceName());
@@ -883,6 +895,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw new RepositoryException(e);
         } catch (DavException e) {
             throw ExceptionConverter.generate(e);
+        } catch (MalformedPathException e) {
+            throw new RepositoryException(e);
         } finally {
             if (method != null) {
                 method.releaseConnection();
@@ -996,6 +1010,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         // set of Dav-properties to be retrieved
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
         nameSet.add(DavPropertyName.LOCKDISCOVERY);
+        nameSet.add(ItemResourceConstants.JCR_PARENT);
 
         PropFindMethod method = null;
         try {
@@ -1015,11 +1030,12 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             DavPropertySet ps = responses[0].getProperties(DavServletResponse.SC_OK);
             if (ps.contains(DavPropertyName.LOCKDISCOVERY)) {
                 DavProperty p = ps.get(DavPropertyName.LOCKDISCOVERY);
-                return new LockInfoImpl(LockDiscovery.createFromXml(p.toXml(domFactory)), nodeId);
-            } else {
+                LockDiscovery ld = LockDiscovery.createFromXml(p.toXml(domFactory));
+                NodeId parentId = getParentId(ps, sessionInfo);
+                return retrieveLockInfo(ld, sessionInfo, nodeId, parentId);
+            }  else {
                 throw new LockException("No Lock present on node with id " + nodeId);
             }
-
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1046,7 +1062,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             sessionInfo.addLockToken(lockToken);
 
             LockDiscovery disc = method.getResponseAsLockDiscovery();
-            return new LockInfoImpl(disc, nodeId);
+            return retrieveLockInfo(disc, sessionInfo, nodeId, null);
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1082,6 +1098,40 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         execute(method, sessionInfo);
 
         sessionInfo.removeLockToken(lockToken);
+    }
+
+    private LockInfo retrieveLockInfo(LockDiscovery lockDiscovery, SessionInfo sessionInfo,
+                                      NodeId nodeId, NodeId parentId)
+        throws LockException, RepositoryException {
+        List activeLocks = (List) lockDiscovery.getValue();
+        Iterator it = activeLocks.iterator();
+        ActiveLock activeLock = null;
+        while (it.hasNext()) {
+            ActiveLock l = (ActiveLock) it.next();
+            Scope sc = l.getScope();
+            if (l.getType() == Type.WRITE && (sc == Scope.EXCLUSIVE || sc == ItemResourceConstants.EXCLUSIVE_SESSION)) {
+                if (activeLock != null) {
+                    throw new RepositoryException("Node " + nodeId + " contains multiple exclusive write locks.");
+                } else {
+                    activeLock = l;
+                }
+            }
+        }
+        if (activeLock == null) {
+            throw new LockException("No lock present on node " + nodeId);
+        }
+        if (activeLock.isDeep() && parentId != null) {
+            // try if lock is inherited
+            try {
+                return getLockInfo(sessionInfo, parentId);
+            } catch (LockException e) {
+                // no lock on parent
+                return new LockInfoImpl(activeLock, nodeId);
+            }
+        }
+        // no deep lock or parentID == null or lock is not present on parent
+        // -> nodeID is lockHolding Id.
+        return new LockInfoImpl(activeLock, nodeId);
     }
 
     /**

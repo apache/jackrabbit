@@ -23,10 +23,12 @@ import org.apache.jackrabbit.jcr2spi.state.StaleItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateLifeCycleListener;
 import org.apache.jackrabbit.jcr2spi.state.Status;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
@@ -134,20 +136,32 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
     }
 
     /**
-     * @see javax.jcr.Item#getParent()
+     * @see Item#getParent()
      */
-    public abstract Node getParent() throws ItemNotFoundException, AccessDeniedException, RepositoryException;
+    public Node getParent() throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+        checkStatus();
+
+        // special treatment for root node
+        if (state.isNode() && ((NodeState)state).isRoot()) {
+            String msg = "Root node doesn't have a parent.";
+            log.debug(msg);
+            throw new ItemNotFoundException(msg);
+        }
+
+        NodeEntry parentEntry = getItemState().getHierarchyEntry().getParent();
+        return (Node) itemMgr.getItem(parentEntry);
+    }
 
     /**
      * @see javax.jcr.Item#getDepth()
      */
     public int getDepth() throws RepositoryException {
         checkStatus();
-        if (state.getParent() == null) {
+        if (state.isNode() && ((NodeState)state).isRoot()) {
             // shortcut
             return Path.ROOT_DEPTH;
         }
-        return session.getHierarchyManager().getDepth(state);
+        return session.getHierarchyManager().getDepth(state.getHierarchyEntry());
     }
 
     /**
@@ -245,7 +259,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
         // check session status
         session.checkIsAlive();
         // check if item has been removed by this or another session
-        if (Status.isTerminal(state.getStatus())) {
+        if (Status.isTerminal(state.getStatus()) || Status.EXISTING_REMOVED == state.getStatus()) {
             throw new InvalidItemStateException("Item '" + this + "' doesn't exist anymore");
         }
 
@@ -258,7 +272,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
                 // from the 'server'.
                 // Note, that with Observation-CacheBehaviour no manuel refresh
                 // is required. changes get pushed automatically.
-                state.reload(true);
+                state.getHierarchyEntry().reload(true, true);
             }
         } else {
             // check status of item state
@@ -282,7 +296,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
                within this tree 'invalidated' in order to have them refreshed
                from the server upon the next access.*/
             if (session.getCacheBehaviour() != CacheBehaviour.OBSERVATION) {
-                state.invalidate(true);
+                state.getHierarchyEntry().invalidate(true);
             }
         }
     }
@@ -425,7 +439,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
         // check status of this item for read operation
         if (state.getStatus() == Status.INVALIDATED) {
             // refresh to get current status from persistent storage
-            state.reload(false);
+            state.getHierarchyEntry().reload(false, false);
         }
         // now check if valid
         if (!state.isValid()) {
@@ -487,6 +501,22 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
     protected void checkIsWritable() throws UnsupportedRepositoryOperationException, ConstraintViolationException, RepositoryException {
         checkSupportedOption(Repository.LEVEL_2_SUPPORTED);
         checkStatus();
+    }
+
+    /**
+     * Returns true if the repository supports level 2 (writing). Note, that
+     * this method does not perform any additional validation tests such as
+     * access restrictions, locking, checkin status or protection that affect
+     * the writing to nodes and properties.
+     *
+     * @throws UnsupportedRepositoryOperationException
+     * @throws RepositoryException if the sanity check on this item fails.
+     * See {@link ItemImpl#checkStatus()}. 
+     * @see ItemStateValidator
+     */
+    protected boolean isWritable() throws RepositoryException {
+        checkStatus();
+        return session.isSupportedOption(Repository.LEVEL_2_SUPPORTED);
     }
 
     //------------------------------------< Implementation specific methods >---

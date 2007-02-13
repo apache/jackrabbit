@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.name.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,21 +64,21 @@ public class Clone extends AbstractCopy {
     }
 
     /**
-     * @see Operation#persisted()
+     * @see Operation#persisted(CacheBehaviour)
+     * @param cacheBehaviour
      */
-    public void persisted() {
-        if (removeExisting) {
-            // invalidate the complete tree
-            try {
-                NodeState rootState = destMgrProvider.getItemStateManager().getRootState();
-                rootState.invalidate(true);
-            } catch (ItemStateException e) {
-                log.error("Cannot invalidate root state.", e.getMessage());
-                // fallback
-                super.persisted();
+    public void persisted(CacheBehaviour cacheBehaviour) {
+        if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
+            if (removeExisting) {
+                // invalidate the complete tree -> find root-hierarchy-entry
+                HierarchyEntry he = getDestinationParentState().getHierarchyEntry();
+                while (he.getParent() != null) {
+                    he = he.getParent();
+                }
+                he.invalidate(true);
+            } else {
+                super.persisted(cacheBehaviour);
             }
-        } else {
-            super.persisted();
         }
     }
 

@@ -18,6 +18,10 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
+
+import java.util.Iterator;
 
 /**
  * <code>ItemStateFactory</code> provides methods to create child
@@ -28,68 +32,96 @@ public interface ItemStateFactory {
 
     /**
      *
-     * @param ism
+     * @param entry
      * @return
      * @throws ItemStateException
      */
-    public NodeState createRootState(ItemStateManager ism) throws ItemStateException;
+    public NodeState createRootState(NodeEntry entry) throws ItemStateException;
 
     /**
      * Creates the child <code>NodeState</code> with the given
      * <code>nodeId</code>.
      *
      * @param nodeId the id of the <code>NodeState</code> to create.
-     * @param ism    the item state manager to retrievev the parent of the
-     *               <code>NodeState</code> to create.
+     * @param entry the <code>HierarchyEntry</code> the new state should
+     * be attached to.
      * @return the created <code>NodeState</code>.
      * @throws NoSuchItemStateException if there is no such <code>NodeState</code>.
-     * @throws ItemStateException       if an error occurs while retrieving the
-     *                                  <code>NodeState</code>.
+     * @throws ItemStateException if an error occurs while retrieving the <code>NodeState</code>.
      */
-    public NodeState createNodeState(NodeId nodeId, ItemStateManager ism)
-            throws NoSuchItemStateException, ItemStateException;
+    public NodeState createNodeState(NodeId nodeId, NodeEntry entry)
+        throws NoSuchItemStateException, ItemStateException;
+
 
     /**
-     * Creates the child <code>NodeState</code> with the given
-     * <code>nodeId</code>.
+     * Tries to retrieve the <code>NodeState</code> with the given <code>NodeId</code>
+     * and if the state exists, fills in the NodeEntries missing between the
+     * last known NodeEntry marked by <code>anyParent</code>.
      *
-     * @param nodeId the id of the <code>NodeState</code> to create.
-     * @param parent the parent of the <code>NodeState</code> to create.
+     * @param nodeId
+     * @param anyParent
      * @return the created <code>NodeState</code>.
      * @throws NoSuchItemStateException if there is no such <code>NodeState</code>.
-     * @throws ItemStateException       if an error occurs while retrieving the
-     *                                  <code>NodeState</code>.
+     * @throws ItemStateException if an error occurs while retrieving the <code>NodeState</code>.
      */
-    public NodeState createNodeState(NodeId nodeId, NodeState parent)
-            throws NoSuchItemStateException, ItemStateException;
+    public NodeState createDeepNodeState(NodeId nodeId, NodeEntry anyParent) throws NoSuchItemStateException, ItemStateException;
+
 
     /**
      * Creates the <code>PropertyState</code> with the given
      * <code>propertyId</code>.
      *
      * @param propertyId the id of the <code>PropertyState</code> to create.
-     * @param parent the parent of the <code>PropertyState</code> to create.
+     * @param entry the <code>HierarchyEntry</code> the new state should
+     * be attached to.
      * @return the created <code>PropertyState</code>.
      * @throws NoSuchItemStateException if there is no such <code>PropertyState</code>.
      * @throws ItemStateException       if an error occurs while retrieving the
      *                                  <code>PropertyState</code>.
      */
-    public PropertyState createPropertyState(PropertyId propertyId,
-                                             NodeState parent)
-            throws NoSuchItemStateException, ItemStateException;
+    public PropertyState createPropertyState(PropertyId propertyId, PropertyEntry entry)
+        throws NoSuchItemStateException, ItemStateException;
 
 
     /**
+     * Tries to retrieve the <code>PropertyState</code> with the given <code>PropertyId</code>
+     * and if the state exists, fills in the HierarchyEntries missing between the
+     * last known NodeEntry marked by <code>anyParent</code>.
+     *
+     * @param propertyId
+     * @param anyParent
+     * @return
+     * @throws NoSuchItemStateException if there is no such <code>NodeState</code>.
+     * @throws ItemStateException if an error occurs while retrieving the <code>NodeState</code>.
+     */
+    public PropertyState createDeepPropertyState(PropertyId propertyId, NodeEntry anyParent) throws NoSuchItemStateException, ItemStateException;
+
+    /**
+     * Returns an Iterator over <code>ChildInfo</code>s for the given <code>NodeState</code>.
+     *
+     * @param nodeId
+     */
+    public Iterator getChildNodeInfos(NodeId nodeId) throws NoSuchItemStateException, ItemStateException;
+
+    /**
+     * Returns the NodeReferences for the NodeState with the given ID.
      *
      * @param nodeState
+     * @return NodeReferences
      */
-    public ChildNodeEntries getChildNodeEntries(NodeState nodeState) throws NoSuchItemStateException, ItemStateException;
+    public NodeReferences getNodeReferences(NodeState nodeState);
 
     /**
-     * Set the cache used to retrieve item states that have already been
-     * built before.
+     * Adds the given <code>ItemStateCreationListener</code>.
      *
-     * @param cache
+     * @param listener
      */
-    public void setCache(ItemStateCache cache);
+    public void addCreationListener(ItemStateCreationListener listener);
+
+    /**
+     * Removes the given <code>ItemStateCreationListener</code>.
+     *
+     * @param listener
+     */
+    public void removeCreationListener(ItemStateCreationListener listener);
 }

@@ -19,6 +19,7 @@ package org.apache.jackrabbit.jcr2spi.operation;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
@@ -77,10 +78,13 @@ public abstract class AbstractCopy extends AbstractOperation {
     /**
      * Invalidate the destination parent <code>NodeState</code>.
      * 
-     * @see Operation#persisted()
+     * @see Operation#persisted(CacheBehaviour)
+     * @param cacheBehaviour
      */
-    public void persisted() {
-        destParentState.invalidate(false);
+    public void persisted(CacheBehaviour cacheBehaviour) {
+        if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
+            destParentState.getHierarchyEntry().invalidate(false);
+        }
     }
 
     //----------------------------------------< Access Operation Parameters >---

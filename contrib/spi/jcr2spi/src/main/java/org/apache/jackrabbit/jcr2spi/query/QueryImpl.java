@@ -18,8 +18,8 @@ package org.apache.jackrabbit.jcr2spi.query;
 
 import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.name.LocalNamespaceMappings;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
@@ -63,9 +63,9 @@ public class QueryImpl implements Query {
     private final ItemManager itemManager;
 
     /**
-     * The item state manager of the session that executes this query.
+     * The hierarchy manager of the session that executes this query.
      */
-    private final ItemStateManager itemStateManager;
+    private final HierarchyManager hierarchyManager;
 
     /**
      * The query statement
@@ -94,7 +94,7 @@ public class QueryImpl implements Query {
      * @param session          the session that created this query.
      * @param nsResolver       the namespace resolver to be used.
      * @param itemMgr          the item manager of that session.
-     * @param itemStateManager the item state manager of that session.
+     * @param hierarchyMgr     the HierarchyManager of that session.
      * @param wspManager       the workspace manager that belongs to the
      *                         session.
      * @param statement        the query statement.
@@ -102,14 +102,14 @@ public class QueryImpl implements Query {
      * @throws InvalidQueryException if the query is invalid.
      */
     public QueryImpl(Session session, LocalNamespaceMappings nsResolver,
-                     ItemManager itemMgr, ItemStateManager itemStateManager,
+                     ItemManager itemMgr, HierarchyManager hierarchyManager,
                      WorkspaceManager wspManager,
                      String statement, String language)
             throws InvalidQueryException, RepositoryException {
         this.session = session;
         this.nsResolver = nsResolver;
         this.itemManager = itemMgr;
-        this.itemStateManager = itemStateManager;
+        this.hierarchyManager = hierarchyManager;
         this.statement = statement;
         this.language = language;
         this.wspManager = wspManager;
@@ -122,6 +122,7 @@ public class QueryImpl implements Query {
      * @param session    the session that created this query.
      * @param nsResolver the namespace resolver to be used.
      * @param itemMgr    the item manager of that session.
+     * @param hierarchyManager
      * @param wspManager the workspace manager that belongs to the session.
      * @param node       the node from where to read the query.
      * @throws InvalidQueryException if the query is invalid.
@@ -129,14 +130,14 @@ public class QueryImpl implements Query {
      *                               the node.
      */
     public QueryImpl(Session session, LocalNamespaceMappings nsResolver,
-                     ItemManager itemMgr, ItemStateManager itemStateManager,
+                     ItemManager itemMgr, HierarchyManager hierarchyManager,
                      WorkspaceManager wspManager, Node node)
         throws InvalidQueryException, RepositoryException {
 
         this.session = session;
         this.nsResolver = nsResolver;
         this.itemManager = itemMgr;
-        this.itemStateManager = itemStateManager;
+        this.hierarchyManager = hierarchyManager;
         this.node = node;
         this.wspManager = wspManager;
 
@@ -159,7 +160,7 @@ public class QueryImpl implements Query {
     public QueryResult execute() throws RepositoryException {
         QueryInfo qI = wspManager.executeQuery(statement, language,
                 nsResolver.getLocalNamespaceMappings());
-        return new QueryResultImpl(itemManager, itemStateManager, qI, nsResolver);
+        return new QueryResultImpl(itemManager, hierarchyManager, qI, nsResolver);
     }
 
     /**

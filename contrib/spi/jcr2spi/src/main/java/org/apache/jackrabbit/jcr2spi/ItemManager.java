@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 
 import javax.jcr.PathNotFoundException;
 import javax.jcr.AccessDeniedException;
@@ -66,13 +66,12 @@ public interface ItemManager extends ItemLifeCycleListener {
     public boolean itemExists(Path path);
 
     /**
-     * Checks if the item with the given id exists.
+     * Checks if the item for given HierarchyEntry exists.
      *
-     * @param itemState state of the item to be checked
+     * @param hierarchyEntry
      * @return true if the specified item exists
      */
-    public boolean itemExists(ItemState itemState);
-
+    public boolean itemExists(HierarchyEntry hierarchyEntry);
 
     /**
      *
@@ -87,56 +86,56 @@ public interface ItemManager extends ItemLifeCycleListener {
 
     /**
      *
-     * @param itemState
+     * @param hierarchyEntry
      * @return
      * @throws ItemNotFoundException
      * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    public Item getItem(ItemState itemState)
+    public Item getItem(HierarchyEntry hierarchyEntry)
         throws ItemNotFoundException, AccessDeniedException, RepositoryException;
 
     /**
      *
-     * @param parentState
+     * @param parentEntry
      * @return
      * @throws ItemNotFoundException
      * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    public boolean hasChildNodes(NodeState parentState)
+    public boolean hasChildNodes(NodeEntry parentEntry)
         throws ItemNotFoundException, AccessDeniedException, RepositoryException;
 
     /**
      *
-     * @param parentState
+     * @param parentEntry
      * @return
      * @throws ItemNotFoundException
      * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    public NodeIterator getChildNodes(NodeState parentState)
+    public NodeIterator getChildNodes(NodeEntry parentEntry)
         throws ItemNotFoundException, AccessDeniedException, RepositoryException;
 
     /**
      *
-     * @param parentState
+     * @param parentEntry
      * @return
      * @throws ItemNotFoundException
      * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    public boolean hasChildProperties(NodeState parentState)
+    public boolean hasChildProperties(NodeEntry parentEntry)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException;
 
     /**
      *
-     * @param parentState
+     * @param parentEntry
      * @return
      * @throws ItemNotFoundException
      * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    public PropertyIterator getChildProperties(NodeState parentState)
+    public PropertyIterator getChildProperties(NodeEntry parentEntry)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException;
 }

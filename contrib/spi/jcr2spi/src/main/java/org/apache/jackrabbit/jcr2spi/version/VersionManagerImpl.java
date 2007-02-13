@@ -17,9 +17,9 @@
 package org.apache.jackrabbit.jcr2spi.version;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.Checkout;
 import org.apache.jackrabbit.jcr2spi.operation.Checkin;
@@ -30,6 +30,7 @@ import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveVersion;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -39,6 +40,7 @@ import javax.jcr.version.VersionException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.IdIterator;
+import org.apache.jackrabbit.spi.NodeId;
 
 /**
  * <code>VersionManagerImpl</code>...
@@ -55,13 +57,13 @@ public class VersionManagerImpl implements VersionManager {
 
     public void checkin(NodeState nodeState) throws RepositoryException {
         NodeState wspState = getWorkspaceState(nodeState);
-        Operation ci = Checkin.create(wspState);
+        Operation ci = Checkin.create(wspState, this);
         workspaceManager.execute(ci);
     }
 
     public void checkout(NodeState nodeState) throws RepositoryException {
         NodeState wspState = getWorkspaceState(nodeState);
-        Operation co = Checkout.create(wspState);
+        Operation co = Checkout.create(wspState, this);
         workspaceManager.execute(co);
     }
 
@@ -79,28 +81,29 @@ public class VersionManagerImpl implements VersionManager {
             return true;
         }
 
-        NodeState wspState = getWorkspaceState(nodeState);
+        NodeEntry nodeEntry = nodeState.getNodeEntry();
         try {
-            /**
-             * FIXME should not only rely on existence of jcr:isCheckedOut property
-             * but also verify that node.isNodeType("mix:versionable")==true;
-             * this would have a negative impact on performance though...
-             */
-            while (!wspState.hasPropertyName(QName.JCR_ISCHECKEDOUT)) {
-                NodeState parentState = wspState.getParent();
-                if (parentState == null) {
+            // NOTE: since the hierarchy might not be completely loaded or some
+            // entry might even not be accessible, the check may not detect
+            // a checked-in parent. ok, as long as the 'server' find out upon
+            // save or upon executing the workspace operation.
+            while (!nodeEntry.hasPropertyEntry(QName.JCR_ISCHECKEDOUT)) {
+                NodeEntry parent = nodeEntry.getParent();
+                if (parent == null) {
                     // reached root state without finding a jcr:isCheckedOut property
                     return true;
                 }
-                wspState = parentState;
+                nodeEntry = parent;
             }
-            PropertyState propState = wspState.getPropertyState(QName.JCR_ISCHECKEDOUT);
+            PropertyState propState = nodeEntry.getPropertyEntry(QName.JCR_ISCHECKEDOUT).getPropertyState();
             Boolean b = Boolean.valueOf(propState.getValue().getString());
             return b.booleanValue();
         } catch (ItemStateException e) {
-            // should not occur
-            throw new RepositoryException(e);
+            // error while accessing jcr:isCheckedOut property state.
+            // -> assume that checkedOut status is ok. see above for general
+            // notes about the capabilities of the jcr2spi implementation.
         }
+        return true;
     }
 
     public void checkIsCheckedOut(NodeState nodeState) throws VersionException, RepositoryException {
@@ -111,7 +114,7 @@ public class VersionManagerImpl implements VersionManager {
 
     public void removeVersion(NodeState versionHistoryState, NodeState versionState) throws RepositoryException {
         NodeState wspVersionState = getWorkspaceState(versionState);
-        Operation op = RemoveVersion.create(wspVersionState);
+        Operation op = RemoveVersion.create(wspVersionState, getWorkspaceState(versionHistoryState), this);
         workspaceManager.execute(op);
     }
 
@@ -148,7 +151,7 @@ public class VersionManagerImpl implements VersionManager {
 
     public IdIterator merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws RepositoryException {
         NodeState wspState = getWorkspaceState(nodeState);
-        Merge op = Merge.create(wspState, workspaceName, bestEffort);
+        Merge op = Merge.create(wspState, workspaceName, bestEffort, this);
         workspaceManager.execute(op);
         return op.getFailedIds();
     }
@@ -158,6 +161,31 @@ public class VersionManagerImpl implements VersionManager {
         NodeState wspVState = getWorkspaceState(versionState);
         Operation op = ResolveMergeConflict.create(wspState, wspVState, done);
         workspaceManager.execute(op);
+    }
+
+    public NodeEntry getVersionableNodeState(NodeState versionState) throws RepositoryException {
+        try {
+            NodeState ns = versionState.getChildNodeState(QName.JCR_FROZENNODE, Path.INDEX_DEFAULT);
+            PropertyState ps = ns.getPropertyState(QName.JCR_FROZENUUID);
+            String uniqueID = ps.getValue().toString();
+
+            NodeId versionableId = workspaceManager.getIdFactory().createNodeId(uniqueID);
+            return (NodeEntry) workspaceManager.getHierarchyManager().getHierarchyEntry(versionableId);
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        }
+    }
+
+    public NodeEntry getVersionHistoryNodeState(NodeState versionableState) throws RepositoryException {
+        try {
+            PropertyState ps = versionableState.getPropertyState(QName.JCR_VERSIONHISTORY);
+            String uniqueID = ps.getValue().toString();
+            NodeId vhId = workspaceManager.getIdFactory().createNodeId(uniqueID);
+            return (NodeEntry) workspaceManager.getHierarchyManager().getHierarchyEntry(vhId);
+        } catch (ItemStateException e) {
+            // should not occur
+            throw new RepositoryException(e);
+        }
     }
 
     //------------------------------------------------------------< private >---

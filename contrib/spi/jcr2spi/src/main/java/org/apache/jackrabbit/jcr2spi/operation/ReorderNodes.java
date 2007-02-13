@@ -19,6 +19,7 @@ package org.apache.jackrabbit.jcr2spi.operation;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.name.Path;
 
 import javax.jcr.nodetype.ConstraintViolationException;
@@ -55,9 +56,10 @@ public class ReorderNodes extends AbstractOperation {
     /**
      * Throws UnsupportedOperationException
      *
-     * @see Operation#persisted()
+     * @see Operation#persisted(CacheBehaviour)
+     * @param cacheBehaviour
      */
-    public void persisted() {
+    public void persisted(CacheBehaviour cacheBehaviour) {
         throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
     }
     //----------------------------------------< Access Operation Parameters >---
@@ -77,8 +79,8 @@ public class ReorderNodes extends AbstractOperation {
 
     public static Operation create(NodeState parentState, Path.PathElement srcName,
                                    Path.PathElement beforeName) throws NoSuchItemStateException, ItemStateException {
-        NodeState insert = parentState.getChildNodeEntry(srcName.getName(), srcName.getNormalizedIndex()).getNodeState();
-        NodeState before = (beforeName == null) ? null : parentState.getChildNodeEntry(beforeName.getName(), beforeName.getNormalizedIndex()).getNodeState();
+        NodeState insert = parentState.getChildNodeState(srcName.getName(), srcName.getNormalizedIndex());
+        NodeState before = (beforeName == null) ? null : parentState.getChildNodeState(beforeName.getName(), beforeName.getNormalizedIndex());
         Operation op = new ReorderNodes(parentState, insert, before);
         return op;
     }

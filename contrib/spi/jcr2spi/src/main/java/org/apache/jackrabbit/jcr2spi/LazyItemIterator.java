@@ -16,25 +16,27 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
+import org.apache.jackrabbit.spi.ItemId;
 
-import javax.jcr.Item;
-import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
-import javax.jcr.RepositoryException;
+import javax.jcr.Item;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Node;
+import javax.jcr.Property;
 import javax.jcr.RangeIterator;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.version.VersionIterator;
 import javax.jcr.version.Version;
-import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Collection;
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * <code>LazyItemIterator</code> is an id-based iterator that instantiates
@@ -56,8 +58,8 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
     /** the item manager that is used to lazily fetch the items */
     private final ItemManager itemMgr;
 
-    /** the list of item states */
-    private final List stateList;
+    /** Iterator over HierarchyEntry elements */
+    private final Iterator iter;
 
     /** the position of the next item */
     private int pos;
@@ -69,14 +71,37 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
      * Creates a new <code>LazyItemIterator</code> instance.
      *
      * @param itemMgr item manager
-     * @param itemStates Collection of item states
+     * @param hierarchyEntryIterator Iterator over HierarchyEntries
      */
-    public LazyItemIterator(ItemManager itemMgr, Collection itemStates) {
+    public LazyItemIterator(ItemManager itemMgr, Iterator hierarchyEntryIterator) {
         this.itemMgr = itemMgr;
-        this.stateList = new ArrayList(itemStates);
+        this.iter = hierarchyEntryIterator;
         // prefetch first item
         pos = 0;
-        prefetchNext();
+        next = prefetchNext();
+    }
+
+    /**
+     * Creates a new <code>LazyItemIterator</code> instance.
+     *
+     * @param itemMgr
+     * @param hierarchyMgr
+     * @param itemIds
+     */
+    public LazyItemIterator(ItemManager itemMgr, HierarchyManager hierarchyMgr,
+                            Iterator itemIds)
+        throws PathNotFoundException, RepositoryException {
+        this.itemMgr = itemMgr;
+        List entries = new ArrayList();
+        while (itemIds.hasNext()) {
+            ItemId id = (ItemId) itemIds.next();
+            entries.add(hierarchyMgr.getHierarchyEntry(id));
+        }
+        this.iter = entries.iterator();
+
+        // prefetch first item
+        pos = 0;
+        next = prefetchNext();
     }
 
     /**
@@ -85,25 +110,21 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
      * {@link #next} is set to the next available item in this iterator or to
      * <code>null</code> in case there are no more items.
      */
-    private void prefetchNext() {
-        // reset
-        next = null;
-        while (next == null && pos < stateList.size()) {
-            ItemState state = (ItemState) stateList.get(pos);
+    private Item prefetchNext() {
+        Item nextItem = null;
+        while (nextItem == null && iter.hasNext()) {
+            HierarchyEntry entry = (HierarchyEntry) iter.next();
             try {
-                next = itemMgr.getItem(state);
+                nextItem = itemMgr.getItem(entry);
             } catch (ItemNotFoundException e) {
-                log.debug("ignoring nonexistent item " + state);
-                // remove invalid id
-                stateList.remove(pos);
-                // try next
+                log.debug("Ignoring nonexistent item " + entry);
+                // try the next
             } catch (RepositoryException e) {
-                log.error("failed to fetch item " + state + ", skipping...", e);
-                // remove invalid id
-                stateList.remove(pos);
-                // try next
+                log.error("failed to fetch item " + entry + ", skipping...", e);
+                // try the next
             }
         }
+        return nextItem;
     }
 
     //-------------------------------------------------------< NodeIterator >---
@@ -149,10 +170,10 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
      * @see RangeIterator#getSize()
      */
     public long getSize() {
-        // Always returns -1, since the original list may contains items that
+        // Always returns -1, since the entry-iterator may contains items that
         // are not accessible due to access constraints. -1 seems preferable
         // to returning a size that is not correct.
-        return UNDEFINED_SIZE;
+        return LazyItemIterator.UNDEFINED_SIZE;
     }
 
     /**
@@ -170,33 +191,19 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
             throw new NoSuchElementException();
         }
 
-        // reset
-        next = null;
         // skip the first (skipNum - 1) items without actually retrieving them
         while (--skipNum > 0) {
             pos++;
-            if (pos >= stateList.size()) {
-                // skipped past last item
-                throw new NoSuchElementException();
-            }
-            ItemState state = (ItemState) stateList.get(pos);
-            // eliminate invalid items from this iterator
-            while (!itemMgr.itemExists(state)) {
-                log.debug("ignoring nonexistent item " + state);
-                // remove invalid id
-                stateList.remove(pos);
-                if (pos >= stateList.size()) {
-                    // skipped past last item
-                    throw new NoSuchElementException();
-                }
-                state = (ItemState) stateList.get(pos);
-                // try next
-                continue;
+            HierarchyEntry entry = (HierarchyEntry) iter.next();
+            // check if item exists but don't build Item instance.
+            while (!itemMgr.itemExists(entry)) {
+                log.debug("Ignoring nonexistent item " + entry);
+                entry = (HierarchyEntry) iter.next();
             }
         }
         // prefetch final item (the one to be returned on next())
         pos++;
-        prefetchNext();
+        next = prefetchNext();
     }
 
     //-----------------------------------------------------------< Iterator >---
@@ -218,7 +225,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
         }
         Item item = next;
         pos++;
-        prefetchNext();
+        next = prefetchNext();
         return item;
     }
 

@@ -24,6 +24,7 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.value.ValueFormat;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.slf4j.LoggerFactory;
@@ -37,8 +38,6 @@ import javax.jcr.Property;
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
-import javax.jcr.AccessDeniedException;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemVisitor;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
@@ -55,13 +54,9 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     public static final int UNDEFINED_PROPERTY_LENGTH = -1;
 
-    private final PropertyDefinition definition;
-
     public PropertyImpl(ItemManagerImpl itemManager, SessionImpl session,
-                        PropertyState state, PropertyDefinition definition,
-                        ItemLifeCycleListener[] listeners) {
+                        PropertyState state, ItemLifeCycleListener[] listeners) {
         super(itemManager, session, state, listeners);
-        this.definition = definition;
         // value will be read (and converted from qualified value) on demand.
     }
 
@@ -80,14 +75,6 @@ public class PropertyImpl extends ItemImpl implements Property {
             log.debug(msg);
             throw new RepositoryException(msg, npde);
         }
-    }
-
-    /**
-     * @see Item#getParent()
-     */
-    public Node getParent() throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        checkStatus();
-        return (Node) itemMgr.getItem(getItemState().getParent());
     }
 
     /**
@@ -145,7 +132,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             }
         }
 
-        int targetType = definition.getRequiredType();
+        int targetType = getDefinition().getRequiredType();
         if (targetType == PropertyType.UNDEFINED) {
             targetType = (valueType == PropertyType.UNDEFINED) ?  PropertyType.STRING : valueType;
         }
@@ -389,8 +376,9 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @see javax.jcr.Property#getDefinition()
      */
     public PropertyDefinition getDefinition() throws RepositoryException {
-	checkStatus();
-        return definition;
+        checkStatus();
+        QPropertyDefinition qpd = getPropertyState().getDefinition();
+        return session.getNodeTypeManager().getPropertyDefinition(qpd);
     }
 
     /**
@@ -424,7 +412,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         checkIsWritable();
 
         // property specific check
-        if (definition.isMultiple() != multiValues) {
+        if (isMultiple() != multiValues) {
             throw new ValueFormatException(getPath() + "Multivalue definition of " + safeGetJCRPath() + " does not match to given value(s).");
         }
     }
@@ -435,7 +423,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @return true if the definition indicates that this Property is multivalued.
      */
     private boolean isMultiple() {
-	return definition.isMultiple();
+	return getPropertyState().isMultiValued();
     }
 
     /**
@@ -443,9 +431,9 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @param defaultType
      * @return the required type for this property.
      */
-    private int getRequiredType(int defaultType) {
+    private int getRequiredType(int defaultType) throws RepositoryException {
         // check type according to definition of this property
-        int reqType = definition.getRequiredType();
+        int reqType = getDefinition().getRequiredType();
         if (reqType == PropertyType.UNDEFINED) {
             if (defaultType == PropertyType.UNDEFINED) {
                 reqType = PropertyType.STRING;

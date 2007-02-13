@@ -20,7 +20,8 @@ import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
-import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.slf4j.LoggerFactory;
@@ -84,16 +85,10 @@ public class ItemStateValidator {
      * option for <code>{@link #checkRemoveItem}</code> method:<p/>
      * check that target node is not being referenced
      */
-    public static final int CHECK_REFERENCES = 16;
-
-    /**
-     * option for <code>{@link #checkRemoveItem}</code> method:<p/>
-     * check that target node is not being referenced
-     */
     public static final int CHECK_COLLISION = 32;
 
     public static final int CHECK_NONE = 0;
-    public static final int CHECK_ALL = CHECK_ACCESS | CHECK_LOCK | CHECK_VERSIONING | CHECK_CONSTRAINTS | CHECK_COLLISION | CHECK_REFERENCES;
+    public static final int CHECK_ALL = CHECK_ACCESS | CHECK_LOCK | CHECK_VERSIONING | CHECK_CONSTRAINTS | CHECK_COLLISION;
 
     /**
      * node type registry
@@ -132,8 +127,8 @@ public class ItemStateValidator {
      * @throws ConstraintViolationException if any of the validations fail
      * @throws RepositoryException          if another error occurs
      */
-    public void validate(NodeState nodeState)
-            throws ConstraintViolationException, RepositoryException {
+    public void validate(NodeState nodeState) throws ConstraintViolationException,
+        RepositoryException {
         // effective primary node type
         EffectiveNodeType entPrimary = ntReg.getEffectiveNodeType(nodeState.getNodeTypeName());
         // effective node type (primary type incl. mixins)
@@ -167,7 +162,7 @@ public class ItemStateValidator {
         QNodeDefinition[] cnda = entPrimaryAndMixins.getMandatoryNodeDefs();
         for (int i = 0; i < cnda.length; i++) {
             QNodeDefinition cnd = cnda[i];
-            if (!nodeState.hasChildNodeEntry(cnd.getQName())) {
+            if (!nodeState.getNodeEntry().hasNodeEntry(cnd.getQName())) {
                 String msg = safeGetJCRPath(nodeState)
                         + ": mandatory child node " + cnd.getQName()
                         + " does not exist";
@@ -376,8 +371,15 @@ public class ItemStateValidator {
         VersionException, LockException, ItemNotFoundException,
         ItemExistsException, PathNotFoundException, RepositoryException {
 
-        QPropertyDefinition def = propState.getDefinition();
-        checkWriteProperty(propState.getParent(), propState.getQName(), def, options);
+        try {
+            NodeState parent = propState.getParent();
+            QPropertyDefinition def = propState.getDefinition();
+            checkWriteProperty(parent, propState.getQName(), def, options);
+        } catch (NoSuchItemStateException e) {
+            throw new ItemNotFoundException(e);
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     /**
@@ -432,7 +434,7 @@ public class ItemStateValidator {
      * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    public void checkWriteProperty(NodeState parentState, QName propertyName, QPropertyDefinition definition, int options)
+    private void checkWriteProperty(NodeState parentState, QName propertyName, QPropertyDefinition definition, int options)
         throws ConstraintViolationException, AccessDeniedException,
         VersionException, LockException, ItemNotFoundException,
         ItemExistsException, PathNotFoundException, RepositoryException {
@@ -534,8 +536,6 @@ public class ItemStateValidator {
      *                    parent node is checked-out</li>
      *                    <li><code>{@link #CHECK_CONSTRAINTS}</code>:
      *                    make sure no node type constraints would be violated</li>
-     *                    <li><code>{@link #CHECK_REFERENCES}</code>:
-     *                    make sure no references exist on target node</li>
      *                    </ul>
      * @throws ConstraintViolationException
      * @throws AccessDeniedException
@@ -551,26 +551,28 @@ public class ItemStateValidator {
             ReferentialIntegrityException, RepositoryException {
 
         // TODO: missing check if all affected child-states can be removed as well
-        // NOTE: referencial integrity should be asserted for all child-nodes.
-        NodeState parentState = targetState.getParent();
-        if (parentState == null) {
+        if (targetState.isNode() && ((NodeState)targetState).isRoot()) {
             // root node
             throw new ConstraintViolationException("Cannot remove root node.");
         }
         // check parent
-        checkIsWritable(parentState, options);
+        try {
+            checkIsWritable(targetState.getParent(), options);
+        } catch (NoSuchItemStateException e) {
+            throw new ItemNotFoundException(e);
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        }
 
         // access rights
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
             try {
                 // make sure current session is allowed to remove target node
                 if (!mgrProvider.getAccessManager().canRemove(targetState)) {
-                    throw new AccessDeniedException(safeGetJCRPath(targetState)
-                            + ": not allowed to remove node");
+                    throw new AccessDeniedException(safeGetJCRPath(targetState) + ": not allowed to remove node");
                 }
             } catch (ItemNotFoundException infe) {
-                String msg = "internal error: failed to check access rights for "
-                        + safeGetJCRPath(targetState);
+                String msg = "internal error: failed to check access rights for " + safeGetJCRPath(targetState);
                 log.debug(msg);
                 throw new RepositoryException(msg, infe);
             }
@@ -580,10 +582,6 @@ public class ItemStateValidator {
         if ((options & CHECK_CONSTRAINTS) == CHECK_CONSTRAINTS) {
             // check if target not protected and not mandatory
             checkRemoveConstraints(targetState);
-        }
-        // check referential integrity of state to be deleted
-        if ((options & CHECK_REFERENCES) == CHECK_REFERENCES) {
-            checkReferences(targetState);
         }
     }
 
@@ -603,8 +601,14 @@ public class ItemStateValidator {
      */
     private void checkIsCheckedOut(ItemState itemState)
             throws PathNotFoundException, VersionException, RepositoryException {
-        NodeState nodeState = (itemState.isNode()) ? (NodeState)itemState : itemState.getParent();
-        mgrProvider.getVersionManager().checkIsCheckedOut(nodeState);
+        try {
+            NodeState nodeState = (itemState.isNode()) ? (NodeState)itemState : itemState.getParent();
+            mgrProvider.getVersionManager().checkIsCheckedOut(nodeState);
+        } catch (NoSuchItemStateException e) {
+            throw new ItemNotFoundException(e);
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     /**
@@ -616,12 +620,17 @@ public class ItemStateValidator {
      * @throws LockException         if write access to the specified path is not allowed
      * @throws RepositoryException   if another error occurs
      */
-    private void checkLock(ItemState itemState)
-            throws LockException, RepositoryException {
-        // make sure there's no foreign lock present the node (or the parent node
-        // in case the state represents a PropertyState).
-        NodeState nodeState = (itemState.isNode()) ? ((NodeState)itemState) : itemState.getParent();
-        mgrProvider.getLockManager().checkLock(nodeState);
+    private void checkLock(ItemState itemState) throws LockException, RepositoryException {
+        try {
+            // make sure there's no foreign lock present the node (or the parent node
+            // in case the state represents a PropertyState).
+            NodeState nodeState = (itemState.isNode()) ? ((NodeState)itemState) : itemState.getParent();
+            mgrProvider.getLockManager().checkLock(nodeState);
+        } catch (NoSuchItemStateException e) {
+            throw new ItemNotFoundException(e);
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     /**
@@ -686,22 +695,23 @@ public class ItemStateValidator {
      * @throws RepositoryException
      */
     private void checkCollision(NodeState parentState, QName propertyName) throws ItemExistsException, RepositoryException {
+        NodeEntry parentEntry = (NodeEntry) parentState.getHierarchyEntry();
         // check for name collisions with existing child nodes
-        if (parentState.hasChildNodeEntry(propertyName)) {
-            String msg = "there's already a child node with name " + propertyName;
+        if (parentEntry.hasNodeEntry(propertyName)) {
+            String msg = "Child node with name '" + propertyName + "' already exists.";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
         // check for name collisions with existing properties
-        if (parentState.hasPropertyName(propertyName)) {
-            PropertyState errorState = null;
+        PropertyEntry pe = parentEntry.getPropertyEntry(propertyName);
+        if (pe != null) {
             try {
-                errorState = parentState.getPropertyState(propertyName);
+                pe.getPropertyState();
             } catch (ItemStateException e) {
                 // should not occur. existance has been asserted before
                 throw new RepositoryException(e);
             }
-            throw new ItemExistsException(safeGetJCRPath(errorState));
+            throw new ItemExistsException("Property '" + pe.getQName() + "' already exists.");
         }
     }
 
@@ -721,12 +731,10 @@ public class ItemStateValidator {
                 + nodeName.getLocalName() + "' to " + safeGetJCRPath(parentState)
                 + ": colliding with same-named existing property");
 
-        } else if (parentState.hasChildNodeEntry(nodeName)) {
+        } else if (parentState.hasChildNodeEntry(nodeName, Path.INDEX_DEFAULT)) {
             // retrieve the existing node state that ev. conflicts with the new one.
             try {
-                ChildNodeEntry cne = parentState.getChildNodeEntry(nodeName, Path.INDEX_DEFAULT);
-                // cne must not be null, since existence has been checked before
-                NodeState conflictingState = cne.getNodeState();
+                NodeState conflictingState = parentState.getChildNodeState(nodeName, Path.INDEX_DEFAULT);
                 QNodeDefinition conflictDef = conflictingState.getDefinition();
                 QNodeDefinition newDef = getApplicableNodeDefinition(nodeName, nodeTypeName, parentState);
 
@@ -740,28 +748,6 @@ public class ItemStateValidator {
             } catch (ItemStateException e) {
                 // should not occur, since existence has been asserted before
                 throw new RepositoryException(e);
-            }
-        }
-    }
-
-    /**
-     *
-     * @param toDelete
-     * @throws ReferentialIntegrityException
-     * @throws RepositoryException
-     */
-    private void checkReferences(ItemState toDelete) throws ReferentialIntegrityException, RepositoryException {
-        if (!toDelete.isNode()) {
-            // PropertyState: nothing to do.
-            return;
-        }
-
-        NodeState targetState = (NodeState)toDelete;
-        EffectiveNodeType ent = getEffectiveNodeType(targetState);
-        if (ent.includesNodeType(QName.MIX_REFERENCEABLE)) {
-            ItemStateManager stateMgr = mgrProvider.getItemStateManager();
-            if (stateMgr.hasReferingStates(targetState)) {
-                throw new ReferentialIntegrityException(safeGetJCRPath(targetState) + ": cannot remove node with references");
             }
         }
     }

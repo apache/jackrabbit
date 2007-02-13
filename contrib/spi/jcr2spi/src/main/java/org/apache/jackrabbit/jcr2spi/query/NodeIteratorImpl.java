@@ -23,7 +23,7 @@ import javax.jcr.Item;
 import javax.jcr.Node;
 
 import org.apache.jackrabbit.jcr2spi.ItemManager;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.QueryResultRow;
@@ -43,8 +43,8 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
     /** ItemManager to turn Ids into Node instances */
     private final ItemManager itemMgr;
 
-    /** ItemManager to turn Ids into Node instances */
-    private final ItemStateManager itemStateMgr;
+    /**  */
+    private final HierarchyManager hierarchyMgr;
 
     /** The QueryResultRows */
     private final QueryResultRowIterator rows;
@@ -68,14 +68,14 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
      * Creates a new <code>NodeIteratorImpl</code> instance.
      *
      * @param itemMgr The <code>ItemManager</code> to build <code>Node</code> instances.
-     * @param itemStateMgr The <code>ItemStateManager</code> used to build
-     * <code>ItemState</code>s from the ids returned by the query.
+     * @param hierarchyMgr The <code>HierarchyManager</code> used to retrieve the
+     * HierarchyEntry objects from the ids returned by the query.
      * @param queryInfo the query result.
      */
-    public NodeIteratorImpl(ItemManager itemMgr, ItemStateManager itemStateMgr,
+    public NodeIteratorImpl(ItemManager itemMgr, HierarchyManager hierarchyMgr,
                             QueryInfo queryInfo) {
         this.itemMgr = itemMgr;
-        this.itemStateMgr = itemStateMgr;
+        this.hierarchyMgr = hierarchyMgr;
         this.rows = queryInfo.getRows();
         
         fetchNext();
@@ -214,7 +214,7 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
             try {
                 QueryResultRow row = rows.nextQueryResultRow();
                 nextId = row.getNodeId();
-                Item tmp = itemMgr.getItem(itemStateMgr.getItemState(nextId));
+                Item tmp = itemMgr.getItem(hierarchyMgr.getHierarchyEntry(nextId));
 
                 if (tmp.isNode()) {
                     next = (Node) tmp;

@@ -25,29 +25,35 @@ import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.ChildInfo;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.MalformedPathException;
 
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
+import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Collections;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * <code>WorkspaceItemStateFactory</code>...
  */
-public class WorkspaceItemStateFactory implements ItemStateFactory {
+public class WorkspaceItemStateFactory extends AbstractItemStateFactory implements ItemStateFactory {
 
     private static Logger log = LoggerFactory.getLogger(WorkspaceItemStateFactory.class);
 
@@ -55,9 +61,8 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
     private final SessionInfo sessionInfo;
     private final WorkspaceManager wspManager;
 
-    private ItemStateCache cache;
-
-    public WorkspaceItemStateFactory(RepositoryService service, SessionInfo sessionInfo, WorkspaceManager wspManager) {
+    public WorkspaceItemStateFactory(RepositoryService service, SessionInfo sessionInfo,
+                                     WorkspaceManager wspManager) {
         this.service = service;
         this.sessionInfo = sessionInfo;
         this.wspManager = wspManager;
@@ -65,12 +70,13 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
 
     /**
      * @inheritDoc
-     * @see ItemStateFactory#createRootState(ItemStateManager)
+     * @see ItemStateFactory#createRootState(NodeEntry)
+     * @param entry
      */
-    public NodeState createRootState(ItemStateManager ism) throws ItemStateException {
+    public NodeState createRootState(NodeEntry entry) throws ItemStateException {
         try {
             NodeInfo info = service.getNodeInfo(sessionInfo, service.getRootId(sessionInfo));
-            return createNodeState(info, null);
+            return createNodeState(info, entry);
         } catch (RepositoryException e) {
             throw new ItemStateException("Internal error while building root state.");
         }
@@ -81,20 +87,15 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
      * <code>RepositoryService</code>.
      *
      * @inheritDoc
-     * @see ItemStateFactory#createNodeState(NodeId, ItemStateManager)
+     * @see ItemStateFactory#createNodeState(NodeId,NodeEntry)
      */
-    public NodeState createNodeState(NodeId nodeId, ItemStateManager ism)
+    public NodeState createNodeState(NodeId nodeId, NodeEntry entry)
             throws NoSuchItemStateException, ItemStateException {
         try {
             NodeInfo info = service.getNodeInfo(sessionInfo, nodeId);
-            NodeId parentId = info.getParentId();
-            if (parentId != null) {
-                NodeState parent = (NodeState) ism.getItemState(parentId);
-                return parent.getChildNodeEntry(nodeId).getNodeState();
-            } else {
-                // special case for root state
-                return createNodeState(info, null);
-            }
+            return createNodeState(info, entry);
+        } catch (PathNotFoundException e) {
+            throw new NoSuchItemStateException(e.getMessage(), e);
         } catch (ItemNotFoundException e) {
             throw new NoSuchItemStateException(e.getMessage(), e);
         } catch (RepositoryException e) {
@@ -102,85 +103,37 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
         }
     }
 
-    /**
-     * Creates the node with information retrieved from the
-     * <code>RepositoryService</code>.
-     *
-     * @inheritDoc
-     * @see ItemStateFactory#createNodeState(NodeId, NodeState)
-     */
-    public NodeState createNodeState(NodeId nodeId, NodeState parent)
-            throws NoSuchItemStateException, ItemStateException {
+    public NodeState createDeepNodeState(NodeId nodeId, NodeEntry anyParent) throws NoSuchItemStateException, ItemStateException {
         try {
             NodeInfo info = service.getNodeInfo(sessionInfo, nodeId);
-            return createNodeState(info, parent);
+            // node for nodeId exists -> build missing entries in hierarchy
+            // Note, that the path contained in NodeId does not reveal which
+            // entries are missing -> calculate relative path.
+            Path anyParentPath = anyParent.getPath();
+            Path relPath = anyParentPath.computeRelativePath(info.getPath());
+            Path.PathElement[] missingElems = relPath.getElements();
+
+            NodeEntry entry = anyParent;
+            for (int i = 0; i < missingElems.length; i++) {
+                QName name = missingElems[i].getName();
+                int index = missingElems[i].getNormalizedIndex();
+                if (entry.hasNodeEntry(name, index)) {
+                    entry = entry.getNodeEntry(name, index);
+                } else {
+                    entry = entry.addNodeEntry(name, null, index);
+                }
+            }
+            if (entry == anyParent) {
+                throw new ItemStateException("Internal error while getting deep itemState");
+            }
+            return createNodeState(info, entry);
         } catch (PathNotFoundException e) {
             throw new NoSuchItemStateException(e.getMessage(), e);
-        } catch (RepositoryException e) {
+        } catch (ItemNotFoundException e) {
+            throw new NoSuchItemStateException(e.getMessage(), e);
+        }  catch (RepositoryException e) {
             throw new ItemStateException(e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Creates the node with information retrieved from <code>info</code>.
-     *
-     * @param info the <code>NodeInfo</code> to use to create the
-     * <code>NodeState</code>.
-     * @param parent the parent <code>NodeState</code>.
-     * @return the new <code>NodeState</code>.
-     */
-    private NodeState createNodeState(NodeInfo info, NodeState parent)
-            throws NoSuchItemStateException, ItemStateException {
-        try {
-            // retrieve definition
-            QNodeDefinition definition;
-            if (parent == null) {
-                // special case for root state
-                definition = wspManager.getNodeTypeRegistry().getRootNodeDef();
-            } else {
-                NodeTypeRegistry ntReg = wspManager.getNodeTypeRegistry();
-                EffectiveNodeType ent = ntReg.getEffectiveNodeType(parent.getNodeTypeNames());
-                definition = ent.getApplicableNodeDefinition(info.getQName(), info.getNodetype(), ntReg);
-            }
-
-            // build the node state
-            String uniqueID = null;
-            if (info.getId().getPath() == null) {
-                uniqueID = info.getId().getUniqueID();
-            }
-            NodeState state = new NodeState(info.getQName(), uniqueID, parent, info.getNodetype(),
-                definition, Status.EXISTING, this, service.getIdFactory(), true);
-
-            // names of child property entries
-            Set propNames = new HashSet();
-            for (IdIterator it = info.getPropertyIds(); it.hasNext(); ) {
-                PropertyId pId = (PropertyId) it.nextId();
-                propNames.add(pId.getQName());
-            }
-
-            // Build node-references object even if the state is not refereceable yet.
-            PropertyId[] references = info.getReferences();
-            NodeReferences nodeRefs = new NodeReferencesImpl(state, references);
-
-            state.init(info.getMixins(), propNames, nodeRefs);
-
-            state.addListener(cache);
-            cache.created(state);
-
-            return state;
-        } catch (NodeTypeConflictException e) {
-            String msg = "Internal error: failed to retrieve node definition.";
-            log.debug(msg);
-            throw new ItemStateException(msg, e);
-        } catch (ConstraintViolationException e) {
-            String msg = "Internal error: failed to retrieve node definition.";
-            log.debug(msg);
-            throw new ItemStateException(msg, e);
-        } catch (NoSuchNodeTypeException e) {
-            String msg = "internal error: failed to retrieve node definition.";
-            log.debug(msg);
-            throw new ItemStateException(msg, e);
-        } catch (RepositoryException e) {
+        } catch (MalformedPathException e) {
             throw new ItemStateException(e.getMessage(), e);
         }
     }
@@ -190,36 +143,174 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
      * <code>RepositoryService</code>.
      *
      * @inheritDoc
-     * @see ItemStateFactory#createPropertyState(PropertyId, NodeState)
+     * @see ItemStateFactory#createPropertyState(PropertyId,PropertyEntry)
      */
     public PropertyState createPropertyState(PropertyId propertyId,
-                                             NodeState parent)
+                                             PropertyEntry entry)
             throws NoSuchItemStateException, ItemStateException {
         try {
             PropertyInfo info = service.getPropertyInfo(sessionInfo, propertyId);
-            return createPropertyState(info, parent);
+            return createPropertyState(info, entry);
         } catch (PathNotFoundException e) {
+            throw new NoSuchItemStateException(e.getMessage(), e);
+        } catch (ItemNotFoundException e) {
             throw new NoSuchItemStateException(e.getMessage(), e);
         } catch (RepositoryException e) {
             throw new ItemStateException(e.getMessage(), e);
         }
     }
 
-    public ChildNodeEntries getChildNodeEntries(NodeState nodeState)
+    public PropertyState createDeepPropertyState(PropertyId propertyId, NodeEntry anyParent) throws NoSuchItemStateException, ItemStateException {
+        try {
+            PropertyInfo info = service.getPropertyInfo(sessionInfo, propertyId);
+            // prop for propertyId exists -> build missing entries in hierarchy
+            // Note, that the path contained in PropertyId does not reveal which
+            // entries are missing -> calculate relative path.
+            Path anyParentPath = anyParent.getPath();
+            Path relPath = anyParentPath.computeRelativePath(info.getPath());
+            Path.PathElement[] missingElems = relPath.getElements();
+            NodeEntry entry = anyParent;
+            int i = 0;
+            // NodeEntries except for the very last 'missingElem'
+            while (i < missingElems.length - 1) {
+                QName name = missingElems[i].getName();
+                int index = missingElems[i].getNormalizedIndex();
+                if (entry.hasNodeEntry(name, index)) {
+                    entry = entry.getNodeEntry(name, index);
+                } else {
+                    entry = entry.addNodeEntry(name, null, index);
+                }
+                i++;
+            }
+            // create PropertyEntry for the last element if not existing yet
+            QName propName = missingElems[i].getName();
+            PropertyEntry propEntry;
+            if (!entry.hasPropertyEntry(propName)) {
+                propEntry = entry.addPropertyEntry(propName);
+            } else {
+                propEntry = entry.getPropertyEntry(propName);
+            }
+            return createPropertyState(info, propEntry);
+        } catch (PathNotFoundException e) {
+            throw new NoSuchItemStateException(e.getMessage(), e);
+        } catch (ItemNotFoundException e) {
+            throw new NoSuchItemStateException(e.getMessage(), e);
+        } catch (RepositoryException e) {
+            throw new ItemStateException(e.getMessage(), e);
+        } catch (MalformedPathException e) {
+            throw new ItemStateException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * @inheritDoc
+     * @see ItemStateFactory#getChildNodeInfos(NodeId)
+     * @param nodeId
+     */
+    public Iterator getChildNodeInfos(NodeId nodeId)
         throws NoSuchItemStateException, ItemStateException {
         try {
-            ChildNodeEntries entries = new ChildNodeEntries(nodeState);
-            Iterator childInfos = service.getChildInfos(sessionInfo, nodeState.getNodeId());
-            while (childInfos.hasNext()) {
-                ChildInfo ci = (ChildInfo) childInfos.next();
-                entries.add(ci.getName(), ci.getUniqueID(), ci.getIndex());
-            }
-            return entries;
+            return service.getChildInfos(sessionInfo, nodeId);
         } catch (PathNotFoundException e) {
+            throw new NoSuchItemStateException(e.getMessage(), e);
+        } catch (ItemNotFoundException e) {
             throw new NoSuchItemStateException(e.getMessage(), e);
         } catch (RepositoryException e) {
             throw new ItemStateException(e.getMessage(), e);
         }
+    }
+
+    /**
+     * @inheritDoc
+     * @see ItemStateFactory#getNodeReferences(NodeState)
+     * @param nodeState
+     */
+    public NodeReferences getNodeReferences(NodeState nodeState) {
+        nodeState.checkIsWorkspaceState();
+        // shortcut
+        if (nodeState.getUniqueID() == null || !nodeState.hasPropertyName(QName.JCR_UUID)) {
+            // for sure not referenceable
+            return EmptyNodeReferences.getInstance();
+        }
+
+        // nodestate has a unique ID and is potentially mix:referenceable
+        // => try to retrieve references
+        try {
+            NodeInfo info = service.getNodeInfo(sessionInfo, nodeState.getNodeId());
+            return new NodeReferencesImpl(info.getReferences());
+        } catch (RepositoryException e) {
+            log.debug("No references for NodeState " + nodeState);
+            return EmptyNodeReferences.getInstance();
+        }
+    }
+
+    //------------------------------------------------------------< private >---
+    /**
+     * Creates the node with information retrieved from <code>info</code>.
+     *
+     * @param info the <code>NodeInfo</code> to use to create the <code>NodeState</code>.
+     * @param entry
+     * @return the new <code>NodeState</code>.
+     */
+    private NodeState createNodeState(NodeInfo info, NodeEntry entry) {
+        // make sure the entry has the correct ItemId
+        // this make not be the case, if the hierachy has not been completely
+        // resolved yet -> if uniqueID is present, set it on this entry or on
+        // the appropriate parent entry
+        String uniqueID = info.getId().getUniqueID();
+        Path path = info.getId().getPath();
+        if (path == null) {
+            entry.setUniqueID(uniqueID);
+        } else if (uniqueID != null) {
+            // uniqueID that applies to a parent NodeEntry -> get parentEntry
+            NodeEntry parent = getAncestor(entry, path.getLength());
+            parent.setUniqueID(uniqueID);
+        }
+
+        // retrieve definition
+        NodeTypeRegistry ntReg = wspManager.getNodeTypeRegistry();
+        QNodeDefinition definition = null;
+        NodeEntry parent = entry.getParent();
+        if (parent == null) {
+            // special case for root state
+            definition = wspManager.getNodeTypeRegistry().getRootNodeDef();
+        } else if (parent.isAvailable() && parent.getStatus() != Status.INVALIDATED) {
+            // try to retrieve definition if the parent is available
+            try {
+                NodeState parentState = parent.getNodeState();
+                EffectiveNodeType ent = ntReg.getEffectiveNodeType(parentState.getNodeTypeNames());
+                definition = ent.getApplicableNodeDefinition(info.getQName(), info.getNodetype(), ntReg);
+            } catch (RepositoryException e) {
+                // should not get here
+                log.warn("Internal error", e);
+            } catch (ItemStateException e) {
+                // should not get here
+                log.warn("Internal error", e);
+            } catch (NodeTypeConflictException e) {
+                // should not get here
+               log.warn("Internal error", e);
+            }
+        }
+
+        // now build the nodestate itself
+        NodeState state = new NodeState(entry, info.getNodetype(), info.getMixins(), definition, Status.EXISTING, true, this, ntReg);
+
+        // update NodeEntry from the information present in the NodeInfo (prop entries)
+        List propNames = new ArrayList();
+        for (IdIterator it = info.getPropertyIds(); it.hasNext(); ) {
+            PropertyId pId = (PropertyId) it.nextId();
+            QName propertyName = pId.getQName();
+            propNames.add(propertyName);
+        }
+        try {
+            entry.addPropertyEntries(propNames);
+        } catch (ItemExistsException e) {
+            // should not get here
+            log.warn("Internal error", e);
+        }
+
+        notifyCreated(state);
+        return state;
     }
 
     /**
@@ -227,47 +318,61 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
      *
      * @param info   the <code>PropertyInfo</code> to use to create the
      *               <code>PropertyState</code>.
-     * @param parent the parent <code>NodeState</code>.
+     * @param entry
      * @return the new <code>PropertyState</code>.
-     * @throws ItemStateException if an error occurs while retrieving the
-     *                            <code>PropertyState</code>.
      */
-    private PropertyState createPropertyState(PropertyInfo info, NodeState parent)
-        throws ItemStateException {
-        try {
-
-            // retrieve property definition
-            EffectiveNodeType ent = wspManager.getNodeTypeRegistry().getEffectiveNodeType(parent.getNodeTypeNames());
-            QPropertyDefinition def = ent.getApplicablePropertyDefinition(info.getQName(), info.getType(), info.isMultiValued());
-
-            // build the PropertyState
-            PropertyState state = new PropertyState(info.getQName(), parent,
-                def, Status.EXISTING, this, service.getIdFactory(), true);
-            state.init(info.getType(), info.getValues());
-            state.addListener(cache);
-            cache.created(state);
-
-            return state;
-        } catch (NodeTypeConflictException e) {
-            String msg = "internal error: failed to build property state.";
-            log.debug(msg);
-            throw new ItemStateException(msg, e);
-        } catch (RepositoryException e) {
-            String msg = "internal error: failed to build property state.";
-            log.debug(msg);
-            throw new ItemStateException(msg, e);
+    private PropertyState createPropertyState(PropertyInfo info, PropertyEntry entry) {
+        // make sure uuid part of id is correct
+        String uniqueID = info.getId().getUniqueID();
+        if (uniqueID != null) {
+            // uniqueID always applies to a parent NodeEntry -> get parentEntry
+            NodeEntry parent = getAncestor(entry, info.getId().getPath().getLength());
+            parent.setUniqueID(uniqueID);
         }
+
+        QPropertyDefinition definition = null;
+        // try to retrieve property definition
+        if (entry.getParent().isAvailable() && entry.getStatus() != Status.INVALIDATED) {
+            NodeState parentState = null;
+            try {
+                parentState = entry.getParent().getNodeState();
+                EffectiveNodeType ent = wspManager.getNodeTypeRegistry().getEffectiveNodeType(parentState.getNodeTypeNames());
+                definition = ent.getApplicablePropertyDefinition(info.getQName(), info.getType(), info.isMultiValued());
+            } catch (ItemStateException e) {
+                // should not get here
+                log.warn("Internal error", e);
+            } catch (RepositoryException e) {
+                // should not get here
+                log.warn("Internal error", e);
+            } catch (NodeTypeConflictException e) {
+                // should not get here
+                log.warn("Internal error", e);
+            }
+        }
+
+        // build the PropertyState
+        PropertyState state = new PropertyState(entry, info.isMultiValued(), definition, Status.EXISTING, true, this, wspManager.getNodeTypeRegistry());
+        state.init(info.getType(), info.getValues());
+
+        //state.addListener(cache);
+        //cache.created(state);
+        notifyCreated(state);
+
+        return state;
     }
 
-    /**
-     *
-     * @param cache
-     * @see ItemStateFactory#setCache(ItemStateCache)
-     */
-    public void setCache(ItemStateCache cache) {
-        this.cache = cache;
+    private static NodeEntry getAncestor(HierarchyEntry entry, int degree) {
+        NodeEntry parent = entry.getParent();
+        degree--;
+        while (parent != null && degree > 0) {
+            parent = parent.getParent();
+            degree--;
+        }
+        if (degree != 0) {
+            throw new IllegalArgumentException();
+        }
+        return parent;
     }
-
     //-----------------------------------------------------< NodeReferences >---
     /**
      * <code>NodeReferences</code> represents the references (i.e. properties of
@@ -275,21 +380,15 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
      */
     private class NodeReferencesImpl implements NodeReferences {
 
-        private NodeState nodeState;
+        private PropertyId[] references;
 
         /**
          * Private constructor
          *
-         * @param nodeState
-         * @param referenceIds
+         * @param references
          */
-        private NodeReferencesImpl(NodeState nodeState, PropertyId[] referenceIds) {
-            this.nodeState = nodeState;
-
-            // TODO: improve. make usage of the references returned
-            // with NodeInfo that was just retrieved and implement a notification
-            // mechanism that updates this NodeReference object if references
-            // are modified.
+        private NodeReferencesImpl(PropertyId[] references) {
+            this.references = references;
         }
 
         //-------------------------------------------------< NodeReferences >---
@@ -297,42 +396,18 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
          * @see NodeReferences#isEmpty()
          */
         public boolean isEmpty() {
-            // shortcut
-            if (nodeState.getUniqueID() == null) {
-                return true;
-            }
-            // nodestate has a unique ID and is potentially mix:referenceable
-            // => try to retrieve references
-            try {
-                NodeInfo info = service.getNodeInfo(sessionInfo, nodeState.getNodeId());
-                return info.getReferences().length > 0;
-            } catch (RepositoryException e) {
-                log.error("Internal error.",e);
-                return false;
-            }
+            return references.length <= 0;
         }
 
         /**
          * @see NodeReferences#iterator()
          */
         public Iterator iterator() {
-            // shortcut
-            if (nodeState.getUniqueID() == null) {
-                return Collections.EMPTY_SET.iterator();
-            }
-            // nodestate has a uniqueID and is potentially mix:referenceable
-            // => try to retrieve references
-            try {
-                NodeInfo info = service.getNodeInfo(sessionInfo, nodeState.getNodeId());
-                if (info.getReferences().length > 0) {
-                    Set referenceIds = new HashSet();
-                    referenceIds.addAll(Arrays.asList(info.getReferences()));
-                    return Collections.unmodifiableSet(referenceIds).iterator();
-                } else {
-                    return Collections.EMPTY_SET.iterator();
-                }
-            } catch (RepositoryException e) {
-                log.error("Internal error.", e);
+            if (references.length > 0) {
+                Set referenceIds = new HashSet();
+                referenceIds.addAll(Arrays.asList(references));
+                return Collections.unmodifiableSet(referenceIds).iterator();
+            } else {
                 return Collections.EMPTY_SET.iterator();
             }
         }

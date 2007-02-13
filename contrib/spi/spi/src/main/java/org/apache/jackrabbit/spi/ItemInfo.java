@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.spi;
 
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.Path;
 
 /**
  * <code>ItemInfo</code>...
@@ -37,4 +38,10 @@ public interface ItemInfo {
      * @return Return true if this ItemInfo denotes a node, false otherwise
      */
     public boolean denotesNode();
+
+    /**
+     * @return Return the <code>Path</code> of the Item represented by this
+     * item info.
+     */
+    public Path getPath();
 }

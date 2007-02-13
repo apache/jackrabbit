@@ -42,14 +42,14 @@ import org.apache.jackrabbit.jcr2spi.operation.LockRelease;
 import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveVersion;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.uuid.UUID;
@@ -73,11 +73,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.lock.LockException;
 import java.util.Iterator;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
 import java.io.InputStream;
 
 /**
@@ -107,145 +103,21 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @param workspaceItemStateMgr
      */
     public SessionItemStateManager(UpdatableItemStateManager workspaceItemStateMgr,
-                                   IdFactory idFactory,
                                    ItemStateValidator validator,
-                                   QValueFactory qValueFactory) {
+                                   QValueFactory qValueFactory,
+                                   ItemStateFactory isf) {
+        
         this.workspaceItemStateMgr = workspaceItemStateMgr;
-        this.transientStateMgr = new TransientItemStateManager(idFactory, workspaceItemStateMgr);
+        this.transientStateMgr = new TransientItemStateManager();
+        isf.addCreationListener(transientStateMgr);
+
         this.validator = validator;
         this.qValueFactory = qValueFactory;
     }
 
-    //---------------------------------------------------< ItemStateManager >---
-    /**
-     * {@inheritDoc}
-     * @see ItemStateManager#getRootState()
-     */
-    public NodeState getRootState() throws ItemStateException {
-        // always retrieve from transientStateMgr
-        return transientStateMgr.getRootState();
-    }
-
-    /**
-     * {@inheritDoc}
-     * @see ItemStateManager#getItemState(ItemId)
-     */
-    public ItemState getItemState(ItemId id)
-            throws NoSuchItemStateException, ItemStateException {
-
-        ItemState itemState = transientStateMgr.getItemState(id);
-        // check status of ItemState. Transient ISM also returns removed ItemStates
-        if (itemState.isValid()) {
-            return itemState;
-        } else {
-            throw new NoSuchItemStateException(id.toString());
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     * @see ItemStateManager#hasItemState(ItemId)
-     */
-    public boolean hasItemState(ItemId id) {
-        // first check if the specified item exists at all in the transient ISM
-        if (transientStateMgr.hasItemState(id)) {
-            // retrieve item and check state
-            try {
-                ItemState itemState = transientStateMgr.getItemState(id);
-                if (itemState.isValid()) {
-                    return true;
-                }
-            } catch (ItemStateException e) {
-                // has been removed in the meantime
-            }
-        }
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     * Since node references cannot be managed within the transient space,
-     * this call is delegated to the workspace itemstate manager.
-     *
-     * @see ItemStateManager#getReferingStates(NodeState)
-     * @param nodeState
-     */
-    public Collection getReferingStates(NodeState nodeState) throws ItemStateException {
-        NodeState wspState = (NodeState) nodeState.getWorkspaceState();
-        if (wspState == null) {
-            // new state => unable to determine references
-            return Collections.EMPTY_SET;
-        }
-
-        Collection rs = workspaceItemStateMgr.getReferingStates(wspState);
-        if (rs.isEmpty()) {
-            return rs;
-        } else {
-            // retrieve session-propertystates
-            Set refStates = new HashSet();
-            for (Iterator it =  rs.iterator(); it.hasNext();) {
-                PropertyState wState = (PropertyState) it.next();
-                ItemState sState = wState.getSessionState();
-                if (sState == null) {
-                    // overlaying state has not been build up to now
-                   sState = getItemState(wState.getPropertyId());
-                }
-                // add property state to list of refering states unless it has
-                // be removed in the transient layer.
-                if (sState.isValid()) {
-                   refStates.add(sState);
-                }
-            }
-            return Collections.unmodifiableCollection(refStates);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     * Since node references cannot be managed within the transient space,
-     * this call is delegated to the workspace itemstate manager.
-     *
-     * @see ItemStateManager#hasReferingStates(NodeState)
-     * @param nodeState
-     */
-    public boolean hasReferingStates(NodeState nodeState) {
-        try {
-            return !getReferingStates(nodeState).isEmpty();
-        } catch (ItemStateException e) {
-            log.warn("Internal error", e);
-            return false;
-        }
-    }
-
-    //------------------------------------------< UpdatableItemStateManager >---
-    /**
-     * {@inheritDoc}
-     */
-    public void execute(Operation operation) throws RepositoryException {
-        operation.accept(this);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void execute(ChangeLog changes) throws RepositoryException {
-        throw new UnsupportedOperationException("Not implemented for SessionItemStateManager");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void dispose() {
-        // discard all transient changes
-        transientStateMgr.dispose();
-        // dispose our (i.e. 'local') state manager
-        workspaceItemStateMgr.dispose();
-    }
-
-    //--------------------------------------------------------------------------
     /**
      * @return <code>true</code> if this manager has any transient state;
-     *         <code>false</code> otherwise.
+     * <code>false</code> otherwise.
      */
     public boolean hasPendingChanges() {
         return transientStateMgr.hasPendingChanges();
@@ -285,9 +157,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      *
      * @param itemState the root state of the cancel operation.
      * @throws ItemStateException if undoing changes made to <code>state</code>
-     *                            and descendant items is not a closed set of
-     *                            changes. That is, at least another item needs
-     *                            to be canceled as well in another sub-tree.
+     * and descendant items is not a closed set of changes. That is, at least
+     * another item needs to be canceled as well in another sub-tree.
      */
     public void undo(ItemState itemState) throws ItemStateException, ConstraintViolationException {
         ChangeLog changeLog = getChangeLog(itemState, false);
@@ -298,7 +169,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             IteratorChain chain = new IteratorChain(its);
             while (chain.hasNext()) {
                 ItemState state = (ItemState) chain.next();
-                state.revert();
+                state.getHierarchyEntry().revert();
             }
 
             // remove transient states and related operations from the t-statemanager
@@ -308,7 +179,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     }
 
     /**
-     * Adjust references at the end of a successful {@link Session#importXML(String, InputStream, int) XML import}.
+     * Adjust references at the end of a successful
+     * {@link Session#importXML(String, InputStream, int) XML import}.
      *
      * @param refTracker
      * @throws ConstraintViolationException
@@ -343,46 +215,38 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         refTracker.clear();
     }
 
-    //-------------------------------------------< Transient state handling >---
-
+    //------------------------------------------< UpdatableItemStateManager >---
     /**
-     *
-     * @param itemState
-     * @param throwOnStale Throws StaleItemStateException if either the given
-     * <code>ItemState</code> or any of its decendants is stale and the flag is true.
-     * @return
-     * @throws StaleItemStateException if a stale <code>ItemState</code> is
-     * encountered while traversing the state hierarchy. The <code>changeLog</code>
-     * might have been populated with some transient item states. A client should
-     * therefore not reuse the <code>changeLog</code> if such an exception is thrown.
-     * @throws ItemStateException if <code>state</code> is a new item state.
+     * {@inheritDoc}
+     * @see UpdatableItemStateManager#execute(Operation)
      */
-    private ChangeLog getChangeLog(ItemState itemState, boolean throwOnStale) throws StaleItemStateException, ItemStateException, ConstraintViolationException {
-        // build changelog for affected and decendant states only
-        ChangeLog changeLog = new ChangeLog(itemState);
-        // fail-fast test: check status of this item's state
-        if (itemState.getStatus() == Status.NEW) {
-            String msg = "Cannot save an item with status NEW (" +itemState+ ").";
-            log.debug(msg);
-            throw new ItemStateException(msg);
-        }
-        if (throwOnStale && Status.isStale(itemState.getStatus())) {
-            String msg =  "Attempt to save an item, that has been externally modified (" +itemState+ ").";
-            log.debug(msg);
-            throw new StaleItemStateException(msg);
-        }
-        // collect transient/stale states that should be persisted or reverted
-        itemState.collectStates(changeLog, throwOnStale);
-
-        changeLog.collectOperations(transientStateMgr.getOperations());
-        changeLog.checkIsSelfContained();
-        return changeLog;
+    public void execute(Operation operation) throws RepositoryException {
+        operation.accept(this);
     }
 
-    //--------------------------------------------------------------------------
+    /**
+     * {@inheritDoc}
+     * @see UpdatableItemStateManager#execute(ChangeLog)
+     */
+    public void execute(ChangeLog changes) throws RepositoryException {
+        throw new UnsupportedOperationException("Not implemented for SessionItemStateManager");
+    }
 
     /**
+     * {@inheritDoc}
+     * @see UpdatableItemStateManager#dispose()
+     */
+    public void dispose() {
+        // discard all transient changes
+        transientStateMgr.dispose();
+        // dispose our (i.e. 'local') state manager
+        workspaceItemStateMgr.dispose();
+    }
+
+    //---------------------------------------------------< OperationVisitor >---
+    /**
      * @inheritDoc
+     * @see OperationVisitor#visit(AddNode)
      */
     public void visit(AddNode operation) throws LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_COLLISION
@@ -397,11 +261,12 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
     /**
      * @inheritDoc
+     * @see OperationVisitor#visit(AddProperty)
      */
     public void visit(AddProperty operation) throws ValueFormatException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         NodeState parent = operation.getParentState();
         QName propertyName = operation.getPropertyName();
-        QPropertyDefinition pDef = validator.getApplicablePropertyDefinition(propertyName, operation.getPropertyType(), operation.isMultiValued(), parent);
+        QPropertyDefinition pDef = operation.getDefinition();
         int targetType = pDef.getRequiredType();
         if (targetType == PropertyType.UNDEFINED) {
             targetType = operation.getPropertyType();
@@ -420,6 +285,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
     /**
      * @inheritDoc
+     * @see OperationVisitor#visit(Move)
      */
     public void visit(Move operation) throws LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
 
@@ -453,6 +319,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
     /**
      * @inheritDoc
+     * @see OperationVisitor#visit(Remove)
      */
     public void visit(Remove operation) throws ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         ItemState state = operation.getRemoveState();
@@ -460,61 +327,68 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             | ItemStateValidator.CHECK_VERSIONING
             | ItemStateValidator.CHECK_CONSTRAINTS;
         removeItemState(state, options);
-        // remember operation unless new state got removed
+        // unless new state got removed remember operation and mark parent modified.
         if (!Status.isTerminal(state.getStatus())) {
             transientStateMgr.addOperation(operation);
+            operation.getParentState().markModified();
         }
     }
 
     /**
      * @inheritDoc
+     * @see OperationVisitor#visit(SetMixin)
      */
     public void visit(SetMixin operation) throws ConstraintViolationException, AccessDeniedException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         // NOTE: nodestate is only modified upon save of the changes!
         QName[] mixinNames = operation.getMixinNames();
         NodeState nState = operation.getNodeState();
+        NodeEntry nEntry = (NodeEntry) nState.getHierarchyEntry();
 
-        // new array of mixinNames to be set on the nodestate (and corresponding property state)
-        if (mixinNames != null && mixinNames.length > 0) {
-            // update/create corresponding property state
-            if (nState.hasPropertyName(QName.JCR_MIXINTYPES)) {
-                // execute value of existing property
-                try {
-                    PropertyState pState = nState.getPropertyState(QName.JCR_MIXINTYPES);
+        try {
+            // new array of mixinNames to be set on the nodestate (and corresponding property state)
+            PropertyEntry mixinEntry = nEntry.getPropertyEntry(QName.JCR_MIXINTYPES);
+            if (mixinNames != null && mixinNames.length > 0) {
+                // update/create corresponding property state
+                if (mixinEntry != null) {
+                    // execute value of existing property
+                    PropertyState pState = mixinEntry.getPropertyState();
                     int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
                     setPropertyStateValue(pState, getQValues(mixinNames, qValueFactory), PropertyType.NAME, options);
-                } catch (ItemStateException e) {
-                    // should not occur, since existance has been asserted before
-                    throw new RepositoryException(e);
+                } else {
+                    // create new jcr:mixinTypes property
+                    EffectiveNodeType ent = validator.getEffectiveNodeType(nState);
+                    QPropertyDefinition pd = ent.getApplicablePropertyDefinition(QName.JCR_MIXINTYPES, PropertyType.NAME, true);
+                    QValue[] mixinValue = getQValues(mixinNames, qValueFactory);
+                    int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
+                    addPropertyState(nState, pd.getQName(), pd.getRequiredType(), mixinValue, pd, options);
                 }
+                nState.markModified();
+                transientStateMgr.addOperation(operation);
             } else {
-                // create new jcr:mixinTypes property
-                EffectiveNodeType ent = validator.getEffectiveNodeType(nState);
-                QPropertyDefinition pd = ent.getApplicablePropertyDefinition(QName.JCR_MIXINTYPES, PropertyType.NAME, true);
-                QValue[] mixinValue = getQValues(mixinNames, qValueFactory);
-                int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
-                addPropertyState(nState, pd.getQName(), pd.getRequiredType(), mixinValue, pd, options);
-            }
-        } else {
-            // remove the jcr:mixinTypes property state if already present
-            if (nState.hasPropertyName(QName.JCR_MIXINTYPES)) {
-                try {
-                    PropertyState pState = nState.getPropertyState(QName.JCR_MIXINTYPES);
+                // remove the jcr:mixinTypes property state if already present
+                if (mixinEntry != null) {
+                    PropertyState pState = mixinEntry.getPropertyState();
+                    boolean newMixinState = pState.getStatus() == Status.NEW;
                     int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
                     removeItemState(pState, options);
-                } catch (ItemStateException e) {
-                    // should not occur, since existance has been asserted before
-                    throw new RepositoryException(e);
+                    // only added the remove-mixin operation if it doesn't revert
+                    // a previous 'add-mixin' (which has been removed automatically
+                    // upon notification of removing the prop-state).
+                    if (!newMixinState) {
+                        nState.markModified();
+                        transientStateMgr.addOperation(operation);
+                    }
                 }
             }
+        } catch (ItemStateException e) {
+            // should not occur, since existance has been asserted before
+            throw new RepositoryException(e);
         }
-
-        nState.markModified();
-        transientStateMgr.addOperation(operation);
     }
 
     /**
      * @inheritDoc
+     * @see OperationVisitor#visit(SetPropertyValue)
      */
     public void visit(SetPropertyValue operation) throws ValueFormatException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         PropertyState pState = operation.getPropertyState();
@@ -527,6 +401,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
     /**
      * @inheritDoc
+     * @see OperationVisitor#visit(ReorderNodes)
      */
     public void visit(ReorderNodes operation) throws ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         NodeState parent = operation.getParentState();
@@ -541,63 +416,153 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         transientStateMgr.addOperation(operation);
     }
 
+    /**
+     * @throws UnsupportedOperationException
+     * @see OperationVisitor#visit(Clone)
+     */
     public void visit(Clone operation) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         throw new UnsupportedOperationException("Internal error: Clone cannot be handled by session ItemStateManager.");
     }
 
+    /**
+     * @throws UnsupportedOperationException
+     * @see OperationVisitor#visit(Clone)
+     */
     public void visit(Copy operation) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         throw new UnsupportedOperationException("Internal error: Copy cannot be handled by session ItemStateManager.");
     }
 
+    /**
+     * @throws UnsupportedOperationException
+     * @see OperationVisitor#visit(Clone)
+     */
     public void visit(Checkout operation) throws RepositoryException, UnsupportedRepositoryOperationException {
         throw new UnsupportedOperationException("Internal error: Checkout cannot be handled by session ItemStateManager.");
     }
 
+    /**
+     * @throws UnsupportedOperationException
+     * @see OperationVisitor#visit(Clone)
+     */
     public void visit(Checkin operation) throws UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
         throw new UnsupportedOperationException("Internal error: Checkin cannot be handled by session ItemStateManager.");
     }
 
+    /**
+     * @throws UnsupportedOperationException
+     * @see OperationVisitor#visit(Update)
+     */
     public void visit(Update operation) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException {
         throw new UnsupportedOperationException("Internal error: Update cannot be handled by session ItemStateManager.");
     }
 
+    /**
+     * @throws UnsupportedOperationException
+     * @see OperationVisitor#visit(Restore)
+     */
     public void visit(Restore operation) throws VersionException, PathNotFoundException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
         throw new UnsupportedOperationException("Internal error: Restore cannot be handled by session ItemStateManager.");
     }
 
+    /**
+     * @throws UnsupportedOperationException
+     * @see OperationVisitor#visit(Merge)
+     */
     public void visit(Merge operation) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
         throw new UnsupportedOperationException("Internal error: Merge cannot be handled by session ItemStateManager.");
     }
 
+    /**
+     * @throws UnsupportedOperationException
+     * @see OperationVisitor#visit(ResolveMergeConflict)
+     */
     public void visit(ResolveMergeConflict operation) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException {
         throw new UnsupportedOperationException("Internal error: Update cannot be handled by session ItemStateManager.");
     }
 
+    /**
+     * @throws UnsupportedOperationException
+     * @see OperationVisitor#visit(LockOperation)
+     */
     public void visit(LockOperation operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
         throw new UnsupportedOperationException("Internal error: Lock cannot be handled by session ItemStateManager.");
     }
 
+    /**
+     * @throws UnsupportedOperationException
+     * @see OperationVisitor#visit(LockRefresh)
+     */
     public void visit(LockRefresh operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
         throw new UnsupportedOperationException("Internal error: LockRefresh cannot be handled by session ItemStateManager.");
     }
 
+    /**
+     * @throws UnsupportedOperationException
+     * @see OperationVisitor#visit(LockRelease)
+     */
     public void visit(LockRelease operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
         throw new UnsupportedOperationException("Internal error: LockRelease cannot be handled by session ItemStateManager.");
     }
 
+    /**
+     * @throws UnsupportedOperationException
+     * @see OperationVisitor#visit(AddLabel)
+     */
     public void visit(AddLabel operation) throws VersionException, RepositoryException {
         throw new UnsupportedOperationException("Internal error: AddLabel cannot be handled by session ItemStateManager.");
     }
 
+    /**
+     * @throws UnsupportedOperationException
+     * @see OperationVisitor#visit(RemoveLabel)
+     */
     public void visit(RemoveLabel operation) throws VersionException, RepositoryException {
         throw new UnsupportedOperationException("Internal error: RemoveLabel cannot be handled by session ItemStateManager.");
     }
 
+    /**
+     * @throws UnsupportedOperationException
+     * @see OperationVisitor#visit(RemoveVersion)
+     */
     public void visit(RemoveVersion operation) throws VersionException, AccessDeniedException, ReferentialIntegrityException, RepositoryException {
         throw new UnsupportedOperationException("Internal error: RemoveVersion cannot be handled by session ItemStateManager.");
     }
 
     //--------------------------------------------< Internal State Handling >---
+    /**
+     *
+     * @param itemState
+     * @param throwOnStale Throws StaleItemStateException if either the given
+     * <code>ItemState</code> or any of its decendants is stale and the flag is true.
+     * @return
+     * @throws StaleItemStateException if a stale <code>ItemState</code> is
+     * encountered while traversing the state hierarchy. The <code>changeLog</code>
+     * might have been populated with some transient item states. A client should
+     * therefore not reuse the <code>changeLog</code> if such an exception is thrown.
+     * @throws ItemStateException if <code>state</code> is a new item state.
+     */
+    private ChangeLog getChangeLog(ItemState itemState, boolean throwOnStale) throws StaleItemStateException, ItemStateException, ConstraintViolationException {
+        // build changelog for affected and decendant states only
+        ChangeLog changeLog = new ChangeLog(itemState);
+        // fail-fast test: check status of this item's state
+        if (itemState.getStatus() == Status.NEW) {
+            String msg = "Cannot save an item with status NEW (" +itemState+ ").";
+            log.debug(msg);
+            throw new ItemStateException(msg);
+        }
+        if (throwOnStale && Status.isStale(itemState.getStatus())) {
+            String msg =  "Attempt to save an item, that has been externally modified (" +itemState+ ").";
+            log.debug(msg);
+            throw new StaleItemStateException(msg);
+        }
+        // collect transient/stale states that should be persisted or reverted
+        itemState.getHierarchyEntry().collectStates(changeLog, throwOnStale);
+
+        changeLog.collectOperations(transientStateMgr.getOperations());
+        changeLog.checkIsSelfContained();
+        return changeLog;
+    }
+
     /**
      *
      * @param parent
@@ -685,7 +650,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         // recursively remove the given state and all child states.
         boolean success = false;
         try {
-            itemState.remove();
+            itemState.getHierarchyEntry().transientRemove();
             success = true;
         } catch (ItemStateException e) {
             throw new RepositoryException("Cannot remove item: " + e.getMessage(), e);

@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.spi.QValue;
 
 import javax.jcr.RepositoryException;
@@ -60,9 +61,10 @@ public class SetPropertyValue extends AbstractOperation {
     /**
      * Throws UnsupportedOperationException
      *
-     * @see Operation#persisted()
+     * @see Operation#persisted(CacheBehaviour)
+     * @param cacheBehaviour
      */
-    public void persisted() {
+    public void persisted(CacheBehaviour cacheBehaviour) {
         throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
     }
 

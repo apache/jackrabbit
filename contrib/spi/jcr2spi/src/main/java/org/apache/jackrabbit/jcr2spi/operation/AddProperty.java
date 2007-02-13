@@ -20,6 +20,7 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemExistsException;
@@ -64,9 +65,10 @@ public class AddProperty extends AbstractOperation {
     /**
      * Throws UnsupportedOperationException
      *
-     * @see Operation#persisted()
+     * @see Operation#persisted(CacheBehaviour)
+     * @param cacheBehaviour
      */
-    public void persisted() {
+    public void persisted(CacheBehaviour cacheBehaviour) {
         throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
     }
     //----------------------------------------< Access Operation Parameters >---
@@ -88,6 +90,10 @@ public class AddProperty extends AbstractOperation {
 
     public boolean isMultiValued() {
         return definition.isMultiple();
+    }
+
+    public QPropertyDefinition getDefinition() {
+        return definition;
     }
 
     //------------------------------------------------------------< Factory >---

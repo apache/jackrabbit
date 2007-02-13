@@ -41,7 +41,6 @@ import javax.jcr.LoginException;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.query.InvalidQueryException;
 import java.util.Map;
-import java.util.Collection;
 import java.util.Iterator;
 import java.io.InputStream;
 

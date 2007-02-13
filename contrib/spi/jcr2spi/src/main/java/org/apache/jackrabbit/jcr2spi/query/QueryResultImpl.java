@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.query;
 
 import org.apache.jackrabbit.jcr2spi.ItemManager;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
@@ -47,9 +47,9 @@ class QueryResultImpl implements QueryResult {
     private final ItemManager itemMgr;
 
     /**
-     * The item state manager of the session executing the query
+     * The HierarchyManager of the session executing the query
      */
-    private final ItemStateManager itemStateMgr;
+    private final HierarchyManager hierarchyMgr;
 
     /**
      * The spi query result.
@@ -65,14 +65,14 @@ class QueryResultImpl implements QueryResult {
      * Creates a new query result.
      *
      * @param itemMgr     the item manager of the session executing the query.
-     * @param itemStateMgr the item state manager of the session executing the query.
+     * @param hierarchyMgr the HierarchyManager of the session executing the query.
      * @param queryInfo   the spi query result.
      * @param nsResolver    the namespace nsResolver of the session executing the query.
      */
-    QueryResultImpl(ItemManager itemMgr, ItemStateManager itemStateMgr,
+    QueryResultImpl(ItemManager itemMgr, HierarchyManager hierarchyMgr,
                     QueryInfo queryInfo, NamespaceResolver nsResolver) {
         this.itemMgr = itemMgr;
-        this.itemStateMgr = itemStateMgr;
+        this.hierarchyMgr = hierarchyMgr;
         this.queryInfo = queryInfo;
         this.nsResolver = nsResolver;
     }
@@ -114,7 +114,7 @@ class QueryResultImpl implements QueryResult {
      * Creates a node iterator over the result nodes.
      * @return a node iterator over the result nodes.
      */
-    private ScoreNodeIterator getNodeIterator() throws RepositoryException {
-        return new NodeIteratorImpl(itemMgr, itemStateMgr, queryInfo);
+    private ScoreNodeIterator getNodeIterator() {
+        return new NodeIteratorImpl(itemMgr, hierarchyMgr, queryInfo);
     }
 }

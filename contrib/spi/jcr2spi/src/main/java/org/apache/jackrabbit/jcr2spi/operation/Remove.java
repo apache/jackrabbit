@@ -18,6 +18,8 @@ package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
@@ -30,12 +32,14 @@ import javax.jcr.version.VersionException;
 public class Remove extends AbstractOperation {
 
     protected ItemState removeState;
+    protected NodeState parent;
 
-    protected Remove(ItemState removeState) {
+    protected Remove(ItemState removeState, NodeState parent) {
         this.removeState = removeState;
+        this.parent = parent;
 
         addAffectedItemState(removeState);
-        addAffectedItemState(removeState.getParent());
+        addAffectedItemState(parent);
     }
 
     //----------------------------------------------------------< Operation >---
@@ -49,9 +53,10 @@ public class Remove extends AbstractOperation {
     /**
      * Throws UnsupportedOperationException
      *
-     * @see Operation#persisted()
+     * @see Operation#persisted(CacheBehaviour)
+     * @param cacheBehaviour
      */
-    public void persisted() {
+    public void persisted(CacheBehaviour cacheBehaviour) {
         throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
     }
 
@@ -62,12 +67,21 @@ public class Remove extends AbstractOperation {
     }
 
     public NodeState getParentState() {
-        return removeState.getParent();
+        return parent;
     }
 
     //------------------------------------------------------------< Factory >---
-    public static Operation create(ItemState state) {
-        Remove rm = new Remove(state);
+    public static Operation create(ItemState state) throws RepositoryException {
+        try {
+            Remove rm = new Remove(state, state.getParent());
+            return rm;
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        }
+    }
+
+    public static Operation create(ItemState state, NodeState parent) {
+        Remove rm = new Remove(state, parent);
         return rm;
     }
 }

@@ -15,20 +15,12 @@
 */
 package org.apache.jackrabbit.spi2dav;
 
-import org.apache.jackrabbit.webdav.lock.LockDiscovery;
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
-import org.apache.jackrabbit.webdav.lock.Type;
-import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
-
-import javax.jcr.lock.LockException;
-import javax.jcr.RepositoryException;
-import java.util.List;
-import java.util.Iterator;
 
 /**
  * <code>LockInfoImpl</code>...
@@ -37,26 +29,12 @@ public class LockInfoImpl implements LockInfo {
 
     private static Logger log = LoggerFactory.getLogger(LockInfoImpl.class);
 
-    private ActiveLock activeLock;
+    private final ActiveLock activeLock;
+    private final NodeId nodeId;
 
-    public LockInfoImpl(LockDiscovery ld, NodeId nodeId) throws LockException, RepositoryException {
-        List activeLocks = (List) ld.getValue();
-        Iterator it = activeLocks.iterator();
-        while (it.hasNext()) {
-            ActiveLock l = (ActiveLock) it.next();
-            Scope sc = l.getScope();
-            if (l.getType() == Type.WRITE && (sc == Scope.EXCLUSIVE || sc == ItemResourceConstants.EXCLUSIVE_SESSION)) {
-                if (activeLock != null) {
-                    throw new RepositoryException("Node " + nodeId + " contains multiple exclusive write locks.");
-                } else {
-                    activeLock = l;
-                }
-            }
-        }
-
-        if (activeLock == null) {
-            throw new LockException("No lock present on node " + nodeId);
-        }
+    public LockInfoImpl(ActiveLock activeLock, NodeId nodeId) {
+        this.activeLock = activeLock;
+        this.nodeId = nodeId;
     }
 
     public String getLockToken() {
@@ -73,5 +51,9 @@ public class LockInfoImpl implements LockInfo {
 
     public boolean isSessionScoped() {
         return activeLock.getScope() == ItemResourceConstants.EXCLUSIVE_SESSION;
+    }
+
+    public NodeId getNodeId() {
+        return nodeId;
     }
 }

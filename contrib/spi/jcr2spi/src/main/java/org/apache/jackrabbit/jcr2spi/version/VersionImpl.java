@@ -32,7 +32,6 @@ import javax.jcr.Value;
 import javax.jcr.Node;
 import javax.jcr.Item;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.Calendar;
 
@@ -44,8 +43,8 @@ public class VersionImpl extends NodeImpl implements Version {
     private static Logger log = LoggerFactory.getLogger(VersionImpl.class);
 
     public VersionImpl(ItemManager itemMgr, SessionImpl session, NodeState state,
-                       NodeDefinition definition, ItemLifeCycleListener[] listeners) {
-        super(itemMgr, session, state, definition, listeners);
+                       ItemLifeCycleListener[] listeners) {
+        super(itemMgr, session, state, listeners);
     }
 
     //------------------------------------------------------------< Version >---
@@ -114,6 +113,8 @@ public class VersionImpl extends NodeImpl implements Version {
 
     //-----------------------------------------------------------< ItemImpl >---
     /**
+     * Always throws ConstraintViolationException since the version storage is
+     * protected.
      *
      * @throws UnsupportedRepositoryOperationException
      * @throws ConstraintViolationException
@@ -124,6 +125,16 @@ public class VersionImpl extends NodeImpl implements Version {
         throw new ConstraintViolationException("Version is protected");
     }
 
+    /**
+     * Always returns false
+     *
+     * @throws RepositoryException
+     * @see NodeImpl#isWritable()
+     */
+    protected boolean isWritable() throws RepositoryException {
+        super.isWritable();
+        return false;
+    }
     //------------------------------------------------------------< private >---
     /**
      *

@@ -18,6 +18,8 @@ package org.apache.jackrabbit.jcr2spi.state;
  */
 public final class Status {
 
+    public static final int _UNDEFINED_ = -1;
+
     /**
      * A state once read from persistent storage has been set to invalid. This
      * means that the state needs to be re-fetched from persistent storage when
@@ -221,6 +223,9 @@ public final class Status {
      * @return Human readable status name for the given int.
      */
     public static String getName(int status) {
+        if (status == _UNDEFINED_) {
+            return "_UNDEFINED_";
+        }
         if (status < 0 || status >= STATUS_NAMES.length) {
             throw new IllegalArgumentException("Invalid status " + status);
         }
