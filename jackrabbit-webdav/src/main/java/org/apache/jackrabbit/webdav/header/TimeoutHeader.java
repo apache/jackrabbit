@@ -67,7 +67,7 @@ public class TimeoutHeader implements Header, DavConstants {
      * into a long indicating the number of milliseconds until expiration time
      * is reached.<br>
      * NOTE: If the timeout String equals to {@link #TIMEOUT_INFINITE 'infinite'}
-     * {@link Long.MAX_VALUE} is returned. If the Sting is invalid or is in an
+     * {@link Long#MAX_VALUE} is returned. If the Sting is invalid or is in an
      * invalid format that cannot be parsed, the default value is returned.
      *
      * @param timeoutStr

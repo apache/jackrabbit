@@ -22,6 +22,7 @@ import org.apache.jackrabbit.webdav.header.IfHeader;
 import org.apache.jackrabbit.webdav.header.LabelHeader;
 import org.apache.jackrabbit.webdav.header.OverwriteHeader;
 import org.apache.jackrabbit.webdav.header.TimeoutHeader;
+import org.apache.jackrabbit.webdav.header.PollTimeoutHeader;
 import org.apache.jackrabbit.webdav.lock.LockInfo;
 import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.lock.Type;
@@ -583,6 +584,13 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      */
     public String getSubscriptionId() {
         return CodedUrlHeader.parse(httpRequest, ObservationConstants.HEADER_SUBSCRIPTIONID).getCodedUrl();
+    }
+
+    /**
+     * @see org.apache.jackrabbit.webdav.observation.ObservationDavServletRequest#getPollTimeout()
+     */
+    public long getPollTimeout() {
+        return PollTimeoutHeader.parseHeader(httpRequest, 0).getTimeout();
     }
 
     /**
