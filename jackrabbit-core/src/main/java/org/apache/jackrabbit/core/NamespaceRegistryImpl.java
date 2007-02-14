@@ -327,10 +327,12 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
      *
      * @param prefixHint the prefix hint
      * @param uri the namespace URI
+     * @throws NamespaceException if an illegal attempt is made to register
+     *                            a mapping
      * @throws RepositoryException if an unexpected error occurs
      * @see #registerNamespace(String, String)
      */
-    public void safeRegisterNamespace(String prefixHint, String uri)
+    public synchronized void safeRegisterNamespace(String prefixHint, String uri)
             throws NamespaceException, RepositoryException {
         try {
             // Check if the namespace is already registered
@@ -405,7 +407,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
     /**
      * {@inheritDoc}
      */
-    public void registerNamespace(String prefix, String uri)
+    public synchronized void registerNamespace(String prefix, String uri)
             throws NamespaceException, UnsupportedRepositoryOperationException,
             AccessDeniedException, RepositoryException {
         if (prefix == null || uri == null) {
