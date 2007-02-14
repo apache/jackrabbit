@@ -26,7 +26,8 @@ Known Issues and TODOs with jcr2spi
 - BUG: Restore (testcase failed)
 
 - BUG: LockToken transfer with Session.addLockToken, Session.removeLockToken
-       
+   
+- BUG: Workspace.importXML does not invalidate
 
 - IMPROVE: Replace ItemState-duality by copy on write behaviour
 
