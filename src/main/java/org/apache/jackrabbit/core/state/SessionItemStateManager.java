@@ -110,6 +110,17 @@ public class SessionItemStateManager
         return hierMgr;
     }
 
+    /**
+     * Returns an attic-aware hierarchy manager, i.e. an hierarchy manager that
+     * is also able to build/resolve paths of those items that have been moved
+     * or removed (i.e. moved to the attic).
+     *
+     * @return an attic-aware hierarchy manager
+     */
+    public HierarchyManager getAtticAwareHierarchyMgr() {
+        return new ZombieHierarchyManager(hierMgr, this, getAttic());
+    }
+
     //-------------------------------------------------------------< Dumpable >
 
     /**
