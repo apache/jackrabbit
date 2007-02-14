@@ -52,7 +52,7 @@ public class AMContext {
     private final HierarchyManager hierMgr;
 
     /**
-     * namespace resolver for resolving namesapces in qualified paths
+     * namespace resolver for resolving namespaces in qualified paths
      */
     private final NamespaceResolver nsResolver;
 
