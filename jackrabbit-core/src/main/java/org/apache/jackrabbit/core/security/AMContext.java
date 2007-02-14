@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.security;
 
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.name.NamespaceResolver;
 
 import javax.security.auth.Subject;
 import java.io.File;
@@ -51,6 +52,11 @@ public class AMContext {
     private final HierarchyManager hierMgr;
 
     /**
+     * namespace resolver for resolving namesapces in qualified paths
+     */
+    private final NamespaceResolver nsResolver;
+
+    /**
      * name of the workspace
      */
     private final String workspaceName;
@@ -58,21 +64,24 @@ public class AMContext {
     /**
      * Creates a new <code>AMContext</code>.
      *
-     * @param homeDir the physical home directory
-     * @param fs      the virtual jackrabbit filesystem
-     * @param subject subject whose access rights should be reflected
-     * @param hierMgr hierarchy manager
-     * @param hierMgr workspace name
+     * @param physicalHomeDir the physical home directory
+     * @param fs              the virtual jackrabbit filesystem
+     * @param subject         subject whose access rights should be reflected
+     * @param hierMgr         hierarchy manager
+     * @param nsResolver      namespace resolver
+     * @param workspaceName   workspace name
      */
-    public AMContext(File homeDir,
+    public AMContext(File physicalHomeDir,
                      FileSystem fs,
                      Subject subject,
                      HierarchyManager hierMgr,
+                     NamespaceResolver nsResolver,
                      String workspaceName) {
-        this.physicalHomeDir = homeDir;
+        this.physicalHomeDir = physicalHomeDir;
         this.fs = fs;
         this.subject = subject;
         this.hierMgr = hierMgr;
+        this.nsResolver = nsResolver;
         this.workspaceName = workspaceName;
     }
 
@@ -111,6 +120,15 @@ public class AMContext {
      */
     public HierarchyManager getHierarchyManager() {
         return hierMgr;
+    }
+
+    /**
+     * Returns the namespace resolver
+     *
+     * @return the namespace resolver
+     */
+    public NamespaceResolver getNamespaceResolver() {
+        return nsResolver;
     }
 
     /**
