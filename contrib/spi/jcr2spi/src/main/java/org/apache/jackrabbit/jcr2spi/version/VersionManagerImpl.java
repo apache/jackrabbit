@@ -179,7 +179,7 @@ public class VersionManagerImpl implements VersionManager {
     public NodeEntry getVersionHistoryNodeState(NodeState versionableState) throws RepositoryException {
         try {
             PropertyState ps = versionableState.getPropertyState(QName.JCR_VERSIONHISTORY);
-            String uniqueID = ps.getValue().toString();
+            String uniqueID = ps.getValue().getString();
             NodeId vhId = workspaceManager.getIdFactory().createNodeId(uniqueID);
             return (NodeEntry) workspaceManager.getHierarchyManager().getHierarchyEntry(vhId);
         } catch (ItemStateException e) {
