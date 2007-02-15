@@ -148,8 +148,8 @@
   </build>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/contrib/classloader</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/contrib/classloader</developerConnection>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/contrib/classloader</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/contrib/classloader</developerConnection>
     <url>http://svn.apache.org/viewvc/jackrabbit/trunk/contrib/classloader</url>
   </scm>
 
