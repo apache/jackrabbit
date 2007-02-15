@@ -118,7 +118,9 @@ public class SessionItemStateManager
      * @return an attic-aware hierarchy manager
      */
     public HierarchyManager getAtticAwareHierarchyMgr() {
-        return new ZombieHierarchyManager(hierMgr, this, getAttic());
+        return new ZombieHierarchyManager(
+            hierMgr.getRootNodeId(), this, getAttic(),
+            hierMgr.getNamespaceResolver());
     }
 
     //-------------------------------------------------------------< Dumpable >
