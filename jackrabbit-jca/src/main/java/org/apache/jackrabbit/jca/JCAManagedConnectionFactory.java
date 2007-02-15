@@ -143,7 +143,7 @@ public final class JCAManagedConnectionFactory
         } catch (RepositoryException e) {
             log("Failed to create session", e);
             throw new ResourceException(
-                    "Failed to create session: " + e.getMessage());
+                    "Failed to create session: " + e.getMessage(), e);
         }
     }
 
