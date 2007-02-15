@@ -250,7 +250,7 @@ public class SessionImpl implements Session, Dumpable {
         itemStateMgr = createSessionItemStateManager(wsp.getItemStateManager());
         hierMgr = itemStateMgr.getHierarchyMgr();
         itemMgr = createItemManager(itemStateMgr, hierMgr);
-        accessMgr = createAccessManager(subject, hierMgr);
+        accessMgr = createAccessManager(subject, itemStateMgr.getAtticAwareHierarchyMgr());
         versionMgr = createVersionManager(rep);
     }
 
@@ -315,10 +315,12 @@ public class SessionImpl implements Session, Dumpable {
             throws AccessDeniedException, RepositoryException {
         AccessManagerConfig amConfig = rep.getConfig().getAccessManagerConfig();
         try {
+
             AMContext ctx = new AMContext(new File(rep.getConfig().getHomeDir()),
                     rep.getFileSystem(),
                     subject,
                     hierMgr,
+                    rep.getNamespaceRegistry(),
                     wsp.getName());
             AccessManager accessMgr = (AccessManager) amConfig.newInstance();
             accessMgr.init(ctx);
