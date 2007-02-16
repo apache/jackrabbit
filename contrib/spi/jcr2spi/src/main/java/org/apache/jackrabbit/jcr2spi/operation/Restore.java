@@ -68,16 +68,19 @@ public class Restore extends AbstractOperation {
      */
     public void persisted(CacheBehaviour cacheBehaviour) {
         if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
+            NodeEntry entry;
             if (nodeState == null || removeExisting) {
                 // invalidate the complete tree
-                NodeEntry root = nodeState.getNodeEntry();
-                while (root.getParent() != null) {
-                    root = root.getParent();
+                // -> start searching root-entry from any version-entry or
+                //    from the given nodestate
+                entry = (nodeState == null) ? versionStates[0].getNodeEntry() : nodeState.getNodeEntry();
+                while (entry.getParent() != null) {
+                    entry = entry.getParent();
                 }
-                root.invalidate(true);
             } else {
-                nodeState.getHierarchyEntry().invalidate(true);
+                entry = nodeState.getNodeEntry();
             }
+            entry.invalidate(true);
         }
     }
     //----------------------------------------< Access Operation Parameters >---
