@@ -212,6 +212,8 @@ public class SetValueValueFormatExceptionTest extends AbstractJCRTest {
         try {
             Node referenceableNode = testRootNode.addNode(nodeName3);
             referenceableNode.addMixin(mixReferenceable);
+            // some implementations may require a save after addMixin()
+            testRootNode.save();
 
             booleanProperty.setValue(referenceableNode);
             fail("Property.setValue(Node) must throw a ValueFormatException " +
@@ -261,6 +263,8 @@ public class SetValueValueFormatExceptionTest extends AbstractJCRTest {
                 throw new NotExecutableException(testNodeType + " does not support adding of mix:referenceable");
             } else {
                 n.addMixin(mixReferenceable);
+                // some implementations may require a save after addMixin()
+                testRootNode.save();
             }
         }
 

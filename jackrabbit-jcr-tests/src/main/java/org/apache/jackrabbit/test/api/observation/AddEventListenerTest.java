@@ -191,6 +191,8 @@ public class AddEventListenerTest extends AbstractObservationTest {
         Node n = testRootNode.addNode(nodeName, nodeType);
         if (!n.isNodeType(mixReferenceable)) {
             n.addMixin(mixReferenceable);
+            // some implementations may require a save after addMixin()
+            testRootNode.save();
         }
         return n;
     }
