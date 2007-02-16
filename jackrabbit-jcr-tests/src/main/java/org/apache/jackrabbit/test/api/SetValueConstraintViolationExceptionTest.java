@@ -448,6 +448,9 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
             nodeNotSatisfied = testRootNode.addNode(nodeName4, nodeTypeNotSatisfied);
             nodeNotSatisfied.addMixin(mixReferenceable);
 
+            // some implementations may require a save after addMixin()
+            testRootNode.save();
+
             prop = node.setProperty(propDef.getName(), nodeSatisfied);
             testRootNode.save();
         } catch (ConstraintViolationException e) {
@@ -812,12 +815,15 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
             // create a referenceable node satisfying the constraint
             nodeSatisfied = testRootNode.addNode(nodeName3, nodeTypeSatisfied);
             nodeSatisfied.addMixin(mixReferenceable);
-            Value valueSatisfied = superuser.getValueFactory().createValue(nodeSatisfied);
 
             // create a referenceable node not satisfying the constraint
             nodeNotSatisfied = testRootNode.addNode(nodeName4, nodeTypeNotSatisfied);
             nodeNotSatisfied.addMixin(mixReferenceable);
+            
+            // some implementations may require a save after addMixin()
+            testRootNode.save();
 
+            Value valueSatisfied = superuser.getValueFactory().createValue(nodeSatisfied);
             prop = node.setProperty(propDef.getName(), new Value[]{valueSatisfied});
             testRootNode.save();
         } catch (ConstraintViolationException e) {

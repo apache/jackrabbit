@@ -234,7 +234,10 @@ class TreeComparator extends AbstractJCRTest {
             // the UUID during serialization.
             if (!referenceable.isNodeType(mixReferenceable)) {
                 referenceable.addMixin(mixReferenceable);
+                // some implementations may require a save after addMixin()                
+                session.save();
             }
+
             pt.setProperty(sc.referenceTestProperty, referenceable);
 
             // Create a boolean property on the root node, so I can test noRecurse and skipBinary at the same time
