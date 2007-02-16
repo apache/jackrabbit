@@ -81,7 +81,7 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
      */
     public NodeState createRootState(NodeEntry entry) throws ItemStateException {
         // retrieve state to overlay
-        NodeState overlayedState = (NodeState) workspaceStateFactory.createRootState(entry);
+        NodeState overlayedState = workspaceStateFactory.createRootState(entry);
         return buildNodeState(overlayedState, Status.EXISTING);
     }
 
@@ -92,7 +92,7 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
     public NodeState createNodeState(NodeId nodeId, NodeEntry entry)
         throws NoSuchItemStateException, ItemStateException {
         // retrieve state to overlay
-        NodeState overlayedState = (NodeState) workspaceStateFactory.createNodeState(nodeId, entry);
+        NodeState overlayedState = workspaceStateFactory.createNodeState(nodeId, entry);
         return buildNodeState(overlayedState, getInitialStatus(entry.getParent()));
     }
 
@@ -101,7 +101,7 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
      * @see ItemStateFactory#createDeepNodeState(NodeId, NodeEntry)
      */
     public NodeState createDeepNodeState(NodeId nodeId, NodeEntry anyParent) throws NoSuchItemStateException, ItemStateException {
-        NodeState overlayedState = (NodeState) workspaceStateFactory.createDeepNodeState(nodeId, anyParent);
+        NodeState overlayedState = workspaceStateFactory.createDeepNodeState(nodeId, anyParent);
         return buildNodeState(overlayedState, getInitialStatus(anyParent));
     }
 
@@ -113,7 +113,7 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
                                              PropertyEntry entry)
         throws NoSuchItemStateException, ItemStateException {
         // retrieve state to overlay
-        PropertyState overlayedState = (PropertyState) workspaceStateFactory.createPropertyState(propertyId, entry);
+        PropertyState overlayedState = workspaceStateFactory.createPropertyState(propertyId, entry);
         return buildPropertyState(overlayedState, getInitialStatus(entry.getParent()));
     }
 
@@ -121,7 +121,7 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
      * @see ItemStateFactory#createDeepPropertyState(PropertyId, NodeEntry)
      */
     public PropertyState createDeepPropertyState(PropertyId propertyId, NodeEntry anyParent) throws NoSuchItemStateException, ItemStateException {
-        PropertyState overlayedState = (PropertyState) workspaceStateFactory.createDeepPropertyState(propertyId, anyParent);
+        PropertyState overlayedState = workspaceStateFactory.createDeepPropertyState(propertyId, anyParent);
         return buildPropertyState(overlayedState, getInitialStatus(anyParent));
     }
 
