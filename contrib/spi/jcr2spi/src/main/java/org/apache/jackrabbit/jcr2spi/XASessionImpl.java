@@ -52,6 +52,7 @@ public class XASessionImpl extends SessionImpl implements XASession {
 
     /**
      * @inheritDoc
+     * @see org.apache.jackrabbit.jcr2spi.XASession#getXAResource() 
      */
     public XAResource getXAResource() {
         return sessionInfo.getXAResource();
