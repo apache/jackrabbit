@@ -1057,7 +1057,7 @@ public class SharedItemStateManager
     }
 
     /**
-     * Create a new node state instance
+     * Create a new item state instance
      *
      * @param other other state associated with new instance
      * @return new node state instance
