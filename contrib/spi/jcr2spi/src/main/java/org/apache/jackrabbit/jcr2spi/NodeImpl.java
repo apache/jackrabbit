@@ -474,9 +474,9 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             return (Property) itemMgr.getItem(entry);
         } catch (AccessDeniedException e) {
-            throw new PathNotFoundException(relPath.toString());
+            throw new PathNotFoundException(relPath);
         } catch (ItemNotFoundException e) {
-            throw new PathNotFoundException(relPath.toString());
+            throw new PathNotFoundException(relPath);
         }
     }
 
@@ -564,22 +564,6 @@ public class NodeImpl extends ItemImpl implements Node {
         } else {
             return new LazyItemIterator(itemMgr, session.getHierarchyManager(), refs.iterator());
         }
-        /*
-        try {
-            ItemStateManager itemStateMgr = session.getItemStateManager();
-            Collection refStates = itemStateMgr.getReferingStates(getNodeState());
-            if (refStates.isEmpty()) {
-                // there are no references, return empty iterator
-                return IteratorHelper.EMPTY;
-            } else {
-                return new LazyItemIterator(itemMgr, refStates);
-            }
-        } catch (ItemStateException e) {
-            String msg = "Unable to retrieve REFERENCE properties that refer to " + safeGetJCRPath();
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
-        */
     }
 
     /**
@@ -588,7 +572,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public boolean hasNode(String relPath) throws RepositoryException {
         checkStatus();
         NodeEntry nodeEntry = resolveRelativeNodePath(relPath);
-        return (nodeEntry != null) ? itemMgr.itemExists(nodeEntry) : false;
+        return (nodeEntry != null) && itemMgr.itemExists(nodeEntry);
     }
 
     /**
@@ -597,7 +581,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public boolean hasProperty(String relPath) throws RepositoryException {
         checkStatus();
         PropertyEntry childEntry = resolveRelativePropertyPath(relPath);
-        return (childEntry != null) ? itemMgr.itemExists(childEntry) : false;
+        return (childEntry != null) && itemMgr.itemExists(childEntry);
     }
 
     /**
@@ -685,7 +669,6 @@ public class NodeImpl extends ItemImpl implements Node {
         List mixinValue = getMixinTypes();
         if (mixinValue.contains(mixinQName)) {
             log.warn("Mixin " + mixinName + " has already been transiently added -> Ignored.");
-            return;
         } else {
             mixinValue.add(mixinQName);
             // perform the operation
