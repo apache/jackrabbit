@@ -75,10 +75,10 @@ public class NodeReorderTest extends AbstractObservationTest {
         addEventListener(removeNodeListener, Event.NODE_REMOVED);
         testRootNode.orderBefore(nodeName3, nodeName2);
         testRootNode.save();
-        removeEventListener(addNodeListener);
-        removeEventListener(removeNodeListener);
         Event[] added = addNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(addNodeListener);
+        removeEventListener(removeNodeListener);
         // either
         // 1) nodename2 has been reordered to the end
         // or:
@@ -142,10 +142,10 @@ public class NodeReorderTest extends AbstractObservationTest {
         testRootNode.orderBefore(nodeName1 + "[3]", nodeName1 + "[2]");
         //testRootNode.orderBefore(nodeName1 + "[2]", null);
         testRootNode.save();
-        removeEventListener(addNodeListener);
-        removeEventListener(removeNodeListener);
         Event[] added = addNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(addNodeListener);
+        removeEventListener(removeNodeListener);
         // either
         // 1) nodename1[2] has been reordered to the end
         // or:
@@ -215,10 +215,10 @@ public class NodeReorderTest extends AbstractObservationTest {
         testRootNode.orderBefore(nodeName1 + "[2]", null);
         testRootNode.getNode(nodeName3).remove();
         testRootNode.save();
-        removeEventListener(addNodeListener);
-        removeEventListener(removeNodeListener);
         Event[] added = addNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(addNodeListener);
+        removeEventListener(removeNodeListener);
         // either
         // 1) nodename1[2] has been reordered to the end
         // or:

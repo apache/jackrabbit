@@ -42,8 +42,8 @@ public class EventTest extends AbstractObservationTest {
         addEventListener(result, Event.NODE_ADDED);
         Node addedNode = testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.save();
-        removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(result);
         assertEquals("Wrong number of events returned", 1, events.length);
         String path = events[0].getPath();
         String absPath = addedNode.getPath();
@@ -75,8 +75,8 @@ public class EventTest extends AbstractObservationTest {
         addEventListener(result, Event.NODE_ADDED);
         testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.save();
-        removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(result);
         assertEquals("Wrong number of events returned", 1, events.length);
         int type = events[0].getType();
         assertEquals("Event did not return correct event type", Event.NODE_ADDED, type);

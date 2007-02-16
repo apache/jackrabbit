@@ -53,8 +53,8 @@ public class EventIteratorTest extends AbstractObservationTest{
         addEventListener(listener, Event.NODE_ADDED);
         testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.save();
-        removeEventListener(listener);
         EventIterator events = listener.getEventIterator(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(listener);
         assertNotNull("No events delivered within " + DEFAULT_WAIT_TIMEOUT + "ms.", events);
         long size = events.getSize();
         if (size == -1) {
@@ -73,8 +73,8 @@ public class EventIteratorTest extends AbstractObservationTest{
         testRootNode.addNode(nodeName2, testNodeType);
         testRootNode.addNode(nodeName3, testNodeType);
         testRootNode.save();
-        removeEventListener(listener);
         EventIterator events = listener.getEventIterator(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(listener);
         assertNotNull("No events delivered within " + DEFAULT_WAIT_TIMEOUT + "ms.", events);
         assertEquals("Initial call to getPosition() must return 0.", 0, events.getPosition());
         events.nextEvent();
@@ -95,8 +95,8 @@ public class EventIteratorTest extends AbstractObservationTest{
         testRootNode.addNode(nodeName2, testNodeType);
         testRootNode.addNode(nodeName3, testNodeType);
         testRootNode.save();
-        removeEventListener(listener);
         EventIterator events = listener.getEventIterator(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(listener);
         assertNotNull("No events delivered within " + DEFAULT_WAIT_TIMEOUT + "ms.", events);
         // skip zero elements
         events.skip(0);

@@ -49,8 +49,8 @@ public class WorkspaceOperationTest extends AbstractObservationTest {
         EventResult listener = new EventResult(log);
         addEventListener(listener, Event.NODE_ADDED);
         superuser.getWorkspace().copy(testRoot + "/" + nodeName1, testRoot + "/" + nodeName3);
-        removeEventListener(listener);
         Event[] events = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(listener);
         checkNodeAdded(events, new String[]{nodeName3, nodeName3 + "/" + nodeName2});
     }
 
@@ -68,10 +68,10 @@ public class WorkspaceOperationTest extends AbstractObservationTest {
         addEventListener(removeNodeListener, Event.NODE_REMOVED);
         superuser.getWorkspace().move(n1.getPath(), testRoot + "/" + nodeName3);
         testRootNode.save();
-        removeEventListener(addNodeListener);
-        removeEventListener(removeNodeListener);
         Event[] added = addNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(addNodeListener);
+        removeEventListener(removeNodeListener);
         checkNodeAdded(added, new String[]{nodeName3});
         checkNodeRemoved(removed, new String[]{nodeName1});
     }
@@ -91,10 +91,10 @@ public class WorkspaceOperationTest extends AbstractObservationTest {
         addEventListener(removeNodeListener, Event.NODE_REMOVED);
         superuser.getWorkspace().move(n1.getPath(), n3.getPath() + "/" + nodeName4);
         testRootNode.save();
-        removeEventListener(addNodeListener);
-        removeEventListener(removeNodeListener);
         Event[] added = addNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(addNodeListener);
+        removeEventListener(removeNodeListener);
         checkNodeAdded(added, new String[]{nodeName3 + "/" + nodeName4});
         checkNodeRemoved(removed, new String[]{nodeName1});
     }
