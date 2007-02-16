@@ -29,7 +29,7 @@
   <groupId>org.apache.jackrabbit</groupId>
   <artifactId>jackrabbit-classloader</artifactId>
   <name>Jackrabbit Repository Classloader</name>
-  <version>1.1</version>
+  <version>1.2-SNAPSHOT</version>
   <description>
     Classloader is an independent subproject of the Jackrabbit project.
     It provides support for loading classes from from Java Content Repository
