@@ -54,8 +54,8 @@ public class PropertyChangedTest extends AbstractObservationTest {
         addEventListener(result, Event.PROPERTY_CHANGED);
         node.getProperty(propertyName1).setValue("foobar");
         testRootNode.save();
-        removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(result);
         checkPropertyChanged(events, new String[]{nodeName1 + "/" + propertyName1});
     }
 
@@ -74,8 +74,8 @@ public class PropertyChangedTest extends AbstractObservationTest {
         node.getProperty(propertyName1).setValue("foobar");
         node.getProperty(propertyName2).setValue("foobar");
         testRootNode.save();
-        removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(result);
         checkPropertyChanged(events, new String[]{nodeName1 + "/" + propertyName1,
                                                   nodeName1 + "/" + propertyName2});
     }
@@ -93,8 +93,8 @@ public class PropertyChangedTest extends AbstractObservationTest {
         node.getProperty(propertyName1).setValue("foobar");
         node.setProperty(propertyName2, "bar");    // will not fire prop changed event
         testRootNode.save();
-        removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(result);
         checkPropertyChanged(events, new String[]{nodeName1 + "/" + propertyName1});
     }
 
@@ -127,8 +127,8 @@ public class PropertyChangedTest extends AbstractObservationTest {
         n.getProperty(propertyName1).remove();
         n.setProperty(propertyName1, v2);
         testRootNode.save();
-        removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(result);
 
         if (events.length == 1) {
             checkPropertyChanged(events, new String[]{nodeName1 + "/" + propertyName1});

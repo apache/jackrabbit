@@ -45,8 +45,8 @@ public class NodeAddedTest extends AbstractObservationTest {
         addEventListener(result, Event.NODE_ADDED);
         testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.save();
-        removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(result);
         checkNodeAdded(events, new String[]{nodeName1});
     }
 
@@ -60,8 +60,8 @@ public class NodeAddedTest extends AbstractObservationTest {
         testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.addNode(nodeName2, testNodeType);
         testRootNode.save();
-        removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(result);
         checkNodeAdded(events, new String[]{nodeName1, nodeName2});
     }
 
@@ -75,8 +75,8 @@ public class NodeAddedTest extends AbstractObservationTest {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         n1.addNode(nodeName2, testNodeType);
         testRootNode.save();
-        removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(result);
         checkNodeAdded(events, new String[]{nodeName1, nodeName1 + "/" + nodeName2});
     }
 
@@ -90,8 +90,8 @@ public class NodeAddedTest extends AbstractObservationTest {
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
         n2.remove();
         testRootNode.save();
-        removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(result);
         checkNodeAdded(events, new String[]{nodeName1});
     }
 }

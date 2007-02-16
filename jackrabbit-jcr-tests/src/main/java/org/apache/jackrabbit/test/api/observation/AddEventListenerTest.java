@@ -53,8 +53,8 @@ public class AddEventListenerTest extends AbstractObservationTest {
         Node n = testRootNode.addNode(nodeName1, testNodeType);
         n.addNode(nodeName2);
         testRootNode.save();
-        obsMgr.removeEventListener(listener);
         Event[] events = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        obsMgr.removeEventListener(listener);
         checkNodeAdded(events, new String[]{nodeName1, nodeName1 + "/" + nodeName2});
     }
 
@@ -68,8 +68,8 @@ public class AddEventListenerTest extends AbstractObservationTest {
         Node n = testRootNode.addNode(nodeName1, testNodeType);
         n.addNode(nodeName2);
         testRootNode.save();
-        obsMgr.removeEventListener(listener);
         Event[] events = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        obsMgr.removeEventListener(listener);
         checkNodeAdded(events, new String[]{nodeName1});
     }
 
@@ -86,8 +86,8 @@ public class AddEventListenerTest extends AbstractObservationTest {
         n1.setProperty(propertyName1, "foo");
         n2.setProperty(propertyName1, "foo");
         testRootNode.save();
-        obsMgr.removeEventListener(listener);
         Event[] events = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        obsMgr.removeEventListener(listener);
         checkPropertyAdded(events, new String[]{nodeName1 + "/" + propertyName1});
     }
 
@@ -107,8 +107,8 @@ public class AddEventListenerTest extends AbstractObservationTest {
 
         testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.save();
-        obsMgr.removeEventListener(listener);
         Event[] events = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        obsMgr.removeEventListener(listener);
         assertEquals("EventListener must not receive own modification when noLocal=true", 0, events.length);
     }
 
@@ -136,8 +136,8 @@ public class AddEventListenerTest extends AbstractObservationTest {
         n1.setProperty(propertyName1, "foo");
         n2.setProperty(propertyName1, "foo");
         testRootNode.save();
-        obsMgr.removeEventListener(listener);
         Event[] events = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        obsMgr.removeEventListener(listener);
         checkPropertyAdded(events, new String[]{nodeName1 + "/" + propertyName1});
     }
 
@@ -168,8 +168,8 @@ public class AddEventListenerTest extends AbstractObservationTest {
         } finally {
             s.logout();
         }
-        obsMgr.removeEventListener(listener);
         Event[] events = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        obsMgr.removeEventListener(listener);
         checkNodeAdded(events, new String[]{nodeName1 + "/" + nodeName3});
     }
 

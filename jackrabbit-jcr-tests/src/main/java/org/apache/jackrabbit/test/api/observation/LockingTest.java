@@ -52,8 +52,8 @@ public class LockingTest extends AbstractObservationTest {
         // now lock node. no save needed
         lockable.lock(false,true);
 
-        removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(result);
 
         assertEquals("Wrong number of events.", 2, events.length);
         for (int i = 0; i < events.length; i++) {
@@ -84,9 +84,9 @@ public class LockingTest extends AbstractObservationTest {
         EventResult result = new EventResult(log);
         addEventListener(result, Event.PROPERTY_REMOVED);
         lockable.unlock();
-        removeEventListener(result);
 
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(result);
         assertEquals("Wrong number of events.", 2, events.length);
         for (int i = 0; i < events.length; i++) {
             assertEquals("Wrong type of event.", Event.PROPERTY_REMOVED, events[i].getType());

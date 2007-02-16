@@ -47,8 +47,8 @@ public class NodeRemovedTest extends AbstractObservationTest {
         testRootNode.save();
         foo.remove();
         testRootNode.save();
-        removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(result);
         checkNodeRemoved(events, new String[]{nodeName1});
     }
 
@@ -64,8 +64,8 @@ public class NodeRemovedTest extends AbstractObservationTest {
         testRootNode.save();
         n1.remove();
         testRootNode.save();
-        removeEventListener(result);
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(result);
         checkNodeRemoved(events, new String[]{nodeName1, nodeName1 + "/" + nodeName2});
     }
 

@@ -64,10 +64,10 @@ public class NodeMovedTest extends AbstractObservationTest {
         addEventListener(removeNodeListener, Event.NODE_REMOVED);
         superuser.move(n1.getPath(), testRoot + "/" + nodeName3);
         testRootNode.save();
-        removeEventListener(addNodeListener);
-        removeEventListener(removeNodeListener);
         Event[] added = addNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(addNodeListener);
+        removeEventListener(removeNodeListener);
         checkNodeAdded(added, new String[]{nodeName3});
         checkNodeRemoved(removed, new String[]{nodeName1});
     }
@@ -98,10 +98,10 @@ public class NodeMovedTest extends AbstractObservationTest {
         addEventListener(removeNodeListener, Event.NODE_REMOVED);
         superuser.move(n2.getPath(), testRoot + "/" + nodeName2);
         testRootNode.save();
-        removeEventListener(addNodeListener);
-        removeEventListener(removeNodeListener);
         Event[] added = addNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(addNodeListener);
+        removeEventListener(removeNodeListener);
         checkNodeAdded(added, new String[]{nodeName2});
         checkNodeRemoved(removed, new String[]{nodeName1 + "/" + nodeName2});
     }
@@ -136,10 +136,10 @@ public class NodeMovedTest extends AbstractObservationTest {
         // remove n1
         n1.remove();
         testRootNode.save();
-        removeEventListener(addNodeListener);
-        removeEventListener(removeNodeListener);
         Event[] added = addNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        removeEventListener(addNodeListener);
+        removeEventListener(removeNodeListener);
         checkNodeAdded(added, new String[]{nodeName3 + "/" + nodeName2});
         checkNodeRemoved(removed, new String[]{nodeName1 + "/" + nodeName2, nodeName1});
     }
