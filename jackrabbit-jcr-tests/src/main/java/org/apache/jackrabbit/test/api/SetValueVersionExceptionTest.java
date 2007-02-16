@@ -63,7 +63,7 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
         value = session.getValueFactory().createValue("abc");
         values = new Value[] {value};
 
-        if (!isSupported(Repository.OPTION_LOCKING_SUPPORTED)) {
+        if (!isSupported(Repository.OPTION_VERSIONING_SUPPORTED)) {
             throw new NotExecutableException("Versioning is not supported.");
         }
 
