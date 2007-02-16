@@ -71,7 +71,7 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
     final ItemStateFactory isf;
 
     // TODO: find better solution..... needed to retrieve definition.
-    final NodeTypeRegistry ntReg;
+    private final NodeTypeRegistry ntReg;
 
     /**
      * the backing persistent item state (may be null)
