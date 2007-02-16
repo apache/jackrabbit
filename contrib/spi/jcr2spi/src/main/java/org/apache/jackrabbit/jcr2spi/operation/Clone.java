@@ -40,9 +40,6 @@ public class Clone extends AbstractCopy {
     private static Logger log = LoggerFactory.getLogger(Clone.class);
 
     private final boolean removeExisting;
-    /* In case of 'removeExisting' and INVALIDATION-cachebehaviour we need
-       to invalidate the complete tree. */
-    private final ManagerProvider destMgrProvider;
 
     private Clone(Path srcPath, Path destPath, String srcWorkspaceName,
                   boolean removeExisting, ManagerProvider srcMgrProvider,
@@ -51,7 +48,6 @@ public class Clone extends AbstractCopy {
         super(srcPath, destPath, srcWorkspaceName, srcMgrProvider, destMgrProvider);
 
         this.removeExisting = removeExisting;
-        this.destMgrProvider = destMgrProvider;
     }
 
     //----------------------------------------------------------< Operation >---
