@@ -118,6 +118,7 @@ public class ChangeLog {
      * Call this method when this change log has been sucessfully persisted.
      * This implementation will call {@link ItemState#persisted(ChangeLog, CacheBehaviour)
      * ItemState.refresh(this)} on the target item of this change log.
+     * TODO: remove parameter CacheBehaviour
      */
     public void persisted(CacheBehaviour cacheBehaviour) {
         target.persisted(this, cacheBehaviour);
@@ -253,12 +254,21 @@ public class ChangeLog {
                             if (parent.getStatus() != Status.REMOVED) {
                                 for (Iterator it = operations.iterator(); it.hasNext();) {
                                     Operation op = (Operation) it.next();
-                                    if (op instanceof AddNode && ((AddNode)op).getParentState() == parent) {
-                                        it.remove();
-                                        break;
-                                    } else if (op instanceof AddProperty && ((AddProperty)op).getParentState() == parent) {
-                                        it.remove();
-                                        break;
+                                    if (op instanceof AddNode) {
+                                        AddNode operation = (AddNode) op;
+                                        if (operation.getParentState() == parent
+                                                && operation.getNodeName().equals(state.getQName())) {
+                                            // TODO: this will not work for name name siblings!
+                                            it.remove();
+                                            break;
+                                        }
+                                    } else if (op instanceof AddProperty) {
+                                        AddProperty operation = (AddProperty) op;
+                                        if (operation.getParentState() == parent
+                                                && operation.getPropertyName().equals(state.getQName())) {
+                                            it.remove();
+                                            break;
+                                        }
                                     } else if (op instanceof SetMixin &&
                                         QName.JCR_MIXINTYPES.equals(state.getQName()) &&
                                         ((SetMixin)op).getNodeState() == parent) {
