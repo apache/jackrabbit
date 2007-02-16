@@ -45,11 +45,11 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
 
     public static final String PROPERTY_ELEMENT = "property";
     public static final String PREFIXED_PROPERTY_ELEMENT =
-        QName.NS_SV_PREFIX + ":" + PROPERTY_ELEMENT;;
+        QName.NS_SV_PREFIX + ":" + PROPERTY_ELEMENT;
 
     public static final String VALUE_ELEMENT = "value";
     public static final String PREFIXED_VALUE_ELEMENT =
-        QName.NS_SV_PREFIX + ":" + VALUE_ELEMENT;;
+        QName.NS_SV_PREFIX + ":" + VALUE_ELEMENT;
 
     public static final String NAME_ATTRIBUTE = "name";
     public static final String PREFIXED_NAME_ATTRIBUTE =
