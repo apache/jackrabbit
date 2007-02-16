@@ -269,7 +269,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             ItemStateException ise = null;
             // number of attempts to store the changes
             int trials = 2;
-            while (true) {
+            while (trials > 0) {
                 try {
                     super.store(changeLog);
                     break;
