@@ -100,7 +100,11 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     public WorkspaceImpl(String name, SessionImpl session, RepositoryConfig config, SessionInfo sessionInfo) throws RepositoryException {
         this.name = name;
         this.session = session;
-        wspManager = createManager(config.getRepositoryService(), sessionInfo, session.getCacheBehaviour(), config.getPollingInterval());
+        wspManager = createManager(
+                config.getRepositoryService(),
+                sessionInfo,
+                session.getCacheBehaviour(), 
+                3 * 1000); // 3 seconds poll timeout
     }
 
     //----------------------------------------------------------< Workspace >---
@@ -440,8 +444,8 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     protected WorkspaceManager createManager(RepositoryService service,
                                              SessionInfo sessionInfo,
                                              CacheBehaviour cacheBehaviour,
-                                             int pollingInterval) throws RepositoryException {
-        return new WorkspaceManager(service, sessionInfo, cacheBehaviour, pollingInterval);
+                                             int pollTimeout) throws RepositoryException {
+        return new WorkspaceManager(service, sessionInfo, cacheBehaviour, pollTimeout);
     }
 
     /**
