@@ -23,6 +23,7 @@ import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.HttpConnectionManager;
+import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
@@ -204,6 +205,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     private final HostConfiguration hostConfig;
     private final HashMap clients = new HashMap();
+    private final HttpConnectionManager connectionManager;
 
     private final Map nodeTypeDefinitions = new HashMap();
 
@@ -236,6 +238,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         } catch (URIException e) {
             throw new RepositoryException(e);
         }
+
+        this.connectionManager = new MultiThreadedHttpConnectionManager();
+        HttpConnectionManagerParams params = new HttpConnectionManagerParams();
+        params.setMaxConnectionsPerHost(hostConfig, 20);
+        this.connectionManager.setParams(params);
     }
 
     private static void checkSessionInfo(SessionInfo sessionInfo) throws RepositoryException {
@@ -279,8 +286,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     HttpClient getClient(SessionInfo sessionInfo) throws RepositoryException {
         HttpClient client = (HttpClient) clients.get(sessionInfo);
         if (client == null) {
-            HttpConnectionManager connMgr = new MultiThreadedHttpConnectionManager();
-            client = new HttpClient(connMgr);
+            client = new HttpClient(connectionManager);
             client.setHostConfiguration(hostConfig);
             // always send authentication not waiting for 401
             client.getParams().setAuthenticationPreemptive(true);
@@ -300,9 +306,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     private void removeClient(SessionInfo sessionInfo) {
         HttpClient cl = (HttpClient) clients.remove(sessionInfo);
-        if (cl != null) {
-            ((MultiThreadedHttpConnectionManager) cl.getHttpConnectionManager()).shutdown();
-        }
         log.debug("Removed Client " + cl + " for SessionInfo " + sessionInfo);
     }
 

@@ -407,7 +407,7 @@ public class NodeState extends ItemState {
                 }
             } else {
                 // Properties: push changes down to overlayed state
-                ((PropertyState) modState.overlayedState).merge(modState, false);
+                modState.overlayedState.merge(modState, false);
                 modState.setStatus(Status.EXISTING);
 
                 // if property state defines a modified jcr:mixinTypes the parent
