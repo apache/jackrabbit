@@ -47,8 +47,6 @@ NOTE: This list only contains major open issues.
 
 5) Observation (problem)
 
-   - distinction between local and external modifications
-   - proper order of events
    - assertion that the same event doesn't get processed multiple times
 
    - EventImpl: with the current setup spi2dav connects to a default 
