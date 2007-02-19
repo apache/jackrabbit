@@ -871,8 +871,11 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                         QPropertyDefinition epd = (QPropertyDefinition) existing;
                         // compare type & multiValued flag
                         if (pd.getRequiredType() == epd.getRequiredType()
-                                && pd.isMultiple() == epd.isMultiple()) {
+                                && pd.isMultiple() == epd.isMultiple()
+                                && pd.getOnParentVersion() == epd.getOnParentVersion()) {
                             // conflict
+                            // TODO: need to take more aspects into account
+                            // TODO: getMatchingPropDef needs to check this as well
                             String msg = "A property definition in node type '"
                                     + qDef.getDeclaringNodeType()
                                     + "' conflicts with node type '"
