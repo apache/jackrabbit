@@ -30,11 +30,12 @@ import org.apache.jackrabbit.test.api.NodeCanAddMixinTest;
 import org.apache.jackrabbit.test.api.NodeRemoveMixinTest;
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import junit.framework.TestCase;
 
 /**
  * <code>TestNodeWrite</code>...
  */
-public class TestNodeWrite {
+public class TestNodeWrite extends TestCase {
 
     private static Logger log = LoggerFactory.getLogger(TestNodeWrite.class);
 
