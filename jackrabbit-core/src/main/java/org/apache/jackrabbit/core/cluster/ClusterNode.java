@@ -20,25 +20,43 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.core.config.ClusterConfig;
 import org.apache.jackrabbit.core.config.ConfigurationException;
+import org.apache.jackrabbit.core.config.JournalConfig;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.journal.Journal;
+import org.apache.jackrabbit.core.journal.RecordConsumer;
+import org.apache.jackrabbit.core.journal.Record;
+import org.apache.jackrabbit.core.journal.JournalException;
+import org.apache.jackrabbit.core.journal.FileRevision;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
+import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.state.ChangeLog;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.Path;
 import EDU.oswego.cs.dl.util.concurrent.Mutex;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.observation.Event;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.HashSet;
+import java.io.File;
 
 /**
  * Default clustered node implementation.
  */
-public class ClusterNode implements Runnable, UpdateEventChannel,
-        NamespaceEventChannel, NodeTypeEventChannel  {
+public class ClusterNode implements Runnable,
+        NamespaceEventChannel, NodeTypeEventChannel, RecordConsumer  {
 
     /**
      * System property specifying a node id to use.
@@ -46,9 +64,19 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
     public static final String SYSTEM_PROPERTY_NODE_ID = "org.apache.jackrabbit.core.cluster.node_id";
 
     /**
+     * Revision counter parameter name.
+     */
+    private static final String REVISION_NAME = "revision";
+
+    /**
      * Used for padding short string representations.
      */
     private static final String SHORT_PADDING = "0000";
+
+    /**
+     * Producer identifier.
+     */
+    private static final String PRODUCER_ID = "JR";
 
     /**
      * Status constant.
@@ -81,9 +109,9 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
     private String clusterNodeId;
 
     /**
-     * Synchronization delay, in seconds.
+     * Synchronization delay, in milliseconds.
      */
-    private int syncDelay;
+    private long syncDelay;
 
     /**
      * Journal used.
@@ -126,6 +154,31 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
     private NodeTypeEventListener nodeTypeListener;
 
     /**
+     * Instance revision file.
+     */
+    private FileRevision instanceRevision;
+
+    /**
+     * Workspace name used when consuming records.
+     */
+    private String workspace;
+
+    /**
+     * Change log used when consuming records.
+     */
+    private ChangeLog changeLog;
+
+    /**
+     * List of recorded events; used when consuming records.
+     */
+    private List events;
+
+    /**
+     * Last used session for event sources.
+     */
+    private Session lastSession;
+
+    /**
      * Initialize this cluster node.
      *
      * @throws ClusterException if an error occurs
@@ -146,10 +199,22 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
         clusterNodeId = getClusterNodeId(cc.getId());
         syncDelay = cc.getSyncDelay();
 
+        JournalConfig jc = cc.getJournalConfig();
+
+        String revisionName = jc.getParameters().getProperty(REVISION_NAME);
+        if (revisionName == null) {
+            String msg = "Revision not specified.";
+            throw new ClusterException(msg);
+        }
         try {
-            journal = (Journal) cc.getJournalConfig().newInstance();
-            journal.init(clusterNodeId, new SyncListener(), clusterContext.getNamespaceResovler());
+            instanceRevision = new FileRevision(new File(revisionName));
+
+            journal = (Journal) jc.newInstance();
+            journal.init(clusterNodeId, clusterContext.getNamespaceResovler());
+            journal.register(this);
         } catch (ConfigurationException e) {
+            throw new ClusterException(e.getMessage(), e.getCause());
+        } catch (JournalException e) {
             throw new ClusterException(e.getMessage(), e.getCause());
         }
     }
@@ -178,7 +243,7 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
         for (;;) {
             synchronized (this) {
                 try {
-                    wait(syncDelay * 1000);
+                    wait(syncDelay);
                 } catch (InterruptedException e) {}
 
                 if (status == STOPPED) {
@@ -213,8 +278,11 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
             String msg = "Interrupted while waiting for mutex.";
             throw new ClusterException(msg);
         }
+
         try {
             journal.sync();
+        } catch (JournalException e) {
+            throw new ClusterException(e.getMessage(), e.getCause());
         } finally {
             syncLock.release();
         }
@@ -229,72 +297,6 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
 
             journal.close();
             notifyAll();
-        }
-    }
-
-    /**
-     * Called when a node has been locked.
-     *
-     * @param workspace workspace name
-     * @param nodeId node id
-     * @param deep flag indicating whether lock is deep
-     * @param owner lock owner
-     */
-    private void locked(String workspace, NodeId nodeId, boolean deep, String owner) {
-        if (status != STARTED) {
-            log.info("not started: lock operation ignored.");
-            return;
-        }
-        boolean succeeded = false;
-
-        try {
-            journal.begin(workspace);
-            journal.log(nodeId, deep, owner);
-            journal.prepare();
-            journal.commit();
-            succeeded = true;
-        } catch (JournalException e) {
-            String msg = "Unable to create log entry: " + e.getMessage();
-            log.error(msg);
-        } catch (Throwable e) {
-            String msg = "Unexpected error while creating log entry.";
-            log.error(msg, e);
-        } finally {
-            if (!succeeded) {
-                journal.cancel();
-            }
-        }
-    }
-
-    /**
-     * Called when a node has been unlocked.
-     *
-     * @param workspace workspace name
-     * @param nodeId node id
-     */
-    private void unlocked(String workspace, NodeId nodeId) {
-        if (status != STARTED) {
-            log.info("not started: unlock operation ignored.");
-            return;
-        }
-        boolean succeeded = false;
-
-        try {
-            journal.begin(workspace);
-            journal.log(nodeId);
-            journal.prepare();
-            journal.commit();
-            succeeded = true;
-        } catch (JournalException e) {
-            String msg = "Unable to create log entry: " + e.getMessage();
-            log.error(msg);
-        } catch (Throwable e) {
-            String msg = "Unexpected error while creating log entry.";
-            log.error(msg, e);
-        } finally {
-            if (!succeeded) {
-                journal.cancel();
-            }
         }
     }
 
@@ -349,108 +351,6 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
         return s;
     }
 
-    //--------------------------------------------------< UpdateEventListener >
-
-    /**
-     * {@inheritDoc}
-     */
-    public void updateCreated() {
-        if (status != STARTED) {
-            log.info("not started: update create ignored.");
-            return;
-        }
-        try {
-            sync();
-        } catch (ClusterException e) {
-            String msg = "Unable to sync with journal: " + e.getMessage();
-            log.error(msg);
-        } catch (Throwable e) {
-            String msg = "Unexpected error while creating log entry.";
-            log.error(msg, e);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Invoked when an update has been prepared inside versioning. Delegate
-     * to common method with <code>null</code> workspace.
-     */
-    public void updatePrepared(ChangeLog changes, EventStateCollection esc) {
-        updatePrepared(null, changes, esc);
-    }
-
-    /**
-     * Called when an a update operation has been prepared.
-     *
-     * @param workspace workspace to use when writing journal entry
-     * @param changes changes
-     * @param esc events as they will be delivered on success
-     */
-    private void updatePrepared(String workspace, ChangeLog changes, EventStateCollection esc) {
-        if (status != STARTED) {
-            log.info("not started: update prepare ignored.");
-            return;
-        }
-        boolean succeeded = false;
-
-        try {
-            journal.begin(workspace);
-            journal.log(changes, esc);
-            journal.prepare();
-            succeeded = true;
-        } catch (JournalException e) {
-            String msg = "Unable to create log entry: " + e.getMessage();
-            log.error(msg);
-        } catch (Throwable e) {
-            String msg = "Unexpected error while preparing log entry.";
-            log.error(msg, e);
-        } finally {
-            if (!succeeded) {
-                journal.cancel();
-            }
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void updateCommitted() {
-        if (status != STARTED) {
-            log.info("not started: update commit ignored.");
-            return;
-        }
-        try {
-            journal.commit();
-        } catch (JournalException e) {
-            String msg = "Unable to create log entry: " + e.getMessage();
-            log.error(msg);
-        } catch (Throwable e) {
-            String msg = "Unexpected error while committing log entry.";
-            log.error(msg, e);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void updateCancelled() {
-        if (status != STARTED) {
-            log.info("not started: update cancel ignored.");
-            return;
-        }
-        journal.cancel();
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Invoked to set the update event listener responsible for delivering versioning events.
-     */
-    public void setListener(UpdateEventListener listener) {
-        versionUpdateListener = listener;
-    }
-
     //-----------------------------------------------< NamespaceEventListener >
 
     /**
@@ -461,13 +361,16 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
             log.info("not started: namespace operation ignored.");
             return;
         }
+        Record record = null;
         boolean succeeded = false;
 
         try {
-            journal.begin(null);
-            journal.log(oldPrefix, newPrefix, uri);
-            journal.prepare();
-            journal.commit();
+            record = journal.getProducer(PRODUCER_ID).append();
+            record.writeString(null);
+            write(record, oldPrefix, newPrefix, uri);
+            record.writeChar('\0');
+            record.update();
+            setRevision(record.getRevision());
             succeeded = true;
         } catch (JournalException e) {
             String msg = "Unable to create log entry: " + e.getMessage();
@@ -476,8 +379,8 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
             String msg = "Unexpected error while creating log entry.";
             log.error(msg, e);
         } finally {
-            if (!succeeded) {
-                journal.cancel();
+            if (!succeeded && record != null) {
+                record.cancelUpdate();
             }
         }
     }
@@ -496,13 +399,16 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
             log.info("not started: nodetype operation ignored.");
             return;
         }
+        Record record = null;
         boolean succeeded = false;
 
         try {
-            journal.begin(null);
-            journal.log(ntDefs);
-            journal.prepare();
-            journal.commit();
+            record = journal.getProducer(PRODUCER_ID).append();
+            record.writeString(null);
+            write(record, ntDefs);
+            record.writeChar('\0');
+            record.update();
+            setRevision(record.getRevision());
             succeeded = true;
         } catch (JournalException e) {
             String msg = "Unable to create log entry: " + e.getMessage();
@@ -511,8 +417,8 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
             String msg = "Unexpected error while creating log entry.";
             log.error(msg, e);
         } finally {
-            if (!succeeded) {
-                journal.cancel();
+            if (!succeeded && record != null) {
+                record.cancelUpdate();
             }
         }
     }
@@ -524,7 +430,6 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
         nodeTypeListener = listener;
     }
 
-
     /**
      * Workspace update channel.
      */
@@ -534,6 +439,11 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
          * Workspace name.
          */
         private final String workspace;
+
+        /**
+         * Record being appended.
+         */
+        private Record record;
 
         /**
          * Create a new instance of this class.
@@ -548,37 +458,117 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
          * {@inheritDoc}
          */
         public void updateCreated() {
-            ClusterNode.this.updateCreated();
+            if (status != STARTED) {
+                log.info("not started: update create ignored.");
+                return;
+            }
+            if (record != null) {
+                String msg = "Record already created.";
+                log.warn(msg);
+                return;
+            }
+            try {
+                sync();
+                record = journal.getProducer(PRODUCER_ID).append();
+                //sync();
+            } catch (JournalException e) {
+                String msg = "Unable to create log entry.";
+                log.error(msg, e);
+            } catch (Throwable e) {
+                String msg = "Unexpected error while creating log entry.";
+                log.error(msg, e);
+            }
         }
 
         /**
          * {@inheritDoc}
          */
         public void updatePrepared(ChangeLog changes, EventStateCollection esc) {
-            ClusterNode.this.updatePrepared(workspace, changes, esc);
+            if (status != STARTED) {
+                log.info("not started: update prepare ignored.");
+                return;
+            }
+            if (record == null) {
+                String msg = "No record created.";
+                log.warn(msg);
+                return;
+            }
+
+            boolean succeeded = false;
+
+            try {
+                //record = journal.getProducer(PRODUCER_ID).append();
+                record.writeString(workspace);
+                write(record, changes, esc);
+                record.writeChar('\0');
+                succeeded = true;
+            } catch (JournalException e) {
+                String msg = "Unable to create log entry: " + e.getMessage();
+                log.error(msg);
+            } catch (Throwable e) {
+                String msg = "Unexpected error while preparing log entry.";
+                log.error(msg, e);
+            } finally {
+                if (!succeeded && record != null) {
+                    record.cancelUpdate();
+                    record = null;
+                }
+            }
         }
 
         /**
          * {@inheritDoc}
          */
         public void updateCommitted() {
-            ClusterNode.this.updateCommitted();
+            if (status != STARTED) {
+                log.info("not started: update commit ignored.");
+                return;
+            }
+            if (record == null) {
+                String msg = "No record prepared.";
+                log.warn(msg);
+                return;
+            }
+            try {
+                record.update();
+                setRevision(record.getRevision());
+                log.info("Appended revision: " + record.getRevision());
+            } catch (JournalException e) {
+                String msg = "Unable to commit log entry.";
+                log.error(msg, e);
+            } catch (Throwable e) {
+                String msg = "Unexpected error while committing log entry.";
+                log.error(msg, e);
+            } finally {
+                record = null;
+            }
         }
 
         /**
          * {@inheritDoc}
          */
         public void updateCancelled() {
-            ClusterNode.this.updateCancelled();
+            if (status != STARTED) {
+                log.info("not started: update cancel ignored.");
+                return;
+            }
+            if (record != null) {
+                record.cancelUpdate();
+                record = null;
+            }
         }
 
         /**
          * {@inheritDoc}
          */
         public void setListener(UpdateEventListener listener) {
-            wspUpdateListeners.remove(workspace);
-            if (listener != null) {
-                wspUpdateListeners.put(workspace, listener);
+            if (workspace == null) {
+                versionUpdateListener = listener;
+            } else {
+                wspUpdateListeners.remove(workspace);
+                if (listener != null) {
+                    wspUpdateListeners.put(workspace, listener);
+                }
             }
         }
     }
@@ -606,14 +596,63 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
          * {@inheritDoc}
          */
         public void locked(NodeId nodeId, boolean deep, String owner) {
-            ClusterNode.this.locked(workspace, nodeId, deep, owner);
+            if (status != STARTED) {
+                log.info("not started: lock operation ignored.");
+                return;
+            }
+            Record record = null;
+            boolean succeeded = false;
+
+            try {
+                record = journal.getProducer(PRODUCER_ID).append();
+                record.writeString(workspace);
+                write(record, nodeId, deep, owner);
+                record.writeChar('\0');
+                record.update();
+                setRevision(record.getRevision());
+                succeeded = true;
+            } catch (JournalException e) {
+                String msg = "Unable to create log entry: " + e.getMessage();
+                log.error(msg);
+            } catch (Throwable e) {
+                String msg = "Unexpected error while creating log entry.";
+                log.error(msg, e);
+            } finally {
+                if (!succeeded && record != null) {
+                    record.cancelUpdate();
+                }
+            }
         }
 
         /**
          * {@inheritDoc}
          */
         public void unlocked(NodeId nodeId) {
-            ClusterNode.this.unlocked(workspace, nodeId);
+            if (status != STARTED) {
+                log.info("not started: unlock operation ignored.");
+                return;
+            }
+            Record record = null;
+            boolean succeeded = false;
+
+            try {
+                record = journal.getProducer(PRODUCER_ID).append();
+                record.writeString(workspace);
+                write(record, nodeId);
+                record.update();
+                setRevision(record.getRevision());
+                succeeded = true;
+            } catch (JournalException e) {
+                String msg = "Unable to create log entry: " + e.getMessage();
+                log.error(msg);
+            } catch (Throwable e) {
+                String msg = "Unexpected error while creating log entry.";
+                log.error(msg, e);
+            } finally {
+                if (!succeeded && record != null) {
+                    record.cancelUpdate();
+                }
+            }
         }
 
         /**
@@ -628,179 +667,464 @@ public class ClusterNode implements Runnable, UpdateEventChannel,
     }
 
     /**
-     * Sync listener on journal.
+     * Invoked when a record starts.
+     *
+     * @param workspace workspace, may be <code>null</code>
      */
-    class SyncListener implements RecordProcessor {
+    private void start(String workspace) {
+        this.workspace = workspace;
 
-        /**
-         * Workspace name.
-         */
-        private String workspace;
+        changeLog = new ChangeLog();
+        events = new ArrayList();
+    }
 
-        /**
-         * Change log.
-         */
-        private ChangeLog changeLog;
+    /**
+     * Process an update operation.
+     *
+     * @param operation operation to process
+     */
+    private void process(ItemOperation operation) {
+        operation.apply(changeLog);
+    }
 
-        /**
-         * List of recorded events.
-         */
-        private List events;
+    /**
+     * Process an event.
+     *
+     * @param event event
+     */
+    private void process(EventState event) {
+        events.add(event);
+    }
 
-        /**
-         * {@inheritDoc}
-         */
-        public void start(String workspace) {
-            this.workspace = workspace;
-
-            changeLog = new ChangeLog();
-            events = new ArrayList();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public void process(ItemOperation operation) {
-            operation.apply(changeLog);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public void process(EventState event) {
-            events.add(event);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public void process(NodeId nodeId, boolean isDeep, String owner) {
-            LockEventListener listener = (LockEventListener) wspLockListeners.get(workspace);
-            if (listener == null) {
-                try {
-                    clusterContext.lockEventsReady(workspace);
-                } catch (RepositoryException e) {
-                    String msg = "Unable to make lock listener for workspace " +
-                            workspace + " online: " + e.getMessage();
-                    log.warn(msg);
-                }
-                listener = (LockEventListener) wspLockListeners.get(workspace);
-                if (listener ==  null) {
-                    String msg = "Lock channel unavailable for workspace: " + workspace;
-                    log.error(msg);
-                    return;
-                }
-            }
+    /**
+     * Process a lock operation.
+     *
+     * @param nodeId node id
+     * @param isDeep flag indicating whether lock is deep
+     * @param owner lock owner
+     */
+    private void process(NodeId nodeId, boolean isDeep, String owner) {
+        LockEventListener listener = (LockEventListener) wspLockListeners.get(workspace);
+        if (listener == null) {
             try {
-                listener.externalLock(nodeId, isDeep, owner);
+                clusterContext.lockEventsReady(workspace);
             } catch (RepositoryException e) {
-                String msg = "Unable to deliver lock event: " + e.getMessage();
-                log.error(msg);
+                String msg = "Unable to make lock listener for workspace " +
+                        workspace + " online: " + e.getMessage();
+                log.warn(msg);
             }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public void process(NodeId nodeId) {
-            LockEventListener listener = (LockEventListener) wspLockListeners.get(workspace);
-            if (listener == null) {
-                try {
-                    clusterContext.lockEventsReady(workspace);
-                } catch (RepositoryException e) {
-                    String msg = "Unable to make lock listener for workspace " +
-                            workspace + " online: " + e.getMessage();
-                    log.warn(msg);
-                }
-                listener = (LockEventListener) wspLockListeners.get(workspace);
-                if (listener ==  null) {
-                    String msg = "Lock channel unavailable for workspace: " + workspace;
-                    log.error(msg);
-                    return;
-                }
-            }
-            try {
-                listener.externalUnlock(nodeId);
-            } catch (RepositoryException e) {
-                String msg = "Unable to deliver lock event: " + e.getMessage();
-                log.error(msg);
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public void process(String oldPrefix, String newPrefix, String uri) {
-            if (namespaceListener == null) {
-                String msg = "Namespace listener unavailable.";
+            listener = (LockEventListener) wspLockListeners.get(workspace);
+            if (listener ==  null) {
+                String msg = "Lock channel unavailable for workspace: " + workspace;
                 log.error(msg);
                 return;
             }
-            try {
-                namespaceListener.externalRemap(oldPrefix, newPrefix, uri);
-            } catch (RepositoryException e) {
-                String msg = "Unable to deliver namespace operation: " + e.getMessage();
-                log.error(msg);
-            }
         }
+        try {
+            listener.externalLock(nodeId, isDeep, owner);
+        } catch (RepositoryException e) {
+            String msg = "Unable to deliver lock event: " + e.getMessage();
+            log.error(msg);
+        }
+    }
 
-        /**
-         * {@inheritDoc}
-         */
-        public void process(Collection ntDefs) {
-            if (nodeTypeListener == null) {
-                String msg = "NodeType listener unavailable.";
+    /**
+     * Process an unlock operation.
+     *
+     * @param nodeId node id
+     */
+    private void process(NodeId nodeId) {
+        LockEventListener listener = (LockEventListener) wspLockListeners.get(workspace);
+        if (listener == null) {
+            try {
+                clusterContext.lockEventsReady(workspace);
+            } catch (RepositoryException e) {
+                String msg = "Unable to make lock listener for workspace " +
+                        workspace + " online: " + e.getMessage();
+                log.warn(msg);
+            }
+            listener = (LockEventListener) wspLockListeners.get(workspace);
+            if (listener ==  null) {
+                String msg = "Lock channel unavailable for workspace: " + workspace;
                 log.error(msg);
                 return;
             }
-            try {
-                nodeTypeListener.externalRegistered(ntDefs);
-            } catch (InvalidNodeTypeDefException e) {
-                String msg = "Unable to deliver node type operation: " + e.getMessage();
-                log.error(msg);
-            } catch (RepositoryException e) {
-                String msg = "Unable to deliver node type operation: " + e.getMessage();
-                log.error(msg);
-            }
         }
+        try {
+            listener.externalUnlock(nodeId);
+        } catch (RepositoryException e) {
+            String msg = "Unable to deliver lock event: " + e.getMessage();
+            log.error(msg);
+        }
+    }
 
-        /**
-         * {@inheritDoc}
-         */
-        public void end() {
-            UpdateEventListener listener = null;
-            if (workspace != null) {
+    /**
+     * Process a namespace operation.
+     *
+     * @param oldPrefix old prefix. if <code>null</code> this is a fresh mapping
+     * @param newPrefix new prefix. if <code>null</code> this is an unmap operation
+     * @param uri uri to map prefix to
+     */
+    private void process(String oldPrefix, String newPrefix, String uri) {
+        if (namespaceListener == null) {
+            String msg = "Namespace listener unavailable.";
+            log.error(msg);
+            return;
+        }
+        try {
+            namespaceListener.externalRemap(oldPrefix, newPrefix, uri);
+        } catch (RepositoryException e) {
+            String msg = "Unable to deliver namespace operation: " + e.getMessage();
+            log.error(msg);
+        }
+    }
+
+    /**
+     * Process one or more node type registrations.
+     *
+     * @param ntDefs node type definition
+     */
+    private void process(Collection ntDefs) {
+        if (nodeTypeListener == null) {
+            String msg = "NodeType listener unavailable.";
+            log.error(msg);
+            return;
+        }
+        try {
+            nodeTypeListener.externalRegistered(ntDefs);
+        } catch (InvalidNodeTypeDefException e) {
+            String msg = "Unable to deliver node type operation: " + e.getMessage();
+            log.error(msg);
+        } catch (RepositoryException e) {
+            String msg = "Unable to deliver node type operation: " + e.getMessage();
+            log.error(msg);
+        }
+    }
+
+    /**
+     * Invoked when a record ends.
+     */
+    private void end() {
+        UpdateEventListener listener = null;
+        if (workspace != null) {
+            listener = (UpdateEventListener) wspUpdateListeners.get(workspace);
+            if (listener == null) {
+                try {
+                    clusterContext.updateEventsReady(workspace);
+                } catch (RepositoryException e) {
+                    String msg = "Error making update listener for workspace " +
+                            workspace + " online: " + e.getMessage();
+                    log.warn(msg);
+                }
                 listener = (UpdateEventListener) wspUpdateListeners.get(workspace);
-                if (listener == null) {
-                    try {
-                        clusterContext.updateEventsReady(workspace);
-                    } catch (RepositoryException e) {
-                        String msg = "Error making update listener for workspace " +
-                                workspace + " online: " + e.getMessage();
-                        log.warn(msg);
-                    }
-                    listener = (UpdateEventListener) wspUpdateListeners.get(workspace);
-                    if (listener ==  null) {
-                        String msg = "Update listener unavailable for workspace: " + workspace;
-                        log.error(msg);
-                        return;
-                    }
-                }
-            } else {
-                if (versionUpdateListener != null) {
-                    listener = versionUpdateListener;
-                } else {
-                    String msg = "Version update listener unavailable.";
+                if (listener ==  null) {
+                    String msg = "Update listener unavailable for workspace: " + workspace;
                     log.error(msg);
                     return;
                 }
             }
-            try {
-                listener.externalUpdate(changeLog, events);
-            } catch (RepositoryException e) {
-                String msg = "Unable to deliver update events: " + e.getMessage();
+        } else {
+            if (versionUpdateListener != null) {
+                listener = versionUpdateListener;
+            } else {
+                String msg = "Version update listener unavailable.";
                 log.error(msg);
+                return;
             }
+        }
+        try {
+            listener.externalUpdate(changeLog, events);
+        } catch (RepositoryException e) {
+            String msg = "Unable to deliver update events: " + e.getMessage();
+            log.error(msg);
+        }
+    }
+
+    //-------------------------------------------------------< RecordConsumer >
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getId() {
+        return PRODUCER_ID;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public long getRevision() {
+        try {
+            return instanceRevision.get();
+        } catch (JournalException e) {
+            log.warn("Unable to return current revision.", e);
+            return Long.MAX_VALUE;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void consume(Record record) {
+        log.info("Processing revision: " + record.getRevision());
+
+        String workspace = null;
+
+        try {
+            workspace = record.readString();
+            start(workspace);
+
+            for (;;) {
+                char c = record.readChar();
+                if (c == '\0') {
+                    break;
+                }
+                if (c == 'N') {
+                    NodeOperation operation = NodeOperation.create(record.readByte());
+                    operation.setId(record.readNodeId());
+                    process(operation);
+                } else if (c == 'P') {
+                    PropertyOperation operation = PropertyOperation.create(record.readByte());
+                    operation.setId(record.readPropertyId());
+                    process(operation);
+                } else if (c == 'E') {
+                    int type = record.readByte();
+                    NodeId parentId = record.readNodeId();
+                    Path parentPath = record.readPath();
+                    NodeId childId = record.readNodeId();
+                    Path.PathElement childRelPath = record.readPathElement();
+                    QName ntName = record.readQName();
+
+                    Set mixins = new HashSet();
+                    int mixinCount = record.readInt();
+                    for (int i = 0; i < mixinCount; i++) {
+                        mixins.add(record.readQName());
+                    }
+                    String userId = record.readString();
+                    process(createEventState(type, parentId, parentPath, childId,
+                            childRelPath, ntName, mixins, userId));
+                } else if (c == 'L') {
+                    NodeId nodeId = record.readNodeId();
+                    boolean isLock = record.readBoolean();
+                    if (isLock) {
+                        boolean isDeep = record.readBoolean();
+                        String owner = record.readString();
+                        process(nodeId, isDeep, owner);
+                    } else {
+                        process(nodeId);
+                    }
+                } else if (c == 'S') {
+                    String oldPrefix = record.readString();
+                    String newPrefix = record.readString();
+                    String uri = record.readString();
+                    process(oldPrefix, newPrefix, uri);
+                } else if (c == 'T') {
+                    int size = record.readInt();
+                    HashSet ntDefs = new HashSet();
+                    for (int i = 0; i < size; i++) {
+                        ntDefs.add(record.readNodeTypeDef());
+                    }
+                    process(ntDefs);
+                } else {
+                    throw new IllegalArgumentException("Unknown entry type: " + c);
+                }
+            }
+            end();
+
+        } catch (JournalException e) {
+            String msg = "Unable to read revision '" + record.getRevision() + "'.";
+            log.error(msg, e);
+        } catch (IllegalArgumentException e) {
+            String msg = "Error while processing revision " +
+                    record.getRevision() + ": " + e.getMessage();
+            log.error(msg);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setRevision(long revision) {
+        try {
+            instanceRevision.set(revision);
+        } catch (JournalException e) {
+            log.warn("Unable to set current revision to " + revision + ".", e);
+        }
+    }
+
+    /**
+     * Create an event state.
+     *
+     * @param type event type
+     * @param parentId parent id
+     * @param parentPath parent path
+     * @param childId child id
+     * @param childRelPath child relative path
+     * @param ntName ndoe type name
+     * @param userId user id
+     * @return event
+     */
+    private EventState createEventState(int type, NodeId parentId, Path parentPath,
+                                        NodeId childId, Path.PathElement childRelPath,
+                                        QName ntName, Set mixins, String userId) {
+        switch (type) {
+            case Event.NODE_ADDED:
+                return EventState.childNodeAdded(parentId, parentPath, childId, childRelPath,
+                        ntName, mixins, getOrCreateSession(userId), true);
+            case Event.NODE_REMOVED:
+                return EventState.childNodeRemoved(parentId, parentPath, childId, childRelPath,
+                        ntName, mixins, getOrCreateSession(userId), true);
+            case Event.PROPERTY_ADDED:
+                return EventState.propertyAdded(parentId, parentPath, childRelPath,
+                        ntName, mixins, getOrCreateSession(userId), true);
+            case Event.PROPERTY_CHANGED:
+                return EventState.propertyChanged(parentId, parentPath, childRelPath,
+                        ntName, mixins, getOrCreateSession(userId), true);
+            case Event.PROPERTY_REMOVED:
+                return EventState.propertyRemoved(parentId, parentPath, childRelPath,
+                        ntName, mixins, getOrCreateSession(userId), true);
+            default:
+                String msg = "Unexpected event type: " + type;
+                throw new IllegalArgumentException(msg);
+        }
+    }
+
+    /**
+     * Return a session matching a certain user id.
+     *
+     * @param userId user id
+     * @return session
+     */
+    private Session getOrCreateSession(String userId) {
+        if (lastSession == null || !lastSession.getUserID().equals(userId)) {
+            lastSession = new ClusterSession(userId);
+        }
+        return lastSession;
+    }
+
+    //-----------------------------------------------< Record writing methods >
+
+    private static void write(Record record, ChangeLog changeLog, EventStateCollection esc)
+            throws JournalException {
+
+        Iterator addedStates = changeLog.addedStates();
+        while (addedStates.hasNext()) {
+            ItemState state = (ItemState) addedStates.next();
+            if (state.isNode()) {
+                write(record, NodeAddedOperation.create((NodeState) state));
+            } else {
+                write(record, PropertyAddedOperation.create((PropertyState) state));
+            }
+        }
+        Iterator modifiedStates = changeLog.modifiedStates();
+        while (modifiedStates.hasNext()) {
+            ItemState state = (ItemState) modifiedStates.next();
+            if (state.isNode()) {
+                write(record, NodeModifiedOperation.create((NodeState) state));
+            } else {
+                write(record, PropertyModifiedOperation.create((PropertyState) state));
+            }
+        }
+        Iterator deletedStates = changeLog.deletedStates();
+        while (deletedStates.hasNext()) {
+            ItemState state = (ItemState) deletedStates.next();
+            if (state.isNode()) {
+                write(record, NodeDeletedOperation.create((NodeState) state));
+            } else {
+                write(record, PropertyDeletedOperation.create((PropertyState) state));
+            }
+        }
+
+        Iterator events = esc.getEvents().iterator();
+        while (events.hasNext()) {
+            EventState event = (EventState) events.next();
+            write(record, event);
+        }
+    }
+
+    private static void write(Record record, String oldPrefix, String newPrefix, String uri)
+            throws JournalException {
+
+        record.writeChar('S');
+        record.writeString(oldPrefix);
+        record.writeString(newPrefix);
+        record.writeString(uri);
+    }
+
+    private static void write(Record record, NodeId nodeId, boolean isDeep, String owner)
+            throws JournalException {
+
+        write(record, nodeId, true, isDeep, owner);
+    }
+
+    private static void write(Record record, NodeId nodeId)
+            throws JournalException {
+
+        write(record, nodeId, false, false, null);
+    }
+
+    private static void write(Record record, Collection ntDefs)
+            throws JournalException {
+
+        record.writeChar('T');
+        record.writeInt(ntDefs.size());
+
+        Iterator iter = ntDefs.iterator();
+        while (iter.hasNext()) {
+            record.writeNodeTypeDef((NodeTypeDef) iter.next());
+        }
+    }
+
+    private static void write(Record record, PropertyOperation operation)
+            throws JournalException {
+
+        record.writeChar('P');
+        record.writeByte(operation.getOperationType());
+        record.writePropertyId(operation.getId());
+    }
+
+    private static void write(Record record, NodeOperation operation)
+            throws JournalException {
+
+        record.writeChar('N');
+        record.writeByte(operation.getOperationType());
+        record.writeNodeId(operation.getId());
+    }
+
+    /**
+     * Log an event. Subclass responsibility.
+     *
+     * @param event event to log
+     */
+    private static void write(Record record, EventState event)
+            throws JournalException {
+
+        record.writeChar('E');
+        record.writeByte(event.getType());
+        record.writeNodeId(event.getParentId());
+        record.writePath(event.getParentPath());
+        record.writeNodeId(event.getChildId());
+        record.writePathElement(event.getChildRelPath());
+        record.writeQName(event.getNodeType());
+
+        Set mixins = event.getMixinNames();
+        record.writeInt(mixins.size());
+        Iterator iter = mixins.iterator();
+        while (iter.hasNext()) {
+            record.writeQName((QName) iter.next());
+        }
+        record.writeString(event.getUserId());
+    }
+
+    private static void write(Record record, NodeId nodeId, boolean isLock,
+                              boolean isDeep, String owner)
+            throws JournalException {
+
+        record.writeChar('L');
+        record.writeNodeId(nodeId);
+        record.writeBoolean(isLock);
+        if (isLock) {
+            record.writeBoolean(isDeep);
+            record.writeString(owner);
         }
     }
 }

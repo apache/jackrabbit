@@ -14,10 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.cluster;
+package org.apache.jackrabbit.core.journal;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.name.NamespaceResolver;
 
 import java.io.File;
 import java.io.DataInputStream;
@@ -27,12 +28,13 @@ import java.io.BufferedInputStream;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
- * A file record log is a file containing {@link FileRecord}s. Physically,
+ * A file record log is a file containing {@link Record}s. Physically,
  * the first 4 bytes contain a signature, followed by a major and minor version
  * (2 bytes each). The next 8 bytes contain the revision this log starts with.
- * After this, zero or more <code>FileRecord</code>s follow.
+ * After this, zero or more <code>ReadRecord</code>s follow.
  */
 class FileRecordLog {
 
@@ -49,7 +51,7 @@ class FileRecordLog {
     /**
      * Known major version.
      */
-    private static final short MAJOR_VERSION = 1;
+    private static final short MAJOR_VERSION = 2;
 
     /**
      * Known minor version.
@@ -65,7 +67,7 @@ class FileRecordLog {
     /**
      * Underlying file.
      */
-    private File file;
+    private File logFile;
 
     /**
      * Flag indicating whether this is a new log.
@@ -78,33 +80,48 @@ class FileRecordLog {
     private DataInputStream in;
 
     /**
-     * First revision available in this log.
+     * Last revision that is not in this log.
      */
-    private long minRevision;
+    private long previousRevision;
 
     /**
-     * First revision that is not available in this, but in the next log.
+     * Relative position inside this log.
      */
-    private long maxRevision;
+    private long position;
 
     /**
-     * Create a new instance of this class.
+     * Last revision that is available in this log.
+     */
+    private long lastRevision;
+
+    /**
+     * Major version found in record log.
+     */
+    private short major;
+
+    /**
+     * Minor version found in record log.
+     */
+    private short minor;
+
+    /**
+     * Create a new instance of this class. Opens a record log in read-only mode.
      *
-     * @param file file containing record log
-     * @throws IOException if an I/O error occurs
+     * @param logFile file containing record log
+     * @throws java.io.IOException if an I/O error occurs
      */
-    public FileRecordLog(File file) throws IOException {
-        this.file = file;
+    public FileRecordLog(File logFile) throws IOException {
+        this.logFile = logFile;
 
-        if (file.exists()) {
-            DataInputStream in = new DataInputStream(new FileInputStream(file));
+        if (logFile.exists()) {
+            DataInputStream in = new DataInputStream(new FileInputStream(logFile));
 
             try {
                 readHeader(in);
-                minRevision = in.readLong();
-                maxRevision = minRevision + file.length() - HEADER_SIZE;
+                previousRevision = in.readLong();
+                lastRevision = previousRevision + logFile.length() - HEADER_SIZE;
             } finally {
-                in.close();
+                close(in);
             }
         } else {
             isNew = true;
@@ -112,12 +129,23 @@ class FileRecordLog {
     }
 
     /**
-     * Return the first revision.
-     *
-     * @return first revision
+     * Initialize this record log by writing a header containing the
+     * previous revision.
      */
-    public long getFirstRevision() {
-        return minRevision;
+    public void init(long previousRevision) throws IOException {
+        if (isNew) {
+            DataOutputStream out = new DataOutputStream(new FileOutputStream(logFile));
+
+            try {
+                writeHeader(out);
+                out.writeLong(previousRevision);
+            } finally {
+                close(out);
+            }
+
+            this.previousRevision = lastRevision = previousRevision;
+            isNew = false;
+        }
     }
 
     /**
@@ -128,7 +156,7 @@ class FileRecordLog {
      *         <code>false</code> otherwise
      */
     public boolean contains(long revision) {
-        return (revision >= minRevision && revision < maxRevision);
+        return (revision >= previousRevision && revision < lastRevision);
     }
 
     /**
@@ -142,11 +170,18 @@ class FileRecordLog {
     }
 
     /**
+     * Return a flag indicating whether this record log exceeds a given size.
+     */
+    public boolean exceeds(long size) {
+        return (lastRevision - previousRevision) > size;
+    }
+
+    /**
      * Seek an entry. This is an operation that allows the unterlying input stream
      * to be sequentially scanned and must therefore not be called twice.
      *
      * @param revision revision to seek
-     * @throws IOException if an I/O error occurs
+     * @throws java.io.IOException if an I/O error occurs
      */
     public void seek(long revision) throws IOException {
         if (in != null) {
@@ -154,15 +189,16 @@ class FileRecordLog {
             throw new IllegalStateException(msg);
         }
         in = new DataInputStream(new BufferedInputStream(
-                new FileInputStream(file)));
-        skip(revision - minRevision + HEADER_SIZE);
+                new FileInputStream(logFile)));
+        skip(revision - previousRevision + HEADER_SIZE);
+        position = revision - previousRevision;
     }
 
     /**
      * Skip exactly <code>n</code> bytes. Throws if less bytes are skipped.
      *
      * @param n bytes to skip
-     * @throws IOException if an I/O error occurs, or less that <code>n</code> bytes
+     * @throws java.io.IOException if an I/O error occurs, or less that <code>n</code> bytes
      *                     were skipped.
      */
     private void skip(long n) throws IOException {
@@ -183,38 +219,49 @@ class FileRecordLog {
     /**
      * Read the file record at the current seek position.
      *
+     * @param resolver namespace resolver
      * @return file record
-     * @throws IOException if an I/O error occurs
+     * @throws java.io.IOException if an I/O error occurs
      */
-    public FileRecord read() throws IOException {
-        byte[] creator = new byte[in.readUnsignedShort()];
-        in.readFully(creator);
+    public ReadRecord read(NamespaceResolver resolver) throws IOException {
+        String journalId = in.readUTF();
+        String producerId = in.readUTF();
         int length = in.readInt();
-        return new FileRecord(creator, length, in);
+
+        position += 2 + utfLength(journalId) +
+                2 + utfLength(producerId) +
+                4 + length;
+
+        long revision = previousRevision + position;
+        return new ReadRecord(journalId, producerId, revision, in, length, resolver);
     }
 
     /**
-     * Append a record to this log. Returns the revision following this record.
+     * Append a record backed by a file to this log. Returns the revision
+     * following this record.
      *
-     * @param record record to add
-     * @return next available revision
-     * @throws IOException if an I/O error occurs
+     * @param journalId journal identifier
+     * @param producerId producer identifier
+     * @param file record to add
+     * @throws java.io.IOException if an I/O error occurs
      */
-    public long append(long revision, byte[] creator, File record) throws IOException {
-        DataOutputStream out = new DataOutputStream(new FileOutputStream(file, true));
+    public long append(String journalId, String producerId, File file)
+            throws IOException {
+
+        DataOutputStream out = new DataOutputStream(new FileOutputStream(logFile, true));
+
         try {
-            int recordLength = (int) record.length();
-            if (isNew) {
-                writeHeader(out);
-                out.writeLong(revision);
-            }
-            out.writeShort(creator.length);
-            out.write(creator);
+            int recordLength = (int) file.length();
+            out.writeUTF(journalId);
+            out.writeUTF(producerId);
             out.writeInt(recordLength);
-            append(record, out);
-            return revision + getRecordSize(creator, recordLength);
+            append(file, out);
+            lastRevision += 2 + utfLength(journalId) +
+                2 + utfLength(producerId) +
+                4 + file.length();
+            return lastRevision;
         } finally {
-            out.close();
+            close(out);
         }
     }
 
@@ -233,22 +280,10 @@ class FileRecordLog {
     }
 
     /**
-     * Return the size of a stored record . A stored record's size is the size of
-     * the length-prefixed creator string plus the size of the length-prefixed data.
-     *
-     * @param creator creator string
-     * @param length data length
-     * @return size of a stored record
-     */
-    public static int getRecordSize(byte[] creator, int length) {
-        return 2 + creator.length + 4 + length;
-    }
-
-    /**
      * Read signature and major/minor version of file and verify.
      *
      * @param in input stream
-     * @throws IOException if an I/O error occurs or the file does
+     * @throws java.io.IOException if an I/O error occurs or the file does
      *                     not have a valid header.
      */
     private void readHeader(DataInputStream in) throws IOException {
@@ -257,27 +292,26 @@ class FileRecordLog {
 
         for (int i = 0; i < SIGNATURE.length; i++) {
             if (signature[i] != SIGNATURE[i]) {
-                String msg = "Record log '" + file.getPath() +
+                String msg = "Record log '" + logFile.getPath() +
                         "' has wrong signature: " + toHexString(signature);
                 throw new IOException(msg);
             }
         }
 
-        short major = in.readShort();
-        in.readShort(); // minor version not used yet
-
-        if (major > MAJOR_VERSION) {
-            String msg = "Record log '" + file.getPath() +
+        major = in.readShort();
+        if (major != MAJOR_VERSION) {
+            String msg = "Record log '" + logFile.getPath() +
                     "' has incompatible major version: " + major;
             throw new IOException(msg);
         }
+        minor  = in.readShort();
     }
 
     /**
      * Write signature and major/minor.
      *
      * @param out input stream
-     * @throws IOException if an I/O error occurs.
+     * @throws java.io.IOException if an I/O error occurs.
      */
     private void writeHeader(DataOutputStream out) throws IOException {
         out.write(SIGNATURE);
@@ -286,23 +320,47 @@ class FileRecordLog {
     }
 
     /**
-     * Append a record to this log's output stream.
+     * Close an input stream, logging a warning if an error occurs.
+     */
+    private static void close(InputStream in) {
+        try {
+            in.close();
+        } catch (IOException e) {
+            String msg = "I/O error while closing input stream.";
+            log.warn(msg, e);
+        }
+    }
+
+    /**
+     * Close an output stream, logging a warning if an error occurs.
+     */
+    private static void close(OutputStream out) {
+        try {
+            out.close();
+        } catch (IOException e) {
+            String msg = "I/O error while closing input stream.";
+            log.warn(msg, e);
+        }
+    }
+
+    /**
+     * Append a file to this log's output stream.
      *
-     * @param record record to append
+     * @param file file to append
      * @param out where to append to
      */
-    private static void append(File record, DataOutputStream out) throws IOException {
+    private static void append(File file, DataOutputStream out) throws IOException {
         byte[] buffer = new byte[8192];
         int len;
 
-        InputStream in = new BufferedInputStream(new FileInputStream(record));
+        InputStream in = new BufferedInputStream(new FileInputStream(file));
         try {
             while ((len = in.read(buffer)) > 0) {
                 out.write(buffer, 0, len);
             }
             out.flush();
         } finally {
-            in.close();
+            close(in);
         }
     }
 
@@ -319,5 +377,27 @@ class FileRecordLog {
             buf.append(s);
         }
         return buf.toString();
+    }
+
+    /**
+     * Return the length of a string when converted to its Java modified
+     * UTF-8 encoding, as used by <code>DataInput.readUTF</code> and
+     * <code>DataOutput.writeUTF</code>.
+     */
+    private static int utfLength(String s) {
+        char[] ac = s.toCharArray();
+        int utflen = 0;
+
+        for (int i = 0; i < ac.length; i++) {
+            char c = ac[i];
+            if ((c >= 0x0001) && (c <= 0x007F)) {
+                utflen++;
+            } else if (c > 0x07FF) {
+                utflen += 3;
+            } else {
+                utflen += 2;
+            }
+        }
+        return utflen;
     }
 }

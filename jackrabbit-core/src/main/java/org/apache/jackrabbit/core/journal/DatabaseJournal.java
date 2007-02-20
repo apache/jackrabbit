@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.cluster;
+package org.apache.jackrabbit.core.journal;
 
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.util.Text;
@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.DataInputStream;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.BufferedReader;
@@ -133,108 +132,17 @@ public class DatabaseJournal extends AbstractJournal {
     private PreparedStatement insertRevisionStmt;
 
     /**
-     * Bean getter for driver.
-     * @return driver
+     * Locked revision.
      */
-    public String getDriver() {
-        return driver;
-    }
-
-    /**
-     * Bean setter for driver.
-     * @param driver driver
-     */
-    public void setDriver(String driver) {
-        this.driver = driver;
-    }
-
-    /**
-     * Bean getter for url.
-     * @return url
-     */
-    public String getUrl() {
-        return url;
-    }
-
-    /**
-     * Bean setter for url.
-     * @param url url
-     */
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    /**
-     * Bean getter for schema.
-     * @return schema
-     */
-    public String getSchema() {
-        return schema;
-    }
-
-    /**
-     * Bean getter for schema.
-     * @param schema schema
-     */
-    public void setSchema(String schema) {
-        this.schema = schema;
-    }
-
-    /**
-     * Bean getter for schema object prefix.
-     * @return schema object prefix
-     */
-    public String getSchemaObjectPrefix() {
-        return schemaObjectPrefix;
-    }
-
-    /**
-     * Bean getter for schema object prefix.
-     * @param schemaObjectPrefix schema object prefix
-     */
-    public void setSchemaObjectPrefix(String schemaObjectPrefix) {
-        this.schemaObjectPrefix = schemaObjectPrefix.toUpperCase();
-    }
-
-    /**
-     * Bean getter for user.
-     * @return user
-     */
-    public String getUser() {
-        return user;
-    }
-
-    /**
-     * Bean setter for user.
-     * @param user user
-     */
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    /**
-     * Bean getter for password.
-     * @return password
-     */
-    public String getPassword() {
-        return password;
-    }
-
-    /**
-     * Bean setter for password.
-     * @param password password
-     */
-    public void setPassword(String password) {
-        this.password = password;
-    }
+    private long lockedRevision;
 
     /**
      * {@inheritDoc}
      */
-    public void init(String id, RecordProcessor processor, NamespaceResolver resolver)
+    public void init(String id, NamespaceResolver resolver)
             throws JournalException {
 
-        super.init(id, processor, resolver);
+        super.init(id, resolver);
 
         if (driver == null) {
             String msg = "Driver not specified.";
@@ -258,7 +166,7 @@ public class DatabaseJournal extends AbstractJournal {
         try {
             Class.forName(driver);
             con = DriverManager.getConnection(url, user, password);
-            con.setAutoCommit(false);
+            con.setAutoCommit(true);
 
             checkSchema();
             prepareStatements();
@@ -291,72 +199,36 @@ public class DatabaseJournal extends AbstractJournal {
     /**
      * {@inheritDoc}
      */
-    public void sync() throws JournalException {
-        long oldRevision = getLocalRevision();
-        ResultSet rs = null;
+    protected RecordIterator getRecords(long startRevision)
+            throws JournalException {
 
         try {
             selectRevisionsStmt.clearParameters();
             selectRevisionsStmt.clearWarnings();
-            selectRevisionsStmt.setLong(1, oldRevision);
+            selectRevisionsStmt.setLong(1, startRevision);
             selectRevisionsStmt.execute();
 
-            rs = selectRevisionsStmt.getResultSet();
-            while (rs.next()) {
-                long revision = rs.getLong(1);
-                String creator = rs.getString(2);
-                if (!creator.equals(id)) {
-                    DataInputStream in = new DataInputStream(rs.getBinaryStream(3));
-                    try {
-                        process(revision, in);
-                    } catch (IllegalArgumentException e) {
-                        String msg = "Error while processing revision " +
-                                revision + ": " + e.getMessage();
-                        throw new JournalException(msg);
-                    } finally {
-                        close(in);
-                    }
-                } else {
-                    log.info("Log entry matches journal id, skipped: " + revision);
-                }
-                setLocalRevision(revision);
-            }
+            return new DatabaseRecordIterator(
+                    selectRevisionsStmt.getResultSet(), getResolver());
         } catch (SQLException e) {
-            String msg = "Unable to iterate over modified records.";
+            String msg = "Unable to return record iterater.";
             throw new JournalException(msg, e);
-        } finally {
-            close(rs);
-        }
-
-        long currentRevision = getLocalRevision();
-        if (oldRevision < currentRevision) {
-            log.info("Sync finished, instance revision is: " + currentRevision);
-        }
-    }
-
-    /**
-     * Process a record.
-     *
-     * @param revision revision
-     * @param dataIn data input
-     * @throws JournalException if an error occurs
-     */
-    private void process(long revision, DataInputStream dataIn) throws JournalException {
-        RecordInput in = new RecordInput(dataIn, resolver);
-
-        try {
-            process(revision, in);
-        } finally {
-            in.close();
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    protected long lockRevision() throws JournalException {
+    protected void doLock() throws JournalException {
         ResultSet rs = null;
         boolean succeeded = false;
+
+        try {
+            con.setAutoCommit(false);
+        } catch (SQLException e) {
+            String msg = "Unable to set autocommit to false.";
+            throw new JournalException(msg, e);
+        }
 
         try {
             updateGlobalStmt.clearParameters();
@@ -371,17 +243,23 @@ public class DatabaseJournal extends AbstractJournal {
             if (!rs.next()) {
                  throw new JournalException("No revision available.");
             }
-            long globalRevision = rs.getLong(1);
+            lockedRevision = rs.getLong(1);
             succeeded = true;
-            return globalRevision;
 
         } catch (SQLException e) {
-            String msg = "Unable to lock global revision table: " + e.getMessage();
-            throw new JournalException(msg);
+            String msg = "Unable to lock global revision table.";
+            throw new JournalException(msg, e);
         } finally {
             close(rs);
             if (!succeeded) {
                 rollback(con);
+
+                try {
+                    con.setAutoCommit(true);
+                } catch (SQLException e) {
+                    String msg = "Unable to set autocommit to true.";
+                    log.warn(msg, e);
+                }
             }
         }
     }
@@ -389,39 +267,52 @@ public class DatabaseJournal extends AbstractJournal {
     /**
      * {@inheritDoc}
      */
-    protected void unlockRevision(boolean successful) {
+    protected void doUnlock(boolean successful) {
         if (!successful) {
             rollback(con);
+        }
+        try {
+            con.setAutoCommit(true);
+        } catch (SQLException e) {
+            String msg = "Unable to set autocommit to true.";
+            log.warn(msg, e);
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    protected void append(long revision, File record) throws JournalException {
+    protected long append(String producerId, File file) throws JournalException {
         try {
-            InputStream in = new BufferedInputStream(new FileInputStream(record));
+            InputStream in = new BufferedInputStream(new FileInputStream(file));
 
             try {
                 insertRevisionStmt.clearParameters();
                 insertRevisionStmt.clearWarnings();
-                insertRevisionStmt.setLong(1, revision);
-                insertRevisionStmt.setString(2, id);
-                insertRevisionStmt.setBinaryStream(3, in, (int) record.length());
+                insertRevisionStmt.setLong(1, lockedRevision);
+                insertRevisionStmt.setString(2, getId());
+                insertRevisionStmt.setString(3, producerId);
+                insertRevisionStmt.setBinaryStream(4, in, (int) file.length());
                 insertRevisionStmt.execute();
 
                 con.commit();
-
-                setLocalRevision(revision);
+                return lockedRevision;
             } finally {
-                in.close();
+                close(in);
+
+                try {
+                    con.setAutoCommit(true);
+                } catch (SQLException e) {
+                    String msg = "Unable to set autocommit to true.";
+                    log.warn(msg, e);
+                }
             }
         } catch (IOException e) {
-            String msg = "Unable to open journal log " + record + ": " + e.getMessage();
-            throw new JournalException(msg);
+            String msg = "Unable to open journal log '" + file + "'.";
+            throw new JournalException(msg, e);
         } catch (SQLException e) {
-            String msg = "Unable to append revision: "  + revision + ": " + e.getMessage();
-            throw new JournalException(msg);
+            String msg = "Unable to append revision " + lockedRevision + ".";
+            throw new JournalException(msg, e);
         }
     }
 
@@ -566,7 +457,7 @@ public class DatabaseJournal extends AbstractJournal {
      */
     private void prepareStatements() throws SQLException {
         selectRevisionsStmt = con.prepareStatement(
-                "select REVISION_ID, REVISION_CREATOR, REVISION_DATA " +
+                "select REVISION_ID, JOURNAL_ID, PRODUCER_ID, REVISION_DATA " +
                 "from " + schemaObjectPrefix + "JOURNAL " +
                 "where REVISION_ID > ?");
         updateGlobalStmt = con.prepareStatement(
@@ -577,7 +468,61 @@ public class DatabaseJournal extends AbstractJournal {
                 "from " + schemaObjectPrefix + "GLOBAL_REVISION");
         insertRevisionStmt = con.prepareStatement(
                 "insert into " + schemaObjectPrefix + "JOURNAL" +
-                "(REVISION_ID, REVISION_CREATOR, REVISION_DATA) " +
-                "values (?,?,?)");
+                "(REVISION_ID, JOURNAL_ID, PRODUCER_ID, REVISION_DATA) " +
+                "values (?,?,?,?)");
+    }
+
+    /**
+     * Bean getters
+     */
+    public String getDriver() {
+        return driver;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public String getSchema() {
+        return schema;
+    }
+
+    public String getSchemaObjectPrefix() {
+        return schemaObjectPrefix;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    /**
+     * Bean setters
+     */
+    public void setDriver(String driver) {
+        this.driver = driver;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public void setSchema(String schema) {
+        this.schema = schema;
+    }
+
+    public void setSchemaObjectPrefix(String schemaObjectPrefix) {
+        this.schemaObjectPrefix = schemaObjectPrefix.toUpperCase();
+    }
+
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

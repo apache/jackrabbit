@@ -522,9 +522,15 @@ public class SharedItemStateManager
             if (eventChannel != null) {
                 eventChannel.updateCreated();
             }
-            acquireWriteLock();
 
-            holdingWriteLock = true;
+            try {
+                acquireWriteLock();
+                holdingWriteLock = true;
+            } finally {
+                if (!holdingWriteLock && eventChannel != null) {
+                    eventChannel.updateCancelled();
+                }
+            }
 
             boolean succeeded = false;
 

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.cluster;
+package org.apache.jackrabbit.core.journal;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -27,12 +27,12 @@ import java.nio.channels.FileLock;
 /**
  * Maintains a file-based revision counter with locking, assuring uniqueness.
  */
-class FileRevision {
+class LockableFileRevision {
 
     /**
      * Logger.
      */
-    private static final Logger log = LoggerFactory.getLogger(FileRevision.class);
+    private static final Logger log = LoggerFactory.getLogger(LockableFileRevision.class);
 
     /**
      * Underlying file.
@@ -59,7 +59,7 @@ class FileRevision {
      *
      * @param file holding global counter
      */
-    public FileRevision(File file) {
+    public LockableFileRevision(File file) {
         this.file = file;
 
         try {
@@ -83,8 +83,8 @@ class FileRevision {
                 raf = new RandomAccessFile(file, shared ? "r" : "rw");
                 lock = raf.getChannel().lock(0L, Long.MAX_VALUE, shared);
             } catch (IOException e) {
-                String msg = "I/O error occurred: " + e.getMessage();
-                throw new JournalException(msg);
+                String msg = "I/O error occurred.";
+                throw new JournalException(msg, e);
             } finally {
                 if (lock == null && raf != null) {
                     try {
