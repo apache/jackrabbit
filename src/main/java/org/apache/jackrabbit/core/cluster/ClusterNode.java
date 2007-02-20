@@ -497,7 +497,6 @@ public class ClusterNode implements Runnable,
             boolean succeeded = false;
 
             try {
-                //record = journal.getProducer(PRODUCER_ID).append();
                 record.writeString(workspace);
                 write(record, changes, esc);
                 record.writeChar('\0');
