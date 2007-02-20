@@ -17,7 +17,6 @@ import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.TransientItemStateFactory;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.IdFactory;
@@ -39,15 +38,11 @@ public class HierarchyManagerImpl implements HierarchyManager {
 
     private final NodeEntry rootEntry;
     private final UniqueIdResolver uniqueIdResolver;
-
-    private final ItemStateFactory isf;
     private final IdFactory idFactory;
 
     public HierarchyManagerImpl(TransientItemStateFactory isf, IdFactory idFactory) {
         uniqueIdResolver = new UniqueIdResolver(isf);
         rootEntry = new EntryFactory(isf, idFactory, uniqueIdResolver).createRootEntry();
-
-        this.isf = isf;
         this.idFactory = idFactory;
     }
 
