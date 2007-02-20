@@ -115,6 +115,9 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     /** Name of the clustered configuration attribute. */
     public static final String CLUSTERED_ATTRIBUTE = "clustered";
 
+    /** Default synchronization delay, in milliseconds. */
+    public static final String DEFAULT_SYNC_DELAY = "5000";
+
     /**
      * Creates a new configuration parser with the given parser variables.
      *
@@ -478,8 +481,8 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                 Element element = (Element) child;
 
                 String id = getAttribute(element, ID_ATTRIBUTE, null);
-                int syncDelay = Integer.parseInt(
-                        getAttribute(element, SYNC_DELAY_ATTRIBUTE, "5"));
+                long syncDelay = Long.parseLong(
+                        getAttribute(element, SYNC_DELAY_ATTRIBUTE, DEFAULT_SYNC_DELAY));
 
                 JournalConfig jc = parseJournalConfig(element);
                 return new ClusterConfig(id, syncDelay, jc);

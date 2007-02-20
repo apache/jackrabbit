@@ -30,7 +30,7 @@ public class ClusterConfig {
     /**
      * Sync delay.
      */
-    private final int syncDelay;
+    private final long syncDelay;
 
     /**
      * Journal configuration.
@@ -41,9 +41,10 @@ public class ClusterConfig {
      * Creates a new cluster configuration.
      *
      * @param id custom cluster node id
+     * @param syncDelay syncDelay, in milliseconds
      * @param jc journal configuration
      */
-    public ClusterConfig(String id, int syncDelay, JournalConfig jc) {
+    public ClusterConfig(String id, long syncDelay, JournalConfig jc) {
         this.id = id;
         this.syncDelay = syncDelay;
         this.jc = jc;
@@ -63,7 +64,7 @@ public class ClusterConfig {
      *
      * @return syncDelay
      */
-    public int getSyncDelay() {
+    public long getSyncDelay() {
         return syncDelay;
     }
 

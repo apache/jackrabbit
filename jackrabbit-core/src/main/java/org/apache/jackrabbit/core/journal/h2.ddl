@@ -16,7 +16,7 @@
 #  DDL script for the H2 database engine (http://www.h2database.com)
 # 
 set max_length_inplace_lob 4096
-create table ${schemaObjectPrefix}JOURNAL (REVISION_ID bigint primary key, REVISION_CREATOR varchar(255), REVISION_DATA blob)
+create table ${schemaObjectPrefix}JOURNAL (REVISION_ID bigint primary key, JOURNAL_ID varchar(255), PRODUCER_ID varchar(255), REVISION_DATA blob)
 create table ${schemaObjectPrefix}GLOBAL_REVISION (REVISION_ID bigint primary key)
 
 # Inserting the one and only revision counter record now helps avoiding race conditions 

@@ -14,21 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.cluster;
+package org.apache.jackrabbit.core.journal;
 
 /**
- * Contains definitions common to both <code>RecordInput</code> and
- * <code>RecordOutput</code>.
+ * Produces new records that can be appended to the journal.
  */
-interface Record {
+public interface RecordProducer {
 
     /**
-     * Indicator for a literal UUID.
+     * Append a record. This operation implicitely locks the journal revision
+     * and must be followed by either {@link Record#update} or {@link Record#cancelUpdate}.
+     * on the record returned.
+     *
+     * @return appended record
+     * @throws JournalException if an error occurs
      */
-    public static final byte UUID_LITERAL = 'L';
-
-    /**
-     * Indicator for a UUID index.
-     */
-    public static final byte UUID_INDEX = 'I';
+    public Record append() throws JournalException;
 }

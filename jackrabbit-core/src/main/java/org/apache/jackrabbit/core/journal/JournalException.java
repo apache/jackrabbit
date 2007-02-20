@@ -14,12 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.cluster;
+package org.apache.jackrabbit.core.journal;
+
+import org.apache.jackrabbit.BaseException;
 
 /**
  * The <code>JournalException</code> signals an error within a journal operation.
  */
-public class JournalException extends ClusterException {
+public class JournalException extends BaseException {
 
     /**
      * Constructs a new instance of this class with the specified detail

@@ -14,18 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.cluster;
+package org.apache.jackrabbit.core.journal;
+
+import org.apache.jackrabbit.name.NamespaceResolver;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.NoSuchElementException;
 
 /**
  * Record cursor that returns unseen revisions in ascending order on every
- * iteration. When iterating, a record must either be completely processed
- * or its {@link FileRecord#skip()} method must be invoked to guarantee
- * that this cursor is pointing at the next record.
+ * iteration.
  */
-class FileRecordCursor {
+class FileRecordIterator implements RecordIterator {
 
     /**
      * Log files to scan for revisions.
@@ -33,14 +34,19 @@ class FileRecordCursor {
     private File[] logFiles;
 
     /**
-     * Next revision to visit.
+     * Current revision being visited.
      */
-    private long nextRevision;
+    private long revision;
 
     /**
      * Last revision to visit.
      */
-    private long lastRevision;
+    private long stopRevision;
+
+    /**
+     * Namespace resolver.
+     */
+    private NamespaceResolver resolver;
 
     /**
      * Current record log, containing file records.
@@ -50,19 +56,21 @@ class FileRecordCursor {
     /**
      * Current record.
      */
-    private FileRecord record;
+    private ReadRecord record;
 
     /**
      * Creates a new instance of this class.
      *
      * @param logFiles available log files, sorted ascending by age
-     * @param firstRevision first revision to return
-     * @param lastRevision last revision to return
+     * @param startRevision start point (exclusive)
+     * @param stopRevision stop point (inclusive)
      */
-    public FileRecordCursor(File[] logFiles, long firstRevision, long lastRevision) {
+    public FileRecordIterator(File[] logFiles, long startRevision, long stopRevision,
+                              NamespaceResolver resolver) {
         this.logFiles = logFiles;
-        this.nextRevision = firstRevision;
-        this.lastRevision = lastRevision;
+        this.revision = startRevision;
+        this.stopRevision = stopRevision;
+        this.resolver = resolver;
     }
 
 
@@ -70,37 +78,61 @@ class FileRecordCursor {
      * Return a flag indicating whether there are next records.
      */
     public boolean hasNext() {
-        return nextRevision < lastRevision;
+        return revision < stopRevision;
     }
 
     /**
-     * Returns the next record.
-     *
-     * @throws IllegalStateException if no next revision exists
-     * @throws IOException if an I/O error occurs
+     * {@inheritDoc}
      */
-    public FileRecord next() throws IOException {
+    public Record nextRecord() throws NoSuchElementException, JournalException {
         if (!hasNext()) {
             String msg = "No next revision.";
-            throw new IllegalStateException(msg);
+            throw new NoSuchElementException(msg);
         }
-        if (record != null) {
-            record.skip();
-            record = null;
+        try {
+            if (record != null) {
+                record.close();
+                record = null;
+            }
+        } catch (IOException e) {
+            close();
+            String msg = "Unable to skip over record.";
+            throw new JournalException(msg, e);
         }
+
         if (recordLog != null) {
-            if (!recordLog.contains(nextRevision)) {
+            if (!recordLog.contains(revision)) {
                 recordLog.close();
                 recordLog = null;
             }
         }
-        if (recordLog == null) {
-            recordLog = getRecordLog(nextRevision);
+
+        try {
+            if (recordLog == null) {
+                recordLog = getRecordLog(revision);
+            }
+        } catch (IOException e) {
+            String msg = "Unable to open record log with revision: " + revision;
+            throw new JournalException(msg, e);
         }
-        record = recordLog.read();
-        record.setRevision(nextRevision);
-        nextRevision = record.getNextRevision();
-        return record;
+
+        try {
+            record = recordLog.read(resolver);
+            revision = record.getRevision();
+            return record;
+        } catch (IOException e) {
+            String msg = "Unable to read record with revision: " + revision;
+            throw new JournalException(msg, e);
+        }
+    }
+
+    /**
+     * Close this cursor, releasing its resources.
+     */
+    public void close() {
+        if (recordLog != null) {
+            recordLog.close();
+        }
     }
 
     /**
@@ -120,14 +152,5 @@ class FileRecordCursor {
         }
         String msg = "No log file found containing revision: " + revision;
         throw new IOException(msg);
-    }
-
-    /**
-     * Close this cursor, releasing its resources.
-     */
-    public void close() {
-        if (recordLog != null) {
-            recordLog.close();
-        }
     }
 }
