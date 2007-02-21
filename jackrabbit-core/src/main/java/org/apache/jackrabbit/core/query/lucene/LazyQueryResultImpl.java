@@ -256,6 +256,8 @@ public class LazyQueryResultImpl implements QueryResult {
                 try {
                     if (accessMgr.isGranted(id, AccessManager.READ)) {
                         resultNodes.add(new ScoreNode(id, result.score(i)));
+                    } else {
+                        invalid++;
                     }
                 } catch (ItemNotFoundException e) {
                     // has been deleted meanwhile
