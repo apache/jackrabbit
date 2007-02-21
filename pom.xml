@@ -452,6 +452,16 @@
       </roles>
       <timezone>+1</timezone>
     </developer>
+    <developer>
+      <name>Przemo Pakulski</name>
+      <id>ppakulski</id>
+      <organization>Cognifide</organization>
+      <organizationUrl>www.cognifide.com</organizationUrl>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
   </developers>
   <contributors>
     <contributor>
@@ -551,15 +561,6 @@
     <contributor>
       <name>Nicolas Toper</name>
       <organization>Google Summer of Code 2006</organization>
-      <roles>
-        <role>Java Developer</role>
-      </roles>
-      <timezone>+1</timezone>
-    </contributor>
-    <contributor>
-      <name>Przemo Pakulski</name>
-      <organization>Cognifide</organization>
-      <organizationUrl>www.cognifide.com</organizationUrl>
       <roles>
         <role>Java Developer</role>
       </roles>
