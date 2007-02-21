@@ -9,8 +9,6 @@ Known Issues and TODOs with jcr2spi
         
 - TODO: test Observation
 
-- TODO: test Query tests, that expect additional content
-
 - TODO: test Merge
 
 - BUG: NodeEntryImpl needs an attic for transiently moved and removed
