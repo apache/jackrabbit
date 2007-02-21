@@ -25,8 +25,14 @@
         This is an archive of all the Apache Jackrabbit news posted to the
         home page. The news are listed in reverse chronological order.
       </p>
-      <subsection name="News in 2006">
+      <subsection name="News in 2007">
         <dl>
+          <dt><strong>February 21, 2007: Apache Jackrabbit 1.2.2 released</strong></dt>
+          <dd>
+            From the release notes: "<em>Apache Jackrabbit 1.2.2 is a patch
+            release that fixes a few issues reported since the 1.2.1 release
+            and adds two clustering improvements.</em>"
+          </dd>
           <dt><strong>January 23, 2007: Apache Jackrabbit 1.2.1 released</strong></dt>
           <dd>
             From the release notes: "<em>Apache Jackrabbit 1.2.1 is an
@@ -35,6 +41,10 @@
             release are the introduction of a clustering feature and various
             query improvements.</em>"
           </dd>
+        </dl>
+      </subsection>
+      <subsection name="News in 2006">
+        <dl>
           <dt><strong>December 4, 2006: Apache Jackrabbit 1.1.1 released</strong></dt>
           <dd>
             From the release notes: "<em>Apache Jackrabbit 1.1.1 is a patch

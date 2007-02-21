@@ -47,6 +47,13 @@
       </p>
       <subsection name="Apache Jackrabbit News">
         <dl>
+          <dt><strong>February 21, 2007: Apache Jackrabbit 1.2.2 released</strong></dt>
+          <dd>
+            From the release notes: "<em>Apache Jackrabbit 1.2.2 is a patch
+            release that fixes a few issues reported since the 1.2.1 release
+            and adds two clustering improvements.</em>"
+            See the <a href="downloads.cgi">downloads page</a> for more details.
+          </dd>
           <dt><strong>January 23, 2007: Apache Jackrabbit 1.2.1 released</strong></dt>
           <dd>
             From the release notes: "<em>Apache Jackrabbit 1.2.1 is an
@@ -54,7 +61,6 @@
             improvements, and bug fixes. The most notable changes in this
             release are the introduction of a clustering feature and various
             query improvements.</em>"
-            See the <a href="downloads.cgi">downloads page</a> for more details.
           </dd>
           <dt><strong>December 4, 2006: Apache Jackrabbit 1.1.1 released</strong></dt>
           <dd>
@@ -62,14 +68,6 @@
             release that fixes a number of issues, see the included change
             history for details. No new features or configuration changes have
             been introduced since the 1.1 release.</em>"
-          </dd>
-          <dt><strong>October 12, 2006: Apache Jackrabbit 1.1 released</strong></dt>
-          <dd>
-            From the release notes: "<em>Apache Jackrabbit 1.1 is an
-            incremental release that fixes a number of issues and introduces
-            some new features. The most notable changes in this release
-            include the removal of the Apache Xerces dependency and an
-            improved item state cache.</em>"
           </dd>
         </dl>
         <p>
