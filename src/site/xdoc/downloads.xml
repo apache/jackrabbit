@@ -62,29 +62,29 @@ list of mirrors</a>.</p>
 </subsection>
 </section>
 
-<section name="Apache Jackrabbit 1.2.1">
+<section name="Apache Jackrabbit 1.2.2">
 
 <p>For details, see the <a href="[preferred]/jackrabbit/RELEASE-NOTES.txt">release notes</a>.</p>
 
 <subsection name="Source Code">
 
 <ul>
-<li><a href="[preferred]/jackrabbit/source/jackrabbit-1.2.1-src.jar">jackrabbit-1.2.1-src.jar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/source/jackrabbit-1.2.1-src.jar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/source/jackrabbit-1.2.1-src.jar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/source/jackrabbit-1.2.1-src.jar.sha1">SHA1</a>]
+<li><a href="[preferred]/jackrabbit/source/jackrabbit-1.2.2-src.jar">jackrabbit-1.2.2-src.jar</a> 
+[<a href="http://www.apache.org/dist/jackrabbit/source/jackrabbit-1.2.2-src.jar.asc">PGP</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/source/jackrabbit-1.2.2-src.jar.md5">MD5</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/source/jackrabbit-1.2.2-src.jar.sha">SHA1</a>]
 </li>
 </ul>
 
 <p>
-The main source archive contains a "jackrabbit-1.2.1-src" directory
+The main source archive contains a "jackrabbit-1.2.2-src" directory
 with the full released source code and build environment. Use the
 following commands (or the equivalent in your system) to build all
 the released components with Maven 2:
 </p>
 <source>
-$ jar xf jackrabbit-1.2.1-src.jar
-$ cd jackrabbit-1.2.1-src
+$ jar xf jackrabbit-1.2.2-src.jar
+$ cd jackrabbit-1.2.2-src
 $ mvn install
 </source>
 
@@ -94,91 +94,91 @@ $ mvn install
 
 <p>Jackrabbit API</p>
 <ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-api-1.2.1.jar">jackrabbit-api-1.2.1.jar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-api-1.2.1.jar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-api-1.2.1.jar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-api-1.2.1.jar.sha1">SHA1</a>]
+<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-api-1.2.2.jar">jackrabbit-api-1.2.2.jar</a> 
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-api-1.2.2.jar.asc">PGP</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-api-1.2.2.jar.md5">MD5</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-api-1.2.2.jar.sha">SHA1</a>]
 </li>
 </ul>
 
 <p>Jackrabbit JCR Commons</p>
 <ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-commons-1.2.1.jar">jackrabbit-jcr-commons-1.2.1.jar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-commons-1.2.1.jar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-commons-1.2.1.jar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-commons-1.2.1.jar.sha1">SHA1</a>]
+<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-commons-1.2.2.jar">jackrabbit-jcr-commons-1.2.2.jar</a> 
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-commons-1.2.2.jar.asc">PGP</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-commons-1.2.2.jar.md5">MD5</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-commons-1.2.2.jar.sha">SHA1</a>]
 </li>
 </ul>
 
 <p>Jackrabbit JCR Tests</p>
 <ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-tests-1.2.1.jar">jackrabbit-jcr-tests-1.2.1.jar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-tests-1.2.1.jar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-tests-1.2.1.jar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-tests-1.2.1.jar.sha1">SHA1</a>]
+<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-tests-1.2.2.jar">jackrabbit-jcr-tests-1.2.2.jar</a> 
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-tests-1.2.2.jar.asc">PGP</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-tests-1.2.2.jar.md5">MD5</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-tests-1.2.2.jar.sha">SHA1</a>]
 </li>
 </ul>
 
 <p>Jackrabbit Core</p>
 <ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-core-1.2.1.jar">jackrabbit-core-1.2.1.jar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-core-1.2.1.jar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-core-1.2.1.jar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-core-1.2.1.jar.sha1">SHA1</a>]
+<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-core-1.2.2.jar">jackrabbit-core-1.2.2.jar</a> 
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-core-1.2.2.jar.asc">PGP</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-core-1.2.2.jar.md5">MD5</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-core-1.2.2.jar.sha">SHA1</a>]
 </li>
 </ul>
 
 <p>Jackrabbit Index Filters</p>
 <ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-index-filters-1.2.1.jar">jackrabbit-index-filters-1.2.1.jar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-index-filters-1.2.1.jar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-index-filters-1.2.1.jar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-index-filters-1.2.1.jar.sha1">SHA1</a>]
+<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-index-filters-1.2.2.jar">jackrabbit-index-filters-1.2.2.jar</a> 
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-index-filters-1.2.2.jar.asc">PGP</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-index-filters-1.2.2.jar.md5">MD5</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-index-filters-1.2.2.jar.sha">SHA1</a>]
 </li>
 </ul>
 
 <p>Jackrabbit JCR-RMI</p>
 <ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-rmi-1.2.1.jar">jackrabbit-jcr-rmi-1.2.1.jar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-rmi-1.2.1.jar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-rmi-1.2.1.jar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-rmi-1.2.1.jar.sha1">SHA1</a>]
+<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-rmi-1.2.2.jar">jackrabbit-jcr-rmi-1.2.2.jar</a> 
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-rmi-1.2.2.jar.asc">PGP</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-rmi-1.2.2.jar.md5">MD5</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-rmi-1.2.2.jar.sha">SHA1</a>]
 </li>
 </ul>
 
 <p>Jackrabbit WebDAV Library</p>
 <ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-webdav-1.2.1.jar">jackrabbit-webdav-1.2.1.jar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webdav-1.2.1.jar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webdav-1.2.1.jar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webdav-1.2.1.jar.sha1">SHA1</a>]
+<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-webdav-1.2.2.jar">jackrabbit-webdav-1.2.2.jar</a> 
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webdav-1.2.2.jar.asc">PGP</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webdav-1.2.2.jar.md5">MD5</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webdav-1.2.2.jar.sha">SHA1</a>]
 </li>
 </ul>
 
 <p>Jackrabbit JCR Server</p>
 <ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-server-1.2.1.jar">jackrabbit-jcr-server-1.2.1.jar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-server-1.2.1.jar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-server-1.2.1.jar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-server-1.2.1.jar.sha1">SHA1</a>]
+<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-server-1.2.2.jar">jackrabbit-jcr-server-1.2.2.jar</a> 
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-server-1.2.2.jar.asc">PGP</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-server-1.2.2.jar.md5">MD5</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-server-1.2.2.jar.sha">SHA1</a>]
 </li>
 </ul>
 
 <p>Jackrabbit Web Application</p>
 <ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-webapp-1.2.1.war">jackrabbit-webapp-1.2.1.war</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webapp-1.2.1.war.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webapp-1.2.1.war.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webapp-1.2.1.war.sha1">SHA1</a>]
+<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-webapp-1.2.2.war">jackrabbit-webapp-1.2.2.war</a> 
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webapp-1.2.2.war.asc">PGP</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webapp-1.2.2.war.md5">MD5</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webapp-1.2.2.war.sha">SHA1</a>]
 </li>
 </ul>
 
 <p>Jackrabbit JCA Resource Adapter</p>
 <ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-jca-1.2.1.rar">jackrabbit-jca-1.2.1.rar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jca-1.2.1.rar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jca-1.2.1.rar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jca-1.2.1.rar.sha1">SHA1</a>]
+<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-jca-1.2.2.rar">jackrabbit-jca-1.2.2.rar</a> 
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jca-1.2.2.rar.asc">PGP</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jca-1.2.2.rar.md5">MD5</a>]
+[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jca-1.2.2.rar.sha">SHA1</a>]
 </li>
 </ul>
 
