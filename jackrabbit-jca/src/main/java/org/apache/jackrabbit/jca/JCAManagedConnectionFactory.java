@@ -148,10 +148,21 @@ public final class JCAManagedConnectionFactory
     }
 
     /**
+     * {@inheritDoc}
+     * <p/>
      * Creates a new physical connection to the underlying EIS resource manager.
+     * <p/>
+     * WebSphere 5.1.1 will try to recover an XA resource on startup, regardless
+     * whether it was committed or rolled back. On this occasion, <code>cri</code>
+     * will be <code>null</code>. In order to be interoperable, we return an
+     * anonymous connection, whose XA resource is recoverable-only.
      */
     public ManagedConnection createManagedConnection(Subject subject, ConnectionRequestInfo cri)
             throws ResourceException {
+
+        if (cri == null) {
+            return new AnonymousConnection();
+        }
         return createManagedConnection((JCAConnectionRequestInfo) cri);
     }
 
