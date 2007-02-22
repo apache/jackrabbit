@@ -174,7 +174,9 @@ public final class JCARepositoryManager {
          * Shutdown the repository.
          */
         public void shutdown() {
-            repository.shutdown();
+            if (repository != null) {
+                repository.shutdown();
+            }
         }
 
         /**
