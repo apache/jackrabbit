@@ -35,15 +35,15 @@ public interface QValue {
      * Returns the <code>PropertyType</code> of this <code>QValue</code> object.
      * It may be either of the value property types defined by the JSR 170:
      * <ul>
-     * <li>{@link PropertyType#BINARY<li>
-     * <li>{@link PropertyType#BOOLEAN<li>
-     * <li>{@link PropertyType#DATE<li>
-     * <li>{@link PropertyType#DOUBLE<li>
-     * <li>{@link PropertyType#LONG<li>
-     * <li>{@link PropertyType#NAME<li>
-     * <li>{@link PropertyType#PATH<li>
-     * <li>{@link PropertyType#REFERENCE<li>
-     * <li>{@link PropertyType#STRING<li>
+     * <li>{@link PropertyType#BINARY}<li>
+     * <li>{@link PropertyType#BOOLEAN}<li>
+     * <li>{@link PropertyType#DATE}<li>
+     * <li>{@link PropertyType#DOUBLE}<li>
+     * <li>{@link PropertyType#LONG}<li>
+     * <li>{@link PropertyType#NAME}<li>
+     * <li>{@link PropertyType#PATH}<li>
+     * <li>{@link PropertyType#REFERENCE}<li>
+     * <li>{@link PropertyType#STRING}<li>
      * </ul>
      *
      * @return

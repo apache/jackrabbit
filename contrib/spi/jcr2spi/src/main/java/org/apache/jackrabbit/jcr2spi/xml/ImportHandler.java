@@ -280,30 +280,18 @@ public class ImportHandler extends DefaultHandler {
             nsContext = new NamespaceSupport();
         }
 
-        /**
-         * {@inheritDoc}
-         */
         void popContext() {
             nsContext.popContext();
         }
 
-        /**
-         * {@inheritDoc}
-         */
         void pushContext() {
             nsContext.pushContext();
         }
 
-        /**
-         * {@inheritDoc}
-         */
         void reset() {
             nsContext.reset();
         }
 
-        /**
-         * {@inheritDoc}
-         */
         boolean declarePrefix(String prefix, String uri) {
             if (QName.NS_DEFAULT_URI.equals(uri)) {
                 uri = DUMMY_DEFAULT_URI;
