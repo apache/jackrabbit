@@ -12,11 +12,11 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-create table ${schemaObjectPrefix}NODE (NODE_ID char(36) not null, NODE_DATA blob not null)
+create table ${schemaObjectPrefix}NODE (NODE_ID char(36) not null, NODE_DATA mediumblob not null)
 create unique index ${schemaObjectPrefix}NODE_IDX on ${schemaObjectPrefix}NODE (NODE_ID)
-create table ${schemaObjectPrefix}PROP (PROP_ID varchar(255) not null, PROP_DATA blob not null)
+create table ${schemaObjectPrefix}PROP (PROP_ID varchar(255) not null, PROP_DATA mediumblob not null)
 create unique index ${schemaObjectPrefix}PROP_IDX on ${schemaObjectPrefix}PROP (PROP_ID)
-create table ${schemaObjectPrefix}REFS (NODE_ID char(36) not null, REFS_DATA blob not null)
+create table ${schemaObjectPrefix}REFS (NODE_ID char(36) not null, REFS_DATA mediumblob not null)
 create unique index ${schemaObjectPrefix}REFS_IDX on ${schemaObjectPrefix}REFS (NODE_ID)
 create table ${schemaObjectPrefix}BINVAL (BINVAL_ID varchar(255) not null, BINVAL_DATA longblob not null)
 create unique index ${schemaObjectPrefix}BINVAL_IDX on ${schemaObjectPrefix}BINVAL (BINVAL_ID)
