@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.observation;
 
 import org.apache.jackrabbit.spi.EventBundle;
+import org.apache.jackrabbit.spi.EventFilter;
 
 import java.util.Collection;
 

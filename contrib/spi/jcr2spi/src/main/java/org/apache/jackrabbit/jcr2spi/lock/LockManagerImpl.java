@@ -576,7 +576,6 @@ public class LockManagerImpl implements LockManager, SessionListener {
          * @param lockState
          * Note, that the given state must not have an overlayed state.
          * @param lockHoldingNode the lock holding <code>Node</code> itself.
-         * @param lockHoldingNode
          */
         public LockImpl(LockState lockState, Node lockHoldingNode) {
             this.lockState = lockState;

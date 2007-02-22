@@ -94,7 +94,7 @@ public class QueryImpl implements Query {
      * @param session          the session that created this query.
      * @param nsResolver       the namespace resolver to be used.
      * @param itemMgr          the item manager of that session.
-     * @param hierarchyMgr     the HierarchyManager of that session.
+     * @param hierarchyManager the HierarchyManager of that session.
      * @param wspManager       the workspace manager that belongs to the
      *                         session.
      * @param statement        the query statement.

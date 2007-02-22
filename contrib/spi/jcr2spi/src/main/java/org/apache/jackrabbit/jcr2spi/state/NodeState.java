@@ -478,7 +478,6 @@ public class NodeState extends ItemState {
      *
      * @param newParent
      * @param childState
-     * @param newName
      * @param newName <code>QName</code> object specifying the entry's new name
      * @throws RepositoryException if the given child state is not a child
      * of this node state.
