@@ -333,7 +333,7 @@ public class SessionImporter implements Importer, SessionListener {
                     // remember uuid mapping
                     EffectiveNodeType ent = session.getValidator().getEffectiveNodeType(nodeState);
                     if (ent.includesNodeType(QName.MIX_REFERENCEABLE)) {
-                        refTracker.mappedUUIDs(originalUUID, nodeState.getNodeId().getUniqueID());
+                        refTracker.mappedUUIDs(originalUUID, nodeState.getUniqueID());
                     }
                 }
                 break;
