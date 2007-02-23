@@ -46,7 +46,7 @@ public interface PropertyHandler {
      * @return true if the export succeeded.
      * @throws RepositoryException If an attempt is made to export properties
      * even if {@link #canExport{PropertyExportContext, boolean)} returns false or if
-     * some other unrecoverable error occurs. Note, that
+     * some other unrecoverable error occurs.
      */
     public boolean exportProperties(PropertyExportContext exportContext, boolean isCollection) throws RepositoryException;
 
