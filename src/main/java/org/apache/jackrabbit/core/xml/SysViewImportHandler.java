@@ -106,17 +106,13 @@ class SysViewImportHandler extends TargetImportHandler {
     public void startElement(String namespaceURI, String localName,
                              String qName, Attributes atts)
             throws SAXException {
-        // check namespace
-        if (!QName.NS_SV_URI.equals(namespaceURI)) {
-            throw new SAXException(new InvalidSerializedDataException("invalid namespace for element in system view xml document: "
-                    + namespaceURI));
-        }
+        QName name = new QName(namespaceURI, localName);
         // check element name
-        if (SysViewSAXEventGenerator.NODE_ELEMENT.equals(localName)) {
+        if (name.equals(QName.SV_NODE)) {
             // sv:node element
 
             // node name (value of sv:name attribute)
-            String name = atts.getValue(SysViewSAXEventGenerator.PREFIXED_NAME_ATTRIBUTE);
+            String svName = getAttribute(atts, QName.SV_NAME);
             if (name == null) {
                 throw new SAXException(new InvalidSerializedDataException(
                         "missing mandatory sv:name attribute of element sv:node"));
@@ -135,43 +131,48 @@ class SysViewImportHandler extends TargetImportHandler {
             // push new ImportState instance onto the stack
             ImportState state = new ImportState();
             try {
-                state.nodeName = NameFormat.parse(name, nsContext);
+                state.nodeName = NameFormat.parse(svName, nsContext);
             } catch (NameException e) {
                 throw new SAXException(new InvalidSerializedDataException("illegal node name: " + name, e));
             }
             stack.push(state);
-        } else if (SysViewSAXEventGenerator.PROPERTY_ELEMENT.equals(localName)) {
+        } else if (name.equals(QName.SV_PROPERTY)) {
             // sv:property element
 
             // reset temp fields
             currentPropValues.clear();
 
             // property name (value of sv:name attribute)
-            String name = atts.getValue(SysViewSAXEventGenerator.PREFIXED_NAME_ATTRIBUTE);
+            String svName = getAttribute(atts, QName.SV_NAME);
             if (name == null) {
                 throw new SAXException(new InvalidSerializedDataException(
                         "missing mandatory sv:name attribute of element sv:property"));
             }
             try {
-                currentPropName = NameFormat.parse(name, nsContext);
+                currentPropName = NameFormat.parse(svName, nsContext);
             } catch (NameException e) {
                 throw new SAXException(new InvalidSerializedDataException("illegal property name: " + name, e));
             }
             // property type (sv:type attribute)
-            String type = atts.getValue(SysViewSAXEventGenerator.PREFIXED_TYPE_ATTRIBUTE);
+            String type = getAttribute(atts, QName.SV_TYPE);
             if (type == null) {
                 throw new SAXException(new InvalidSerializedDataException(
                         "missing mandatory sv:type attribute of element sv:property"));
             }
-            currentPropType = PropertyType.valueFromName(type);
-        } else if (SysViewSAXEventGenerator.VALUE_ELEMENT.equals(localName)) {
+            try {
+                currentPropType = PropertyType.valueFromName(type);
+            } catch (IllegalArgumentException e) {
+                throw new SAXException(new InvalidSerializedDataException(
+                        "Unknown property type: " + type, e));
+            }
+        } else if (name.equals(QName.SV_VALUE)) {
             // sv:value element
 
             // reset temp fields
             currentPropValue = new BufferedStringValue(nsContext);
         } else {
-            throw new SAXException(new InvalidSerializedDataException("unexpected element found in system view xml document: "
-                    + localName));
+            throw new SAXException(new InvalidSerializedDataException(
+                    "Unexpected element in system view xml document: " + name));
         }
     }
 
@@ -215,9 +216,10 @@ class SysViewImportHandler extends TargetImportHandler {
      */
     public void endElement(String namespaceURI, String localName, String qName)
             throws SAXException {
+        QName name = new QName(namespaceURI, localName);
         // check element name
         ImportState state = (ImportState) stack.peek();
-        if (SysViewSAXEventGenerator.NODE_ELEMENT.equals(localName)) {
+        if (name.equals(QName.SV_NODE)) {
             // sv:node element
             if (!state.started) {
                 // need to start & end current node
@@ -229,7 +231,7 @@ class SysViewImportHandler extends TargetImportHandler {
             }
             // pop current state from stack
             stack.pop();
-        } else if (SysViewSAXEventGenerator.PROPERTY_ELEMENT.equals(localName)) {
+        } else if (name.equals(QName.SV_PROPERTY)) {
             // sv:property element
 
             // check if all system properties (jcr:primaryType, jcr:uuid etc.)
@@ -279,7 +281,7 @@ class SysViewImportHandler extends TargetImportHandler {
             }
             // reset temp fields
             currentPropValues.clear();
-        } else if (SysViewSAXEventGenerator.VALUE_ELEMENT.equals(localName)) {
+        } else if (name.equals(QName.SV_VALUE)) {
             // sv:value element
             currentPropValues.add(currentPropValue);
             // reset temp fields
@@ -318,4 +320,19 @@ class SysViewImportHandler extends TargetImportHandler {
          */
         boolean started = false;
     }
+
+    //-------------------------------------------------------------< private >
+
+    /**
+     * Returns the value of the named XML attribute.
+     *
+     * @param attributes set of XML attributes
+     * @param name attribute name
+     * @return attribute value,
+     *         or <code>null</code> if the named attribute is not found
+     */
+    private static String getAttribute(Attributes attributes, QName name) {
+        return attributes.getValue(name.getNamespaceURI(), name.getLocalName());
+    }
+
 }
