@@ -140,7 +140,7 @@ public class LabelInfo implements DeltaVConstants, XmlSerializable {
      *
      * @param labelElement
      * @throws DavException
-     * @see #LabelInfo(org.w3c.dom.Element;, int)
+     * @see #LabelInfo(org.w3c.dom.Element, int)
      */
     public LabelInfo(Element labelElement) throws DavException {
         this(labelElement, 0);

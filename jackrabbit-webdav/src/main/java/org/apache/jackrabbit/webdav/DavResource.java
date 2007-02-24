@@ -222,7 +222,7 @@ public interface DavResource {
     /**
      * Returns an iterator over all internal members.
      *
-     * @return a {@link DavResourceIterator) over all internal members.
+     * @return a {@link DavResourceIterator} over all internal members.
      */
     public DavResourceIterator getMembers();
 

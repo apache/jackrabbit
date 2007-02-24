@@ -269,8 +269,8 @@ public class NodeDefTest extends AbstractJCRTest {
      * Returns true if defaultType or one of its supertypes is of the same
      * NodeType as requiredType.
      *
-     * @param requiredType: one of the required primary types of a NodeDef
-     * @param defaultType:  the default primary type of a NodeDef
+     * @param requiredType one of the required primary types of a NodeDef
+     * @param defaultType  the default primary type of a NodeDef
      */
     private boolean compareWithRequiredType(NodeType requiredType,
                                             NodeType defaultType) {

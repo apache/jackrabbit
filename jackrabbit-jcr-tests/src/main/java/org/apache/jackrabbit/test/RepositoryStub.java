@@ -196,7 +196,7 @@ public abstract class RepositoryStub {
      * to the <code>Repository</code> returned by {@link #getRepository}.
      * <p/>
      * The <code>Credentials</code> returned has 'superuser' rights. That
-     * is, the <code>Ticket</code> object returned by {@link Repository#login}
+     * is, the <code>Session</code> object returned by {@link Repository#login(Credentials)}
      * has read write access to the whole Content Repository.
      *
      * @return a <code>Credentials</code> object, that allows to login to the
@@ -211,7 +211,7 @@ public abstract class RepositoryStub {
      * to the <code>Repository</code> returned by {@link #getRepository}.
      * <p/>
      * The <code>Credentials</code> returned has read/write rights. That
-     * is, the <code>Ticket</code> object returned by {@link Repository#login}
+     * is, the <code>Session</code> object returned by {@link Repository#login(Credentials)}
      * has read write access to the <code>Node</code> configured in the
      * JCR TCK Interview.
      * <p/>
@@ -229,7 +229,7 @@ public abstract class RepositoryStub {
      * to the <code>Repository</code> returned by {@link #getRepository}.
      * <p/>
      * The <code>Credentials</code> returned must have read-only rights. That
-     * is, the <code>Ticket</code> object returned by {@link Repository#login}
+     * is, the <code>Session</code> object returned by {@link Repository#login()}
      * has read-only access to the <code>Node</code> configured in the
      * JCR TCK Interview.
      * <p/>
