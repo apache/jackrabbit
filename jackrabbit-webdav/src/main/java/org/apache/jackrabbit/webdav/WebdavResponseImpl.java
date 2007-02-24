@@ -142,7 +142,7 @@ public class WebdavResponseImpl implements WebdavResponse {
      * @param serializable
      * @param status
      * @throws IOException
-     * @see DavServletResponse#sendXmlResponse(XmlSerializable, int);
+     * @see DavServletResponse#sendXmlResponse(XmlSerializable, int)
      */
     public void sendXmlResponse(XmlSerializable serializable, int status) throws IOException {
         httpResponse.setStatus(status);

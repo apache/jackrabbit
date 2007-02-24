@@ -26,7 +26,7 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.observation.Event;
 
 /**
- * Test cases for {@link javax.jcr.observation.Event.PROPERTY_CHANGED} events.
+ * Test cases for {@link javax.jcr.observation.Event#PROPERTY_CHANGED} events.
  * <p/>
  * Configuration requirements are:<br/>
  * The {@link #testRoot} must allow child nodes of type {@link #testNodeType}.

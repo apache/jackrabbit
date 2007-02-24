@@ -452,7 +452,7 @@ public class VersionTest extends AbstractVersionTest {
 
     /**
      * Tests if <code>Version.lock(boolean, boolean)</code> throws a {@link
-     * javax.jcr.lcok.LockException}
+     * LockException}
      */
     public void testLock() throws Exception {
         try {

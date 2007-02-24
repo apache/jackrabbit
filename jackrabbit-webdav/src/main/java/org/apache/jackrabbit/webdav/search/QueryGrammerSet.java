@@ -38,7 +38,7 @@ public class QueryGrammerSet extends AbstractDavProperty implements SearchConsta
 
     /**
      * Create a new empty <code>QueryGrammerSet</code>. Supported query grammers
-     * may be added by calling {@link #addQueryLanguage(String, Namespace).
+     * may be added by calling {@link #addQueryLanguage(String, Namespace)}.
      */
     public QueryGrammerSet() {
         super(QUERY_GRAMMER_SET, true);

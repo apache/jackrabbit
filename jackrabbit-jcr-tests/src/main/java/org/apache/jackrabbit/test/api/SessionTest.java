@@ -232,7 +232,7 @@ public class SessionTest extends AbstractJCRTest {
     /**
      * Calls <code>{@link javax.jcr.Session#move(String src, String dest)} where
      * the parent node of src is locked.<br/> <br/> Should throw a <code>{@link
-     * javax.jcr.LockException} immediately or on save.
+     * LockException} immediately or on save.
      */
     public void testMoveLockException()
         throws NotExecutableException, RepositoryException {

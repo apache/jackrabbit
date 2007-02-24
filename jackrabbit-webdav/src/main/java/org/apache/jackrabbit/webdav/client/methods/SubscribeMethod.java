@@ -49,7 +49,7 @@ public class SubscribeMethod extends DavMethodBase implements ObservationConstan
     /**
      * Create a new <code>SubscribeMethod</code> used to register to the
      * observation events specified within the given <code>SubscriptionInfo</code>.
-     * See {@link #SubscribeMethod(String, SubscriptionInfo, String) for a
+     * See {@link #SubscribeMethod(String, SubscriptionInfo, String)} for a
      * constructor that allows to redefined an existing subscription.
      *
      * @param uri

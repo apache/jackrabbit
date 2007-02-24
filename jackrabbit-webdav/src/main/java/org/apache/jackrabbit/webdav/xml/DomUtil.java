@@ -132,7 +132,7 @@ public class DomUtil {
     }
 
     /**
-     * Removes leading and trailing whitespace after calling {@link #getText(Element).
+     * Removes leading and trailing whitespace after calling {@link #getText(Element)}.
      *
      * @param element
      * @return Trimmed text or <code>null</code>

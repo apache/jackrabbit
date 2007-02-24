@@ -49,7 +49,7 @@ public class SaveTest extends AbstractJCRTest {
     }
 
     /**
-     * Stores a {@link javax.jcr.query.Query.XPATH} query at:
+     * Stores a {@link javax.jcr.query.Query#XPATH} query at:
      * <code>testRoot + "/" + nodeName1</code>.
      * @throws NotExecutableException if nt:query is not supported.
      */

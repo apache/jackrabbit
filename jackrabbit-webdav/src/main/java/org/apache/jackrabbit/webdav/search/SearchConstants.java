@@ -72,7 +72,7 @@ public interface SearchConstants {
     public static final String XML_SEARCHREQUEST = "searchrequest";
 
     /**
-     * Optional Xml element name used in the SEARCH request body instead of {@link XML_SEARCHREQUEST}
+     * Optional Xml element name used in the SEARCH request body instead of {@link #XML_SEARCHREQUEST}
      * in order to access a given query schema.
      */
     public static final String XML_QUERY_SCHEMA_DISCOVERY = "query-schema-discovery";

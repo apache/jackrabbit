@@ -21,7 +21,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
 
 /**
- * Test cases for {@link javax.jcr.observation.Event.NODE_REMOVED} events.
+ * Test cases for {@link javax.jcr.observation.Event#NODE_REMOVED} events.
  * <p/>
  * Configuration requirements are:<br/>
  * The {@link #testRoot} must allow child nodes of type {@link #testNodeType}.
