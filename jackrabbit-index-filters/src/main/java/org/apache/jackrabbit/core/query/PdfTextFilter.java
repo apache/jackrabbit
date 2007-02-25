@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.query.lucene.FieldNames;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.pdfbox.cos.COSDocument;
 import org.pdfbox.pdfparser.PDFParser;
 import org.pdfbox.pdmodel.PDDocument;
 import org.pdfbox.util.PDFTextStripper;
@@ -69,7 +70,7 @@ public class PdfTextFilter implements TextFilter {
             final BLOBFileValue blob = (BLOBFileValue) values[0].internalValue();
             LazyReader reader = new LazyReader() {
                 protected void initializeReader() throws IOException {
-                    PDFParser parser;
+                    PDFParser parser = null;
                     InputStream in;
                     try {
                         in = blob.getStream();
@@ -96,6 +97,19 @@ public class PdfTextFilter implements TextFilter {
                     } catch (Exception e) {
                         // it may happen that PDFParser throws a runtime
                         // exception when parsing certain pdf documents
+
+                        // JCR-764: Check if document is still open and
+                        // close it appropriately. Otherwise some temporary
+                        // files may get left behind and document finalization
+                        // will log a warning.
+                        if (parser != null) {
+                            try {
+                                parser.getDocument().close();
+                            } catch (Exception ioe) {
+                                // ignore, this means doc has not been generated
+                            }
+                        }
+
                         throw new IOException(e.getMessage());
                     } finally {
                         in.close();
