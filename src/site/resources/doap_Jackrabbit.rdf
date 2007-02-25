@@ -15,8 +15,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
   -->
-<rdf:RDF xmlns="http://usefulinc.com/ns/doap#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:asfext="http://projects.apache.org/ns/asfext#" xml:lang="en">
+<rdf:RDF xmlns="http://usefulinc.com/ns/doap#"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:asfext="http://projects.apache.org/ns/asfext#"
+         xml:lang="en">
+
   <Project rdf:about="http://jackrabbit.apache.org/">
+
     <name>Apache Jackrabbit</name>
     <homepage rdf:resource="http://jackrabbit.apache.org/"/>
     <programming-language>Java</programming-language>
@@ -32,10 +37,13 @@
     <shortdesc xml:lang="en">Apache Jackrabbit Content Repository</shortdesc>
 
     <description xml:lang="en">
-The Apache Jackrabbit project is an effort to build and maintain an open
-source implementation of the Content Repository for Java technology API (JCR).
-The JCR 1.0 API is specified in the Java Specification Request 170 (JSR 170)
-and work on the JCR version 2.0 has begun in JSR 283.
+      Apache Jackrabbit is a fully conforming implementation of the
+      Content Repository for Java Technology API (JCR). A content
+      repository is a hierarchical content store with support for
+      structured and unstructured content, full text search, versioning,
+      transactions, observation, and more. Typical applications that use
+      content repositories include content management, document management,
+      and records management systems.
     </description>
 
     <repository>
@@ -46,12 +54,54 @@ and work on the JCR version 2.0 has begun in JSR 283.
     </repository>
 
     <mailing-list rdf:resource="http://jackrabbit.apache.org/mail-lists.html"/>
-   
+
     <release>
       <Version>
-        <name>Stable Release</name>
+        <name>Apache Jackrabbit 0.9</name>
+        <created>2006-02-14</created>
+        <revision>0.9</revision>
+      </Version>
+    </release>
+    <release>
+      <Version>
+        <name>Apache Jackrabbit 1.0</name>
         <created>2006-04-08</created>
         <revision>1.0</revision>
+      </Version>
+    </release>
+    <release>
+      <Version>
+        <name>Apache Jackrabbit 1.0.1</name>
+        <created>2006-06-02</created>
+        <revision>1.0.1</revision>
+      </Version>
+    </release>
+    <release>
+      <Version>
+        <name>Apache Jackrabbit 1.1</name>
+        <created>2006-10-12</created>
+        <revision>1.1</revision>
+      </Version>
+    </release>
+    <release>
+      <Version>
+        <name>Apache Jackrabbit 1.1.1</name>
+        <created>2006-12-04</created>
+        <revision>1.1.1</revision>
+      </Version>
+    </release>
+    <release>
+      <Version>
+        <name>Apache Jackrabbit 1.2.1</name>
+        <created>2006-01-23</created>
+        <revision>1.2.1</revision>
+      </Version>
+    </release>
+    <release>
+      <Version>
+        <name>Apache Jackrabbit 1.2.2</name>
+        <created>2007-02-21</created>
+        <revision>1.2.2</revision>
       </Version>
     </release>
 
@@ -61,5 +111,7 @@ and work on the JCR version 2.0 has begun in JSR 283.
       <asfext:id>JSR 170</asfext:id>
       <asfext:url rdf:resource="http://jcp.org/en/jsr/detail?id=170"/>
     </asfext:Standard></asfext:implements>
+
   </Project>
+
 </rdf:RDF>
