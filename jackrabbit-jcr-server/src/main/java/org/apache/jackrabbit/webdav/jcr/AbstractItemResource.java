@@ -113,10 +113,10 @@ abstract class AbstractItemResource extends AbstractResource implements
      * this resource does not exist). An item path is in addition first translated
      * to the corresponding resource path.<br>
      * NOTE: the displayname is not equivalent to {@link Item#getName() item name}
-     * which is exposed with the {@link #JCR_NAME &#123;http://www.day.com/jcr/webdav/1.0&#125;name}
-     * property.
+     * which is exposed with the {@link ItemResourceConstants#JCR_NAME
+     * &#123;http://www.day.com/jcr/webdav/1.0&#125;name} property.
      *
-     * @see org.apache.jackrabbit.webdav.DavResource#getDisplayName() )
+     * @see org.apache.jackrabbit.webdav.DavResource#getDisplayName()
      */
     public String getDisplayName() {
         String resPath = getResourcePath();

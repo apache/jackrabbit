@@ -45,8 +45,8 @@ public interface PropertyHandler {
      * @param isCollection
      * @return true if the export succeeded.
      * @throws RepositoryException If an attempt is made to export properties
-     * even if {@link #canExport{PropertyExportContext, boolean)} returns false or if
-     * some other unrecoverable error occurs.
+     * even if {@link PropertyHandler#canExport{PropertyExportContext, boolean)}
+     * returns false or if some other unrecoverable error occurs.
      */
     public boolean exportProperties(PropertyExportContext exportContext, boolean isCollection) throws RepositoryException;
 
@@ -73,10 +73,12 @@ public interface PropertyHandler {
      * @param isCollection
      * @return Map listing those properties that failed to be updated. An empty
      * map indicates a successful import for all properties listed in the context.
-     * @throws RepositoryException If {@link #canImport(PropertyImportContext, boolean)}
+     * @throws RepositoryException If
+     * {@link PropertyHandler#canImport(PropertyImportContext, boolean)}
      * returns false for the given parameters or if some other unrecoverable
      * error occured. Note, that normal failure of a property update must be
      * reported with the return value and should not result in an exception.
      */
     public Map importProperties(PropertyImportContext importContext, boolean isCollection) throws RepositoryException;
+
 }

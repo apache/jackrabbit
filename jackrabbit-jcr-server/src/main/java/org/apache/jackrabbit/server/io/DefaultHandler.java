@@ -377,8 +377,8 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
     }
 
     /**
-     * Same as (@link #exportContent(ExportContext, boolean)} where the boolean
-     * values is defined by {@link DavResource#isCollection()}.
+     * Same as (@link IOHandler#exportContent(ExportContext, boolean)} where
+     * the boolean values is defined by {@link DavResource#isCollection()}.
      *
      * @see IOHandler#exportContent(ExportContext, DavResource)
      */
@@ -394,7 +394,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
      * and spools its value to the output stream fo the export context.<br>
      * Please note, that subclasses that define a different structure of the
      * content node should create their own
-     * {@link #exportData(ExportContext, boolean, Node) exportData} method.
+     * {@link  #exportData(ExportContext, boolean, Node) exportData} method.
      *
      * @param context
      * @param isCollection
@@ -529,7 +529,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
         try {
             // export the properties common with normal IO handling
             exportProperties(exportContext, isCollection, cn);
-            
+
             // export all other properties as well
             PropertyIterator it = cn.getProperties();
             while (it.hasNext()) {
