@@ -92,7 +92,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
     protected Connection con;
 
     // internal flag governing whether an automatic reconnect should be
-    // attempted after a SQLException had been encountered    
+    // attempted after a SQLException had been encountered
     protected boolean autoReconnect = true;
     // time to sleep in ms before a reconnect is attempted
     protected static final int SLEEP_BEFORE_RECONNECT = 10000;
@@ -778,7 +778,14 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
 
         // close shared prepared statements
         for (Iterator it = preparedStatements.values().iterator(); it.hasNext(); ) {
-            closeStatement((PreparedStatement) it.next());
+            PreparedStatement stmt = ((PreparedStatement) it.next());
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException se) {
+                    // ignored, see JCR-765
+                }
+            }
         }
         try {
             closeConnection(con);
