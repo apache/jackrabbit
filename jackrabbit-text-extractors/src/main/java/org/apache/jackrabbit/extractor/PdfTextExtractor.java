@@ -51,7 +51,7 @@ public class PdfTextExtractor extends AbstractTextExtractor {
 
     /**
      * {@inheritDoc}
-     */ 
+     */
     public Reader extractText(InputStream stream,
                               String type,
                               String encoding) throws IOException {
@@ -68,9 +68,13 @@ public class PdfTextExtractor extends AbstractTextExtractor {
 
                 return new CharArrayReader(writer.toCharArray());
             } finally {
-                PDDocument doc = parser.getPDDocument();
-                if (doc != null) {
-                    doc.close();
+                try {
+                    PDDocument doc = parser.getPDDocument();
+                    if (doc != null) {
+                        doc.close();
+                    }
+                } catch (IOException e) {
+                    // ignore
                 }
             }
         } catch (Exception e) {
