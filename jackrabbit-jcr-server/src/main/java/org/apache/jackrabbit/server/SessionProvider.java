@@ -43,7 +43,7 @@ public interface SessionProvider {
 
     /**
      * Informs this provider that the session aquired by a previous
-     * {@link #getSession} call is no longer needed.
+     * {@link SessionProvider#getSession} call is no longer needed.
      *
      * @param session
      */

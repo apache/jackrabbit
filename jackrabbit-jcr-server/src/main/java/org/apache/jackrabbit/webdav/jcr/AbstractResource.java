@@ -223,9 +223,9 @@ abstract class AbstractResource implements DavResource, TransactionResource,
 
     /**
      * Builds a single List from the properties to set and the properties to
-     * remove and delegates the list to {@link #alterProperties(List)};
+     * remove and delegates the list to {@link AbstractResource#alterProperties(List)};
      *
-     * @see DavResource#alterProperties(org.apache.jackrabbit.webdav.property.DavPropertySet, org.apache.jackrabbit.webdav.property.DavPropertyNameSet) 
+     * @see DavResource#alterProperties(org.apache.jackrabbit.webdav.property.DavPropertySet, org.apache.jackrabbit.webdav.property.DavPropertyNameSet)
      */
     public MultiStatusResponse alterProperties(DavPropertySet setProperties,
                                 DavPropertyNameSet removePropertyNames)
@@ -364,7 +364,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @see DavResource#refreshLock(org.apache.jackrabbit.webdav.lock.LockInfo, String)
      */
     public ActiveLock refreshLock(LockInfo info, String lockToken) throws DavException {
-        return txMgr.refreshLock(info, lockToken, this);        
+        return txMgr.refreshLock(info, lockToken, this);
     }
 
     /**
@@ -558,7 +558,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
     public MultiStatus search(SearchInfo sInfo) throws DavException {
         return new SearchResourceImpl(getLocator(), session).search(sInfo);
     }
-    
+
     //--------------------------------------------------------------------------
     /**
      * Fill the set of default properties
@@ -657,7 +657,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
     /**
      * Shortcut for <code>getSession().getRepositorySession()</code>
      *
-     * @return repository session present in the {@link #session}.
+     * @return repository session present in the {@link AbstractResource#session}.
      */
     protected Session getRepositorySession() {
         return session.getRepositorySession();
