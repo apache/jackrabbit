@@ -302,8 +302,9 @@ public class DefaultItemCollection extends AbstractItemResource
     /**
      * Loops over the given <code>List</code>s and alters the properties accordingly.
      * Changes are persisted at the end according to the rules defined with
-     * the {@link #complete()} method.<p>
-     * Please note: since there is only a single property ({@link #JCR_MIXINNODETYPES}
+     * the {@link AbstractItemResource#complete()} method.<p>
+     * Please note: since there is only a single property
+     * ({@link ItemResourceConstants#JCR_MIXINNODETYPES}
      * that can be set or removed with PROPPATCH, this method either succeeds
      * or throws an exception, even if this violates RFC 2518. Thus no property
      * specific multistatus will be created in case of an error.
@@ -662,7 +663,8 @@ public class DefaultItemCollection extends AbstractItemResource
     /**
      * Returns the write lock present on this resource or <code>null</code> if
      * no write lock exists. NOTE: that the scope of a write lock may either
-     * be {@link org.apache.jackrabbit.webdav.lock.Scope#EXCLUSIVE} or {@link #EXCLUSIVE_SESSION}.
+     * be {@link org.apache.jackrabbit.webdav.lock.Scope#EXCLUSIVE} or
+     * {@link ItemResourceConstants#EXCLUSIVE_SESSION}.
      *
      * @return write lock or <code>null</code>
      * @throws DavException if this resource does not represent a repository item.
@@ -683,8 +685,8 @@ public class DefaultItemCollection extends AbstractItemResource
      * Returns true if this resource exists and the nodetype defining the
      * underlying repository node allow to reorder this nodes children.
      *
-     * @return true if {@link #orderMembers(OrderPatch)} can be called on this
-     * resource.
+     * @return true if {@link DefaultItemCollection#orderMembers(OrderPatch)}
+     * can be called on this resource.
      * @see org.apache.jackrabbit.webdav.ordering.OrderingResource#isOrderable()
      * @see javax.jcr.nodetype.NodeType#hasOrderableChildNodes()
      */
@@ -783,9 +785,10 @@ public class DefaultItemCollection extends AbstractItemResource
 
     //--------------------------------------------------------------------------
     /**
-     * Extend the general {@link #supportedLock} field by lock entries specific for this
-     * resource: write locks (exclusive or exclusive session-scoped) in case the underlying
-     * node has the node type mix:lockable.
+     * Extend the general {@link AbstractResource#supportedLock} field by
+     * lock entries specific for this resource: write locks (exclusive or
+     * exclusive session-scoped) in case the underlying node has the node
+     * type mix:lockable.
      *
      * @see org.apache.jackrabbit.JcrConstants#MIX_LOCKABLE
      */

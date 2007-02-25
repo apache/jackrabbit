@@ -60,8 +60,9 @@ public interface IOHandler {
     /**
      * Returns true, if this handler can run a successful import based on
      * the specified context and resource. A simple implementation may choose
-     * to return the same as {@link #canImport(ImportContext, boolean)} where
-     * the isCollection flag is determined by {@link DavResource#isCollection()}.
+     * to return the same as {@link IOHandler#canImport(ImportContext, boolean)}
+     * where the isCollection flag is determined by
+     * {@link DavResource#isCollection()}.
      *
      * @param context
      * @param resource
@@ -84,8 +85,8 @@ public interface IOHandler {
      * @param isCollection
      * @return true if the import was successful.
      * @throws IOException if an unexpected error occurs or if this method has
-     * been called although {@link #canImport(ImportContext, boolean)} returns
-     * false.
+     * been called although {@link IOHandler#canImport(ImportContext, boolean)}
+     * returns false.
      */
     public boolean importContent(ImportContext context, boolean isCollection) throws IOException;
 
@@ -95,8 +96,8 @@ public interface IOHandler {
      * <code>ImportContext</code> does not provide a {@link ImportContext#hasStream() stream}
      * the implementation is free, to only import properties of to refuse the
      * import. A simple implementation may return the same as
-     * {@link #importContent(ImportContext, boolean)} where the isCollection flag
-     * is determined by {@link DavResource#isCollection()}<br>
+     * {@link IOHandler#importContent(ImportContext, boolean)} where the
+     * isCollection flag is determined by {@link DavResource#isCollection()}<br>
      *
      * Please note, that it is the responsibility of the specified
      * <code>ImportContext</code> to assert, that its stream is not consumed
@@ -106,9 +107,9 @@ public interface IOHandler {
      * @param resource
      * @return
      * @throws IOException if an unexpected error occurs or if this method has
-     * been called although {@link #canImport(ImportContext, DavResource)} returns
-     * false.
-     * @see #importContent(ImportContext, boolean)
+     * been called although {@link IOHandler#canImport(ImportContext, DavResource)}
+     * returns false.
+     * @see IOHandler#importContent(ImportContext, boolean)
      */
     public boolean importContent(ImportContext context, DavResource resource) throws IOException;
 
@@ -125,8 +126,9 @@ public interface IOHandler {
     /**
      * Returns true, if this handler can run a successful export based on
      * the specified context and resource. A simple implementation may choose
-     * to return the same as {@link #canExport(ExportContext, boolean)} where
-     * the isCollection flag is determined by {@link DavResource#isCollection()}.
+     * to return the same as {@link IOHandler#canExport(ExportContext, boolean)}
+     * where the isCollection flag is determined by
+     * {@link DavResource#isCollection()}.
      *
      * @param context
      * @param resource
@@ -140,8 +142,8 @@ public interface IOHandler {
      * <code>ExportContext</code> does not provide a {@link ExportContext#hasStream() stream}
      * the implementation should set the properties only and ignore the content to
      * be exported. A simple implementation may return the same as
-     * {@link #exportContent(ExportContext, boolean)} where the isCollection flag
-     * is determined by {@link DavResource#isCollection()}<br>
+     * {@link IOHandler#exportContent(ExportContext, boolean)} where the
+     * isCollection flag is determined by {@link DavResource#isCollection()}<br>
      *
      * Please note, that it is the responsibility of the specified
      * <code>ExportContext</code> to assert, that its stream is not written
@@ -151,8 +153,8 @@ public interface IOHandler {
      * @param isCollection
      * @return
      * @throws IOException if an unexpected error occurs or if this method has
-     * been called although {@link #canExport(ExportContext, boolean)} returns
-     * false.
+     * been called although {@link IOHandler#canExport(ExportContext, boolean)}
+     * returns false.
      */
     public boolean exportContent(ExportContext context, boolean isCollection) throws IOException;
 
@@ -162,8 +164,8 @@ public interface IOHandler {
      * <code>ExportContext</code> does not provide a {@link ExportContext#hasStream() stream}
      * the implementation should set the properties only and ignore the content to
      * be exported. A simple implementation may return the same as
-     * {@link #exportContent(ExportContext, boolean)} where the isCollection flag
-     * is determined by {@link DavResource#isCollection()}<br>
+     * {@link IOHandler#exportContent(ExportContext, boolean)} where the
+     * isCollection flag is determined by {@link DavResource#isCollection()}<br>
      *
      * Please note, that it is the responsibility of the specified
      * <code>ExportContext</code> to assert, that its stream is not written
@@ -173,8 +175,8 @@ public interface IOHandler {
      * @param resource
      * @return
      * @throws IOException if an unexpected error occurs or if this method has
-     * been called although {@link #canExport(ExportContext, DavResource)} returns
-     * false.
+     * been called although {@link IOHandler#canExport(ExportContext, DavResource)}
+     * returns false.
      */
     public boolean exportContent(ExportContext context, DavResource resource) throws IOException;
 }
