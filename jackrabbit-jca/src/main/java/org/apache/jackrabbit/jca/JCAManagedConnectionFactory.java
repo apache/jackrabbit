@@ -142,8 +142,10 @@ public final class JCAManagedConnectionFactory
             return session;
         } catch (RepositoryException e) {
             log("Failed to create session", e);
-            throw new ResourceException(
-                    "Failed to create session: " + e.getMessage(), e);
+            ResourceException exception = new ResourceException(
+                    "Failed to create session: " + e.getMessage());
+            exception.setLinkedException(e);
+            throw exception;
         }
     }
 
@@ -277,8 +279,10 @@ public final class JCAManagedConnectionFactory
                 log("Created repository (" + repository + ")");
             } catch (RepositoryException e) {
                 log("Failed to create repository", e);
-                throw new ResourceException(
+                ResourceException exception = new ResourceException(
                         "Failed to create session: " + e.getMessage());
+                exception.setLinkedException(e);
+                throw exception;
             }
         }
     }

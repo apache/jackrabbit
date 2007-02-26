@@ -158,7 +158,10 @@ public final class JCAManagedConnection
             try {
                 this.session.refresh(false);
             } catch (RepositoryException e) {
-                throw new ResourceException("unable to cleanup connection", e);
+                ResourceException exception =
+                    new ResourceException("unable to cleanup connection");
+                exception.setLinkedException(e);
+                throw exception;
             }
             this.handles.clear();
         }
