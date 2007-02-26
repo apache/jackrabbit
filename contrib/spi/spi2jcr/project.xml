@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<project>
+    <!-- ====================================================================== -->
+    <!-- P R O J E C T  D E S C R I P T I O N                                   -->
+    <!-- ====================================================================== -->
+    <extend>${basedir}/../project.xml</extend>
+    <artifactId>jackrabbit-spi-spi2jcr</artifactId>
+    <name>SPI to JCR</name>
+    <package>org.apache.jackrabbit.spi2jcr.*</package>
+
+    <!-- ====================================================================== -->
+    <!-- D E P E N D E N C I E S                                                -->
+    <!-- ====================================================================== -->
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-spi</artifactId>
+            <version>${jackrabbit.build.version.spi}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-spi-commons</artifactId>
+            <version>${jackrabbit.build.version.spi}</version>
+        </dependency>
+        <!-- jackrabbit dependencies -->
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-jcr-commons</artifactId>
+            <version>${jackrabbit.build.version.jackrabbit}</version>
+        </dependency>
+
+        <!-- external dependencies -->
+        <dependency>
+            <groupId>jsr170</groupId>
+            <artifactId>jcr</artifactId>
+            <version>${jackrabbit.build.version.jcr}</version>
+            <url>http://jcp.org/en/jsr/detail?id=170</url>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.0</version>
+            <url>http://www.slf4j.org/download.html</url>
+        </dependency>
+    </dependencies>
+
+    <!-- ====================================================================== -->
+    <!-- B U I L D  D E S C R I P T I O N                                       -->
+    <!-- ====================================================================== -->
+    <build>
+        <sourceDirectory>${basedir}/src/main/java</sourceDirectory>
+    </build>
+
+</project>
