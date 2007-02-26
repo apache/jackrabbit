@@ -21,6 +21,8 @@ import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 
+import jline.ConsoleReader;
+
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
 import org.apache.commons.logging.Log;
@@ -58,10 +60,11 @@ public class Login implements Command {
             user = anon;
         }
 
-        if (password == null) {
-            password = anon;
+        if (password == null || (password.equals(anon) && !user.equals(anon))) {
+            ConsoleReader reader = new ConsoleReader();
+            password = reader.readLine("Password: ", (char) 0);
         }
-
+        
         if (log.isDebugEnabled()) {
             log.debug("logging in as " + user);
         }

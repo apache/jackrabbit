@@ -940,4 +940,8 @@
     <flag name="locktoken" description="cmd.lsnodes.locktoken"/>
   </command>
 
+  <command name="info">
+    <alias name="status"/>    
+  </command>
+  
 </commands>

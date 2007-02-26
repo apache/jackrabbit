@@ -46,7 +46,7 @@ public class ConnectToRmiServer implements Command {
         }
         ClientRepositoryFactory factory = new ClientRepositoryFactory();
         Repository repository = factory.getRepository(url);
-        CommandHelper.setRepository(ctx, repository);
+        CommandHelper.setRepository(ctx, repository, "jcr-rmi " + url);
         return false;
     }
 

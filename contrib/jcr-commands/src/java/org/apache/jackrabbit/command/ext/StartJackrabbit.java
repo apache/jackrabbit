@@ -52,7 +52,7 @@ public class StartJackrabbit implements Command {
         }
         RepositoryConfig conf = RepositoryConfig.create(config, home);
         Repository repo = RepositoryImpl.create(conf);
-        CommandHelper.setRepository(ctx, repo);
+        CommandHelper.setRepository(ctx, repo, "local " + home);
         return false;
     }
 

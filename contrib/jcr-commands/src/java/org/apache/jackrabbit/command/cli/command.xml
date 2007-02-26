@@ -283,5 +283,8 @@
 				fromKey="collected"/>
 		</chain>
 
+		<command name="info"
+			className="org.apache.jackrabbit.command.info.Info"/>
+		
 	</catalog>
 </chains>

@@ -47,7 +47,7 @@ public class StopJackrabbit implements Command {
                     "Jackrabbit is not the current working repository");
         }
         repo.shutdown();
-        CommandHelper.setRepository(ctx, null);
+        CommandHelper.setRepository(ctx, null, null);
         return false;
     }
 }

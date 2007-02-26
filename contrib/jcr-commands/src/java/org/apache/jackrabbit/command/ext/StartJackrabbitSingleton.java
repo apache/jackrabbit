@@ -75,7 +75,7 @@ public class StartJackrabbitSingleton implements Command {
                     repo = RepositoryImpl.create(conf);
                     cache.put(key, repo);
                 }
-                CommandHelper.setRepository(ctx, repo);
+                CommandHelper.setRepository(ctx, repo, "local singleton " + home);
             }
         } catch (Exception e) {
             log.error("Unable to start jackrabbit", e);
