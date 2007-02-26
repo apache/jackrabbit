@@ -49,9 +49,12 @@ public final class CommandHelper {
     /** session key */
     public static final String SESSION_KEY = "jcr.session";
 
-    /** session key */
+    /** output key */
     public static final String OUTPUT_KEY = "jcr.output";
 
+    /** address key */
+    public static final String REPO_ADDRESS_KEY = "jcr.repo.address";
+    
     /**
      * should never get called
      */
@@ -96,11 +99,13 @@ public final class CommandHelper {
      * @param repository
      *        the current working <code>Repository</code>
      */
-    public static void setRepository(Context ctx, Repository repository) {
+    public static void setRepository(Context ctx, Repository repository, String address) {
         if (repository == null) {
             ctx.remove(REPOSITORY_KEY);
+            ctx.remove(REPO_ADDRESS_KEY);
         } else {
             ctx.put(REPOSITORY_KEY, repository);
+            ctx.put(REPO_ADDRESS_KEY, address);
         }
     }
 
@@ -167,6 +172,14 @@ public final class CommandHelper {
             throw new CommandException("exception.no.current.repository");
         }
         return r;
+    }
+    
+    public static String getRepositoryAddress(Context ctx) throws CommandException {
+        String a = (String) ctx.get(REPO_ADDRESS_KEY);
+        if (a == null) {
+            throw new CommandException("exception.no.current.repository");
+        }
+        return a;        
     }
 
     /**

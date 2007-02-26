@@ -50,7 +50,7 @@ public class ConnectToJNDIServer implements Command {
 		ClientAdapterFactory adapter = new ClientAdapterFactory();
 		RemoteRepository remote = (RemoteRepository) iCtx.lookup(url);
 		Repository repo = adapter.getRepository(remote);
-		CommandHelper.setRepository(ctx, repo);
+		CommandHelper.setRepository(ctx, repo, "jndi " + url);
 		return false;
 	}
 

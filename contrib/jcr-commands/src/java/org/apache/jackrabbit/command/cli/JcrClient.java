@@ -20,12 +20,22 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
 import javax.jcr.InvalidItemStateException;
+import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+
+import jline.ArgumentCompletor;
+import jline.Completor;
+import jline.ConsoleReader;
+import jline.History;
+import jline.SimpleCompletor;
 
 import org.apache.commons.chain.Context;
 import org.apache.commons.chain.impl.ContextBase;
@@ -39,6 +49,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandException;
 import org.apache.jackrabbit.command.CommandHelper;
+import org.apache.jackrabbit.util.ChildrenCollectorFilter;
 
 /**
  * Command line interface client
@@ -118,6 +129,45 @@ public class JcrClient {
             return;
         }
     }
+    
+    /**
+     * jline ConsoleReader tab completor that completes on the children of the
+     * current jcr node (both nodes and properties).
+     * 
+     * @author <a href="mailto:alexander(dot)klimetschek(at)mindquarry(dot)com">
+     *         Alexander Klimetschek</a>
+     *
+     */
+    private class JcrChildrenCompletor implements Completor {
+
+        public int complete(String buffer, int cursor, List clist) {
+            String start = (buffer == null) ? "" : buffer;
+            
+            Node node;
+            try {
+                node = CommandHelper.getNode(ctx, ".");
+                Collection items = new ArrayList();
+                ChildrenCollectorFilter collector = new ChildrenCollectorFilter(
+                    "*", items, true, true, 1);
+                collector.visit(node);
+                for (Object item : items) {
+                    String can = ((Item) item).getName();
+                    if (can.startsWith(start)) {
+                        clist.add(can);
+                    }
+                }
+                
+                return 0;
+            } catch (CommandException e) {
+                e.printStackTrace();
+            } catch (RepositoryException e) {
+                e.printStackTrace();
+            }
+            
+            return -1;
+        }
+        
+    }
 
     /**
      * Run in interactive mode
@@ -127,18 +177,38 @@ public class JcrClient {
      *         if an Exception occurs
      */
     private void runInteractive(CommandLine cl) throws Exception {
-        // Prompt command
+        // built jline console reader with history + tab completion
+        ConsoleReader reader = new ConsoleReader();
+        reader.setHistory(new History());
+        reader.setUseHistory(true);
+        
+        // get all available commands for command tab completion
+        Collection<org.apache.jackrabbit.command.cli.CommandLine> commands =
+            CommandLineFactory.getInstance().getCommandLines();
+        List<String> commandNames = new ArrayList<String>();
+        for (org.apache.jackrabbit.command.cli.CommandLine c : commands) {
+            commandNames.add(c.getName());
+            for (Object alias : c.getAlias()) {
+                commandNames.add((String) alias);
+            }
+        }
+        commandNames.add("exit");
+        commandNames.add("quit");
+        
+        // first part is the command, then all arguments will get children tab completion
+        reader.addCompletor(new ArgumentCompletor( new Completor[] {
+                new SimpleCompletor(commandNames.toArray(new String[] {} )),
+                new JcrChildrenCompletor()
+        }));
+        
         while (!exit) {
             try {
-                System.out.print(this.getPrompt() + ">");
-                // Read input
-                BufferedReader br = new BufferedReader(new InputStreamReader(
-                    System.in));
-                String input = br.readLine();
+                String input = reader.readLine("[" + this.getPrompt() + "] > ");
+                
                 log.debug("running: " + input);
                 if (input.trim().equals("exit") || input.trim().equals("quit")) { // exit?
                     exit = true;
-                    System.out.println("Good bye..");
+                    System.out.println("Good bye...");
                 } else if (input.trim().length() == 0) {
                     // Do nothing
                 } else {
@@ -148,7 +218,7 @@ public class JcrClient {
                 System.out.println(e.getLocalizedMessage());
                 System.out.println();
             } catch (Exception e) {
-                handleException(e);
+                handleException(reader, e);
             }
         }
     }
@@ -206,7 +276,7 @@ public class JcrClient {
      * @param ex
      *        the <code>Exception</code> to handle
      */
-    private void handleException(Exception ex) {
+    private void handleException(ConsoleReader cr, Exception ex) {
         System.out.println();
         System.out.println(bundle.getString("exception.occurred"));
         System.out.println();
@@ -217,14 +287,14 @@ public class JcrClient {
         System.out.println();
         String prompt = bundle.getString("phrase.display.stacktrace")
                 + "? [y/n]";
-        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+
         String str = "";
         int tries = 0;
         while (!str.equals("y") && !str.equals("n") && tries < 3) {
             tries++;
-            System.out.print(prompt);
+
             try {
-                str = in.readLine();
+                str = cr.readLine(prompt);
             } catch (IOException e) {
                 e.printStackTrace();
             }
