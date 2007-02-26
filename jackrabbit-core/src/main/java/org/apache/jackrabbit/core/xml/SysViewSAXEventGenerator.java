@@ -16,12 +16,16 @@
  */
 package org.apache.jackrabbit.core.xml;
 
+import org.apache.jackrabbit.name.NameException;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.value.ValueHelper;
+import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
+import javax.jcr.NamespaceException;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
@@ -35,29 +39,6 @@ import java.io.Writer;
  * representing the serialized form of an item in System View XML.
  */
 public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
-
-    /**
-     * The XML elements and attributes used in serialization
-     */
-    public static final String NODE_ELEMENT = "node";
-    public static final String PREFIXED_NODE_ELEMENT =
-        QName.NS_SV_PREFIX + ":" + NODE_ELEMENT;
-
-    public static final String PROPERTY_ELEMENT = "property";
-    public static final String PREFIXED_PROPERTY_ELEMENT =
-        QName.NS_SV_PREFIX + ":" + PROPERTY_ELEMENT;;
-
-    public static final String VALUE_ELEMENT = "value";
-    public static final String PREFIXED_VALUE_ELEMENT =
-        QName.NS_SV_PREFIX + ":" + VALUE_ELEMENT;;
-
-    public static final String NAME_ATTRIBUTE = "name";
-    public static final String PREFIXED_NAME_ATTRIBUTE =
-        QName.NS_SV_PREFIX + ":" + NAME_ATTRIBUTE;
-
-    public static final String TYPE_ATTRIBUTE = "type";
-    public static final String PREFIXED_TYPE_ATTRIBUTE =
-        QName.NS_SV_PREFIX + ":" + TYPE_ATTRIBUTE;
 
     public static final String CDATA_TYPE = "CDATA";
     public static final String ENUMERATION_TYPE = "ENUMERATION";
@@ -97,11 +78,9 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
             nodeName = node.getName();
         }
 
-        attrs.addAttribute(QName.NS_SV_URI, NAME_ATTRIBUTE, PREFIXED_NAME_ATTRIBUTE,
-                CDATA_TYPE, nodeName);
+        addAttribute(attrs, QName.SV_NAME, CDATA_TYPE, nodeName);
         // start node element
-        contentHandler.startElement(QName.NS_SV_URI, NODE_ELEMENT,
-                PREFIXED_NODE_ELEMENT, attrs);
+        startElement(QName.SV_NODE, attrs);
     }
 
     /**
@@ -126,7 +105,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
     protected void leaving(Node node, int level)
             throws RepositoryException, SAXException {
         // end node element
-        contentHandler.endElement(QName.NS_SV_URI, NODE_ELEMENT, PREFIXED_NODE_ELEMENT);
+        endElement(QName.SV_NODE);
     }
 
     /**
@@ -134,35 +113,27 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
      */
     protected void entering(Property prop, int level)
             throws RepositoryException, SAXException {
-        String propName = prop.getName();
         AttributesImpl attrs = new AttributesImpl();
         // name attribute
-        attrs.addAttribute(QName.NS_SV_URI, NAME_ATTRIBUTE, PREFIXED_NAME_ATTRIBUTE,
-                CDATA_TYPE, propName);
+        addAttribute(attrs, QName.SV_NAME, CDATA_TYPE, prop.getName());
         // type attribute
-        int type = prop.getType();
-        String typeName;
         try {
-            typeName = PropertyType.nameFromValue(type);
-        } catch (IllegalArgumentException iae) {
+            String typeName = PropertyType.nameFromValue(prop.getType());
+            addAttribute(attrs, QName.SV_TYPE, ENUMERATION_TYPE, typeName);
+        } catch (IllegalArgumentException e) {
             // should never be getting here
-            throw new RepositoryException("unexpected property-type ordinal: "
-                    + type, iae);
+            throw new RepositoryException(
+                    "unexpected property-type ordinal: " + prop.getType(), e);
         }
-        attrs.addAttribute(QName.NS_SV_URI, TYPE_ATTRIBUTE, PREFIXED_TYPE_ATTRIBUTE,
-                ENUMERATION_TYPE, typeName);
 
         // start property element
-        contentHandler.startElement(QName.NS_SV_URI, PROPERTY_ELEMENT,
-                PREFIXED_PROPERTY_ELEMENT, attrs);
+        startElement(QName.SV_PROPERTY, attrs);
 
         // values
         if (prop.getType() == PropertyType.BINARY && skipBinary) {
             // empty value element
-            contentHandler.startElement(QName.NS_SV_URI, VALUE_ELEMENT,
-                    PREFIXED_VALUE_ELEMENT, new AttributesImpl());
-            contentHandler.endElement(QName.NS_SV_URI, VALUE_ELEMENT,
-                    PREFIXED_VALUE_ELEMENT);
+            startElement(QName.SV_VALUE, new AttributesImpl());
+            endElement(QName.SV_VALUE);
         } else {
             boolean multiValued = prop.getDefinition().isMultiple();
             Value[] vals;
@@ -175,8 +146,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
                 Value val = vals[i];
 
                 // start value element
-                contentHandler.startElement(QName.NS_SV_URI, VALUE_ELEMENT,
-                        PREFIXED_VALUE_ELEMENT, new AttributesImpl());
+                startElement(QName.SV_VALUE, new AttributesImpl());
 
                 // characters
                 Writer writer = new Writer() {
@@ -210,8 +180,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
                 }
 
                 // end value element
-                contentHandler.endElement(QName.NS_SV_URI, VALUE_ELEMENT,
-                        PREFIXED_VALUE_ELEMENT);
+                endElement(QName.SV_VALUE);
             }
         }
     }
@@ -221,7 +190,69 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
      */
     protected void leaving(Property prop, int level)
             throws RepositoryException, SAXException {
-        contentHandler.endElement(QName.NS_SV_URI, PROPERTY_ELEMENT,
-                PREFIXED_PROPERTY_ELEMENT);
+        endElement(QName.SV_PROPERTY);
     }
+
+    //-------------------------------------------------------------< private >
+
+    /**
+     * Adds an attribute to the given XML attribute set. The local part of
+     * the given {@link QName} is assumed to be a valid XML NCName, i.e. it
+     * won't be encoded.
+     *
+     * @param attributes the XML attribute set
+     * @param name name of the attribute
+     * @param type XML type of the attribute
+     * @param value value of the attribute
+     * @throws NamespaceException if the namespace of the attribute is not found
+     */
+    private void addAttribute(
+            AttributesImpl attributes, QName name, String type, String value)
+            throws NamespaceException {
+        try {
+            attributes.addAttribute(
+                    name.getNamespaceURI(), name.getLocalName(),
+                    NameFormat.format(name, nsResolver), type, value);
+        } catch (NameException e) {
+            throw new NamespaceException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Starts an XML element. The local part of the given {@link QName} is
+     * assumed to be a valid XML NCName, i.e. it won't be encoded.
+     *
+     * @param name name of the element
+     * @param attributes XML attributes
+     * @throws NamespaceException if the namespace of the element is not found
+     */
+    private void startElement(QName name, Attributes attributes)
+            throws NamespaceException, SAXException {
+        try {
+            contentHandler.startElement(
+                    name.getNamespaceURI(), name.getLocalName(),
+                    NameFormat.format(name, nsResolver), attributes);
+        } catch (NameException e) {
+            throw new NamespaceException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Ends an XML element. The local part of the given {@link QName} is
+     * assumed to be a valid XML NCName, i.e. it won't be encoded.
+     *
+     * @param name name of the element
+     * @throws NamespaceException if the namespace of the element is not found
+     */
+    private void endElement(QName name)
+            throws NamespaceException, SAXException {
+        try {
+            contentHandler.endElement(
+                    name.getNamespaceURI(), name.getLocalName(),
+                    NameFormat.format(name, nsResolver));
+        } catch (NameException e) {
+            throw new NamespaceException(e.getMessage(), e);
+        }
+    }
+
 }

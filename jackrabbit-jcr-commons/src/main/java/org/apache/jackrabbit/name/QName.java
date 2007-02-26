@@ -498,6 +498,33 @@ public final class QName implements Cloneable, Comparable, Serializable {
      */
     public static final QName NT_CHILDNODEDEFINITION = new QName(NS_NT_URI, "childNodeDefinition");
 
+    //------------------------------------------< system view name constants >
+
+    /**
+     * sv:node
+     */
+    public static final QName SV_NODE = new QName(NS_SV_URI, "node");
+
+    /**
+     * sv:property
+     */
+    public static final QName SV_PROPERTY = new QName(NS_SV_URI, "property");
+
+    /**
+     * sv:value
+     */
+    public static final QName SV_VALUE = new QName(NS_SV_URI, "value");
+
+    /**
+     * sv:type
+     */
+    public static final QName SV_TYPE = new QName(NS_SV_URI, "type");
+
+    /**
+     * sv:name
+     */
+    public static final QName SV_NAME = new QName(NS_SV_URI, "name");
+
     /** Serialization UID of this class. */
     static final long serialVersionUID = -2712313010017755368L;
 
