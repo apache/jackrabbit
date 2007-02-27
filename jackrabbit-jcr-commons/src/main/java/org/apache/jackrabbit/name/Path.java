@@ -20,6 +20,7 @@ import javax.jcr.PathNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.io.Serializable;
 
 /**
  * The <code>Path</code> utility class provides misc. methods to resolve and
@@ -79,7 +80,9 @@ import java.util.LinkedList;
  *                  character *)
  * </pre>
  */
-public final class Path {
+public final class Path implements Serializable {
+
+    static final long serialVersionUID = 7272485577196962560L;
 
     /**
      * the 'root' element. i.e. '/'
@@ -134,12 +137,12 @@ public final class Path {
     /**
      * the cached hashcode of this path
      */
-    private int hash = 0;
+    private transient int hash = 0;
 
     /**
      * the cached 'toString' of this path
      */
-    private String string;
+    private transient String string;
 
     /**
      * Private constructor
@@ -955,7 +958,7 @@ public final class Path {
      * <p/>
      * Once created, a PathElement object is immutable.
      */
-    public abstract static class PathElement {
+    public abstract static class PathElement implements Serializable {
 
         /**
          * Qualified name of the path element.
