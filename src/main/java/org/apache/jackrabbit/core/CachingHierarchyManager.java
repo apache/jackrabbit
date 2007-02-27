@@ -337,7 +337,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * {@inheritDoc}
      */
     public void stateDiscarded(ItemState discarded) {
-        if (discarded.isTransient() && !discarded.hasOverlayedState()) {
+        if (discarded.isTransient() && !discarded.hasOverlayedState()
+                && discarded.getStatus() == ItemState.STATUS_NEW) {
             // a new node has been discarded -> remove from cache
             remove(discarded.getId());
         } else if (provider.hasItemState(discarded.getId())) {
