@@ -30,6 +30,9 @@ import org.apache.jackrabbit.spi.rmi.common.LockInfoImpl;
 import org.apache.jackrabbit.spi.rmi.common.QNodeTypeDefinitionImpl;
 import org.apache.jackrabbit.spi.rmi.common.ChildInfoImpl;
 import org.apache.jackrabbit.spi.rmi.common.IteratorHelper;
+import org.apache.jackrabbit.spi.rmi.common.EventImpl;
+import org.apache.jackrabbit.spi.rmi.common.EventBundleImpl;
+import org.apache.jackrabbit.spi.rmi.common.EventFilterImpl;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
@@ -47,6 +50,8 @@ import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.QNodeTypeDefinitionIterator;
 import org.apache.jackrabbit.spi.ChildInfo;
+import org.apache.jackrabbit.spi.EventIterator;
+import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 
@@ -58,6 +63,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Arrays;
 import java.rmi.RemoteException;
 import java.rmi.Remote;
 import java.rmi.server.RemoteObject;
@@ -690,8 +698,14 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
                                          boolean noLocal)
             throws RepositoryException, RemoteException {
         try {
-            return service.createEventFilter(getSessionInfo(sessionInfo),
-                    eventTypes, absPath, isDeep, uuid, nodeTypeName, noLocal);
+            // some implementations may rely on createEventFilter being called
+            service.createEventFilter(getSessionInfo(sessionInfo), eventTypes,
+                    absPath, isDeep, uuid, nodeTypeName, noLocal);
+            Set ntNames = null;
+            if (nodeTypeName != null) {
+                ntNames = new HashSet(Arrays.asList(nodeTypeName));
+            }
+            return new EventFilterImpl(eventTypes, absPath, isDeep, uuid, ntNames, noLocal);
         } catch (RepositoryException e) {
             throw getRepositoryException(e);
         }
@@ -705,10 +719,32 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
                                    EventFilter[] filters)
             throws RepositoryException, InterruptedException, RemoteException {
         try {
-            EventBundle[] bundles = service.getEvents(
-                    getSessionInfo(sessionInfo), timeout, filters);
-            // TODO
-            return new EventBundle[0];
+            SessionInfo sInfo = getSessionInfo(sessionInfo);
+            // create local event filter instances
+            filters = createLocalEventFilters(sInfo, filters);
+            EventBundle[] bundles = service.getEvents(sInfo, timeout, filters);
+            EventBundle[] serBundles = new EventBundle[bundles.length];
+            for (int i = 0; i < bundles.length; i++) {
+                List events = new ArrayList();
+                for (EventIterator it = bundles[i].getEvents(); it.hasNext(); ) {
+                    Event e = it.nextEvent();
+                    ItemId id;
+                    if (e.getItemId().denotesNode()) {
+                        id = createSerializableNodeId((NodeId) e.getItemId());
+                    } else {
+                        id = createSerializablePropertyId((PropertyId) e.getItemId());
+                    }
+                    Event serEvent = new EventImpl(e.getType(),
+                            e.getQPath(), id,
+                            createSerializableNodeId(e.getParentId()),
+                            e.getPrimaryNodeTypeName(),
+                            e.getMixinTypeNames(), e.getUserID());
+                    events.add(serEvent);
+                }
+                serBundles[i] = new EventBundleImpl(events,
+                        bundles[i].isLocal(), bundles[i].getBundleId());
+            }
+            return serBundles;
         } catch (RepositoryException e) {
             throw getRepositoryException(e);
         }
@@ -869,5 +905,41 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
                     createSerializableNodeId(propId.getParentId()),
                     propId.getQName());
         }
+    }
+
+    /**
+     * Creates filter instances created by the underlying repository service.
+     *
+     * @param sInfo   the session info.
+     * @param filters the event filters created by this server repository
+     *                service.
+     * @return array of filter instances created by the underlying repository
+     *         service.
+     * @throws RepositoryException if an error occurs.
+     */
+    private EventFilter[] createLocalEventFilters(SessionInfo sInfo,
+                                                  EventFilter[] filters)
+            throws RepositoryException {
+        if (filters == null) {
+            return null;
+        }
+        for (int i = 0; i < filters.length; i++) {
+            if (filters[i] instanceof EventFilterImpl) {
+                EventFilterImpl e = (EventFilterImpl) filters[i];
+                Set nodeTypeNames = e.getNodeTypeNames();
+                QName[] ntNames = null;
+                if (nodeTypeNames != null) {
+                    ntNames = (QName[]) nodeTypeNames.toArray(
+                            new QName[nodeTypeNames.size()]);
+                }
+                filters[i] = service.createEventFilter(sInfo,
+                        e.getEventTypes(), e.getAbsPath(), e.isDeep(),
+                        e.getUUIDs(), ntNames, e.getNoLocal());
+            } else {
+                throw new RepositoryException("Unknown EventFilter implementation: " +
+                        filters[i].getClass().getName());
+            }
+        }
+        return filters;
     }
 }
