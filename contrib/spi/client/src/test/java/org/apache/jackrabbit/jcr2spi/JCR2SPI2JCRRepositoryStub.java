@@ -19,10 +19,10 @@ package org.apache.jackrabbit.jcr2spi;
 import org.apache.jackrabbit.test.RepositoryStubException;
 import org.apache.jackrabbit.core.JackrabbitRepositoryStub;
 import org.apache.jackrabbit.spi2jcr.RepositoryServiceImpl;
+import org.apache.jackrabbit.spi2jcr.ValueFactoryImpl;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
