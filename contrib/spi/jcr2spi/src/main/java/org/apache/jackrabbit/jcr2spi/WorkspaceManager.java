@@ -109,7 +109,6 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Collections;
 import java.io.InputStream;
 
 import EDU.oswego.cs.dl.util.concurrent.Sync;
@@ -149,7 +148,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * List of event listener that are set on this WorkspaceManager to get
      * notifications about local and external changes.
      */
-    private final Set listeners = Collections.synchronizedSet(new HashSet());
+    private final Set listeners = new HashSet();
 
     public WorkspaceManager(RepositoryService service, SessionInfo sessionInfo,
                             CacheBehaviour cacheBehaviour, int pollTimeout)
@@ -287,7 +286,10 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @param listener the new listener.
      */
     public void addEventListener(InternalEventListener listener) {
-        listeners.add(listener);
+        synchronized (listeners) {
+            listeners.add(listener);
+            listeners.notify();
+        }
     }
 
     /**
@@ -295,7 +297,9 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @param listener
      */
     public void removeEventListener(InternalEventListener listener) {
-        listeners.remove(listener);
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
     }
 
     /**
@@ -627,7 +631,10 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         }
         try {
             // notify listener
-            InternalEventListener[] lstnrs = (InternalEventListener[]) listeners.toArray(new InternalEventListener[listeners.size()]);
+            InternalEventListener[] lstnrs;
+            synchronized (listeners) {
+                lstnrs = (InternalEventListener[]) listeners.toArray(new InternalEventListener[listeners.size()]);
+            }
             for (int i = 0; i < eventBundles.length; i++) {
                 for (int j = 0; j < lstnrs.length; j++) {
                     lstnrs[j].onEvent(eventBundles[i]);
@@ -987,7 +994,13 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                 try {
                     // get filters from listeners
                     List filters = new ArrayList();
-                    InternalEventListener[] iel = (InternalEventListener[]) listeners.toArray(new InternalEventListener[0]);
+                    InternalEventListener[] iel;
+                    synchronized (listeners) {
+                        while (listeners.isEmpty()) {
+                            listeners.wait();
+                        }
+                        iel = (InternalEventListener[]) listeners.toArray(new InternalEventListener[0]);
+                    }
                     for (int i = 0; i < iel.length; i++) {
                         filters.addAll(iel[i].getEventFilters());
                     }
