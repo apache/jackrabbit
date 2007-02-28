@@ -60,10 +60,10 @@ public class HierarchyEventListener implements InternalEventListener {
                 // spi does not support observation, or another error occurred.
             }
             this.eventFilter = (filter == null) ? Collections.EMPTY_LIST : Collections.singletonList(filter);
+            wspManager.addEventListener(this);
         } else {
             this.eventFilter = Collections.EMPTY_LIST;
         }
-        wspManager.addEventListener(this);
     }
 
     //----------------------------------------------< InternalEventListener >---
