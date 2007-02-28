@@ -38,6 +38,9 @@ import java.io.FileOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.Serializable;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 /**
  * <code>QValueFactoryImpl</code>...
@@ -150,7 +153,7 @@ public final class QValueFactoryImpl implements QValueFactory {
      * except for BINARY.
      * @see QValueFactoryImpl.BinaryQValue
      */
-    private static class QValueImpl implements QValue {
+    private static class QValueImpl implements QValue, Serializable {
         /**
          * the default encoding
          */
@@ -294,6 +297,9 @@ public final class QValueFactoryImpl implements QValueFactory {
         public int hashCode() {
             return val.hashCode();
         }
+
+        //---------------------------------------------------< Serializable >---
+
     }
 
 
@@ -304,7 +310,7 @@ public final class QValueFactoryImpl implements QValueFactory {
      * state, i.e. the <code>getStream()</code> method always returns a fresh
      * <code>InputStream</code> instance.
      */
-    private static class BinaryQValue implements QValue {
+    private static class BinaryQValue implements QValue, Serializable {
         /**
          * empty array
          */
@@ -318,14 +324,14 @@ public final class QValueFactoryImpl implements QValueFactory {
         /**
          * underlying file
          */
-        private final File file;
+        private transient File file;
 
         /**
          * flag indicating if this instance represents a <i>temporary</i> value
          * whose dynamically allocated resources can be explicitly freed on
          * {@link #discard()}.
          */
-        private final boolean temp;
+        private transient boolean temp;
 
         /**
          * Buffer for small-sized data
@@ -335,7 +341,7 @@ public final class QValueFactoryImpl implements QValueFactory {
         /**
          * Converted text
          */
-        private String text = null;
+        private transient String text = null;
 
         /**
          * Creates a new <code>BinaryQValue</code> instance from an
@@ -640,6 +646,55 @@ public final class QValueFactoryImpl implements QValueFactory {
                 } catch (IOException ignore) {
                 }
             }
+        }
+
+        //-----------------------------< Serializable >-------------------------
+
+        private void writeObject(ObjectOutputStream out)
+                throws IOException {
+            out.defaultWriteObject();
+            // write hasFile marker
+            out.writeBoolean(file != null);
+            // then write file if necessary
+            if (file != null) {
+                byte[] buffer = new byte[4096];
+                int bytes;
+                InputStream stream = new FileInputStream(file);
+                while ((bytes = stream.read(buffer)) >= 0) {
+                    // Write a segment of the input stream
+                    if (bytes > 0) {
+                        // just to ensure that no 0 is written
+                        out.writeInt(bytes);
+                        out.write(buffer, 0, bytes);
+                    }
+                }
+                // Write the end of stream marker
+                out.writeInt(0);
+                // close stream
+                stream.close();
+            }
+        }
+
+        private void readObject(ObjectInputStream in)
+                throws IOException, ClassNotFoundException {
+            in.defaultReadObject();
+            boolean hasFile = in.readBoolean();
+            if (hasFile) {
+                file = File.createTempFile("binary-qvalue", "bin");
+
+                OutputStream out = new FileOutputStream(file);
+                byte[] buffer = new byte[4096];
+                for (int bytes = in.readInt(); bytes > 0; bytes = in.readInt()) {
+                    if (buffer.length < bytes) {
+                        buffer = new byte[bytes];
+                    }
+                    in.readFully(buffer, 0, bytes);
+                    out.write(buffer, 0, bytes);
+                }
+                out.close();
+            }
+            // deserialized value is always temp
+            temp = true;
         }
     }
 }
