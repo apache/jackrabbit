@@ -102,8 +102,6 @@ public class TransientItemStateManager implements ItemStateCreationListener {
 
         parent.checkIsSessionState();
         NodeState nodeState = ((NodeEntry) parent.getHierarchyEntry()).addNewNodeEntry(nodeName, uniqueID, nodeTypeName, definition);
-        nodeState.addListener(this);
-
         parent.markModified();
 
         return nodeState;
@@ -131,8 +129,6 @@ public class TransientItemStateManager implements ItemStateCreationListener {
         PropertyState propState = ((NodeEntry) parent.getHierarchyEntry()).addNewPropertyEntry(propName, definition);
         // NOTE: callers must make sure, the property type is not 'undefined'
         propState.init(propertyType, values);
-        propState.addListener(this);
-
         parent.markModified();
 
         return propState;
