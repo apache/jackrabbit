@@ -32,6 +32,7 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.jcr2spi.operation.AddNode;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
@@ -64,6 +65,7 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFormat;
+import org.apache.jackrabbit.uuid.UUID;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -73,6 +75,8 @@ import java.io.IOException;
 import java.util.Stack;
 import java.util.List;
 import java.util.Iterator;
+import java.util.Arrays;
+import java.util.ArrayList;
 
 /**
  * <code>SessionImporter</code>...
@@ -173,32 +177,39 @@ public class SessionImporter implements Importer, SessionListener {
 
        NodeEntry parentEntry = (NodeEntry) parent.getHierarchyEntry();
        NodeState nodeState = null;
+
        if (parentEntry.hasNodeEntry(nodeInfo.getName())) {
-           // a valid child node with that name already exists...
-           NodeEntry entry = parentEntry.getNodeEntry(nodeInfo.getName(), Path.INDEX_DEFAULT);
-           NodeState existing = null;
            try {
-               existing = entry.getNodeState();
+               // a valid child node with that name already exists
+               NodeEntry entry = parentEntry.getNodeEntry(nodeInfo.getName(), Path.INDEX_DEFAULT);
+               NodeState existing = entry.getNodeState();
+
+               QNodeDefinition def = existing.getDefinition();
+               if (!def.allowsSameNameSiblings()) {
+                   // existing doesn't allow same-name siblings, check for conflicts
+                   EffectiveNodeType entExisting = session.getValidator().getEffectiveNodeType(existing);
+                   if (def.isProtected() && entExisting.includesNodeType(nodeInfo.getNodeTypeName()))
+                   {
+                       // skip protected node
+                       parents.push(null); // push null onto stack for skipped node
+                       log.debug("skipping protected node " + LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver()));
+                       return;
+                   }
+                   if (def.isAutoCreated() && entExisting.includesNodeType(nodeInfo.getNodeTypeName()))
+                   {
+                       // this node has already been auto-created, no need to create it
+                       nodeState = existing;
+                   } else {
+                       throw new ItemExistsException(LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver()));
+                   }
+               }
+           } catch (NoSuchItemStateException e) {
+               // 'existing' doesn't exist any more -> ignore
            } catch (ItemStateException e) {
-               // should not occur. existance has been checked before
-               throw new RepositoryException(e);
-           }
-           QNodeDefinition def = existing.getDefinition();
-           if (!def.allowsSameNameSiblings()) {
-               // existing doesn't allow same-name siblings, check for conflicts
-               EffectiveNodeType entExisting = session.getValidator().getEffectiveNodeType(existing);
-               if (def.isProtected() && entExisting.includesNodeType(nodeInfo.getNodeTypeName())) {
-                   // skip protected node
-                   parents.push(null); // push null onto stack for skipped node
-                   log.debug("skipping protected node " + LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver()));
-                   return;
-               }
-               if (def.isAutoCreated() && entExisting.includesNodeType(nodeInfo.getNodeTypeName())) {
-                   // this node has already been auto-created, no need to create it
-                   nodeState = existing;
-               } else {
-                   throw new ItemExistsException(LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver()));
-               }
+               // undefined internal error
+               String msg = "Internal error. Failed to retrieve existing nodeState.";
+               log.debug(msg);
+               throw new RepositoryException(msg, e);
            }
        }
 
@@ -208,6 +219,10 @@ public class SessionImporter implements Importer, SessionListener {
                // no potential uuid conflict, add new node from given info
                nodeState = importNode(nodeInfo, parent);
            } else {
+               // make sure the import does not define a uuid without having
+               // a primaryType or mixin that makes the new node referenceable
+               checkIncludesMixReferenceable(nodeInfo);
+
                // potential uuid conflict
                try {
                    NodeId conflictingId = session.getIdFactory().createNodeId(nodeInfo.getUUID());
@@ -220,7 +235,7 @@ public class SessionImporter implements Importer, SessionListener {
                    // no conflict: create new with given uuid
                    nodeState = importNode(nodeInfo, parent);
                } catch (ItemStateException e) {
-                   String msg = "Internal error: failed to retrieve node state";
+                   String msg = "Internal error: failed to retrieve conflicting node state";
                    log.debug(msg);
                    throw new RepositoryException(msg, e);
                }
@@ -326,15 +341,13 @@ public class SessionImporter implements Importer, SessionListener {
         switch (uuidBehavior) {
             case ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW:
                 String originalUUID = nodeInfo.getUUID();
+                String newUUID = UUID.randomUUID().toString();
                 // reset id on nodeInfo to force creation with new uuid:
-                nodeInfo.setUUID(null);
+                nodeInfo.setUUID(newUUID);
                 nodeState = importNode(nodeInfo, parent);
                 if (nodeState != null) {
                     // remember uuid mapping
-                    EffectiveNodeType ent = session.getValidator().getEffectiveNodeType(nodeState);
-                    if (ent.includesNodeType(QName.MIX_REFERENCEABLE)) {
-                        refTracker.mappedUUIDs(originalUUID, nodeState.getUniqueID());
-                    }
+                    refTracker.mappedUUIDs(originalUUID, newUUID);
                 }
                 break;
 
@@ -360,7 +373,7 @@ public class SessionImporter implements Importer, SessionListener {
                     throw new RepositoryException(msg, e);
                 }
                 // do remove conflicting (recursive) including validation check
-                Operation op = Remove.create(conflicting.getNodeState(), parent);
+                Operation op = Remove.create(conflicting.getNodeState());
                 stateMgr.execute(op);
                 // create new with given uuid:
                 nodeState = importNode(nodeInfo, parent);
@@ -377,7 +390,7 @@ public class SessionImporter implements Importer, SessionListener {
                 parent = conflicting.getParent().getNodeState();
 
                 // do remove conflicting (recursive), including validation checks
-                op = Remove.create(conflicting.getNodeState(), parent);
+                op = Remove.create(conflicting.getNodeState());
                 stateMgr.execute(op);
                 // create new with given uuid at same location as conflicting
                 nodeState = importNode(nodeInfo, parent);
@@ -438,7 +451,7 @@ public class SessionImporter implements Importer, SessionListener {
 
                     Operation ap = AddProperty.create(parent, newName, conflicting.getType(), propDef, conflicting.getValues());
                     stateMgr.execute(ap);
-                    Operation rm = Remove.create(conflicting, parent);
+                    Operation rm = Remove.create(conflicting);
                     stateMgr.execute(rm);
                 }
             } catch (ItemStateException e) {
@@ -644,6 +657,32 @@ public class SessionImporter implements Importer, SessionListener {
             String msg = "failed to retrieve serialized value";
             log.debug(msg, e);
             throw new RepositoryException(msg, e);
+        }
+    }
+
+    /**
+     * Validate the given <code>NodeInfo</code>: make sure, that if a uuid is
+     * defined, the primary or the mixin types include mix:referenceable.
+     *
+     * @param nodeInfo
+     * @throws RepositoryException
+     */
+    private void checkIncludesMixReferenceable(Importer.NodeInfo nodeInfo) throws RepositoryException {
+        List l = new ArrayList();
+        l.add(nodeInfo.getNodeTypeName());
+        l.addAll(Arrays.asList(nodeInfo.getMixinNames()));
+        if (l.contains(QName.MIX_REFERENCEABLE)) {
+            // shortcut
+            return;
+        }
+        QName[] ntNames = (QName[]) l.toArray(new QName[l.size()]);
+        try {
+            EffectiveNodeType ent = session.getValidator().getEffectiveNodeType(ntNames);
+            if (!ent.includesNodeType(QName.MIX_REFERENCEABLE)) {
+                throw new ConstraintViolationException("XML defines jcr:uuid without defining import node to be referenceable.");
+            }
+        } catch (NodeTypeConflictException e) {
+            throw new RepositoryException("Internal error", e);
         }
     }
 }

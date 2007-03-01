@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.OperationVisitor;
 import org.apache.jackrabbit.jcr2spi.operation.AddNode;
@@ -42,6 +41,7 @@ import org.apache.jackrabbit.jcr2spi.operation.LockRelease;
 import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveVersion;
+import org.apache.jackrabbit.jcr2spi.operation.WorkspaceImport;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.slf4j.LoggerFactory;
@@ -53,7 +53,6 @@ import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.uuid.UUID;
-import org.apache.commons.collections.iterators.IteratorChain;
 
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
@@ -163,15 +162,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     public void undo(ItemState itemState) throws ItemStateException, ConstraintViolationException {
         ChangeLog changeLog = getChangeLog(itemState, false);
         if (!changeLog.isEmpty()) {
-            // now do it for real
-            // TODO: check if states are reverted in correct order
-            Iterator[] its = new Iterator[] {changeLog.addedStates(), changeLog.deletedStates(), changeLog.modifiedStates()};
-            IteratorChain chain = new IteratorChain(its);
-            while (chain.hasNext()) {
-                ItemState state = (ItemState) chain.next();
-                state.getHierarchyEntry().revert();
-            }
-
+            // let changelog revert all changes
+            changeLog.undo();
             // remove transient states and related operations from the t-statemanager
             transientStateMgr.dispose(changeLog);
             changeLog.reset();
@@ -395,7 +387,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         int options = ItemStateValidator.CHECK_LOCK
             | ItemStateValidator.CHECK_VERSIONING
             | ItemStateValidator.CHECK_CONSTRAINTS;
-        setPropertyStateValue(pState, operation.getValues(), operation.getPropertyType(), options);
+        setPropertyStateValue(pState, operation.getValues(), operation.getValueType(), options);
         transientStateMgr.addOperation(operation);
     }
 
@@ -528,6 +520,14 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         throw new UnsupportedOperationException("Internal error: RemoveVersion cannot be handled by session ItemStateManager.");
     }
 
+    /**
+     * @throws UnsupportedOperationException
+     * @see OperationVisitor#visit(WorkspaceImport)
+     */
+    public void visit(WorkspaceImport operation) throws RepositoryException {
+        throw new UnsupportedOperationException("Internal error: WorkspaceImport cannot be handled by session ItemStateManager.");
+    }
+
     //--------------------------------------------< Internal State Handling >---
     /**
      *
@@ -601,14 +601,11 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
         // check if add node is possible. note, that the options differ if
         // the 'addNode' is called from inside a regular add-node to create
-        // autocreated child nodes that my are 'protected' by their def.
+        // autocreated child nodes that may be 'protected'.
         validator.checkAddNode(parent, nodeName, nodeTypeName, options);
+        // a new NodeState doesn't have mixins defined yet -> ent is ent of primarytype
+        EffectiveNodeType ent = validator.getEffectiveNodeType(nodeTypeName);
 
-        try {
-            validator.getEffectiveNodeType(new QName[]{nodeTypeName});
-        } catch (NodeTypeConflictException e) {
-            throw new RepositoryException("node type conflict: " + e.getMessage());
-        }
         if (nodeTypeName == null) {
             // no primary node type specified,
             // try default primary type from definition
@@ -620,18 +617,27 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             }
         }
 
-        NodeState nodeState = transientStateMgr.createNewNodeState(nodeName, uuid, nodeTypeName, definition, parent);
+        // create new nodeState. NOTE, that the uniqueID is not added to the
+        // state for consistency between 'addNode' and importXML // TODO review
+        NodeState nodeState = transientStateMgr.createNewNodeState(nodeName, null, nodeTypeName, definition, parent);
+        if (uuid != null) {
+            QValue[] value = getQValues(uuid, qValueFactory);
+            EffectiveNodeType effnt = validator.getEffectiveNodeType(QName.MIX_REFERENCEABLE);
+            QPropertyDefinition pDef = effnt.getApplicablePropertyDefinition(QName.JCR_UUID, PropertyType.STRING, false);
+            addPropertyState(nodeState, QName.JCR_UUID, PropertyType.STRING, value, pDef, 0);
+        }
 
-        EffectiveNodeType ent = validator.getEffectiveNodeType(nodeState);
         // add 'auto-create' properties defined in node type
         QPropertyDefinition[] pda = ent.getAutoCreatePropDefs();
         for (int i = 0; i < pda.length; i++) {
             QPropertyDefinition pd = pda[i];
-            QValue[] autoValue = computeSystemGeneratedPropertyValues(nodeState, pd);
-            if (autoValue != null) {
-                int propOptions = ItemStateValidator.CHECK_NONE;
-                // execute 'addProperty' without adding operation.
-                addPropertyState(nodeState, pd.getQName(), pd.getRequiredType(), autoValue, pd, propOptions);
+            if (!nodeState.hasPropertyName(pd.getQName())) {
+                QValue[] autoValue = computeSystemGeneratedPropertyValues(nodeState, pd);
+                if (autoValue != null) {
+                    int propOptions = ItemStateValidator.CHECK_NONE;
+                    // execute 'addProperty' without adding operation.
+                    addPropertyState(nodeState, pd.getQName(), pd.getRequiredType(), autoValue, pd, propOptions);
+                }
             }
         }
 
@@ -704,11 +710,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             QName name = def.getQName();
             if (QName.MIX_REFERENCEABLE.equals(declaringNT) && QName.JCR_UUID.equals(name)) {
                 // mix:referenceable node type defines jcr:uuid
-                String uniqueID = parent.getUniqueID();
-                if (uniqueID == null) {
-                    uniqueID = UUID.randomUUID().toString();
-                }
-                genValues = new QValue[]{qValueFactory.create(uniqueID, PropertyType.REFERENCE)};
+                genValues = getQValues(parent.getUniqueID(), qValueFactory);
             } else if (QName.NT_BASE.equals(declaringNT)) {
                 // nt:base node type
                 if (QName.JCR_PRIMARYTYPE.equals(name)) {
@@ -747,5 +749,12 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             ret[i] = factory.create(qNames[i]);
         }
         return ret;
+    }
+
+    private static QValue[] getQValues(String uniqueID, QValueFactory factory) {
+        if (uniqueID == null) {
+            uniqueID = UUID.randomUUID().toString();
+        }
+        return new QValue[] {factory.create(uniqueID, PropertyType.STRING)};
     }
 }

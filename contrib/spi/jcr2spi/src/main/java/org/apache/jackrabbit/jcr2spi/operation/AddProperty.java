@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
@@ -36,6 +37,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
  */
 public class AddProperty extends AbstractOperation {
 
+    private final NodeId parentId;
     private final NodeState parentState;
     private final QName propertyName;
     private final int propertyType;
@@ -44,6 +46,7 @@ public class AddProperty extends AbstractOperation {
     private final QPropertyDefinition definition;
 
     private AddProperty(NodeState parentState, QName propName, int propertyType, QValue[] values, QPropertyDefinition definition) {
+        this.parentId = parentState.getNodeId();
         this.parentState = parentState;
         this.propertyName = propName;
         this.propertyType = propertyType;
@@ -72,6 +75,10 @@ public class AddProperty extends AbstractOperation {
         throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
     }
     //----------------------------------------< Access Operation Parameters >---
+    public NodeId getParentId() {
+        return parentId;
+    }
+
     public NodeState getParentState() {
         return parentState;
     }

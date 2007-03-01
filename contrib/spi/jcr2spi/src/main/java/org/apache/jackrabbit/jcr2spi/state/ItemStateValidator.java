@@ -38,6 +38,7 @@ import javax.jcr.version.VersionException;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QItemDefinition;
+import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.NamespaceResolver;
@@ -185,7 +186,29 @@ public class ItemStateValidator {
     public EffectiveNodeType getEffectiveNodeType(NodeState nodeState)
             throws RepositoryException {
         try {
-            return getEffectiveNodeType(nodeState.getNodeTypeNames());
+            QName[] allNtNames;
+            if (nodeState.getStatus() == Status.EXISTING) {
+                allNtNames = nodeState.getNodeTypeNames();
+            } else {
+                // TODO: check if correct (and only used for creating new)
+                QName primaryType = nodeState.getNodeTypeName();
+                allNtNames = new QName[] { primaryType }; // default
+                PropertyEntry mixins = nodeState.getNodeEntry().getPropertyEntry(QName.JCR_MIXINTYPES);
+                if (mixins != null) {
+                    try {
+                        QValue[] values = mixins.getPropertyState().getValues();
+                        allNtNames = new QName[values.length + 1];
+                        for (int i = 0; i < values.length; i++) {
+                            allNtNames[i] = values[i].getQName();
+                        }
+                        allNtNames[values.length] = primaryType;
+                    } catch (ItemStateException e) {
+                        // ignore
+                    }
+                }
+            }
+
+            return getEffectiveNodeType(allNtNames);
         } catch (NodeTypeConflictException ntce) {
             String msg = "Internal error: failed to build effective node type from node types defined with " + safeGetJCRPath(nodeState);
             log.debug(msg);
@@ -195,8 +218,7 @@ public class ItemStateValidator {
 
     /**
      * Helper method that builds the effective (i.e. merged and resolved)
-     * node type representation of the specified node's primary and mixin
-     * node types.
+     * node type representation of the specified node types.
      *
      * @param nodeTypeNames
      * @return the effective node type
@@ -204,8 +226,20 @@ public class ItemStateValidator {
      * @throws NoSuchNodeTypeException
      */
     public EffectiveNodeType getEffectiveNodeType(QName[] nodeTypeNames)
-        throws NodeTypeConflictException, NoSuchNodeTypeException  {
-            return ntReg.getEffectiveNodeType(nodeTypeNames);
+            throws NodeTypeConflictException, NoSuchNodeTypeException  {
+        return ntReg.getEffectiveNodeType(nodeTypeNames);
+    }
+
+    /**
+     * Helper method that builds the effective (i.e. merged and resolved)
+     * node type representation of the specified node type.
+     *
+     * @param nodeTypeName
+     * @return the effective node type
+     * @throws NoSuchNodeTypeException
+     */
+    public EffectiveNodeType getEffectiveNodeType(QName nodeTypeName) throws NoSuchNodeTypeException  {
+        return ntReg.getEffectiveNodeType(nodeTypeName);
     }
 
     /**

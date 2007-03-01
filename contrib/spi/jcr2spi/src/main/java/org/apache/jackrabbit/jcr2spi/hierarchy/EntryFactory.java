@@ -68,17 +68,10 @@ public class EntryFactory {
         return isf;
     }
 
+
     public void notifyIdChange(NodeEntry entry, String previousUniqueID) {
         listener.uniqueIdChanged(entry, previousUniqueID);
     }
-
-    public void notifyEntryMoved(NodeEntry old, NodeEntry newEntry) {
-        // TODO: check if correct
-        if (old.getUniqueID() != null) {
-            listener.uniqueIdChanged(newEntry, old.getUniqueID());
-        }
-    }
-
 
     //--------------------------------------------------------------------------
     public interface NodeEntryListener {

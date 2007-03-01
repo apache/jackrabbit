@@ -19,6 +19,7 @@ package org.apache.jackrabbit.jcr2spi.operation;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.spi.LockInfo;
+import org.apache.jackrabbit.spi.NodeId;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -69,8 +70,8 @@ public class LockOperation extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeState getNodeState() {
-        return nodeState;
+    public NodeId getNodeId() {
+        return nodeState.getNodeId();
     }
 
     public boolean isDeep() {

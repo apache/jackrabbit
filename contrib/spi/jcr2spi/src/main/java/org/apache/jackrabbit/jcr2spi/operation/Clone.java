@@ -67,7 +67,7 @@ public class Clone extends AbstractCopy {
         if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
             if (removeExisting) {
                 // invalidate the complete tree -> find root-hierarchy-entry
-                HierarchyEntry he = getDestinationParentState().getHierarchyEntry();
+                HierarchyEntry he = destParentState.getHierarchyEntry();
                 while (he.getParent() != null) {
                     he = he.getParent();
                 }

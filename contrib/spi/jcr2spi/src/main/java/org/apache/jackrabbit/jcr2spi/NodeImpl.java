@@ -116,7 +116,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
     }
 
-    //-----------------------------------------------------< Item interface >---
+    //---------------------------------------------------------------< Item >---
     /**
      * @see Item#getName()
      */
@@ -155,7 +155,7 @@ public class NodeImpl extends ItemImpl implements Node {
         return true;
     }
 
-    //-----------------------------------------------------< Node interface >---
+    //---------------------------------------------------------------< Node >---
     /**
      * @see Node#addNode(String)
      */
@@ -730,7 +730,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     private List getMixinTypes() {
         QName[] mixinValue = new QName[0];
-        if (getNodeEntry().hasPropertyEntry(QName.JCR_MIXINTYPES)) {
+        if (hasProperty(QName.JCR_MIXINTYPES)) {
             if (getNodeState().getStatus() == Status.EXISTING) {
                 mixinValue = getNodeState().getMixinTypeNames();
             } else {
@@ -1209,7 +1209,12 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // check effective node type
-        return getEffectiveNodeType().includesNodeType(qName);
+        try {
+            EffectiveNodeType effnt = session.getValidator().getEffectiveNodeType(getNodeState().getNodeTypeNames());
+            return effnt.includesNodeType(qName);
+        } catch (NodeTypeConflictException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     //-----------------------------------------------------------< ItemImpl >---
@@ -1669,19 +1674,6 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new RepositoryException(msg, e);
         }
         return targetEntry;
-    }
-
-    /**
-     * Returns the effective (i.e. merged and resolved) node type representation
-     * of this node's primary and mixin node types.
-     *
-     * @return the effective node type
-     * @throws RepositoryException
-     */
-    private EffectiveNodeType getEffectiveNodeType() throws RepositoryException {
-        // build effective node type of mixins & primary type
-        ItemStateValidator validator = session.getValidator();
-        return validator.getEffectiveNodeType(getNodeState());
     }
 
     /**

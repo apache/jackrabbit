@@ -41,6 +41,7 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.QValue;
 
 /**
  * <code>VersionManagerImpl</code>...
@@ -156,11 +157,45 @@ public class VersionManagerImpl implements VersionManager {
         return op.getFailedIds();
     }
 
-    public void resolveMergeConflict(NodeState nodeState, NodeState versionState, boolean done) throws RepositoryException {
+    public void resolveMergeConflict(NodeState nodeState, NodeState versionState,
+                                     boolean done) throws RepositoryException {
         NodeState wspState = getWorkspaceState(nodeState);
-        NodeState wspVState = getWorkspaceState(versionState);
-        Operation op = ResolveMergeConflict.create(wspState, wspVState, done);
-        workspaceManager.execute(op);
+        NodeId vId = getWorkspaceState(versionState).getNodeId();
+        try {
+            PropertyState mergeFailedState = wspState.getPropertyState(QName.JCR_MERGEFAILED);
+            QValue[] vs = mergeFailedState.getValues();
+
+            NodeId[] mergeFailedIds = new NodeId[vs.length - 1];
+            for (int i = 0, j = 0; i < vs.length; i++) {
+                NodeId id = workspaceManager.getIdFactory().createNodeId(vs[i].getString());
+                if (!id.equals(vId)) {
+                    mergeFailedIds[j] = id;
+                    j++;
+                }
+                // else: the version id is being solved by this call and not
+                // part of 'jcr:mergefailed' any more
+            }
+
+            PropertyState predecessorState = wspState.getPropertyState(QName.JCR_PREDECESSORS);
+            vs = predecessorState.getValues();
+
+            int noOfPredecessors = (done) ? vs.length + 1 : vs.length;
+            NodeId[] predecessorIds = new NodeId[noOfPredecessors];
+
+            int i = 0;
+            while (i < vs.length) {
+                predecessorIds[i] = workspaceManager.getIdFactory().createNodeId(vs[i].getString());
+                i++;
+            }
+            if (done) {
+                predecessorIds[i] = vId;
+            }
+            Operation op = ResolveMergeConflict.create(wspState, mergeFailedIds, predecessorIds, done);
+            workspaceManager.execute(op);
+
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     public NodeEntry getVersionableNodeState(NodeState versionState) throws RepositoryException {

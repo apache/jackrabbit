@@ -69,7 +69,7 @@ public class ReferenceChangeTracker {
      * @param newUUID
      */
     public void mappedUUIDs(String oldUUID, String newUUID) {
-        if (oldUUID.equals(newUUID) || oldUUID == null) {
+        if (oldUUID == null || oldUUID.equals(newUUID)) {
             // only remember if uuid exists and has changed
             return;
         }

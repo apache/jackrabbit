@@ -51,6 +51,7 @@ import java.util.HashMap;
 
 /**
  * <code>LockManagerImpl</code>...
+ * TODO: TOBEFIXED. Lock objects obtained through this mgr are not informed if another session is or becomes lock-holder and removes the lock again.
  */
 public class LockManagerImpl implements LockManager, SessionListener {
 
@@ -207,9 +208,9 @@ public class LockManagerImpl implements LockManager, SessionListener {
      * If the lock addressed by the token is session-scoped, this method will
      * throw a LockException, such as defined by JSR170 v.1.0.1 for
      * {@link Session#removeLockToken(String)}.<br>Otherwise the call is
-     * delegated to {@link WorkspaceManager#removeLockToken(String)} and
-     * all locks stored in the local lock map are notified by the removed
-     * token in order to give them the chance to update their lock information.
+     * delegated to {@link WorkspaceManager#removeLockToken(String)}.
+     * All locks stored in the local lock map are notified by the removed
+     * token in order have them updated their lock information.
      *
      * @see LockManager#removeLockToken(String)
      */
@@ -232,13 +233,8 @@ public class LockManagerImpl implements LockManager, SessionListener {
             }
         }
 
-        if (!found) {
-            String msg = "Unable to remove lock token: lock is held by another session.";
-            log.warn(msg);
-            throw new RepositoryException(msg);
-        }
-
-        // remove lock token from sessionInfo
+        // remove lock token from sessionInfo. call will fail, if the session
+        // is not lock holder.
         wspManager.removeLockToken(lt);
         // inform about this lt being removed from this session
         notifyTokenRemoved(lt);
@@ -290,7 +286,9 @@ public class LockManagerImpl implements LockManager, SessionListener {
      * be affected by the lock present on an ancestor state.
      * Note, that in certain cases it might not be possible to detect a lock
      * being present due to the fact that the hierarchy might be imcomplete or
-     * not even readable completely.
+     * not even readable completely. For this reason it seem equally reasonable
+     * to search for jcr:lockIsDeep property only and omitting all kind of
+     * verification regarding nodetypes present.
      *
      * @param nodeState <code>NodeState</code> from which searching starts.
      * Note, that the given state must not have an overlayed state.
@@ -298,11 +296,6 @@ public class LockManagerImpl implements LockManager, SessionListener {
      * given state nor any of its ancestors is locked.
      */
     private NodeState getLockHoldingState(NodeState nodeState) {
-        /**
-         * TODO: should not only rely on existence of jcr:lockIsDeep property
-         * but also verify that node.isNodeType("mix:lockable")==true;
-         * this would have a negative impact on performance though...
-         */
         NodeEntry entry = nodeState.getNodeEntry();
         while (!entry.hasPropertyEntry(QName.JCR_LOCKISDEEP)) {
             NodeEntry parent = entry.getParent();
@@ -324,17 +317,18 @@ public class LockManagerImpl implements LockManager, SessionListener {
     }
 
     private LockState buildLockState(NodeState nodeState) throws RepositoryException {
+        NodeId nId = nodeState.getNodeId();
         NodeState lockHoldingState = null;
         LockInfo lockInfo;
         try {
-            lockInfo = wspManager.getLockInfo(nodeState.getNodeId());
+            lockInfo = wspManager.getLockInfo(nId);
         } catch (LockException e) {
             // no lock present
             return null;
         }
 
         NodeId lockNodeId = lockInfo.getNodeId();
-        if (lockNodeId.equals(nodeState.getId())) {
+        if (lockNodeId.equals(nId)) {
             lockHoldingState = nodeState;
         } else {
             HierarchyEntry lockedEntry = wspManager.getHierarchyManager().getHierarchyEntry(lockNodeId);
@@ -372,20 +366,30 @@ public class LockManagerImpl implements LockManager, SessionListener {
      */
     private LockImpl getLockImpl(NodeState nodeState, boolean lazyLockDiscovery) throws RepositoryException {
         nodeState.checkIsSessionState();
+        NodeState nState = nodeState;
+        // access first non-NEW state
+        while (nState.getStatus() == Status.NEW) {
+            try {
+                nState = nState.getParent();
+            } catch (ItemStateException e) {
+                // should never occur, since NEW states must have an accessible parent
+                throw new RepositoryException("Intenal error", e);
+            }
+        }
 
         // shortcut: check if a given state holds a lock, which has been
-        // accessed before (thus is known to the manager) irrespective if the
-        // current session is the lock holder or not.
-        if (lockMap.containsKey(nodeState)) {
-            return (LockImpl) lockMap.get(nodeState);
+        // store in the lock map. see below (LockImpl) for the conditions that
+        // must be met in order a lock can be stored.
+        if (lockMap.containsKey(nState)) {
+            return (LockImpl) lockMap.get(nState);
         }
 
         LockState lState;
         if (lazyLockDiscovery) {
             // try to retrieve a state (ev. a parent state) that holds a lock.
-            NodeState lockHoldingState = getLockHoldingState(nodeState);
+            NodeState lockHoldingState = getLockHoldingState(nState);
             if (lockHoldingState == null) {
-                // no lock
+                // assume no lock is present (might not be correct due to incomplete hierarchy)
                 return null;
             } else {
                 // check lockMap again with the lockholding state
@@ -395,18 +399,31 @@ public class LockManagerImpl implements LockManager, SessionListener {
                 lState = buildLockState(lockHoldingState);
             }
         } else {
-            lState = buildLockState(nodeState);
+            // need correct information about lock status -> retrieve lockInfo
+            // from the persistent layer.
+            lState = buildLockState(nState);
         }
 
-        // Lock has never been access -> build the lock object
-        // retrieve lock holding node. note that this may fail if the session
-        // does not have permission to see this node.
-        if (lState != null && lState.appliesToNodeState(nodeState)) {
-            Item lockHoldingNode = itemManager.getItem(lState.lockHoldingState.getHierarchyEntry());
-            return new LockImpl(lState, (Node)lockHoldingNode);
+        if (lState != null) {
+            // Test again if a Lock object is stored in the lockmap. Otherwise
+            // build the lock object and retrieve lock holding node. note that this
+            // may fail if the session does not have permission to see this node.
+            LockImpl lock;
+            if (lockMap.containsKey(lState.lockHoldingState)) {
+                lock = (LockImpl) lockMap.get(lState.lockHoldingState);
+                lock.lockState.lockInfo = lState.lockInfo;
+            } else {
+                Item lockHoldingNode = itemManager.getItem(lState.lockHoldingState.getHierarchyEntry());
+                lock = new LockImpl(lState, (Node)lockHoldingNode);
+            }
+            // test if lock applies to the original nodestate
+            if (lState.appliesToNodeState(nodeState)) {
+                return lock;
+            } else {
+                return null; // lock exists but doesn't apply to the given state
+            }
         } else {
-            // lock exists but does not apply to the given node state
-            // passed to this method.
+            // no lock at all
             return null;
         }
     }
@@ -586,7 +603,10 @@ public class LockManagerImpl implements LockManager, SessionListener {
             if (cacheBehaviour == CacheBehaviour.OBSERVATION) {
                 lockMap.put(lockState.lockHoldingState, this);
                 lockState.startListening();
-            } else if (isSessionScoped() && isHoldBySession()) {
+            } else if (isHoldBySession()) {
+                // TODO: TOBEFIXED. since another session may become lock-holder for
+                // an open-scoped lock, the map entry and the lock information
+                // stored therein may become outdated.
                 lockMap.put(lockState.lockHoldingState, this);
             }
         }

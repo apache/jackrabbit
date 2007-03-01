@@ -29,6 +29,7 @@ import org.apache.jackrabbit.jcr2spi.operation.Move;
 import org.apache.jackrabbit.jcr2spi.operation.Copy;
 import org.apache.jackrabbit.jcr2spi.operation.Clone;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
+import org.apache.jackrabbit.jcr2spi.operation.WorkspaceImport;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.apache.jackrabbit.jcr2spi.lock.LockManager;
 import org.apache.jackrabbit.jcr2spi.lock.LockManagerImpl;
@@ -327,8 +328,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     /**
      * @see javax.jcr.Workspace#importXML(String, InputStream, int)
      */
-    public void importXML(String parentAbsPath, InputStream in,
-                          int uuidBehavior)
+    public void importXML(String parentAbsPath, InputStream in, int uuidBehavior)
         throws IOException, PathNotFoundException, ItemExistsException,
         ConstraintViolationException, InvalidSerializedDataException,
         LockException, RepositoryException {
@@ -345,7 +345,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
             getValidator().checkIsWritable(parentState, options);
 
             // run the import
-            wspManager.importXml(parentState, in, uuidBehavior);
+            wspManager.execute(WorkspaceImport.create(parentState, in, uuidBehavior));
         } else {
             throw new PathNotFoundException("No node at path " + parentAbsPath);
         }

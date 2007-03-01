@@ -21,8 +21,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.Status;
-import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.spi.QValue;
 
 import javax.jcr.RepositoryException;
@@ -72,16 +72,8 @@ public class StateUtility {
             // the root state cannot be moved
             return false;
         } else {
-            // a session-state is moved, if its NodeEntry is not the same as
-            // the NodeEntry of its overlayed state. If no overlayedState
-            // exists the state not moved anyway.
-            ItemState overlayed = state.getWorkspaceState();
-            if (overlayed == null) {
-                return false;
-            } else {
-                return state.getHierarchyEntry() != overlayed.getHierarchyEntry();
-                //return modState.overlayedState.getParent() != modState.getParent().overlayedState;
-            }
+            NodeEntry ne = state.getNodeEntry();
+            return ne.isTransientlyMoved();
         }
     }
 }

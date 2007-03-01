@@ -64,16 +64,17 @@ public class HierarchyManagerImpl implements HierarchyManager {
     /**
      * @see HierarchyManager#lookup(ItemId)
      */
-    public HierarchyEntry lookup(ItemId itemId) {
-        String uniqueID = itemId.getUniqueID();
+    public HierarchyEntry lookup(ItemId workspaceItemId) {
+        String uniqueID = workspaceItemId.getUniqueID();
         if (uniqueID == null) {
-            return PathResolver.lookup(rootEntry, itemId.getPath());
+            return rootEntry.lookupDeepEntry(workspaceItemId.getPath());
         } else {
             NodeEntry nEntry = uniqueIdResolver.lookup(idFactory.createNodeId(uniqueID));
-            if (itemId.getPath() == null) {
+            Path path = workspaceItemId.getPath();
+            if (path == null) {
                 return nEntry;
             } else {
-                return PathResolver.lookup(nEntry, itemId.getPath());
+                return nEntry.lookupDeepEntry(path);
             }
         }
     }

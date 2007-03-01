@@ -9,23 +9,14 @@ Known Issues and TODOs with jcr2spi
         
 - TODO: test Observation
 
-- TODO: test Merge
-
-- BUG: NodeEntryImpl needs an attic for transiently moved and removed
-       child entries in order not to access those from the persistent
-       storage again.
-       In addition: having an attic allows to properly handle events
-       notifying external modifications for those moved/removed
-       NodeEntries, that are not identified by a uniqueID
+- TODO: test Merge, Workspace.restore, Workspace.copy, Workspace.clone
+        (missing clone impl with spi2dav)
        
 - BUG: Node.hasProperty currently returns false, if prop-entry has
        not been loaded yet -> should use same mechanism as Node.getProperty.
-       
-- BUG: Restore (testcase failed)
 
-- BUG: LockToken transfer with Session.addLockToken, Session.removeLockToken
-   
-- BUG: Workspace.importXML does not invalidate
+- BUG: Locks that have been accessed by another session are not informed
+       if the lock is released by the lock-holder.
 
 - IMPROVE: Replace ItemState-duality by copy on write behaviour
 

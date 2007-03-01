@@ -21,6 +21,7 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
@@ -47,17 +48,21 @@ public class Move extends AbstractOperation {
     private static Logger log = LoggerFactory.getLogger(Move.class);
 
     private final NodeId srcId;
+    private final NodeId destParentId;
+    private final QName destName;
+
     private final NodeState srcState;
     private final NodeState srcParentState;
     private final NodeState destParentState;
-    private final QName destName;
 
     private Move(NodeState srcNodeState, NodeState srcParentState, NodeState destParentState, QName destName) {
         this.srcId = (NodeId) srcNodeState.getId();
+        this.destParentId = destParentState.getNodeId();
+        this.destName = destName;
+
         this.srcState = srcNodeState;
         this.srcParentState = srcParentState;
         this.destParentState = destParentState;
-        this.destName = destName;
         
         addAffectedItemState(srcNodeState);
         addAffectedItemState(srcParentState);
@@ -83,19 +88,26 @@ public class Move extends AbstractOperation {
      */
     public void persisted(CacheBehaviour cacheBehaviour) {
         if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
-            if (srcState.isWorkspaceState()) {
-                // non-recursive invalidation
+            // non-recursive invalidation
+            try {
+                srcState.getNodeEntry().move(destName, destParentState.getNodeEntry(), false);
+                // TODO: TOBEFIXED. moved state ev. got a new definition.
+            } catch (RepositoryException e) {
+                // should not occure
+                log.error("Internal error", e);
                 srcParentState.getHierarchyEntry().invalidate(false);
                 destParentState.getHierarchyEntry().invalidate(false);
                 srcState.getHierarchyEntry().invalidate(false);
-            } else {
-                throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
             }
         }
     }
     //----------------------------------------< Access Operation Parameters >---
     public NodeId getSourceId() {
         return srcId;
+    }
+
+    public NodeId getDestinationParentId() {
+        return destParentId;
     }
 
     public NodeState getSourceState() {
@@ -151,6 +163,9 @@ public class Move extends AbstractOperation {
         NodeState destParentState = getNodeState(destPath.getAncestor(1), hierMgr, nsResolver);
         QName destName = destElement.getName();
 
+        // lazy check for existing items at destination. since the hierarchy
+        // may not be complete it is possible that an conflict is only detected
+        // upon saving the 'move'.
         NodeEntry destEntry = (NodeEntry) destParentState.getHierarchyEntry();
         if (destEntry.hasPropertyEntry(destName)) {
             throw new ItemExistsException("Move destination already exists (Property).");
@@ -160,6 +175,8 @@ public class Move extends AbstractOperation {
                 if (!existing.getNodeState().getDefinition().allowsSameNameSiblings()) {
                     throw new ItemExistsException("Node existing at move destination does not allow same name siblings.");
                 }
+            } catch (NoSuchItemStateException e) {
+                // existing apparent not valid any more -> probably no conflict
             } catch (ItemStateException e) {
                 throw new RepositoryException(e);
             }

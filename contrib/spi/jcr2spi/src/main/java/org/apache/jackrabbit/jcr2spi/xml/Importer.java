@@ -57,13 +57,10 @@ public interface Importer {
 
     //--------------------------------------------------------< inner classes >
     static class NodeInfo {
-        private QName name;
-        private QName nodeTypeName;
-        private QName[] mixinNames;
+        private final QName name;
+        private final QName nodeTypeName;
+        private final QName[] mixinNames;
         private String uuid;
-
-        public NodeInfo() {
-        }
 
         public NodeInfo(QName name, QName nodeTypeName, QName[] mixinNames, String uuid) {
             this.name = name;
@@ -72,24 +69,12 @@ public interface Importer {
             this.uuid = uuid;
         }
 
-        public void setName(QName name) {
-            this.name = name;
-        }
-
         public QName getName() {
             return name;
         }
 
-        public void setNodeTypeName(QName nodeTypeName) {
-            this.nodeTypeName = nodeTypeName;
-        }
-
         public QName getNodeTypeName() {
             return nodeTypeName;
-        }
-
-        public void setMixinNames(QName[] mixinNames) {
-            this.mixinNames = mixinNames;
         }
 
         public QName[] getMixinNames() {
@@ -106,12 +91,9 @@ public interface Importer {
     }
 
     static class PropInfo {
-        private QName name;
-        private int type;
-        private TextValue[] values;
-
-        public PropInfo() {
-        }
+        private final QName name;
+        private final int type;
+        private final TextValue[] values;
 
         public PropInfo(QName name, int type, TextValue[] values) {
             this.name = name;
@@ -119,24 +101,12 @@ public interface Importer {
             this.values = values;
         }
 
-        public void setName(QName name) {
-            this.name = name;
-        }
-
         public QName getName() {
             return name;
         }
 
-        public void setType(int type) {
-            this.type = type;
-        }
-
         public int getType() {
             return type;
-        }
-
-        public void setValues(TextValue[] values) {
-            this.values = values;
         }
 
         public TextValue[] getValues() {

@@ -350,20 +350,32 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
         if (state == null) {
             // nothing to do -> correct status must be set upon resolution.
             return;
-        } else {
-            state.checkIsSessionState();
-            if (!state.isValid()) {
-                throw new ItemStateException("Cannot remove an invalid ItemState");
+        }
+
+        state.checkIsSessionState();
+        // if during recursive removal an invalidated entry is found, reload
+        // it in order to determine the current status.
+        if (state.getStatus() == Status.INVALIDATED) {
+            reload(false, false);
+            // check if upon reload the item has been removed -> nothing to do
+            if (Status.isTerminal(state.getStatus())) {
+                return;
             }
-            int oldStatus = state.getStatus();
-            if (oldStatus == Status.NEW) {
+        }
+
+        switch (state.getStatus()) {
+            case Status.NEW:
                 remove();
-            } else {
+                break;
+            case Status.EXISTING:
+            case Status.EXISTING_MODIFIED:
                 state.setStatus(Status.EXISTING_REMOVED);
                 // NOTE: parent does not need to be informed. an transiently
                 // removed propertyEntry is automatically moved to the 'attic'
                 // if a conflict with a new entry occurs.
-            }
+                break;
+            default:
+                throw new ItemStateException("Cannot transiently remove an ItemState with status " + Status.getName(state.getStatus()));
         }
     }
 

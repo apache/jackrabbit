@@ -75,4 +75,6 @@ public interface OperationVisitor {
     public void visit(RemoveLabel operation) throws VersionException, RepositoryException;
 
     public void visit(RemoveVersion operation) throws VersionException, AccessDeniedException, ReferentialIntegrityException, RepositoryException;
+
+    public void visit(WorkspaceImport operation) throws RepositoryException;    
 }

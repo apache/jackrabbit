@@ -23,6 +23,7 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
+import org.apache.jackrabbit.spi.NodeId;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -82,12 +83,12 @@ public class RemoveLabel extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeState getVersionHistoryState() {
-        return versionHistoryState;
+    public NodeId getVersionHistoryId() {
+        return versionHistoryState.getNodeId();
     }
 
-    public NodeState getVersionState() {
-        return versionState;
+    public NodeId getVersionId() {
+        return versionState.getNodeId();
     }
 
     public QName getLabel() {

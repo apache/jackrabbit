@@ -46,7 +46,7 @@ public class NodeState extends ItemState {
 
     private static Logger log = LoggerFactory.getLogger(NodeState.class);
 
-    private NodeEntry hierarchyEntry;
+    private final NodeEntry hierarchyEntry;
 
     /**
      * the name of this node's primary type
@@ -141,10 +141,6 @@ public class NodeState extends ItemState {
         synchronized (another) {
             NodeState nState = (NodeState) another;
 
-            if (hierarchyEntry != nState.hierarchyEntry) {
-                hierarchyEntry = nState.hierarchyEntry;
-                modified = true;
-            }
             if (nState.definition != null && !nState.definition.equals(definition)) {
                 definition = nState.definition;
                 modified = true;
@@ -175,7 +171,11 @@ public class NodeState extends ItemState {
      * @return the id of this node state.
      */
     public NodeId getNodeId() {
-        return getNodeEntry().getId();
+        if (isWorkspaceState()) {
+            return getNodeEntry().getWorkspaceId();
+        } else {
+            return getNodeEntry().getId();
+        }
     }
 
     /**
@@ -250,7 +250,7 @@ public class NodeState extends ItemState {
      */
     public QNodeDefinition getDefinition() throws RepositoryException {
         if (definition == null) {
-            definition = getEffectiveNodeType().getApplicableNodeDefinition(getQName(), getNodeTypeName(), getNodeTypeRegistry());
+            definition = getEffectiveParentNodeType().getApplicableNodeDefinition(getQName(), getNodeTypeName(), getNodeTypeRegistry());
         }
         return definition;
     }
@@ -390,10 +390,8 @@ public class NodeState extends ItemState {
             ItemState modState = (ItemState) it.next();
             if (modState.isNode()) {
                 if (StateUtility.isMovedState((NodeState) modState)) {
-                    // move overlayed state as well by setting NodeEntry and
-                    // definition according to session-state
+                    // set definition of overlayed according to session-state
                     NodeState overlayed = (NodeState) modState.overlayedState;
-                    overlayed.hierarchyEntry = ((NodeState) modState).hierarchyEntry;
                     overlayed.definition = ((NodeState) modState).definition;
 
                     // and mark the moved state existing
@@ -467,6 +465,7 @@ public class NodeState extends ItemState {
 
         NodeEntry before = (beforeNode == null) ? null : beforeNode.getNodeEntry();
         insertNode.getNodeEntry().orderBefore(before);
+        
         // mark this state as modified
         markModified();
     }
@@ -482,22 +481,19 @@ public class NodeState extends ItemState {
      * @throws RepositoryException if the given child state is not a child
      * of this node state.
      */
-    synchronized void moveChildNodeEntry(NodeState newParent, NodeState childState, QName newName, QNodeDefinition newDefinition)
+    synchronized void moveChildNodeEntry(NodeState newParent, NodeState childState,
+                                         QName newName, QNodeDefinition newDefinition)
         throws RepositoryException {
         checkIsSessionState();
 
         // move child entry
-        NodeEntry newEntry = getNodeEntry().moveNodeEntry(childState, newName, newParent.getNodeEntry());
-
-        // set new NodeEntry on child state, that differs from the HE of the workspaceState
-        // TODO: check again
-        childState.hierarchyEntry = newEntry;
+        childState.getNodeEntry().move(newName, newParent.getNodeEntry(), true);
         childState.definition = newDefinition;
 
         // mark both this and newParent modified
         markModified();
-        childState.markModified();
         newParent.markModified();
+        childState.markModified();
     }
 
     /**

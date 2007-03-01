@@ -69,13 +69,12 @@ class SysViewImportHandler extends TargetImportHandler {
         if (!start && !end) {
             return;
         }
-        Importer.NodeInfo nodeInfo = new Importer.NodeInfo();
-        nodeInfo.setName(state.nodeName);
-        nodeInfo.setNodeTypeName(state.nodeTypeName);
+        QName[] mixins = null;
         if (state.mixinNames != null) {
-            QName[] mixins = (QName[]) state.mixinNames.toArray(new QName[state.mixinNames.size()]);
-            nodeInfo.setMixinNames(mixins);
+            mixins = (QName[]) state.mixinNames.toArray(new QName[state.mixinNames.size()]);
         }
+        Importer.NodeInfo nodeInfo = new Importer.NodeInfo(state.nodeName, state.nodeTypeName, mixins, state.uuid);
+
         if (state.uuid != null) {
             nodeInfo.setUUID(state.uuid);
         }
@@ -277,11 +276,8 @@ class SysViewImportHandler extends TargetImportHandler {
                     throw new SAXException("error while retrieving value", ioe);
                 }
             } else {
-                Importer.PropInfo prop = new Importer.PropInfo();
-                prop.setName(currentPropName);
-                prop.setType(currentPropType);
-                prop.setValues((Importer.TextValue[])
-                        currentPropValues.toArray(new Importer.TextValue[currentPropValues.size()]));
+                Importer.TextValue[] values = (Importer.TextValue[]) currentPropValues.toArray(new Importer.TextValue[currentPropValues.size()]);
+                Importer.PropInfo prop = new Importer.PropInfo(currentPropName, currentPropType, values);
                 state.props.add(prop);
             }
             // reset temp fields

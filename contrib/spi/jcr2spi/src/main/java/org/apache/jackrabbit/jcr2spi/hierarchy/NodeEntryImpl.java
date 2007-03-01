@@ -35,6 +35,7 @@ import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
 import org.apache.jackrabbit.jcr2spi.state.StaleItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateLifeCycleListener;
 import org.apache.jackrabbit.jcr2spi.util.StateUtility;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.slf4j.Logger;
@@ -51,14 +52,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 /**
  * <code>NodeEntryImpl</code> implements common functionality for child
  * node entry implementations.
  */
 public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
-
-    // TODO: TOBEFIXED attic for transiently removed or moved child-node-entries required, in order 'know' that they are remove instead of retrieving them from the server again.
 
     private static Logger log = LoggerFactory.getLogger(NodeEntryImpl.class);
 
@@ -75,6 +76,12 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     private ChildNodeEntries childNodeEntries;
 
     /**
+     * Map used to remember transiently removed or moved childNodeEntries, that
+     * must not be retrieved from the persistent storage.
+     */
+    private ChildNodeAttic childNodeAttic;
+
+    /**
      * Map of properties. Key = {@link QName} of property. Value = {@link
      * PropertyEntry}.
      */
@@ -87,6 +94,18 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     private final HashMap propertiesInAttic = new HashMap();
 
     /**
+     * Upon transient 'move' ('rename') or 'reorder' of SNSs this
+     * <code>NodeEntry</code> remembers the original parent, name and index
+     * for later revert as well as for the creation of the
+     * {@link #getWorkspaceId() workspace id}. Finally the revertInfo is
+     * used to find the target of an <code>Event</code> indicating external
+     * modification.
+     *
+     * @see #refresh(Event)
+     */
+    private RevertInfo revertInfo;
+
+    /**
      * Creates a new <code>NodeEntryImpl</code>
      *
      * @param parent    the <code>NodeEntry</code> that owns this child item
@@ -97,6 +116,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     NodeEntryImpl(NodeEntryImpl parent, QName name, String uniqueID, EntryFactory factory) {
         super(parent, name, factory);
         this.uniqueID = uniqueID; // NOTE: don't use setUniqueID (for mod only)
+        this.childNodeAttic = new ChildNodeAttic();
     }
 
     /**
@@ -161,6 +181,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * Calls {@link HierarchyEntryImpl#revert()} and moves all properties from the
      * attic back into th properties map. If this HierarchyEntry has been
      * transiently moved, it is in addition moved back to its old parent.
+     * Similarly reordering of child node entries is reverted.
      *
      * @inheritDoc
      * @see HierarchyEntry#revert()
@@ -171,16 +192,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             properties.putAll(propertiesInAttic);
             propertiesInAttic.clear();
         }
-        // if this entry has been moved before -> move back
-        NodeState state = (NodeState) internalGetItemState();
-        if (state != null && StateUtility.isMovedState(state)) {
-            // move NodeEntry back to its original parent
-            parent.childNodeEntries().remove(this);
-            NodeEntryImpl oldEntry = (NodeEntryImpl) state.getWorkspaceState().getHierarchyEntry();
-            oldEntry.parent.childNodeEntries().add(oldEntry);
 
-            factory.notifyEntryMoved(this, oldEntry);
-        }
+        revertTransientChanges();
+
         // now make sure the underlying state is reverted to the original state
         super.revert();
     }
@@ -267,8 +281,26 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 // root node
                 return idFactory.createNodeId((String) null, Path.ROOT);
             } else {
-                return factory.getIdFactory().createNodeId(parent.getId(), Path.create(getQName(), getIndex()));
+                return idFactory.createNodeId(parent.getId(), Path.create(getQName(), getIndex()));
             }
+        }
+    }
+
+    /**
+     * @see NodeEntry#getWorkspaceId()
+     */
+    public NodeId getWorkspaceId() {
+        IdFactory idFactory = factory.getIdFactory();
+        if (uniqueID != null || parent == null) {
+            // uniqueID and root-node -> internal id is always the same as getId().
+            return getId();
+        } else if (revertInfo != null) {
+            NodeId parentId = revertInfo.oldParent.getWorkspaceId();
+            Path path = Path.create(revertInfo.oldName, revertInfo.oldIndex);
+            return idFactory.createNodeId(parentId, path);
+        } else {
+            NodeId parentId = parent.getWorkspaceId();
+            return idFactory.createNodeId(parentId, Path.create(getQName(), getIndex()));
         }
     }
 
@@ -353,10 +385,20 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             } else if (index == Path.INDEX_DEFAULT && entry.properties.containsKey(name)
                 && i == path.getLength() - 1) {
                 // property must not have index && must be final path element
-                PropertyEntry pe = (PropertyEntry) entry.properties.get(name);
-                return pe;
+                return (PropertyEntry) entry.properties.get(name);
             } else {
-                /*
+                // no valid entry
+                // -> check for moved child entry in node-attic
+                // -> check if child points to a removed sns
+                if (entry.childNodeAttic.contains(name, index)) {
+                    throw new PathNotFoundException(path.toString());
+                } else if (entry.childNodeEntries != null) {
+                    int noSNS = entry.childNodeEntries.get(name).size() + entry.childNodeAttic.get(name).size();
+                    if (index <= noSNS) {
+                        throw new PathNotFoundException(path.toString());
+                    }
+                }
+               /*
                 * Unknown entry (not-existing or not yet loaded):
                 * Skip all intermediate entries and directly try to load the ItemState
                 * (including building the itermediate entries. If that fails
@@ -403,6 +445,40 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 } catch (ItemStateException e) {
                     throw new RepositoryException("Internal error", e);
                 }
+            }
+        }
+        return entry;
+    }
+
+    /**
+     * @see NodeEntry#lookupDeepEntry(Path)
+     */
+    public HierarchyEntry lookupDeepEntry(Path workspacePath) {
+        NodeEntryImpl entry = this;
+        for (int i = 0; i < workspacePath.getLength(); i++) {
+            Path.PathElement elem = workspacePath.getElement(i);
+            // check for root element
+            if (elem.denotesRoot()) {
+                if (getParent() != null) {
+                    log.warn("NodeEntry out of 'hierarchy'" + workspacePath.toString());
+                    return null;
+                } else {
+                    continue;
+                }
+            }
+
+            int index = elem.getNormalizedIndex();
+            QName childName = elem.getName();
+
+            // first try to resolve node
+            NodeEntry cne = entry.lookupNodeEntry(childName, index);
+            if (cne != null) {
+                entry = (NodeEntryImpl) cne;
+            } else if (index == Path.INDEX_DEFAULT && i == workspacePath.getLength() - 1) {
+                // property must not have index && must be final path element
+                return entry.lookupPropertyEntry(childName);
+            } else {
+                return null;
             }
         }
         return entry;
@@ -525,7 +601,8 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @inheritDoc
      * @see NodeEntry#addNewNodeEntry(QName, String, QName, QNodeDefinition)
      */
-    public NodeState addNewNodeEntry(QName nodeName, String uniqueID, QName primaryNodeType, QNodeDefinition definition) throws ItemExistsException {
+    public NodeState addNewNodeEntry(QName nodeName, String uniqueID,
+                                     QName primaryNodeType, QNodeDefinition definition) throws ItemExistsException {
         NodeEntryImpl entry = internalAddNodeEntry(nodeName, uniqueID, Path.INDEX_UNDEFINED, childNodeEntries());
         NodeState state = factory.getItemStateFactory().createNewNodeState(entry, primaryNodeType, definition);
         entry.internalSetItemState(state);
@@ -540,29 +617,11 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @param childEntries
      * @return
      */
-    private NodeEntryImpl internalAddNodeEntry(QName nodeName, String uniqueID, int index, ChildNodeEntries childEntries) {
+    private NodeEntryImpl internalAddNodeEntry(QName nodeName, String uniqueID,
+                                               int index, ChildNodeEntries childEntries) {
         NodeEntryImpl entry = new NodeEntryImpl(this, nodeName, uniqueID, factory);
         childEntries.add(entry, index);
         return entry;
-    }
-
-    /**
-     * @see NodeEntry#moveNodeEntry(NodeState, QName, NodeEntry)
-     */
-    public NodeEntry moveNodeEntry(NodeState childState, QName newName, NodeEntry newParent) throws RepositoryException {
-        NodeEntry oldEntry = childNodeEntries().remove(childState.getNodeEntry());
-        if (oldEntry != null) {
-            NodeEntryImpl movedEntry = (NodeEntryImpl) newParent.addNodeEntry(newName, oldEntry.getUniqueID(), Path.INDEX_UNDEFINED);
-            movedEntry.internalSetItemState(childState);
-
-            factory.notifyEntryMoved(oldEntry, movedEntry);
-            return movedEntry;
-        } else {
-            // should never occur
-            String msg = "Internal error. Attempt to move NodeEntry (" + childState + ") which is not connected to its parent.";
-            log.error(msg);
-            throw new RepositoryException(msg);
-        }
     }
 
     /**
@@ -717,8 +776,56 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @inheritDoc
      * @see NodeEntry#orderBefore(NodeEntry)
      */
-    public boolean orderBefore(NodeEntry beforeEntry) {
-        return parent.childNodeEntries().reorder(this, beforeEntry);
+    public void orderBefore(NodeEntry beforeEntry) {
+        if (Status.NEW == getStatus()) {
+            // new states get remove upon revert
+            parent.childNodeEntries().reorder(this, beforeEntry);
+        } else {
+            createSiblingRevertInfos();
+            parent.createRevertInfo();
+            // now reorder child entries on parent
+            NodeEntry previousBefore = parent.childNodeEntries().reorder(this, beforeEntry);
+            parent.revertInfo.reordered(this, previousBefore);
+        }
+    }
+
+   /**
+    * @see NodeEntry#move(QName, NodeEntry, boolean)
+    */
+   public NodeEntry move(QName newName, NodeEntry newParent, boolean transientMove) throws RepositoryException {
+       if (parent == null) {
+           // the root may never be moved
+           throw new RepositoryException("Root cannot be moved.");
+       }
+
+       // for existing nodeEntry that are 'moved' for the first time, the
+       // original data must be stored and this entry is moved to the attic.
+       if (transientMove && !isTransientlyMoved() && Status.NEW != getStatus()) {
+           createSiblingRevertInfos();
+           createRevertInfo();
+           parent.childNodeAttic.add(this);
+       }
+
+       NodeEntryImpl entry = (NodeEntryImpl) parent.childNodeEntries().remove(this);
+       if (entry != this) {
+           // should never occur
+           String msg = "Internal error. Attempt to move NodeEntry (" + getQName() + ") which is not connected to its parent.";
+           log.error(msg);
+           throw new RepositoryException(msg);
+       }
+       // set name and parent to new values
+       parent = (NodeEntryImpl) newParent;
+       name = newName;
+       // register entry with its new parent
+       parent.childNodeEntries().add(this);
+       return this;
+   }
+
+    /**
+     * @see NodeEntry#isTransientlyMoved()
+     */
+    public boolean isTransientlyMoved() {
+        return revertInfo != null && revertInfo.isMoved();
     }
 
     /**
@@ -731,10 +838,18 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         switch (childEvent.getType()) {
             case Event.NODE_ADDED:
                 int index = childEvent.getQPath().getNameElement().getNormalizedIndex();
-                String uniqueChildID = (childEvent.getItemId().getPath() == null) ? childEvent.getItemId().getUniqueID() : null;
+                String uniqueChildID = null;
+                if (childEvent.getItemId().getPath() == null) {
+                    uniqueChildID = childEvent.getItemId().getUniqueID();
+                }
                 // first check if no matching child entry exists.
                 // TODO: TOBEFIXED for SNSs
-                NodeEntry cne = (uniqueChildID != null) ? childNodeEntries().get(eventName, uniqueChildID) : childNodeEntries().get(eventName, index);
+                NodeEntry cne;
+                if (uniqueChildID != null) {
+                    cne = childNodeEntries().get(eventName, uniqueChildID);
+                } else {
+                    cne = childNodeEntries().get(eventName, index);
+                }
                 if (cne == null) {
                     cne = internalAddNodeEntry(eventName, uniqueChildID, index, childNodeEntries());
                     modified = true;
@@ -764,7 +879,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
             case Event.NODE_REMOVED:
             case Event.PROPERTY_REMOVED:
-                HierarchyEntry child = getEntryForExternalEvent(childEvent.getItemId(), childEvent.getQPath());
+                HierarchyEntry child = lookupEntry(childEvent.getItemId(), childEvent.getQPath());
                 if (child != null) {
                     child.remove();
                     modified = true;
@@ -772,7 +887,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 break;
 
             case Event.PROPERTY_CHANGED:
-                child = getEntryForExternalEvent(childEvent.getItemId(), childEvent.getQPath());
+                child = lookupEntry(childEvent.getItemId(), childEvent.getQPath());
                 if (child != null) {
                     // Reload data from server and try to merge them with the
                     // current session-state. if the latter is transiently
@@ -802,8 +917,8 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
         // TODO: check if status of THIS_state must be marked modified...
     }
-
-    //------------------------------------------------------< HierarchyEntryImpl >---
+    
+    //-------------------------------------------------< HierarchyEntryImpl >---
     /**
      * @inheritDoc
      * @see HierarchyEntryImpl#doResolve()
@@ -812,7 +927,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      */
     ItemState doResolve()
         throws NoSuchItemStateException, ItemStateException {
-        return factory.getItemStateFactory().createNodeState(getId(), this);
+        return factory.getItemStateFactory().createNodeState((NodeId) getWorkspaceId(), this);
     }
 
     //-----------------------------------------------< private || protected >---
@@ -831,6 +946,33 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     }
 
     /**
+     *
+     * @param oldName
+     * @param oldIndex
+     * @return
+     */
+    boolean matches(QName oldName, int oldIndex) {
+        if (revertInfo != null) {
+            return revertInfo.oldName.equals(oldName) && revertInfo.oldIndex == oldIndex;
+        } else {
+            return getQName().equals(oldName) && getIndex() == oldIndex;
+        }
+    }
+
+    /**
+     *
+     * @param oldName
+     * @return
+     */
+    boolean matches(QName oldName) {
+        if (revertInfo != null) {
+            return revertInfo.oldName.equals(oldName);
+        } else {
+            return getQName().equals(oldName);
+        }
+    }
+
+    /**
      * Searches the child-entries of this NodeEntry for a matching child.
      * Since {@link #refresh(Event)} must always be called on the parent
      * NodeEntry, there is no need to check if a given event id would point
@@ -840,25 +982,25 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @param eventPath
      * @return
      */
-    private HierarchyEntry getEntryForExternalEvent(ItemId eventId, Path eventPath) {
+    private HierarchyEntry lookupEntry(ItemId eventId, Path eventPath) {
         QName childName = eventPath.getNameElement().getName();
         HierarchyEntry child = null;
         if (eventId.denotesNode()) {
             String uniqueChildID = (eventId.getPath() == null) ? eventId.getUniqueID() : null;
+            // for external node-removal the attic must be consulted first
+            // in order to be able to apply the changes to the proper node-entry.
             if (uniqueChildID != null) {
-                child = childNodeEntries().get(childName, uniqueID);
+                child = childNodeAttic.get(uniqueChildID);
+                if (child == null && childNodeEntries != null) {
+                    child = childNodeEntries.get(childName, uniqueChildID);
+                }
             }
             if (child == null) {
-                child = childNodeEntries().get(childName, eventPath.getNameElement().getNormalizedIndex());
+                int index = eventPath.getNameElement().getNormalizedIndex();
+                child = lookupNodeEntry(childName, index);
             }
         } else {
-            // for external prop-removal the attic must be consulted first
-            // in order not access a NEW prop shadowing a transiently removed
-            // property with the same name.
-            child = (HierarchyEntry) propertiesInAttic.get(childName);
-            if (child == null) {
-                child = (HierarchyEntry) properties.get(childName);
-            }
+            child = lookupPropertyEntry(childName);
         }
         if (child != null) {
             // a NEW hierarchyEntry may never be affected by an external
@@ -867,6 +1009,32 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             if (state != null && state.getStatus() == Status.NEW) {
                 return null;
             }
+        }
+        return child;
+    }
+
+    private NodeEntryImpl lookupNodeEntry(QName childName, int index) {
+        NodeEntryImpl child = (NodeEntryImpl) childNodeAttic.get(childName, index);
+        if (child == null && childNodeEntries != null) {
+            List namedChildren = childNodeEntries.get(childName);
+            for (Iterator it = namedChildren.iterator(); it.hasNext(); ) {
+                NodeEntryImpl c = (NodeEntryImpl) it.next();
+                if (c.matches(childName, index)) {
+                    child = c;
+                    break;
+                }
+            }
+        }
+        return child;
+    }
+
+    private PropertyEntry lookupPropertyEntry(QName childName) {
+        // for external prop-removal the attic must be consulted first
+        // in order not access a NEW prop shadowing a transiently removed
+        // property with the same name.
+        PropertyEntry child = (PropertyEntry) propertiesInAttic.get(childName);
+        if (child == null) {
+            child = (PropertyEntry) properties.get(childName);
         }
         return child;
     }
@@ -919,41 +1087,26 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      */
     private ChildNodeEntries childNodeEntries() {
         if (childNodeEntries == null) {
+            childNodeEntries = new ChildNodeEntries(this);
             ItemState state = internalGetItemState();
-            if (state != null) {
-                if (state.getStatus() == Status.NEW) {
-                    childNodeEntries = new ChildNodeEntries(this);
-                } else if (StateUtility.isMovedState((NodeState) state)) {
-                    // TODO: TOBEFIXED need to retrieve the original id. currently this will fail in case of SNS
-                    // since, the index cannot be determined from the original parent any more
-                    NodeId originalID = ((NodeState) state.getWorkspaceState()).getNodeId();
-                    childNodeEntries = loadChildNodeEntries(originalID);
-                } else {
-                    childNodeEntries = loadChildNodeEntries(getId());
+            if (state == null || state.getStatus() != Status.NEW) {
+                try {
+                    NodeId id = (NodeId) getWorkspaceId();
+                    Iterator it = factory.getItemStateFactory().getChildNodeInfos(id);
+                    while (it.hasNext()) {
+                        ChildInfo ci = (ChildInfo) it.next();
+                        internalAddNodeEntry(ci.getName(), ci.getUniqueID(), ci.getIndex(), childNodeEntries);
+                    }
+                } catch (NoSuchItemStateException e) {
+                    log.error("Cannot retrieve child node entries.", e);
+                    // ignore (TODO correct?)
+                } catch (ItemStateException e) {
+                    log.error("Cannot retrieve child node entries.", e);
+                    // ignore (TODO correct?)
                 }
-            } else {
-                childNodeEntries = loadChildNodeEntries(getId());
             }
         }
         return childNodeEntries;
-    }
-
-    private ChildNodeEntries loadChildNodeEntries(NodeId id) {
-        ChildNodeEntries cnes = new ChildNodeEntries(this);
-        try {
-            Iterator it = factory.getItemStateFactory().getChildNodeInfos(id);
-            while (it.hasNext()) {
-                ChildInfo ci = (ChildInfo) it.next();
-                internalAddNodeEntry(ci.getName(), ci.getUniqueID(), ci.getIndex(), cnes);
-            }
-        } catch (NoSuchItemStateException e) {
-            log.error("Cannot retrieve child node entries.", e);
-            // ignore (TODO correct?)
-        } catch (ItemStateException e) {
-            log.error("Cannot retrieve child node entries.", e);
-            // ignore (TODO correct?)
-        }
-        return cnes;
     }
 
     /**
@@ -986,8 +1139,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 its = new Iterator[] {properties.values().iterator(), children};
             }
         }
-        IteratorChain chain = new IteratorChain(its);
-        return chain;
+        return new IteratorChain(its);
     }
 
     /**
@@ -1014,5 +1166,197 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         }
         // not found (should not occur)
         return Path.INDEX_UNDEFINED;
+    }
+
+    /**
+     * If 'revertInfo' is null it gets created from the current information
+     * present on this entry.
+     */
+    private void createRevertInfo() {
+        if (revertInfo == null) {
+            revertInfo = new RevertInfo(parent, name, getIndex());
+        }
+    }
+
+    /**
+     * Special handling for MOVE and REORDER with same-name-siblings
+     */
+    private void createSiblingRevertInfos() {
+        if (revertInfo != null) {
+            return; // nothing to do
+        }
+        // for SNSs without UniqueID remember original index in order to
+        // be able to build the workspaceID TODO: improve
+        List sns = parent.childNodeEntries().get(name);
+        if (sns.size() > 1) {
+            for (Iterator it = sns.iterator(); it.hasNext();) {
+                NodeEntryImpl sibling = (NodeEntryImpl) it.next();
+                if (sibling.getUniqueID() == null && Status.NEW != sibling.getStatus()) {
+                    sibling.createRevertInfo();
+                }
+            }
+        }
+    }
+
+    /**
+     * Revert a transient move and reordering of child entries
+     */
+    private void revertTransientChanges() {
+        if (revertInfo == null) {
+            return; // nothing to do
+        }
+
+        if (isTransientlyMoved())  {
+            // move NodeEntry back to its original parent
+            // TODO improve for simple renaming
+            parent.childNodeEntries().remove(this);
+            revertInfo.oldParent.childNodeAttic.remove(this);
+
+            // now restore moved entry with the old name and index and re-add
+            // it to its original parent (unless it got destroyed)
+            parent = revertInfo.oldParent;
+            name = revertInfo.oldName;
+            ItemState state = internalGetItemState();
+            if (state != null && !Status.isTerminal(state.getStatus())) {
+                parent.childNodeEntries().add(this, revertInfo.oldIndex);
+            }
+        }
+        // revert reordering of child-node-entries
+        revertInfo.revertReordering();
+
+        revertInfo.dispose();
+        revertInfo = null;
+    }
+
+    /**
+     * This entry has be set to 'EXISTING' again -> move and/or reordering of
+     * child entries has been completed and the 'revertInfo' needs to be
+     * reset/removed.
+     */
+    private void completeTransientChanges() {
+        // old parent can forget this one
+        revertInfo.oldParent.childNodeAttic.remove(this);
+        revertInfo.dispose();
+        revertInfo = null;
+    }
+
+    //--------------------------------------------------------< inner class >---
+    /**
+     * Upon move of this entry or upon reorder of its child-entries store
+     * original hierarchy information for later revert and in order to be able
+     * to build the workspace id(s).
+     */
+    private class RevertInfo implements ItemStateLifeCycleListener {
+
+        private NodeEntryImpl oldParent;
+        private QName oldName;
+        private int oldIndex;
+
+        private Map reorderedChildren;
+
+        private RevertInfo(NodeEntryImpl oldParent, QName oldName, int oldIndex) {
+            this.oldParent = oldParent;
+            this.oldName = oldName;
+            this.oldIndex = oldIndex;
+
+            ItemState state = internalGetItemState();
+            if (state != null) {
+                state.addListener(this);
+            } // else: should never be null.
+        }
+
+        private void dispose() {
+            ItemState state = internalGetItemState();
+            if (state != null) {
+                state.removeListener(this);
+            }
+
+            if (reorderedChildren != null) {
+                // special handling of SNS-children  TODO: improve
+                // since reordered sns-children are not marked modified (unless they
+                // got modified by some other action, their revertInfo
+                // must be disposed manually
+                for (Iterator it = reorderedChildren.keySet().iterator(); it.hasNext();) {
+                    NodeEntry ne = (NodeEntry) it.next();
+                    List sns = childNodeEntries.get(ne.getQName());
+                    if (sns.size() > 1) {
+                        for (Iterator snsIt = sns.iterator(); snsIt.hasNext();) {
+                            NodeEntryImpl sibling = (NodeEntryImpl) snsIt.next();
+                            if (sibling.revertInfo != null && Status.EXISTING == sibling.getStatus()) {
+                                sibling.revertInfo.dispose();
+                                sibling.revertInfo = null;
+                            }
+                        }
+                    }
+                }
+                reorderedChildren.clear();
+            }
+        }
+
+        private boolean isMoved() {
+            return oldParent != getParent() || !getQName().equals(oldName);
+        }
+
+        private void reordered(NodeEntry insertEntry, NodeEntry previousBefore) {
+            if (reorderedChildren == null) {
+                reorderedChildren = new LinkedHashMap();
+            }
+            reorderedChildren.put(insertEntry, previousBefore);
+        }
+
+        private void revertReordering() {
+            if (reorderedChildren == null) {
+                return; // nothing to do
+            }
+            // revert all 'reorder' calls in in reverse other they were performed
+            NodeEntry[] reordered = (NodeEntry[]) reorderedChildren.keySet().toArray(new NodeEntry[reorderedChildren.size()]);
+            for (int i = reordered.length-1; i >= 0; i--) {
+                NodeEntry ordered = reordered[i];
+                if (isValidReorderedChild(ordered)) {
+                    NodeEntry previousBefore = (NodeEntry) reorderedChildren.get(ordered);
+                    if (previousBefore == null || isValidReorderedChild(previousBefore)) {
+                        childNodeEntries.reorder(ordered, previousBefore);
+                    }
+                }
+            }
+        }
+
+        private boolean isValidReorderedChild(NodeEntry child) {
+            if (Status.isTerminal(child.getStatus())) {
+                log.warn("Cannot revert reordering. 'previousBefore' does not exist any more.");
+                return false;
+            }
+            if (child.isTransientlyMoved()) {
+                // child has been moved away -> move back
+                try {
+                    child.revert();
+                } catch (ItemStateException e) {
+                    log.error("Internal error", e);
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /**
+         * @see ItemStateLifeCycleListener#statusChanged(ItemState, int)
+         */
+        public void statusChanged(ItemState state, int previousStatus) {
+            switch (state.getStatus()) {
+                case Status.EXISTING:
+                    // stop listening
+                    state.removeListener(this);
+                    completeTransientChanges();
+                    break;
+
+                case Status.REMOVED:
+                case Status.STALE_DESTROYED:
+                    // stop listening
+                    state.removeListener(this);
+                    // remove from the attic
+                    revertTransientChanges();
+                    break;
+            }
+        }
     }
 }
