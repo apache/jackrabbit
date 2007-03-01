@@ -33,7 +33,7 @@ public class DeepLockTest extends AbstractJCRTest {
 
     private static Logger log = LoggerFactory.getLogger(DeepLockTest.class);
 
-    private boolean isSessionScoped = true;
+    private boolean isSessionScoped = false;
     private boolean isDeep = true;
 
     private Node lockedNode;
@@ -51,6 +51,15 @@ public class DeepLockTest extends AbstractJCRTest {
         lock = lockedNode.lock(isDeep, isSessionScoped);
     }
 
+    protected void tearDown() throws Exception {
+        try {
+            lockedNode.unlock();
+        } catch (RepositoryException e) {
+            log.warn(e.getMessage());
+        }
+        super.tearDown();
+    }
+
     public void testLockHoldingNode() throws RepositoryException {
         assertTrue("Lock.getNode() must be lockholding node.", lock.getNode().isSame(lockedNode));
     }
@@ -59,8 +68,18 @@ public class DeepLockTest extends AbstractJCRTest {
         assertTrue("Lock.isDeep() if lock has been created deeply.", lock.isDeep());
     }
 
+    public void testNodeIsLocked() throws RepositoryException {
+        assertTrue("Creating a deep lock must create a lock on the lock-holding node", lockedNode.isLocked());
+        assertTrue("Creating a deep lock must create a lock on the lock-holding node", lockedNode.holdsLock());
+    }
+
     public void testIsLockedChild() throws RepositoryException {
         assertTrue("Child node below deep lock must be locked", childNode.isLocked());
+    }
+
+    public void testIsLockedNewChild() throws RepositoryException {
+        Node newChild = lockedNode.addNode(nodeName3, testNodeType);
+        assertTrue("Child node below deep lock must be locked even if its is NEW", newChild.isLocked());
     }
 
     public void testNotHoldsLockChild() throws RepositoryException {
@@ -69,11 +88,23 @@ public class DeepLockTest extends AbstractJCRTest {
 
     public void testGetLockOnChild() throws RepositoryException {
         // get lock must succeed even if child is not lockable.
-        Lock lock = childNode.getLock();
+        childNode.getLock();
+    }
+
+    public void testGetLockOnNewChild() throws RepositoryException {
+        // get lock must succeed even if child is not lockable.
+        Node newChild = lockedNode.addNode(nodeName3, testNodeType);
+        newChild.getLock();
     }
 
     public void testGetNodeOnLockObtainedFromChild() throws RepositoryException {
         Lock lock = childNode.getLock();
+        assertTrue("Lock.getNode() must return the lock holding node even if lock is obtained from child node.", lock.getNode().isSame(lockedNode));
+    }
+
+    public void testGetNodeOnLockObtainedFromNewChild() throws RepositoryException {
+        Node newChild = lockedNode.addNode(nodeName3, testNodeType);
+        Lock lock = newChild.getLock();
         assertTrue("Lock.getNode() must return the lock holding node even if lock is obtained from child node.", lock.getNode().isSame(lockedNode));
     }
 

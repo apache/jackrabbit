@@ -41,13 +41,6 @@ public class TestPropertyRead extends TestCase {
 
     private static Logger log = LoggerFactory.getLogger(TestPropertyRead.class);
 
-    /**
-     * Returns a <code>Test</code> suite that executes all tests inside this
-     * package.
-     *
-     * @return a <code>Test</code> suite that executes all tests inside this
-     *         package.
-     */
     public static Test suite() {
 
         TestSuite suite = new TestSuite("javax.jcr Property-Read");

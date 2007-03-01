@@ -49,19 +49,11 @@ public class TestGeneralWrite extends TestCase {
 
     private static Logger log = LoggerFactory.getLogger(TestGeneralWrite.class);
 
-    /**
-     * Returns a <code>Test</code> suite that executes all tests inside this
-     * package.
-     *
-     * @return a <code>Test</code> suite that executes all tests inside this
-     *         package.
-     */
     public static Test suite() {
 
         TestSuite suite = new TestSuite("javax.jcr General-Write");
 
         suite.addTestSuite(CheckPermissionTest.class);
-
         suite.addTestSuite(NamespaceRegistryTest.class);
 
         suite.addTestSuite(SessionTest.class);

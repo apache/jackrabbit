@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
@@ -32,35 +31,18 @@ import javax.jcr.ItemExistsException;
 /**
  * <code>MoveTest</code>...
  */
-public class MoveTest extends AbstractJCRTest {
+public class MoveTest extends AbstractMoveTest {
 
     private static Logger log = LoggerFactory.getLogger(MoveTest.class);
 
-    protected Node srcParentNode;
-    protected Node destParentNode;
-    protected Node moveNode;
-
-    protected String destinationPath;
-
-    protected void setUp() throws Exception {
-        super.setUp();
-
-        // create parent node
-        srcParentNode = testRootNode.addNode(nodeName1, testNodeType);
-        // create node to be moved
-        moveNode = srcParentNode.addNode(nodeName2, testNodeType);
-        // create a node that will serve as new parent
-        destParentNode = testRootNode.addNode(nodeName3, testNodeType);
-        // save the new nodes
-        testRootNode.save();
-
-        destinationPath = destParentNode.getPath() + "/" + nodeName2;
+    protected boolean isSessionMove() {
+        return true;
     }
 
     public void testMoveRoot() throws RepositoryException {
         Node root = superuser.getRootNode();
         try {
-            superuser.move(root.getPath(), destinationPath);
+            doMove(root.getPath(), destinationPath);
             fail("Moving the root node must fail with RepositoryException.");
         } catch (RepositoryException e) {
             // OK
@@ -69,7 +51,7 @@ public class MoveTest extends AbstractJCRTest {
 
     public void testMoveBelowDescendant() throws RepositoryException {
         try {
-            superuser.move(srcParentNode.getPath(), moveNode.getPath() + "/" + nodeName2);
+            doMove(srcParentNode.getPath(), moveNode.getPath() + "/" + nodeName2);
             fail("Moving the ancestor node below descendant must fail with RepositoryException.");
         } catch (RepositoryException e) {
             // OK
@@ -78,7 +60,7 @@ public class MoveTest extends AbstractJCRTest {
 
     public void testMoveDestinationWithIndex() throws RepositoryException {
         try {
-            superuser.move(moveNode.getPath(), destinationPath + "[1]");
+            doMove(moveNode.getPath(), destinationPath + "[1]");
             fail("Moving to destination with index must fail with RepositoryException.");
         } catch (RepositoryException e) {
             // OK
@@ -96,7 +78,7 @@ public class MoveTest extends AbstractJCRTest {
             throw new NotExecutableException("Move destination already contains a child node with name " + nodeName2);
         }
         //move the node
-        superuser.move(oldPath,destinationPath);
+        doMove(oldPath, destinationPath);
         assertEquals("After successful move the moved node must return the destination path.", destinationPath, moveNode.getPath());
     }
 
@@ -111,7 +93,7 @@ public class MoveTest extends AbstractJCRTest {
             throw new NotExecutableException("Move destination already contains a child node with name " + nodeName2);
         }
         //move the node
-        superuser.move(oldPath, destParentNode.getPath() + "/" + nodeName2);
+        doMove(oldPath, destParentNode.getPath() + "/" + nodeName2);
         superuser.save();
         assertEquals("After successful move the moved node must return the destination path.", destinationPath, moveNode.getPath());
     }
@@ -133,7 +115,7 @@ public class MoveTest extends AbstractJCRTest {
         String oldPath = moveNode.getPath();
 
         //move the node
-        superuser.move(oldPath, destinationPath);
+        doMove(oldPath, destinationPath);
         try {
             superuser.getItem(oldPath);
             fail("A moved node must not be accessible by its old path any more.");
@@ -160,7 +142,7 @@ public class MoveTest extends AbstractJCRTest {
         String oldPath = moveNode.getPath();
 
         //move the node
-        superuser.move(oldPath, destinationPath);
+        doMove(oldPath, destinationPath);
         superuser.save();
         try {
             superuser.getItem(oldPath);
@@ -186,7 +168,7 @@ public class MoveTest extends AbstractJCRTest {
         String newPath = destParentNode.getPath() + "/" + nodeName2;
 
         //move the node
-        superuser.move(oldPath, destinationPath);
+        doMove(oldPath, destinationPath);
         Item movedItem = superuser.getItem(newPath);
         assertTrue("Moved Node must be the same after the move.", movedItem.isSame(moveNode));
         // NOTE: implementation specific test
@@ -208,7 +190,7 @@ public class MoveTest extends AbstractJCRTest {
         String oldPath = moveNode.getPath();
 
         //move the node
-        superuser.move(oldPath, destinationPath);
+        doMove(oldPath, destinationPath);
         superuser.save();
 
         Item movedItem = superuser.getItem(destinationPath);
@@ -225,7 +207,7 @@ public class MoveTest extends AbstractJCRTest {
      */
     public void testMovedNodeParent() throws RepositoryException {
         //move the node
-        superuser.move(moveNode.getPath(), destinationPath);
+        doMove(moveNode.getPath(), destinationPath);
         assertTrue("Parent of moved node must be the destination parent node.", moveNode.getParent().isSame(destParentNode));
         // NOTE: implementation specific test
         assertTrue("After successful moving a referenceable node node, accessing the node by uuid be the identical node.", moveNode.getParent() == destParentNode);
@@ -239,7 +221,7 @@ public class MoveTest extends AbstractJCRTest {
      */
     public void testMovedNodeParent2() throws RepositoryException {
         //move the node
-        superuser.move(moveNode.getPath(), destinationPath);
+        doMove(moveNode.getPath(), destinationPath);
         superuser.save();
 
         assertTrue("Parent of moved node must be the destination parent node.", moveNode.getParent().isSame(destParentNode));
@@ -265,8 +247,8 @@ public class MoveTest extends AbstractJCRTest {
 
         try {
             // move the node
-            superuser.move(moveNode.getPath(), destProperty.getPath());
-            fail("Moving a node using Session.move() to a location where a property already exists must throw ItemExistsException");
+            doMove(moveNode.getPath(), destProperty.getPath());
+            fail("Moving a node to a location where a property exists must throw ItemExistsException");
         } catch (ItemExistsException e) {
             // ok, works as expected
         }

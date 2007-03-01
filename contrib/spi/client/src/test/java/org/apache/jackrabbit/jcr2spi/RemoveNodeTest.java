@@ -25,6 +25,7 @@ import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.Item;
+import javax.jcr.Session;
 
 /**
  * <code>RemoveNodeTest</code>...
@@ -53,7 +54,8 @@ public class RemoveNodeTest extends RemoveItemTest {
 
         // check if the node has been properly removed
         try {
-            testRootNode.getNode(nodeName1);
+            String relPath = removePath.substring(removePath.lastIndexOf('/') + 1);
+            testRootNode.getNode(relPath);
             fail("Transiently removed node should no longer be accessible from parent node.");
         } catch (PathNotFoundException e) {
             // ok , works as expected
@@ -68,7 +70,8 @@ public class RemoveNodeTest extends RemoveItemTest {
         removeItem.remove();
         testRootNode.save();
         try {
-            testRootNode.getNode(nodeName1);
+            String relPath = removePath.substring(removePath.lastIndexOf('/') + 1);
+            testRootNode.getNode(relPath);
             fail("Persistently removed node should no longer be accessible from parent node.");
         } catch (PathNotFoundException e) {
             // ok , works as expected
@@ -116,6 +119,32 @@ public class RemoveNodeTest extends RemoveItemTest {
             fail("Calling getProperty(String) on a removed node must throw InvalidItemStateException.");
         } catch (InvalidItemStateException e) {
             //ok
+        }
+    }
+
+    public void testInvalidStateRemovedNode3() throws RepositoryException {
+        Node childNode = testRootNode.addNode(nodeName1, testNodeType);
+        superuser.save();
+
+        // get the node with session 2
+        Session otherSession = helper.getReadWriteSession();
+        try {
+            Node childNode2 = (Node) otherSession.getItem(childNode.getPath());
+
+            childNode.remove();
+            superuser.save();
+
+            // try to remove already deleted node with session 2
+            try {
+                childNode2.refresh(false);
+                childNode2.remove();
+                otherSession.save();
+                fail("Removing a node already deleted by other session should throw an InvalidItemStateException!");
+            } catch (InvalidItemStateException e) {
+                //ok, works as expected
+            }
+        } finally {
+            otherSession.logout();
         }
     }
 }
