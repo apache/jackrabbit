@@ -21,11 +21,8 @@ import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.sql.PreparedStatement;
@@ -282,24 +279,22 @@ public class DatabaseJournal extends AbstractJournal {
     /**
      * {@inheritDoc}
      */
-    protected long append(String producerId, File file) throws JournalException {
-        try {
-            InputStream in = new BufferedInputStream(new FileInputStream(file));
+    protected long append(String producerId, InputStream in, int length)
+            throws JournalException {
 
+        try {
             try {
                 insertRevisionStmt.clearParameters();
                 insertRevisionStmt.clearWarnings();
                 insertRevisionStmt.setLong(1, lockedRevision);
                 insertRevisionStmt.setString(2, getId());
                 insertRevisionStmt.setString(3, producerId);
-                insertRevisionStmt.setBinaryStream(4, in, (int) file.length());
+                insertRevisionStmt.setBinaryStream(4, in, length);
                 insertRevisionStmt.execute();
 
                 con.commit();
                 return lockedRevision;
             } finally {
-                close(in);
-
                 try {
                     con.setAutoCommit(true);
                 } catch (SQLException e) {
@@ -307,9 +302,6 @@ public class DatabaseJournal extends AbstractJournal {
                     log.warn(msg, e);
                 }
             }
-        } catch (IOException e) {
-            String msg = "Unable to open journal log '" + file + "'.";
-            throw new JournalException(msg, e);
         } catch (SQLException e) {
             String msg = "Unable to append revision " + lockedRevision + ".";
             throw new JournalException(msg, e);

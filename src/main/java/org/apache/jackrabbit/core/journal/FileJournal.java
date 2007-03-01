@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.InputStream;
 import java.io.IOException;
 
 /**
@@ -158,7 +159,9 @@ public class FileJournal extends AbstractJournal {
     /**
      * {@inheritDoc}
      */
-    protected long append(String producerId, File file) throws JournalException {
+    protected long append(String producerId, InputStream in, int length)
+            throws JournalException {
+
         try {
             FileRecordLog recordLog = new FileRecordLog(journalFile);
             if (recordLog.exceeds(maximumSize)) {
@@ -168,7 +171,7 @@ public class FileJournal extends AbstractJournal {
             if (recordLog.isNew()) {
                 recordLog.init(globalRevision.get());
             }
-            long revision = recordLog.append(getId(), producerId, file);
+            long revision = recordLog.append(getId(), producerId, in, length);
             globalRevision.set(revision);
             return revision;
 
