@@ -63,24 +63,12 @@ NOTE: This list only contains major open issues.
    call may not identify the new Node in case of same-name-siblings.
 
 
-7) Merge >> done
-
-
 8) Transactions (work in progress)
 
    Definition of XASessionInfo must be reviewed.
 
 
-9) Extract interface for ItemState and derived classes
-
-
 10) AccessManager.canRead() seems useless, since the jcr2spi client is only
-    able to access Items it can read anyway. Remove method and calls to it?
-
-
-11) Nodetypes, Namespaces (improve)
-    
-    Should the SPI define means for observation of nodetype/namespace
-    changes?
+    able to access Items it can read anyway. Remove method and calls to it
 
 

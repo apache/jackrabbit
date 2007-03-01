@@ -43,7 +43,7 @@ In a next step the JCR layer at the end of the chain will be replaced
 by another SPI implementation, avoiding the extra costs caused by 
 having JCR (including transient space and Session management) again:
 
-  JCR -> SPI -> WebDAV -> SPI    (WebDAV only being an example).
+  JCR -> SPI -> SPI-Implementation
   
  
 
@@ -85,13 +85,14 @@ Requirements
 
 This project assumes that you have already successfully compiled and 
 installed the Jackrabbit commons module as well as the Jackrabbit
-Jcr-Server into your maven repository. If this is not the case:
+Jcr-Server into your maven repository. If this is not the case, go back
+to your jackrabbit directory and build it.
+NOTE: Jackrabbit is built using Maven2.
 
-> cd ../../jackrabbit/modules/commons
-> maven jar:install
+> cd ../../
+> mvn install
 
-> cd ../../../jcr-server
-> maven
+-> installs all required jar files.
 
 > cd ../contrib/spi
 > maven

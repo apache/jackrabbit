@@ -44,6 +44,8 @@ A: The jackrabbit core project represents the reference implementation of
    JSR 170. Introducing an SPI is a recent approach that hopefully allows to
    provide a JCR client covering the transient layer only. See also the
    README.txt for some rationals regarding defining a SPI. 
+   For discussions regarding merging the SPI efforts and jackrabbit-core
+   see the devs@jackrabbit.apache.org mailing list.
 
 
 Q: why does the SPI subproject have a dependency to jackrabbit commons?
@@ -59,16 +61,9 @@ A: this has been matter of long discussions.
    and added the implementation to our own 'commons' project.
    While preparing the existing efforts for a checkin into jackrabbit, we 
    decided, that there should be only one commons project within Jackrabbit.
-   therefore we removed the interfaces again from the SPI project, since it would
+   therefore removed the interfaces again from the SPI project, since it would
    not be possible to have jackrabbit code depend on a contribution.
    -> we will probably address this issue again.
-
-
-Q: jcr2spi looks like jackrabbit/core code. why are all the classes copied?
-A: originally we planned to use jackrabbit/core for the jcr2spi implementation.
-   however, we realized that its not feasible to plug different implementations
-   of the crucial interfaces in the core. Therefore we decided to copy over
-   the code and modify it according to the needs of the SPI.
 
 
 Some questions arising from issues still being discussed:
@@ -77,12 +72,8 @@ Q: Why does the RepositoryService does not provide methods batch reads?
 Q: Is there need for special handling of very large values in SPI?
 Q: Should the SPI define a XASessionInfo or should the transaction handling
    be left out from the interfaces?
-Q: Should credentials, workspaceName and all kind of tokens be passed to every 
-   RepositoryService call instead of having a SessionInfo?
-   (currently we don't thinks so. we had that in the beginning).
 Q: RepositoryService.executeQuery(): should it take an offset?
-Q: QueryInfo: should it take a flag rating the results?
-Q: QueryInfo: should it rather return NodeInfos instead of Ids?   
+Q: QueryInfo: should it take a flag rating the results? 
 
 
 
