@@ -19,9 +19,14 @@ package org.apache.jackrabbit.core.journal;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
 
 /**
@@ -45,6 +50,16 @@ public class AppendRecord extends AbstractRecord {
     private static final String DEFAULT_EXT = ".tmp";
 
     /**
+     * Default size for in-memory records.
+     */
+    private static final int DEFAULT_IN_MEMORY_SIZE = 1024;
+
+    /**
+     * Maximum size for in-memory records.
+     */
+    private static final int MAXIMUM_IN_MEMORY_SIZE = 65536;
+
+    /**
      * Journal where record is being appended.
      */
     private final AbstractJournal journal;
@@ -60,14 +75,29 @@ public class AppendRecord extends AbstractRecord {
     private long revision;
 
     /**
+     * Underlying data output.
+     */
+    private DataOutputStream dataOut;
+
+    /**
+     * Underlying byte output.
+     */
+    private ByteArrayOutputStream byteOut;
+
+    /**
      * Underlying file.
      */
     private File file;
 
     /**
-     * Underlying data output.
+     * Underlying file output.
      */
-    private DataOutputStream dataOut;
+    private FileOutputStream fileOut;
+
+    /**
+     * Flag indicating whether the output is closed.
+     */
+    private boolean outputClosed;
 
     /**
      * Create a new instance of this class.
@@ -81,6 +111,9 @@ public class AppendRecord extends AbstractRecord {
         this.journal = journal;
         this.producerId = producerId;
         this.revision = 0L;
+
+        byteOut = new ByteArrayOutputStream(DEFAULT_IN_MEMORY_SIZE);
+        dataOut = new DataOutputStream(byteOut);
     }
 
     /**
@@ -108,7 +141,7 @@ public class AppendRecord extends AbstractRecord {
      * {@inheritDoc}
      */
     public void writeByte(int n) throws JournalException {
-        open();
+        checkOutput();
 
         try {
             dataOut.writeByte(n);
@@ -122,7 +155,7 @@ public class AppendRecord extends AbstractRecord {
      * {@inheritDoc}
      */
     public void writeChar(char c) throws JournalException {
-        open();
+        checkOutput();
 
         try {
             dataOut.writeChar(c);
@@ -136,7 +169,7 @@ public class AppendRecord extends AbstractRecord {
      * {@inheritDoc}
      */
     public void writeBoolean(boolean b) throws JournalException {
-        open();
+        checkOutput();
 
         try {
             dataOut.writeBoolean(b);
@@ -150,7 +183,7 @@ public class AppendRecord extends AbstractRecord {
      * {@inheritDoc}
      */
     public void writeInt(int n) throws JournalException {
-        open();
+        checkOutput();
 
         try {
             dataOut.writeInt(n);
@@ -164,7 +197,7 @@ public class AppendRecord extends AbstractRecord {
      * {@inheritDoc}
      */
     public void writeString(String s) throws JournalException {
-        open();
+        checkOutput();
 
         try {
             if (s == null) {
@@ -183,7 +216,7 @@ public class AppendRecord extends AbstractRecord {
      * {@inheritDoc}
      */
     public void write(byte[] b) throws JournalException {
-        open();
+        checkOutput();
 
         try {
             dataOut.write(b);
@@ -200,9 +233,22 @@ public class AppendRecord extends AbstractRecord {
         boolean succeeded = false;
 
         try {
-            close();
-            revision = journal.append(producerId, file);
-            succeeded = true;
+            int length = dataOut.size();
+            closeOutput();
+
+            InputStream in = openInput();
+
+            try {
+                revision = journal.append(producerId, in, length);
+                succeeded = true;
+            } finally {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    String msg = "I/O error while closing stream.";
+                    log.warn(msg, e);
+                }
+            }
         } finally {
             dispose();
 
@@ -214,44 +260,80 @@ public class AppendRecord extends AbstractRecord {
      * {@inheritDoc}
      */
     public void cancelUpdate() {
-        if (dataOut != null) {
+        if (!outputClosed) {
             dispose();
-            
+
             journal.unlock(false);
         }
     }
 
     /**
-     * Create temporary file and open data output on it.
+     * Open input on record written.
+     */
+    private InputStream openInput() throws JournalException {
+        if (file != null) {
+            try {
+                return new FileInputStream(file);
+            } catch (IOException e) {
+                String msg = "Unable to open file input on: " + file.getPath();
+                throw new JournalException(msg, e);
+            }
+        } else {
+            return new ByteArrayInputStream(byteOut.toByteArray());
+        }
+    }
+
+    /**
+     * Check output size and eventually switch to file output.
      *
      * @throws JournalException
      */
-    private void open() throws JournalException {
-        if (file == null) {
+    private void checkOutput() throws JournalException {
+        if (outputClosed) {
+            throw new IllegalStateException("Output closed.");
+        }
+        if (fileOut == null && byteOut.size() >= MAXIMUM_IN_MEMORY_SIZE) {
             try {
                 file = File.createTempFile(DEFAULT_PREFIX, DEFAULT_EXT);
-                dataOut = new DataOutputStream(new FileOutputStream(file));
             } catch (IOException e) {
                 String msg = "Unable to create temporary file.";
+                throw new JournalException(msg, e);
+            }
+            try {
+                fileOut = new FileOutputStream(file);
+            } catch (FileNotFoundException e) {
+                String msg = "Unable to open output stream on: " + file.getPath();
+                throw new JournalException(msg, e);
+            }
+            dataOut = new DataOutputStream(fileOut);
+
+            try {
+                dataOut.write(byteOut.toByteArray());
+            } catch (IOException e) {
+                String msg = "Unable to write in-memory record to file.";
                 throw new JournalException(msg, e);
             }
         }
     }
 
     /**
-     * Close this record, keeping the underlying file.
+     * Close output, keeping the underlying file.
      *
      * @throws JournalException if an error occurs
      */
-    private void close() throws JournalException {
-        if (dataOut != null) {
+    private void closeOutput() throws JournalException {
+        if (!outputClosed) {
             try {
-                dataOut.close();
+                if (fileOut != null) {
+                    dataOut.flush();
+                    fileOut.getFD().sync();
+                    dataOut.close();
+                }
             } catch (IOException e) {
                 String msg = "I/O error while closing stream.";
                 throw new JournalException(msg, e);
             } finally {
-                dataOut = null;
+                outputClosed = true;
             }
         }
     }
@@ -260,14 +342,14 @@ public class AppendRecord extends AbstractRecord {
      * Dispose this record, deleting the underlying file.
      */
     private void dispose() {
-        if (dataOut != null) {
+        if (!outputClosed) {
             try {
                 dataOut.close();
             } catch (IOException e) {
                 String msg = "I/O error while closing stream.";
                 log.warn(msg, e);
             } finally {
-                dataOut = null;
+                outputClosed = true;
             }
         }
         if (file != null) {

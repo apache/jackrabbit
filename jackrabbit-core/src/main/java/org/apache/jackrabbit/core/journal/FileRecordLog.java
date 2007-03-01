@@ -237,28 +237,35 @@ class FileRecordLog {
     }
 
     /**
-     * Append a record backed by a file to this log. Returns the revision
-     * following this record.
+     * Append a record to this log. Returns the revision following this record.
      *
      * @param journalId journal identifier
      * @param producerId producer identifier
-     * @param file record to add
+     * @param in record to add
+     * @param length record length
      * @throws java.io.IOException if an I/O error occurs
      */
-    public long append(String journalId, String producerId, File file)
+    public long append(String journalId, String producerId, InputStream in, int length)
             throws IOException {
 
         DataOutputStream out = new DataOutputStream(new FileOutputStream(logFile, true));
 
         try {
-            int recordLength = (int) file.length();
             out.writeUTF(journalId);
             out.writeUTF(producerId);
-            out.writeInt(recordLength);
-            append(file, out);
+            out.writeInt(length);
+
+            byte[] buffer = new byte[8192];
+            int len;
+
+            while ((len = in.read(buffer)) > 0) {
+                out.write(buffer, 0, len);
+            }
+            out.flush();
+
             lastRevision += 2 + utfLength(journalId) +
                 2 + utfLength(producerId) +
-                4 + file.length();
+                4 + length;
             return lastRevision;
         } finally {
             close(out);
@@ -340,27 +347,6 @@ class FileRecordLog {
         } catch (IOException e) {
             String msg = "I/O error while closing input stream.";
             log.warn(msg, e);
-        }
-    }
-
-    /**
-     * Append a file to this log's output stream.
-     *
-     * @param file file to append
-     * @param out where to append to
-     */
-    private static void append(File file, DataOutputStream out) throws IOException {
-        byte[] buffer = new byte[8192];
-        int len;
-
-        InputStream in = new BufferedInputStream(new FileInputStream(file));
-        try {
-            while ((len = in.read(buffer)) > 0) {
-                out.write(buffer, 0, len);
-            }
-            out.flush();
-        } finally {
-            close(in);
         }
     }
 
