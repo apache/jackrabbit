@@ -78,6 +78,7 @@ public class ExceptionConverter {
             case DavServletResponse.SC_LOCKED : return new LockException(msg);
             case DavServletResponse.SC_METHOD_NOT_ALLOWED : return new ConstraintViolationException(msg);
             case DavServletResponse.SC_CONFLICT : return new InvalidItemStateException(msg);
+            case DavServletResponse.SC_PRECONDITION_FAILED : return new LockException(msg);
             default: return new RepositoryException(msg);
         }
     }
