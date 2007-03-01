@@ -532,25 +532,23 @@ public class DefaultItemCollection extends AbstractItemResource
      */
     public ActiveLock getLock(Type type, Scope scope) {
         ActiveLock lock = null;
-        if (isLockable(type, scope)) {
-            if (Type.WRITE.equals(type)) {
-                try {
-                    if (!exists()) {
-                        log.warn("Unable to retrieve lock: no item found at '" + getResourcePath() + "'");
-                    } else if (((Node) item).isLocked()) {
-                        Lock jcrLock = ((Node) item).getLock();
-                        lock = new JcrActiveLock(jcrLock);
-                    }
-                } catch (AccessDeniedException e) {
-                    log.error("Error while accessing resource lock: "+e.getMessage());
-                } catch (UnsupportedRepositoryOperationException e) {
-                    log.error("Error while accessing resource lock: "+e.getMessage());
-                } catch (RepositoryException e) {
-                    log.error("Error while accessing resource lock: "+e.getMessage());
+        if (Type.WRITE.equals(type)) {
+            try {
+                if (!exists()) {
+                    log.warn("Unable to retrieve lock: no item found at '" + getResourcePath() + "'");
+                } else if (((Node) item).isLocked()) {
+                    Lock jcrLock = ((Node) item).getLock();
+                    lock = new JcrActiveLock(jcrLock);
                 }
-            } else {
-                lock = super.getLock(type, scope);
+            } catch (AccessDeniedException e) {
+                log.error("Error while accessing resource lock: "+e.getMessage());
+            } catch (UnsupportedRepositoryOperationException e) {
+                log.error("Error while accessing resource lock: "+e.getMessage());
+            } catch (RepositoryException e) {
+                log.error("Error while accessing resource lock: "+e.getMessage());
             }
+        } else {
+            lock = super.getLock(type, scope);
         }
         return lock;
     }
@@ -724,7 +722,7 @@ public class DefaultItemCollection extends AbstractItemResource
         Node n = (Node)item;
         try {
             for (int i = 0; i < instructions.length; i++) {
-                String srcRelPath = instructions[i].getMemberHandle();
+                String srcRelPath = Text.unescape(instructions[i].getMemberHandle());
                 Position pos = instructions[i].getPosition();
                 String destRelPath = getRelDestinationPath(pos, n.getNodes());
                 // preform the reordering
@@ -779,6 +777,9 @@ public class DefaultItemCollection extends AbstractItemResource
         } else {
             // before or last. in the latter case the segmet is 'null'
             destRelPath = position.getSegment();
+        }
+        if (destRelPath != null) {
+            destRelPath = Text.unescape(destRelPath);
         }
         return destRelPath;
     }
