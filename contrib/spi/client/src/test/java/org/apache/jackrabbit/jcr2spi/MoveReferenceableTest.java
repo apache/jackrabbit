@@ -26,7 +26,7 @@ import javax.jcr.Node;
 /**
  * <code>MoveReferenceableTest</code>...
  */
-public class MoveReferenceableTest extends MoveTest {
+public class MoveReferenceableTest extends AbstractMoveTest {
 
     private static Logger log = LoggerFactory.getLogger(MoveReferenceableTest.class);
 
@@ -41,6 +41,10 @@ public class MoveReferenceableTest extends MoveTest {
         moveNode.save();
     }
 
+    protected boolean isSessionMove() {
+        return true;
+    }
+
     /**
      * Test if a moved referenceable node still has the same uuid.
      */
@@ -48,7 +52,7 @@ public class MoveReferenceableTest extends MoveTest {
 
         String uuid = moveNode.getUUID();
         //move the node
-        superuser.move(moveNode.getPath(), destinationPath);
+        doMove(moveNode.getPath(), destinationPath);
         assertEquals("After successful moving a referenceable node node, the uuid must not have changed.", uuid, moveNode.getUUID());
     }
 
@@ -60,7 +64,7 @@ public class MoveReferenceableTest extends MoveTest {
 
         String uuid = moveNode.getUUID();
         //move the node
-        superuser.move(moveNode.getPath(), destinationPath);
+        doMove(moveNode.getPath(), destinationPath);
         superuser.save();
         assertEquals("After successful moving a referenceable node node, the uuid must not have changed.", uuid, moveNode.getUUID());
     }
@@ -73,7 +77,7 @@ public class MoveReferenceableTest extends MoveTest {
 
         String uuid = moveNode.getUUID();
         //move the node
-        superuser.move(moveNode.getPath(), destinationPath);
+        doMove(moveNode.getPath(), destinationPath);
 
         Node n = superuser.getNodeByUUID(uuid);
         assertTrue("After successful moving a referenceable node node, accessing the node by uuid must return the same node.", n.isSame(moveNode));
@@ -89,7 +93,7 @@ public class MoveReferenceableTest extends MoveTest {
 
         String uuid = moveNode.getUUID();
         //move the node
-        superuser.move(moveNode.getPath(), destinationPath);
+        doMove(moveNode.getPath(), destinationPath);
         superuser.save();
 
         Node n = superuser.getNodeByUUID(uuid);

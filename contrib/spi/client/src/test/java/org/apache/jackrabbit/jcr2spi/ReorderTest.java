@@ -1,0 +1,129 @@
+package org.apache.jackrabbit.jcr2spi;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Session;
+import javax.jcr.ItemExistsException;
+import javax.jcr.lock.LockException;
+import javax.jcr.version.VersionException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+
+/**
+ * <code>ReorderTest</code>...
+ */
+public class ReorderTest extends AbstractJCRTest {
+
+    private static Logger log = LoggerFactory.getLogger(ReorderTest.class);
+
+    protected Node child1;
+    protected Node child2;
+    protected Node child3;
+    protected Node child4;
+
+    protected void setUp() throws Exception {
+        super.setUp();
+        if (!testRootNode.getPrimaryNodeType().hasOrderableChildNodes()) {
+            throw new NotExecutableException("Test node does not have orderable children.");
+        }
+        createOrderableChildren();
+    }
+
+    protected void tearDown() throws Exception {
+        super.tearDown();
+    }
+
+    protected void createOrderableChildren() throws RepositoryException, LockException, ConstraintViolationException, NoSuchNodeTypeException, ItemExistsException, VersionException, NotExecutableException {
+        child1 = testRootNode.addNode(nodeName1, testNodeType);
+        child2 = testRootNode.addNode(nodeName2, testNodeType);
+        child3 = testRootNode.addNode(nodeName3, testNodeType);
+        child4 = testRootNode.addNode(nodeName4, testNodeType);
+
+        testRootNode.save();
+    }
+
+    protected static String getRelPath(Node child) throws RepositoryException {
+        if (child == null) {
+            return null;
+        }
+        String path = child.getPath();
+        return path.substring(path.lastIndexOf('/')+1);
+    }
+
+    private static void testOrder(Node parent, Node[] children) throws RepositoryException {
+        NodeIterator it = parent.getNodes();
+        int i = 0;
+        while (it.hasNext()) {
+            Node child = it.nextNode();
+            assertTrue(child.isSame(children[i]));
+            i++;
+        }
+    }
+
+    public void testReorder() throws RepositoryException {
+        testRootNode.orderBefore(getRelPath(child1), getRelPath(child3));
+        testOrder(testRootNode, new Node[] { child2, child1, child3, child4});
+
+        testRootNode.save();
+        testOrder(testRootNode, new Node[] { child2, child1, child3, child4});
+    }
+
+    public void testReorderToEnd() throws RepositoryException, ConstraintViolationException, UnsupportedRepositoryOperationException, VersionException {
+        testRootNode.orderBefore(getRelPath(child2), null);
+        testOrder(testRootNode, new Node[] { child1, child3, child4, child2});
+
+        testRootNode.save();
+        testOrder(testRootNode, new Node[] { child1, child3, child4, child2});
+    }
+
+    public void testRevertReorder() throws RepositoryException {
+        testRootNode.orderBefore(getRelPath(child4), getRelPath(child2));
+        testOrder(testRootNode, new Node[] { child1, child4, child2, child3});
+
+        testRootNode.refresh(false);
+        testOrder(testRootNode, new Node[] { child1, child2, child3, child4});
+    }
+
+    public void testRevertReorderToEnd() throws RepositoryException {
+        testRootNode.orderBefore(getRelPath(child1), null);
+        testOrder(testRootNode, new Node[] { child2, child3, child4, child1});
+
+        testRootNode.refresh(false);
+        testOrder(testRootNode, new Node[] { child1, child2, child3, child4});
+    }
+
+    public void testReorder2() throws RepositoryException {
+        testRootNode.orderBefore(getRelPath(child3), getRelPath(child1));
+        testRootNode.save();
+
+        Session otherSession = helper.getReadOnlySession();
+        testOrder((Node) otherSession.getItem(testRootNode.getPath()), new Node[] {child3, child1, child2, child4});
+    }
+
+    public void testReorderTwice() throws RepositoryException {
+        testRootNode.orderBefore(getRelPath(child2), null);
+        testRootNode.orderBefore(getRelPath(child4), getRelPath(child1));
+
+        testOrder(testRootNode, new Node[] { child4, child1, child3, child2});
+        testRootNode.save();
+        testOrder(testRootNode, new Node[] { child4, child1, child3, child2});
+    }
+
+    public void testReorderFinallyOriginalOrder() throws RepositoryException {
+        testRootNode.orderBefore(getRelPath(child4), getRelPath(child1));
+        testRootNode.orderBefore(getRelPath(child3), getRelPath(child4));
+        testRootNode.orderBefore(getRelPath(child2), getRelPath(child3));
+        testRootNode.orderBefore(getRelPath(child1), getRelPath(child2));
+
+        testOrder(testRootNode, new Node[] { child1, child2, child3, child4});
+        testRootNode.save();
+        testOrder(testRootNode, new Node[] { child1, child2, child3, child4});
+    }
+}

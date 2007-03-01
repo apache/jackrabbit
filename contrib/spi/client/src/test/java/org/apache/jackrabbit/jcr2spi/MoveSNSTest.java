@@ -31,7 +31,7 @@ import javax.jcr.Item;
  * expects orderable same-name-siblings to have a consistent and testable
  * order.)
  */
-public class MoveSNSTest extends MoveTest {
+public class MoveSNSTest extends AbstractMoveTest {
 
     private static Logger log = LoggerFactory.getLogger(MoveSNSTest.class);
 
@@ -56,6 +56,10 @@ public class MoveSNSTest extends MoveTest {
         testRootNode.save();
     }
 
+    protected boolean isSessionMove() {
+        return true;
+    }
+
     /**
      * Implementation specific:
      * Test if the path of a moved node, contains the index of the last sibling.
@@ -63,7 +67,7 @@ public class MoveSNSTest extends MoveTest {
     public void testMovedNodeGetPath() throws RepositoryException, NotExecutableException {
         int index = destSibling.getIndex() + 1;
         //move the node
-        superuser.move(moveNode.getPath(),destinationPath);
+        doMove(moveNode.getPath(),destinationPath);
         assertEquals("After successful move the moved node must return the destination path.", destinationPath + "["+ index +"]", moveNode.getPath());
     }
 
@@ -75,7 +79,7 @@ public class MoveSNSTest extends MoveTest {
     public void testMovedNodeGetPath2() throws RepositoryException, NotExecutableException {
         int index = destSibling.getIndex() + 1;
         //move the node
-        superuser.move(moveNode.getPath(), destParentNode.getPath() + "/" + nodeName2);
+        doMove(moveNode.getPath(), destParentNode.getPath() + "/" + nodeName2);
         superuser.save();
         assertEquals("After successful move the moved node must return the destination path.", destinationPath + "["+ index +"]", moveNode.getPath());
     }
@@ -87,7 +91,7 @@ public class MoveSNSTest extends MoveTest {
     public void testAccessMovedNodeByOldPath() throws RepositoryException, NotExecutableException {
         String oldPath = moveNode.getPath();
         //move the node
-        superuser.move(oldPath, destinationPath);
+        doMove(oldPath, destinationPath);
         try {
             Item item = superuser.getItem(oldPath);
             // Implementation specific:
@@ -104,7 +108,7 @@ public class MoveSNSTest extends MoveTest {
     public void testAccessMovedNodeByOldPath2() throws RepositoryException, NotExecutableException {
         String oldPath = moveNode.getPath();
         //move the node
-        superuser.move(oldPath, destinationPath);
+        doMove(oldPath, destinationPath);
         superuser.save();
         try {
             Item item = superuser.getItem(oldPath);
@@ -124,7 +128,7 @@ public class MoveSNSTest extends MoveTest {
      */
     public void testMovedNodeIsSame() throws RepositoryException, NotExecutableException {
         //move the node
-        superuser.move(moveNode.getPath(), destinationPath);
+        doMove(moveNode.getPath(), destinationPath);
 
         int cnt = 0;
         for (NodeIterator it = destParentNode.getNodes(nodeName2); it.hasNext();) {
@@ -148,7 +152,7 @@ public class MoveSNSTest extends MoveTest {
      */
     public void testMovedNodeIsSame2() throws RepositoryException, NotExecutableException {
         //move the node
-        superuser.move(moveNode.getPath(), destinationPath);
+        doMove(moveNode.getPath(), destinationPath);
         superuser.save();
 
         int cnt = 0;

@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
 import javax.jcr.Session;
+import javax.jcr.RepositoryException;
 import javax.jcr.lock.LockException;
 import javax.jcr.lock.Lock;
 
@@ -37,7 +38,7 @@ public class OpenScopedLockTest extends AbstractLockTest {
 
     public void testLogoutHasNoEffect() throws Exception {
         // create a second session session. since loggin-out the 'superuser'
-        // will cause all inhertied tear-down to fail
+        // will cause all inherited tear-down to fail
         Session otherSession = helper.getSuperuserSession();
         Node testRoot2 = (Node) otherSession.getItem(testRootNode.getPath());
 
@@ -85,7 +86,7 @@ public class OpenScopedLockTest extends AbstractLockTest {
         }
     }
 
-public void testRefreshAfterTokenTransfer2() throws Exception {
+    public void testRefreshAfterTokenTransfer2() throws Exception {
         String lockToken = lock.getLockToken();
 
         Session otherSession = helper.getSuperuserSession();
@@ -143,12 +144,53 @@ public void testRefreshAfterTokenTransfer2() throws Exception {
             // otherSession is now lockHolder -> unlock must succeed.
             Node n2 = (Node) otherSession.getItem(lockedNode.getPath());
             n2.unlock();
-        } finally {
+        } catch (RepositoryException e) {
             // only in case of failure:
             // move lock token back in order to have lock removed properly
             // if test succeeds, moving back tokens is not necessary.
             otherSession.removeLockToken(lockToken);
             superuser.addLockToken(lockToken);
+
+            // and rethrow
+            throw e;
+        }
+    }
+
+    /**
+     * Test if a Lock created by one session gets properly invalidated
+     * if the lock token has been transfered to another session, which
+     * unlocks the Node.
+     */
+    public void testUnlockAfterTokenTransfer3() throws Exception {
+        String lockToken = lock.getLockToken();
+        Session otherSession = helper.getSuperuserSession();
+        try {
+            superuser.removeLockToken(lockToken);
+            otherSession.addLockToken(lockToken);
+
+            // otherSession is now lockHolder -> unlock must succeed.
+            Node n2 = (Node) otherSession.getItem(lockedNode.getPath());
+            n2.unlock();
+
+            assertFalse("Lock has been release by another session.", lockedNode.holdsLock());
+
+            assertFalse("Lock has been release by another session.", lock.isLive());
+            assertFalse("Lock has been release by another session.", lock.getNode().isLocked());            
+            try {
+                lockedNode.getLock();
+                fail("Lock has been release by another session.");
+            } catch (LockException e) {
+                // ok
+            }
+        } catch (RepositoryException e) {
+            // only in case of failure:
+            // move lock token back in order to have lock removed properly
+            // if test succeeds, moving back tokens is not necessary.
+            otherSession.removeLockToken(lockToken);
+            superuser.addLockToken(lockToken);
+
+            // and rethrow
+            throw e;
         }
     }
 }

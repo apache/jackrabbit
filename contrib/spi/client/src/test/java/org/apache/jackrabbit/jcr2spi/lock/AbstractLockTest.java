@@ -53,8 +53,8 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     }
 
     protected void tearDown() throws Exception {
+        // make sure all locks are removed
         try {
-            // make sure all locks are removed
             lockedNode.unlock();
         } catch (RepositoryException e) {
             // ignore
@@ -256,6 +256,52 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         } finally {
             // mk sure all locks are release again
             lockedNode2.unlock();
+        }
+    }
+
+    /**
+     * A locked node must also be locked if accessed by some other session.
+     */
+    public void testLockVisibility() throws RepositoryException {
+        Session otherSession = helper.getReadOnlySession();
+        Node ln2 = (Node) otherSession.getItem(lockedNode.getPath());
+        assertTrue("Locked node must also be locked for another session", ln2.isLocked());
+        assertTrue("Locked node must also be locked for another session", ln2.holdsLock());
+    }
+
+    /**
+     * If a locked nodes is unlocked again, any Lock instance retrieved by
+     * another session must change the lock-status. Similarly, the previously
+     * locked node must not be marked locked any more.
+     */
+    public void testUnlockByOtherSession() throws RepositoryException {
+        Session otherSession = helper.getReadOnlySession();
+        Node ln2 = (Node) otherSession.getItem(lockedNode.getPath());
+        Lock l2 = ln2.getLock();
+
+        lockedNode.unlock();
+
+        assertFalse("Lock must be informed if Node is unlocked.", l2.isLive());
+    }
+
+    /**
+     * If a locked nodes is unlocked again, any Lock instance retrieved by
+     * another session must change the lock-status. Similarly, the previously
+     * locked node must not be marked locked any more.
+     */
+    public void testUnlockByOtherSession2() throws RepositoryException {
+        Session otherSession = helper.getReadOnlySession();
+        Node ln2 = (Node) otherSession.getItem(lockedNode.getPath());
+
+        lockedNode.unlock();
+
+        assertFalse("Node is not locked any more", ln2.isLocked());
+        assertFalse("Node is not locked any more", ln2.holdsLock());
+        try {
+            ln2.getLock();
+            fail("Node is not locked any more");
+        } catch (LockException e) {
+            // OK
         }
     }
 }
