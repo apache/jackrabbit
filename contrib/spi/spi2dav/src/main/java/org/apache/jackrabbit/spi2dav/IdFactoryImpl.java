@@ -122,8 +122,9 @@ public class IdFactoryImpl implements IdFactory {
         }
 
         boolean equals(ItemId other) {
-            return (uniqueID == null ? other.getUniqueID() == null : uniqueID.equals(other.getUniqueID()))
-                && (path == null ? other.getPath() == null : path.equals(other.getPath()));
+            boolean equalUniqueID = (uniqueID == null) ? other.getUniqueID() == null : uniqueID.equals(other.getUniqueID());
+            boolean equalPath = (path == null) ? other.getPath() == null : path.equals(other.getPath());
+            return equalUniqueID && equalPath;
         }
 
         /**
