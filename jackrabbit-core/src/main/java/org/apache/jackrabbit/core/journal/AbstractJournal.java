@@ -22,7 +22,7 @@ import EDU.oswego.cs.dl.util.concurrent.WriterPreferenceReadWriteLock;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.io.File;
+import java.io.InputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -273,11 +273,13 @@ public abstract class AbstractJournal implements Journal {
      * Append a record backed by a file. Subclass responsibility.
      *
      * @param producerId producer identifier
+     * @param in input stream
+     * @param length number of bytes in input stream
      * @return the new record's revision
      *
      * @throws JournalException if an error occurs
      */
-    protected abstract long append(String producerId, File file)
+    protected abstract long append(String producerId, InputStream in, int length)
             throws JournalException;
 
     /**
