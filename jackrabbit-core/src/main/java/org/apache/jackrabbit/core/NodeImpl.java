@@ -3273,12 +3273,44 @@ public class NodeImpl extends ItemImpl implements Node {
      * then <code>null</code> is returned. If the result of the merge test is
      * 'fail' with bestEffort set to <code>false</code> a MergeException is
      * thrown.
+     * <p/>
+     * jsr170 - 8.2.10 Merge:
+     * [...]
+     * <ul>
+     * <li>If N is currently checked-in then:</li>
+     * <ul>
+     * <li>If V' is a successor (to any degree) of V, then the merge result
+     *     for N is update.
+     * </li>
+     * <li>If V' is a predecessor (to any degree) of V or if V and
+     *     V' are identical (i.e., are actually the same version),
+     *     then the merge result for N is leave.
+     * </li>
+     * <li>If V is neither a successor of, predecessor of, nor
+     *     identical with V', then the merge result for N is failed.
+     *     This is the case where N and N' represent divergent
+     *     branches of the version graph, thus determining the
+     *     result of a merge is non-trivial.
+     * </li>
+     * </ul>
+     * <li>If N is currently checked-out then:</li>
+     * <ul>
+     * <li>If V' is a predecessor (to any degree) of V or if V and
+     *     V' are identical (i.e., are actually the same version),
+     *     then the merge result for N is leave.
+     * </li>
+     * <li>If any other relationship holds between V and V',
+     *     then the merge result for N is fail.
+     * </li>
+     * </ul>
+     * </ul>
      *
-     * @param srcSession
-     * @param bestEffort
-     * @return
-     * @throws RepositoryException
-     * @throws AccessDeniedException
+     * @param srcSession the source session
+     * @param failedIds the list to store the failed node ids.
+     * @param bestEffort the best effort flag
+     * @return the corresponding source node or <code>null</code>
+     * @throws RepositoryException if an error occurs.
+     * @throws AccessDeniedException if access is denied
      */
     private NodeImpl doMergeTest(SessionImpl srcSession, List failedIds, boolean bestEffort)
             throws RepositoryException, AccessDeniedException {
@@ -3677,7 +3709,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 try {
                     dstNode = session.getNodeById(childId);
                     // check if same parent
-                    if (!dstNode.getParent().isSame(srcNode)) {
+                    if (!isSame(dstNode.getParent())) {
                         if (removeExisting) {
                             dstNode.internalRemove(false);
                             dstNode = null;
