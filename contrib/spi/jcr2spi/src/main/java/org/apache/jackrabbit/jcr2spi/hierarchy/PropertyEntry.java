@@ -32,6 +32,17 @@ public interface PropertyEntry extends HierarchyEntry {
     public PropertyId getId();
 
     /**
+     * Returns the ID that must be used for resolving this entry OR loading its
+     * children entries from the persistent layer. This is the same as
+     * <code>getId()</code> unless any of its ancestors has been transiently
+     * moved.
+     *
+     * @return
+     * @see #getId()
+     */
+    public PropertyId getWorkspaceId();
+
+    /**
      * @return the referenced <code>PropertyState</code>.
      * @throws NoSuchItemStateException if the <code>PropertyState</code> does not
      * exist anymore.

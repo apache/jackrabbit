@@ -21,6 +21,7 @@ import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.NodeId;
 
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.AccessDeniedException;
@@ -33,6 +34,10 @@ import javax.jcr.version.VersionException;
  */
 public class ReorderNodes extends AbstractOperation {
 
+    private final NodeId parentId;
+    private final NodeId insertId;
+    private final NodeId beforeId;
+
     private final NodeState parentState;
     private final NodeState insert;
     private final NodeState before;
@@ -41,6 +46,11 @@ public class ReorderNodes extends AbstractOperation {
         this.parentState = parentState;
         this.insert = insert;
         this.before = before;
+
+        this.parentId = parentState.getNodeId();
+        this.insertId = insert.getNodeId();
+        this.beforeId = (before == null) ? null : before.getNodeId();
+
         addAffectedItemState(parentState);
     }
 
@@ -63,6 +73,19 @@ public class ReorderNodes extends AbstractOperation {
         throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
     }
     //----------------------------------------< Access Operation Parameters >---
+
+    public NodeId getParentId() {
+        return parentId;
+    }
+
+    public NodeId getInsertId() {
+        return insertId;
+    }
+
+    public NodeId getBeforeId() {
+        return beforeId;
+    }
+
     public NodeState getParentState() {
         return parentState;
     }
@@ -81,7 +104,6 @@ public class ReorderNodes extends AbstractOperation {
                                    Path.PathElement beforeName) throws NoSuchItemStateException, ItemStateException {
         NodeState insert = parentState.getChildNodeState(srcName.getName(), srcName.getNormalizedIndex());
         NodeState before = (beforeName == null) ? null : parentState.getChildNodeState(beforeName.getName(), beforeName.getNormalizedIndex());
-        Operation op = new ReorderNodes(parentState, insert, before);
-        return op;
+        return new ReorderNodes(parentState, insert, before);
     }
 }

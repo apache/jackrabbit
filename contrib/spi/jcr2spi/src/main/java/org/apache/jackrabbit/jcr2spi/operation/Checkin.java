@@ -21,6 +21,7 @@ import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
+import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,8 +85,8 @@ public class Checkin extends AbstractOperation {
      *
      * @return The nodeState to be checked in.
      */
-    public NodeState getNodeState() {
-        return nodeState;
+    public NodeId getNodeId() {
+        return nodeState.getNodeId();
     }
 
     //------------------------------------------------------------< Factory >---

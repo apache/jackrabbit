@@ -23,6 +23,7 @@ import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -36,10 +37,9 @@ public abstract class AbstractCopy extends AbstractOperation {
 
     private static Logger log = LoggerFactory.getLogger(AbstractCopy.class);
 
+    final NodeState destParentState;
     private final NodeState srcState;
-    private final NodeState destParentState;
     private final QName destName;
-    
     private final String srcWorkspaceName;
 
     /**
@@ -77,7 +77,7 @@ public abstract class AbstractCopy extends AbstractOperation {
     //----------------------------------------------------------< Operation >---
     /**
      * Invalidate the destination parent <code>NodeState</code>.
-     * 
+     *
      * @see Operation#persisted(CacheBehaviour)
      * @param cacheBehaviour
      */
@@ -92,12 +92,12 @@ public abstract class AbstractCopy extends AbstractOperation {
         return srcWorkspaceName;
     }
 
-    public NodeState getNodeState() {
-        return srcState;
+    public NodeId getNodeId() {
+        return srcState.getNodeId();
     }
 
-    public NodeState getDestinationParentState() {
-        return destParentState;
+    public NodeId getDestinationParentId() {
+        return destParentState.getNodeId();
     }
 
     public QName getDestinationName() {

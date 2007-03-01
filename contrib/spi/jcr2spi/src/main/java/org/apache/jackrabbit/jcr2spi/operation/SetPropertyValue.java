@@ -19,6 +19,7 @@ package org.apache.jackrabbit.jcr2spi.operation;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.PropertyId;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
@@ -36,13 +37,16 @@ import java.util.ArrayList;
  */
 public class SetPropertyValue extends AbstractOperation {
 
+    private final PropertyId propertyId;
     private final PropertyState propertyState;
     private final QValue[] values;
-    private final int propertyType;
+    private final int valueType;
 
-    private SetPropertyValue(PropertyState propertyState, int propertyType, QValue[] values) {
+    private SetPropertyValue(PropertyState propertyState, int valueType, QValue[] values) {
         this.propertyState = propertyState;
-        this.propertyType = propertyType;
+
+        propertyId = propertyState.getPropertyId();
+        this.valueType = valueType;
         this.values = values;
 
         addAffectedItemState(propertyState);
@@ -69,12 +73,20 @@ public class SetPropertyValue extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
+    public PropertyId getPropertyId() {
+        return propertyId;
+    }
+
     public PropertyState getPropertyState() {
         return propertyState;
     }
 
-    public int getPropertyType() {
-        return propertyType;
+    public boolean isMultiValued() {
+        return propertyState.isMultiValued();
+    }
+
+    public int getValueType() {
+        return valueType;
     }
 
     public QValue[] getValues() {

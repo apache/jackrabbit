@@ -20,6 +20,7 @@ import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.NodeId;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemExistsException;
@@ -86,13 +87,13 @@ public class Restore extends AbstractOperation {
     //----------------------------------------< Access Operation Parameters >---
 
     /**
-     * Returns state or the closest existing state of the restore target or
+     * Returns id of state or the closest existing state of the restore target or
      * <code>null</code> in case of a {@link javax.jcr.Workspace#restore(Version[], boolean)}
      *
      * @return
      */
-    public NodeState getNodeState() {
-        return nodeState;
+    public NodeId getNodeId() {
+        return (nodeState == null) ? null : nodeState.getNodeId();
     }
 
     /**
@@ -106,8 +107,12 @@ public class Restore extends AbstractOperation {
         return relQPath;
     }
 
-    public NodeState[] getVersionStates() {
-        return versionStates;
+    public NodeId[] getVersionIds() {
+        NodeId[] versionIds = new NodeId[versionStates.length];
+        for (int i = 0; i < versionStates.length; i++) {
+            versionIds[i] = versionStates[i].getNodeId();
+        }
+        return versionIds;
     }
 
     public boolean removeExisting() {
@@ -123,7 +128,7 @@ public class Restore extends AbstractOperation {
      */
     public static Operation create(NodeState nodeState, Path relQPath, NodeState versionState, boolean removeExisting) {
         if (nodeState == null || versionState == null) {
-            throw new IllegalArgumentException("Neither nodeId nor versionState must be null.");
+            throw new IllegalArgumentException("Neither nodeState nor versionState must be null.");
         }
         Restore up = new Restore(nodeState, relQPath, new NodeState[] {versionState}, removeExisting);
         return up;
@@ -135,7 +140,7 @@ public class Restore extends AbstractOperation {
      * @return
      */
     public static Operation create(NodeState[] versionStates, boolean removeExisting) {
-        if (versionStates == null) {
+        if (versionStates == null || versionStates.length == 0) {
             throw new IllegalArgumentException("Version states must not be null.");
         }
         Restore up = new Restore(null, null, versionStates, removeExisting);

@@ -19,6 +19,7 @@ package org.apache.jackrabbit.jcr2spi.operation;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -38,12 +39,14 @@ public class AddNode extends AbstractOperation {
 
     private static Logger log = LoggerFactory.getLogger(AddNode.class);
 
+    private final NodeId parentId;
     private final NodeState parentState;
     private final QName nodeName;
     private final QName nodeTypeName;
     private final String uuid;
 
     private AddNode(NodeState parentState, QName nodeName, QName nodeTypeName, String uuid) {
+        this.parentId = parentState.getNodeId();
         this.parentState = parentState;
         this.nodeName = nodeName;
         this.nodeTypeName = nodeTypeName;
@@ -71,6 +74,10 @@ public class AddNode extends AbstractOperation {
         throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
     }
     //----------------------------------------< Access Operation Parameters >---
+    public NodeId getParentId() {
+        return parentId;
+    }
+
     public NodeState getParentState() {
         return parentState;
     }

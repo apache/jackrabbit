@@ -20,6 +20,7 @@ import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
+import org.apache.jackrabbit.spi.NodeId;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -36,13 +37,16 @@ import java.util.Iterator;
 public class ResolveMergeConflict extends AbstractOperation {
 
     private final NodeState nodeState;
-    private final NodeState versionState;
+    private final NodeId[] mergeFailedIds;
+    private final NodeId[] predecessorIds;
     private final boolean resolveDone;
 
-    private ResolveMergeConflict(NodeState nodeState, NodeState versionState, boolean resolveDone) {
+    private ResolveMergeConflict(NodeState nodeState, NodeId[] mergeFailedIds, NodeId[] predecessorIds, boolean resolveDone) {
         this.nodeState = nodeState;
-        this.versionState = versionState;
+        this.mergeFailedIds = mergeFailedIds;
+        this.predecessorIds = predecessorIds;
         this.resolveDone = resolveDone;
+
 
         // NOTE: affected-states only needed for transient modifications
     }
@@ -74,12 +78,16 @@ public class ResolveMergeConflict extends AbstractOperation {
         }
     }
     //----------------------------------------< Access Operation Parameters >---
-    public NodeState getNodeState() {
-        return nodeState;
+    public NodeId getNodeId() {
+        return nodeState.getNodeId();
     }
 
-    public NodeState getVersionState() {
-        return versionState;
+    public NodeId[] getMergeFailedIds() {
+        return mergeFailedIds;
+    }
+
+    public NodeId[] getPredecessorIds() {
+        return predecessorIds;
     }
 
     public boolean resolveDone() {
@@ -93,8 +101,8 @@ public class ResolveMergeConflict extends AbstractOperation {
      * @param versionState
      * @param resolveDone
      */
-    public static Operation create(NodeState nodeState, NodeState versionState, boolean resolveDone) {
-        ResolveMergeConflict up = new ResolveMergeConflict(nodeState, versionState, resolveDone);
+    public static Operation create(NodeState nodeState, NodeId[] mergeFailedIds, NodeId[] predecessorIds, boolean resolveDone) {
+        ResolveMergeConflict up = new ResolveMergeConflict(nodeState, mergeFailedIds, predecessorIds, resolveDone);
         return up;
     }
 }

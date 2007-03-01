@@ -186,7 +186,11 @@ public class PropertyState extends ItemState {
      * @return the id of this property.
      */
     public PropertyId getPropertyId() {
-        return getPropertyEntry().getId();
+        if (isWorkspaceState()) {
+            return getPropertyEntry().getWorkspaceId();
+        } else {
+            return getPropertyEntry().getId();
+        }
     }
 
     /**
@@ -220,7 +224,7 @@ public class PropertyState extends ItemState {
      */
     public QPropertyDefinition getDefinition() throws RepositoryException {
         if (definition == null) {
-            definition = getEffectiveNodeType().getApplicablePropertyDefinition(getQName(), getType(), isMultiValued());
+            definition = getEffectiveParentNodeType().getApplicablePropertyDefinition(getQName(), getType(), isMultiValued());
         }
         return definition;
     }

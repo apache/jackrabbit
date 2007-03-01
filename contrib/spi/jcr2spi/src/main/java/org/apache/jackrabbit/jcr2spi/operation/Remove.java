@@ -20,6 +20,7 @@ import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
+import org.apache.jackrabbit.spi.ItemId;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
@@ -31,10 +32,12 @@ import javax.jcr.version.VersionException;
  */
 public class Remove extends AbstractOperation {
 
+    private ItemId removeId;
     protected ItemState removeState;
     protected NodeState parent;
 
     protected Remove(ItemState removeState, NodeState parent) {
+        this.removeId = removeState.getId();
         this.removeState = removeState;
         this.parent = parent;
 
@@ -61,6 +64,9 @@ public class Remove extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
+    public ItemId getRemoveId() {
+        return removeId;
+    }
 
     public ItemState getRemoveState() {
         return removeState;
@@ -73,15 +79,9 @@ public class Remove extends AbstractOperation {
     //------------------------------------------------------------< Factory >---
     public static Operation create(ItemState state) throws RepositoryException {
         try {
-            Remove rm = new Remove(state, state.getParent());
-            return rm;
+            return new Remove(state, state.getParent());
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         }
-    }
-
-    public static Operation create(ItemState state, NodeState parent) {
-        Remove rm = new Remove(state, parent);
-        return rm;
     }
 }

@@ -142,7 +142,7 @@ final class ChildNodeEntries implements Collection {
         // no matching entry found
         return false;
     }
-    
+
     /**
      * Returns a <code>List</code> of <code>NodeEntry</code>s for the
      * given <code>nodeName</code>. This method does <b>not</b> filter out
@@ -216,6 +216,10 @@ final class ChildNodeEntries implements Collection {
         if (obj instanceof List) {
             // map entry is a list of siblings
             List siblings = (List) obj;
+            // shortcut if index can never match
+            if (index > siblings.size()) {
+                return null;
+            }
             // filter out removed states
             for (Iterator it = siblings.iterator(); it.hasNext(); ) {
                 NodeEntry cne = ((LinkedEntries.LinkNode) it.next()).getNodeEntry();
@@ -269,48 +273,45 @@ final class ChildNodeEntries implements Collection {
     }
 
     /**
-     * Adds a <code>NodeEntry</code> to the end of the list.
+     * Adds a <code>NodeEntry</code> to the end of the list. Same as
+     * {@link #add(NodeEntry, int)}, where the index is {@link Path#INDEX_UNDEFINED}.
      *
      * @param cne the <code>NodeEntry</code> to add.
      */
      void add(NodeEntry cne) {
-        QName nodeName = cne.getQName();
-        List siblings = null;
-        Object obj = nameMap.get(nodeName);
-        if (obj != null) {
-            if (obj instanceof List) {
-                // map entry is a list of siblings
-                siblings = (ArrayList) obj;
-            } else {
-                // map entry is a single child node entry,
-                // convert to siblings list
-                siblings = new ArrayList();
-                siblings.add(obj);
-                nameMap.put(nodeName, siblings);
-            }
-        }
-
-        LinkedEntries.LinkNode ln = entries.add(cne);
-
-        if (siblings != null) {
-            siblings.add(ln);
-        } else {
-            nameMap.put(nodeName, ln);
-        }
+        add(cne, Path.INDEX_UNDEFINED);
     }
 
     /**
-     * Adds a <code>NodeEntry</code>. If an entry with the given index
-     * already exists, the the new sibling is inserted before.
+     * Adds a <code>NodeEntry</code>.<br>
+     * Note the following special cases:
+     * <ol>
+     * <li>If an entry with the given index already exists, the the new sibling
+     * is inserted before.</li>
+     * <li>If the given index is bigger that the last entry in the siblings list,
+     * intermediate entries will be created.</li>
+     * </ol>
      *
      * @param cne the <code>NodeEntry</code> to add.
      */
     void add(NodeEntry cne, int index) {
         QName nodeName = cne.getQName();
 
-        // retrieve ev. sibling node with same index
-        // if index is 'undefined' behave just as '#add(NodeEntry).
+        // retrieve ev. sibling node with same index if index is 'undefined'
+        // the existing entry is always null and no reordering occur.
         LinkedEntries.LinkNode existing = (index < Path.INDEX_DEFAULT) ? null : getLinkNode(nodeName, index);
+
+        // in case index greater than default -> make sure all intermediate
+        // entries exist.
+        if (index > Path.INDEX_DEFAULT) {
+            int previousIndex = index - 1;
+            LinkedEntries.LinkNode previous = getLinkNode(nodeName, previousIndex);
+            if (previous == null) {
+                // add missing entry (or entries)
+                parent.addNodeEntry(nodeName, null, previousIndex);
+
+            } // else: all intermediate entries exist
+        } // else: undefined or default index are not affected
 
         // add new entry (same as #add(NodeEntry)
         List siblings = null;
@@ -335,8 +336,8 @@ final class ChildNodeEntries implements Collection {
             nameMap.put(nodeName, ln);
         }
 
-        // if new entry must be inserted instead of appended at the end
-        // reorder entries now
+        // reorder the child entries if, the new entry must be inserted rather
+        // than appended at the end of the list.
         if (existing != null) {
             reorder(obj, ln, existing);
         }
@@ -430,25 +431,27 @@ final class ChildNodeEntries implements Collection {
      * @param insertNode the NodeEntry to move.
      * @param beforeNode the NodeEntry where <code>insertNode</code> is
      * reordered to.
+     * @return the NodeEntry that followed the 'insertNode' before the reordering.
      * @throws NoSuchElementException if <code>insertNode</code> or
      * <code>beforeNode</code> does not have a <code>NodeEntry</code>
      * in this <code>ChildNodeEntries</code>.
      */
-    boolean reorder(NodeEntry insertNode, NodeEntry beforeNode) {
+    NodeEntry reorder(NodeEntry insertNode, NodeEntry beforeNode) {
         Object insertObj = nameMap.get(insertNode.getQName());
         // the link node to move
         LinkedEntries.LinkNode insertLN = getLinkNode(insertNode);
         if (insertLN == null) {
-            return false;
+            throw new NoSuchElementException();
         }
         // the link node where insertLN is ordered before
         LinkedEntries.LinkNode beforeLN = (beforeNode != null) ? getLinkNode(beforeNode) : null;
         if (beforeNode != null && beforeLN == null) {
-            return false;
+            throw new NoSuchElementException();
         }
 
+        NodeEntry previousBefore = insertLN.getNextLinkNode().getNodeEntry();
         reorder(insertObj, insertLN, beforeLN);
-        return true;
+        return previousBefore;
     }
 
     /**
@@ -483,9 +486,7 @@ final class ChildNodeEntries implements Collection {
                     }
                 }
             }
-        } else {
-            // no same name siblings -> nothing to do.
-        }
+        } // else: no same name siblings -> no special handling required
 
         // reorder in linked list
         entries.reorderNode(insertLN, beforeLN);

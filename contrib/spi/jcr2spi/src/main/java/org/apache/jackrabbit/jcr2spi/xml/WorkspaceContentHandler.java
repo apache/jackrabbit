@@ -19,6 +19,7 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.Locator;
 import org.xml.sax.Attributes;
+import org.xml.sax.helpers.DefaultHandler;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.Transformer;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
@@ -39,7 +41,7 @@ import java.io.FileInputStream;
 /**
  * <code>WorkspaceContentHandler</code>...
  */
-public class WorkspaceContentHandler implements ContentHandler {
+public class WorkspaceContentHandler extends DefaultHandler {
 
     private static Logger log = LoggerFactory.getLogger(WorkspaceContentHandler.class);
 
@@ -62,9 +64,10 @@ public class WorkspaceContentHandler implements ContentHandler {
             SAXTransformerFactory stf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
             TransformerHandler th = stf.newTransformerHandler();
             th.setResult(new StreamResult(new FileOutputStream(tmpFile)));
-            th.getTransformer().setParameter(OutputKeys.METHOD, "xml");
-            th.getTransformer().setParameter(OutputKeys.ENCODING, "UTF-8");
-            th.getTransformer().setParameter(OutputKeys.INDENT, "no");
+            Transformer tf = th.getTransformer();
+            tf.setParameter(OutputKeys.METHOD, "xml");
+            tf.setParameter(OutputKeys.ENCODING, "UTF-8");
+            tf.setParameter(OutputKeys.INDENT, "no");
             this.delegatee = th;
 
         } catch (FileNotFoundException e) {
@@ -78,7 +81,6 @@ public class WorkspaceContentHandler implements ContentHandler {
 
     public void endDocument() throws SAXException {
         delegatee.endDocument();
-
         try {
             workspace.importXML(parentAbsPath, new FileInputStream(tmpFile), uuidBehavior);
         } catch (IOException e) {

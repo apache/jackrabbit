@@ -20,6 +20,7 @@ import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.apache.jackrabbit.spi.IdIterator;
+import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,8 +81,8 @@ public class Merge extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeState getNodeState() {
-        return nodeState;
+    public NodeId getNodeId() {
+        return nodeState.getNodeId();
     }
 
     public String getSourceWorkspaceName() {

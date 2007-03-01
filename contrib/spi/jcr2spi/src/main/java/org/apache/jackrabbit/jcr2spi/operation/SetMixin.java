@@ -22,6 +22,7 @@ import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
+import org.apache.jackrabbit.spi.NodeId;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -34,11 +35,13 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
  */
 public class SetMixin extends AbstractOperation {
 
+    private final NodeId nodeId;
     private final NodeState nodeState;
     private final QName[] mixinNames;
 
     private SetMixin(NodeState nodeState, QName[] mixinNames) {
         this.nodeState = nodeState;
+        this.nodeId = nodeState.getNodeId();
         this.mixinNames = mixinNames;
 
         // remember node state as affected state
@@ -80,6 +83,10 @@ public class SetMixin extends AbstractOperation {
         return nodeState;
     }
 
+    public NodeId getNodeId() {
+        return nodeId;
+    }
+    
     public QName[] getMixinNames() {
         return mixinNames;
     }

@@ -23,15 +23,11 @@ import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.Status;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * <code>PropertyEntryImpl</code> implements a reference to a property state.
  */
 public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEntry {
-
-    private static Logger log = LoggerFactory.getLogger(PropertyEntryImpl.class);
 
     /**
      * Creates a new <code>PropertyEntryImpl</code>.
@@ -64,21 +60,27 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
      * <p/>
      * Returns a <code>PropertyState</code>.
      */
-    ItemState doResolve()
-            throws NoSuchItemStateException, ItemStateException {
-        return factory.getItemStateFactory().createPropertyState(getId(), this);
+    ItemState doResolve() throws NoSuchItemStateException, ItemStateException {
+        return factory.getItemStateFactory().createPropertyState(getWorkspaceId(), this);
     }
 
     //------------------------------------------------------< PropertyEntry >---
     /**
-     * @inheritDoc
+     * @see PropertyEntry#getId()
      */
     public PropertyId getId() {
         return factory.getIdFactory().createPropertyId(parent.getId(), getQName());
     }
 
     /**
-     * @inheritDoc
+     * @see PropertyEntry#getWorkspaceId()
+     */
+    public PropertyId getWorkspaceId() {
+        return factory.getIdFactory().createPropertyId(parent.getWorkspaceId(), getQName());
+    }
+
+    /**
+     * @see PropertyEntry#getPropertyState()
      */
     public PropertyState getPropertyState() throws NoSuchItemStateException, ItemStateException {
         return (PropertyState) getItemState();

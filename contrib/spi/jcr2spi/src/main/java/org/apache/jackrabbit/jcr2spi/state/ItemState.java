@@ -427,20 +427,19 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      */
     public void reconnect(boolean keepChanges) throws NoSuchItemStateException, ItemStateException {
         checkIsSessionState();
-        // Need to use the workspace-ISF in order not to create yet another
-        // session-state.
+        // Need to use the workspace-ISF in order not to create a session-state.
         ItemStateFactory wspIsf;
         if (overlayedState != null) {
             wspIsf = overlayedState.isf;
         } else {
             wspIsf = getParent().overlayedState.isf;
         }
-
+        ItemId id = (overlayedState == null) ? getId() : overlayedState.getId();
         ItemState overlayed;
         if (isNode()) {
-            overlayed = wspIsf.createNodeState((NodeId) getId(), (NodeEntry) getHierarchyEntry());
+            overlayed = wspIsf.createNodeState((NodeId) id, (NodeEntry) getHierarchyEntry());
         } else {
-            overlayed = wspIsf.createPropertyState((PropertyId) getId(), (PropertyEntry) getHierarchyEntry());
+            overlayed = wspIsf.createPropertyState((PropertyId) id, (PropertyEntry) getHierarchyEntry());
         }
         setOverLayedState(overlayed);
         boolean modified = merge(overlayed, keepChanges);
@@ -493,10 +492,18 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
         }
     }
 
-    EffectiveNodeType getEffectiveNodeType() throws RepositoryException {
+    EffectiveNodeType getEffectiveParentNodeType() throws RepositoryException {
         try {
-            EffectiveNodeType ent = getNodeTypeRegistry().getEffectiveNodeType(getParent().getNodeTypeNames());
-            return ent;
+            /*
+            for NEW-states the definition is always set upon creation.
+            for all other states the definion must be retrieved only taking
+            the effective nodetypes present on the parent into account
+            any kind of transiently added mixins must not have an effect
+            on the definition retrieved for an state that has been persisted
+            before. The effective NT must be evaluated as if it had been
+            evaluated upon creating the workspace state.
+            */
+            return getNodeTypeRegistry().getEffectiveNodeType(getParent().getNodeTypeNames());
         } catch (ItemStateException e) {
             throw new RepositoryException("Error while accessing Definition ", e);
         } catch (NodeTypeConflictException e) {

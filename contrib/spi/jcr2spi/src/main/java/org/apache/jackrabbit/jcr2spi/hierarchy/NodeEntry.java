@@ -45,6 +45,17 @@ public interface NodeEntry extends HierarchyEntry {
     public NodeId getId();
 
     /**
+     * Returns the ID that must be used for resolving this entry OR loading its
+     * children entries from the persistent layer. This is the same as
+     * <code>getId()</code> unless this entry or any of its ancestors has been
+     * transiently moved.
+     *
+     * @return
+     * @see #getId()
+     */
+    public NodeId getWorkspaceId();
+
+    /**
      * @return the unique ID of the node state which is referenced by this
      * child node entry or <code>null</code> if the node state cannot be
      * identified with a unique ID.
@@ -84,6 +95,17 @@ public interface NodeEntry extends HierarchyEntry {
      * @return the entry at the given path.
      */
     public HierarchyEntry getDeepEntry(Path path) throws PathNotFoundException, RepositoryException;
+
+    /**
+     * Traverse the tree below this entry and return the child entry matching
+     * the given 'workspacePath', i.e. transient modifications and new entries
+     * are ignored.<p/>
+     * If no matching entry can be found, <code>null</code> is return.
+     *
+     * @param workspacePath
+     * @return matching entry or <code>null</code>.
+     */
+    public HierarchyEntry lookupDeepEntry(Path workspacePath);
 
     /**
      * Determines if there is a valid <code>NodeEntry</code> with the
@@ -157,16 +179,14 @@ public interface NodeEntry extends HierarchyEntry {
     /**
      * Adds a new, transient child <code>NodeEntry</code>
      *
+     * @param nodeName
+     * @param uniqueID
+     * @param primaryNodeType
+     * @param definition
      * @return
+     * @throws ItemExistsException
      */
     public NodeState addNewNodeEntry(QName nodeName, String uniqueID, QName primaryNodeType, QNodeDefinition definition) throws ItemExistsException;
-
-    /**
-     * @param newName
-     * @param newParent
-     * @return
-     */
-    public NodeEntry moveNodeEntry(NodeState childState, QName newName, NodeEntry newParent) throws RepositoryException;
 
     /**
      * Determines if there is a property entry with the specified <code>QName</code>.
@@ -226,10 +246,20 @@ public interface NodeEntry extends HierarchyEntry {
      *
      * @param beforeEntry the child node where to insert the node before. If
      * <code>null</code> this entry is moved to the end of its parents child node entries.
-     * @return true if the reordering was successful. False if either of the
-     * given entry does not exist in the listed child entries..
      */
-    public boolean orderBefore(NodeEntry beforeEntry) ;
+    public void orderBefore(NodeEntry beforeEntry) ;
+
+    /**
+     * @param newName
+     * @param newParent
+     * @return
+     */
+    public NodeEntry move(QName newName, NodeEntry newParent, boolean transientMove) throws RepositoryException;
+
+    /**
+     * @return true if this <code>NodeEntry</code> is transiently moved.
+     */
+    public boolean isTransientlyMoved();
 
     /**
      * The parent entry of a external event gets informed about the modification.

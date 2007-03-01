@@ -23,6 +23,7 @@ import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.name.QName;
+import org.apache.commons.collections.iterators.IteratorChain;
 
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.Iterator;
@@ -30,6 +31,8 @@ import java.util.Set;
 import java.util.LinkedHashSet;
 import java.util.HashSet;
 import java.util.Collection;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Registers changes made to states and references and consolidates
@@ -54,7 +57,7 @@ public class ChangeLog {
     private final Set deletedStates = new LinkedHashSet();
 
     /**
-     * Type of operation this changelog is collection state modifications for.
+     * Set of operations
      */
     private Set operations = new LinkedHashSet();
 
@@ -124,6 +127,18 @@ public class ChangeLog {
         target.persisted(this, cacheBehaviour);
     }
 
+    /**
+     * Revert the changes listed within this changelog
+     */
+    public void undo() throws ItemStateException {
+        // TODO: check if states are reverted in the correct order
+        Iterator[] its = new Iterator[] {addedStates(), deletedStates(), modifiedStates()};
+        IteratorChain chain = new IteratorChain(its);
+        while (chain.hasNext()) {
+            ItemState state = (ItemState) chain.next();
+            state.getHierarchyEntry().revert();
+        }
+    }
     //----------------------< Retrieve information present in the ChangeLog >---
     /**
      *
