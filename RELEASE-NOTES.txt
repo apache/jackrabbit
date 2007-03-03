@@ -23,7 +23,7 @@ Changes in this release
 
 Bug fixes
 
-    * [JCR-756] - Concurrent add/remove child node operations in a ...
+    * [JCR-772] - Merging between workspaces fails
     * [JCR-758] - QueryResult's RowIterator.getSize returned the wrong ...
     * [JCR-761] - JCA build failure with J2EE 1.3
     * [JCR-762] - System view XML uses hardcoded sv: prefix
