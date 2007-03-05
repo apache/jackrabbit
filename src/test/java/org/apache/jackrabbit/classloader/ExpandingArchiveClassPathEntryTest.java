@@ -91,11 +91,12 @@ public class ExpandingArchiveClassPathEntryTest extends ClassLoaderTestBase {
         assertNotNull("anotherFile's URL missing", url);
 
         String data = new String(res.getBytes());
-        log.info("URL : " + url);
-        log.info("Path: " + res.getPath());
-        log.info("Prop: " + res.getProperty().getPath());
-        log.info("Data: '" + data + "'");
-        log.info("Size: " + res.getContentLength() + " (bytes: " + res.getBytes().length + ")");
-        log.info("Time: " + new Date(res.getLastModificationTime()));
+        log.info("URL : {}", url);
+        log.info("Path: {}", res.getPath());
+        log.info("Prop: {}", res.getProperty().getPath());
+        log.info("Data: '{}'", data);
+        log.info("Size: {} (bytes: {})", new Integer(res.getContentLength()),
+            new Integer(res.getBytes().length));
+        log.info("Time: {}", new Date(res.getLastModificationTime()));
     }
 }
