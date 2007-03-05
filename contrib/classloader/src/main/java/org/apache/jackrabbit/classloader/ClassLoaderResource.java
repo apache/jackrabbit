@@ -78,6 +78,14 @@ class ClassLoaderResource {
      * the repository.
      */
     private final long loadTime;
+    
+    /**
+     * Flag indicating that this resource has already been checked for expiry
+     * and whether it is actually expired.
+     * 
+     * @see #isExpired()
+     */
+    private boolean expired;
 
     /**
      * Creates an instance of this class for the class path entry.
@@ -198,6 +206,17 @@ class ClassLoaderResource {
 
         // fallback if no resource property or an error accessing the path of
         // the property
+        return getSafePath();
+    }
+    
+    /**
+     * Returns the path of the property containing the resource by appending
+     * the {@link #getName() name} to the path of the class path entry to which
+     * this resource belongs. This path need not necessairily be the same as
+     * the {@link #getProperty() path of the property} but will always succeed
+     * as there is no repository access involved.
+     */
+    protected String getSafePath() {
         return getClassPathEntry().getPath() + getName();
     }
 
@@ -234,10 +253,10 @@ class ClassLoaderResource {
 
         try {
             in = getInputStream();
-            log.debug("getInputStream() returned " + in);
+            log.debug("getInputStream() returned {}", in);
 
             int length = getContentLength();
-            log.debug("getContentLength() returned " + String.valueOf(length));
+            log.debug("getContentLength() returned {}", new Integer(length));
 
             if (length >= 0) {
 
@@ -328,32 +347,34 @@ class ClassLoaderResource {
      * propertiy's last modification time, <code>true</code> is returned.
      */
     public boolean isExpired() {
-        try {
+        if (!expired) {
             // creation time of version if loaded now
             long currentPropTime = 0;
             Property prop = getExpiryProperty();
             if (prop != null) {
-                currentPropTime = Util.getLastModificationTime(prop);
+                try {
+                    currentPropTime = Util.getLastModificationTime(prop);
+                } catch (RepositoryException re) {
+                    // cannot get last modif time from property, use current time
+                    log.debug("expireResource: Cannot get current version for "
+                        + toString() + ", will expire", re);
+                    currentPropTime = System.currentTimeMillis();
+                }
             }
-
+    
             // creation time of version currently loaded
             long loadTime = getLoadTime();
-
+    
             // expire if a new version would be loaded
-            boolean exp = currentPropTime > loadTime;
-            if (exp && log.isDebugEnabled()) {
-                log.debug("expireResource: Resource created " +
-                    new Date(loadTime) + " superceded by version created " +
-                    new Date(currentPropTime));
+            expired = currentPropTime > loadTime;
+            if (expired && log.isDebugEnabled()) {
+                log.debug(
+                    "expireResource: Resource created {} superceded by version created {}",
+                    new Date(loadTime), new Date(currentPropTime));
             }
-
-            // return the result of checking
-            return exp;
-        } catch (RepositoryException re) {
-            log.debug("expireResource: Cannot get current version for " +
-                toString() + ", will expire: " + re);
-            return true;
         }
+        
+        return expired;
     }
 
     /**
@@ -393,7 +414,7 @@ class ClassLoaderResource {
     public String toString() {
         StringBuffer buf = new StringBuffer(getClass().getName());
         buf.append(": path=");
-        buf.append(getPath());
+        buf.append(getSafePath());
         buf.append(", name=");
         buf.append(getName());
         return buf.toString();
