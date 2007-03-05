@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * This class is not intended to be subclassed or instantiated by clients.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date$
+ * @version $Rev$, $Date$
  */
 abstract class ClassPathEntry {
 
@@ -118,8 +118,9 @@ abstract class ClassPathEntry {
         try {
             session.checkPermission(path, "read");
         } catch (AccessControlException ace) {
-            log.warn("getInstance: Access denied reading from " + path +
-                ", ignoring entry");
+            log.warn(
+                "getInstance: Access denied reading from {}, ignoring entry",
+                path);
             return null;
         } catch (RepositoryException re) {
             log.error("getInstance: Cannot check permission to " + path, re);
@@ -146,11 +147,13 @@ abstract class ClassPathEntry {
                         return new ArchiveClassPathEntry(prop, path);
                     }
 
-                    log.debug("getInstance: " + path + " might not be a jar " +
-                            "archive, using as directory");
+                    log.debug(
+                        "getInstance: {} might not be a jar archive, using as directory",
+                        path);
                 } else {
-                    log.debug("getInstance: " + path + " does not resolve" +
-                            " to a property, using as directory");
+                    log.debug(
+                        "getInstance: {} does not resolve to a property, using as directory",
+                        path);
                 }
 
             } catch (ItemNotFoundException infe) {
@@ -169,18 +172,21 @@ abstract class ClassPathEntry {
 
             } catch (RepositoryException re) {
 
-                log.debug("getInstance: " + path + " cannot be read from, " +
-                        "using as directory");
+                log.debug(
+                    "getInstance: {} cannot be read from, using as directory",
+                    path);
 
             } catch (JarException ze) {
 
-                log.debug("getInstance: " + path + " does not contain an " +
-                        "archive, using as directory");
+                log.debug(
+                    "getInstance: {} does not contain an archive, using as directory",
+                    path);
 
             } catch (IOException ioe) {
 
-                log.debug("getInstance: " + path + " problem reading from " +
-                        "the archive, using as directory");
+                log.debug(
+                    "getInstance: {} problem reading from the archive, using as directory",
+                    path);
 
             } finally {
                 if (zip != null) {

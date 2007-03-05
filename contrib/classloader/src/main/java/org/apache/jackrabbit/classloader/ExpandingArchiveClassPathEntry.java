@@ -155,13 +155,13 @@ import org.slf4j.LoggerFactory;
                 };
             }
 
-            log.debug("getResource: resource " + name + " not found"
-                + " in archive " + path);
+            log.debug("getResource: resource {} not found in archive {}", name,
+                path);
 
         } catch (RepositoryException re) {
 
-            log.warn("getResource: problem accessing the archive " + path
-                + " for " + name + ": " + re.toString());
+            log.warn("getResource: problem accessing the archive {} for {}",
+                new Object[] { path, name }, re.toString());
 
         }
         // invariant : not found or problem accessing the archive
@@ -241,8 +241,8 @@ import org.slf4j.LoggerFactory;
                 // rollback changes on the jar node in case of problems
                 if (jarNode != null && jarNode.isModified()) {
                     // rollback incomplete modifications
-                    log.warn("Rolling back unsaved changes on JAR node "
-                        + getPath());
+                    log.warn("Rolling back unsaved changes on JAR node {}",
+                        getPath());
 
                     try {
                         jarNode.refresh(false);

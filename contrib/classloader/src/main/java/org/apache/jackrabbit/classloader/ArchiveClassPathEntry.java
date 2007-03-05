@@ -145,18 +145,18 @@ class ArchiveClassPathEntry extends ClassPathEntry {
                 return new ArchiveClassPathResource(this, entry);
             }
 
-            log.debug("getResource: resource " + name + " not found"
-                + " in archive " + path);
+            log.debug("getResource: resource {} not found in archive {}", name,
+                path);
 
         } catch (IOException ioe) {
 
-            log.warn("getResource: problem accessing the archive " + path
-                + " for " + name + ": " + ioe.toString());
+            log.warn("getResource: problem accessing the archive {} for {}",
+                new Object[]{ path, name}, ioe);
 
         } catch (RepositoryException re) {
 
-            log.warn("getResource: problem accessing the archive " + path
-                + " for " + name + ": " + re.toString());
+            log.warn("getResource: problem accessing the archive {} for {}",
+                new Object[]{ path, name}, re);
 
         } finally {
 
@@ -236,7 +236,7 @@ class ArchiveClassPathEntry extends ClassPathEntry {
         try {
             return URLFactory.createURL(session, path);
         } catch (MalformedURLException mue) {
-            log.warn("getCodeSourceURL: Cannot getURL" + " for " + path, mue);
+            log.warn("getCodeSourceURL: Cannot getURL for " + path, mue);
         }
         return null;
     }
@@ -351,7 +351,7 @@ class ArchiveClassPathEntry extends ClassPathEntry {
                             String name = entry.getName();
                             Integer entryNumO = new Integer(i);
                             tmpEntryMap.put(name, entryNumO);
-                            log.debug("findEntry: Entry " + name + " ==> " +
+                            log.debug("findEntry: Entry {} ==> {}", name,
                                 entryNumO);
 
                             // if we found our entry, keep it to be returned later
@@ -367,8 +367,8 @@ class ArchiveClassPathEntry extends ClassPathEntry {
                         // invariant: path has the entry found or null
 
                         // return what we found
-                        log.debug("findEntry: Indexing complete, " +
-                                "returning " + result);
+                        log.debug("findEntry: Indexing complete, returning {}",
+                            result);
                         return result;
 
                     } finally {
@@ -400,12 +400,12 @@ class ArchiveClassPathEntry extends ClassPathEntry {
         // map exists, lets try to get via number
         Number entryNumO = (Number) entryMap.get(path);
         if (entryNumO == null) {
-            log.debug("findEntry: This archive does not contain " + path);
+            log.debug("findEntry: This archive does not contain {}", path);
             return null;
         }
 
         // find the indexed entry
-        log.debug("findEntry: " + path + " is entry #" + entryNumO);
+        log.debug("findEntry: {} is entry #{}", path, entryNumO);
         int entryNum = entryNumO.intValue();
         JarEntry entry = zins.getNextJarEntry();
         while (entryNum > 0 && entry != null) {
@@ -494,8 +494,8 @@ class ArchiveClassPathEntry extends ClassPathEntry {
                 }
 
                 // otherwise
-                log.warn("Cannot find entry " + getName() + " in the archive "
-                    + getClassPathEntry().getPath() + " anymore!");
+                log.warn("Cannot find entry {} in the archive {} anymore!",
+                    getName(), getClassPathEntry().getPath());
                 return null;
 
             } catch (IOException ioe) {

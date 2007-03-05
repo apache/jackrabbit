@@ -82,17 +82,17 @@ import org.slf4j.LoggerFactory;
         try {
             NodeTypeManager ntm = workspace.getNodeTypeManager();
             if (ntm instanceof JackrabbitNodeTypeManager) {
-                log.debug("Using Jackrabbit to import node types from {0}",
-                    TYPE_FILE);
+                log.debug("Using Jackrabbit to import node types from "
+                    + TYPE_FILE);
                 JackrabbitNodeTypeManager jntm = (JackrabbitNodeTypeManager) ntm;
                 jntm.registerNodeTypes(ins,
                     JackrabbitNodeTypeManager.TEXT_X_JCR_CND);
                 return true;
             }
         } catch (IOException ioe) {
-            log.error("Cannot register node types from {0}", TYPE_FILE, ioe);
+            log.error("Cannot register node types from " + TYPE_FILE, ioe);
         } catch (RepositoryException re) {
-            log.error("Cannot register node types from {0}", TYPE_FILE, re);
+            log.error("Cannot register node types from " + TYPE_FILE, re);
         }
 
         // fall back to failure

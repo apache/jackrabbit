@@ -84,12 +84,12 @@ public class Util {
         // been thrown
         Property prop = (Property) item;
         if (prop.getDefinition().isMultiple()) {
-            log.error(prop.getPath() + " is a multivalue property");
+            log.error("{} is a multivalue property", prop.getPath());
             return null;
         } else if (prop.getType() == PropertyType.REFERENCE) {
             Node node = prop.getNode();
-            log.info("Property " + prop.getPath() + " refers to node " +
-                node.getPath() + "; finding primary item");
+            log.info("Property {} refers to node {}; finding primary item",
+                prop.getPath(), node.getPath());
             return getProperty(node);
         }
 

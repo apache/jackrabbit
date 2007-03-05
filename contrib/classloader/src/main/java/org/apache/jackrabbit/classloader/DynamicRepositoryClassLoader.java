@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.classloader;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -126,7 +127,7 @@ public class DynamicRepositoryClassLoader extends RepositoryClassLoader
         // register with observation service and path pattern list
         registerModificationListener();
 
-        log.debug("DynamicRepositoryClassLoader: " + this + " ready");
+        log.debug("DynamicRepositoryClassLoader: {} ready", this);
     }
 
     /**
@@ -164,8 +165,9 @@ public class DynamicRepositoryClassLoader extends RepositoryClassLoader
         // finally finalize the old class loader
         old.destroy();
 
-        log.debug("DynamicRepositoryClassLoader: Copied " + old + ". Do not use " +
-                "that anymore");
+        log.debug(
+            "DynamicRepositoryClassLoader: Copied {}. Do not use that anymore",
+            old);
     }
 
     /**
@@ -243,7 +245,7 @@ public class DynamicRepositoryClassLoader extends RepositoryClassLoader
 
         ClassLoaderResource res = getCachedResource(name);
         if (res != null) {
-            log.debug("shouldReload: Expiring cache entry " + res);
+            log.debug("shouldReload: Expiring cache entry {}", res);
             if (force) {
                 log.debug("shouldReload: Forced dirty flag");
                 dirty = true;
@@ -328,7 +330,7 @@ public class DynamicRepositoryClassLoader extends RepositoryClassLoader
      *      through the {@link #destroy()} method.
      */
     public DynamicRepositoryClassLoader reinstantiate(Session session, ClassLoader parent) {
-        log.debug("reinstantiate: Copying " + this + " with parent " + parent);
+        log.debug("reinstantiate: Copying {} with parent {}", this, parent);
 
         if (isDestroyed()) {
             throw new IllegalStateException("Destroyed class loader cannot be recreated");
@@ -361,7 +363,10 @@ public class DynamicRepositoryClassLoader extends RepositoryClassLoader
      *      characters which will be resolved to build the actual class path.
      */
     public void reconfigure(String[] classPath) {
-        log.debug("reconfigure: Reconfiguring the with " + classPath);
+        if (log.isDebugEnabled()) {
+            log.debug("reconfigure: Reconfiguring the with {}",
+                Arrays.asList(classPath));
+        }
 
         // whether the loader is destroyed
         if (isDestroyed()) {
@@ -378,8 +383,9 @@ public class DynamicRepositoryClassLoader extends RepositoryClassLoader
         ((DynamicPatternPath) getHandles()).addListener(this);
 
         dirty = !hasLoadedResources();
-        log.debug("reconfigure: Class loader is dirty now: " +
-                (isDirty() ? "yes" : "no"));
+        log.debug("reconfigure: Class loader is dirty now: {}", (isDirty()
+                ? "yes"
+                : "no"));
     }
 
     //---------- RepositoryClassLoader overwrites -----------------------------
@@ -462,33 +468,34 @@ public class DynamicRepositoryClassLoader extends RepositoryClassLoader
     public void onEvent(EventIterator events) {
         while (events.hasNext()) {
             Event event = events.nextEvent();
+            String path;
             try {
-                String path = event.getPath();
-                log.debug("onEvent: Item " + path + " has been modified, " +
-                        "checking with cache");
-
-                ClassLoaderResource resource =
-                    (ClassLoaderResource) modTimeCache.get(path);
-                if (resource != null) {
-                    log.debug("pageModified: Expiring cache entry "+ resource);
-                    expireResource(resource);
-                } else {
-                    // might be in not-found cache - remove from there
-                    if (event.getType() == Event.NODE_ADDED ||
-                            event.getType() == Event.PROPERTY_ADDED) {
-                        log.debug("pageModified: Clearing not-found cache " +
-                                "for possible new class");
-                        cleanCache();
-                    }
-                }
-
+                path = event.getPath();
             } catch (RepositoryException re) {
-                //
+                log.warn("onEvent: Cannot get path of event, ignoring", re);
+                continue;
             }
+                
+            log.debug(
+                "onEvent: Item {} has been modified, checking with cache", path);
+
+            ClassLoaderResource resource = (ClassLoaderResource) modTimeCache.get(path);
+            if (resource != null) {
+                log.debug("pageModified: Expiring cache entry {}", resource);
+                expireResource(resource);
+            } else {
+                // might be in not-found cache - remove from there
+                if (event.getType() == Event.NODE_ADDED
+                    || event.getType() == Event.PROPERTY_ADDED) {
+                    log.debug("pageModified: Clearing not-found cache for possible new class");
+                    cleanCache();
+                }
+            }
+
         }
     }
 
-    //----------- PatternPath.Listener interface -------------------------
+    // ----------- PatternPath.Listener interface -------------------------
 
     /**
      * Handles modified matched path set by setting the class loader dirty.
@@ -615,7 +622,7 @@ public class DynamicRepositoryClassLoader extends RepositoryClassLoader
 
         // update dirty flag accordingly
         dirty |= exp;
-        log.debug("expireResource: Loader dirty: " + isDirty());
+        log.debug("expireResource: Loader dirty: {}", new Boolean(isDirty()));
 
         // return the expiry status
         return exp;
@@ -633,7 +640,7 @@ public class DynamicRepositoryClassLoader extends RepositoryClassLoader
         if (oldClassPath != null) {
             for (int i=0; i < oldClassPath.length; i++) {
                 ClassPathEntry entry = oldClassPath[i];
-                log.debug("resetClassPathEntries: Cloning " + entry);
+                log.debug("resetClassPathEntries: Cloning {}", entry);
                 oldClassPath[i] = entry.copy();
             }
         } else {

@@ -235,7 +235,7 @@ import org.slf4j.LoggerFactory;
                 pattern = pattern.substring(0, pattern.length()-1);
             }
 
-            log.debug("addChecked: Adding " + pattern);
+            log.debug("addChecked: Adding {}");
             patternList.add(pattern);
         }
     }
