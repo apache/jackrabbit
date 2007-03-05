@@ -57,7 +57,7 @@ import org.slf4j.LoggerFactory;
  * The <code>ClassLoaderTestBase</code> TODO
  *
  * @author fmeschbe
- * @version $Rev:$, $Date$
+ * @version $Rev$, $Date$
  */
 public class ClassLoaderTestBase extends TestCase {
 
@@ -283,7 +283,7 @@ public class ClassLoaderTestBase extends TestCase {
 
                 session.getItem(path).remove();
             } catch (RepositoryException re) {
-                log.info("Cannot remove Item " + path + ": " + re);
+                log.info("Cannot remove Item " + path, re);
             }
         }
 

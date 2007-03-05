@@ -77,18 +77,18 @@ class DirectoryClassPathEntry extends ClassPathEntry {
                 return new ClassLoaderResource(this, name, prop);
             }
 
-            log.debug("getResource: resource " + name +
-                " not found below " + path);
+            log.debug("getResource: resource {} not found below {} ", name,
+                path);
 
         } catch (PathNotFoundException pnfe) {
 
-            log.info("getResource: Classpath entry " + path +
-                " does not have resource " + name);
+            log.debug("getResource: Classpath entry {} does not have resource {}",
+                path, name);
 
         } catch (RepositoryException cbe) {
 
-            log.warn("getResource: problem accessing the resource " + name +
-                " below " + path + ": " + cbe);
+            log.warn("getResource: problem accessing the resource {} below {}",
+                new Object[] { name, path }, cbe);
 
         }
         // invariant : no page or problem accessing the page

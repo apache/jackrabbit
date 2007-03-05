@@ -183,7 +183,7 @@ public class RepositoryClassLoader extends URLClassLoader {
         // build the class repositories list
         buildRepository();
 
-        log.debug("RepositoryClassLoader: " + this + " ready");
+        log.debug("RepositoryClassLoader: {} ready", this);
     }
 
     /**
@@ -249,7 +249,7 @@ public class RepositoryClassLoader extends URLClassLoader {
             throw new ClassNotFoundException(name + " (Classloader destroyed)");
         }
 
-        log.debug("findClass: Try to find class " + name);
+        log.debug("findClass: Try to find class {}", name);
 
         try {
             return (Class) AccessController
@@ -280,12 +280,12 @@ public class RepositoryClassLoader extends URLClassLoader {
             return null;
         }
 
-        log.debug("findResource: Try to find resource " + name);
+        log.debug("findResource: Try to find resource {}", name);
 
         ClassLoaderResource res = findClassLoaderResource(name);
         if (res != null) {
-            log.debug("findResource: Getting resource from " + res + ", " +
-                "created " + new Date(res.getLastModificationTime()));
+            log.debug("findResource: Getting resource from {}, created {}",
+                res, new Date(res.getLastModificationTime()));
             return res.getURL();
         }
 
@@ -316,17 +316,17 @@ public class RepositoryClassLoader extends URLClassLoader {
             };
         }
 
-        log.debug("findResources: Try to find resources for " + name);
+        log.debug("findResources: Try to find resources for {}", name);
 
         List list = new LinkedList();
         for (int i=0; i < repository.length; i++) {
             final ClassPathEntry cp = repository[i];
-            log.debug("findResources: Trying " + cp);
+            log.debug("findResources: Trying {}", cp);
 
             ClassLoaderResource res = cp.getResource(name);
             if (res != null) {
-                log.debug("findResources: Adding resource from " + res + ", " +
-                    "created " + new Date(res.getLastModificationTime()));
+                log.debug("findResources: Adding resource from {}, created {}",
+                    res, new Date(res.getLastModificationTime()));
                 URL url = res.getURL();
                 if (url != null) {
                     list.add(url);
@@ -385,7 +385,7 @@ public class RepositoryClassLoader extends URLClassLoader {
 
         } else if (checkURL(url)) {
             // Repository URL
-            log.debug("addURL: Adding URL " + url);
+            log.debug("addURL: Adding URL {}", url);
             try {
                 JCRURLConnection conn = (JCRURLConnection) url.openConnection();
                 ClassPathEntry cp = ClassPathEntry.getInstance(
@@ -396,7 +396,7 @@ public class RepositoryClassLoader extends URLClassLoader {
             }
 
         } else {
-            log.warn("addURL: " + url + " is not a Repository URL, ignored");
+            log.warn("addURL: {} is not a Repository URL, ignored", url);
         }
     }
 
@@ -418,12 +418,12 @@ public class RepositoryClassLoader extends URLClassLoader {
             return;
         }
 
-        log.debug("addURL: Adding Handle " + path);
+        log.debug("addURL: Adding Handle {}", path);
         ClassPathEntry cp = ClassPathEntry.getInstance(session, path);
         if (cp != null) {
             addClassPathEntry(cp);
         } else {
-            log.debug("addHandle: Cannot get a ClassPathEntry for " + path);
+            log.debug("addHandle: Cannot get a ClassPathEntry for {}", path);
         }
     }
 
@@ -468,7 +468,7 @@ public class RepositoryClassLoader extends URLClassLoader {
     /* package */ ClassLoaderResource getCachedResource(String name) {
         Object res = cache.get(name);
         if (res == null || res == NOT_FOUND_RESOURCE) {
-            log.debug("Resource " + name + " no cached");
+            log.debug("Resource {} not cached", name);
             return null;
         }
 
@@ -545,7 +545,7 @@ public class RepositoryClassLoader extends URLClassLoader {
      * class path list with the new class path entry.
      */
     protected void addClassPathEntry(ClassPathEntry cpe) {
-        log.debug("addHandle: Adding path " + cpe.getPath());
+        log.debug("addHandle: Adding path {}", cpe.getPath());
 
         // append the entry to the current class path
         ClassPathEntry[] oldClassPath = getRepository();
@@ -648,10 +648,10 @@ public class RepositoryClassLoader extends URLClassLoader {
             }
 
             if (cp != null) {
-                log.debug("Adding path " + entry);
+                log.debug("Adding path {}", entry);
                 newRepository.add(cp);
             } else {
-                log.debug("Cannot get a ClassPathEntry for " + entry);
+                log.debug("Cannot get a ClassPathEntry for {}", entry);
             }
         }
 
@@ -681,20 +681,21 @@ public class RepositoryClassLoader extends URLClassLoader {
 
         // prepare the name of the class
         final String path = name.replace('.', '/').concat(".class");
-        log.debug("findClassPrivileged: Try to find path " + path +
-            " for class " + name);
+        log.debug("findClassPrivileged: Try to find path {} for class {}",
+            path, name);
 
         ClassLoaderResource res = findClassLoaderResource(path);
         if (res != null) {
 
              // try defining the class, error aborts
              try {
-                 log.debug("findClassPrivileged: Loading class from " +
-                     res + ", created " + new Date(res.getLastModificationTime()));
+                 log.debug(
+                    "findClassPrivileged: Loading class from {}, created {}",
+                    res, new Date(res.getLastModificationTime()));
 
                  Class c = defineClass(name, res);
                  if (c == null) {
-                     log.warn("defineClass returned null for class " + name);
+                     log.warn("defineClass returned null for class {}", name);
                      throw new ClassNotFoundException(name);
                  }
                  return c;
@@ -734,7 +735,7 @@ public class RepositoryClassLoader extends URLClassLoader {
         // check for cached resources first
         ClassLoaderResource res = (ClassLoaderResource) cache.get(name);
         if (res == NOT_FOUND_RESOURCE) {
-            log.info("Resource '" + name + "' known to not exist in class path");
+            log.debug("Resource '{}' known to not exist in class path", name);
             return null;
         } else if (res != null) {
             return res;
@@ -743,19 +744,19 @@ public class RepositoryClassLoader extends URLClassLoader {
         // walk the repository list and try to find the resource
         for (int i = 0; i < repository.length; i++) {
             final ClassPathEntry cp = repository[i];
-            log.debug("Checking " + cp);
+            log.debug("Checking {}", cp);
 
             res = cp.getResource(name);
             if (res != null) {
-                log.debug("Found resource in " + res + ", " +
-                    "created " + new Date(res.getLastModificationTime()));
+                log.debug("Found resource in {}, created ", res, new Date(
+                    res.getLastModificationTime()));
                 cache.put(name, res);
                 return res;
             }
 
         }
 
-        log.debug("No classpath entry contains " + name);
+        log.debug("No classpath entry contains {}", name);
         cache.put(name, NOT_FOUND_RESOURCE);
         return null;
     }
@@ -775,7 +776,7 @@ public class RepositoryClassLoader extends URLClassLoader {
     private Class defineClass(String name, ClassLoaderResource res)
             throws IOException, RepositoryException {
 
-        log.debug("defineClass(" + name + ", " + res + ")");
+        log.debug("defineClass({}, {})", name, res);
 
         Class clazz = res.getLoadedClass();
         if (clazz == null) {

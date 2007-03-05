@@ -105,10 +105,10 @@ import org.slf4j.LoggerFactory;
 
         // guarded add
         if (!listeners.contains(listener)) {
-            log.debug("addListener: Listener " + listener);
+            log.debug("addListener: Listener {}", listener);
             listeners.add(listener);
         } else {
-            log.info("addListener: Listener " + listener + " already added");
+            log.info("addListener: Listener {} already added", listener);
         }
     }
 
@@ -135,9 +135,9 @@ import org.slf4j.LoggerFactory;
 
         // guarded removal
         if (listeners.remove(listener)) {
-            log.debug("removeListener: Listener " + listener);
+            log.debug("removeListener: Listener {}", listener);
         } else {
-            log.info("removeListener: Listener " + listener +  " not registered");
+            log.info("removeListener: Listener {} not registered", listener);
         }
 
         // deregister if no listener is registered anymore
@@ -179,8 +179,7 @@ import org.slf4j.LoggerFactory;
             try {
                 String path= event.getPath();
                 if (matchPath(path)) {
-                    log.debug("onEvent: Listener Notification due to " +
-                        path);
+                    log.debug("onEvent: Listener Notification due to {}", path);
                     notifyListeners();
                     return;
                 }
@@ -245,12 +244,11 @@ import org.slf4j.LoggerFactory;
     private void notifyListeners() {
         for (int i=0; i < listeners.size(); i++) {
             Listener listener = (Listener) listeners.get(i);
-            log.debug("notifyListeners: Notifying listener " + listener);
+            log.debug("notifyListeners: Notifying listener {}", listener);
             try {
                 listener.pathChanged();
             } catch (Exception e) {
-                log.warn("notifyListeners: Listener " + listener + " threw: " + e);
-                log.debug("dump", e);
+                log.warn("notifyListeners: Listener {} failed", listener, e);
             }
         }
     }
