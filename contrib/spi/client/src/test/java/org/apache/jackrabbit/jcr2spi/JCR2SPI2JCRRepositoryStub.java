@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.jackrabbit.test.RepositoryStubException;
-import org.apache.jackrabbit.core.JackrabbitRepositoryStub;
 import org.apache.jackrabbit.spi2jcr.RepositoryServiceImpl;
 import org.apache.jackrabbit.spi2jcr.ValueFactoryImpl;
 import org.apache.jackrabbit.spi.RepositoryService;
@@ -34,7 +33,7 @@ import java.util.Properties;
  * initializes a Jackrabbit repository and wraps it with a SPI2JCR layer and
  * a JCR2SPI layer.
  */
-public class JCR2SPI2JCRRepositoryStub extends JackrabbitRepositoryStub {
+public class JCR2SPI2JCRRepositoryStub extends DefaultRepositoryStub {
 
     /**
      * The Jackrabbit repository.
