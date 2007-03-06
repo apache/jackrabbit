@@ -145,6 +145,9 @@ public class QueryImpl implements Query {
             if (!node.isNodeType(NameFormat.format(QName.NT_QUERY, nsResolver))) {
                 throw new InvalidQueryException("Node is not of type nt:query");
             }
+            if (node.getSession() != session) {
+                throw new InvalidQueryException("Node belongs to a different session.");
+            }
             statement = node.getProperty(NameFormat.format(QName.JCR_STATEMENT, nsResolver)).getString();
             language = node.getProperty(NameFormat.format(QName.JCR_LANGUAGE, nsResolver)).getString();
             this.wspManager.checkQueryStatement(statement, language,
