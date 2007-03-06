@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.commons;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.Item;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
@@ -42,40 +43,93 @@ import javax.jcr.RepositoryException;
 public abstract class AbstractItem implements Item {
 
     /**
-     * Returns the ancestor of this item at the given depth from the
-     * root node.
+     * Returns the ancestor of this item at the given depth.
      * <p>
-     * The default implementation returns this item if the given depth
-     * equals the return value of the {@link Item#getDepth()} method.
-     * Otherwise calls the method recursively on the parent node.
+     * The default implementation handles the root node at depth zero and
+     * this item at depth equal to the depth of this item as special cases,
+     * and uses {@link javax.jcr.Session#getItem(String)} to retrieve other
+     * ancestors based on the ancestor path calculated from the path of this
+     * node as returned by {@link Item#getPath()}.
      *
      * @param depth depth of the returned ancestor item
      * @return ancestor item
+     * @throws ItemNotFoundException if the given depth is negative or greater
+     *                               than the depth of this item
+     * @throws AccessDeniedException if access to the ancestor item is denied
      * @throws RepositoryException if an error occurs
      */
-    public Item getAncestor(int depth) throws RepositoryException {
-        if (getDepth() == depth) {
+    public Item getAncestor(int depth)
+            throws ItemNotFoundException, AccessDeniedException,
+            RepositoryException {
+        if (depth < 0) {
+            throw new ItemNotFoundException(
+                    this + ": Invalid ancestor depth (" + depth + ")");
+        } else if (depth == 0) {
+            return getSession().getRootNode();
+        }
+
+        String path = getPath();
+        int slash = 0;
+        for (int i = 0; i < depth - 1; i++) {
+            slash = path.indexOf('/', slash + 1);
+            if (slash == -1) {
+                throw new ItemNotFoundException(
+                        this + ": Invalid ancestor depth (" + depth + ")");
+            }
+        }
+        slash = path.indexOf('/', slash + 1);
+        if (slash == -1) {
             return this;
-        } else {
-            return getParent().getAncestor(depth);
+        }
+
+        try {
+            return getSession().getItem(path.substring(0, slash));
+        } catch (ItemNotFoundException e) {
+            throw new AccessDeniedException(
+                    this + ": Ancestor access denied (" + depth + ")");
         }
     }
 
     /**
      * Returns the depth of this item.
      * <p>
-     * Recursively calls the method on the parent node and increments
-     * the return value to get the depth of this item. Returns zero if
-     * the parent node is not available (i.e. this is the root node).
+     * The default implementation determines the depth by counting the
+     * slashes in the path returned by {@link Item#getPath()}.
      *
      * @return depth of this item
      * @throws RepositoryException if an error occurs
      */
     public int getDepth() throws RepositoryException {
-        try {
-            return getParent().getDepth() + 1;
-        } catch (ItemNotFoundException e) {
+        String path = getPath();
+        if (path.length() == 1) {
             return 0;
+        } else {
+            int depth = 1;
+            int slash = path.indexOf('/', 1);
+            while (slash != -1) {
+                depth++;
+                slash = path.indexOf('/', slash + 1);
+            }
+            return depth;
+        }
+    }
+
+    //--------------------------------------------------------------< Object >
+
+    /**
+     * Returns a string representation of this item.
+     * <p>
+     * The default implementation returns the path of this item and falls
+     * back to the {@link Object#toString()} implementation if the item path
+     * can not be retrieved.
+     *
+     * @return string representation of this item
+     */
+    public String toString() {
+        try {
+            return getPath();
+        } catch (RepositoryException e) {
+            return super.toString();
         }
     }
 
