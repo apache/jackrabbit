@@ -41,7 +41,6 @@ import javax.jcr.Value;
  *   <li>{@link Item#isNew()}</li>
  *   <li>{@link Item#isSame(Item)}</li>
  *   <li>{@link Item#refresh(boolean)}</li>
- *   <li>{@link Item#remove()}</li>
  *   <li>{@link Item#save()}</li>
  * </ul>
  * <p>
@@ -51,9 +50,16 @@ import javax.jcr.Value;
  *   <li>{@link Property#getValue()}</li>
  *   <li>{@link Property#getValues()}</li>
  * </ul>
+ * <p>
+ * <strong>NOTE:</strong> Many of the default method implementations in
+ * this base class rely on the parent node being accessible through the
+ * {@link Item#getParent()} call. It is possible (though unlikely) that
+ * access controls deny access to a containing node even though a property
+ * is accessible. In such cases the default method implementations in this
+ * class <em>will not work</em>.
  */
 public abstract class AbstractProperty extends AbstractItem
-        implements Property {
+        implements Item, Property {
 
     //----------------------------------------------------------------< Item >
 
@@ -95,6 +101,18 @@ public abstract class AbstractProperty extends AbstractItem
      */
     public boolean isNode() {
         return false;
+    }
+
+    /**
+     * Removes this property.
+     * <p>
+     * The default implementation calls {@link Node#setProperty(String, Value)}
+     * with a <code>null</code> value on the parent node.
+     *
+     * @throws RepositoryException if an error occurs
+     */
+    public void remove() throws RepositoryException {
+        getParent().setProperty(getName(), (Value) null);
     }
 
     //------------------------------------------------------------< Property >
@@ -199,12 +217,12 @@ public abstract class AbstractProperty extends AbstractItem
      */
     public Node getNode() throws RepositoryException {
         Session session = getSession();
-        String uuid = getString();
-        if (getType() != PropertyType.REFERENCE) {
-            uuid = session.getValueFactory().createValue(
-                    uuid, PropertyType.REFERENCE).getString();
+        Value value = getValue();
+        if (value.getType() != PropertyType.REFERENCE) {
+            value = session.getValueFactory().createValue(
+                    value.getString(), PropertyType.REFERENCE);
         }
-        return session.getNodeByUUID(uuid);
+        return session.getNodeByUUID(value.getString());
     }
 
     /**
