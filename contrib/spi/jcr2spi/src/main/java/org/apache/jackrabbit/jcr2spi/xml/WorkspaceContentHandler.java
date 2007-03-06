@@ -29,9 +29,7 @@ import javax.jcr.RepositoryException;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.Transformer;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
@@ -64,10 +62,6 @@ public class WorkspaceContentHandler extends DefaultHandler {
             SAXTransformerFactory stf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
             TransformerHandler th = stf.newTransformerHandler();
             th.setResult(new StreamResult(new FileOutputStream(tmpFile)));
-            Transformer tf = th.getTransformer();
-            tf.setParameter(OutputKeys.METHOD, "xml");
-            tf.setParameter(OutputKeys.ENCODING, "UTF-8");
-            tf.setParameter(OutputKeys.INDENT, "no");
             this.delegatee = th;
 
         } catch (FileNotFoundException e) {
