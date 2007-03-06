@@ -26,7 +26,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.RemoteException;
 import java.rmi.NotBoundException;
-import java.rmi.server.UnicastRemoteObject;
 
 /**
  * <code>SPIServer</code> starts a jackrabbit repository and wraps it with

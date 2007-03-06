@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.jackrabbit.test.RepositoryStubException;
-import org.apache.jackrabbit.core.JackrabbitRepositoryStub;
 import org.apache.jackrabbit.spi2jcr.RepositoryServiceImpl;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.rmi.server.ServerRepositoryService;
@@ -26,19 +25,19 @@ import org.apache.jackrabbit.spi.rmi.client.ClientRepositoryService;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
-import org.apache.log4j.PropertyConfigurator;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFactory;
 import java.util.Properties;
+import java.rmi.RemoteException;
 
 /**
  * <code>JCR2SPI2JCROverRMIRepositoryStub</code> implements a repository stub that
  * initializes a Jackrabbit repository and wraps it with a SPI2JCR layer,
  * a SPI-RMI layer and a JCR2SPI layer.
  */
-public class JCR2SPI2JCROverRMIRepositoryStub extends JackrabbitRepositoryStub {
+public class JCR2SPI2JCROverRMIRepositoryStub extends DefaultRepositoryStub {
 
     /**
      * The Jackrabbit repository.
@@ -63,10 +62,10 @@ public class JCR2SPI2JCROverRMIRepositoryStub extends JackrabbitRepositoryStub {
         if (repo == null) {
             Repository jackrabbitRepo = super.getRepository();
             RepositoryService spi2jcrRepoService = new RepositoryServiceImpl(jackrabbitRepo);
-            RemoteRepositoryService remoteRepoService = new ServerRepositoryService(spi2jcrRepoService);
-            final RepositoryService localRepoService = new ClientRepositoryService(remoteRepoService);
-
             try {
+                RemoteRepositoryService remoteRepoService = new ServerRepositoryService(spi2jcrRepoService);
+                final RepositoryService localRepoService = new ClientRepositoryService(remoteRepoService);
+
                 repo = RepositoryImpl.create(new RepositoryConfig() {
                     public RepositoryService getRepositoryService() {
                         return localRepoService;
@@ -86,6 +85,10 @@ public class JCR2SPI2JCROverRMIRepositoryStub extends JackrabbitRepositoryStub {
                     }
                 });
             } catch (RepositoryException e) {
+                RepositoryStubException ex = new RepositoryStubException(e.getMessage());
+                ex.initCause(e);
+                throw ex;
+            } catch (RemoteException e) {
                 RepositoryStubException ex = new RepositoryStubException(e.getMessage());
                 ex.initCause(e);
                 throw ex;
