@@ -117,6 +117,8 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         super(parent, name, factory);
         this.uniqueID = uniqueID; // NOTE: don't use setUniqueID (for mod only)
         this.childNodeAttic = new ChildNodeAttic();
+
+        factory.notifyEntryCreated(this);
     }
 
     /**
@@ -1091,7 +1093,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             ItemState state = internalGetItemState();
             if (state == null || state.getStatus() != Status.NEW) {
                 try {
-                    NodeId id = (NodeId) getWorkspaceId();
+                    NodeId id = getWorkspaceId();
                     Iterator it = factory.getItemStateFactory().getChildNodeInfos(id);
                     while (it.hasNext()) {
                         ChildInfo ci = (ChildInfo) it.next();
