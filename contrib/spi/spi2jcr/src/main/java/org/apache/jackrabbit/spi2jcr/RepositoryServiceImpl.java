@@ -392,22 +392,20 @@ public class RepositoryServiceImpl implements RepositoryService {
         final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         executeWithLocalEvents(new Callable() {
             public Object run() throws RepositoryException {
-                String srcPath = pathForId(srcNodeId, sInfo);
-                StringBuffer destPath = new StringBuffer(pathForId(destParentNodeId, sInfo));
-                try {
-                    if (destPath.length() > 1) {
-                        destPath.append("/");
-                    }
-                    destPath.append(NameFormat.format(destName, sInfo.getNamespaceResolver()));
-                } catch (NoPrefixDeclaredException e) {
-                    throw new RepositoryException(e.getMessage(), e);
-                }
                 Workspace ws = sInfo.getSession().getWorkspace();
-                if (sInfo.getWorkspaceName().equals(srcWorkspaceName)) {
+                String destPath = getDestinationPath(destParentNodeId, destName, sInfo);
+                if (ws.getName().equals(srcWorkspaceName)) {
                     // inner-workspace copy
-                    ws.copy(srcPath, destPath.toString());
+                    String srcPath = pathForId(srcNodeId, sInfo);
+                    ws.copy(srcPath, destPath);
                 } else {
-                    ws.copy(srcWorkspaceName, srcPath, destPath.toString());
+                    SessionInfoImpl srcInfo = getSessionInfoImpl(obtain(sInfo, srcWorkspaceName));
+                    try {
+                        String srcPath = pathForId(srcNodeId, srcInfo);
+                        ws.copy(srcWorkspaceName, srcPath, destPath);
+                    } finally {
+                        dispose(srcInfo);
+                    }
                 }
                 return null;
             }
@@ -442,18 +440,16 @@ public class RepositoryServiceImpl implements RepositoryService {
         final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         executeWithLocalEvents(new Callable() {
             public Object run() throws RepositoryException {
-                String srcPath = pathForId(srcNodeId, sInfo);
-                StringBuffer destPath = new StringBuffer(pathForId(destParentNodeId, sInfo));
+                SessionInfoImpl srcInfo = getSessionInfoImpl(obtain(sessionInfo, srcWorkspaceName));
                 try {
-                    if (destPath.length() > 1) {
-                        destPath.append("/");
-                    }
-                    destPath.append(NameFormat.format(destName, sInfo.getNamespaceResolver()));
-                } catch (NoPrefixDeclaredException e) {
-                    throw new RepositoryException(e.getMessage(), e);
+                String srcPath = pathForId(srcNodeId, srcInfo);
+                String destPath = getDestinationPath(destParentNodeId, destName, sInfo);
+
+                Workspace wsp = sInfo.getSession().getWorkspace();
+                wsp.clone(srcWorkspaceName, srcPath, destPath, removeExisting);
+                } finally {
+                    dispose(srcInfo);
                 }
-                sInfo.getSession().getWorkspace().clone(srcWorkspaceName, srcPath,
-                        destPath.toString(), removeExisting);
                 return null;
             }
         }, sInfo);
@@ -1112,6 +1108,19 @@ public class RepositoryServiceImpl implements RepositoryService {
             throw new RepositoryException("Unknown SessionInfo implementation: "
                     + sessionInfo.getClass().getName());
         }
+    }
+
+    private String getDestinationPath(NodeId destParentNodeId, QName destName, SessionInfoImpl sessionInfo) throws RepositoryException {
+        StringBuffer destPath = new StringBuffer(pathForId(destParentNodeId, sessionInfo));
+        try {
+            if (destPath.length() > 1) {
+                destPath.append("/");
+            }
+            destPath.append(NameFormat.format(destName, sessionInfo.getNamespaceResolver()));
+        } catch (NoPrefixDeclaredException e) {
+            throw new RepositoryException(e.getMessage(), e);
+        }
+        return destPath.toString();
     }
 
     private String pathForId(ItemId id, SessionInfoImpl sessionInfo)
