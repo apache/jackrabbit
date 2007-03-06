@@ -35,7 +35,6 @@ import org.apache.jackrabbit.jcr2spi.lock.LockManager;
 import org.apache.jackrabbit.jcr2spi.lock.LockManagerImpl;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.apache.jackrabbit.jcr2spi.version.VersionManagerImpl;
-import org.apache.jackrabbit.jcr2spi.version.VersionImpl;
 import org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryImpl;
 import org.apache.jackrabbit.jcr2spi.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.jcr2spi.xml.WorkspaceContentHandler;
@@ -242,12 +241,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
 
         NodeState[] versionStates = new NodeState[versions.length];
         for (int i = 0; i < versions.length; i++) {
-            if (versions[i] instanceof VersionImpl) {
-                ItemState vState = ((NodeImpl)versions[i]).getItemState();
-                versionStates[i] = (NodeState) vState;
-            } else {
-                throw new RepositoryException("Unexpected error: Failed to retrieve a valid ID for the given version " + versions[i].getPath());
-            }
+            versionStates[i] = session.getVersionState(versions[i]);
         }
         getVersionManager().restore(versionStates, removeExisting);
     }

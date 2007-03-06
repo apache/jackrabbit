@@ -45,7 +45,6 @@ import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.Update;
 import org.apache.jackrabbit.jcr2spi.lock.LockManager;
-import org.apache.jackrabbit.jcr2spi.version.VersionImpl;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.util.StateUtility;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
@@ -867,12 +866,8 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new VersionException(msg);
         }
 
-        if (version instanceof VersionImpl) {
-            NodeState versionState = ((NodeImpl)version).getNodeState();
-            session.getVersionManager().resolveMergeConflict(getNodeState(), versionState, done);
-        } else {
-            throw new RepositoryException("Incompatible Version object: " + version.getPath());
-        }
+        NodeState versionState = session.getVersionState(version);
+        session.getVersionManager().resolveMergeConflict(getNodeState(), versionState, done);
     }
 
     /**
@@ -1106,12 +1101,8 @@ public class NodeImpl extends ItemImpl implements Node {
             // NOTE: check for nodetype constraint violation is left to the 'server'
         }
 
-        if (version instanceof VersionImpl) {
-            NodeState versionState = ((NodeImpl)version).getNodeState();
-            session.getVersionManager().restore(targetNode.getNodeState(), relQPath, versionState, removeExisting);
-        } else {
-            throw new RepositoryException("Incompatible Version object: " + version.getPath());
-        }
+        NodeState versionState = session.getVersionState(version);
+        session.getVersionManager().restore(targetNode.getNodeState(), relQPath, versionState, removeExisting);
     }
 
     /**

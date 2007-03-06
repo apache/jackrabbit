@@ -81,6 +81,7 @@ import javax.jcr.Workspace;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
+import javax.jcr.version.Version;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
@@ -793,6 +794,25 @@ public class SessionImpl implements Session, ManagerProvider {
         }
     }
 
+    /**
+     * Returns the NodeState of the given Node and asserts that the state is
+     * listed in the hierarchy built by this Session. If the version
+     * was obtained from a different session, the 'corresponding' version
+     * state for this session is retrieved.
+     *
+     * @param node
+     * @return
+     */
+    NodeState getVersionState(Version version) throws RepositoryException {
+        ItemState itemState;
+        if (version.getSession() == this) {
+            itemState = ((NodeImpl) version).getItemState();
+        } else {
+            Path p = getQPath(version.getPath());
+            itemState = getHierarchyManager().getItemState(p);
+        }
+        return (NodeState) itemState;
+    }
     //------------------------------------------------------< check methods >---
     /**
      * Performs a sanity check on this session.
