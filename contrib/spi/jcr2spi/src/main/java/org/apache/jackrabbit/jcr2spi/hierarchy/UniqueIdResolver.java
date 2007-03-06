@@ -123,7 +123,19 @@ public class UniqueIdResolver implements ItemStateCreationListener, EntryFactory
 
     //-------------------------------------< EntryFactory.NodeEntryListener >---
     /**
-     * @param entry
+     * @see EntryFactory.NodeEntryListener#entryCreated(NodeEntry)
+     */
+    public void entryCreated(NodeEntry entry) {
+        String uniqueID = entry.getUniqueID();
+        if (uniqueID != null) {
+            Object previous = lookUp.put(uniqueID, entry);
+            if (previous != null) {
+                ((NodeEntry) previous).remove();
+            }
+        }
+    }
+
+    /**
      * @see EntryFactory.NodeEntryListener#uniqueIdChanged(NodeEntry, String)
      */
     public void uniqueIdChanged(NodeEntry entry, String previousUniqueID) {
@@ -133,7 +145,11 @@ public class UniqueIdResolver implements ItemStateCreationListener, EntryFactory
             }
             String uniqueID = entry.getUniqueID();
             if (uniqueID != null) {
-                lookUp.put(uniqueID, entry);
+                Object previous = lookUp.put(uniqueID, entry);
+                if (previous != null && previous != entry) {
+                    // some other entry existed before with the same uniqueID
+                    ((NodeEntry) previous).remove();
+                }
             }
         }
     }

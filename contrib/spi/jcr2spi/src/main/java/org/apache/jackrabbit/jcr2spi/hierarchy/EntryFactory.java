@@ -68,6 +68,9 @@ public class EntryFactory {
         return isf;
     }
 
+    public void notifyEntryCreated(NodeEntry entry) {
+        listener.entryCreated(entry);
+    }
 
     public void notifyIdChange(NodeEntry entry, String previousUniqueID) {
         listener.uniqueIdChanged(entry, previousUniqueID);
@@ -75,6 +78,8 @@ public class EntryFactory {
 
     //--------------------------------------------------------------------------
     public interface NodeEntryListener {
+
+        public void entryCreated(NodeEntry entry);
 
         public void uniqueIdChanged (NodeEntry entry, String previousUniqueID);
     }

@@ -27,6 +27,7 @@ import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
@@ -252,7 +253,9 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @param entry
      * @return the new <code>NodeState</code>.
      */
-    private NodeState createNodeState(NodeInfo info, NodeEntry entry) {
+    private NodeState createNodeState(NodeInfo info, NodeEntry entry) throws NoSuchItemStateException, RepositoryException {
+        assertMatchingPath(info, entry);
+
         // make sure the entry has the correct ItemId
         // this make not be the case, if the hierachy has not been completely
         // resolved yet -> if uniqueID is present, set it on this entry or on
@@ -321,7 +324,9 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @param entry
      * @return the new <code>PropertyState</code>.
      */
-    private PropertyState createPropertyState(PropertyInfo info, PropertyEntry entry) {
+    private PropertyState createPropertyState(PropertyInfo info, PropertyEntry entry) throws NoSuchItemStateException, RepositoryException {
+        assertMatchingPath(info, entry);
+
         // make sure uuid part of id is correct
         String uniqueID = info.getId().getUniqueID();
         if (uniqueID != null) {
@@ -359,6 +364,17 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         notifyCreated(state);
 
         return state;
+    }
+
+    /**
+     * Validation check: Path of the given ItemInfo must match to the Path of
+     * the HierarchyEntry. This is required for Items that are identified by
+     * a uniqueID that may move within the hierarchy upon restore or clone.
+     */
+    private void assertMatchingPath(ItemInfo info, HierarchyEntry entry) throws NoSuchItemStateException, RepositoryException {
+        if (!info.getPath().equals(entry.getPath())) {
+            throw new NoSuchItemStateException("HierarchyEntry does not belong the given ItemInfo.");
+        }
     }
 
     private static NodeEntry getAncestor(HierarchyEntry entry, int degree) {
