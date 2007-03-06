@@ -205,7 +205,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @see Property#setValue(long)
      */
     public void setValue(long value) throws ValueFormatException, VersionException, LockException, RepositoryException {
-	checkIsWritable(false);
+        checkIsWritable(false);
         int reqType = getRequiredType(PropertyType.LONG);
         setValue(session.getValueFactory().createValue(value), reqType);
     }
@@ -214,7 +214,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @see Property#setValue(double)
      */
     public void setValue(double value) throws ValueFormatException, VersionException, LockException, RepositoryException {
-    	checkIsWritable(false);
+        checkIsWritable(false);
         int reqType = getRequiredType(PropertyType.DOUBLE);
         setValue(session.getValueFactory().createValue(value), reqType);
     }
@@ -223,7 +223,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @see Property#setValue(Calendar)
      */
     public void setValue(Calendar value) throws ValueFormatException, VersionException, LockException, RepositoryException {
-	checkIsWritable(false);
+        checkIsWritable(false);
         int reqType = getRequiredType(PropertyType.DATE);
         if (value == null) {
             setInternalValues(null, reqType);
@@ -236,7 +236,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @see Property#setValue(boolean)
      */
     public void setValue(boolean value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
-    	checkIsWritable(false);
+        checkIsWritable(false);
         int reqType = getRequiredType(PropertyType.BOOLEAN);
         setValue(session.getValueFactory().createValue(value), reqType);
     }
@@ -245,7 +245,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @see Property#setValue(Node)
      */
     public void setValue(Node value) throws ValueFormatException, VersionException, LockException, RepositoryException {
-	checkIsWritable(false);
+        checkIsWritable(false);
         int reqType = getRequiredType(PropertyType.REFERENCE);
         if (value == null) {
             setInternalValues(null, reqType);
@@ -385,8 +385,8 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @see javax.jcr.Property#getType()
      */
     public int getType() throws RepositoryException {
-	checkStatus();
-	return getPropertyState().getType();
+        checkStatus();
+        return getPropertyState().getType();
     }
 
     //-----------------------------------------------------------< ItemImpl >---
@@ -423,7 +423,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @return true if the definition indicates that this Property is multivalued.
      */
     private boolean isMultiple() {
-	return getPropertyState().isMultiValued();
+        return getPropertyState().isMultiValued();
     }
 
     /**
