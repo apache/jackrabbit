@@ -622,14 +622,51 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     /**
-     * TODO: implement
+     * {@inheritDoc}
      */
-    public void resolveMergeConflict(SessionInfo sessionInfo,
-                                     NodeId nodeId,
-                                     NodeId[] mergeFailedIds,
-                                     NodeId[] predecessorIds)
+    public void resolveMergeConflict(final SessionInfo sessionInfo,
+                                     final NodeId nodeId,
+                                     final NodeId[] mergeFailedIds,
+                                     final NodeId[] predecessorIds)
             throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException {
-        throw new UnsupportedRepositoryOperationException("not yet implemented");
+        final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        executeWithLocalEvents(new Callable() {
+            public Object run() throws RepositoryException {
+                Node node = getNode(nodeId, sInfo);
+                Version version = null;
+                boolean cancel;
+                try {
+                    List l = Arrays.asList(mergeFailedIds);
+                    Property mergeFailed = node.getProperty(NameFormat.format(QName.JCR_MERGEFAILED, sInfo.getNamespaceResolver()));
+                    Value[] values = mergeFailed.getValues();
+                    for (int i = 0; i < values.length; i++) {
+                        String uuid = values[i].getString();
+                        if (!l.contains(idFactory.createNodeId(uuid))) {
+                            version = (Version) sInfo.getSession().getNodeByUUID(uuid);
+                            break;
+                        }
+                    }
+
+                    l =  new ArrayList(predecessorIds.length);
+                    l.addAll(Arrays.asList(predecessorIds));
+                    Property predecessors = node.getProperty(NameFormat.format(QName.JCR_PREDECESSORS, sInfo.getNamespaceResolver()));
+                    values = predecessors.getValues();
+                    for (int i = 0; i < values.length; i++) {
+                        NodeId vId = idFactory.createNodeId(values[i].getString());
+                        l.remove(vId);
+                    }
+                    cancel = l.isEmpty();
+                } catch (NoPrefixDeclaredException e) {
+                    throw new RepositoryException (e);
+                }
+                if (cancel) {
+                    node.cancelMerge(version);
+                } else {
+                    node.doneMerge(version);
+                }
+                return null;
+            }
+        }, sInfo);
     }
 
     /**
