@@ -8,9 +8,6 @@ Known Issues and TODOs with jcr2spi
         up to now only CacheBehaviour.INVALIDATION has been tested
         
 - TODO: test Observation
-
-- TODO: test Merge, Workspace.restore, Workspace.copy, Workspace.clone
-        (missing clone impl with spi2dav)
        
 - BUG: Node.hasProperty currently returns false, if prop-entry has
        not been loaded yet -> should use same mechanism as Node.getProperty.
