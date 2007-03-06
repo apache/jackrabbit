@@ -31,8 +31,6 @@ import java.util.Set;
 import java.util.LinkedHashSet;
 import java.util.HashSet;
 import java.util.Collection;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * Registers changes made to states and references and consolidates
