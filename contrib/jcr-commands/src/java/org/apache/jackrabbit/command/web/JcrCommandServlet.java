@@ -212,12 +212,12 @@ public class JcrCommandServlet extends HttpServlet {
 
         if (cfg.getInitParameter(PRINT_SUCCESS_KEY) != null) {
             this.printSuccess = Boolean.valueOf(cfg
-                    .getInitParameter(PRINT_SUCCESS_KEY));
+                    .getInitParameter(PRINT_SUCCESS_KEY)).booleanValue();
         }
 
         if (cfg.getInitParameter(AUTO_SAVE_KEY) != null) {
             this.autoSave = Boolean
-                    .valueOf(cfg.getInitParameter(AUTO_SAVE_KEY));
+                    .valueOf(cfg.getInitParameter(AUTO_SAVE_KEY)).booleanValue();
         }
 
         if (cfg.getInitParameter(SESSION_KEY) != null) {
