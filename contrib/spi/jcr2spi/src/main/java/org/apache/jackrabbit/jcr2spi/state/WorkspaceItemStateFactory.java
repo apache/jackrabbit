@@ -342,7 +342,13 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             try {
                 parentState = entry.getParent().getNodeState();
                 EffectiveNodeType ent = wspManager.getNodeTypeRegistry().getEffectiveNodeType(parentState.getNodeTypeNames());
-                definition = ent.getApplicablePropertyDefinition(info.getQName(), info.getType(), info.isMultiValued());
+                QPropertyDefinition defs[] = ent.getApplicablePropertyDefinitions(info.getQName(), info.getType(), info.isMultiValued());
+                if (defs.length == 1) {
+                    definition = defs[0];
+                }
+                else {
+                    definition = service.getPropertyDefinition(sessionInfo, entry.getId());
+                }
             } catch (ItemStateException e) {
                 // should not get here
                 log.warn("Internal error", e);

@@ -103,6 +103,16 @@ public interface EffectiveNodeType {
             throws ConstraintViolationException;
 
     /**
+     * Returns all applicable property definitions for a property with the
+     * specified name, type and multiValued characteristics.
+     * @throws ConstraintViolationException if no applicable property definition
+     *                                      could be found
+     */
+    public QPropertyDefinition[] getApplicablePropertyDefinitions(QName name, int type,
+                                                                  boolean multiValued)
+            throws ConstraintViolationException;
+
+    /**
      * Returns the applicable property definition for a property with the
      * specified name and type. The multiValued flag is not taken into account
      * in the selection algorithm. Other than

@@ -28,6 +28,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -561,6 +562,32 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     /**
      * @inheritDoc
      */
+    public QPropertyDefinition[] getApplicablePropertyDefinitions(QName name, int type, boolean multiValued) throws ConstraintViolationException {
+      
+        QPropertyDefinition named[] = getNamedPropDefs(name);
+        QPropertyDefinition unnamed[] = getUnnamedPropDefs();
+        QPropertyDefinition all[] = new QPropertyDefinition[named.length + unnamed.length];
+        for (int i = 0; i < all.length; i++) {
+            if (i < named.length) {
+                all[i] = named[i]; 
+            }
+            else {
+                all[i] = unnamed[i - named.length];
+            }
+        }
+      
+        QPropertyDefinition result[] = getMatchingPropDefs(all, type, multiValued);
+        if (result.length == 0) {
+            throw new ConstraintViolationException("no matching property definition found for " + name);
+        }
+        else {
+            return result;
+        }
+    }
+
+    /**
+     * @inheritDoc
+     */
     public QPropertyDefinition getApplicablePropertyDefinition(QName name, int type)
             throws ConstraintViolationException {
         // try named property definitions first
@@ -734,6 +761,35 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
             }
         }
         return match;
+    }
+
+    private QPropertyDefinition[] getMatchingPropDefs(QPropertyDefinition[] defs, int type, boolean multiValued) {
+        List result = Collections.EMPTY_LIST;
+    
+        for (int i = 0; i < defs.length; i++) {
+            QItemDefinition qDef = defs[i];
+            if (!qDef.definesNode()) {
+                QPropertyDefinition pd = (QPropertyDefinition)qDef;
+                int reqType = pd.getRequiredType();
+                // match type
+                if (reqType == PropertyType.UNDEFINED || type == PropertyType.UNDEFINED || reqType == type) {
+                    // match multiValued flag
+                    if (multiValued == pd.isMultiple()) {
+                        // found match
+                        if (result.isEmpty()) {
+                            result = Collections.singletonList(pd);
+                        }
+                        else {
+                            if (result.size() == 1) {
+                                result = new ArrayList(result);
+                            }
+                            result.add(pd);
+                        }
+                    }
+                }
+            }
+        }
+        return (QPropertyDefinition[])result.toArray(QPropertyDefinition.EMPTY_ARRAY);
     }
 
     /**
