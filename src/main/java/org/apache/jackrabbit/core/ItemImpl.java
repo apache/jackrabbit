@@ -39,6 +39,7 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -585,6 +586,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                                 && def.getRequiredType() == PropertyType.REFERENCE) {
                             for (int i = 0; i < values.length; i++) {
                                 boolean satisfied = false;
+                                String constraintViolationMsg = null;
                                 try {
                                     UUID targetUUID = (UUID) values[i].internalValue();
                                     Node targetNode = session.getNodeByUUID(targetUUID);
@@ -604,6 +606,22 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                                             break;
                                         }
                                     }
+                                    if (!satisfied) {
+                                        NodeType[] mixinNodeTypes = targetNode.getMixinNodeTypes();
+                                        String[] targetMixins = new String[mixinNodeTypes.length];
+                                        for (int j = 0; j < mixinNodeTypes.length; j++) {
+                                            targetMixins[j] = mixinNodeTypes[j].getName();
+                                        }
+                                        String targetMixinsString = Text.implode(targetMixins, ", ");
+                                        String constraintsString = Text.implode(constraints, ", ");
+                                        constraintViolationMsg = prop.safeGetJCRPath()
+                                                + ": is constraint to ["
+                                                + constraintsString
+                                                + "] but references [primaryType="
+                                                + targetNode.getPrimaryNodeType().getName()
+                                                + ", mixins="
+                                                + targetMixinsString + "]";
+                                    }
                                 } catch (RepositoryException re) {
                                     String msg = prop.safeGetJCRPath()
                                             + ": failed to check REFERENCE value constraint";
@@ -611,11 +629,8 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                                     throw new ConstraintViolationException(msg, re);
                                 }
                                 if (!satisfied) {
-                                    String msg = prop.safeGetJCRPath()
-                                            + ": does not satisfy the value constraint "
-                                            + constraints[0];   // just report the 1st
-                                    log.debug(msg);
-                                    throw new ConstraintViolationException(msg);
+                                    log.debug(constraintViolationMsg);
+                                    throw new ConstraintViolationException(constraintViolationMsg);
                                 }
                             }
                         }
