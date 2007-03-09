@@ -40,6 +40,7 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.value.QValueFactoryImpl;
 import org.apache.jackrabbit.value.ValueFormat;
 
@@ -273,6 +274,8 @@ public class RepositoryServiceImpl implements RepositoryService {
                 getProperty((PropertyId) itemId, sInfo);
             }
         } catch (ItemNotFoundException e) {
+            return false;
+        } catch (PathNotFoundException e) {
             return false;
         }
         return true;
@@ -565,9 +568,42 @@ public class RepositoryServiceImpl implements RepositoryService {
         final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         executeWithLocalEvents(new Callable() {
             public Object run() throws RepositoryException {
-                Node n = getNode(nodeId, sInfo);
-                Node v = getNode(versionId, sInfo);
-                n.restore(v.getName(), removeExisting);
+                Version v = (Version) getNode(versionId, sInfo);
+                if (exists(sessionInfo, nodeId)) {
+                    Node n = getNode(nodeId, sInfo);
+                    n.restore(v, removeExisting);
+                } else {
+                    try {
+                        // restore with rel-Path part
+                        Node n = null;
+                        Path relPath = null;
+                        Path path = nodeId.getPath();
+                        if (nodeId.getUniqueID() != null) {
+                            n = getNode(idFactory.createNodeId(nodeId.getUniqueID()), sInfo);
+                            relPath = (path.isAbsolute()) ? Path.ROOT.computeRelativePath(nodeId.getPath()) : path;
+                        } else {
+                            int degree = 0;
+                            while (degree < path.getLength()) {
+                                Path ancestorPath = path.getAncestor(degree);
+                                NodeId parentId = idFactory.createNodeId(nodeId.getUniqueID(), ancestorPath);
+                                if (exists(sessionInfo, parentId)) {
+                                    n = getNode(parentId, sInfo);
+                                    relPath = ancestorPath.computeRelativePath(path);
+                                }
+                                degree++;
+                            }
+                        }
+                        if (n == null) {
+                            throw new PathNotFoundException("Path not found " + nodeId);
+                        } else {
+                            n.restore(v, PathFormat.format(relPath, sInfo.getNamespaceResolver()), removeExisting);
+                        }
+                    } catch (MalformedPathException e) {
+                        throw new RepositoryException(e);
+                    } catch (NoPrefixDeclaredException e) {
+                        throw new RepositoryException(e);
+                    }
+                }
                 return null;
             }
         }, sInfo);
