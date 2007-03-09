@@ -24,7 +24,8 @@ import org.w3c.dom.Attr;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.InputSource;
-import org.xml.sax.helpers.DefaultHandler;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -37,9 +38,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.PathNotFoundException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
@@ -259,13 +257,12 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
             handler = session.getImportContentHandler(absPath, uuidBehaviour);
         }
 
-        SAXParserFactory factory = SAXParserFactory.newInstance();
-        factory.setNamespaceAware(true);
-        factory.setFeature(
-                "http://xml.org/sax/features/namespace-prefixes", false);
+        XMLReader reader = XMLReaderFactory.createXMLReader();
+        reader.setFeature("http://xml.org/sax/features/namespaces", true);
+        reader.setFeature("http://xml.org/sax/features/namespace-prefixes", false);
 
-        SAXParser parser = factory.newSAXParser();
-        parser.parse(new InputSource(bin), (DefaultHandler) handler);
+        reader.setContentHandler(handler);
+        reader.parse(new InputSource(bin));
 
         if (!withWorkspace) {
             session.save();
