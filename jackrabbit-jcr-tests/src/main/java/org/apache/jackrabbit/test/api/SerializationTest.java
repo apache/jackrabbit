@@ -21,7 +21,8 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.InvalidSerializedDataException;
@@ -36,8 +37,6 @@ import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.version.VersionException;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -191,7 +190,6 @@ public class SerializationTest extends AbstractJCRTest {
      */
     public void doTestLockException(boolean useWorkspace, boolean useHandler)
             throws Exception {
-        Repository repository = session.getRepository();
         exportRepository(SKIPBINARY, RECURSE);
         if (isSupported(Repository.OPTION_LOCKING_SUPPORTED)) {
             //A LockException is thrown if a lock prevents the addition of the subtree.
@@ -262,15 +260,9 @@ public class SerializationTest extends AbstractJCRTest {
      * @param in
      */
     private void helpTestSaxException(ContentHandler ih, Reader in, String mode)
-            throws IOException, ParserConfigurationException {
+            throws IOException {
         try {
-            SAXParserFactory factory = SAXParserFactory.newInstance();
-            factory.setNamespaceAware(true);
-            factory.setFeature(
-                    "http://xml.org/sax/features/namespace-prefixes", false);
-
-            SAXParser parser = factory.newSAXParser();
-            parser.parse(new InputSource(in), (DefaultHandler) ih);
+            createXMLReader(ih).parse(new InputSource(in));
             fail("Parsing an invalid XML file with via " + mode + " ContentHandler did not throw a SAXException.");
         } catch (SAXException e) {
             // success
@@ -556,18 +548,12 @@ public class SerializationTest extends AbstractJCRTest {
     public void doImport(String absPath, FileInputStream in, boolean useWorkspace, boolean useHandler)
             throws Exception {
         if (useHandler) {
-            SAXParserFactory factory = SAXParserFactory.newInstance();
-            factory.setNamespaceAware(true);
-            factory.setFeature(
-                    "http://xml.org/sax/features/namespace-prefixes", false);
-
-            SAXParser parser = factory.newSAXParser();
             if (useWorkspace) {
                 ContentHandler ih = workspace.getImportContentHandler(absPath, 0);
-                parser.parse(new InputSource(in), (DefaultHandler) ih);
+                createXMLReader(ih).parse(new InputSource(in));
             } else {
                 ContentHandler ih = session.getImportContentHandler(absPath, 0);
-                parser.parse(new InputSource(in), (DefaultHandler) ih);
+                createXMLReader(ih).parse(new InputSource(in));
                 session.save();
             }
         } else {
@@ -583,14 +569,8 @@ public class SerializationTest extends AbstractJCRTest {
     public void doImportNoSave(String absPath, FileInputStream in, boolean useHandler)
             throws Exception {
         if (useHandler) {
-            SAXParserFactory factory = SAXParserFactory.newInstance();
-            factory.setNamespaceAware(true);
-            factory.setFeature(
-                    "http://xml.org/sax/features/namespace-prefixes", false);
-
-            SAXParser parser = factory.newSAXParser();
             ContentHandler ih = session.getImportContentHandler(absPath, 0);
-            parser.parse(new InputSource(in), (DefaultHandler) ih);
+            createXMLReader(ih).parse(new InputSource(in));
         } else {
             session.importXML(absPath, in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
         }
@@ -715,19 +695,13 @@ public class SerializationTest extends AbstractJCRTest {
         FileInputStream in = new FileInputStream(file);
         try {
             if (useHandler) {
-                SAXParserFactory factory = SAXParserFactory.newInstance();
-                factory.setNamespaceAware(true);
-                factory.setFeature(
-                        "http://xml.org/sax/features/namespace-prefixes", false);
-
-                SAXParser parser = factory.newSAXParser();
                 if (workspace) {
                     ContentHandler ih = this.workspace.getImportContentHandler(treeComparator.targetFolder, 0);
-                    parser.parse(new InputSource(in), (DefaultHandler) ih);
+                    createXMLReader(ih).parse(new InputSource(in));
                 } else {
                     ContentHandler ih = session.getImportContentHandler(treeComparator.targetFolder,
                             ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
-                    parser.parse(new InputSource(in), (DefaultHandler) ih);
+                    createXMLReader(ih).parse(new InputSource(in));
                     session.save();
                 }
             } else {
@@ -744,5 +718,20 @@ public class SerializationTest extends AbstractJCRTest {
         } finally {
             in.close();
         }
+    }
+
+    /**
+     * Creates an XMLReader for the given content handler.
+     *
+     * @param handler the content handler.
+     * @return an XMLReader for the given content handler.
+     * @throws SAXException if the reader cannot be created.
+     */
+    private XMLReader createXMLReader(ContentHandler handler) throws SAXException {
+        XMLReader reader = XMLReaderFactory.createXMLReader();
+        reader.setFeature("http://xml.org/sax/features/namespaces", true);
+        reader.setFeature("http://xml.org/sax/features/namespace-prefixes", false);
+        reader.setContentHandler(handler);
+        return reader;
     }
 }
