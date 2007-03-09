@@ -152,7 +152,7 @@ public class UpdateTest extends AbstractJCRTest {
 
     public void testUpdateRemovesExtraProperty() throws RepositoryException, NotExecutableException {
         // create test node in default workspace
-        testRootNode.setProperty(propertyName1, "test");
+        testRootNode.setProperty(propertyName2, "test");
         testRootNode.save();
 
         String srcWorkspace = getAnotherWorkspace();
@@ -160,12 +160,15 @@ public class UpdateTest extends AbstractJCRTest {
         Session session2 = helper.getSuperuserSession(srcWorkspace);
         // make sure the source-session has the corresponding node.
         Node testRootW2 = (Node) session2.getItem(testRootNode.getCorrespondingNodePath(srcWorkspace));
+        if (testRootW2.hasProperty(propertyName2)) {
+            throw new NotExecutableException();
+        }
 
         // call the update method on test node in default workspace
         testRootNode.update(srcWorkspace);
 
         // ok first check if node has no longer propertis
-        assertFalse("Node updated with Node.update() should have property removed", testRootNode.hasProperty(propertyName1));
+        assertFalse("Node updated with Node.update() should have property removed", testRootNode.hasProperty(propertyName2));
     }
 
     public void testUpdateAddsMissingSubtree() throws RepositoryException, NotExecutableException {
