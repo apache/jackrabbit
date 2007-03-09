@@ -686,7 +686,7 @@ public class VersionHistoryTest extends AbstractVersionTest {
         }
         try {
             vHistory.restore(version, "abc", true);
-            fail("VersionHistory.restore(Version,String,boolean) did not throw an UnsupportedRepositoryOperationException");
+            fail("VersionHistory.restore(Version,String,boolean) did not throw an ConstraintViolationException");
         } catch (ConstraintViolationException success) {
         }
     }
