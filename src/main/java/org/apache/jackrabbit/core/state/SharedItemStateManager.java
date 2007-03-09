@@ -50,6 +50,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.HashMap;
 
 /**
  * Shared <code>ItemStateManager</code> (SISM). Caches objects returned from a
@@ -458,7 +459,7 @@ public class SharedItemStateManager
     /**
      * Object representing a single update operation.
      */
-    class Update {
+    class Update implements org.apache.jackrabbit.core.cluster.Update {
 
         /**
          * Local change log.
@@ -497,6 +498,11 @@ public class SharedItemStateManager
         private boolean holdingWriteLock;
 
         /**
+         * Map of attributes stored for this update operation.
+         */
+        private HashMap attributes;
+
+        /**
          * Create a new instance of this class.
          */
         public Update(ChangeLog local, EventStateCollectionFactory factory,
@@ -520,7 +526,7 @@ public class SharedItemStateManager
 
             /* let listener know about change */
             if (eventChannel != null) {
-                eventChannel.updateCreated();
+                eventChannel.updateCreated(this);
             }
 
             try {
@@ -528,7 +534,7 @@ public class SharedItemStateManager
                 holdingWriteLock = true;
             } finally {
                 if (!holdingWriteLock && eventChannel != null) {
-                    eventChannel.updateCancelled();
+                    eventChannel.updateCancelled(this);
                 }
             }
 
@@ -650,7 +656,7 @@ public class SharedItemStateManager
 
                 /* let listener know about change */
                 if (eventChannel != null) {
-                    eventChannel.updatePrepared(local, events);
+                    eventChannel.updatePrepared(this);
                 }
 
                 /* Push all changes from the local items to the shared items */
@@ -715,7 +721,7 @@ public class SharedItemStateManager
 
                 /* let listener know about finished operation */
                 if (eventChannel != null) {
-                    eventChannel.updateCommitted();
+                    eventChannel.updateCommitted(this);
                 }
 
             } finally {
@@ -737,7 +743,7 @@ public class SharedItemStateManager
             try {
                 /* let listener know about cancelled operation */
                 if (eventChannel != null) {
-                    eventChannel.updateCancelled();
+                    eventChannel.updateCancelled(this);
                 }
 
                 local.disconnect();
@@ -768,6 +774,40 @@ public class SharedItemStateManager
                     holdingWriteLock = false;
                 }
             }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void setAttribute(String name, Object value) {
+            if (attributes == null) {
+                attributes = new HashMap();
+            }
+            attributes.put(name, value);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public Object getAttribute(String name) {
+            if (attributes != null) {
+                return attributes.get(name);
+            }
+            return null;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public ChangeLog getChanges() {
+            return local;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public EventStateCollection getEvents() {
+            return events;
         }
     }
 

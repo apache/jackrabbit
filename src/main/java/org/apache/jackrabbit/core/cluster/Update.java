@@ -21,42 +21,37 @@ import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 
 /**
- * Event channel used to transmit update operations.
+ * Update operation passed in <code>UpdateEventChannel</code>.
  */
-public interface UpdateEventChannel {
+public interface Update {
 
     /**
-     * Called when an a update operation has been created.
+     * Set an attribute of this update operation. Can be used
+     * to remember some setting for a later notification.
      *
-     * @param update update operation
+     * @param name attribute name
+     * @param value attribute value
      */
-    public void updateCreated(Update update);
+    public void setAttribute(String name, Object value);
 
     /**
-     * Called when an a update operation has been prepared.
+     * Return an attribute of this update operation.
      *
-     * @param update update operation
+     * @param name attribute name
+     * @return attribute value or <code>null</code>
      */
-    public void updatePrepared(Update update);
+    public Object getAttribute(String name);
 
     /**
-     * Called when an a update operation has been committed.
+     * Return the local changes of this update operation.
      *
-     * @param update update operation
+     * @return local changes
      */
-    public void updateCommitted(Update update);
+    public ChangeLog getChanges();
 
     /**
-     * Called when an a update operation has been cancelled.
-     *
-     * @param update update operation
+     * Return the collection of events this update operation will
+     * generate.
      */
-    public void updateCancelled(Update update);
-
-    /**
-     * Set listener that will receive information about incoming, external update events.
-     *
-     * @param listener update event listener
-     */
-    public void setListener(UpdateEventListener listener);
+    public EventStateCollection getEvents();
 }

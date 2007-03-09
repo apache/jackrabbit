@@ -436,14 +436,14 @@ public class ClusterNode implements Runnable,
     class WorkspaceUpdateChannel implements UpdateEventChannel {
 
         /**
+         * Attribute name used to store record.
+         */
+        private static final String ATTRIBUTE_RECORD = "record";
+
+        /**
          * Workspace name.
          */
         private final String workspace;
-
-        /**
-         * Record being appended.
-         */
-        private Record record;
 
         /**
          * Create a new instance of this class.
@@ -457,20 +457,14 @@ public class ClusterNode implements Runnable,
         /**
          * {@inheritDoc}
          */
-        public void updateCreated() {
+        public void updateCreated(Update update) {
             if (status != STARTED) {
                 log.info("not started: update create ignored.");
                 return;
             }
-            if (record != null) {
-                String msg = "Record already created.";
-                log.warn(msg);
-                return;
-            }
             try {
-                sync();
-                record = journal.getProducer(PRODUCER_ID).append();
-                //sync();
+                Record record = journal.getProducer(PRODUCER_ID).append();
+                update.setAttribute(ATTRIBUTE_RECORD, record);
             } catch (JournalException e) {
                 String msg = "Unable to create log entry.";
                 log.error(msg, e);
@@ -483,22 +477,25 @@ public class ClusterNode implements Runnable,
         /**
          * {@inheritDoc}
          */
-        public void updatePrepared(ChangeLog changes, EventStateCollection esc) {
+        public void updatePrepared(Update update) {
             if (status != STARTED) {
                 log.info("not started: update prepare ignored.");
                 return;
             }
+            Record record = (Record) update.getAttribute(ATTRIBUTE_RECORD);
             if (record == null) {
                 String msg = "No record created.";
                 log.warn(msg);
                 return;
             }
 
+            EventStateCollection events = update.getEvents();
+            ChangeLog changes = update.getChanges();
             boolean succeeded = false;
 
             try {
                 record.writeString(workspace);
-                write(record, changes, esc);
+                write(record, changes, events);
                 record.writeChar('\0');
                 succeeded = true;
             } catch (JournalException e) {
@@ -510,7 +507,7 @@ public class ClusterNode implements Runnable,
             } finally {
                 if (!succeeded && record != null) {
                     record.cancelUpdate();
-                    record = null;
+                    update.setAttribute(ATTRIBUTE_RECORD, null);
                 }
             }
         }
@@ -518,11 +515,12 @@ public class ClusterNode implements Runnable,
         /**
          * {@inheritDoc}
          */
-        public void updateCommitted() {
+        public void updateCommitted(Update update) {
             if (status != STARTED) {
                 log.info("not started: update commit ignored.");
                 return;
             }
+            Record record = (Record) update.getAttribute(ATTRIBUTE_RECORD);
             if (record == null) {
                 String msg = "No record prepared.";
                 log.warn(msg);
@@ -539,21 +537,22 @@ public class ClusterNode implements Runnable,
                 String msg = "Unexpected error while committing log entry.";
                 log.error(msg, e);
             } finally {
-                record = null;
+                update.setAttribute(ATTRIBUTE_RECORD, null);
             }
         }
 
         /**
          * {@inheritDoc}
          */
-        public void updateCancelled() {
+        public void updateCancelled(Update update) {
             if (status != STARTED) {
                 log.info("not started: update cancel ignored.");
                 return;
             }
+            Record record = (Record) update.getAttribute(ATTRIBUTE_RECORD);
             if (record != null) {
                 record.cancelUpdate();
-                record = null;
+                update.setAttribute(ATTRIBUTE_RECORD, null);
             }
         }
 
