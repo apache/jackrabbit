@@ -31,7 +31,7 @@
         <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/"
            class="externalLink" title="JCR 1.0 API documentation"
            >API documentation</a>, check our introduction to
-        <a href="doc/arch/overview/jcrlevels.html">JCR levels</a>,
+        <a href="arch/overview/jcrlevels.html">JCR levels</a>,
         or read some of the
         <a href="http://wiki.apache.org/jackrabbit/JcrLinks"
            class="externalLink" title="JCR Links">JCR articles</a> to
