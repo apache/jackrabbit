@@ -74,7 +74,7 @@ class LockInfoImpl implements LockInfo {
         this.lockOwner = lock.getLockOwner();
         this.isDeep = lock.isDeep();
         this.isSessionScoped = lock.isSessionScoped();
-        this.nodeId = idFactory.createNodeId(node, nsResolver);
+        this.nodeId = idFactory.createNodeId(lock.getNode(), nsResolver);
     }
 
     /**
