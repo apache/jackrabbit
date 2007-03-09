@@ -542,7 +542,7 @@ public class LockTest extends AbstractJCRTest {
         Lock lock = n2.getLock();
 
         // lock holding node must be parent
-        assertTrue("lock holding node must be parent", lock.getNode().equals(n1));
+        assertTrue("lock holding node must be parent", lock.getNode().isSame(n1));
     }
 
     /**
