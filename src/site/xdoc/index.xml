@@ -47,12 +47,19 @@
       </p>
       <subsection name="Apache Jackrabbit News">
         <dl>
+          <dt><strong>March 11, 2007: Apache Jackrabbit 1.2.3 released</strong></dt>
+          <dd>
+            From the release notes: "<em>Apache Jackrabbit 1.2.3 is patch
+            release with bug fixes for issues like correctly reporting the
+            number of access controlled query results and proper cleanup
+            after indexing PDF documents.</em>"
+            See the <a href="downloads.cgi">downloads page</a> for more details.
+          </dd>
           <dt><strong>February 21, 2007: Apache Jackrabbit 1.2.2 released</strong></dt>
           <dd>
             From the release notes: "<em>Apache Jackrabbit 1.2.2 is a patch
             release that fixes a few issues reported since the 1.2.1 release
             and adds two clustering improvements.</em>"
-            See the <a href="downloads.cgi">downloads page</a> for more details.
           </dd>
           <dt><strong>January 23, 2007: Apache Jackrabbit 1.2.1 released</strong></dt>
           <dd>
@@ -61,13 +68,6 @@
             improvements, and bug fixes. The most notable changes in this
             release are the introduction of a clustering feature and various
             query improvements.</em>"
-          </dd>
-          <dt><strong>December 4, 2006: Apache Jackrabbit 1.1.1 released</strong></dt>
-          <dd>
-            From the release notes: "<em>Apache Jackrabbit 1.1.1 is a patch
-            release that fixes a number of issues, see the included change
-            history for details. No new features or configuration changes have
-            been introduced since the 1.1 release.</em>"
           </dd>
         </dl>
         <p>
