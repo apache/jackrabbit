@@ -27,6 +27,13 @@
       </p>
       <subsection name="News in 2007">
         <dl>
+          <dt><strong>March 11, 2007: Apache Jackrabbit 1.2.3 released</strong></dt>
+          <dd>
+            From the release notes: "<em>Apache Jackrabbit 1.2.3 is patch
+            release with bug fixes for issues like correctly reporting the
+            number of access controlled query results and proper cleanup
+            after indexing PDF documents.</em>"
+          </dd>
           <dt><strong>February 21, 2007: Apache Jackrabbit 1.2.2 released</strong></dt>
           <dd>
             From the release notes: "<em>Apache Jackrabbit 1.2.2 is a patch
