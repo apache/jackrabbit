@@ -28,7 +28,17 @@ import java.io.InputStream;
 import java.io.IOException;
 
 /**
- * Default file-based journal implementation.
+ * File-based journal implementation that appends journal records to a single
+ * file.<p/>
+ * It is configured through the following properties:
+ * <ul>
+ * <li><code>directory</code>: the directory where to keep the journal file as
+ * well as the rotated files; this is a required property with no default value</li>
+ * <li><code>basename</code>: the basename of journal files; the default
+ * value is {@link #DEFAULT_BASENAME}</li>
+ * <li><code>maximumSize</code>: the maximum size of an active journal file
+ * before rotating it: the default value is {@link #DEFAULT_MAXSIZE} </li>
+ * </ul>
  */
 public class FileJournal extends AbstractJournal {
 
