@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
+import org.apache.jackrabbit.core.persistence.bundle.CachingPersistenceManager;
 import org.apache.jackrabbit.core.version.XAVersionManager;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
@@ -894,12 +895,17 @@ public class SharedItemStateManager
     }
 
     /**
-     * Perform the external update. While executing this method, the <code>writeLock</code>
-     * on this manager is held.
+     * Perform the external update. While executing this method, the
+     * <code>writeLock</code> on this manager is held.
      *
      * @param external external change containing only node and property ids.
      */
     protected void doExternalUpdate(ChangeLog external) {
+        // workaround to flush cache of persistence manager
+        if (persistMgr instanceof CachingPersistenceManager) {
+            ((CachingPersistenceManager) persistMgr).onExternalUpdate(external);
+        }
+
         ChangeLog shared = new ChangeLog();
 
         // Build a copy of the external change log, consisting of shared

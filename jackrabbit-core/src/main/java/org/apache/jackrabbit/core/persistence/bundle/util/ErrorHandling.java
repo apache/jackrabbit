@@ -1,0 +1,83 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.core.persistence.bundle.util;
+
+import java.util.HashSet;
+import java.util.Iterator;
+
+/**
+ * ErrorHandling configuration abstraction class
+ */
+public final class ErrorHandling {
+
+    /**
+     * Controls if references to missing blob resources are treaded as errors
+     * or not.
+     */
+    public static final String IGNORE_MISSING_BLOBS = "IGN_MISSING_BLOBS";
+
+    /** all available configuration codes */
+    private static final String[] CODES = {
+            IGNORE_MISSING_BLOBS
+    };
+
+    /** the flags */
+    private final HashSet flags = new HashSet();
+
+    /**
+     * Creates a default error handling config.
+     */
+    public ErrorHandling() {
+    }
+
+    /**
+     * Creates a new error handling configuration based on the given string.
+     * The individual flags should be seperated with "|".
+     *
+     * @param str flags
+     */
+    public ErrorHandling(String str) {
+        for (int i=0; i<CODES.length; i++) {
+            if (str.indexOf(CODES[i])>=0) {
+                flags.add(CODES[i]);
+            }
+        }
+    }
+
+    /**
+     * Checks if error handling is set to ignore missing blobs
+     * @return <code>true</code> if error handling is set to ignore missing blobs.
+     */
+    public boolean ignoreMissingBlobs() {
+        return flags.contains(IGNORE_MISSING_BLOBS);
+    }
+
+    /**
+     * Returns the string representation where the flags are seperated
+     * with "|".
+     * @return the string representation.
+     */
+    public String toString() {
+        StringBuffer ret = new StringBuffer("|");
+        Iterator iter = flags.iterator();
+        while (iter.hasNext()) {
+            ret.append(iter.next());
+        }
+        ret.append("|");
+        return ret.toString();
+    }
+}
