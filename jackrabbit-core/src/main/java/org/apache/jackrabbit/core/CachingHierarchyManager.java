@@ -98,7 +98,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      *
      * @param rootNodeId   root node id
      * @param provider     item state manager
-     * @param nsResolver   namespace resolver
+     * @param resolver   namespace resolver
      */
     public CachingHierarchyManager(NodeId rootNodeId,
                                    ItemStateManager provider,
