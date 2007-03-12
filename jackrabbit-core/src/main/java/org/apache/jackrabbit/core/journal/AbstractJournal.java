@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.journal;
 
 import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
-import EDU.oswego.cs.dl.util.concurrent.WriterPreferenceReadWriteLock;
+import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.name.NamespaceResolver;
 
 /**
- * Base implementation for a journal.
+ * Base journal implementation.
  */
 public abstract class AbstractJournal implements Journal {
 
@@ -59,9 +59,10 @@ public abstract class AbstractJournal implements Journal {
     private final Map producers = new HashMap();
 
     /**
-     * Read
+     * Journal lock, allowing multiple readers (synchronizing their contents)
+     * but only one writer (appending a new entry).
      */
-    private final ReadWriteLock rwLock = new WriterPreferenceReadWriteLock();
+    private final ReadWriteLock rwLock = new ReentrantWriterPreferenceReadWriteLock();
 
     /**
      * {@inheritDoc}
@@ -208,6 +209,7 @@ public abstract class AbstractJournal implements Journal {
 
     /**
      * Return an iterator over all records after the specified revision.
+     * Subclass responsibility.
      *
      * @param startRevision start point (exlusive)
      * @throws JournalException if an error occurs
