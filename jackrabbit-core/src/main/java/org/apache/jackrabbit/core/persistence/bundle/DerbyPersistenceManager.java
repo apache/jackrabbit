@@ -34,12 +34,6 @@ import javax.jcr.RepositoryException;
  * Configuration:<br>
  * <ul>
  * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
- * <li>&lt;param name="{@link #setBlobFSBlockSize(String) blobFSBlockSize}" value="0"/>
- * <li>&lt;param name="{@link #setBlobFSInitialCacheSize(String) blobFSInitialCacheSize}" value="100"/>
- * <li>&lt;param name="{@link #setBlobFSMaximumCacheSize(String) blobFSMaximumCacheSize}" value="4000"/>
- * <li>&lt;param name="{@link #setBlobFSLogBufferCache(String) blobFSLogBufferCache}" value="false"/>
- * <li>&lt;param name="{@link #setBlobFSLogIOCalls(String) blobFSLogIOCalls}" value="false"/>
- * <li>&lt;param name="{@link #setBlobFSLogSYSCalls(String) blobFSLogSYSCalls}" value="false"/>
  * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/>
  * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="16384"/>
  * <li>&lt;param name="{@link #setDriver(String) driver}" value="org.apache.derby.jdbc.EmbeddedDriver"/>
@@ -118,7 +112,8 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
      * requested number of pages, as long as they allocate at least one page.
      * <p/>
      * Default is <code>16</code>
-     * @param derbyStorageInitialPages
+     *
+     * @param derbyStorageInitialPages the number of initial pages
      */
     public void setDerbyStorageInitialPages(String derbyStorageInitialPages) {
         this.derbyStorageInitialPages =
@@ -146,7 +141,7 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
      * <p/>
      * Default is <code>256</code>
      *
-     * @param derbyStorageMinimumRecordSize
+     * @param derbyStorageMinimumRecordSize the minimum record size
      */
     public void setDerbyStorageMinimumRecordSize(String derbyStorageMinimumRecordSize) {
         this.derbyStorageMinimumRecordSize =
@@ -183,7 +178,7 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
      * Default is <code>1024</code> (which gives about 16mb memory usage given
      * the default of 16384 as page size).
      *
-     * @param derbyStoragePageCacheSize
+     * @param derbyStoragePageCacheSize the page cache size
      */
     public void setDerbyStoragePageCacheSize(String derbyStoragePageCacheSize) {
         this.derbyStoragePageCacheSize =
@@ -214,7 +209,7 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
      * <p/>
      * Default is <code>20%</code>
      *
-     * @param derbyStoragePageReservedSpace
+     * @param derbyStoragePageReservedSpace the page reserved space
      */
     public void setDerbyStoragePageReservedSpace(String derbyStoragePageReservedSpace) {
         this.derbyStoragePageReservedSpace =
@@ -238,7 +233,7 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
      * <p/>
      * Default is <code>16384</code>
      *
-     * @param derbyStoragePageSize
+     * @param derbyStoragePageSize the storage page size
      */
     public void setDerbyStoragePageSize(String derbyStoragePageSize) {
         this.derbyStoragePageSize = Integer.decode(derbyStoragePageSize).intValue();
