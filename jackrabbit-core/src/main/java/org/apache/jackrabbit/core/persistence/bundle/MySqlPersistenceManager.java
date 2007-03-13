@@ -24,12 +24,6 @@ import org.apache.jackrabbit.core.persistence.PMContext;
  * Configuration:<br>
  * <ul>
  * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
- * <li>&lt;param name="{@link #setBlobFSBlockSize(String) blobFSBlockSize}" value="0"/>
- * <li>&lt;param name="{@link #setBlobFSInitialCacheSize(String) blobFSInitialCacheSize}" value="100"/>
- * <li>&lt;param name="{@link #setBlobFSMaximumCacheSize(String) blobFSMaximumCacheSize}" value="4000"/>
- * <li>&lt;param name="{@link #setBlobFSLogBufferCache(String) blobFSLogBufferCache}" value="false"/>
- * <li>&lt;param name="{@link #setBlobFSLogIOCalls(String) blobFSLogIOCalls}" value="false"/>
- * <li>&lt;param name="{@link #setBlobFSLogSYSCalls(String) blobFSLogSYSCalls}" value="false"/>
  * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/>
  * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="16384"/>
  * <li>&lt;param name="{@link #setDriver(String) driver}" value="org.gjt.mm.mysql.Drive"/>
