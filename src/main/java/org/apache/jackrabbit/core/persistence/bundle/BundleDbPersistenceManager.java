@@ -62,6 +62,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Driver;
 import java.util.Iterator;
+import java.util.Collection;
+import java.util.ArrayList;
 
 import javax.jcr.RepositoryException;
 
@@ -74,6 +76,7 @@ import javax.jcr.RepositoryException;
  * <li>&lt;param name="{@link #setExternalBLOBs(String)} externalBLOBs}" value="false"/>
  * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
  * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/>
+ * <li>&lt;param name="{@link #setConsistencyFix(String) consistencyFix}" value="false"/>
  * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="4096"/>
  * <li>&lt;param name="{@link #setDriver(String) driver}" value=""/>
  * <li>&lt;param name="{@link #setUrl(String) url}" value=""/>
@@ -125,6 +128,9 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
 
     /** flag indicating if a consistency check should be issued during startup */
     protected boolean consistencyCheck = false;
+
+    /** flag indicating if the consistency check should attempt to fix issues */
+    protected boolean consistencyFix = false;
 
     /** initial size of buffer used to serialize objects */
     protected static final int INITIAL_BUFFER_SIZE = 1024;
@@ -320,6 +326,24 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      */
     public void setConsistencyCheck(String consistencyCheck) {
         this.consistencyCheck = Boolean.valueOf(consistencyCheck).booleanValue();
+    }
+
+    /**
+     * Checks if consistency fix is enabled.
+     * @return <code>true</code> if consistency fix is enabled.
+     */
+    public String getConsistencyFix() {
+        return Boolean.toString(consistencyFix);
+    }
+
+    /**
+     * Defines if the consistency check should attempt to fix issues that
+     * it finds.
+     *
+     * @param consistencyFix the consistency fix flag.
+     */
+    public void setConsistencyFix(String consistencyFix) {
+        this.consistencyFix = Boolean.valueOf(consistencyFix).booleanValue();
     }
 
     /**
@@ -632,6 +656,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         int total = 0;
         log.info("{}: checking workspace consistency...", name);
 
+        Collection modifications = new ArrayList();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         DataInputStream din = null;
@@ -644,29 +669,33 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             stmt.execute();
             rs = stmt.getResultSet();
             while (rs.next()) {
-                UUID uuid;
+                NodeId id;
                 Blob blob;
                 if (getStorageModel() == SM_BINARY_KEYS) {
-                    uuid = new UUID(rs.getBytes(1));
+                    id = new NodeId(new UUID(rs.getBytes(1)));
                     blob = rs.getBlob(2);
                 } else {
-                    uuid = new UUID(rs.getLong(1), rs.getLong(2));
+                    id = new NodeId(new UUID(rs.getLong(1), rs.getLong(2)));
                     blob = rs.getBlob(3);
                 }
-                NodeId id = new NodeId(uuid);
-                TrackingInputStream cin =
-                    new TrackingInputStream(blob.getBinaryStream());
-                din = new DataInputStream(cin);
+                din = new DataInputStream(blob.getBinaryStream());
                 try {
                     NodePropBundle bundle = binding.readBundle(din, id);
-                    bundle.setSize(cin.getPosition());
+                    Collection missingChildren = new ArrayList();
                     Iterator iter = bundle.getChildNodeEntries().iterator();
                     while (iter.hasNext()) {
                         NodePropBundle.ChildNodeEntry entry = (NodePropBundle.ChildNodeEntry) iter.next();
+                        if (entry.getId().toString().endsWith("babecafebabe")) {
+                            continue;
+                        }
+                        if (id.toString().endsWith("babecafebabe")) {
+                            continue;
+                        }
                         try {
                             NodePropBundle child = loadBundle(entry.getId());
                             if (child == null) {
                                 log.error("NodeState " + id.getUUID() + " references unexistent child " + entry.getName() + " with id " + entry.getId().getUUID());
+                                missingChildren.add(entry);
                             } else {
                                 NodeId cp = child.getParentId();
                                 if (cp == null) {
@@ -678,8 +707,15 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                         } catch (ItemStateException e) {
                             log.error("Error while loading child node: " + e);
                         }
-
                     }
+                    if (consistencyFix && !missingChildren.isEmpty()) {
+                        Iterator iterator = missingChildren.iterator();
+                        while (iterator.hasNext()) {
+                            bundle.getChildNodeEntries().remove(iterator.next());
+                        }
+                        modifications.add(bundle);
+                    }
+
                     NodeId parentId = bundle.getParentId();
                     if (parentId != null) {
                         if (!exists(parentId)) {
@@ -687,7 +723,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                         }
                     }
                 } catch (IOException e) {
-                    log.error("Error in bundle " + uuid + ": " + e);
+                    log.error("Error in bundle " + id + ": " + e);
                     din = new DataInputStream(blob.getBinaryStream());
                     binding.checkBundle(din);
                 }
@@ -704,8 +740,24 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             closeStatement(stmt);
         }
 
+        if (consistencyFix && !modifications.isEmpty()) {
+            log.info(name + ": Fixing " + modifications.size() + " inconsistent bundle(s)...");
+            Iterator iterator = modifications.iterator();
+            while (iterator.hasNext()) {
+                NodePropBundle bundle = (NodePropBundle) iterator.next();
+                try {
+                    log.info(name + ": Fixing bundle " + bundle.getId());
+                    bundle.markOld(); // use UPDATE instead of INSERT
+                    storeBundle(bundle);
+                } catch (ItemStateException e) {
+                    log.error(name + ": Error storing fixed bundle: " + e);
+                }
+            }
+        }
+
         log.info(name + ": checked " + count + "/" + total + " bundles.");
     }
+
 
     /**
      * Makes sure that <code>schemaObjectPrefix</code> does only consist of
