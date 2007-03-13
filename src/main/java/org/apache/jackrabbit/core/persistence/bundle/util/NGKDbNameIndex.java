@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.persistence.bundle.util;
 
-import org.apache.jackrabbit.core.persistence.bundle.util.DbNameIndex;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Connection;

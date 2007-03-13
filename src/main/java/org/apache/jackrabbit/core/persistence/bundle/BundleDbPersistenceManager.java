@@ -218,7 +218,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
 
     /**
      * Sets the password that will be used to establish JDBC connections.
-     * @param password
+     * @param password the password for the connection
      */
     public void setPassword(String password) {
         this.password = password;
@@ -290,6 +290,14 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     /**
+     * Returns if uses external (filesystem) blob store.
+     * @return if uses external (filesystem) blob store.
+     */
+    public String getExternalBLOBs() {
+        return String.valueOf(externalBLOBs);
+    }
+
+    /**
      * Sets the flag for external (filsystem) blob store usage.
      * @param externalBLOBs a value of "true" indicates that an external blob
      *        store is to be used.
@@ -315,18 +323,18 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     /**
-     * Returns the miminum blob size.
-     * @return the miminum blob size.
+     * Returns the miminum blob size in bytes.
+     * @return the miminum blob size in bytes.
      */
-    public int getMinBlobSize() {
-        return minBlobSize;
+    public String getMinBlobSize() {
+        return String.valueOf(minBlobSize);
     }
 
     /**
      * Sets the minumum blob size. This size defines the threshhold of which
      * size a property is included in the bundle or is stored in the blob store.
      *
-     * @param minBlobSize
+     * @param minBlobSize the minimum blobsize in bytes.
      */
     public void setMinBlobSize(String minBlobSize) {
         this.minBlobSize = Integer.decode(minBlobSize).intValue();
@@ -336,7 +344,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * Sets the error handling behaviour of this manager. See {@link ErrorHandling}
      * for details about the flags.
      *
-     * @param errorHandling
+     * @param errorHandling the error handling flags
      */
     public void setErrorHandling(String errorHandling) {
         this.errorHandling = new ErrorHandling(errorHandling);
@@ -369,6 +377,9 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * Checks if the required schema objects exist and creates them if they
      * don't exist yet.
+     *
+     * @throws SQLException if an SQL error occurs.
+     * @throws RepositoryException if an error occurs.
      */
     protected void checkSchema() throws SQLException, RepositoryException {
         DatabaseMetaData metaData = con.getMetaData();
@@ -481,6 +492,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         // in order to re-register the driver in the DriverManager after a
         // repository shutdown.
         Driver drv = (Driver) Class.forName(driver).newInstance();
+        log.info("JDBC driver created: {}", drv);
         con = DriverManager.getConnection(url, user, password);
         con.setAutoCommit(true);
 
@@ -529,7 +541,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * Creates a suitable blobstore
      * @return a blobstore
-     * @throws Exception
+     * @throws Exception if an unspecified error occurs
      */
     protected CloseableBLOBStore createBlobStore() throws Exception {
         if (useLocalFsBlobStore()) {
@@ -582,7 +594,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * Creates a blob store that is based on a local fs. This is called by
      * init if {@link #useLocalFsBlobStore()} returns <code>true</code>.
      *
-     * @param context
+     * @param context the persistence manager context
      * @return a blob store
      * @throws Exception if an error occurs.
      */
@@ -602,7 +614,8 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * Creates a blob store that uses the database. This is called by
      * init if {@link #useDbBlobStore()} returns <code>true</code>.
      *
-     * @param context
+     * @param context the persistence manager context
+     *
      * @return a blob store
      * @throws Exception if an error occurs.
      */
@@ -762,11 +775,11 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * Sets the key parameters to the prepared statement, starting at
      * <code>pos</code> and returns the number of key parameters + pos.
      *
-     * @param stmt
-     * @param uuid
-     * @param pos
+     * @param stmt the statement
+     * @param uuid the uuid of the key
+     * @param pos the position of the key parameter
      * @return the number of key parameters + <code>pos</code>
-     * @throws SQLException
+     * @throws SQLException if an SQL error occurs.
      */
     protected int setKey(PreparedStatement stmt, UUID uuid, int pos)
             throws SQLException {
@@ -1053,7 +1066,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
 
     /**
      * closes the input stream
-     * @param ins
+     * @param ins the inputs stream
      */
     protected void closeStream(InputStream ins) {
         if (ins != null) {
@@ -1067,7 +1080,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
 
     /**
      * closes the statement
-     * @param stmt
+     * @param stmt the statemenet
      */
     protected void closeStatement(PreparedStatement stmt) {
         if (stmt != null) {
@@ -1081,8 +1094,8 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
 
     /**
      * logs an sql exception
-     * @param message
-     * @param se
+     * @param message the message
+     * @param se the exception
      */
     protected void logException(String message, SQLException se) {
         if (message != null) {

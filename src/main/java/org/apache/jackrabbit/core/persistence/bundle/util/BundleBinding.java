@@ -61,7 +61,8 @@ public class BundleBinding extends ItemStateBinding {
      * @param nsIndex the namespace index
      * @param nameIndex the name index
      */
-    public BundleBinding(ErrorHandling errorHandling, BLOBStore blobStore, StringIndex nsIndex, StringIndex nameIndex) {
+    public BundleBinding(ErrorHandling errorHandling, BLOBStore blobStore,
+                         StringIndex nsIndex, StringIndex nameIndex) {
         super(errorHandling, blobStore, nsIndex, nameIndex);
     }
 

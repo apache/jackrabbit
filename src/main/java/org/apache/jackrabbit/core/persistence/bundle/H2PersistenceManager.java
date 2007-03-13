@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.persistence.bundle;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 
@@ -32,12 +30,6 @@ import javax.jcr.RepositoryException;
  * Configuration:<br>
  * <ul>
  * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
- * <li>&lt;param name="{@link #setBlobFSBlockSize(String) blobFSBlockSize}" value="0"/>
- * <li>&lt;param name="{@link #setBlobFSInitialCacheSize(String) blobFSInitialCacheSize}" value="100"/>
- * <li>&lt;param name="{@link #setBlobFSMaximumCacheSize(String) blobFSMaximumCacheSize}" value="4000"/>
- * <li>&lt;param name="{@link #setBlobFSLogBufferCache(String) blobFSLogBufferCache}" value="false"/>
- * <li>&lt;param name="{@link #setBlobFSLogIOCalls(String) blobFSLogIOCalls}" value="false"/>
- * <li>&lt;param name="{@link #setBlobFSLogSYSCalls(String) blobFSLogSYSCalls}" value="false"/>
  * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/>
  * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="16384"/>
  * <li>&lt;param name="{@link #setDriver(String) driver}" value="org.hsqldb.jdbcDriver"/>
@@ -54,11 +46,6 @@ public class H2PersistenceManager extends BundleDbPersistenceManager {
 
     /** the cvs/svn id */
     static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
-    /**
-     * the default logger
-     */
-    private static Logger log = LoggerFactory.getLogger(H2PersistenceManager.class);
 
     /** the lock time out. see*/
     private long lockTimeout = 10000;
