@@ -320,7 +320,7 @@ abstract class AbstractVersionManager implements VersionManager {
             // end update
             operation.save();
 
-            log.info("Created new version history " + hist.getId() + " for " + node + ".");
+            log.debug("Created new version history " + hist.getId() + " for " + node + ".");
             return hist;
 
         } catch (ItemStateException e) {
