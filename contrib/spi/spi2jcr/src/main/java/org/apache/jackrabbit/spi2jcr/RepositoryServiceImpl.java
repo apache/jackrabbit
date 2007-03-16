@@ -932,20 +932,21 @@ public class RepositoryServiceImpl implements RepositoryService {
             executeGuarded(new Callable() {
                 public Object run() throws RepositoryException {
                     Session s = sInfo.getSession();
-                    Node n = getNode(parentId, sInfo);
+                    Node parent = getParent(parentId, sInfo);
+
                     String jcrName = getJcrName(nodeName);
                     String ntName = getJcrName(nodetypeName);
                     if (uuid == null) {
                         if (ntName == null) {
-                            n.addNode(jcrName);
+                            parent.addNode(jcrName);
                         } else {
-                            n.addNode(jcrName, ntName);
+                            parent.addNode(jcrName, ntName);
                         }
                     } else {
                         String xml = createXMLFragment(jcrName, ntName, uuid);
                         InputStream in = new ByteArrayInputStream(xml.getBytes());
                         try {
-                            s.importXML(n.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+                            s.importXML(parent.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
                         } catch (IOException e) {
                             throw new RepositoryException(e.getMessage(), e);
                         }
@@ -962,10 +963,10 @@ public class RepositoryServiceImpl implements RepositoryService {
             executeGuarded(new Callable() {
                 public Object run() throws RepositoryException {
                     Session s = sInfo.getSession();
-                    Node n = getNode(parentId, sInfo);
+                    Node parent = getParent(parentId, sInfo);
                     Value jcrValue = ValueFormat.getJCRValue(value,
                             sInfo.getNamespaceResolver(), s.getValueFactory());
-                    n.setProperty(getJcrName(propertyName), jcrValue);
+                    parent.setProperty(getJcrName(propertyName), jcrValue);
                     return null;
                 }
             });
@@ -977,7 +978,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             executeGuarded(new Callable() {
                 public Object run() throws RepositoryException {
                     Session s = sInfo.getSession();
-                    Node n = getNode(parentId, sInfo);
+                    Node n = getParent(parentId, sInfo);
                     Value[] jcrValues = new Value[values.length];
                     for (int i = 0; i < jcrValues.length; i++) {
                         jcrValues[i] = ValueFormat.getJCRValue(values[i],
@@ -1037,7 +1038,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                 throws RepositoryException {
             executeGuarded(new Callable() {
                 public Object run() throws RepositoryException {
-                    Node parent = getNode(parentId, sInfo);
+                    Node parent = getParent(parentId, sInfo);
                     Node srcNode = getNode(srcNodeId, sInfo);
                     Node beforeNode = null;
                     if (beforeNodeId != null) {
@@ -1231,7 +1232,17 @@ public class RepositoryServiceImpl implements RepositoryService {
         return path.toString();
     }
 
-    private Node getNode(NodeId id, SessionInfoImpl sessionInfo) throws ItemNotFoundException, RepositoryException {
+    private Node getParent(NodeId parentId, SessionInfoImpl sessionInfo) throws InvalidItemStateException, RepositoryException {
+        try {
+            return getNode(parentId, sessionInfo);
+        } catch (PathNotFoundException e) {
+            // if the parent of an batch operation is not available, this indicates
+            // that it has been destroyed by another session.
+            throw new InvalidItemStateException(e);
+        }
+    }
+
+    private Node getNode(NodeId id, SessionInfoImpl sessionInfo) throws PathNotFoundException, RepositoryException {
         Session session = sessionInfo.getSession();
         Node n;
         if (id.getUniqueID() != null) {
