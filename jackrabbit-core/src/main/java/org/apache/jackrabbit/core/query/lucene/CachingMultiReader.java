@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
+import org.apache.lucene.index.IndexReader;
 
 import java.io.IOException;
 import java.util.Map;
@@ -28,7 +29,9 @@ import java.util.IdentityHashMap;
  * Extends a <code>MultiReader</code> with support for cached <code>TermDocs</code>
  * on {@link FieldNames#UUID} field.
  */
-public final class CachingMultiReader extends MultiReader implements HierarchyResolver {
+public final class CachingMultiReader
+        extends MultiReader
+        implements HierarchyResolver, MultiIndexReader {
 
     /**
      * The sub readers.
@@ -160,6 +163,17 @@ public final class CachingMultiReader extends MultiReader implements HierarchyRe
         if (--refCount == 0) {
             super.doClose();
         }
+    }
+
+    //-------------------------< MultiIndexReader >-----------------------------
+
+    /**
+     * {@inheritDoc}
+     */ 
+    public IndexReader[] getIndexReaders() {
+        IndexReader readers[] = new IndexReader[subReaders.length];
+        System.arraycopy(subReaders, 0, readers, 0, subReaders.length);
+        return readers;
     }
 
     //------------------------< internal >--------------------------------------

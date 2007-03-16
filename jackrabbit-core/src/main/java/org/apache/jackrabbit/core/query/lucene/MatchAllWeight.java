@@ -103,7 +103,25 @@ class MatchAllWeight implements Weight {
      * {@inheritDoc}
      */
     public Scorer scorer(IndexReader reader) throws IOException {
-        return new MatchAllScorer(reader, field);
+        if (reader instanceof MultiIndexReader) {
+            MultiIndexReader mir = (MultiIndexReader) reader;
+            IndexReader readers[] = mir.getIndexReaders();
+            int starts[] = new int[readers.length + 1];
+            int maxDoc = 0;
+            for (int i = 0; i < readers.length; i++) {
+                starts[i] = maxDoc;
+                maxDoc += readers[i].maxDoc();
+            }
+
+            starts[readers.length] = maxDoc;
+            Scorer scorers[] = new Scorer[readers.length];
+            for (int i = 0; i < readers.length; i++)
+                scorers[i] = scorer(readers[i]);
+
+            return new MultiScorer(searcher.getSimilarity(), scorers, starts);
+        } else {
+            return new MatchAllScorer(reader, field);
+        }
     }
 
     /**

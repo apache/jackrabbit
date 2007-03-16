@@ -547,7 +547,9 @@ public class SearchIndex extends AbstractQueryHandler {
      * Combines multiple {@link CachingMultiReader} into a <code>MultiReader</code>
      * with {@link HierarchyResolver} support.
      */
-    protected static final class CombinedIndexReader extends MultiReader implements HierarchyResolver {
+    protected static final class CombinedIndexReader
+            extends MultiReader
+            implements HierarchyResolver, MultiIndexReader {
 
         /**
          * The sub readers.
@@ -581,6 +583,19 @@ public class SearchIndex extends AbstractQueryHandler {
             id = id.applyOffset(starts[i]);
             return id.getDocumentNumber(this);
         }
+
+        //-------------------------< MultiIndexReader >-------------------------
+
+        /**
+         * {@inheritDoc}
+         */
+        public IndexReader[] getIndexReaders() {
+            IndexReader readers[] = new IndexReader[subReaders.length];
+            System.arraycopy(subReaders, 0, readers, 0, subReaders.length);
+            return readers;
+        }
+
+        //---------------------------< internal >-------------------------------
 
         /**
          * Returns the reader index for document <code>n</code>.
