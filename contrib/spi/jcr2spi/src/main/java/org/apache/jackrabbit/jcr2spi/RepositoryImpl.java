@@ -63,7 +63,7 @@ public class RepositoryImpl implements Repository {
      * @see Repository#getDescriptor(String)
      */
     public String getDescriptor(String descriptorKey) {
-	return (String) descriptors.get(descriptorKey);
+        return (String) descriptors.get(descriptorKey);
     }
 
     /**
@@ -78,8 +78,7 @@ public class RepositoryImpl implements Repository {
             } else {
                 return new SessionImpl(info, this, config);
             }
-        }
-        catch (RepositoryException ex) {
+        } catch (RepositoryException ex) {
             config.getRepositoryService().dispose(info);
             throw ex;
         }
@@ -89,20 +88,20 @@ public class RepositoryImpl implements Repository {
      * @see Repository#login(javax.jcr.Credentials)
      */
     public Session login(Credentials credentials) throws LoginException, NoSuchWorkspaceException, RepositoryException {
-	return login(credentials, null);
+        return login(credentials, null);
     }
 
     /**
      * @see Repository#login(String)
      */
     public Session login(String workspaceName) throws LoginException, NoSuchWorkspaceException, RepositoryException {
-	return login(null, workspaceName);
+        return login(null, workspaceName);
     }
 
     /**
      * @see Repository#login()
      */
     public Session login() throws LoginException, NoSuchWorkspaceException, RepositoryException {
-	return login(null, null);
+        return login(null, null);
     }
 }
