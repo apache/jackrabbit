@@ -32,7 +32,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.OnParentVersionAction;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -105,7 +104,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
         this.storage = storage;
         this.validator = new DefinitionValidator(this, nsRegistry);
 
-        entCache = new EffectiveNodeTypeCache();
+        entCache = new BitsetENTCacheImpl();
         registeredNTDefs = new ConcurrentReaderHashMap();
 
         propDefs = new HashSet();
@@ -208,7 +207,8 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
                                                    Map ntdCache)
         throws NoSuchNodeTypeException {
         // 1. check if effective node type has already been built
-        EffectiveNodeType ent = entCache.get(new QName[]{ntName});
+        EffectiveNodeTypeCache.Key key = entCache.getKey(new QName[]{ntName});
+        EffectiveNodeType ent = entCache.get(key);
         if (ent != null) {
             return ent;
         }
@@ -248,8 +248,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
                                                    Map ntdCache)
         throws NodeTypeConflictException, NoSuchNodeTypeException {
 
-        EffectiveNodeTypeCache.WeightedKey key = new EffectiveNodeTypeCache.WeightedKey(ntNames);
-
+        EffectiveNodeTypeCache.Key key = entCache.getKey(ntNames);
         // 1. check if aggregate has already been built
         if (entCache.contains(key)) {
             return entCache.get(key);
@@ -263,41 +262,25 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
         }
 
         // 3. build aggregate
+        EffectiveNodeTypeCache.Key requested = key;
         EffectiveNodeTypeImpl result = null;
         synchronized (entCache) {
             // build list of 'best' existing sub-aggregates
-            ArrayList tmpResults = new ArrayList();
             while (key.getNames().length > 0) {
-                // check if we've already built this aggregate
-                if (entCache.contains(key)) {
-                    tmpResults.add(entCache.get(key));
-                    // subtract the result from the temporary key
-                    // (which is 'empty' now)
-                    key = key.subtract(key);
-                    break;
-                }
-                /**
-                 * walk list of existing aggregates sorted by 'weight' of
-                 * aggregate (i.e. the cost of building it)
-                 */
-                boolean foundSubResult = false;
-                Iterator iter = entCache.keyIterator();
-                while (iter.hasNext()) {
-                    EffectiveNodeTypeCache.WeightedKey k =
-                            (EffectiveNodeTypeCache.WeightedKey) iter.next();
-                    /**
-                     * check if the existing aggregate is a 'subset' of the one
-                     * we're looking for
-                     */
-                    if (key.contains(k)) {
-                        tmpResults.add(entCache.get(k));
-                        // subtract the result from the temporary key
-                        key = key.subtract(k);
-                        foundSubResult = true;
-                        break;
+                // find the (sub) key that matches the current key the best
+                EffectiveNodeTypeCache.Key subKey = entCache.findBest(key);
+                if (subKey != null) {
+                    EffectiveNodeTypeImpl ent = (EffectiveNodeTypeImpl) entCache.get(subKey);
+                    if (result == null) {
+                        result = ent;
+                    } else {
+                        result = result.merge(ent);
+                        // store intermediate result
+                        entCache.put(result);
                     }
-                }
-                if (!foundSubResult) {
+                    // subtract the result from the temporary key
+                    key = key.subtract(subKey);
+                } else {
                     /**
                      * no matching sub-aggregates found:
                      * build aggregate of remaining node types through iteration
@@ -316,21 +299,14 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
                             entCache.put(result);
                         }
                     }
-                    // add aggregate of remaining node types to result list
-                    tmpResults.add(result);
                     break;
                 }
             }
-            // merge the sub-aggregates into new effective node type
-            for (int i = 0; i < tmpResults.size(); i++) {
-                if (result == null) {
-                    result = (EffectiveNodeTypeImpl) tmpResults.get(i);
-                } else {
-                    result = result.merge((EffectiveNodeTypeImpl) tmpResults.get(i));
-                    // store intermediate result
-                    entCache.put(result);
-                }
-            }
+        }
+        // also put the requested key, since the merge could have removed some
+        // the redundant nodetypes
+        if (!entCache.contains(requested)) {
+            entCache.put(requested, result);
         }
         // we're done
         return result;
@@ -552,26 +528,9 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
     }
 
     private void internalUnregister(QName name) {
-        /*
-         * NOTE: detection of built-in NodeTypes not possible, since the client
-         * reads all nodetypes from the 'server' only without being able to
-         * destinguish between built-in and custom-defined nodetypes.
-         */
         QNodeTypeDefinition ntd = (QNodeTypeDefinition) registeredNTDefs.get(name);
         registeredNTDefs.remove(name);
-        /*
-         * remove all affected effective node types from aggregates cache
-         * (copy keys first to prevent ConcurrentModificationException)
-         */
-        ArrayList keys = new ArrayList(entCache.keySet());
-        for (Iterator keysIter = keys.iterator(); keysIter.hasNext();) {
-            EffectiveNodeTypeCache.WeightedKey k =
-                    (EffectiveNodeTypeCache.WeightedKey) keysIter.next();
-            EffectiveNodeType ent = entCache.get(k);
-            if (ent.includesNodeType(name)) {
-                entCache.remove(k);
-            }
-        }
+        entCache.invalidate(name);
 
         // remove property & child node definitions
         QPropertyDefinition[] pda = ntd.getPropertyDefs();

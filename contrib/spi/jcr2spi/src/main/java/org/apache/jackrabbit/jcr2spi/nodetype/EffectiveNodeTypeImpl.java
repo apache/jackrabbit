@@ -431,10 +431,10 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
             throws ConstraintViolationException {
         try {
             getApplicableNodeDefinition(name, null, ntReg);
-        } catch (NoSuchNodeTypeException nsnte) {
+        } catch (NoSuchNodeTypeException e) {
             String msg = "internal eror: inconsistent node type";
             log.debug(msg);
-            throw new ConstraintViolationException(msg, nsnte);
+            throw new ConstraintViolationException(msg, e);
         }
     }
 
