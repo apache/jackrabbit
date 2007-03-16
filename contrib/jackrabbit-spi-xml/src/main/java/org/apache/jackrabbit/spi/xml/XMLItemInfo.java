@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.spi.xml;
 
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.NodeId;
 
@@ -32,6 +33,11 @@ public class XMLItemInfo implements ItemInfo {
 
     public boolean denotesNode() {
         return id.denotesNode();
+    }
+
+    public Path getPath() {
+        // TODO
+        return null;
     }
 
     public NodeId getParentId() {

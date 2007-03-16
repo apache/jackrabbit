@@ -214,6 +214,16 @@ public class XMLRepositoryService implements RepositoryService {
         return namespaces;
     }
 
+    public String getNamespaceURI(SessionInfo sessionInfo, String string) throws NamespaceException, RepositoryException {
+        // TODO
+        return null;
+    }
+
+    public String getNamespacePrefix(SessionInfo sessionInfo, String string) throws NamespaceException, RepositoryException {
+        // TODO
+        return null;
+    }
+
     public QNodeTypeDefinitionIterator getNodeTypeDefinitions(
             SessionInfo session) {
         return new XMLQNodeTypeDefinitionIterator(types);
@@ -484,6 +494,11 @@ public class XMLRepositoryService implements RepositoryService {
             throws LoginException, NoSuchWorkspaceException,
             RepositoryException {
         // TODO Auto-generated method stub
+        return null;
+    }
+
+    public SessionInfo impersonate(SessionInfo sessionInfo, Credentials credentials) throws LoginException, RepositoryException {
+        // TODO
         return null;
     }
 

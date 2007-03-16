@@ -19,6 +19,7 @@ package org.apache.jackrabbit.spi.xml;
 import javax.jcr.PropertyType;
 
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
@@ -38,6 +39,11 @@ public class XMLPrimaryTypeInfo implements PropertyInfo {
 
     public boolean denotesNode() {
         return false;
+    }
+
+    public Path getPath() {
+        // TODO
+        return null;
     }
 
     public PropertyId getId() {
