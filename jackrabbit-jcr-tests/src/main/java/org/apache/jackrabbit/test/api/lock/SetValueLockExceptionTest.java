@@ -43,9 +43,6 @@ import java.io.ByteArrayInputStream;
  */
 public class SetValueLockExceptionTest extends AbstractJCRTest {
 
-    private Session lockingSession;
-    private Session session;
-
     private Node testNode;
 
     private static final String binaryProp = "binaryProp";
@@ -84,14 +81,11 @@ public class SetValueLockExceptionTest extends AbstractJCRTest {
      */
     public void setUp() throws Exception {
         super.setUp();
-        Repository repo = helper.getRepository();
         if (!isSupported(Repository.OPTION_LOCKING_SUPPORTED)) {
             throw new NotExecutableException("SetValueLockExceptionTest "
                     + "not executable: Locking not supported");
         }
         else {
-            lockingSession = superuser;
-
             // add a lockable node
             testNode = testRootNode.addNode(nodeName1, testNodeType);
             testNode.addMixin(mixLockable);
@@ -120,7 +114,7 @@ public class SetValueLockExceptionTest extends AbstractJCRTest {
         if (testNode.holdsLock()) {
             testNode.unlock();
         }
-        lockingSession.save();
+        superuser.save();
         super.tearDown();
     }
 
@@ -136,12 +130,11 @@ public class SetValueLockExceptionTest extends AbstractJCRTest {
         // lock if not yet locked
         if (!testNode.holdsLock()) {
             testNode.lock(false, false);
-            lockingSession.save();
+            superuser.save();
         }
 
         // another session
-        session = helper.getReadWriteSession();
-
+        Session session = helper.getReadWriteSession();
         try {
             Node node = (Node) session.getItem(testNode.getPath());
             Property prop = null;
@@ -209,6 +202,8 @@ public class SetValueLockExceptionTest extends AbstractJCRTest {
                     + "if the parent node holds a Lock.");
         } catch (LockException le) {
             // ok
+        } finally {
+            session.logout();
         }
     }
 
@@ -234,7 +229,7 @@ public class SetValueLockExceptionTest extends AbstractJCRTest {
         try {
             Node node = testRootNode.getNode(name);
             node.remove();
-            lockingSession.save();
+            superuser.save();
         } catch (PathNotFoundException pnfe) {
             // ok
         }
@@ -243,7 +238,7 @@ public class SetValueLockExceptionTest extends AbstractJCRTest {
         if (n1.canAddMixin(mixReferenceable)) {
             n1.addMixin(mixReferenceable);
             // make sure jcr:uuid is available
-            lockingSession.save();
+            superuser.save();
             return n1;
         }
         else {

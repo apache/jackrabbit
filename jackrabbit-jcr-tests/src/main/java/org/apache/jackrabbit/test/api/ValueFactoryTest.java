@@ -87,6 +87,14 @@ public class ValueFactoryTest extends AbstractJCRTest {
         referenceNode = createReferenceableNode(nodeName1);
     }
 
+
+    protected void tearDown() throws Exception {
+        if (session != null) {
+            session.logout();
+        }
+        super.tearDown();
+    }
+
     /**
      * Create a referenceable node under the testRootNode
      * or null if it is not possible to create one.

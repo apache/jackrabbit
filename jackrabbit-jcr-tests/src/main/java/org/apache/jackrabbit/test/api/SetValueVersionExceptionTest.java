@@ -90,12 +90,14 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
      * Releases the session aquired in {@link #setUp()}.
      */
     protected void tearDown() throws Exception {
-        node.checkout();
-
-        if (session != null) {
-            session.logout();
+        try {
+            node.checkout();
+        } finally {
+            if (session != null) {
+                session.logout();
+            }
+            super.tearDown();
         }
-        super.tearDown();
     }
 
     /**

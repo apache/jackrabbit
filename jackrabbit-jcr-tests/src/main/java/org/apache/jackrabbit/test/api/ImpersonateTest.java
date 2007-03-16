@@ -50,41 +50,44 @@ public class ImpersonateTest extends AbstractJCRTest {
             throw new NotExecutableException("impersonate threw LoginException");
         }
 
-        // get a path to test the permissions on
-        String thePath = "";
-        NodeIterator ni = session.getRootNode().getNodes();
-        while (ni.hasNext()) {
-            Node n = ni.nextNode();
-            if (!n.getPath().equals("/" + jcrSystem)) {
-                thePath = n.getPath();
-                break;
+        try {
+            // get a path to test the permissions on
+            String thePath = "";
+            NodeIterator ni = session.getRootNode().getNodes();
+            while (ni.hasNext()) {
+                Node n = ni.nextNode();
+                if (!n.getPath().equals("/" + jcrSystem)) {
+                    thePath = n.getPath();
+                    break;
+                }
             }
+
+            // check that all 4 permissions are granted/denied correctly
+            session.checkPermission(thePath, "read");
+
+            try {
+                session.checkPermission(thePath + "/" + nodeName1, "add_node");
+                fail("add_node permission on \"" + thePath + "/" + nodeName1 + "\" granted to read-only Session");
+            } catch (AccessControlException success) {
+                // ok
+            }
+
+            try {
+                session.checkPermission(thePath + "/" + propertyName1, "set_property");
+                fail("set_property permission on \"" + thePath + "/" + propertyName1 + "\" granted to read-only Session");
+            } catch (AccessControlException success) {
+                // ok
+            }
+
+            try {
+                session.checkPermission(thePath, "remove");
+                fail("remove permission on \"" + thePath + "\" granted to read-only Session");
+            } catch (AccessControlException success) {
+                // ok
+            }
+
+        } finally {
+            session.logout();
         }
-
-        // check that all 4 permissions are granted/denied correctly
-        session.checkPermission(thePath, "read");
-
-        try {
-            session.checkPermission(thePath + "/" + nodeName1, "add_node");
-            fail("add_node permission on \"" + thePath + "/" + nodeName1 + "\" granted to read-only Session");
-        } catch (AccessControlException success) {
-            // ok
-        }
-
-        try {
-            session.checkPermission(thePath + "/" + propertyName1, "set_property");
-            fail("set_property permission on \"" + thePath + "/" + propertyName1 + "\" granted to read-only Session");
-        } catch (AccessControlException success) {
-            // ok
-        }
-
-        try {
-            session.checkPermission(thePath, "remove");
-            fail("remove permission on \"" + thePath + "\" granted to read-only Session");
-        } catch (AccessControlException success) {
-            // ok
-        }
-
-        session.logout();
     }
 }

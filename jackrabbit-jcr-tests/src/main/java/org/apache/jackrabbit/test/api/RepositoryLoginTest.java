@@ -64,14 +64,19 @@ public class RepositoryLoginTest extends AbstractJCRTest {
             name = getNonExistingWorkspaceName(session);
         } finally {
             session.logout();
+            session = null;
         }
 
         try {
-            helper.getRepository().login(credentials, name);
+            session = helper.getRepository().login(credentials, name);
             fail("login with a not available workspace name must throw a " +
                     "NoSuchWorkspaceException");
         } catch (NoSuchWorkspaceException e) {
             // success
+        } finally {
+            if (session != null) {
+                session.logout();
+            }
         }
     }
 
