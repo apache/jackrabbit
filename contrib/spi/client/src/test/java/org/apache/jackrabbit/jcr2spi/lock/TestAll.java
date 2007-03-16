@@ -14,32 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.test;
+package org.apache.jackrabbit.jcr2spi.lock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.jcr2spi.AccessByRelativePathTest;
 import junit.framework.Test;
-import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import junit.framework.TestCase;
 
 /**
- * Test suite that includes all test suites from jackrabbit-jcr-tests.
+ * <code>TestAll</code>...
  */
 public class TestAll extends TestCase {
 
     public static Test suite() {
-        return new JCRTestSuite();
-    }
+        TestSuite suite = new TestSuite("jcr2spi lock tests");
 
-    private static class JCRTestSuite extends TestSuite {
+        suite.addTestSuite(SessionScopedLockTest.class);
+        suite.addTestSuite(OpenScopedLockTest.class);
+        suite.addTestSuite(DeepLockTest.class);
 
-        private JCRTestSuite() {
-            super("JCR API tests");
-            addTest(org.apache.jackrabbit.test.api.TestAll.suite());
-            addTest(org.apache.jackrabbit.test.api.query.TestAll.suite());
-            addTest(org.apache.jackrabbit.test.api.nodetype.TestAll.suite());
-            addTest(org.apache.jackrabbit.test.api.util.TestAll.suite());
-            addTest(org.apache.jackrabbit.test.api.lock.TestAll.suite());
-            addTest(org.apache.jackrabbit.test.api.version.TestAll.suite());
-            addTest(org.apache.jackrabbit.test.api.observation.TestAll.suite());
-        }
+        return suite;
     }
 }

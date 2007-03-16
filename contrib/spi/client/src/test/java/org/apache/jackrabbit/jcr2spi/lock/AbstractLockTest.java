@@ -39,10 +39,14 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     Node childNode;
     Lock lock;
 
+    Session otherSession;
+
     abstract boolean isSessionScoped();
 
     protected void setUp() throws Exception {
         super.setUp();
+
+        otherSession = helper.getSuperuserSession();
 
         lockedNode = testRootNode.addNode(nodeName1, testNodeType);
         lockedNode.addMixin(mixLockable);
@@ -58,6 +62,9 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
             lockedNode.unlock();
         } catch (RepositoryException e) {
             // ignore
+        }
+        if (otherSession.isLive()) {
+            otherSession.logout();
         }
         super.tearDown();
     }
@@ -263,7 +270,6 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
      * A locked node must also be locked if accessed by some other session.
      */
     public void testLockVisibility() throws RepositoryException {
-        Session otherSession = helper.getReadOnlySession();
         Node ln2 = (Node) otherSession.getItem(lockedNode.getPath());
         assertTrue("Locked node must also be locked for another session", ln2.isLocked());
         assertTrue("Locked node must also be locked for another session", ln2.holdsLock());
@@ -275,7 +281,6 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
      * locked node must not be marked locked any more.
      */
     public void testUnlockByOtherSession() throws RepositoryException {
-        Session otherSession = helper.getReadOnlySession();
         Node ln2 = (Node) otherSession.getItem(lockedNode.getPath());
         Lock l2 = ln2.getLock();
 
@@ -290,7 +295,6 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
      * locked node must not be marked locked any more.
      */
     public void testUnlockByOtherSession2() throws RepositoryException {
-        Session otherSession = helper.getReadOnlySession();
         Node ln2 = (Node) otherSession.getItem(lockedNode.getPath());
 
         lockedNode.unlock();

@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
-import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import javax.jcr.lock.LockException;
 import javax.jcr.lock.Lock;
@@ -40,7 +39,6 @@ public class SessionScopedLockTest extends AbstractLockTest {
      * Test locks are released when session logs out
      */
     public void testLockNotLiveAfterLogout() throws RepositoryException {
-        Session otherSession = helper.getSuperuserSession();
         Node testRoot2 = (Node) otherSession.getItem(testRootNode.getPath());
 
         Node lockedNode2 = testRoot2.addNode(nodeName2, testNodeType);
@@ -57,7 +55,6 @@ public class SessionScopedLockTest extends AbstractLockTest {
      * Test locks are released when session logs out
      */
     public void testNotLockedAfterLogout() throws RepositoryException {
-        Session otherSession = helper.getSuperuserSession();
         Node testRoot2 = (Node) otherSession.getItem(testRootNode.getPath());
 
         Node lockedNode2 = testRoot2.addNode(nodeName2, testNodeType);

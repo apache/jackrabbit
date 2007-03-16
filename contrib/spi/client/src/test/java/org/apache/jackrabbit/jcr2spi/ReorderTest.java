@@ -104,7 +104,11 @@ public class ReorderTest extends AbstractJCRTest {
         testRootNode.save();
 
         Session otherSession = helper.getReadOnlySession();
-        testOrder((Node) otherSession.getItem(testRootNode.getPath()), new Node[] {child3, child1, child2, child4});
+        try {
+            testOrder((Node) otherSession.getItem(testRootNode.getPath()), new Node[] {child3, child1, child2, child4});
+        } finally {
+            otherSession.logout();
+        }
     }
 
     public void testReorderTwice() throws RepositoryException {

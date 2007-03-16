@@ -32,9 +32,9 @@ import javax.jcr.lock.LockException;
 /**
  * <code>RefreshTrue</code>...
  */
-public class RefreshTrue extends AbstractJCRTest {
+public class RefreshTrueTest extends AbstractJCRTest {
 
-    private static Logger log = LoggerFactory.getLogger(RefreshTrue.class);
+    private static Logger log = LoggerFactory.getLogger(RefreshTrueTest.class);
 
     private Value testValue;
 
