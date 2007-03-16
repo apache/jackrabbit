@@ -102,7 +102,6 @@ public class SessionImporter implements Importer, SessionListener {
      */
     private final ReferenceChangeTracker refTracker;
 
-
     /**
      * Creates a new <code>WorkspaceImporter</code> instance.
      *
