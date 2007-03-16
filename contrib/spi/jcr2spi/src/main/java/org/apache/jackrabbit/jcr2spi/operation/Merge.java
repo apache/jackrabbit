@@ -74,7 +74,7 @@ public class Merge extends AbstractOperation {
             try {
                 mgr.getVersionHistoryNodeState(nodeState).invalidate(true);
             } catch (RepositoryException e) {
-                log.warn("Internal error", e);
+                log.warn("Error while retrieving VersionHistory state:", e.getMessage());
             }
             nodeState.getHierarchyEntry().invalidate(true);
         }
