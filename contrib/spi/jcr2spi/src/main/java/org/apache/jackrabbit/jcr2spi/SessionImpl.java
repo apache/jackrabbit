@@ -20,7 +20,6 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.jcr2spi.security.SecurityConstants;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.apache.jackrabbit.jcr2spi.state.SessionItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
@@ -74,7 +73,6 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
@@ -191,28 +189,16 @@ public class SessionImpl implements Session, ManagerProvider {
      */
     public Session impersonate(Credentials credentials) throws LoginException, RepositoryException {
         checkIsAlive();
-        // TODO: check whether restriction to SimpleCredentials is correct
-        if (!(credentials instanceof SimpleCredentials)) {
-            String msg = "impersonate failed: incompatible credentials, SimpleCredentials expected";
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
-
-        // set IMPERSONATOR_ATTRIBUTE attribute of given credentials
-        // with current session
-        SimpleCredentials creds = (SimpleCredentials) credentials;
-        creds.setAttribute(SecurityConstants.IMPERSONATOR_ATTRIBUTE, this);
-
+        SessionInfo info = config.getRepositoryService().impersonate(sessionInfo, credentials);
         try {
-            return repository.login(credentials, getWorkspace().getName());
-        } catch (NoSuchWorkspaceException nswe) {
-            // should never get here...
-            String msg = "impersonate failed";
-            log.error(msg, nswe);
-            throw new RepositoryException(msg, nswe);
-        } finally {
-            // make sure IMPERSONATOR_ATTRIBUTE is removed
-            creds.removeAttribute(SecurityConstants.IMPERSONATOR_ATTRIBUTE);
+            if (info instanceof XASessionInfo) {
+                return new XASessionImpl((XASessionInfo) info, repository, config);
+            } else {
+                return new SessionImpl(info, repository, config);
+            }
+        } catch (RepositoryException ex) {
+            config.getRepositoryService().dispose(info);
+            throw ex;
         }
     }
 

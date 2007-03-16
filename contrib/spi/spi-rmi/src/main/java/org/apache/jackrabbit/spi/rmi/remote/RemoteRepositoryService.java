@@ -27,6 +27,7 @@ import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 
@@ -79,6 +80,20 @@ public interface RemoteRepositoryService extends Remote {
      */
     public RemoteSessionInfo obtain(RemoteSessionInfo sessionInfo,
                                     String workspaceName)
+            throws RepositoryException, RemoteException;
+
+    /**
+     * Returns a new <code>RemoteSessionInfo</code>.
+     *
+     * @param sessionInfo
+     * @param credentials
+     * @return a <code>RemoteSessionInfo</code> if impersonate was
+     *         successful.
+     * @throws RemoteException if an error occurs.
+     * @see RepositoryService#impersonate(SessionInfo, Credentials)
+     */
+    public RemoteSessionInfo impersonate(RemoteSessionInfo sessionInfo,
+                                         Credentials credentials)
             throws RepositoryException, RemoteException;
 
     /**
