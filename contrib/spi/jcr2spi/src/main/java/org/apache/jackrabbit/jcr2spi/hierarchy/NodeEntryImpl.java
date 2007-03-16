@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.ItemExistsException;
 import javax.jcr.RepositoryException;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.ItemNotFoundException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
@@ -153,6 +154,10 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 ce.invalidate(recursive);
             }
         }
+        // invalidate 'childNodeEntries'
+        if (getStatus() != Status.NEW && childNodeEntries != null) {
+            childNodeEntries.setStatus(ChildNodeEntries.STATUS_INVALIDATED);
+        }
         // ... and invalidate the resolved state (if available)
         super.invalidate(recursive);
     }
@@ -232,7 +237,13 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 state.getWorkspaceState().setStatus(Status.REMOVED);
             }
         }
-        parent.childNodeEntries().remove(this);
+        if (parent.childNodeEntries != null) {
+            NodeEntry removed = parent.childNodeEntries.remove(this);
+            if (removed == null) {
+                // try attic
+                parent.childNodeAttic.remove(this);
+            }
+        }
 
         // now traverse all child-entries and mark the attached states removed
         // without removing the child-entries themselves. this is not required
@@ -296,13 +307,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         if (uniqueID != null || parent == null) {
             // uniqueID and root-node -> internal id is always the same as getId().
             return getId();
-        } else if (revertInfo != null) {
-            NodeId parentId = revertInfo.oldParent.getWorkspaceId();
-            Path path = Path.create(revertInfo.oldName, revertInfo.oldIndex);
-            return idFactory.createNodeId(parentId, path);
         } else {
-            NodeId parentId = parent.getWorkspaceId();
-            return idFactory.createNodeId(parentId, Path.create(getQName(), getIndex()));
+            NodeId parentId = (revertInfo != null) ? revertInfo.oldParent.getWorkspaceId() : parent.getWorkspaceId();
+            return idFactory.createNodeId(parentId, Path.create(getWorkspaceQName(), getWorkspaceIndex()));
         }
     }
 
@@ -345,7 +352,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 return Path.INDEX_DEFAULT;
             }
         } catch (RepositoryException e) {
-            log.error("Error while building Index. ", e);
+            log.error("Error while building Index. ", e.getMessage());
             return Path.INDEX_UNDEFINED;
         }
     }
@@ -919,7 +926,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
         // TODO: check if status of THIS_state must be marked modified...
     }
-    
+
     //-------------------------------------------------< HierarchyEntryImpl >---
     /**
      * @inheritDoc
@@ -927,9 +934,55 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * <p/>
      * Returns a <code>NodeState</code>.
      */
-    ItemState doResolve()
-        throws NoSuchItemStateException, ItemStateException {
-        return factory.getItemStateFactory().createNodeState((NodeId) getWorkspaceId(), this);
+    ItemState doResolve() throws NoSuchItemStateException, ItemStateException {
+        return factory.getItemStateFactory().createNodeState(getWorkspaceId(), this);
+    }
+
+    /**
+     * @see HierarchyEntryImpl#buildPath(boolean)
+     */
+    Path buildPath(boolean wspPath) throws RepositoryException {
+        // shortcut for root state
+        if (parent == null) {
+            return Path.ROOT;
+        }
+        // build path otherwise
+        try {
+            Path.PathBuilder builder = new Path.PathBuilder();
+            buildPath(builder, this, wspPath);
+            return builder.getPath();
+        } catch (MalformedPathException e) {
+            String msg = "Failed to build path of " + this;
+            throw new RepositoryException(msg, e);
+        }
+    }
+
+    /**
+     * Adds the path element of an item id to the path currently being built.
+     * On exit, <code>builder</code> contains the path of this entry.
+     *
+     * @param builder builder currently being used
+     * @param hEntry HierarchyEntry of the state the path should be built for.
+     */
+    private static void buildPath(Path.PathBuilder builder, NodeEntryImpl nEntry, boolean wspPath) {
+        NodeEntryImpl parentEntry = (wspPath && nEntry.revertInfo != null) ? nEntry.revertInfo.oldParent : nEntry.parent;
+        // shortcut for root state
+        if (parentEntry == null) {
+            builder.addRoot();
+            return;
+        }
+
+        // recursively build path of parent
+        buildPath(builder, parentEntry, wspPath);
+
+        int index = (wspPath) ? nEntry.getWorkspaceIndex() : nEntry.getIndex();
+        QName name = (wspPath) ? nEntry.getWorkspaceQName() : nEntry.getQName();
+        // add to path
+        if (index == Path.INDEX_DEFAULT) {
+            builder.addLast(name);
+        } else {
+            builder.addLast(name, index);
+        }
     }
 
     //-----------------------------------------------< private || protected >---
@@ -954,11 +1007,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @return
      */
     boolean matches(QName oldName, int oldIndex) {
-        if (revertInfo != null) {
-            return revertInfo.oldName.equals(oldName) && revertInfo.oldIndex == oldIndex;
-        } else {
-            return getQName().equals(oldName) && getIndex() == oldIndex;
-        }
+        return getWorkspaceQName().equals(oldName) && getWorkspaceIndex() == oldIndex;
     }
 
     /**
@@ -967,10 +1016,23 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @return
      */
     boolean matches(QName oldName) {
+        return getWorkspaceQName().equals(oldName);
+    }
+
+
+    private QName getWorkspaceQName() {
         if (revertInfo != null) {
-            return revertInfo.oldName.equals(oldName);
+            return revertInfo.oldName;
         } else {
-            return getQName().equals(oldName);
+            return getQName();
+        }
+    }
+
+    private int getWorkspaceIndex() {
+        if (revertInfo != null) {
+            return revertInfo.oldIndex;
+        } else {
+            return getIndex();
         }
     }
 
@@ -1089,26 +1151,90 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      */
     private ChildNodeEntries childNodeEntries() {
         if (childNodeEntries == null) {
-            childNodeEntries = new ChildNodeEntries(this);
-            ItemState state = internalGetItemState();
-            if (state == null || state.getStatus() != Status.NEW) {
-                try {
-                    NodeId id = getWorkspaceId();
-                    Iterator it = factory.getItemStateFactory().getChildNodeInfos(id);
-                    while (it.hasNext()) {
-                        ChildInfo ci = (ChildInfo) it.next();
-                        internalAddNodeEntry(ci.getName(), ci.getUniqueID(), ci.getIndex(), childNodeEntries);
-                    }
-                } catch (NoSuchItemStateException e) {
-                    log.error("Cannot retrieve child node entries.", e);
-                    // ignore (TODO correct?)
-                } catch (ItemStateException e) {
-                    log.error("Cannot retrieve child node entries.", e);
-                    // ignore (TODO correct?)
-                }
-            }
+            loadChildNodeEntries();
+        } else if (childNodeEntries.getStatus() == ChildNodeEntries.STATUS_INVALIDATED) {
+            reloadChildNodeEntries(childNodeEntries);
+            childNodeEntries.setStatus(ChildNodeEntries.STATUS_OK);
         }
         return childNodeEntries;
+    }
+
+    private void loadChildNodeEntries() {
+        try {
+            childNodeEntries = new ChildNodeEntries(this);
+            if (getStatus() == Status.NEW || Status.isTerminal(getStatus())) {
+                return; // cannot retrieve child-entries from persistent layer
+            }
+
+            NodeId id = getWorkspaceId();
+            Iterator it = factory.getItemStateFactory().getChildNodeInfos(id);
+            // simply add all child entries to the empty collection
+            while (it.hasNext()) {
+                ChildInfo ci = (ChildInfo) it.next();
+                internalAddNodeEntry(ci.getName(), ci.getUniqueID(), ci.getIndex(), childNodeEntries);
+            }
+        } catch (NoSuchItemStateException e) {
+            log.error("Cannot retrieve child node entries.", e);
+            // ignore (TODO correct?)
+        } catch (ItemStateException e) {
+            log.error("Cannot retrieve child node entries.", e);
+            // ignore (TODO correct?)
+        }
+    }
+
+    private void reloadChildNodeEntries(ChildNodeEntries cnEntries) {
+        if (getStatus() == Status.NEW || Status.isTerminal(getStatus())) {
+            // nothing to do
+            return;
+        }
+        try {
+            NodeId id = getWorkspaceId();
+            Iterator it = factory.getItemStateFactory().getChildNodeInfos(id);
+            // create list from all ChildInfos (for multiple loop)
+            List cInfos = new ArrayList();
+            while (it.hasNext()) {
+                cInfos.add((ChildInfo) it.next());
+            }
+            // first make sure the ordering of all existing entries is ok
+            NodeEntry entry = null;
+            for (it = cInfos.iterator(); it.hasNext();) {
+                ChildInfo ci = (ChildInfo) it.next();
+                NodeEntry nextEntry = cnEntries.get(ci);
+                if (nextEntry != null) {
+                    if (entry != null) {
+                        cnEntries.reorder(entry, nextEntry);
+                    }
+                    entry = nextEntry;
+                }
+            }
+            // then insert the 'new' entries
+            List newEntries = new ArrayList();
+            for (it = cInfos.iterator(); it.hasNext();) {
+                ChildInfo ci = (ChildInfo) it.next();
+                NodeEntry beforeEntry = cnEntries.get(ci);
+                if (beforeEntry == null) {
+                    NodeEntry ne = new NodeEntryImpl(this, ci.getName(), ci.getUniqueID(), factory);
+                    newEntries.add(ne);
+                } else {
+                    // insert all new entries from the list BEFORE the existing
+                    // 'nextEntry'. Then clear the list.
+                    for (int i = 0; i < newEntries.size(); i++) {
+                        cnEntries.add((NodeEntry) newEntries.get(i), beforeEntry);
+                    }
+                    newEntries.clear();
+                }
+            }
+            // deal with new entries at the end
+            for (int i = 0; i < newEntries.size(); i++) {
+                cnEntries.add((NodeEntry) newEntries.get(i));
+            }
+        } catch (NoSuchItemStateException e) {
+            log.error("Cannot retrieve child node entries.", e);
+            // ignore (TODO correct?)
+        } catch (ItemStateException e) {
+            log.error("Cannot retrieve child node entries.", e);
+            // ignore (TODO correct?)
+        }
     }
 
     /**
@@ -1148,10 +1274,11 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * Returns the index of the given <code>NodeEntry</code>.
      *
      * @param cne  the <code>NodeEntry</code> instance.
-     * @return the index of the child node entry or <code>Path.INDEX_UNDEFINED</code>
-     * if the given entry isn't a valid child of this <code>NodeEntry</code>.
+     * @return the index of the child node entry.
+     * @throws ItemNotFoundException if the given entry isn't a valid child of
+     * this <code>NodeEntry</code>.
      */
-    private int getChildIndex(NodeEntry cne) {
+    private int getChildIndex(NodeEntry cne) throws ItemNotFoundException {
         List sns = childNodeEntries().get(cne.getQName());
         // index is one based
         int index = Path.INDEX_DEFAULT;
@@ -1167,7 +1294,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             }
         }
         // not found (should not occur)
-        return Path.INDEX_UNDEFINED;
+        throw new ItemNotFoundException("No valid child entry for NodeEntry " + cne);
     }
 
     /**

@@ -382,7 +382,7 @@ public class NodeState extends ItemState {
                 it.remove();
             } catch (ItemStateException e) {
                 // should never occur
-                log.error("Internal error", e);
+                log.error("Internal error:", e.getMessage());
             }
         }
 
@@ -416,7 +416,7 @@ public class NodeState extends ItemState {
                     } catch (ItemStateException e) {
                         // should never occur. since parent must be available otherwise
                         // the mixin could not been added/removed.
-                        log.error("Internal error", e);
+                        log.error("Internal error:", e.getMessage());
                     }
                 }
                 it.remove();

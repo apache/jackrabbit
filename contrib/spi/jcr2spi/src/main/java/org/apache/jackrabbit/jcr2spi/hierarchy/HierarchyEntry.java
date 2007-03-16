@@ -50,6 +50,13 @@ public interface HierarchyEntry {
     public Path getPath() throws RepositoryException;
 
     /**
+     * @return If this entry has not been modified this method returns the same
+     * as {@link #getPath()}. In case of moved items this method return the
+     * original path as it is present on the persistent layer.
+     */
+    public Path getWorkspacePath() throws RepositoryException;
+
+    /**
      * Returns the <code>NodeEntry</code> being parent to this
      * <code>HierarchyEntry</code>.
      *

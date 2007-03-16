@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
+import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.commons.collections.list.AbstractLinkedList;
 import org.apache.commons.collections.iterators.UnmodifiableIterator;
 
@@ -47,7 +48,11 @@ final class ChildNodeEntries implements Collection {
 
     private static Logger log = LoggerFactory.getLogger(ChildNodeEntries.class);
 
+    static final int STATUS_OK = 0;
+    static final int STATUS_INVALIDATED = 1;
+
     private final NodeEntryImpl parent;
+    private int status = STATUS_OK;
 
     /**
      * Linked list of {@link NodeEntry} instances.
@@ -68,6 +73,21 @@ final class ChildNodeEntries implements Collection {
      */
     ChildNodeEntries(NodeEntryImpl parent) {
         this.parent = parent;
+    }
+
+    /**
+     * Mark <code>ChildNodeEntries</code> in order to force
+     */
+    void setStatus(int status) {
+        if (status == STATUS_INVALIDATED || status == STATUS_OK) {
+            this.status = status;
+        } else {
+            throw new IllegalArgumentException();
+        }
+    }
+
+    int getStatus() {
+        return status;
     }
 
     /**
@@ -211,7 +231,6 @@ final class ChildNodeEntries implements Collection {
         if (index < Path.INDEX_DEFAULT) {
             throw new IllegalArgumentException("index is 1-based");
         }
-
         Object obj = nameMap.get(nodeName);
         if (obj == null) {
             return null;
@@ -219,32 +238,7 @@ final class ChildNodeEntries implements Collection {
         if (obj instanceof List) {
             // map entry is a list of siblings
             List siblings = (List) obj;
-            // shortcut if index can never match
-            if (index > siblings.size()) {
-                return null;
-            }
-            // filter out removed states
-            for (Iterator it = siblings.iterator(); it.hasNext(); ) {
-                NodeEntry cne = ((LinkedEntries.LinkNode) it.next()).getNodeEntry();
-                if (cne.isAvailable()) {
-                    try {
-                        if (cne.getNodeState().isValid()) {
-                            index--;
-                        } else {
-                            // child node removed
-                        }
-                    } catch (ItemStateException e) {
-                        // should never happen, cne.isAvailable() returned true
-                    }
-                } else {
-                    // then this child node entry has never been accessed
-                    // before and is assumed valid // TODO: check if correct.
-                    index--;
-                }
-                if (index == 0) {
-                    return cne;
-                }
-            }
+            return findMatchingEntry(siblings, index, true);
         } else {
             // map entry is a single child node entry
             if (index == Path.INDEX_DEFAULT) {
@@ -270,6 +264,69 @@ final class ChildNodeEntries implements Collection {
             NodeEntry cne = (NodeEntry) cneIter.next();
             if (uniqueID.equals(cne.getUniqueID())) {
                 return cne;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Find the matching NodeEntry for the given <code>ChildInfo</code>. Returns
+     * <code>null</code> if no matching entry can be found. NOTE, that no check
+     * for validity of the entries is made.
+     *
+     * @param childInfo
+     * @return
+     */
+    NodeEntry get(ChildInfo childInfo) {
+        String uniqueID = childInfo.getUniqueID();
+        if (uniqueID != null) {
+            return get(childInfo.getName(), uniqueID);
+        } else {
+            int index = childInfo.getIndex();
+            Object obj = nameMap.get(childInfo.getName());
+            if (obj == null) {
+                return null;
+            } else if (obj instanceof List) {
+                // map entry is a list of siblings
+                List siblings = (List) obj;
+                return findMatchingEntry(siblings, index, false);
+            } else if (index == Path.INDEX_DEFAULT) {
+                // map entry is a single child node entry
+                return ((LinkedEntries.LinkNode) obj).getNodeEntry();
+            } // else return 'null'
+        }
+        return null;
+    }
+
+    private static NodeEntry findMatchingEntry(List siblings, int index, boolean checkValidity) {
+        // shortcut if index can never match
+        if (index > siblings.size()) {
+            return null;
+        }
+        if (!checkValidity) {
+            return ((LinkedEntries.LinkNode) siblings.get(index - 1)).getNodeEntry();
+        } else {
+            // filter out removed states
+            for (Iterator it = siblings.iterator(); it.hasNext(); ) {
+                NodeEntry cne = ((LinkedEntries.LinkNode) it.next()).getNodeEntry();
+                if (cne.isAvailable()) {
+                    try {
+                        if (cne.getNodeState().isValid()) {
+                            index--;
+                        } else {
+                            // child node removed
+                        }
+                    } catch (ItemStateException e) {
+                        // should never happen, cne.isAvailable() returned true
+                    }
+                } else {
+                    // then this child node entry has never been accessed
+                    // before and is assumed valid // TODO: check if correct.
+                    index--;
+                }
+                if (index == 0) {
+                    return cne;
+                }
             }
         }
         return null;
@@ -346,6 +403,23 @@ final class ChildNodeEntries implements Collection {
         }
     }
 
+    void add(NodeEntry entry, NodeEntry beforeEntry) {
+        if (beforeEntry != null) {
+            // the link node where the new entry is ordered before
+            LinkedEntries.LinkNode beforeLN = getLinkNode(beforeEntry);
+            if (beforeLN == null) {
+                throw new NoSuchElementException();
+            }
+            add(entry);
+            Object insertObj = nameMap.get(entry.getQName());
+            LinkedEntries.LinkNode insertLN = getLinkNode(entry);
+            reorder(insertObj, insertLN, beforeLN);
+        } else {
+            // 'before' is null -> simply append new entry at the end
+            add(entry);
+        }
+    }
+
     /**
      * Removes the child node entry with the given <code>nodeName</code> and
      * <code>index</code>.
@@ -411,18 +485,15 @@ final class ChildNodeEntries implements Collection {
      * @return the removed entry or <code>null</code> if there is no such entry.
      */
     NodeEntry remove(NodeEntry childEntry) {
-        NodeEntry entry = null;
-        for (Iterator it = get(childEntry.getQName()).iterator(); it.hasNext(); ) {
-            NodeEntry tmp = (NodeEntry) it.next();
+        List l = get(childEntry.getQName());
+        for (int i = 0; i < l.size(); i++) {
+            NodeEntry tmp = (NodeEntry) l.get(i);
             if (tmp == childEntry) {
-                entry = tmp;
-                break;
+                int index = i+1; // index is 1-based
+                return remove(childEntry.getQName(), index);
             }
         }
-        if (entry != null) {
-            return remove(entry.getQName(), entry.getIndex());
-        }
-        return entry;
+        return null;
     }
 
     /**
@@ -453,7 +524,9 @@ final class ChildNodeEntries implements Collection {
         }
 
         NodeEntry previousBefore = insertLN.getNextLinkNode().getNodeEntry();
-        reorder(insertObj, insertLN, beforeLN);
+        if (previousBefore != beforeNode) {
+            reorder(insertObj, insertLN, beforeLN);
+        }
         return previousBefore;
     }
 
@@ -503,9 +576,7 @@ final class ChildNodeEntries implements Collection {
      *
      * @param nodeEntry the <code>NodeEntry</code> that is compared to the
      * resolution of any <code>NodeEntry</code> that matches by name.
-     * @return the matching <code>LinkNode</code>.
-     * @throws NoSuchElementException if none of the <code>LinkNode</code>s
-     * matches.
+     * @return the matching <code>LinkNode</code> or <code>null</code>
      */
     private LinkedEntries.LinkNode getLinkNode(NodeEntry nodeEntry) {
         Object listOrLinkNode = nameMap.get(nodeEntry.getQName());
@@ -519,15 +590,14 @@ final class ChildNodeEntries implements Collection {
             for (Iterator it = ((List) listOrLinkNode).iterator(); it.hasNext();) {
                 LinkedEntries.LinkNode n = (LinkedEntries.LinkNode) it.next();
                 NodeEntry cne = n.getNodeEntry();
-                // only check available child node entries
-                if (cne.isAvailable() && cne == nodeEntry) {
+                if (cne == nodeEntry) {
                     return n;
                 }
             }
         } else {
             // single child node with this name
             NodeEntry cne = ((LinkedEntries.LinkNode) listOrLinkNode).getNodeEntry();
-            if (cne.isAvailable() && cne == nodeEntry) {
+            if (cne == nodeEntry) {
                 return (LinkedEntries.LinkNode) listOrLinkNode;
             }
         }
