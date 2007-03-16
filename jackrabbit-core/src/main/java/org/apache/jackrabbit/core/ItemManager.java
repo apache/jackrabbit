@@ -327,6 +327,33 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
     }
 
     /**
+     * Returns the item instance for the given item state.
+     * @param state the item state
+     * @return the item instance for the given item <code>state</code>.
+     * @throws RepositoryException
+     */
+    public synchronized ItemImpl getItem(ItemState state)
+            throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+        // check sanity of session
+        session.sanityCheck();
+
+        ItemId id = state.getId();
+        // check cache
+        ItemImpl item = retrieveItem(id);
+        if (item == null) {
+            // not yet in cache, need to create instance:
+            // only check privileges if state is not new
+            if (state.getStatus() != ItemState.STATUS_NEW
+                    && !session.getAccessManager().isGranted(id, AccessManager.READ)) {
+                throw new AccessDeniedException("cannot read item " + id);
+            }
+            // create instance of item
+            item = createItemInstance(id);
+        }
+        return item;
+    }
+
+    /**
      * @param parentId
      * @return
      * @throws ItemNotFoundException

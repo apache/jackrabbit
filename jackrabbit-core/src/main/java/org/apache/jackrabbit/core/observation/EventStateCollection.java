@@ -364,13 +364,8 @@ public final class EventStateCollection {
                 // node created
                 NodeState n = (NodeState) state;
                 NodeId parentId = n.getParentId();
-                NodeState parent;
-                // unknown if parent node is also new
-                if (stateMgr.hasItemState(parentId)) {
-                    parent = (NodeState) stateMgr.getItemState(parentId);
-                } else {
-                    parent = (NodeState) changes.get(parentId);
-                }
+                // the parent of an added item is always modified or new
+                NodeState parent = (NodeState) changes.get(parentId);
                 NodeTypeImpl nodeType = getNodeType(parent, session);
                 Set mixins = parent.getMixinTypeNames();
                 Path path = getPath(n.getNodeId(), hmgr);
