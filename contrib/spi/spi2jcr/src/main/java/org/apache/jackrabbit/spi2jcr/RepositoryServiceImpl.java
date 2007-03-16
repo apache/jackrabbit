@@ -1022,10 +1022,20 @@ public class RepositoryServiceImpl implements RepositoryService {
         public void remove(final ItemId itemId) throws RepositoryException {
             executeGuarded(new Callable() {
                 public Object run() throws RepositoryException {
-                    if (itemId.denotesNode()) {
-                        getNode((NodeId) itemId, sInfo).remove();
-                    } else {
-                        getProperty((PropertyId) itemId, sInfo).remove();
+                    try {
+                        if (itemId.denotesNode()) {
+                            getNode((NodeId) itemId, sInfo).remove();
+                        } else {
+                            getProperty((PropertyId) itemId, sInfo).remove();
+                        }
+                    } catch (ItemNotFoundException e) {
+                        // item was present in jcr2spi but got removed on the
+                        // persistent layer in the mean time.
+                        throw new InvalidItemStateException(e);
+                    } catch (PathNotFoundException e) {
+                        // item was present in jcr2spi but got removed on the
+                        // persistent layer in the mean time.
+                        throw new InvalidItemStateException(e);
                     }
                     return null;
                 }
@@ -1242,7 +1252,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         }
     }
 
-    private Node getNode(NodeId id, SessionInfoImpl sessionInfo) throws PathNotFoundException, RepositoryException {
+    private Node getNode(NodeId id, SessionInfoImpl sessionInfo) throws ItemNotFoundException, PathNotFoundException, RepositoryException {
         Session session = sessionInfo.getSession();
         Node n;
         if (id.getUniqueID() != null) {
@@ -1266,7 +1276,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         return n.getNode(jcrPath);
     }
 
-    private Property getProperty(PropertyId id, SessionInfoImpl sessionInfo) throws ItemNotFoundException, RepositoryException {
+    private Property getProperty(PropertyId id, SessionInfoImpl sessionInfo) throws ItemNotFoundException, PathNotFoundException, RepositoryException {
         Session session = sessionInfo.getSession();
         Node n;
         if (id.getUniqueID() != null) {
