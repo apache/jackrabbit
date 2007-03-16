@@ -150,6 +150,13 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
         long count = itr.getSize();
         if (count == 0) {
             log.println(" NONE");
+        } else if (count == -1) {
+            // have to count in a loop
+            count = 0;
+            while (itr.hasNext()) {
+                itr.nextRow();
+                count++;
+            }
         }
         assertEquals("Wrong hit count.", hits, count);
     }
