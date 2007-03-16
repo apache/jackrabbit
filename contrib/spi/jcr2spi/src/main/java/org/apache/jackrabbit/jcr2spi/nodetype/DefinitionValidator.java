@@ -64,7 +64,12 @@ class DefinitionValidator {
     public Map validateNodeTypeDefs(Collection ntDefs, Map validatedDefs)
         throws InvalidNodeTypeDefException, RepositoryException {
         // tmp. map containing names/defs of validated nodetypes
-        Map validDefs = new HashMap(validatedDefs);
+        Map tmpMap = new HashMap(validatedDefs);
+        for (Iterator it = ntDefs.iterator(); it.hasNext();) {
+            QNodeTypeDefinition ntd = (QNodeTypeDefinition) it.next();
+            tmpMap.put(ntd.getQName(), ntd);
+        }
+
         // map of nodetype definitions and effective nodetypes to be registered
         Map ntMap = new HashMap();
         ArrayList list = new ArrayList(ntDefs);
@@ -80,12 +85,9 @@ class DefinitionValidator {
                 QNodeTypeDefinition ntd = (QNodeTypeDefinition) iterator.next();
                 // check if definition has unresolved dependencies
                 /* Note: don't compared to 'registered' nodetypes since registr. is performed later on */
-                if (validDefs.keySet().containsAll(ntd.getDependencies())) {
-                    EffectiveNodeType ent = validateNodeTypeDef(ntd, validDefs);
-                    // keep track of validated definitions and eff. nodetypes
-                    if (!validDefs.containsKey(ntd.getQName())) {
-                        validDefs.put(ntd.getQName(), ntd);
-                    }
+                Collection dependencies = ntd.getDependencies();
+                if (tmpMap.keySet().containsAll(dependencies)) {
+                    EffectiveNodeType ent = validateNodeTypeDef(ntd, tmpMap);
                     ntMap.put(ntd, ent);
                     // remove it from list
                     iterator.remove();
