@@ -12,9 +12,6 @@ NOTE: This list only contains major open issues.
    > Clone
    > Copy between Workspaces
    > Impersonate
-   > RegisterNodeType
-   > ReregisterNodeTypes
-   > UnregisterNodeType
    
    
 2) SPI: interfaces  (improve)
