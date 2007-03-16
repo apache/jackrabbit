@@ -153,11 +153,11 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             PropertyInfo info = service.getPropertyInfo(sessionInfo, propertyId);
             return createPropertyState(info, entry);
         } catch (PathNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage(), e);
+            throw new NoSuchItemStateException(e.getMessage());
         } catch (ItemNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage(), e);
+            throw new NoSuchItemStateException(e.getMessage());
         } catch (RepositoryException e) {
-            throw new ItemStateException(e.getMessage(), e);
+            throw new ItemStateException(e.getMessage());
         }
     }
 
@@ -193,13 +193,13 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             }
             return createPropertyState(info, propEntry);
         } catch (PathNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage(), e);
+            throw new NoSuchItemStateException(e.getMessage());
         } catch (ItemNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage(), e);
+            throw new NoSuchItemStateException(e.getMessage());
         } catch (RepositoryException e) {
-            throw new ItemStateException(e.getMessage(), e);
+            throw new ItemStateException(e.getMessage());
         } catch (MalformedPathException e) {
-            throw new ItemStateException(e.getMessage(), e);
+            throw new ItemStateException(e.getMessage());
         }
     }
 
@@ -213,11 +213,11 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         try {
             return service.getChildInfos(sessionInfo, nodeId);
         } catch (PathNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage(), e);
+            throw new NoSuchItemStateException(e.getMessage());
         } catch (ItemNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage(), e);
+            throw new NoSuchItemStateException(e.getMessage());
         } catch (RepositoryException e) {
-            throw new ItemStateException(e.getMessage(), e);
+            throw new ItemStateException(e.getMessage());
         }
     }
 
@@ -277,7 +277,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         if (parent == null) {
             // special case for root state
             definition = wspManager.getNodeTypeRegistry().getRootNodeDef();
-        } else if (parent.isAvailable() && parent.getStatus() != Status.INVALIDATED) {
+        } else if (parent.isAvailable() && parent.getStatus() == Status.EXISTING) {
             // try to retrieve definition if the parent is available
             try {
                 NodeState parentState = parent.getNodeState();
@@ -285,13 +285,13 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
                 definition = ent.getApplicableNodeDefinition(info.getQName(), info.getNodetype(), ntReg);
             } catch (RepositoryException e) {
                 // should not get here
-                log.warn("Internal error", e);
+                log.warn("Internal error", e.getMessage());
             } catch (ItemStateException e) {
                 // should not get here
-                log.warn("Internal error", e);
+                log.warn("Internal error", e.getMessage());
             } catch (NodeTypeConflictException e) {
                 // should not get here
-               log.warn("Internal error", e);
+               log.warn("Internal error", e.getMessage());
             }
         }
 
@@ -337,27 +337,26 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
 
         QPropertyDefinition definition = null;
         // try to retrieve property definition
-        if (entry.getParent().isAvailable() && entry.getStatus() != Status.INVALIDATED) {
-            NodeState parentState = null;
+        NodeEntry parent = entry.getParent();
+        if (parent.isAvailable() && parent.getStatus() == Status.EXISTING) {
             try {
-                parentState = entry.getParent().getNodeState();
+                NodeState parentState = parent.getNodeState();
                 EffectiveNodeType ent = wspManager.getNodeTypeRegistry().getEffectiveNodeType(parentState.getNodeTypeNames());
                 QPropertyDefinition defs[] = ent.getApplicablePropertyDefinitions(info.getQName(), info.getType(), info.isMultiValued());
                 if (defs.length == 1) {
                     definition = defs[0];
-                }
-                else {
+                } else {
                     definition = service.getPropertyDefinition(sessionInfo, entry.getId());
                 }
             } catch (ItemStateException e) {
                 // should not get here
-                log.warn("Internal error", e);
+                log.warn("Internal error", e.getMessage());
             } catch (RepositoryException e) {
                 // should not get here
-                log.warn("Internal error", e);
+                log.warn("Internal error", e.getMessage());
             } catch (NodeTypeConflictException e) {
                 // should not get here
-                log.warn("Internal error", e);
+                log.warn("Internal error", e.getMessage());
             }
         }
 
@@ -378,7 +377,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * a uniqueID that may move within the hierarchy upon restore or clone.
      */
     private void assertMatchingPath(ItemInfo info, HierarchyEntry entry) throws NoSuchItemStateException, RepositoryException {
-        if (!info.getPath().equals(entry.getPath())) {
+        if (!info.getPath().equals(entry.getWorkspacePath())) {
             throw new NoSuchItemStateException("HierarchyEntry does not belong the given ItemInfo.");
         }
     }

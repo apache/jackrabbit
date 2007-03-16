@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi.hierarchy;
 
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
@@ -94,8 +93,13 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
         ItemState state = internalGetItemState();
         // not yet resolved. retrieve and keep weak reference to state
         if (state == null) {
-            state = doResolve();
-            target = new WeakReference(state);
+            try {
+                state = doResolve();
+                target = new WeakReference(state);
+            } catch (NoSuchItemStateException e) {
+                remove();
+                throw e;
+            }
         } else if (state.getStatus() == Status.INVALIDATED) {
             // completely reload this entry, but don't reload recursively
             reload(false, false);
@@ -113,6 +117,15 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
      * @throws ItemStateException       if an error occurs.
      */
     abstract ItemState doResolve() throws NoSuchItemStateException, ItemStateException;
+
+    /**
+     * Build the Path of this entry
+     *
+     * @param workspacePath
+     * @return
+     * @throws RepositoryException
+     */
+    abstract Path buildPath(boolean workspacePath) throws RepositoryException;
 
     /**
      * 
@@ -161,53 +174,15 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
      * @see HierarchyEntry#getPath()
      */
     public Path getPath() throws RepositoryException {
-        // shortcut for root state
-        if (parent == null) {
-            return Path.ROOT;
-        }
-
-        // build path otherwise
-        try {
-            Path.PathBuilder builder = new Path.PathBuilder();
-            buildPath(builder, this);
-            return builder.getPath();
-        } catch (MalformedPathException e) {
-            String msg = "Failed to build path of " + this;
-            throw new RepositoryException(msg, e);
-        }
+        return buildPath(false);
     }
 
     /**
-     * Adds the path element of an item id to the path currently being built.
-     * On exit, <code>builder</code> contains the path of <code>state</code>.
-     *
-     * @param builder builder currently being used
-     * @param hEntry HierarchyEntry of the state the path should be built for.
+     * @inheritDoc
+     * @see HierarchyEntry#getWorkspacePath()
      */
-    private void buildPath(Path.PathBuilder builder, HierarchyEntry hEntry) {
-        NodeEntry parentEntry = hEntry.getParent();
-        // shortcut for root state
-        if (parentEntry == null) {
-            builder.addRoot();
-            return;
-        }
-
-        // recursively build path of parent
-        buildPath(builder, parentEntry);
-
-        QName name = hEntry.getQName();
-        if (hEntry.denotesNode()) {
-            int index = ((NodeEntry) hEntry).getIndex();
-            // add to path
-            if (index == Path.INDEX_DEFAULT) {
-                builder.addLast(name);
-            } else {
-                builder.addLast(name, index);
-            }
-        } else {
-            // property-state: add to path
-            builder.addLast(name);
-        }
+    public Path getWorkspacePath() throws RepositoryException {
+        return buildPath(true);
     }
 
     /**

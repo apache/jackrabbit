@@ -17,12 +17,16 @@
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.Status;
+
+import javax.jcr.RepositoryException;
 
 /**
  * <code>PropertyEntryImpl</code> implements a reference to a property state.
@@ -62,6 +66,23 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
      */
     ItemState doResolve() throws NoSuchItemStateException, ItemStateException {
         return factory.getItemStateFactory().createPropertyState(getWorkspaceId(), this);
+    }
+
+    /**
+     * @see HierarchyEntryImpl#buildPath(boolean)
+     */
+    Path buildPath(boolean workspacePath) throws RepositoryException {
+        try {
+            Path.PathBuilder builder = new Path.PathBuilder();
+            builder.addAll(parent.buildPath(workspacePath).getElements());
+            // add property name to parent path
+            builder.addLast(getQName());
+
+            return builder.getPath();
+        } catch (MalformedPathException e) {
+            String msg = "Failed to build path of " + this;
+            throw new RepositoryException(msg, e);
+        }
     }
 
     //------------------------------------------------------< PropertyEntry >---
