@@ -779,6 +779,8 @@ public class ItemStateValidator {
                         + safeGetJCRPath(parentState)
                         + ": colliding with same-named existing node.");
                 }
+            } catch (NoSuchItemStateException e) {
+                // ignore: conflicting doesn't exist any more
             } catch (ItemStateException e) {
                 // should not occur, since existence has been asserted before
                 throw new RepositoryException(e);
