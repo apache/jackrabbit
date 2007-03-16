@@ -31,7 +31,7 @@ import javax.jcr.lock.Lock;
 public class OpenScopedLockTest extends AbstractLockTest {
 
     private static Logger log = LoggerFactory.getLogger(OpenScopedLockTest.class);
-
+ 
     boolean isSessionScoped() {
         return false;
     }
@@ -39,7 +39,6 @@ public class OpenScopedLockTest extends AbstractLockTest {
     public void testLogoutHasNoEffect() throws Exception {
         // create a second session session. since loggin-out the 'superuser'
         // will cause all inherited tear-down to fail
-        Session otherSession = helper.getSuperuserSession();
         Node testRoot2 = (Node) otherSession.getItem(testRootNode.getPath());
 
         Node lockedNode2 = testRoot2.addNode(nodeName2, testNodeType);
@@ -89,7 +88,6 @@ public class OpenScopedLockTest extends AbstractLockTest {
     public void testRefreshAfterTokenTransfer2() throws Exception {
         String lockToken = lock.getLockToken();
 
-        Session otherSession = helper.getSuperuserSession();
         Node n2 = (Node) otherSession.getItem(lockedNode.getPath());
         try {
             superuser.removeLockToken(lockToken);
@@ -105,7 +103,6 @@ public class OpenScopedLockTest extends AbstractLockTest {
 
     public void testLockHolderAfterTokenTransfer() throws Exception {
         String lockToken = lock.getLockToken();
-        Session otherSession = helper.getSuperuserSession();
         Node n2 = (Node) otherSession.getItem(lockedNode.getPath());
         try {
             superuser.removeLockToken(lockToken);
@@ -136,7 +133,6 @@ public class OpenScopedLockTest extends AbstractLockTest {
 
     public void testUnlockAfterTokenTransfer2() throws Exception {
         String lockToken = lock.getLockToken();
-        Session otherSession = helper.getSuperuserSession();
         try {
             superuser.removeLockToken(lockToken);
             otherSession.addLockToken(lockToken);
@@ -163,7 +159,6 @@ public class OpenScopedLockTest extends AbstractLockTest {
      */
     public void testUnlockAfterTokenTransfer3() throws Exception {
         String lockToken = lock.getLockToken();
-        Session otherSession = helper.getSuperuserSession();
         try {
             superuser.removeLockToken(lockToken);
             otherSession.addLockToken(lockToken);

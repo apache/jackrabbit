@@ -78,9 +78,13 @@ public class SNSIndexTest extends AbstractJCRTest {
      */
     public void testIndexByOtherSession() throws RepositoryException {
         Session otherSession = helper.getReadOnlySession();
-        for (int index = Path.INDEX_DEFAULT; index < 4; index++) {
-            Node sns = (Node) otherSession.getItem(buildPath(index));
-            checkIndex(sns, index);
+        try {
+            for (int index = Path.INDEX_DEFAULT; index < 4; index++) {
+                Node sns = (Node) otherSession.getItem(buildPath(index));
+                checkIndex(sns, index);
+            }
+        } finally {
+            otherSession.logout();
         }
     }
 
@@ -111,22 +115,26 @@ public class SNSIndexTest extends AbstractJCRTest {
      */
     public void testNodeEntriesFilledCorrectly() throws RepositoryException {
         Session otherSession = helper.getReadOnlySession();
-        Node sns = (Node) otherSession.getItem(buildPath(3));
-        checkIndex(sns, 3);
+        try {
+            Node sns = (Node) otherSession.getItem(buildPath(3));
+            checkIndex(sns, 3);
 
-        sns = (Node) otherSession.getItem(buildPath(2));
-        checkIndex(sns, 2);
+            sns = (Node) otherSession.getItem(buildPath(2));
+            checkIndex(sns, 2);
 
-        sns = (Node) otherSession.getItem(buildPath(4));
-        checkIndex(sns, 4);
+            sns = (Node) otherSession.getItem(buildPath(4));
+            checkIndex(sns, 4);
 
-        // check 3 again
-        sns = (Node) otherSession.getItem(buildPath(3));
-        checkIndex(sns, 3);
+            // check 3 again
+            sns = (Node) otherSession.getItem(buildPath(3));
+            checkIndex(sns, 3);
 
-        // check default
-        sns = (Node) otherSession.getItem(buildPath(1));
-        checkIndex(sns, 1);
+            // check default
+            sns = (Node) otherSession.getItem(buildPath(1));
+            checkIndex(sns, 1);
+        } finally {
+            otherSession.logout();
+        }
     }
 
     /**
@@ -152,18 +160,22 @@ public class SNSIndexTest extends AbstractJCRTest {
      */
     public void testGetNodesByNameByOtherSession() throws RepositoryException {
         Session otherSession = helper.getReadOnlySession();
-        NodeIterator it = ((Node) otherSession.getItem(parent.getPath())).getNodes(snsName);
-        long size = it.getSize();
-        if (size != -1) {
+        try {
+            NodeIterator it = ((Node) otherSession.getItem(parent.getPath())).getNodes(snsName);
+            long size = it.getSize();
+            if (size != -1) {
+                assertTrue("4 SNSs have been added -> but iterator size is " + size + ".", size == 4);
+            }
+            int expectedIndex = 1;
+            while (it.hasNext()) {
+                Node sns = it.nextNode();
+                checkIndex(sns, expectedIndex);
+                expectedIndex++;
+            }
             assertTrue("4 SNSs have been added -> but iterator size is " + size + ".", size == 4);
+        } finally {
+            otherSession.logout();
         }
-        int expectedIndex = 1;
-        while (it.hasNext()) {
-            Node sns = it.nextNode();
-            checkIndex(sns, expectedIndex);
-            expectedIndex++;
-        }
-        assertTrue("4 SNSs have been added -> but iterator size is " + size + ".", size == 4);
 
     }
 

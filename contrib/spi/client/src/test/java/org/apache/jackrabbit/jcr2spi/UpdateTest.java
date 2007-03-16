@@ -158,42 +158,50 @@ public class UpdateTest extends AbstractJCRTest {
         String srcWorkspace = getAnotherWorkspace();
         // get the root node in the second workspace
         Session session2 = helper.getSuperuserSession(srcWorkspace);
-        // make sure the source-session has the corresponding node.
-        Node testRootW2 = (Node) session2.getItem(testRootNode.getCorrespondingNodePath(srcWorkspace));
-        if (testRootW2.hasProperty(propertyName2)) {
-            throw new NotExecutableException();
+        try {
+            // make sure the source-session has the corresponding node.
+            Node testRootW2 = (Node) session2.getItem(testRootNode.getCorrespondingNodePath(srcWorkspace));
+            if (testRootW2.hasProperty(propertyName2)) {
+                throw new NotExecutableException();
+            }
+
+            // call the update method on test node in default workspace
+            testRootNode.update(srcWorkspace);
+
+            // ok first check if node has no longer propertis
+            assertFalse("Node updated with Node.update() should have property removed", testRootNode.hasProperty(propertyName2));
+        } finally {
+            session2.logout();
         }
-
-        // call the update method on test node in default workspace
-        testRootNode.update(srcWorkspace);
-
-        // ok first check if node has no longer propertis
-        assertFalse("Node updated with Node.update() should have property removed", testRootNode.hasProperty(propertyName2));
     }
 
     public void testUpdateAddsMissingSubtree() throws RepositoryException, NotExecutableException {
         String srcWorkspace = getAnotherWorkspace();
         // get the root node in the second workspace
         Session session2 = helper.getSuperuserSession(srcWorkspace);
-        // make sure the source-session has the corresponding node.
-        Node testRootW2 = (Node) session2.getItem(testRootNode.getCorrespondingNodePath(srcWorkspace));
+        try {
+            // make sure the source-session has the corresponding node.
+            Node testRootW2 = (Node) session2.getItem(testRootNode.getCorrespondingNodePath(srcWorkspace));
 
-        // create test node in second workspace
-        Node aNode2 = testRootW2.addNode(nodeName1, testNodeType);
-        aNode2.addNode(nodeName2, testNodeType);
-        aNode2.setProperty(propertyName2, "test");
-        Property p2 = testRootW2.setProperty(propertyName1, "test");
-        testRootW2.save();
+            // create test node in second workspace
+            Node aNode2 = testRootW2.addNode(nodeName1, testNodeType);
+            aNode2.addNode(nodeName2, testNodeType);
+            aNode2.setProperty(propertyName2, "test");
+            Property p2 = testRootW2.setProperty(propertyName1, "test");
+            testRootW2.save();
 
-        // call the update method on test node in default workspace
-        testRootNode.update(srcWorkspace);
+            // call the update method on test node in default workspace
+            testRootNode.update(srcWorkspace);
 
-        // ok check if the child has been added
-        boolean allPresent = testRootNode.hasNode(nodeName1) &&
-                             testRootNode.hasNode(nodeName1+"/"+nodeName2) &&
-                             testRootNode.hasProperty(nodeName1+"/"+propertyName2) &&
-                             testRootNode.hasProperty(propertyName1);
-        assertTrue("Node updated with Node.update() should have received childrens", allPresent);
+            // ok check if the child has been added
+            boolean allPresent = testRootNode.hasNode(nodeName1) &&
+                    testRootNode.hasNode(nodeName1+"/"+nodeName2) &&
+                    testRootNode.hasProperty(nodeName1+"/"+propertyName2) &&
+                    testRootNode.hasProperty(propertyName1);
+            assertTrue("Node updated with Node.update() should have received childrens", allPresent);
+        } finally {
+            session2.logout();
+        }
     }
 
     private String getAnotherWorkspace() throws NotExecutableException {

@@ -48,17 +48,16 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
     private String testURI;
 
     protected void setUp() throws Exception {
-        Session superuser = helper.getSuperuserSession();
+        super.setUp();
         nsRegistry = superuser.getWorkspace().getNamespaceRegistry();
 
         testPrefix = getUnusedPrefix();
         testURI = getUnusedURI();
 
-        boolean level2 = Boolean.valueOf((String) superuser.getRepository().getDescriptor(Repository.LEVEL_2_SUPPORTED)).booleanValue();
+        boolean level2 = Boolean.valueOf(superuser.getRepository().getDescriptor(Repository.LEVEL_2_SUPPORTED)).booleanValue();
         if (!level2) {
             throw new NotExecutableException("Cannot test namespace registration/unregistration. Repository is a Level 1 only.");
         }
-
     }
 
     /**
@@ -68,12 +67,17 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
      * @throws RepositoryException
      */
     public void testRegisteredNamespaceVisibility() throws RepositoryException {
-        NamespaceRegistry other = helper.getReadOnlySession().getWorkspace().getNamespaceRegistry();
+        Session otherSession = helper.getReadOnlySession();
+        try {
+            NamespaceRegistry other = otherSession.getWorkspace().getNamespaceRegistry();
 
-        nsRegistry.registerNamespace(testPrefix, testURI);
-        String otherUri = other.getURI(testPrefix);
-        String otherPrefix = other.getPrefix(testURI);
-        assertTrue("Namespace registered must be immediately visible to any other session.", testURI.equals(otherUri) && testPrefix.equals(otherPrefix));
+            nsRegistry.registerNamespace(testPrefix, testURI);
+            String otherUri = other.getURI(testPrefix);
+            String otherPrefix = other.getPrefix(testURI);
+            assertTrue("Namespace registered must be immediately visible to any other session.", testURI.equals(otherUri) && testPrefix.equals(otherPrefix));
+        } finally {
+            otherSession.logout();
+        }
     }
 
     /**
@@ -102,16 +106,21 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
      * @throws RepositoryException
      */
     public void testReRegisteredNamespace2() throws RepositoryException {
-        NamespaceRegistry other = helper.getReadOnlySession().getWorkspace().getNamespaceRegistry();
+        Session otherSession = helper.getReadOnlySession();
+        try {
+            NamespaceRegistry other = otherSession.getWorkspace().getNamespaceRegistry();
 
-        nsRegistry.registerNamespace(testPrefix, testURI);
-        other.getPrefix(testURI);
+            nsRegistry.registerNamespace(testPrefix, testURI);
+            other.getPrefix(testURI);
 
-        String replacePrefix = getUnusedPrefix();
-        nsRegistry.registerNamespace(replacePrefix, testURI);
+            String replacePrefix = getUnusedPrefix();
+            nsRegistry.registerNamespace(replacePrefix, testURI);
 
-        String otherPrefix = other.getPrefix(testURI);
-        assertEquals("Namespace with prefix " + testPrefix + " has been reregistered with new prefix " + replacePrefix, replacePrefix, otherPrefix);
+            String otherPrefix = other.getPrefix(testURI);
+            assertEquals("Namespace with prefix " + testPrefix + " has been reregistered with new prefix " + replacePrefix, replacePrefix, otherPrefix);
+        } finally {
+            otherSession.logout();
+        }
     }
 
     /**
@@ -121,23 +130,28 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
      * @throws RepositoryException
      */
     public void testReRegisteredNamespaceVisibility() throws RepositoryException {
-        NamespaceRegistry other = helper.getReadOnlySession().getWorkspace().getNamespaceRegistry();
-
-        nsRegistry.registerNamespace(testPrefix, testURI);
-        other.getPrefix(testURI);
-
-        String replacePrefix = getUnusedPrefix();
-        nsRegistry.registerNamespace(replacePrefix, testURI);
-
-        String otherUri = other.getURI(replacePrefix);
-        String otherPrefix = other.getPrefix(testURI);
-        assertTrue("Namespace registered must be immediately visible to any other session.", testURI.equals(otherUri) && replacePrefix.equals(otherPrefix));
-
+        Session otherSession = helper.getReadOnlySession();
         try {
-            other.getURI(testPrefix);
-            fail("Namespace with prefix " + testPrefix + " has been reregistered with new prefix " + replacePrefix);
-        } catch (NamespaceException e) {
-            // OK
+            NamespaceRegistry other = otherSession.getWorkspace().getNamespaceRegistry();
+
+            nsRegistry.registerNamespace(testPrefix, testURI);
+            other.getPrefix(testURI);
+
+            String replacePrefix = getUnusedPrefix();
+            nsRegistry.registerNamespace(replacePrefix, testURI);
+
+            String otherUri = other.getURI(replacePrefix);
+            String otherPrefix = other.getPrefix(testURI);
+            assertTrue("Namespace registered must be immediately visible to any other session.", testURI.equals(otherUri) && replacePrefix.equals(otherPrefix));
+
+            try {
+                other.getURI(testPrefix);
+                fail("Namespace with prefix " + testPrefix + " has been reregistered with new prefix " + replacePrefix);
+            } catch (NamespaceException e) {
+                // OK
+            }
+        } finally {
+            otherSession.logout();
         }
     }
 
@@ -150,18 +164,23 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
         String prefix = getUnusedPrefix();
         String uri = getUnusedURI();
 
-        NamespaceRegistry other = helper.getReadOnlySession().getWorkspace().getNamespaceRegistry();
-
-        nsRegistry.registerNamespace(prefix, uri);
+        Session otherSession = helper.getReadOnlySession();
         try {
-            nsRegistry.unregisterNamespace(prefix);
-        } catch (NamespaceException e) {
-            throw new NotExecutableException("Repository does not support unregistration of namespaces.");
-        }
+            NamespaceRegistry other = otherSession.getWorkspace().getNamespaceRegistry();
 
-        String otherUri = other.getURI(prefix);
-        String otherPrefix = other.getPrefix(uri);
-        assertTrue("Namespace registered must be immediately visible to any other session.", uri.equals(otherUri) && prefix.equals(otherPrefix));
+            nsRegistry.registerNamespace(prefix, uri);
+            try {
+                nsRegistry.unregisterNamespace(prefix);
+            } catch (NamespaceException e) {
+                throw new NotExecutableException("Repository does not support unregistration of namespaces.");
+            }
+
+            String otherUri = other.getURI(prefix);
+            String otherPrefix = other.getPrefix(uri);
+            assertTrue("Namespace registered must be immediately visible to any other session.", uri.equals(otherUri) && prefix.equals(otherPrefix));
+        } finally {
+            otherSession.logout();
+        }
     }
 
     /**

@@ -253,11 +253,15 @@ public class MoveMultipleTest extends AbstractMoveTest {
         testRootNode.save();
 
         Session otherSession = helper.getReadWriteSession();
-        otherSession.move(originalPath, destinationPath);
+        try {
+            otherSession.move(originalPath, destinationPath);
+            Node mv = (Node) otherSession.getItem(destinationPath);
 
-        Node mv = (Node) otherSession.getItem(destinationPath);
-
-        assertTrue(childNode.isSame(mv.getNode(nodeName2)));
-        assertTrue(childProperty.isSame(mv.getProperty(propertyName2)));
+            testRootNode.refresh(false);
+            assertTrue(childNode.isSame(mv.getNode(nodeName2)));
+            assertTrue(childProperty.isSame(mv.getProperty(propertyName2)));
+        } finally {
+            otherSession.logout();
+        }
     }
 }
