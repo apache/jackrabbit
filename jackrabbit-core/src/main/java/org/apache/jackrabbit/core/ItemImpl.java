@@ -23,6 +23,7 @@ import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -33,10 +34,7 @@ import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.state.StaleItemStateException;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.util.Text;
@@ -467,6 +465,9 @@ public abstract class ItemImpl implements Item, ItemStateListener {
          */
 
         AccessManager accessMgr = session.getAccessManager();
+        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+        ItemValidator validator = new ItemValidator(ntMgr.getNodeTypeRegistry(),
+                session.getHierarchyManager(), session);
         // walk through list of dirty transient items and validate each
         while (dirtyIter.hasNext()) {
             ItemState itemState = (ItemState) dirtyIter.next();
@@ -488,12 +489,11 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                 // the transient item is a node
                 NodeState nodeState = (NodeState) itemState;
                 ItemId id = nodeState.getNodeId();
-                NodeImpl node = (NodeImpl) itemMgr.getItem(id);
-                NodeDefinition def = node.getDefinition();
+                NodeDefinition def = ntMgr.getNodeDefinition(nodeState.getDefinitionId());
                 // primary type
-                NodeTypeImpl pnt = (NodeTypeImpl) node.getPrimaryNodeType();
+                NodeTypeImpl pnt = ntMgr.getNodeType(nodeState.getNodeTypeName());
                 // effective node type (primary type incl. mixins)
-                EffectiveNodeType ent = node.getEffectiveNodeType();
+                EffectiveNodeType ent = validator.getEffectiveNodeType(nodeState);
                 /**
                  * if the transient node was added (i.e. if it is 'new'),
                  * check its node's node type against the required node type
@@ -509,7 +509,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                              * the transient node's primary node type does not
                              * satisfy the 'required primary types' constraint
                              */
-                            String msg = node.safeGetJCRPath()
+                            String msg = itemMgr.safeGetJCRPath(id)
                                     + " must be of node type " + ntReq.getName();
                             log.debug(msg);
                             throw new ConstraintViolationException(msg);
@@ -530,7 +530,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                         continue;
                     }
                     if (!nodeState.hasPropertyName(pd.getName())) {
-                        String msg = node.safeGetJCRPath()
+                        String msg = itemMgr.safeGetJCRPath(id)
                                 + ": mandatory property " + pd.getName()
                                 + " does not exist";
                         log.debug(msg);
@@ -542,7 +542,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                 for (int i = 0; i < cnda.length; i++) {
                     NodeDef cnd = cnda[i];
                     if (!nodeState.hasChildNodeEntry(cnd.getName())) {
-                        String msg = node.safeGetJCRPath()
+                        String msg = itemMgr.safeGetJCRPath(id)
                                 + ": mandatory child node " + cnd.getName()
                                 + " does not exist";
                         log.debug(msg);
@@ -553,9 +553,8 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                 // the transient item is a property
                 PropertyState propState = (PropertyState) itemState;
                 ItemId propId = propState.getPropertyId();
-                PropertyImpl prop = (PropertyImpl) itemMgr.getItem(propId);
                 PropertyDefinitionImpl def =
-                        (PropertyDefinitionImpl) prop.getDefinition();
+                        ntMgr.getPropertyDefinition(propState.getDefinitionId());
 
                 /**
                  * check value constraints
@@ -572,7 +571,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                                     def.unwrap(), values);
                         } catch (RepositoryException e) {
                             // repack exception for providing verboser error message
-                            String msg = prop.safeGetJCRPath() + ": " + e.getMessage();
+                            String msg = itemMgr.safeGetJCRPath(propId) + ": " + e.getMessage();
                             log.debug(msg);
                             throw new ConstraintViolationException(msg);
                         }
@@ -614,7 +613,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                                         }
                                         String targetMixinsString = Text.implode(targetMixins, ", ");
                                         String constraintsString = Text.implode(constraints, ", ");
-                                        constraintViolationMsg = prop.safeGetJCRPath()
+                                        constraintViolationMsg = itemMgr.safeGetJCRPath(propId)
                                                 + ": is constraint to ["
                                                 + constraintsString
                                                 + "] but references [primaryType="
@@ -623,7 +622,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                                                 + targetMixinsString + "]";
                                     }
                                 } catch (RepositoryException re) {
-                                    String msg = prop.safeGetJCRPath()
+                                    String msg = itemMgr.safeGetJCRPath(propId)
                                             + ": failed to check REFERENCE value constraint";
                                     log.debug(msg);
                                     throw new ConstraintViolationException(msg, re);
@@ -683,7 +682,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         // walk through list of transient items and persist each one
         while (iter.hasNext()) {
             ItemState itemState = (ItemState) iter.next();
-            ItemImpl item = itemMgr.getItem(itemState.getId());
+            ItemImpl item = itemMgr.getItem(itemState);
             // persist state of transient item
             item.makePersistent();
         }
@@ -757,14 +756,18 @@ public abstract class ItemImpl implements Item, ItemStateListener {
     private boolean initVersionHistories(Iterator iter) throws RepositoryException {
         // walk through list of transient items and search for new versionable nodes
         boolean createdTransientState = false;
+        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+        ItemValidator validator = new ItemValidator(ntMgr.getNodeTypeRegistry(),
+                session.getHierarchyManager(), session);
         while (iter.hasNext()) {
             ItemState itemState = (ItemState) iter.next();
             if (itemState.isNode()) {
-                NodeImpl node = (NodeImpl) itemMgr.getItem(itemState.getId());
-                if (node.isNodeType(QName.MIX_VERSIONABLE)) {
-                    if (!node.hasProperty(QName.JCR_VERSIONHISTORY)) {
+                NodeState nodeState = (NodeState) itemState;
+                EffectiveNodeType nt = validator.getEffectiveNodeType(nodeState);
+                if (nt.includesNodeType(QName.MIX_VERSIONABLE)) {
+                    if (!nodeState.hasPropertyName(QName.JCR_VERSIONHISTORY)) {
+                        NodeImpl node = (NodeImpl) itemMgr.getItem(itemState.getId());
                         VersionManager vMgr = session.getVersionManager();
-                        NodeState nodeState = (NodeState) itemState;
                         /**
                          * check if there's already a version history for that
                          * node; this would e.g. be the case if a versionable
