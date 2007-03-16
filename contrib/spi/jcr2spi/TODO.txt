@@ -17,8 +17,6 @@ Known Issues and TODOs with jcr2spi
 
 - IMPROVE: Replace ItemState-duality by copy on write behaviour
 
-- IMPROVE: Refreshing and reloading states, that are transiently modified.
-
 - IMPROVE: review if ItemStateExceptions are really needed. currently
            they are created from RepositoryExceptions and rethrown as
            RepositoryExceptions
