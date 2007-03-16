@@ -265,20 +265,22 @@ public class SessionTest extends AbstractJCRTest {
 
         // access node through another session to lock it
         Session session2 = helper.getSuperuserSession();
-        Node node2 = session2.getRootNode().getNode(pathRelToRoot);
-        node2.lock(true, true);
-
         try {
-            String destPath = testRoot + "/" + nodeName2;
-            session.move(srcNode.getPath(), destPath);
-            testRootNode.save();
-            fail("A LockException is thrown either immediately or on save  if a lock prevents the move.");
-        }
-        catch (LockException e){
-            // success
-        }
+            Node node2 = session2.getRootNode().getNode(pathRelToRoot);
+            node2.lock(true, true);
 
-        session2.logout();
+            try {
+                String destPath = testRoot + "/" + nodeName2;
+                session.move(srcNode.getPath(), destPath);
+                testRootNode.save();
+                fail("A LockException is thrown either immediately or on save  if a lock prevents the move.");
+            } catch (LockException e){
+                // success
+            }
+
+        } finally {
+            session2.logout();
+        }
     }
 
     /**

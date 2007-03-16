@@ -86,6 +86,9 @@ public class SerializationTest extends AbstractJCRTest {
 
     public void tearDown() throws Exception {
         file.delete();
+        if (session != null && session.isLive()) {
+            session.logout();
+        }
         super.tearDown();
     }
 

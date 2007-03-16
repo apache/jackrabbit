@@ -64,10 +64,11 @@ public class NodeTest extends AbstractJCRTest {
     public void tearDown() throws Exception {
         try {
             cleanUpTestRoot(superuserW2);
-            // log out
-            superuserW2.logout();
         } catch (RepositoryException e) {
             log.println("Exception in tearDown: " + e.toString());
+        } finally {
+            // log out
+            superuserW2.logout();
         }
 
         super.tearDown();
