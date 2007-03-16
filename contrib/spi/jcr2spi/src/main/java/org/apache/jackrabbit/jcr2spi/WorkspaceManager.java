@@ -506,11 +506,11 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      */
     public boolean isGranted(ItemState itemState, String[] actions) throws ItemNotFoundException, RepositoryException {
         // a 'new' state can always be read, written and removed
-        // TODO: correct?
         if (itemState.getStatus() == Status.NEW) {
             return true;
         }
-        return service.isGranted(sessionInfo, itemState.getId(), actions);
+        ItemState wspState = itemState.getWorkspaceState();
+        return service.isGranted(sessionInfo, wspState.getId(), actions);
     }
 
     /**
@@ -521,7 +521,8 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         if (itemState.getStatus() == Status.NEW) {
             return true;
         }
-        return service.isGranted(sessionInfo, itemState.getId(), AccessManager.READ);
+        ItemState wspState = itemState.getWorkspaceState();
+        return service.isGranted(sessionInfo, wspState.getId(), AccessManager.READ);
     }
 
     /**
@@ -532,7 +533,8 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         if (itemState.getStatus() == Status.NEW) {
             return true;
         }
-        return service.isGranted(sessionInfo, itemState.getId(), AccessManager.REMOVE);
+        ItemState wspState = itemState.getWorkspaceState();
+        return service.isGranted(sessionInfo, wspState.getId(), AccessManager.REMOVE);
     }
 
     /**
