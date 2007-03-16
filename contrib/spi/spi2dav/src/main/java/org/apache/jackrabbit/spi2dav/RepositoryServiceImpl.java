@@ -449,8 +449,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * TODO: handle impersonation
-     *
      * @see RepositoryService#obtain(Credentials, String)
      */
     public SessionInfo obtain(Credentials credentials, String workspaceName)
@@ -463,6 +461,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         throws LoginException, NoSuchWorkspaceException, RepositoryException {
         checkSessionInfo(sessionInfo);
         return obtain(((SessionInfoImpl)sessionInfo).getCredentials(), workspaceName);
+    }
+
+    public SessionInfo impersonate(SessionInfo sessionInfo, Credentials credentials) throws LoginException, RepositoryException {
+        throw new UnsupportedOperationException("Not implemented yet.");
     }
 
     private SessionInfo obtain(CredentialsWrapper credentials, String workspaceName)

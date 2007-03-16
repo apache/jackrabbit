@@ -160,6 +160,20 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
     /**
      * {@inheritDoc}
      */
+    public RemoteSessionInfo impersonate(RemoteSessionInfo sessionInfo,
+                                         Credentials credentials)
+            throws RepositoryException, RemoteException {
+        try {
+            return createServerSessionInfo(
+                    service.impersonate(getSessionInfo(sessionInfo), credentials));
+        } catch (RepositoryException e) {
+            throw getRepositoryException(e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public void dispose(RemoteSessionInfo sessionInfo)
             throws RepositoryException, RemoteException {
         try {

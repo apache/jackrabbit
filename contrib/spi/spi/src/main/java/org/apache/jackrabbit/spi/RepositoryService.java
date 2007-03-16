@@ -104,6 +104,17 @@ public interface RepositoryService {
             throws LoginException, NoSuchWorkspaceException, RepositoryException;
 
     /**
+     * Returns a <code>SessionInfo</code> that will be used by other methods
+     * on the <code>RepositoryService</code>.
+     *
+     * @param sessionInfo
+     * @param credentials
+     * @return a <code>SessionInfo</code> if impersonate was successful.
+     * @see Session#impersonate(Credentials)
+     */
+    public SessionInfo impersonate(SessionInfo sessionInfo, Credentials credentials) throws LoginException, RepositoryException;
+
+    /**
      * Indicates to the <code>RepositoryService</code>, that the given SessionInfo
      * will not be used any more.
      *

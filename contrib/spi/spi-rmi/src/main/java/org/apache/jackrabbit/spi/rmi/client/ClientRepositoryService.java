@@ -153,6 +153,15 @@ public class ClientRepositoryService implements RepositoryService {
         }
     }
 
+    public SessionInfo impersonate(SessionInfo sessionInfo, Credentials credentials) throws LoginException, RepositoryException {
+        try {
+            return new ClientSessionInfo(remoteService.impersonate(
+                    getRemoteSessionInfo(sessionInfo), credentials));
+        } catch (RemoteException e) {
+            throw new RemoteRepositoryException(e);
+        }
+    }
+
     /**
      * {@inheritDoc}
      */

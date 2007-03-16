@@ -186,6 +186,15 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
+    public SessionInfo impersonate(SessionInfo sessionInfo, Credentials credentials) throws LoginException, RepositoryException {
+        Credentials duplicate = SessionInfoImpl.duplicateCredentials(credentials);
+        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        return new SessionInfoImpl(sInfo.getSession().impersonate(credentials), duplicate);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public void dispose(SessionInfo sessionInfo) throws RepositoryException {
         subscriptions.remove(sessionInfo);
         getSessionInfoImpl(sessionInfo).getSession().logout();
