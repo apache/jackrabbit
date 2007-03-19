@@ -335,13 +335,20 @@ public class LocalItemStateManager
 
         // this LocalItemStateManager instance is no longer needed;
         // cached item states can now be safely discarded
-        Iterator iter = cache.values().iterator();
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
-            dispatcher.notifyStateDiscarded(state);
-            // let the item state know that it has been disposed
-            state.onDisposed();
+
+        // JCR-798: copy cached item states to array
+        // to avoid ConcurrentModificationException
+        ItemState[] isa = (ItemState[]) cache.values().toArray(
+                new ItemState[cache.size()]);
+        for (int i = 0; i < isa.length; i++) {
+            ItemState state = isa[i];
+            if (state != null) {
+                dispatcher.notifyStateDiscarded(state);
+                // let the item state know that it has been disposed
+                state.onDisposed();
+            }
         }
+
         // clear cache
         cache.evictAll();
         cache.dispose();
