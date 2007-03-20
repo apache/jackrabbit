@@ -24,6 +24,8 @@ import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
+import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.jcr2spi.query.QueryManagerImpl;
 import org.apache.jackrabbit.jcr2spi.operation.Move;
 import org.apache.jackrabbit.jcr2spi.operation.Copy;
@@ -43,6 +45,7 @@ import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.name.Path;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -67,6 +70,7 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.InvalidSerializedDataException;
+import javax.jcr.ValueFactory;
 import java.io.InputStream;
 import java.io.IOException;
 
@@ -385,6 +389,25 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
             versionManager = createVersionManager(wspManager);
         }
         return versionManager;
+    }
+
+    /**
+     * @see ManagerProvider#getItemDefinitionProvider()
+     */
+    public ItemDefinitionProvider getItemDefinitionProvider() {
+        return wspManager.getItemDefinitionProvider();
+    }
+
+    public EffectiveNodeTypeProvider getEffectiveNodeTypeProvider() {
+        return wspManager.getEffectiveNodeTypeProvider();
+    }
+
+    public ValueFactory getJcrValueFactory() throws RepositoryException {
+        return session.getJcrValueFactory();
+    }
+
+    public QValueFactory getQValueFactory() throws RepositoryException {
+        return session.getQValueFactory();
     }
 
     //------------------------------------< implementation specific methods >---

@@ -28,10 +28,7 @@ import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.ItemInfo;
-import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
-import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
@@ -60,13 +57,13 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
 
     private final RepositoryService service;
     private final SessionInfo sessionInfo;
-    private final WorkspaceManager wspManager;
+    private final ItemDefinitionProvider definitionProvider;
 
     public WorkspaceItemStateFactory(RepositoryService service, SessionInfo sessionInfo,
-                                     WorkspaceManager wspManager) {
+                                     ItemDefinitionProvider definitionProvider) {
         this.service = service;
         this.sessionInfo = sessionInfo;
-        this.wspManager = wspManager;
+        this.definitionProvider = definitionProvider;
     }
 
     /**
@@ -244,29 +241,10 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         }
 
         // retrieve definition
-        NodeTypeRegistry ntReg = wspManager.getNodeTypeRegistry();
-        QNodeDefinition definition = null;
-        NodeEntry parent = entry.getParent();
-        if (parent == null) {
-            // special case for root state
-            definition = wspManager.getNodeTypeRegistry().getRootNodeDef();
-        } else if (parent.isAvailable() && parent.getStatus() == Status.EXISTING) {
-            // try to retrieve definition if the parent is available
-            try {
-                NodeState parentState = parent.getNodeState();
-                EffectiveNodeType ent = ntReg.getEffectiveNodeType(parentState.getNodeTypeNames());
-                definition = ent.getApplicableNodeDefinition(info.getQName(), info.getNodetype(), ntReg);
-            } catch (RepositoryException e) {
-                // should not get here
-                log.warn("Internal error", e.getMessage());
-            } catch (NodeTypeConflictException e) {
-                // should not get here
-               log.warn("Internal error", e.getMessage());
-            }
-        }
+        QNodeDefinition definition = definitionProvider.getQNodeDefinition(entry, info);
 
         // now build the nodestate itself
-        NodeState state = new NodeState(entry, info.getNodetype(), info.getMixins(), definition, Status.EXISTING, true, this, ntReg);
+        NodeState state = new NodeState(entry, info.getNodetype(), info.getMixins(), definition, Status.EXISTING, true, this, definitionProvider);
 
         // update NodeEntry from the information present in the NodeInfo (prop entries)
         List propNames = new ArrayList();
@@ -308,30 +286,10 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             parent.setUniqueID(uniqueID);
         }
 
-        QPropertyDefinition definition = null;
-        // try to retrieve property definition
-        NodeEntry parent = entry.getParent();
-        if (parent.isAvailable() && parent.getStatus() == Status.EXISTING) {
-            try {
-                NodeState parentState = parent.getNodeState();
-                EffectiveNodeType ent = wspManager.getNodeTypeRegistry().getEffectiveNodeType(parentState.getNodeTypeNames());
-                QPropertyDefinition defs[] = ent.getApplicablePropertyDefinitions(info.getQName(), info.getType(), info.isMultiValued());
-                if (defs.length == 1) {
-                    definition = defs[0];
-                } else {
-                    definition = service.getPropertyDefinition(sessionInfo, entry.getId());
-                }
-            } catch (RepositoryException e) {
-                // should not get here
-                log.warn("Internal error", e.getMessage());
-            } catch (NodeTypeConflictException e) {
-                // should not get here
-                log.warn("Internal error", e.getMessage());
-            }
-        }
+        QPropertyDefinition definition = definitionProvider.getQPropertyDefinition(entry, info);
 
         // build the PropertyState
-        PropertyState state = new PropertyState(entry, info.isMultiValued(), definition, Status.EXISTING, true, this, wspManager.getNodeTypeRegistry());
+        PropertyState state = new PropertyState(entry, info.isMultiValued(), definition, Status.EXISTING, true, this, definitionProvider);
         state.init(info.getType(), info.getValues());
 
         //state.addListener(cache);

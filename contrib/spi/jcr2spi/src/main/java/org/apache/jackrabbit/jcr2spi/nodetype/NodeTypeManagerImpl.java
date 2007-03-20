@@ -25,6 +25,7 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.jcr2spi.util.Dumpable;
+import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
@@ -61,14 +62,14 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
     private static Logger log = LoggerFactory.getLogger(NodeTypeManagerImpl.class);
 
     /**
+     * The ManagerProvider
+     */
+    private final ManagerProvider mgrProvider;
+
+    /**
      * The wrapped node type registry.
      */
     private final NodeTypeRegistry ntReg;
-
-    /**
-     * The namespace resolver used to translate qualified names to JCR names.
-     */
-    private final NamespaceResolver nsResolver;
 
     /**
      * The ValueFactory used to convert qualified values to JCR values.
@@ -104,9 +105,9 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
      * @param ntReg      node type registry
      * @param nsResolver namespace resolver
      */
-    public NodeTypeManagerImpl(NodeTypeRegistry ntReg, NamespaceResolver nsResolver,
+    public NodeTypeManagerImpl(NodeTypeRegistry ntReg, ManagerProvider mgrProvider,
                                ValueFactory valueFactory, QValueFactory qValueFactory) {
-        this.nsResolver = nsResolver;
+        this.mgrProvider = mgrProvider;
         this.ntReg = ntReg;
         this.ntReg.addListener(this);
         this.valueFactory = valueFactory;
@@ -118,11 +119,22 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
         ndCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
 
         // setup root definition and update cache
-        QNodeDefinition rootDef = ntReg.getRootNodeDef();
-        NodeDefinition rootNodeDefinition = new NodeDefinitionImpl(rootDef, this, nsResolver);
+        QNodeDefinition rootDef = defProvider().getRootNodeDefinition();
+        NodeDefinition rootNodeDefinition = new NodeDefinitionImpl(rootDef, this, nsResolver());
         ndCache.put(rootDef, rootNodeDefinition);
     }
 
+    private NamespaceResolver nsResolver() {
+        return mgrProvider.getNamespaceResolver();
+    }
+
+    private ItemDefinitionProvider defProvider() {
+        return mgrProvider.getItemDefinitionProvider();
+    }
+
+    private EffectiveNodeTypeProvider entProvider() {
+        return mgrProvider.getEffectiveNodeTypeProvider();
+    }
     //--------------------------------------------------------------------------
     /**
      * @param name
@@ -133,9 +145,9 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
         synchronized (ntCache) {
             NodeTypeImpl nt = (NodeTypeImpl) ntCache.get(name);
             if (nt == null) {
-                EffectiveNodeType ent = ntReg.getEffectiveNodeType(name);
+                EffectiveNodeType ent = entProvider().getEffectiveNodeType(name);
                 QNodeTypeDefinition def = ntReg.getNodeTypeDefinition(name);
-                nt = new NodeTypeImpl(ent, def, this, nsResolver, valueFactory, qValueFactory);
+                nt = new NodeTypeImpl(ent, def, this, mgrProvider);
                 ntCache.put(name, nt);
             }
             return nt;
@@ -166,7 +178,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
         synchronized (ndCache) {
             NodeDefinition ndi = (NodeDefinition) ndCache.get(def);
             if (ndi == null) {
-                ndi = new NodeDefinitionImpl(def, this, nsResolver);
+                ndi = new NodeDefinitionImpl(def, this, nsResolver());
                 ndCache.put(def, ndi);
             }
             return ndi;
@@ -184,7 +196,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
         synchronized (pdCache) {
             PropertyDefinition pdi = (PropertyDefinition) pdCache.get(def);
             if (pdi == null) {
-                pdi = new PropertyDefinitionImpl(def, this, nsResolver, valueFactory);
+                pdi = new PropertyDefinitionImpl(def, this, nsResolver(), valueFactory);
                 pdCache.put(def, pdi);
             }
             return pdi;
@@ -212,7 +224,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
         // flush all affected cache entries
         ntCache.remove(ntName);
         try {
-            String name = NameFormat.format(ntName, nsResolver);
+            String name = NameFormat.format(ntName, nsResolver());
             synchronized (pdCache) {
                 Iterator iter = pdCache.values().iterator();
                 while (iter.hasNext()) {
@@ -249,7 +261,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
         // flush all affected cache entries
         ntCache.remove(ntName);
         try {
-            String name = NameFormat.format(ntName, nsResolver);
+            String name = NameFormat.format(ntName, nsResolver());
             synchronized (pdCache) {
                 Iterator iter = pdCache.values().iterator();
                 while (iter.hasNext()) {
@@ -328,7 +340,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
     public NodeType getNodeType(String nodeTypeName)
             throws NoSuchNodeTypeException {
         try {
-            QName qName = NameFormat.parse(nodeTypeName, nsResolver);
+            QName qName = NameFormat.parse(nodeTypeName, nsResolver());
             return getNodeType(qName);
         } catch (UnknownPrefixException upe) {
             throw new NoSuchNodeTypeException(nodeTypeName, upe);

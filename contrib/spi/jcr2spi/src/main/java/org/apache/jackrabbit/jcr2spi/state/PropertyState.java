@@ -26,7 +26,7 @@ import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.jcr2spi.nodetype.ValueConstraint;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
@@ -94,8 +94,8 @@ public class PropertyState extends ItemState {
      */
     protected PropertyState(PropertyEntry entry, boolean multiValued, QPropertyDefinition definition,
                             int initialStatus, boolean isWorkspaceState,
-                            ItemStateFactory isf, NodeTypeRegistry ntReg) {
-        super(initialStatus, isWorkspaceState, isf, ntReg);
+                            ItemStateFactory isf, ItemDefinitionProvider definitionProvider) {
+        super(initialStatus, isWorkspaceState, isf, definitionProvider);
 
         this.hierarchyEntry = entry;
         this.definition = definition;
@@ -224,7 +224,7 @@ public class PropertyState extends ItemState {
      */
     public QPropertyDefinition getDefinition() throws RepositoryException {
         if (definition == null) {
-            definition = getEffectiveParentNodeType().getApplicablePropertyDefinition(getQName(), getType(), isMultiValued());
+            definition = definitionProvider.getQPropertyDefinition(this);
         }
         return definition;
     }

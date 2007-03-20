@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
@@ -38,7 +36,6 @@ import javax.jcr.version.VersionException;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QItemDefinition;
-import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.NamespaceResolver;
@@ -92,11 +89,6 @@ public class ItemStateValidator {
     public static final int CHECK_ALL = CHECK_ACCESS | CHECK_LOCK | CHECK_VERSIONING | CHECK_CONSTRAINTS | CHECK_COLLISION;
 
     /**
-     * node type registry
-     */
-    private final NodeTypeRegistry ntReg;
-
-    /**
      * manager provider
      */
     private final ManagerProvider mgrProvider;
@@ -104,11 +96,9 @@ public class ItemStateValidator {
     /**
      * Creates a new <code>ItemStateValidator</code> instance.
      *
-     * @param ntReg      node type registry
      * @param mgrProvider manager provider
      */
-    public ItemStateValidator(NodeTypeRegistry ntReg, ManagerProvider mgrProvider) {
-        this.ntReg = ntReg;
+    public ItemStateValidator(ManagerProvider mgrProvider) {
         this.mgrProvider = mgrProvider;
     }
 
@@ -131,9 +121,7 @@ public class ItemStateValidator {
     public void validate(NodeState nodeState) throws ConstraintViolationException,
         RepositoryException {
         // effective primary node type
-        EffectiveNodeType entPrimary = ntReg.getEffectiveNodeType(nodeState.getNodeTypeName());
-        // effective node type (primary type incl. mixins)
-        EffectiveNodeType entPrimaryAndMixins = getEffectiveNodeType(nodeState);
+        EffectiveNodeType entPrimary = mgrProvider.getEffectiveNodeTypeProvider().getEffectiveNodeType(nodeState.getNodeTypeName());
         QNodeDefinition def = nodeState.getDefinition();
 
         // check if primary type satisfies the 'required node types' constraint
@@ -148,7 +136,9 @@ public class ItemStateValidator {
             }
         }
         // mandatory properties
-        QPropertyDefinition[] pda = entPrimaryAndMixins.getMandatoryPropDefs();
+        // effective node type (primary type incl. mixins)
+        EffectiveNodeType entPrimaryAndMixins = mgrProvider.getEffectiveNodeTypeProvider().getEffectiveNodeType(nodeState);
+        QPropertyDefinition[] pda = entPrimaryAndMixins.getMandatoryQPropertyDefinitions();
         for (int i = 0; i < pda.length; i++) {
             QPropertyDefinition pd = pda[i];
             if (!nodeState.hasPropertyName(pd.getQName())) {
@@ -160,7 +150,7 @@ public class ItemStateValidator {
             }
         }
         // mandatory child nodes
-        QNodeDefinition[] cnda = entPrimaryAndMixins.getMandatoryNodeDefs();
+        QNodeDefinition[] cnda = entPrimaryAndMixins.getMandatoryQNodeDefinitions();
         for (int i = 0; i < cnda.length; i++) {
             QNodeDefinition cnd = cnda[i];
             if (!nodeState.getNodeEntry().hasNodeEntry(cnd.getQName())) {
@@ -175,74 +165,6 @@ public class ItemStateValidator {
 
     //-------------------------------------------------< misc. helper methods >
     /**
-     * Helper method that builds the effective (i.e. merged and resolved)
-     * node type representation of the specified node's primary and mixin
-     * node types.
-     *
-     * @param nodeState
-     * @return the effective node type
-     * @throws RepositoryException
-     */
-    public EffectiveNodeType getEffectiveNodeType(NodeState nodeState)
-            throws RepositoryException {
-        try {
-            QName[] allNtNames;
-            if (nodeState.getStatus() == Status.EXISTING) {
-                allNtNames = nodeState.getNodeTypeNames();
-            } else {
-                // TODO: check if correct (and only used for creating new)
-                QName primaryType = nodeState.getNodeTypeName();
-                allNtNames = new QName[] { primaryType }; // default
-                PropertyEntry mixins = nodeState.getNodeEntry().getPropertyEntry(QName.JCR_MIXINTYPES);
-                if (mixins != null) {
-                    try {
-                        QValue[] values = mixins.getPropertyState().getValues();
-                        allNtNames = new QName[values.length + 1];
-                        for (int i = 0; i < values.length; i++) {
-                            allNtNames[i] = values[i].getQName();
-                        }
-                        allNtNames[values.length] = primaryType;
-                    } catch (RepositoryException e) {
-                        // ignore
-                    }
-                }
-            }
-
-            return getEffectiveNodeType(allNtNames);
-        } catch (NodeTypeConflictException ntce) {
-            String msg = "Internal error: failed to build effective node type from node types defined with " + safeGetJCRPath(nodeState);
-            log.debug(msg);
-            throw new RepositoryException(msg, ntce);
-        }
-    }
-
-    /**
-     * Helper method that builds the effective (i.e. merged and resolved)
-     * node type representation of the specified node types.
-     *
-     * @param nodeTypeNames
-     * @return the effective node type
-     * @throws NodeTypeConflictException
-     * @throws NoSuchNodeTypeException
-     */
-    public EffectiveNodeType getEffectiveNodeType(QName[] nodeTypeNames)
-            throws NodeTypeConflictException, NoSuchNodeTypeException  {
-        return ntReg.getEffectiveNodeType(nodeTypeNames);
-    }
-
-    /**
-     * Helper method that builds the effective (i.e. merged and resolved)
-     * node type representation of the specified node type.
-     *
-     * @param nodeTypeName
-     * @return the effective node type
-     * @throws NoSuchNodeTypeException
-     */
-    public EffectiveNodeType getEffectiveNodeType(QName nodeTypeName) throws NoSuchNodeTypeException  {
-        return ntReg.getEffectiveNodeType(nodeTypeName);
-    }
-
-    /**
      * Failsafe translation of internal <code>ItemState</code> to JCR path for use
      * in error messages etc.
      *
@@ -252,88 +174,6 @@ public class ItemStateValidator {
      */
     private String safeGetJCRPath(ItemState itemState) {
         return LogUtil.safeGetJCRPath(itemState, mgrProvider.getNamespaceResolver());
-    }
-
-    /**
-     * Helper method that finds the applicable definition for a child node with
-     * the given name and node type in the parent node's node type and
-     * mixin types.
-     *
-     * @param name
-     * @param nodeTypeName
-     * @param parentState
-     * @return a <code>QNodeDefinition</code>
-     *
-     * @throws ConstraintViolationException if no applicable child node definition
-     * could be found
-     * @throws NoSuchNodeTypeException if the given nodeTypeName does not exist.
-     * @throws RepositoryException if another error occurs
-     */
-    public QNodeDefinition getApplicableNodeDefinition(QName name,
-                                                       QName nodeTypeName,
-                                                       NodeState parentState)
-        throws NoSuchNodeTypeException, ConstraintViolationException, RepositoryException {
-        EffectiveNodeType entParent = getEffectiveNodeType(parentState);
-        return entParent.getApplicableNodeDefinition(name, nodeTypeName, ntReg);
-    }
-
-    /**
-     * Helper method that finds the applicable definition for a property with
-     * the given name, type and multiValued characteristic in the parent node's
-     * node type and mixin types. If there more than one applicable definitions
-     * then the following rules are applied:
-     * <ul>
-     * <li>named definitions are preferred to residual definitions</li>
-     * <li>definitions with specific required type are preferred to definitions
-     * with required type UNDEFINED</li>
-     * </ul>
-     *
-     * @param name
-     * @param type
-     * @param multiValued
-     * @param parentState
-     * @return a <code>QPropertyDefinition</code>
-     * @throws ConstraintViolationException if no applicable property definition
-     *                                      could be found
-     * @throws RepositoryException          if another error occurs
-     */
-    public QPropertyDefinition getApplicablePropertyDefinition(QName name,
-                                                               int type,
-                                                               boolean multiValued,
-                                                               NodeState parentState)
-        throws ConstraintViolationException, RepositoryException {
-        EffectiveNodeType entParent = getEffectiveNodeType(parentState);
-        return entParent.getApplicablePropertyDefinition(name, type, multiValued);
-    }
-
-    /**
-     * Helper method that finds the applicable definition for a property with
-     * the given name, type in the parent node's node type and mixin types.
-     * Other than <code>{@link #getApplicablePropertyDefinition(QName, int, boolean, NodeState)}</code>
-     * this method does not take the multiValued flag into account in the
-     * selection algorithm. If there more than one applicable definitions then
-     * the following rules are applied:
-     * <ul>
-     * <li>named definitions are preferred to residual definitions</li>
-     * <li>definitions with specific required type are preferred to definitions
-     * with required type UNDEFINED</li>
-     * <li>single-value definitions are preferred to multiple-value definitions</li>
-     * </ul>
-     *
-     * @param name
-     * @param type
-     * @param parentState
-     * @return a <code>QPropertyDefinition</code>
-     * @throws ConstraintViolationException if no applicable property definition
-     *                                      could be found
-     * @throws RepositoryException          if another error occurs
-     */
-    public QPropertyDefinition getApplicablePropertyDefinition(QName name,
-                                                               int type,
-                                                               NodeState parentState)
-        throws RepositoryException, ConstraintViolationException {
-        EffectiveNodeType entParent = getEffectiveNodeType(parentState);
-        return entParent.getApplicablePropertyDefinition(name, type);
     }
 
     //------------------------------------------------------< check methods >---
@@ -539,8 +379,8 @@ public class ItemStateValidator {
         // node type constraints
         if ((options & CHECK_CONSTRAINTS) == CHECK_CONSTRAINTS) {
             // make sure there's an applicable definition for new child node
-            EffectiveNodeType entParent = getEffectiveNodeType(parentState);
-            entParent.checkAddNodeConstraints(nodeName, nodeTypeName, ntReg);
+            EffectiveNodeType entParent = mgrProvider.getEffectiveNodeTypeProvider().getEffectiveNodeType(parentState);
+            entParent.checkAddNodeConstraints(nodeName, nodeTypeName, mgrProvider.getItemDefinitionProvider());
         }
         // collisions
         if ((options & CHECK_COLLISION) == CHECK_COLLISION) {
@@ -747,7 +587,7 @@ public class ItemStateValidator {
             try {
                 NodeState conflictingState = parentState.getChildNodeState(nodeName, Path.INDEX_DEFAULT);
                 QNodeDefinition conflictDef = conflictingState.getDefinition();
-                QNodeDefinition newDef = getApplicableNodeDefinition(nodeName, nodeTypeName, parentState);
+                QNodeDefinition newDef = mgrProvider.getItemDefinitionProvider().getQNodeDefinition(parentState, nodeName, nodeTypeName);
 
                 // check same-name sibling setting of both target and existing node
                 if (!(conflictDef.allowsSameNameSiblings() && newDef.allowsSameNameSiblings())) {

@@ -24,11 +24,9 @@ import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
-import javax.jcr.PropertyType;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -84,7 +82,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
      * @throws NodeTypeConflictException
      * @throws NoSuchNodeTypeException
      */
-    static EffectiveNodeTypeImpl create(NodeTypeRegistry ntReg, QNodeTypeDefinition ntd, Map ntdMap)
+    static EffectiveNodeTypeImpl create(EffectiveNodeTypeProvider entProvider, QNodeTypeDefinition ntd, Map ntdMap)
             throws NodeTypeConflictException, NoSuchNodeTypeException {
         // create empty effective node type instance
         EffectiveNodeTypeImpl ent = new EffectiveNodeTypeImpl();
@@ -199,7 +197,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         // resolve supertypes recursively
         QName[] supertypes = ntd.getSupertypes();
         if (supertypes.length > 0) {
-            EffectiveNodeTypeImpl effSuperType = (EffectiveNodeTypeImpl)ntReg.getEffectiveNodeType(supertypes, ntdMap);
+            EffectiveNodeTypeImpl effSuperType = (EffectiveNodeTypeImpl)entProvider.getEffectiveNodeType(supertypes, ntdMap);
             ent.internalMerge(effSuperType, true);
         }
 
@@ -218,30 +216,30 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
 
     //--------------------------------------------------< EffectiveNodeType >---
     /**
-     * @inheritDoc
+     * @see EffectiveNodeType#getInheritedNodeTypes()
      */
     public QName[] getInheritedNodeTypes() {
         return (QName[]) inheritedNodeTypes.toArray(new QName[inheritedNodeTypes.size()]);
     }
 
     /**
-     * @inheritDoc
+     * @see EffectiveNodeType#getAllNodeTypes()
      */
     public QName[] getAllNodeTypes() {
         return (QName[]) allNodeTypes.toArray(new QName[allNodeTypes.size()]);
     }
 
     /**
-     * @inheritDoc
+     * @see EffectiveNodeType#getMergedNodeTypes()
      */
     public QName[] getMergedNodeTypes() {
         return (QName[]) mergedNodeTypes.toArray(new QName[mergedNodeTypes.size()]);
     }
 
     /**
-     * @inheritDoc
+     * @see EffectiveNodeType#getAllQNodeDefinitions()
      */
-    public QNodeDefinition[] getAllNodeDefs() {
+    public QNodeDefinition[] getAllQNodeDefinitions() {
         if (namedItemDefs.size() == 0 && unnamedItemDefs.size() == 0) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
@@ -271,9 +269,9 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     }
 
     /**
-     * @inheritDoc
+     * @see EffectiveNodeType#getAllQPropertyDefinitions()
      */
-    public QPropertyDefinition[] getAllPropDefs() {
+    public QPropertyDefinition[] getAllQPropertyDefinitions() {
         if (namedItemDefs.size() == 0 && unnamedItemDefs.size() == 0) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
@@ -303,9 +301,9 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     }
 
     /**
-     * @inheritDoc
+     * @see EffectiveNodeType#getAutoCreateQNodeDefinitions()
      */
-    public QNodeDefinition[] getAutoCreateNodeDefs() {
+    public QNodeDefinition[] getAutoCreateQNodeDefinitions() {
         // since auto-create items must have a name,
         // we're only searching the named item definitions
         if (namedItemDefs.size() == 0) {
@@ -330,9 +328,9 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     }
 
     /**
-     * @inheritDoc
+     * @see EffectiveNodeType#getAutoCreateQPropertyDefinitions()
      */
-    public QPropertyDefinition[] getAutoCreatePropDefs() {
+    public QPropertyDefinition[] getAutoCreateQPropertyDefinitions() {
         // since auto-create items must have a name,
         // we're only searching the named item definitions
         if (namedItemDefs.size() == 0) {
@@ -357,9 +355,9 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     }
 
     /**
-     * @inheritDoc
+     * @see EffectiveNodeType#getMandatoryQPropertyDefinitions()
      */
-    public QPropertyDefinition[] getMandatoryPropDefs() {
+    public QPropertyDefinition[] getMandatoryQPropertyDefinitions() {
         // since mandatory items must have a name,
         // we're only searching the named item definitions
         if (namedItemDefs.size() == 0) {
@@ -384,9 +382,9 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     }
 
     /**
-     * @inheritDoc
+     * @see EffectiveNodeType#getMandatoryQNodeDefinitions()
      */
-    public QNodeDefinition[] getMandatoryNodeDefs() {
+    public QNodeDefinition[] getMandatoryQNodeDefinitions() {
         // since mandatory items must have a name,
         // we're only searching the named item definitions
         if (namedItemDefs.size() == 0) {
@@ -411,6 +409,92 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     }
 
     /**
+     * @see EffectiveNodeType#getNamedQNodeDefinitions(QName)
+     */
+    public QNodeDefinition[] getNamedQNodeDefinitions(QName name) {
+        List list = (List) namedItemDefs.get(name);
+        if (list == null || list.size() == 0) {
+            return QNodeDefinition.EMPTY_ARRAY;
+        }
+        ArrayList defs = new ArrayList(list.size());
+        Iterator iter = list.iterator();
+        while (iter.hasNext()) {
+            QItemDefinition qDef = (QItemDefinition) iter.next();
+            if (qDef.definesNode()) {
+                defs.add(qDef);
+            }
+        }
+        if (defs.size() == 0) {
+            return QNodeDefinition.EMPTY_ARRAY;
+        }
+        return (QNodeDefinition[]) defs.toArray(new QNodeDefinition[defs.size()]);
+    }
+
+    /**
+     * @see EffectiveNodeType#getUnnamedQNodeDefinitions()
+     */
+    public QNodeDefinition[] getUnnamedQNodeDefinitions() {
+        if (unnamedItemDefs.size() == 0) {
+            return QNodeDefinition.EMPTY_ARRAY;
+        }
+        ArrayList defs = new ArrayList(unnamedItemDefs.size());
+        Iterator iter = unnamedItemDefs.iterator();
+        while (iter.hasNext()) {
+            QItemDefinition qDef = (QItemDefinition) iter.next();
+            if (qDef.definesNode()) {
+                defs.add(qDef);
+            }
+        }
+        if (defs.size() == 0) {
+            return QNodeDefinition.EMPTY_ARRAY;
+        }
+        return (QNodeDefinition[]) defs.toArray(new QNodeDefinition[defs.size()]);
+    }
+
+    /**
+     * @see EffectiveNodeType#getNamedQPropertyDefinitions(QName)
+     */
+    public QPropertyDefinition[] getNamedQPropertyDefinitions(QName name) {
+        List list = (List) namedItemDefs.get(name);
+        if (list == null || list.size() == 0) {
+            return QPropertyDefinition.EMPTY_ARRAY;
+        }
+        ArrayList defs = new ArrayList(list.size());
+        Iterator iter = list.iterator();
+        while (iter.hasNext()) {
+            QItemDefinition qDef = (QItemDefinition) iter.next();
+            if (!qDef.definesNode()) {
+                defs.add(qDef);
+            }
+        }
+        if (defs.size() == 0) {
+            return QPropertyDefinition.EMPTY_ARRAY;
+        }
+        return (QPropertyDefinition[]) defs.toArray(new QPropertyDefinition[defs.size()]);
+    }
+
+    /**
+     * @see EffectiveNodeType#getUnnamedQPropertyDefinitions()
+     */
+    public QPropertyDefinition[] getUnnamedQPropertyDefinitions() {
+        if (unnamedItemDefs.size() == 0) {
+            return QPropertyDefinition.EMPTY_ARRAY;
+        }
+        ArrayList defs = new ArrayList(unnamedItemDefs.size());
+        Iterator iter = unnamedItemDefs.iterator();
+        while (iter.hasNext()) {
+            QItemDefinition qDef = (QItemDefinition) iter.next();
+            if (!qDef.definesNode()) {
+                defs.add(qDef);
+            }
+        }
+        if (defs.size() == 0) {
+            return QPropertyDefinition.EMPTY_ARRAY;
+        }
+        return (QPropertyDefinition[]) defs.toArray(new QPropertyDefinition[defs.size()]);
+    }
+
+    /**
      * @inheritDoc
      */
     public boolean includesNodeType(QName nodeTypeName) {
@@ -426,11 +510,12 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
 
     /**
      * @inheritDoc
+     * @see EffectiveNodeType#checkAddNodeConstraints(QName, ItemDefinitionProvider)
      */
-    public void checkAddNodeConstraints(QName name, NodeTypeRegistry ntReg)
+    public void checkAddNodeConstraints(QName name, ItemDefinitionProvider definitionProvider)
             throws ConstraintViolationException {
         try {
-            getApplicableNodeDefinition(name, null, ntReg);
+            definitionProvider.getQNodeDefinition(this, name, null);
         } catch (NoSuchNodeTypeException e) {
             String msg = "internal eror: inconsistent node type";
             log.debug(msg);
@@ -440,10 +525,11 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
 
     /**
      * @inheritDoc
+     * @see EffectiveNodeType#checkAddNodeConstraints(QName, ItemDefinitionProvider)
      */
-    public void checkAddNodeConstraints(QName name, QName nodeTypeName, NodeTypeRegistry ntReg)
+    public void checkAddNodeConstraints(QName name, QName nodeTypeName, ItemDefinitionProvider definitionProvider)
             throws ConstraintViolationException, NoSuchNodeTypeException {
-        QNodeDefinition nd = getApplicableNodeDefinition(name, nodeTypeName, ntReg);
+        QNodeDefinition nd = definitionProvider.getQNodeDefinition(this, name, nodeTypeName);
         if (nd.isProtected()) {
             throw new ConstraintViolationException(name + " is protected");
         }
@@ -454,6 +540,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
 
     /**
      * @inheritDoc
+     * @see EffectiveNodeType#checkRemoveItemConstraints(QName)
      */
     public void checkRemoveItemConstraints(QName name) throws ConstraintViolationException {
         /**
@@ -473,140 +560,6 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         }
     }
 
-    /**
-     * @inheritDoc
-     */
-    public QNodeDefinition getApplicableNodeDefinition(QName name, QName nodeTypeName,
-                                                       NodeTypeRegistry ntReg)
-            throws NoSuchNodeTypeException, ConstraintViolationException {
-        EffectiveNodeType entTarget;
-        if (nodeTypeName != null) {
-            entTarget = ntReg.getEffectiveNodeType(nodeTypeName);
-        } else {
-            entTarget = null;
-        }
-
-        // try named node definitions first
-        QItemDefinition[] defs = getNamedItemDefs(name);
-        if (defs != null) {
-            for (int i = 0; i < defs.length; i++) {
-                QItemDefinition def = defs[i];
-                if (def.definesNode()) {
-                    QNodeDefinition nd = (QNodeDefinition) def;
-                    // node definition with that name exists
-                    if (entTarget != null && nd.getRequiredPrimaryTypes() != null) {
-                        // check 'required primary types' constraint
-                        if (entTarget.includesNodeTypes(nd.getRequiredPrimaryTypes())) {
-                            // found named node definition
-                            return nd;
-                        }
-                    } else {
-                        if (nd.getDefaultPrimaryType() != null) {
-                            // found node definition with default node type
-                            return nd;
-                        }
-                    }
-                }
-            }
-        }
-
-        // no item with that name defined;
-        // try residual node definitions
-        QNodeDefinition[] nda = getUnnamedNodeDefs();
-        for (int i = 0; i < nda.length; i++) {
-            QNodeDefinition nd = nda[i];
-            if (entTarget != null && nd.getRequiredPrimaryTypes() != null) {
-                // check 'required primary types' constraint
-                if (entTarget.includesNodeTypes(nd.getRequiredPrimaryTypes())) {
-                    // found residual node definition
-                    return nd;
-                }
-            } else {
-                // since no node type has been specified for the new node,
-                // it must be determined from the default node type;
-                if (nd.getDefaultPrimaryType() != null) {
-                    // found residual node definition with default node type
-                    return nd;
-                }
-            }
-        }
-
-        // no applicable definition found
-        throw new ConstraintViolationException("no matching child node definition found for " + name);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public QPropertyDefinition getApplicablePropertyDefinition(QName name, int type,
-                                                               boolean multiValued)
-        throws ConstraintViolationException {
-        // try named property definitions first
-        QPropertyDefinition match =
-                getMatchingPropDef(getNamedPropDefs(name), type, multiValued);
-        if (match != null) {
-            return match;
-        }
-
-        // no item with that name defined;
-        // try residual property definitions
-        match = getMatchingPropDef(getUnnamedPropDefs(), type, multiValued);
-        if (match != null) {
-            return match;
-        }
-
-        // no applicable definition found
-        throw new ConstraintViolationException("no matching property definition found for " + name);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public QPropertyDefinition[] getApplicablePropertyDefinitions(QName name, int type, boolean multiValued) throws ConstraintViolationException {
-      
-        QPropertyDefinition named[] = getNamedPropDefs(name);
-        QPropertyDefinition unnamed[] = getUnnamedPropDefs();
-        QPropertyDefinition all[] = new QPropertyDefinition[named.length + unnamed.length];
-        for (int i = 0; i < all.length; i++) {
-            if (i < named.length) {
-                all[i] = named[i]; 
-            }
-            else {
-                all[i] = unnamed[i - named.length];
-            }
-        }
-      
-        QPropertyDefinition result[] = getMatchingPropDefs(all, type, multiValued);
-        if (result.length == 0) {
-            throw new ConstraintViolationException("no matching property definition found for " + name);
-        }
-        else {
-            return result;
-        }
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public QPropertyDefinition getApplicablePropertyDefinition(QName name, int type)
-            throws ConstraintViolationException {
-        // try named property definitions first
-        QPropertyDefinition match = getMatchingPropDef(getNamedPropDefs(name), type);
-        if (match != null) {
-            return match;
-        }
-
-        // no item with that name defined;
-        // try residual property definitions
-        match = getMatchingPropDef(getUnnamedPropDefs(), type);
-        if (match != null) {
-            return match;
-        }
-
-        // no applicable definition found
-        throw new ConstraintViolationException("no matching property definition found for " + name);
-    }
-
     //---------------------------------------------< impl. specific methods >---
 
     private QItemDefinition[] getNamedItemDefs() {
@@ -624,172 +577,19 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         return (QItemDefinition[]) defs.toArray(new QItemDefinition[defs.size()]);
     }
 
+    private QItemDefinition[] getNamedItemDefs(QName name) {
+        List list = (List) namedItemDefs.get(name);
+        if (list == null || list.size() == 0) {
+            return QNodeDefinition.EMPTY_ARRAY;
+        }
+        return (QItemDefinition[]) list.toArray(new QItemDefinition[list.size()]);
+    }
+
     private QItemDefinition[] getUnnamedItemDefs() {
         if (unnamedItemDefs.size() == 0) {
             return QItemDefinition.EMPTY_ARRAY;
         }
         return (QItemDefinition[]) unnamedItemDefs.toArray(new QItemDefinition[unnamedItemDefs.size()]);
-    }
-
-    private QItemDefinition[] getNamedItemDefs(QName name) {
-        List defs = (List) namedItemDefs.get(name);
-        if (defs == null || defs.size() == 0) {
-            return QItemDefinition.EMPTY_ARRAY;
-        }
-        return (QItemDefinition[]) defs.toArray(new QItemDefinition[defs.size()]);
-    }
-
-    private QNodeDefinition[] getUnnamedNodeDefs() {
-        if (unnamedItemDefs.size() == 0) {
-            return QNodeDefinition.EMPTY_ARRAY;
-        }
-        ArrayList defs = new ArrayList(unnamedItemDefs.size());
-        Iterator iter = unnamedItemDefs.iterator();
-        while (iter.hasNext()) {
-            QItemDefinition qDef = (QItemDefinition) iter.next();
-            if (qDef.definesNode()) {
-                defs.add(qDef);
-            }
-        }
-        if (defs.size() == 0) {
-            return QNodeDefinition.EMPTY_ARRAY;
-        }
-        return (QNodeDefinition[]) defs.toArray(new QNodeDefinition[defs.size()]);
-    }
-
-    private QPropertyDefinition[] getNamedPropDefs(QName name) {
-        List list = (List) namedItemDefs.get(name);
-        if (list == null || list.size() == 0) {
-            return QPropertyDefinition.EMPTY_ARRAY;
-        }
-        ArrayList defs = new ArrayList(list.size());
-        Iterator iter = list.iterator();
-        while (iter.hasNext()) {
-            QItemDefinition qDef = (QItemDefinition) iter.next();
-            if (!qDef.definesNode()) {
-                defs.add(qDef);
-            }
-        }
-        if (defs.size() == 0) {
-            return QPropertyDefinition.EMPTY_ARRAY;
-        }
-        return (QPropertyDefinition[]) defs.toArray(new QPropertyDefinition[defs.size()]);
-    }
-
-    private QPropertyDefinition[] getUnnamedPropDefs() {
-        if (unnamedItemDefs.size() == 0) {
-            return QPropertyDefinition.EMPTY_ARRAY;
-        }
-        ArrayList defs = new ArrayList(unnamedItemDefs.size());
-        Iterator iter = unnamedItemDefs.iterator();
-        while (iter.hasNext()) {
-            QItemDefinition qDef = (QItemDefinition) iter.next();
-            if (!qDef.definesNode()) {
-                defs.add(qDef);
-            }
-        }
-        if (defs.size() == 0) {
-            return QPropertyDefinition.EMPTY_ARRAY;
-        }
-        return (QPropertyDefinition[]) defs.toArray(new QPropertyDefinition[defs.size()]);
-    }
-
-    private QPropertyDefinition getMatchingPropDef(QPropertyDefinition[] defs, int type) {
-        QPropertyDefinition match = null;
-        for (int i = 0; i < defs.length; i++) {
-            QItemDefinition qDef = defs[i];
-            if (!qDef.definesNode()) {
-                QPropertyDefinition pd = (QPropertyDefinition) qDef;
-                int reqType = pd.getRequiredType();
-                // match type
-                if (reqType == PropertyType.UNDEFINED
-                        || type == PropertyType.UNDEFINED
-                        || reqType == type) {
-                    if (match == null) {
-                        match = pd;
-                    } else {
-                        // check if this definition is a better match than
-                        // the one we've already got
-                        if (match.getRequiredType() != pd.getRequiredType()) {
-                            if (match.getRequiredType() == PropertyType.UNDEFINED) {
-                                // found better match
-                                match = pd;
-                            }
-                        } else {
-                            if (match.isMultiple() && !pd.isMultiple()) {
-                                // found better match
-                                match = pd;
-                            }
-                        }
-                    }
-                    if (match.getRequiredType() != PropertyType.UNDEFINED
-                            && !match.isMultiple()) {
-                        // found best possible match, get outta here
-                        return match;
-                    }
-                }
-            }
-        }
-        return match;
-    }
-
-    private QPropertyDefinition getMatchingPropDef(QPropertyDefinition[] defs, int type,
-                                       boolean multiValued) {
-        QPropertyDefinition match = null;
-        for (int i = 0; i < defs.length; i++) {
-            QItemDefinition qDef = defs[i];
-            if (!qDef.definesNode()) {
-                QPropertyDefinition pd = (QPropertyDefinition) qDef;
-                int reqType = pd.getRequiredType();
-                // match type
-                if (reqType == PropertyType.UNDEFINED
-                        || type == PropertyType.UNDEFINED
-                        || reqType == type) {
-                    // match multiValued flag
-                    if (multiValued == pd.isMultiple()) {
-                        // found match
-                        if (pd.getRequiredType() != PropertyType.UNDEFINED) {
-                            // found best possible match, get outta here
-                            return pd;
-                        } else {
-                            if (match == null) {
-                                match = pd;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return match;
-    }
-
-    private QPropertyDefinition[] getMatchingPropDefs(QPropertyDefinition[] defs, int type, boolean multiValued) {
-        List result = Collections.EMPTY_LIST;
-    
-        for (int i = 0; i < defs.length; i++) {
-            QItemDefinition qDef = defs[i];
-            if (!qDef.definesNode()) {
-                QPropertyDefinition pd = (QPropertyDefinition)qDef;
-                int reqType = pd.getRequiredType();
-                // match type
-                if (reqType == PropertyType.UNDEFINED || type == PropertyType.UNDEFINED || reqType == type) {
-                    // match multiValued flag
-                    if (multiValued == pd.isMultiple()) {
-                        // found match
-                        if (result.isEmpty()) {
-                            result = Collections.singletonList(pd);
-                        }
-                        else {
-                            if (result.size() == 1) {
-                                result = new ArrayList(result);
-                            }
-                            result.add(pd);
-                        }
-                    }
-                }
-            }
-        }
-        return (QPropertyDefinition[])result.toArray(QPropertyDefinition.EMPTY_ARRAY);
     }
 
     /**

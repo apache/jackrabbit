@@ -19,6 +19,9 @@ package org.apache.jackrabbit.jcr2spi;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistryImpl;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeStorage;
+import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
+import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProviderImpl;
+import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.jcr2spi.name.NamespaceStorage;
 import org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryImpl;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
@@ -129,6 +132,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
     private final NamespaceRegistryImpl nsRegistry;
     private final NodeTypeRegistry ntRegistry;
+    private final ItemDefinitionProvider definitionProvider;
 
     /**
      * Mutex to synchronize the feed thread with client
@@ -158,8 +162,10 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
         Map repositoryDescriptors = service.getRepositoryDescriptors();
         nsRegistry = createNamespaceRegistry(repositoryDescriptors);
-        ntRegistry = createNodeTypeRegistry(nsRegistry, repositoryDescriptors);
+        QNodeDefinition rootNodeDef = service.getNodeDefinition(sessionInfo, service.getRootId(sessionInfo));
+        ntRegistry = createNodeTypeRegistry(rootNodeDef, nsRegistry, repositoryDescriptors);
         changeFeed = createChangeFeed(pollTimeout);
+        definitionProvider = createDefinitionProvider(rootNodeDef, getEffectiveNodeTypeProvider());
 
         TransientItemStateFactory stateFactory = createItemStateFactory(ntRegistry);
         this.isf = stateFactory;
@@ -173,6 +179,14 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
     public NodeTypeRegistry getNodeTypeRegistry() {
         return ntRegistry;
+    }
+
+    public ItemDefinitionProvider getItemDefinitionProvider() {
+        return definitionProvider;
+    }
+
+    public EffectiveNodeTypeProvider getEffectiveNodeTypeProvider() {
+        return (NodeTypeRegistryImpl) ntRegistry;
     }
 
     public HierarchyManager getHierarchyManager() {
@@ -335,8 +349,8 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @return
      */
     private TransientItemStateFactory createItemStateFactory(NodeTypeRegistry ntReg) {
-        ItemStateFactory isf = new WorkspaceItemStateFactory(service, sessionInfo, this);
-        TransientItemStateFactory tisf = new TransientISFactory(isf, ntReg);
+        ItemStateFactory isf = new WorkspaceItemStateFactory(service, sessionInfo, getItemDefinitionProvider());
+        TransientItemStateFactory tisf = new TransientISFactory(isf, getItemDefinitionProvider());
         return tisf;
     }
 
@@ -375,8 +389,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @return
      * @throws RepositoryException
      */
-    private NodeTypeRegistry createNodeTypeRegistry(NamespaceRegistry nsRegistry, Map descriptors) throws RepositoryException {
-        QNodeDefinition rootNodeDef = service.getNodeDefinition(sessionInfo, service.getRootId(sessionInfo));
+    private NodeTypeRegistry createNodeTypeRegistry(QNodeDefinition rootNodeDef, NamespaceRegistry nsRegistry, Map descriptors) throws RepositoryException {
         QNodeTypeDefinitionIterator it = service.getNodeTypeDefinitions(sessionInfo);
         List ntDefs = new ArrayList();
         while (it.hasNext()) {
@@ -394,6 +407,15 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             }
         };
         return NodeTypeRegistryImpl.create(ntDefs, ntst, rootNodeDef, nsRegistry);
+    }
+
+    /**
+     *
+     * @param ntReg
+     * @return
+     */
+    private ItemDefinitionProvider createDefinitionProvider(QNodeDefinition rootDefinition, EffectiveNodeTypeProvider entProvider) {
+        return new ItemDefinitionProviderImpl(rootDefinition, entProvider, service, sessionInfo);
     }
 
     /**

@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.OperationVisitor;
 import org.apache.jackrabbit.jcr2spi.operation.AddNode;
@@ -44,6 +45,7 @@ import org.apache.jackrabbit.jcr2spi.operation.RemoveVersion;
 import org.apache.jackrabbit.jcr2spi.operation.WorkspaceImport;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
+import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -95,15 +97,18 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
     private final QValueFactory qValueFactory;
 
+    private final ManagerProvider mgrProvider;
+
     /**
      * Creates a new <code>SessionItemStateManager</code> instance.
      *
      * @param workspaceItemStateMgr
+     * @param definitionProvider
      */
     public SessionItemStateManager(UpdatableItemStateManager workspaceItemStateMgr,
                                    ItemStateValidator validator,
                                    QValueFactory qValueFactory,
-                                   ItemStateFactory isf) {
+                                   ItemStateFactory isf, ManagerProvider mgrProvider) {
         
         this.workspaceItemStateMgr = workspaceItemStateMgr;
         this.transientStateMgr = new TransientItemStateManager();
@@ -111,6 +116,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
         this.validator = validator;
         this.qValueFactory = qValueFactory;
+        this.mgrProvider = mgrProvider;
     }
 
     /**
@@ -252,7 +258,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             | ItemStateValidator.CHECK_VERSIONING | ItemStateValidator.CHECK_CONSTRAINTS;
 
         NodeState parent = operation.getParentState();
-        QNodeDefinition def = validator.getApplicableNodeDefinition(operation.getNodeName(), operation.getNodeTypeName(), parent);
+        ItemDefinitionProvider defProvider = mgrProvider.getItemDefinitionProvider();
+        QNodeDefinition def = defProvider.getQNodeDefinition(parent, operation.getNodeName(), operation.getNodeTypeName());
         addNodeState(parent, operation.getNodeName(), operation.getNodeTypeName(), operation.getUuid(), def, options);
 
         transientStateMgr.addOperation(operation);
@@ -307,7 +314,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             | ItemStateValidator.CHECK_CONSTRAINTS);
         
         // retrieve applicable definition at the new place
-        QNodeDefinition newDefinition = validator.getApplicableNodeDefinition(operation.getDestinationName(), srcState.getNodeTypeName(), destParent);
+        ItemDefinitionProvider defProvider = mgrProvider.getItemDefinitionProvider();
+        QNodeDefinition newDefinition = defProvider.getQNodeDefinition(destParent, operation.getDestinationName(), srcState.getNodeTypeName());
 
         // perform the move (modifying states)
         srcParent.moveChildNodeEntry(destParent, srcState, operation.getDestinationName(), newDefinition);
@@ -354,8 +362,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 setPropertyStateValue(pState, getQValues(mixinNames, qValueFactory), PropertyType.NAME, options);
             } else {
                 // create new jcr:mixinTypes property
-                EffectiveNodeType ent = validator.getEffectiveNodeType(nState);
-                QPropertyDefinition pd = ent.getApplicablePropertyDefinition(QName.JCR_MIXINTYPES, PropertyType.NAME, true);
+                ItemDefinitionProvider defProvider = mgrProvider.getItemDefinitionProvider();
+                QPropertyDefinition pd = defProvider.getQPropertyDefinition(nState, QName.JCR_MIXINTYPES, PropertyType.NAME, true);
                 QValue[] mixinValue = getQValues(mixinNames, qValueFactory);
                 int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
                 addPropertyState(nState, pd.getQName(), pd.getRequiredType(), mixinValue, pd, options);
@@ -601,7 +609,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         // autocreated child nodes that may be 'protected'.
         validator.checkAddNode(parent, nodeName, nodeTypeName, options);
         // a new NodeState doesn't have mixins defined yet -> ent is ent of primarytype
-        EffectiveNodeType ent = validator.getEffectiveNodeType(nodeTypeName);
+        EffectiveNodeType ent = mgrProvider.getEffectiveNodeTypeProvider().getEffectiveNodeType(nodeTypeName);
 
         if (nodeTypeName == null) {
             // no primary node type specified,
@@ -619,13 +627,13 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         NodeState nodeState = transientStateMgr.createNewNodeState(nodeName, null, nodeTypeName, definition, parent);
         if (uuid != null) {
             QValue[] value = getQValues(uuid, qValueFactory);
-            EffectiveNodeType effnt = validator.getEffectiveNodeType(QName.MIX_REFERENCEABLE);
-            QPropertyDefinition pDef = effnt.getApplicablePropertyDefinition(QName.JCR_UUID, PropertyType.STRING, false);
+            ItemDefinitionProvider defProvider = mgrProvider.getItemDefinitionProvider();
+            QPropertyDefinition pDef = defProvider.getQPropertyDefinition(QName.MIX_REFERENCEABLE, QName.JCR_UUID, PropertyType.STRING, false);
             addPropertyState(nodeState, QName.JCR_UUID, PropertyType.STRING, value, pDef, 0);
         }
 
         // add 'auto-create' properties defined in node type
-        QPropertyDefinition[] pda = ent.getAutoCreatePropDefs();
+        QPropertyDefinition[] pda = ent.getAutoCreateQPropertyDefinitions();
         for (int i = 0; i < pda.length; i++) {
             QPropertyDefinition pd = pda[i];
             if (!nodeState.hasPropertyName(pd.getQName())) {
@@ -639,7 +647,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         }
 
         // recursively add 'auto-create' child nodes defined in node type
-        QNodeDefinition[] nda = ent.getAutoCreateNodeDefs();
+        QNodeDefinition[] nda = ent.getAutoCreateQNodeDefinitions();
         for (int i = 0; i < nda.length; i++) {
             QNodeDefinition nd = nda[i];
             // execute 'addNode' without adding the operation.

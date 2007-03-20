@@ -43,12 +43,12 @@ class DefinitionValidator {
 
     private static Logger log = LoggerFactory.getLogger(DefinitionValidator.class);
 
-    private final NodeTypeRegistry ntRegistry;
+    private final EffectiveNodeTypeProvider entProvider;
     private final NamespaceRegistry nsRegistry;
 
 
-    DefinitionValidator(NodeTypeRegistry ntRegistry, NamespaceRegistry nsRegistry) {
-        this.ntRegistry = ntRegistry;
+    DefinitionValidator(EffectiveNodeTypeProvider entProvider, NamespaceRegistry nsRegistry) {
+        this.entProvider = entProvider;
         this.nsRegistry = nsRegistry;
     }
 
@@ -185,7 +185,7 @@ class DefinitionValidator {
          */
         if (supertypes.length > 0) {
             try {
-                EffectiveNodeType est = ntRegistry.getEffectiveNodeType(supertypes, validatedDefs);
+                EffectiveNodeType est = entProvider.getEffectiveNodeType(supertypes, validatedDefs);
                 // make sure that all primary types except nt:base extend from nt:base
                 if (!ntDef.isMixin() && !QName.NT_BASE.equals(ntDef.getQName())
                         && !est.includesNodeType(QName.NT_BASE)) {
@@ -330,14 +330,14 @@ class DefinitionValidator {
                  */
                 try {
                     if (!referenceToSelf) {
-                        defaultENT = ntRegistry.getEffectiveNodeType(new QName[] {dpt}, validatedDefs);
+                        defaultENT = entProvider.getEffectiveNodeType(new QName[] {dpt}, validatedDefs);
                     } else {
                         /**
                          * the default primary type is identical with the node
                          * type just being registered; we have to instantiate it
                          * 'manually'
                          */
-                        ent = EffectiveNodeTypeImpl.create(ntRegistry, ntDef, validatedDefs);
+                        ent = EffectiveNodeTypeImpl.create(entProvider, ntDef, validatedDefs);
                         defaultENT = ent;
                     }
                     if (cnd.isAutoCreated()) {
@@ -404,7 +404,7 @@ class DefinitionValidator {
                      */
                     try {
                         if (!referenceToSelf) {
-                            ntRegistry.getEffectiveNodeType(new QName[] {rpt}, validatedDefs);
+                            entProvider.getEffectiveNodeType(new QName[] {rpt}, validatedDefs);
                         } else {
                             /**
                              * the required primary type is identical with the
@@ -412,7 +412,7 @@ class DefinitionValidator {
                              * instantiate it 'manually'
                              */
                             if (ent == null) {
-                                ent = EffectiveNodeTypeImpl.create(ntRegistry, ntDef, validatedDefs);
+                                ent = EffectiveNodeTypeImpl.create(entProvider, ntDef, validatedDefs);
                             }
                         }
                     } catch (NodeTypeConflictException ntce) {
@@ -437,7 +437,7 @@ class DefinitionValidator {
          */
         if (ent == null) {
             try {
-                ent = EffectiveNodeTypeImpl.create(ntRegistry, ntDef, validatedDefs);
+                ent = EffectiveNodeTypeImpl.create(entProvider, ntDef, validatedDefs);
             } catch (NodeTypeConflictException ntce) {
                 String msg = "[" + name + "] failed to resolve node type definition";
                 log.debug(msg);
@@ -526,7 +526,7 @@ class DefinitionValidator {
             }
         }
 
-        QNodeDefinition[] nodeDefs = childNodeENT.getAutoCreateNodeDefs();
+        QNodeDefinition[] nodeDefs = childNodeENT.getAutoCreateQNodeDefinitions();
         for (int i = 0; i < nodeDefs.length; i++) {
             QName dnt = nodeDefs[i].getDefaultPrimaryType();
             QName definingNT = nodeDefs[i].getDeclaringNodeType();
@@ -534,7 +534,7 @@ class DefinitionValidator {
                 if (dnt != null) {
                     // check recursively
                     definingParentNTs.push(definingNT);
-                    EffectiveNodeType ent = ntRegistry.getEffectiveNodeType(new QName[] {dnt}, ntdMap);
+                    EffectiveNodeType ent = entProvider.getEffectiveNodeType(new QName[] {dnt}, ntdMap);
                     checkForCircularNodeAutoCreation(ent, definingParentNTs, ntdMap);
                     definingParentNTs.pop();
                 }

@@ -31,6 +31,7 @@ import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.jcr2spi.operation.AddNode;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
@@ -184,16 +185,15 @@ public class SessionImporter implements Importer, SessionListener {
                QNodeDefinition def = existing.getDefinition();
                if (!def.allowsSameNameSiblings()) {
                    // existing doesn't allow same-name siblings, check for conflicts
-                   EffectiveNodeType entExisting = session.getValidator().getEffectiveNodeType(existing);
-                   if (def.isProtected() && entExisting.includesNodeType(nodeInfo.getNodeTypeName()))
-                   {
+                   EffectiveNodeTypeProvider provider = session.getEffectiveNodeTypeProvider();
+                   EffectiveNodeType entExisting = provider.getEffectiveNodeType(existing);
+                   if (def.isProtected() && entExisting.includesNodeType(nodeInfo.getNodeTypeName())) {
                        // skip protected node
                        parents.push(null); // push null onto stack for skipped node
                        log.debug("skipping protected node " + LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver()));
                        return;
                    }
-                   if (def.isAutoCreated() && entExisting.includesNodeType(nodeInfo.getNodeTypeName()))
-                   {
+                   if (def.isAutoCreated() && entExisting.includesNodeType(nodeInfo.getNodeTypeName())) {
                        // this node has already been auto-created, no need to create it
                        nodeState = existing;
                    } else {
@@ -430,14 +430,14 @@ public class SessionImporter implements Importer, SessionListener {
                         // could be single- or multi-valued (n == 1)
                         try {
                             // try single-valued
-                            propDef = session.getValidator().getApplicablePropertyDefinition(newName, conflicting.getType(), false, parent);
+                            propDef = session.getItemDefinitionProvider().getQPropertyDefinition(parent, newName, conflicting.getType(), false);
                         } catch (ConstraintViolationException cve) {
                             // try multi-valued
-                            propDef = session.getValidator().getApplicablePropertyDefinition(newName, conflicting.getType(), true, parent);
+                            propDef = session.getItemDefinitionProvider().getQPropertyDefinition(parent, newName, conflicting.getType(), true);
                         }
                     } else {
                         // can only be multi-valued (n == 0 || n > 1)
-                        propDef = session.getValidator().getApplicablePropertyDefinition(newName, conflicting.getType(), true, parent);
+                        propDef = session.getItemDefinitionProvider().getQPropertyDefinition(parent, newName, conflicting.getType(), true);
                     }
 
                     Operation ap = AddProperty.create(parent, newName, conflicting.getType(), propDef, conflicting.getValues());
@@ -452,7 +452,7 @@ public class SessionImporter implements Importer, SessionListener {
         }
 
         // do create new nodeState
-        QNodeDefinition def = session.getValidator().getApplicableNodeDefinition(nodeInfo.getName(), nodeInfo.getNodeTypeName(), parent);
+        QNodeDefinition def = session.getItemDefinitionProvider().getQNodeDefinition(parent, nodeInfo.getName(), nodeInfo.getNodeTypeName());
         if (def.isProtected()) {
             log.debug("Skipping protected nodeState (" + nodeInfo.getName() + ")");
             return null;
@@ -527,10 +527,10 @@ public class SessionImporter implements Importer, SessionListener {
            // there's no property with that name, find applicable definition
            if (tva.length == 1) {
                // could be single- or multi-valued (n == 1)
-               def = session.getValidator().getApplicablePropertyDefinition(propName, infoType, parentState);
+               def = session.getItemDefinitionProvider().getQPropertyDefinition(parentState, propName, infoType);
            } else {
                // can only be multi-valued (n == 0 || n > 1)
-               def = session.getValidator().getApplicablePropertyDefinition(propName, infoType, true, parentState);
+               def = session.getItemDefinitionProvider().getQPropertyDefinition(parentState, propName, infoType, true);
            }
            if (def.isProtected()) {
                // skip protected property
@@ -660,7 +660,7 @@ public class SessionImporter implements Importer, SessionListener {
         }
         QName[] ntNames = (QName[]) l.toArray(new QName[l.size()]);
         try {
-            EffectiveNodeType ent = session.getValidator().getEffectiveNodeType(ntNames);
+            EffectiveNodeType ent = session.getEffectiveNodeTypeProvider().getEffectiveNodeType(ntNames);
             if (!ent.includesNodeType(QName.MIX_REFERENCEABLE)) {
                 throw new ConstraintViolationException("XML defines jcr:uuid without defining import node to be referenceable.");
             }

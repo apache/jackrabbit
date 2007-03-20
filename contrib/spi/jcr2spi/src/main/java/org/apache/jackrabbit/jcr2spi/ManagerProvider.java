@@ -21,6 +21,12 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.apache.jackrabbit.jcr2spi.lock.LockManager;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
+import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
+import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
+import org.apache.jackrabbit.spi.QValueFactory;
+
+import javax.jcr.ValueFactory;
+import javax.jcr.RepositoryException;
 
 /**
  * <code>ManagerProvider</code>...
@@ -33,7 +39,38 @@ public interface ManagerProvider {
 
     public AccessManager getAccessManager();
 
+    /**
+     * Returns the <code>AccessManager</code> associated with this
+     * <code>ManagerProvider</code>.
+     *
+     * @return the <code>AccessManager</code> associated with this
+     * <code>ManagerProvider</code>
+     */
     public LockManager getLockManager();
 
+    /**
+     * Returns the <code>VersionManager</code> associated with this
+     * <code>ManagerProvider</code>.
+     *
+     * @return the <code>VersionManager</code> associated with this
+     * <code>ManagerProvider</code>
+     */
     public VersionManager getVersionManager();
+
+    public ItemDefinitionProvider getItemDefinitionProvider();
+
+    public EffectiveNodeTypeProvider getEffectiveNodeTypeProvider();
+
+    /**
+     * Same as {@link Session#getValueFactory()} but omits the check, if this repository
+     * is really level 2 compliant. Therefore, this method may be used for
+     * internal functionality only, that require creation and conversion of
+     * JCR values.
+     *
+     * @return
+     * @throws RepositoryException
+     */
+    public ValueFactory getJcrValueFactory() throws RepositoryException;
+
+    public QValueFactory getQValueFactory() throws RepositoryException;
 }

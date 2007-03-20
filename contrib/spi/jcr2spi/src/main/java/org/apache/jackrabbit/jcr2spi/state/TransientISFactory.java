@@ -25,7 +25,7 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
@@ -39,11 +39,11 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
     private static Logger log = LoggerFactory.getLogger(TransientISFactory.class);
 
     private final ItemStateFactory workspaceStateFactory;
-    private final NodeTypeRegistry ntReg;
+    private final ItemDefinitionProvider defProvider;
 
-    public TransientISFactory(ItemStateFactory workspaceStateFactory, NodeTypeRegistry ntReg) {
+    public TransientISFactory(ItemStateFactory workspaceStateFactory, ItemDefinitionProvider defProvider) {
         this.workspaceStateFactory = workspaceStateFactory;
-        this.ntReg = ntReg;
+        this.defProvider = defProvider;
     }
 
     //------------------------------------------< TransientItemStateFactory >---
@@ -54,7 +54,7 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
     public NodeState createNewNodeState(NodeEntry entry, QName nodetypeName,
                                         QNodeDefinition definition) {
 
-        NodeState nodeState = new NodeState(entry, nodetypeName, QName.EMPTY_ARRAY, definition, Status.NEW, false, this, ntReg);
+        NodeState nodeState = new NodeState(entry, nodetypeName, QName.EMPTY_ARRAY, definition, Status.NEW, false, this, defProvider);
 
         // notify listeners that a node state has been created
         notifyCreated(nodeState);
@@ -67,7 +67,7 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
      * @see TransientItemStateFactory#createNewPropertyState(PropertyEntry, QPropertyDefinition)
      */
     public PropertyState createNewPropertyState(PropertyEntry entry, QPropertyDefinition definition) {
-        PropertyState propState = new PropertyState(entry, definition.isMultiple(), definition, Status.NEW, false, this, ntReg);
+        PropertyState propState = new PropertyState(entry, definition.isMultiple(), definition, Status.NEW, false, this, defProvider);
 
         // notify listeners that a property state has been created
         notifyCreated(propState);
