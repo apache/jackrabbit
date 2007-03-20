@@ -16,10 +16,11 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.spi.PropertyId;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.ItemNotFoundException;
 
 /**
  * <code>PropertyEntry</code>...
@@ -44,11 +45,11 @@ public interface PropertyEntry extends HierarchyEntry {
 
     /**
      * @return the referenced <code>PropertyState</code>.
-     * @throws NoSuchItemStateException if the <code>PropertyState</code> does not
+     * @throws ItemNotFoundException if the <code>PropertyState</code> does not
      * exist anymore.
-     * @throws ItemStateException if an error occurs while retrieving the
+     * @throws RepositoryException if an error occurs while retrieving the
      * <code>PropertyState</code>.
      */
-    public PropertyState getPropertyState() throws NoSuchItemStateException, ItemStateException;
+    public PropertyState getPropertyState() throws ItemNotFoundException, RepositoryException;
 
 }

@@ -20,11 +20,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.commons.collections.list.AbstractLinkedList;
 import org.apache.commons.collections.iterators.UnmodifiableIterator;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.ItemNotFoundException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.HashMap;
@@ -316,8 +317,9 @@ final class ChildNodeEntries implements Collection {
                         } else {
                             // child node removed
                         }
-                    } catch (ItemStateException e) {
-                        // should never happen, cne.isAvailable() returned true
+                    } catch (RepositoryException e) {
+                        // ignore for index detection. entry does not exist or is
+                        // not accessible
                     }
                 } else {
                     // then this child node entry has never been accessed
@@ -570,7 +572,7 @@ final class ChildNodeEntries implements Collection {
 
     /**
      * Returns the matching <code>LinkNode</code> from a list or a single
-     * <code>LinkNode</code>. This method will throw <code>NoSuchItemStateException</code>
+     * <code>LinkNode</code>. This method will return <code>null</code>
      * if none of the entries matches either due to missing entry for given
      * state name or due to missing availability of the <code>NodeEntry</code>.
      *

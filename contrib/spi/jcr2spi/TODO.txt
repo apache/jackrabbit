@@ -17,10 +17,6 @@ Known Issues and TODOs with jcr2spi
 
 - IMPROVE: Replace ItemState-duality by copy on write behaviour
 
-- IMPROVE: review if ItemStateExceptions are really needed. currently
-           they are created from RepositoryExceptions and rethrown as
-           RepositoryExceptions
-           
 - IMPROVE: consistency of PathNotFoundException and ItemNotFoundException.
 
 

@@ -18,8 +18,6 @@ package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.StaleItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateLifeCycleListener;
 import org.apache.jackrabbit.jcr2spi.state.Status;
@@ -241,15 +239,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
     public void save() throws AccessDeniedException, ConstraintViolationException, InvalidItemStateException, ReferentialIntegrityException, VersionException, LockException, RepositoryException {
         // check state of this instance
         checkStatus();
-        try {
-            session.getSessionItemStateManager().save(getItemState());
-        } catch (StaleItemStateException e) {
-            throw new InvalidItemStateException(e);
-        } catch (ItemStateException e) {
-            String msg = "Unable to update item (" + safeGetJCRPath() + ")";
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
+        session.getSessionItemStateManager().save(getItemState());
     }
 
     /**
@@ -285,13 +275,8 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
             /*
             Reset all transient modifications from this item and its decendants.
             */
-            try {
-                session.getSessionItemStateManager().undo(state);
-            } catch (ItemStateException e) {
-                String msg = "Unable to undo item (" + safeGetJCRPath() + ")";
-                log.debug(msg);
-                throw new RepositoryException(msg, e);
-            }
+            session.getSessionItemStateManager().undo(state);
+
             /* Unless the session is in 'observation' mode, mark all states
                within this tree 'invalidated' in order to have them refreshed
                from the server upon the next access.*/

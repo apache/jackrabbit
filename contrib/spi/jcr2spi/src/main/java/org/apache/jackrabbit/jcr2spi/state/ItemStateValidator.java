@@ -202,7 +202,7 @@ public class ItemStateValidator {
                             allNtNames[i] = values[i].getQName();
                         }
                         allNtNames[values.length] = primaryType;
-                    } catch (ItemStateException e) {
+                    } catch (RepositoryException e) {
                         // ignore
                     }
                 }
@@ -405,15 +405,9 @@ public class ItemStateValidator {
         VersionException, LockException, ItemNotFoundException,
         ItemExistsException, PathNotFoundException, RepositoryException {
 
-        try {
-            NodeState parent = propState.getParent();
-            QPropertyDefinition def = propState.getDefinition();
-            checkWriteProperty(parent, propState.getQName(), def, options);
-        } catch (NoSuchItemStateException e) {
-            throw new ItemNotFoundException(e);
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        }
+        NodeState parent = propState.getParent();
+        QPropertyDefinition def = propState.getDefinition();
+        checkWriteProperty(parent, propState.getQName(), def, options);
     }
 
     /**
@@ -590,13 +584,7 @@ public class ItemStateValidator {
             throw new ConstraintViolationException("Cannot remove root node.");
         }
         // check parent
-        try {
-            checkIsWritable(targetState.getParent(), options);
-        } catch (NoSuchItemStateException e) {
-            throw new ItemNotFoundException(e);
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        }
+        checkIsWritable(targetState.getParent(), options);
 
         // access rights
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
@@ -605,10 +593,10 @@ public class ItemStateValidator {
                 if (!mgrProvider.getAccessManager().canRemove(targetState)) {
                     throw new AccessDeniedException(safeGetJCRPath(targetState) + ": not allowed to remove node");
                 }
-            } catch (ItemNotFoundException infe) {
+            } catch (ItemNotFoundException e) {
                 String msg = "internal error: failed to check access rights for " + safeGetJCRPath(targetState);
                 log.debug(msg);
-                throw new RepositoryException(msg, infe);
+                throw new RepositoryException(msg, e);
             }
         }
 
@@ -635,14 +623,9 @@ public class ItemStateValidator {
      */
     private void checkIsCheckedOut(ItemState itemState)
             throws PathNotFoundException, VersionException, RepositoryException {
-        try {
-            NodeState nodeState = (itemState.isNode()) ? (NodeState)itemState : itemState.getParent();
-            mgrProvider.getVersionManager().checkIsCheckedOut(nodeState);
-        } catch (NoSuchItemStateException e) {
-            throw new ItemNotFoundException(e);
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        }
+
+        NodeState nodeState = (itemState.isNode()) ? (NodeState)itemState : itemState.getParent();
+        mgrProvider.getVersionManager().checkIsCheckedOut(nodeState);
     }
 
     /**
@@ -655,16 +638,10 @@ public class ItemStateValidator {
      * @throws RepositoryException   if another error occurs
      */
     private void checkLock(ItemState itemState) throws LockException, RepositoryException {
-        try {
-            // make sure there's no foreign lock present the node (or the parent node
-            // in case the state represents a PropertyState).
-            NodeState nodeState = (itemState.isNode()) ? ((NodeState)itemState) : itemState.getParent();
-            mgrProvider.getLockManager().checkLock(nodeState);
-        } catch (NoSuchItemStateException e) {
-            throw new ItemNotFoundException(e);
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        }
+        // make sure there's no foreign lock present the node (or the parent node
+        // in case the state represents a PropertyState).
+        NodeState nodeState = (itemState.isNode()) ? ((NodeState)itemState) : itemState.getParent();
+        mgrProvider.getLockManager().checkLock(nodeState);
     }
 
     /**
@@ -741,11 +718,11 @@ public class ItemStateValidator {
         if (pe != null) {
             try {
                 pe.getPropertyState();
-            } catch (ItemStateException e) {
-                // should not occur. existance has been asserted before
-                throw new RepositoryException(e);
+                throw new ItemExistsException("Property '" + pe.getQName() + "' already exists.");
+            } catch (ItemNotFoundException e) {
+                // apparently conflicting entry does not exist any more
+                // ignore and return
             }
-            throw new ItemExistsException("Property '" + pe.getQName() + "' already exists.");
         }
     }
 
@@ -779,11 +756,8 @@ public class ItemStateValidator {
                         + safeGetJCRPath(parentState)
                         + ": colliding with same-named existing node.");
                 }
-            } catch (NoSuchItemStateException e) {
+            } catch (ItemNotFoundException e) {
                 // ignore: conflicting doesn't exist any more
-            } catch (ItemStateException e) {
-                // should not occur, since existence has been asserted before
-                throw new RepositoryException(e);
             }
         }
     }

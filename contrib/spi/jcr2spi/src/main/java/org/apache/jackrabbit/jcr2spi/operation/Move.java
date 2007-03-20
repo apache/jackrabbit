@@ -20,8 +20,6 @@ import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
@@ -35,6 +33,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -175,10 +174,8 @@ public class Move extends AbstractOperation {
                 if (!existing.getNodeState().getDefinition().allowsSameNameSiblings()) {
                     throw new ItemExistsException("Node existing at move destination does not allow same name siblings.");
                 }
-            } catch (NoSuchItemStateException e) {
+            } catch (ItemNotFoundException e) {
                 // existing apparent not valid any more -> probably no conflict
-            } catch (ItemStateException e) {
-                throw new RepositoryException(e);
             }
         }
 

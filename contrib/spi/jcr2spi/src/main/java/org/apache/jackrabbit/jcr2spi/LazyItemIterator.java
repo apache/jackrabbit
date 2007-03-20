@@ -30,7 +30,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RangeIterator;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.version.VersionIterator;
 import javax.jcr.version.Version;
 import java.util.NoSuchElementException;
@@ -90,7 +89,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
      */
     public LazyItemIterator(ItemManager itemMgr, HierarchyManager hierarchyMgr,
                             Iterator itemIds)
-        throws PathNotFoundException, RepositoryException {
+        throws ItemNotFoundException, RepositoryException {
         this.itemMgr = itemMgr;
         List entries = new ArrayList();
         while (itemIds.hasNext()) {

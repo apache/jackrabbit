@@ -62,7 +62,7 @@ public interface HierarchyManager {
      * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    public HierarchyEntry getHierarchyEntry(ItemId itemId) throws PathNotFoundException, RepositoryException;
+    public HierarchyEntry getHierarchyEntry(ItemId itemId) throws ItemNotFoundException, RepositoryException;
 
     /**
      * Resolves a path into a <code>HierarchyEntry</code>.

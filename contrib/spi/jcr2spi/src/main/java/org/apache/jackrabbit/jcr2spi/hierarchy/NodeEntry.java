@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.name.QName;
@@ -30,6 +28,7 @@ import org.apache.jackrabbit.spi.Event;
 import javax.jcr.ItemExistsException;
 import javax.jcr.RepositoryException;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.ItemNotFoundException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Collection;
@@ -77,12 +76,12 @@ public interface NodeEntry extends HierarchyEntry {
 
     /**
      * @return the referenced <code>NodeState</code>.
-     * @throws NoSuchItemStateException if the <code>NodeState</code> does not
-     * exist anymore.
-     * @throws ItemStateException If an error occurs while retrieving the
+     * @throws ItemNotFoundException if the <code>NodeState</code> does not
+     * exist.
+     * @throws RepositoryException If an error occurs while retrieving the
      * <code>NodeState</code>.
      */
-    public NodeState getNodeState() throws NoSuchItemStateException, ItemStateException;
+    public NodeState getNodeState() throws ItemNotFoundException, RepositoryException;
 
     /**
      * Traverse the tree below this entry and return the child entry matching

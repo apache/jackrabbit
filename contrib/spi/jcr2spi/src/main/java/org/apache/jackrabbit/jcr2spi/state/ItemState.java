@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.ItemNotFoundException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Collections;
@@ -196,10 +197,10 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      * hierarchy entry}.
      *
      * @return
-     * @throws NoSuchItemStateException
-     * @throws ItemStateException
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
      */
-    public NodeState getParent() throws NoSuchItemStateException, ItemStateException {
+    public NodeState getParent() throws ItemNotFoundException, RepositoryException {
         return getHierarchyEntry().getParent().getNodeState();
     }
 
@@ -422,10 +423,10 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      * the parent must already be connected to its overlayed state.
      *
      * @param keepChanges
-     * @throws NoSuchItemStateException
-     * @throws ItemStateException
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
      */
-    public void reconnect(boolean keepChanges) throws NoSuchItemStateException, ItemStateException {
+    public void reconnect(boolean keepChanges) throws ItemNotFoundException, RepositoryException {
         checkIsSessionState();
         // Need to use the workspace-ISF in order not to create a session-state.
         ItemStateFactory wspIsf;
@@ -504,8 +505,6 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
             evaluated upon creating the workspace state.
             */
             return getNodeTypeRegistry().getEffectiveNodeType(getParent().getNodeTypeNames());
-        } catch (ItemStateException e) {
-            throw new RepositoryException("Error while accessing Definition ", e);
         } catch (NodeTypeConflictException e) {
             throw new RepositoryException("Error while accessing Definition ", e);
         }

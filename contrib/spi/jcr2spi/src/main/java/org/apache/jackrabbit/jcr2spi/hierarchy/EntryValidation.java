@@ -18,9 +18,9 @@ package org.apache.jackrabbit.jcr2spi.hierarchy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.ItemNotFoundException;
 import java.util.Iterator;
 
 /**
@@ -65,10 +65,10 @@ final class EntryValidation {
         if (cne.isAvailable()) {
             try {
                 isValid = cne.getNodeState().isValid();
-            } catch (NoSuchItemStateException e) {
+            } catch (ItemNotFoundException e) {
                 // may occur if the cached state is marked 'INVALIDATED' and
                 // does not exist any more on the persistent layer -> invalid.
-            } catch (ItemStateException e) {
+            } catch (RepositoryException e) {
                 // should not occur, if the cne is available.
             }
         } else {
@@ -97,10 +97,10 @@ final class EntryValidation {
         if (cpe.isAvailable()) {
             try {
                 isValid = cpe.getPropertyState().isValid();
-            } catch (NoSuchItemStateException e) {
+            } catch (ItemNotFoundException e) {
                 // may occur if the cached state is marked 'INVALIDATED' and
                 // does not exist any more on the persistent layer -> invalid.
-            } catch (ItemStateException e) {
+            } catch (RepositoryException e) {
                 // probably deleted in the meantime. should not occur.
             }
         } else {

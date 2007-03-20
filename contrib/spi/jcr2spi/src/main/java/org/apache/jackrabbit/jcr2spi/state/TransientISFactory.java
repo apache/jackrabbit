@@ -27,6 +27,8 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.ItemNotFoundException;
 import java.util.Iterator;
 
 /**
@@ -77,9 +79,8 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
     /**
      * @inheritDoc
      * @see ItemStateFactory#createRootState(NodeEntry)
-     * @param entry
      */
-    public NodeState createRootState(NodeEntry entry) throws ItemStateException {
+    public NodeState createRootState(NodeEntry entry) throws ItemNotFoundException, RepositoryException {
         // retrieve state to overlay
         NodeState overlayedState = workspaceStateFactory.createRootState(entry);
         return buildNodeState(overlayedState, Status.EXISTING);
@@ -90,7 +91,7 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
      * @see ItemStateFactory#createNodeState(NodeId,NodeEntry)
      */
     public NodeState createNodeState(NodeId nodeId, NodeEntry entry)
-        throws NoSuchItemStateException, ItemStateException {
+            throws ItemNotFoundException, RepositoryException {
         // retrieve state to overlay
         NodeState overlayedState = workspaceStateFactory.createNodeState(nodeId, entry);
         return buildNodeState(overlayedState, getInitialStatus(entry.getParent()));
@@ -100,7 +101,8 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
      * @inheritDoc
      * @see ItemStateFactory#createDeepNodeState(NodeId, NodeEntry)
      */
-    public NodeState createDeepNodeState(NodeId nodeId, NodeEntry anyParent) throws NoSuchItemStateException, ItemStateException {
+    public NodeState createDeepNodeState(NodeId nodeId, NodeEntry anyParent)
+            throws ItemNotFoundException, RepositoryException {
         NodeState overlayedState = workspaceStateFactory.createDeepNodeState(nodeId, anyParent);
         return buildNodeState(overlayedState, getInitialStatus(anyParent));
     }
@@ -111,7 +113,7 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
      */
     public PropertyState createPropertyState(PropertyId propertyId,
                                              PropertyEntry entry)
-        throws NoSuchItemStateException, ItemStateException {
+            throws ItemNotFoundException, RepositoryException {
         // retrieve state to overlay
         PropertyState overlayedState = workspaceStateFactory.createPropertyState(propertyId, entry);
         return buildPropertyState(overlayedState, getInitialStatus(entry.getParent()));
@@ -120,7 +122,7 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
     /**
      * @see ItemStateFactory#createDeepPropertyState(PropertyId, NodeEntry)
      */
-    public PropertyState createDeepPropertyState(PropertyId propertyId, NodeEntry anyParent) throws NoSuchItemStateException, ItemStateException {
+    public PropertyState createDeepPropertyState(PropertyId propertyId, NodeEntry anyParent) throws ItemNotFoundException, RepositoryException {
         PropertyState overlayedState = workspaceStateFactory.createDeepPropertyState(propertyId, anyParent);
         return buildPropertyState(overlayedState, getInitialStatus(anyParent));
     }
@@ -128,16 +130,14 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
     /**
      * @inheritDoc
      * @see ItemStateFactory#getChildNodeInfos(NodeId)
-     * @param nodeId
      */
-    public Iterator getChildNodeInfos(NodeId nodeId) throws NoSuchItemStateException, ItemStateException {
+    public Iterator getChildNodeInfos(NodeId nodeId) throws ItemNotFoundException, RepositoryException {
         return workspaceStateFactory.getChildNodeInfos(nodeId);
     }
 
     /**
      * @inheritDoc
      * @see ItemStateFactory#getNodeReferences(NodeState)
-     * @param nodeState
      */
     public NodeReferences getNodeReferences(NodeState nodeState) {
         if (nodeState.getStatus() == Status.NEW) {

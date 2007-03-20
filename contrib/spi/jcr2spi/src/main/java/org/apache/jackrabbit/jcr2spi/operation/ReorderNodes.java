@@ -17,8 +17,6 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.NodeId;
@@ -27,6 +25,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.RepositoryException;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.version.VersionException;
 
 /**
@@ -101,7 +100,7 @@ public class ReorderNodes extends AbstractOperation {
     //------------------------------------------------------------< Factory >---
 
     public static Operation create(NodeState parentState, Path.PathElement srcName,
-                                   Path.PathElement beforeName) throws NoSuchItemStateException, ItemStateException {
+                                   Path.PathElement beforeName) throws ItemNotFoundException, RepositoryException {
         NodeState insert = parentState.getChildNodeState(srcName.getName(), srcName.getNormalizedIndex());
         NodeState before = (beforeName == null) ? null : parentState.getChildNodeState(beforeName.getName(), beforeName.getNormalizedIndex());
         return new ReorderNodes(parentState, insert, before);

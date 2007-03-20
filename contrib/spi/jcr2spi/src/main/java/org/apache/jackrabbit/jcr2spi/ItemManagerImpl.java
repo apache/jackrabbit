@@ -23,8 +23,6 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.version.VersionHistoryImpl;
@@ -112,9 +110,9 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
             // session-sanity & permissions are checked upon itemExists(ItemState)
             ItemState state = hierarchyEntry.getItemState();
             return itemExists(state);
-        } catch (NoSuchItemStateException e) {
+        } catch (ItemNotFoundException e) {
             return false;
-        } catch (ItemStateException e) {
+        } catch (RepositoryException e) {
             return false;
         }
     }
@@ -156,14 +154,8 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
      * @see ItemManager#getItem(HierarchyEntry)
      */
     public Item getItem(HierarchyEntry hierarchyEntry) throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        try {
-            ItemState itemState = hierarchyEntry.getItemState();
-            return getItem(itemState);
-        } catch (NoSuchItemStateException e) {
-            throw new ItemNotFoundException(e);
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        }
+        ItemState itemState = hierarchyEntry.getItemState();
+        return getItem(itemState);
     }
 
     /**
@@ -210,7 +202,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
                 NodeEntry entry = (NodeEntry) iter.next();
                 entry.getNodeState();
                 return true;
-            } catch (ItemStateException e) {
+            } catch (ItemNotFoundException e) {
                 // should not occur. ignore
                 log.debug("Failed to access node state.", e);
             }
@@ -245,7 +237,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
                 // check read access by accessing the propState (also implicit validation).
                 entry.getPropertyState();
                 return true;
-            } catch (ItemStateException e) {
+            } catch (ItemNotFoundException e) {
                 // should not occur. ignore
                 log.debug("Failed to access node state.", e);
             }

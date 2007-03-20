@@ -17,8 +17,6 @@
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.TransientItemStateFactory;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.ItemId;
@@ -85,7 +83,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
     /**
      * @see HierarchyManager#getHierarchyEntry(ItemId)
      */
-    public HierarchyEntry getHierarchyEntry(ItemId itemId) throws PathNotFoundException, RepositoryException {
+    public HierarchyEntry getHierarchyEntry(ItemId itemId) throws ItemNotFoundException, RepositoryException {
         String uniqueID = itemId.getUniqueID();
         if (uniqueID == null) {
             return getHierarchyEntry(itemId.getPath());
@@ -131,10 +129,8 @@ public class HierarchyManagerImpl implements HierarchyManager {
             } else {
                 throw new PathNotFoundException();
             }
-        } catch (NoSuchItemStateException e) {
+        } catch (ItemNotFoundException e) {
             throw new PathNotFoundException(e);
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
         }
     }
 
