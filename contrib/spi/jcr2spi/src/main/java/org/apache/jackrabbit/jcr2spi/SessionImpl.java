@@ -20,6 +20,8 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
+import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.apache.jackrabbit.jcr2spi.state.SessionItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
@@ -136,8 +138,8 @@ public class SessionImpl implements Session, ManagerProvider {
         nsMappings = new LocalNamespaceMappings(workspace.getNamespaceRegistryImpl());
 
         // build nodetype manager
-        ntManager = new NodeTypeManagerImpl(workspace.getNodeTypeRegistry(), getNamespaceResolver(), internalGetValueFactory(), getQValueFactory());
-        validator = new ItemStateValidator(workspace.getNodeTypeRegistry(), this);
+        ntManager = new NodeTypeManagerImpl(workspace.getNodeTypeRegistry(), this, getJcrValueFactory(), getQValueFactory());
+        validator = new ItemStateValidator(this);
 
         itemStateManager = createSessionItemStateManager(workspace.getUpdatableItemStateManager(), workspace.getItemStateFactory());
         itemManager = createItemManager(getHierarchyManager());
@@ -338,20 +340,7 @@ public class SessionImpl implements Session, ManagerProvider {
         // must throw UnsupportedRepositoryOperationException if writing is
         // not supported
         checkSupportedOption(Repository.LEVEL_2_SUPPORTED);
-        return internalGetValueFactory();
-    }
-
-    /**
-     * Same as {@link #getValueFactory()} but omits the check, if this repository
-     * is really level 2 compliant. Therefore, this method may be used for
-     * internal functionality only, that require creation and conversion of
-     * JCR values.
-     *
-     * @return
-     * @throws RepositoryException
-     */
-    ValueFactory internalGetValueFactory() throws RepositoryException {
-        return config.getValueFactory();
+        return getJcrValueFactory();
     }
 
     /**
@@ -653,7 +642,7 @@ public class SessionImpl implements Session, ManagerProvider {
     }
 
     protected SessionItemStateManager createSessionItemStateManager(UpdatableItemStateManager workspaceStateManager, ItemStateFactory isf) throws RepositoryException {
-        return new SessionItemStateManager(workspaceStateManager, getValidator(), getQValueFactory(), isf);
+        return new SessionItemStateManager(workspaceStateManager, getValidator(), getQValueFactory(), isf, this);
     }
     
     protected ItemManager createItemManager(HierarchyManager hierarchyManager) {
@@ -683,9 +672,6 @@ public class SessionImpl implements Session, ManagerProvider {
     }
 
     /**
-     * Returns the <code>AccessManager</code> associated with this session.
-     *
-     * @return the <code>AccessManager</code> associated with this session
      * @see ManagerProvider#getAccessManager()
      */
     public AccessManager getAccessManager() {
@@ -693,13 +679,38 @@ public class SessionImpl implements Session, ManagerProvider {
     }
 
     /**
-     * Returns the <code>VersionManager</code> associated with this session.
-     *
-     * @return the <code>VersionManager</code> associated with this session
      * @see ManagerProvider#getVersionManager()
      */
     public VersionManager getVersionManager() {
         return workspace.getVersionManager();
+    }
+
+    /**
+     * @see ManagerProvider#getItemDefinitionProvider()
+     */
+    public ItemDefinitionProvider getItemDefinitionProvider() {
+        return workspace.getItemDefinitionProvider();
+    }
+
+    /**
+     * @see ManagerProvider#getEffectiveNodeTypeProvider()
+     */
+    public EffectiveNodeTypeProvider getEffectiveNodeTypeProvider() {
+        return workspace.getEffectiveNodeTypeProvider();
+    }
+
+    /**
+     * @see ManagerProvider#getQValueFactory()
+     */
+    public QValueFactory getQValueFactory() throws RepositoryException {
+        return config.getRepositoryService().getQValueFactory();
+    }
+
+    /**
+     * @see ManagerProvider#getJcrValueFactory()
+     */
+    public ValueFactory getJcrValueFactory() throws RepositoryException {
+        return config.getValueFactory();
     }
 
     //--------------------------------------------------------------------------
@@ -720,10 +731,6 @@ public class SessionImpl implements Session, ManagerProvider {
     // TODO public for SessionImport only. review
     public IdFactory getIdFactory() {
         return workspace.getIdFactory();
-    }
-
-    public QValueFactory getQValueFactory() throws RepositoryException {
-        return config.getRepositoryService().getQValueFactory();
     }
 
     /**

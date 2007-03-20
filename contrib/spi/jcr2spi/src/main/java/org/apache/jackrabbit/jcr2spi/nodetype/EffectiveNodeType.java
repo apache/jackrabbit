@@ -54,104 +54,42 @@ public interface EffectiveNodeType {
      */
     public boolean includesNodeTypes(QName[] nodeTypeNames);
 
-    public QNodeDefinition[] getAllNodeDefs();
+    public QNodeDefinition[] getAllQNodeDefinitions();
 
-    public QPropertyDefinition[] getAllPropDefs();
+    public QPropertyDefinition[] getAllQPropertyDefinitions();
 
-    public QNodeDefinition[] getAutoCreateNodeDefs();
+    public QNodeDefinition[] getAutoCreateQNodeDefinitions();
 
-    public QPropertyDefinition[] getAutoCreatePropDefs();
+    public QPropertyDefinition[] getAutoCreateQPropertyDefinitions();
 
-    public QPropertyDefinition[] getMandatoryPropDefs();
+    public QNodeDefinition[] getMandatoryQNodeDefinitions();
 
-    public QNodeDefinition[] getMandatoryNodeDefs();
+    public QPropertyDefinition[] getMandatoryQPropertyDefinitions();
 
-    /**
-     * Returns the applicable child node definition for a child node with the
-     * specified name and node type.
-     *
-     * @param name
-     * @param nodeTypeName
-     * @return
-     * @throws NoSuchNodeTypeException
-     * @throws ConstraintViolationException if no applicable child node definition
-     * could be found
-     */
-    public QNodeDefinition getApplicableNodeDefinition(QName name, QName nodeTypeName,
-                                                       NodeTypeRegistry ntReg)
-            throws NoSuchNodeTypeException, ConstraintViolationException;
+    public QNodeDefinition[] getNamedQNodeDefinitions(QName name);
 
-    /**
-     * Returns the applicable property definition for a property with the
-     * specified name, type and multiValued characteristic. If there more than
-     * one applicable definitions then the following rules are applied:
-     * <ul>
-     * <li>named definitions are preferred to residual definitions</li>
-     * <li>definitions with specific required type are preferred to definitions
-     * with required type UNDEFINED</li>
-     * </ul>
-     *
-     * @param name
-     * @param type
-     * @param multiValued
-     * @return
-     * @throws ConstraintViolationException if no applicable property definition
-     *                                      could be found
-     */
-    public QPropertyDefinition getApplicablePropertyDefinition(QName name, int type,
-                                                               boolean multiValued)
-            throws ConstraintViolationException;
+    public QPropertyDefinition[] getNamedQPropertyDefinitions(QName name);
 
-    /**
-     * Returns all applicable property definitions for a property with the
-     * specified name, type and multiValued characteristics.
-     * @throws ConstraintViolationException if no applicable property definition
-     *                                      could be found
-     */
-    public QPropertyDefinition[] getApplicablePropertyDefinitions(QName name, int type,
-                                                                  boolean multiValued)
-            throws ConstraintViolationException;
+    public QNodeDefinition[] getUnnamedQNodeDefinitions();
 
-    /**
-     * Returns the applicable property definition for a property with the
-     * specified name and type. The multiValued flag is not taken into account
-     * in the selection algorithm. Other than
-     * <code>{@link #getApplicablePropertyDefinition(QName, int, boolean)}</code>
-     * this method does not take the multiValued flag into account in the
-     * selection algorithm. If there more than one applicable definitions then
-     * the following rules are applied:
-     * <ul>
-     * <li>named definitions are preferred to residual definitions</li>
-     * <li>definitions with specific required type are preferred to definitions
-     * with required type UNDEFINED</li>
-     * <li>single-value definitions are preferred to multiple-value definitions</li>
-     * </ul>
-     *
-     * @param name
-     * @param type
-     * @return
-     * @throws ConstraintViolationException if no applicable property definition
-     *                                      could be found
-     */
-    public QPropertyDefinition getApplicablePropertyDefinition(QName name, int type)
-            throws ConstraintViolationException;
+    public QPropertyDefinition[] getUnnamedQPropertyDefinitions();
 
     /**
      * @param name
-     * @param ntReg
+     * @param definitionProvider
      * @throws ConstraintViolationException
      */
-    public void checkAddNodeConstraints(QName name, NodeTypeRegistry ntReg)
+    public void checkAddNodeConstraints(QName name, ItemDefinitionProvider definitionProvider)
             throws ConstraintViolationException;
 
     /**
      * @param name
      * @param nodeTypeName
-     * @param ntReg
+     * @param definitionProvider
      * @throws ConstraintViolationException
      * @throws NoSuchNodeTypeException
      */
-    public void checkAddNodeConstraints(QName name, QName nodeTypeName, NodeTypeRegistry ntReg)
+    public void checkAddNodeConstraints(QName name, QName nodeTypeName, ItemDefinitionProvider definitionProvider)
             throws ConstraintViolationException, NoSuchNodeTypeException;
 
     /**

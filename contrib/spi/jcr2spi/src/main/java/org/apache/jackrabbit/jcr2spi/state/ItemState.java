@@ -26,9 +26,7 @@ import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
-import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,8 +69,7 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      */
     final ItemStateFactory isf;
 
-    // TODO: find better solution..... needed to retrieve definition.
-    private final NodeTypeRegistry ntReg;
+    final ItemDefinitionProvider definitionProvider;
 
     /**
      * the backing persistent item state (may be null)
@@ -86,7 +83,7 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      * @param isWorkspaceState
      */
     protected ItemState(int initialStatus, boolean isWorkspaceState,
-                        ItemStateFactory isf, NodeTypeRegistry ntReg) {
+                        ItemStateFactory isf, ItemDefinitionProvider definitionProvider) {
         switch (initialStatus) {
             case Status.EXISTING:
             case Status.NEW:
@@ -100,7 +97,7 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
         overlayedState = null;
 
         this.isf = isf;
-        this.ntReg = ntReg;
+        this.definitionProvider = definitionProvider;
         this.isWorkspaceState = isWorkspaceState;
     }
 
@@ -125,7 +122,7 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
         }
         this.isf = isf;
         this.isWorkspaceState = false;
-        this.ntReg = overlayedState.ntReg;
+        this.definitionProvider = overlayedState.definitionProvider;
         connect(overlayedState);
     }
 
@@ -491,26 +488,5 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
                 String msg = "Cannot mark item state with status " + status + " modified.";
                 throw new IllegalStateException(msg);
         }
-    }
-
-    EffectiveNodeType getEffectiveParentNodeType() throws RepositoryException {
-        try {
-            /*
-            for NEW-states the definition is always set upon creation.
-            for all other states the definion must be retrieved only taking
-            the effective nodetypes present on the parent into account
-            any kind of transiently added mixins must not have an effect
-            on the definition retrieved for an state that has been persisted
-            before. The effective NT must be evaluated as if it had been
-            evaluated upon creating the workspace state.
-            */
-            return getNodeTypeRegistry().getEffectiveNodeType(getParent().getNodeTypeNames());
-        } catch (NodeTypeConflictException e) {
-            throw new RepositoryException("Error while accessing Definition ", e);
-        }
-    }
-
-    NodeTypeRegistry getNodeTypeRegistry() {
-        return ntReg;
     }
 }

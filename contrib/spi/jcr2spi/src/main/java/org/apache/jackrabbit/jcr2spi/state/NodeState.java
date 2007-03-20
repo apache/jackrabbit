@@ -22,7 +22,7 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.util.StateUtility;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
@@ -74,8 +74,8 @@ public class NodeState extends ItemState {
     protected NodeState(NodeEntry entry, QName nodeTypeName, QName[] mixinTypeNames,
                         QNodeDefinition definition, int initialStatus,
                         boolean isWorkspaceState,
-                        ItemStateFactory isf, NodeTypeRegistry ntReg) {
-        super(initialStatus, isWorkspaceState, isf, ntReg);
+                        ItemStateFactory isf, ItemDefinitionProvider definitionProvider) {
+        super(initialStatus, isWorkspaceState, isf, definitionProvider);
         this.hierarchyEntry = entry;
         this.nodeTypeName = nodeTypeName;
         setMixinTypeNames(mixinTypeNames);
@@ -251,7 +251,7 @@ public class NodeState extends ItemState {
      */
     public QNodeDefinition getDefinition() throws RepositoryException {
         if (definition == null) {
-            definition = getEffectiveParentNodeType().getApplicableNodeDefinition(getQName(), getNodeTypeName(), getNodeTypeRegistry());
+            definition = definitionProvider.getQNodeDefinition(this);
         }
         return definition;
     }

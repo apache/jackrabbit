@@ -18,25 +18,16 @@ package org.apache.jackrabbit.jcr2spi.nodetype;
 
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.QNodeDefinition;
 
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.RepositoryException;
 import java.util.Collection;
-import java.util.Map;
 
 /**
  * <code>NodeTypeRegistry</code>...
  *
  */
 public interface NodeTypeRegistry {
-
-    /**
-     * Return the <code>QNodeDefinition</code> of the root node.
-     *
-     * @return
-     */
-    QNodeDefinition getRootNodeDef();
 
     /**
      * Returns the node type definition of the node type with the given name.
@@ -48,38 +39,6 @@ public interface NodeTypeRegistry {
      */
     QNodeTypeDefinition getNodeTypeDefinition(QName nodeTypeName)
             throws NoSuchNodeTypeException;
-
-    /**
-     *
-     *
-     * @param ntName
-     * @return
-     * @throws NoSuchNodeTypeException
-     */
-    EffectiveNodeType getEffectiveNodeType(QName ntName)
-            throws NoSuchNodeTypeException;
-
-    /**
-     *
-     *
-     * @param ntNames
-     * @return
-     * @throws NodeTypeConflictException
-     * @throws NoSuchNodeTypeException
-     */
-    EffectiveNodeType getEffectiveNodeType(QName[] ntNames)
-            throws NodeTypeConflictException, NoSuchNodeTypeException;
-
-    /**
-     * @param ntNames
-     * @param ntdMap
-     * @return
-     * @throws NodeTypeConflictException
-     * @throws NoSuchNodeTypeException
-     */
-    EffectiveNodeType getEffectiveNodeType(QName[] ntNames, Map ntdMap)
-            throws NodeTypeConflictException, NoSuchNodeTypeException;
-
 
     /**
      * Add a <code>NodeTypeRegistryListener</code>

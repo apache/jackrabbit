@@ -689,7 +689,7 @@ public class NodeImpl extends ItemImpl implements Node {
             QName[] allRemaining = (QName[]) mixinValue.toArray(new QName[mixinValue.size() + 1]);
             allRemaining[mixinValue.size()] = primaryTypeName;
             try {
-                entRemaining = session.getValidator().getEffectiveNodeType(allRemaining);
+                entRemaining = session.getEffectiveNodeTypeProvider().getEffectiveNodeType(allRemaining);
             } catch (NodeTypeConflictException e) {
                 throw new ConstraintViolationException(e);
             }
@@ -1192,7 +1192,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // check effective node type
         try {
-            EffectiveNodeType effnt = session.getValidator().getEffectiveNodeType(getNodeState().getNodeTypeNames());
+            EffectiveNodeType effnt = session.getEffectiveNodeTypeProvider().getEffectiveNodeType(getNodeState().getNodeTypeNames());
             return effnt.includesNodeType(qName);
         } catch (NodeTypeConflictException e) {
             throw new RepositoryException(e);
@@ -1309,7 +1309,7 @@ public class NodeImpl extends ItemImpl implements Node {
         throws ItemExistsException, NoSuchNodeTypeException, VersionException,
         ConstraintViolationException, LockException, RepositoryException {
 
-        QNodeDefinition definition = session.getValidator().getApplicableNodeDefinition(nodeName, nodeTypeName, getNodeState());
+        QNodeDefinition definition = session.getItemDefinitionProvider().getQNodeDefinition(getNodeState(), nodeName, nodeTypeName);
         if (nodeTypeName == null) {
             // use default node type
             nodeTypeName = definition.getDefaultPrimaryType();
@@ -1475,7 +1475,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // get list of existing nodetypes
         QName[] existingNts = getNodeState().getNodeTypeNames();
         // build effective node type representing primary type including existing mixin's
-        EffectiveNodeType entExisting = session.getValidator().getEffectiveNodeType(existingNts);
+        EffectiveNodeType entExisting = session.getEffectiveNodeTypeProvider().getEffectiveNodeType(existingNts);
 
         // check if adding new mixin conflicts with existing nodetypes
         if (entExisting.includesNodeType(mixinName)) {
@@ -1488,7 +1488,7 @@ public class NodeImpl extends ItemImpl implements Node {
         QName[] resultingNts = new QName[existingNts.length + 1];
         System.arraycopy(existingNts, 0, resultingNts, 0, existingNts.length);
         resultingNts[existingNts.length] = mixinName;
-        session.getValidator().getEffectiveNodeType(resultingNts);
+        session.getEffectiveNodeTypeProvider().getEffectiveNodeType(resultingNts);
 
         // all validations succeeded: return true
         return true;
@@ -1672,7 +1672,6 @@ public class NodeImpl extends ItemImpl implements Node {
                                                                 int type,
                                                                 boolean multiValued)
             throws ConstraintViolationException, RepositoryException {
-        ItemStateValidator validator = session.getValidator();
-        return validator.getApplicablePropertyDefinition(propertyName, type, multiValued, getNodeState());
+        return session.getItemDefinitionProvider().getQPropertyDefinition(getNodeState(), propertyName, type, multiValued);
     }
 }
