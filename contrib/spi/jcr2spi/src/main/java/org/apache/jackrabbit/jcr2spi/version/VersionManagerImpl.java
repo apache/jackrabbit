@@ -19,7 +19,6 @@ package org.apache.jackrabbit.jcr2spi.version;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.Checkout;
 import org.apache.jackrabbit.jcr2spi.operation.Checkin;
@@ -35,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.name.QName;
@@ -99,7 +99,7 @@ public class VersionManagerImpl implements VersionManager {
             PropertyState propState = nodeEntry.getPropertyEntry(QName.JCR_ISCHECKEDOUT).getPropertyState();
             Boolean b = Boolean.valueOf(propState.getValue().getString());
             return b.booleanValue();
-        } catch (ItemStateException e) {
+        } catch (ItemNotFoundException e) {
             // error while accessing jcr:isCheckedOut property state.
             // -> assume that checkedOut status is ok. see above for general
             // notes about the capabilities of the jcr2spi implementation.
@@ -161,66 +161,53 @@ public class VersionManagerImpl implements VersionManager {
                                      boolean done) throws RepositoryException {
         NodeState wspState = getWorkspaceState(nodeState);
         NodeId vId = getWorkspaceState(versionState).getNodeId();
-        try {
-            PropertyState mergeFailedState = wspState.getPropertyState(QName.JCR_MERGEFAILED);
-            QValue[] vs = mergeFailedState.getValues();
 
-            NodeId[] mergeFailedIds = new NodeId[vs.length - 1];
-            for (int i = 0, j = 0; i < vs.length; i++) {
-                NodeId id = workspaceManager.getIdFactory().createNodeId(vs[i].getString());
-                if (!id.equals(vId)) {
-                    mergeFailedIds[j] = id;
-                    j++;
-                }
-                // else: the version id is being solved by this call and not
-                // part of 'jcr:mergefailed' any more
+        PropertyState mergeFailedState = wspState.getPropertyState(QName.JCR_MERGEFAILED);
+        QValue[] vs = mergeFailedState.getValues();
+
+        NodeId[] mergeFailedIds = new NodeId[vs.length - 1];
+        for (int i = 0, j = 0; i < vs.length; i++) {
+            NodeId id = workspaceManager.getIdFactory().createNodeId(vs[i].getString());
+            if (!id.equals(vId)) {
+                mergeFailedIds[j] = id;
+                j++;
             }
-
-            PropertyState predecessorState = wspState.getPropertyState(QName.JCR_PREDECESSORS);
-            vs = predecessorState.getValues();
-
-            int noOfPredecessors = (done) ? vs.length + 1 : vs.length;
-            NodeId[] predecessorIds = new NodeId[noOfPredecessors];
-
-            int i = 0;
-            while (i < vs.length) {
-                predecessorIds[i] = workspaceManager.getIdFactory().createNodeId(vs[i].getString());
-                i++;
-            }
-            if (done) {
-                predecessorIds[i] = vId;
-            }
-            Operation op = ResolveMergeConflict.create(wspState, mergeFailedIds, predecessorIds, done);
-            workspaceManager.execute(op);
-
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
+            // else: the version id is being solved by this call and not
+            // part of 'jcr:mergefailed' any more
         }
+
+        PropertyState predecessorState = wspState.getPropertyState(QName.JCR_PREDECESSORS);
+        vs = predecessorState.getValues();
+
+        int noOfPredecessors = (done) ? vs.length + 1 : vs.length;
+        NodeId[] predecessorIds = new NodeId[noOfPredecessors];
+
+        int i = 0;
+        while (i < vs.length) {
+            predecessorIds[i] = workspaceManager.getIdFactory().createNodeId(vs[i].getString());
+            i++;
+        }
+        if (done) {
+            predecessorIds[i] = vId;
+        }
+        Operation op = ResolveMergeConflict.create(wspState, mergeFailedIds, predecessorIds, done);
+        workspaceManager.execute(op);
     }
 
     public NodeEntry getVersionableNodeState(NodeState versionState) throws RepositoryException {
-        try {
-            NodeState ns = versionState.getChildNodeState(QName.JCR_FROZENNODE, Path.INDEX_DEFAULT);
-            PropertyState ps = ns.getPropertyState(QName.JCR_FROZENUUID);
-            String uniqueID = ps.getValue().toString();
+        NodeState ns = versionState.getChildNodeState(QName.JCR_FROZENNODE, Path.INDEX_DEFAULT);
+        PropertyState ps = ns.getPropertyState(QName.JCR_FROZENUUID);
+        String uniqueID = ps.getValue().toString();
 
-            NodeId versionableId = workspaceManager.getIdFactory().createNodeId(uniqueID);
-            return (NodeEntry) workspaceManager.getHierarchyManager().getHierarchyEntry(versionableId);
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        }
+        NodeId versionableId = workspaceManager.getIdFactory().createNodeId(uniqueID);
+        return (NodeEntry) workspaceManager.getHierarchyManager().getHierarchyEntry(versionableId);
     }
 
     public NodeEntry getVersionHistoryNodeState(NodeState versionableState) throws RepositoryException {
-        try {
-            PropertyState ps = versionableState.getPropertyState(QName.JCR_VERSIONHISTORY);
-            String uniqueID = ps.getValue().getString();
-            NodeId vhId = workspaceManager.getIdFactory().createNodeId(uniqueID);
-            return (NodeEntry) workspaceManager.getHierarchyManager().getHierarchyEntry(vhId);
-        } catch (ItemStateException e) {
-            // should not occur
-            throw new RepositoryException(e);
-        }
+        PropertyState ps = versionableState.getPropertyState(QName.JCR_VERSIONHISTORY);
+        String uniqueID = ps.getValue().getString();
+        NodeId vhId = workspaceManager.getIdFactory().createNodeId(uniqueID);
+        return (NodeEntry) workspaceManager.getHierarchyManager().getHierarchyEntry(vhId);
     }
 
     //------------------------------------------------------------< private >---

@@ -21,12 +21,11 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
-import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.ItemNotFoundException;
 
 /**
  * <code>PropertyEntryImpl</code> implements a reference to a property state.
@@ -64,7 +63,7 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
      * <p/>
      * Returns a <code>PropertyState</code>.
      */
-    ItemState doResolve() throws NoSuchItemStateException, ItemStateException {
+    ItemState doResolve() throws ItemNotFoundException, RepositoryException {
         return factory.getItemStateFactory().createPropertyState(getWorkspaceId(), this);
     }
 
@@ -103,7 +102,7 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
     /**
      * @see PropertyEntry#getPropertyState()
      */
-    public PropertyState getPropertyState() throws NoSuchItemStateException, ItemStateException {
+    public PropertyState getPropertyState() throws ItemNotFoundException, RepositoryException {
         return (PropertyState) getItemState();
     }
 

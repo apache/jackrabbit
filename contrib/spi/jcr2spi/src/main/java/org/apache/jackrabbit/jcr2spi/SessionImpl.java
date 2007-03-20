@@ -257,8 +257,6 @@ public class SessionImpl implements Session, ManagerProvider {
                 log.error("NodeId '" + id + " does not point to a Node");
                 throw new ItemNotFoundException(id.toString());
             }
-        } catch (PathNotFoundException e) {
-            throw new ItemNotFoundException(id.toString());
         } catch (AccessDeniedException e) {
             throw new ItemNotFoundException(id.toString());
         }

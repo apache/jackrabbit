@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.ItemNotFoundException;
 import java.util.ArrayList;
 
 import java.util.HashMap;
@@ -287,16 +288,16 @@ public class NodeState extends ItemState {
      * @param nodeName <code>QName</code> object specifying a node name.
      * @param index 1-based index if there are same-name child node entries.
      * @return The <code>NodeState</code> with the specified name and index
-     * @throws NoSuchItemStateException
-     * @throws ItemStateException
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
      */
-    public NodeState getChildNodeState(QName nodeName, int index) throws NoSuchItemStateException, ItemStateException {
+    public NodeState getChildNodeState(QName nodeName, int index) throws ItemNotFoundException, RepositoryException {
         NodeEntry child = getNodeEntry().getNodeEntry(nodeName, index);
         if (child != null) {
             return child.getNodeState();
         } else {
             // TODO: correct?
-            throw new NoSuchItemStateException("Child node "+ nodeName +" with index " + index + " does not exist.");
+            throw new ItemNotFoundException("Child node "+ nodeName +" with index " + index + " does not exist.");
         }
     }
 
@@ -315,21 +316,21 @@ public class NodeState extends ItemState {
      * Utility method that returns the property state with the given name.
      *
      * @param propertyName The name of the property state to return.
-     * @throws NoSuchItemStateException If there is no (valid) property state
+     * @throws ItemNotFoundException If there is no (valid) property state
      * with the given name.
-     * @throws ItemStateException If an error occurs while retrieving the
+     * @throws RepositoryException If an error occurs while retrieving the
      * property state.
      *
      * @see NodeEntry#getPropertyEntry(QName)
      * @see PropertyEntry#getPropertyState()
      */
-    public PropertyState getPropertyState(QName propertyName) throws NoSuchItemStateException, ItemStateException {
+    public PropertyState getPropertyState(QName propertyName) throws ItemNotFoundException, RepositoryException {
         PropertyEntry child = getNodeEntry().getPropertyEntry(propertyName);
         if (child != null) {
             return child.getPropertyState();
         } else {
             // TODO; correct?
-            throw new NoSuchItemStateException("Child Property with name " + propertyName + " does not exist.");
+            throw new ItemNotFoundException("Child Property with name " + propertyName + " does not exist.");
         }
     }
 
@@ -337,8 +338,7 @@ public class NodeState extends ItemState {
      * {@inheritDoc}
      * @see ItemState#persisted(ChangeLog, CacheBehaviour)
      */
-    void persisted(ChangeLog changeLog, CacheBehaviour cacheBehaviour)
-        throws IllegalStateException {
+    void persisted(ChangeLog changeLog, CacheBehaviour cacheBehaviour) throws IllegalStateException {
         checkIsSessionState();
 
         // remember parent states that have need to adjust their uniqueID/mixintypes
@@ -353,13 +353,16 @@ public class NodeState extends ItemState {
             delState.getHierarchyEntry().remove();
 
             // adjust parent states unless the parent is removed as well
-            try {
-                NodeState parent = delState.getParent();
-                if (!changeLog.containsDeletedState(parent)) {
-                    modifiedParent(parent, delState, modParents);
+            if (delState.getHierarchyEntry().getParent().isAvailable()) {
+                try {
+                    NodeState parent = delState.getParent();
+                    if (!changeLog.containsDeletedState(parent)) {
+                        modifiedParent(parent, delState, modParents);
+                    }
+                } catch (RepositoryException e) {
+                    // ignore. if parent state cannot be retrieved for whatever
+                    // reason, it doesn't need to be adjusted
                 }
-            } catch (ItemStateException e) {
-                // ignore. if parent state does not exist it doesn't need to be adjusted
             }
         }
 
@@ -380,7 +383,7 @@ public class NodeState extends ItemState {
                     modifiedParent(parent, addedState, modParents);
                 }
                 it.remove();
-            } catch (ItemStateException e) {
+            } catch (RepositoryException e) {
                 // should never occur
                 log.error("Internal error:", e.getMessage());
             }
@@ -413,10 +416,10 @@ public class NodeState extends ItemState {
                 if (QName.JCR_MIXINTYPES.equals(modState.getQName())) {
                     try {
                         modifiedParent(modState.getParent(), modState, modParents);
-                    } catch (ItemStateException e) {
+                    } catch (RepositoryException e) {
                         // should never occur. since parent must be available otherwise
                         // the mixin could not been added/removed.
-                        log.error("Internal error:", e.getMessage());
+                        log.warn("Internal error:", e.getMessage());
                     }
                 }
                 it.remove();
@@ -456,11 +459,11 @@ public class NodeState extends ItemState {
      * @param beforeNode the child node where to insert the node before. If
      * <code>null</code> the child node <code>insertNode</code> is moved to the
      * end of the child node entries.
-     * @throws NoSuchItemStateException if <code>insertNode</code> or
+     * @throws ItemNotFoundException if <code>insertNode</code> or
      * <code>beforeNode</code> is not a child node of this <code>NodeState</code>.
      */
     synchronized void reorderChildNodeEntries(NodeState insertNode, NodeState beforeNode)
-        throws NoSuchItemStateException {
+        throws ItemNotFoundException {
         checkIsSessionState();
 
         NodeEntry before = (beforeNode == null) ? null : beforeNode.getNodeEntry();
@@ -532,7 +535,7 @@ public class NodeState extends ItemState {
                         // retrieve uuid from persistent layer
                         try {
                             propState.reconnect(false);
-                        } catch (ItemStateException e) {
+                        } catch (RepositoryException e) {
                             // TODO: handle properly
                             log.error("Internal error", e);
                         }
@@ -550,7 +553,7 @@ public class NodeState extends ItemState {
                 // TODO: really necessary???
                 try {
                     parent.reconnect(false);
-                } catch (ItemStateException e) {
+                } catch (RepositoryException e) {
                     // TODO: handle properly
                     log.error("Internal error", e);
                 }

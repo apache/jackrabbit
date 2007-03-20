@@ -28,11 +28,8 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
-import org.apache.jackrabbit.jcr2spi.state.StaleItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateLifeCycleListener;
@@ -45,6 +42,7 @@ import javax.jcr.ItemExistsException;
 import javax.jcr.RepositoryException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.InvalidItemStateException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
@@ -193,7 +191,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @inheritDoc
      * @see HierarchyEntry#revert()
      */
-    public void revert() throws ItemStateException {
+    public void revert() throws RepositoryException {
         // move all properties from attic back to properties map
         if (!propertiesInAttic.isEmpty()) {
             properties.putAll(propertiesInAttic);
@@ -209,7 +207,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     /**
      * @see HierarchyEntry#transientRemove()
      */
-    public void transientRemove() throws ItemStateException {
+    public void transientRemove() throws RepositoryException {
         for (Iterator it = getAllChildEntries(true, false); it.hasNext();) {
             HierarchyEntry ce = (HierarchyEntry) it.next();
             ce.transientRemove();
@@ -270,7 +268,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @inheritDoc
      * @see HierarchyEntry#collectStates(ChangeLog, boolean)
      */
-    public void collectStates(ChangeLog changeLog, boolean throwOnStale) throws StaleItemStateException {
+    public void collectStates(ChangeLog changeLog, boolean throwOnStale) throws InvalidItemStateException {
         super.collectStates(changeLog, throwOnStale);
 
         // collect transient child states including properties in attic.
@@ -361,8 +359,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @inheritDoc
      * @see NodeEntry#getNodeState()
      */
-    public NodeState getNodeState()
-            throws NoSuchItemStateException, ItemStateException {
+    public NodeState getNodeState() throws ItemNotFoundException, RepositoryException {
         return (NodeState) getItemState();
     }
 
@@ -411,7 +408,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 * Unknown entry (not-existing or not yet loaded):
                 * Skip all intermediate entries and directly try to load the ItemState
                 * (including building the itermediate entries. If that fails
-                * NoSuchItemStateException is thrown.
+                * ItemNotFoundException is thrown.
                 *
                 * Since 'path' might be ambigous (Node or Property):
                 * 1) first try Node
@@ -436,7 +433,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 try {
                     NodeState state = entry.factory.getItemStateFactory().createDeepNodeState(nodeId, entry);
                     return state.getHierarchyEntry();
-                } catch (NoSuchItemStateException e) {
+                } catch (ItemNotFoundException e) {
                     if (index != Path.INDEX_DEFAULT) {
                         throw new PathNotFoundException(path.toString(), e);
                     }
@@ -446,13 +443,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                         PropertyId id = idFactory.createPropertyId(nodeId, remainingPath.getNameElement().getName());
                         PropertyState state = entry.factory.getItemStateFactory().createDeepPropertyState(id, entry);
                         return state.getHierarchyEntry();
-                    } catch (NoSuchItemStateException ise) {
+                    } catch (ItemNotFoundException ise) {
                         throw new PathNotFoundException(path.toString());
-                    } catch (ItemStateException ise) {
-                        throw new RepositoryException("Internal error", ise);
                     }
-                } catch (ItemStateException e) {
-                    throw new RepositoryException("Internal error", e);
                 }
             }
         }
@@ -749,9 +742,12 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                     // existing is still existing -> cannot add same-named property
                     throw new ItemExistsException(propName.toString());
                 }
-            } catch (ItemStateException e) {
-                // entry probably does not exist on the persistent layer
+            } catch (ItemNotFoundException e) {
+                // entry does not exist on the persistent layer
                 // -> therefore remove from properties map
+                properties.remove(propName);
+            } catch (RepositoryException e) {
+                // some other error -> remove from properties map
                 properties.remove(propName);
             }
         }
@@ -934,7 +930,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * <p/>
      * Returns a <code>NodeState</code>.
      */
-    ItemState doResolve() throws NoSuchItemStateException, ItemStateException {
+    ItemState doResolve() throws ItemNotFoundException, RepositoryException {
         return factory.getItemStateFactory().createNodeState(getWorkspaceId(), this);
     }
 
@@ -1121,8 +1117,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                     state.setMixinTypeNames(StateUtility.getMixinNames(ps));
                 } // nodestate not yet loaded -> ignore change
             }
-        } catch (ItemStateException e) {
-            log.error("Internal Error", e);
         } catch (RepositoryException e) {
             log.error("Internal Error", e);
         }
@@ -1173,10 +1167,10 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 ChildInfo ci = (ChildInfo) it.next();
                 internalAddNodeEntry(ci.getName(), ci.getUniqueID(), ci.getIndex(), childNodeEntries);
             }
-        } catch (NoSuchItemStateException e) {
+        } catch (ItemNotFoundException e) {
             log.error("Cannot retrieve child node entries.", e);
             // ignore (TODO correct?)
-        } catch (ItemStateException e) {
+        } catch (RepositoryException e) {
             log.error("Cannot retrieve child node entries.", e);
             // ignore (TODO correct?)
         }
@@ -1228,10 +1222,10 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             for (int i = 0; i < newEntries.size(); i++) {
                 cnEntries.add((NodeEntry) newEntries.get(i));
             }
-        } catch (NoSuchItemStateException e) {
+        } catch (ItemNotFoundException e) {
             log.error("Cannot retrieve child node entries.", e);
             // ignore (TODO correct?)
-        } catch (ItemStateException e) {
+        } catch (RepositoryException e) {
             log.error("Cannot retrieve child node entries.", e);
             // ignore (TODO correct?)
         }
@@ -1459,7 +1453,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 // child has been moved away -> move back
                 try {
                     child.revert();
-                } catch (ItemStateException e) {
+                } catch (RepositoryException e) {
                     log.error("Internal error", e);
                     return false;
                 }

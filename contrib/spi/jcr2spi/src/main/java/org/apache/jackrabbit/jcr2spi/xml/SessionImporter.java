@@ -20,8 +20,6 @@ import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.SessionItemStateManager;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.SessionImpl;
@@ -142,7 +140,7 @@ public class SessionImporter implements Importer, SessionListener {
             refTracker = new ReferenceChangeTracker();
             parents = new Stack();
             parents.push(importTarget);
-        } catch (ItemNotFoundException infe) {
+        } catch (ItemNotFoundException e) {
             throw new PathNotFoundException(LogUtil.safeGetJCRPath(parentPath, session.getNamespaceResolver()));
         }
     }
@@ -202,13 +200,8 @@ public class SessionImporter implements Importer, SessionListener {
                        throw new ItemExistsException(LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver()));
                    }
                }
-           } catch (NoSuchItemStateException e) {
+           } catch (ItemNotFoundException e) {
                // 'existing' doesn't exist any more -> ignore
-           } catch (ItemStateException e) {
-               // undefined internal error
-               String msg = "Internal error. Failed to retrieve existing nodeState.";
-               log.debug(msg);
-               throw new RepositoryException(msg, e);
            }
        }
 
@@ -230,13 +223,9 @@ public class SessionImporter implements Importer, SessionListener {
                    conflicting.getItemState();
 
                    nodeState = resolveUUIDConflict(parent, (NodeEntry) conflicting, nodeInfo);
-               } catch (NoSuchItemStateException e) {
+               } catch (ItemNotFoundException e) {
                    // no conflict: create new with given uuid
                    nodeState = importNode(nodeInfo, parent);
-               } catch (ItemStateException e) {
-                   String msg = "Internal error: failed to retrieve conflicting node state";
-                   log.debug(msg);
-                   throw new RepositoryException(msg, e);
                }
            }
        }
@@ -334,8 +323,7 @@ public class SessionImporter implements Importer, SessionListener {
      * @throws RepositoryException
      */
     NodeState resolveUUIDConflict(NodeState parent, NodeEntry conflicting,
-                                  NodeInfo nodeInfo)
-        throws ItemExistsException, RepositoryException, ItemStateException {
+                                  NodeInfo nodeInfo) throws ItemExistsException, RepositoryException {
         NodeState nodeState;
         switch (uuidBehavior) {
             case ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW:
@@ -372,8 +360,12 @@ public class SessionImporter implements Importer, SessionListener {
                     throw new RepositoryException(msg, e);
                 }
                 // do remove conflicting (recursive) including validation check
-                Operation op = Remove.create(conflicting.getNodeState());
-                stateMgr.execute(op);
+                try {
+                    Operation op = Remove.create(conflicting.getNodeState());
+                    stateMgr.execute(op);
+                } catch (ItemNotFoundException e) {
+                    // conflicting does not exist any more. no need for a removal
+                }
                 // create new with given uuid:
                 nodeState = importNode(nodeInfo, parent);
                 break;
@@ -389,7 +381,7 @@ public class SessionImporter implements Importer, SessionListener {
                 parent = conflicting.getParent().getNodeState();
 
                 // do remove conflicting (recursive), including validation checks
-                op = Remove.create(conflicting.getNodeState());
+                Operation op = Remove.create(conflicting.getNodeState());
                 stateMgr.execute(op);
                 // create new with given uuid at same location as conflicting
                 nodeState = importNode(nodeInfo, parent);
@@ -453,7 +445,7 @@ public class SessionImporter implements Importer, SessionListener {
                     Operation rm = Remove.create(conflicting);
                     stateMgr.execute(rm);
                 }
-            } catch (ItemStateException e) {
+            } catch (RepositoryException e) {
                 // should not occur. existance has been checked before
                 throw new RepositoryException(e);
             }
@@ -474,17 +466,12 @@ public class SessionImporter implements Importer, SessionListener {
             stateMgr.execute(an);
             // retrieve id of state that has been created during execution of AddNode
             NodeState childState;
-            try {
-                List cne = parent.getNodeEntry().getNodeEntries(nodeInfo.getName());
-                if (def.allowsSameNameSiblings()) {
-                    // TODO TOBEFIXED find proper solution. problem with same-name-siblings
-                    childState = ((NodeEntry)cne.get(cne.size()-1)).getNodeState();
-                } else {
-                    childState = ((NodeEntry)cne.get(0)).getNodeState();
-                }
-            } catch (ItemStateException e) {
-                // should not occur, since nodestate is retrieved from cne-list
-                throw new RepositoryException(e);
+            List cne = parent.getNodeEntry().getNodeEntries(nodeInfo.getName());
+            if (def.allowsSameNameSiblings()) {
+                // TODO TOBEFIXED find proper solution. problem with same-name-siblings
+                childState = ((NodeEntry)cne.get(cne.size()-1)).getNodeState();
+            } else {
+                childState = ((NodeEntry)cne.get(0)).getNodeState();
             }
 
             // and set mixin types
@@ -508,7 +495,7 @@ public class SessionImporter implements Importer, SessionListener {
         int infoType = pi.getType();
 
         PropertyState propState = null;
-        QPropertyDefinition def;
+        QPropertyDefinition def = null;
 
         NodeEntry parentEntry = (NodeEntry) parentState.getHierarchyEntry();
         PropertyEntry pEntry = parentEntry.getPropertyEntry(propName);
@@ -530,25 +517,27 @@ public class SessionImporter implements Importer, SessionListener {
                 } else {
                     throw new ItemExistsException(LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver()));
                 }
-            } catch (ItemStateException e) {
-                // should not occur. existance has been checked before
-                throw new RepositoryException(e);
-            }
-        } else {
-            // there's no property with that name, find applicable definition
-            if (tva.length == 1) {
-                // could be single- or multi-valued (n == 1)
-                def = session.getValidator().getApplicablePropertyDefinition(propName, infoType, parentState);
-            } else {
-                // can only be multi-valued (n == 0 || n > 1)
-                def = session.getValidator().getApplicablePropertyDefinition(propName, infoType, true, parentState);
-            }
-            if (def.isProtected()) {
-                // skip protected property
-                log.debug("skipping protected property " + propName);
-                return;
+            } catch (ItemNotFoundException e) {
+                // property apperently doesn't exist any more
+                // -> ignore
             }
         }
+
+       if (def == null) {
+           // there's no property with that name, find applicable definition
+           if (tva.length == 1) {
+               // could be single- or multi-valued (n == 1)
+               def = session.getValidator().getApplicablePropertyDefinition(propName, infoType, parentState);
+           } else {
+               // can only be multi-valued (n == 0 || n > 1)
+               def = session.getValidator().getApplicablePropertyDefinition(propName, infoType, true, parentState);
+           }
+           if (def.isProtected()) {
+               // skip protected property
+               log.debug("skipping protected property " + propName);
+               return;
+           }
+       }
 
         // retrieve the target property type needed for creation of QValue(s)
         // including an eventual conversion. the targetType is then needed for
@@ -567,12 +556,7 @@ public class SessionImporter implements Importer, SessionListener {
             // create new property
             Operation ap = AddProperty.create(parentState, propName, targetType, def, values);
             stateMgr.execute(ap);
-            try {
-                propState = parentEntry.getPropertyEntry(propName).getPropertyState();
-            } catch (ItemStateException e) {
-                // should not occur since prop-state has been created before
-                throw new RepositoryException(e);
-            }
+            propState = parentEntry.getPropertyEntry(propName).getPropertyState();
         } else {
             // modify value of existing property
             Operation sp = SetPropertyValue.create(propState, values, targetType);

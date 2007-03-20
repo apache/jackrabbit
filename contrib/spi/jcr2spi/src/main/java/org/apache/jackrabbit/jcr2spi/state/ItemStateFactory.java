@@ -21,6 +21,8 @@ import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.ItemNotFoundException;
 import java.util.Iterator;
 
 /**
@@ -31,12 +33,12 @@ import java.util.Iterator;
 public interface ItemStateFactory {
 
     /**
-     *
      * @param entry
      * @return
-     * @throws ItemStateException
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
      */
-    public NodeState createRootState(NodeEntry entry) throws ItemStateException;
+    public NodeState createRootState(NodeEntry entry) throws ItemNotFoundException, RepositoryException;
 
     /**
      * Creates the child <code>NodeState</code> with the given
@@ -46,11 +48,11 @@ public interface ItemStateFactory {
      * @param entry the <code>HierarchyEntry</code> the new state should
      * be attached to.
      * @return the created <code>NodeState</code>.
-     * @throws NoSuchItemStateException if there is no such <code>NodeState</code>.
-     * @throws ItemStateException if an error occurs while retrieving the <code>NodeState</code>.
+     * @throws ItemNotFoundException if there is no such <code>NodeState</code>.
+     * @throws RepositoryException if an error occurs while retrieving the <code>NodeState</code>.
      */
     public NodeState createNodeState(NodeId nodeId, NodeEntry entry)
-        throws NoSuchItemStateException, ItemStateException;
+            throws ItemNotFoundException, RepositoryException;
 
 
     /**
@@ -61,10 +63,11 @@ public interface ItemStateFactory {
      * @param nodeId
      * @param anyParent
      * @return the created <code>NodeState</code>.
-     * @throws NoSuchItemStateException if there is no such <code>NodeState</code>.
-     * @throws ItemStateException if an error occurs while retrieving the <code>NodeState</code>.
+     * @throws ItemNotFoundException if there is no such <code>NodeState</code>.
+     * @throws RepositoryException if an error occurs while retrieving the <code>NodeState</code>.
      */
-    public NodeState createDeepNodeState(NodeId nodeId, NodeEntry anyParent) throws NoSuchItemStateException, ItemStateException;
+    public NodeState createDeepNodeState(NodeId nodeId, NodeEntry anyParent)
+            throws ItemNotFoundException, RepositoryException;
 
 
     /**
@@ -75,12 +78,12 @@ public interface ItemStateFactory {
      * @param entry the <code>HierarchyEntry</code> the new state should
      * be attached to.
      * @return the created <code>PropertyState</code>.
-     * @throws NoSuchItemStateException if there is no such <code>PropertyState</code>.
-     * @throws ItemStateException       if an error occurs while retrieving the
-     *                                  <code>PropertyState</code>.
+     * @throws ItemNotFoundException if there is no such <code>PropertyState</code>.
+     * @throws RepositoryException if an error occurs while retrieving the
+     * <code>PropertyState</code>.
      */
     public PropertyState createPropertyState(PropertyId propertyId, PropertyEntry entry)
-        throws NoSuchItemStateException, ItemStateException;
+            throws ItemNotFoundException, RepositoryException;
 
 
     /**
@@ -91,17 +94,19 @@ public interface ItemStateFactory {
      * @param propertyId
      * @param anyParent
      * @return
-     * @throws NoSuchItemStateException if there is no such <code>NodeState</code>.
-     * @throws ItemStateException if an error occurs while retrieving the <code>NodeState</code>.
+     * @throws ItemNotFoundException if there is no such <code>NodeState</code>.
+     * @throws RepositoryException if an error occurs while retrieving the <code>NodeState</code>.
      */
-    public PropertyState createDeepPropertyState(PropertyId propertyId, NodeEntry anyParent) throws NoSuchItemStateException, ItemStateException;
+    public PropertyState createDeepPropertyState(PropertyId propertyId, NodeEntry anyParent) throws ItemNotFoundException, RepositoryException;
 
     /**
      * Returns an Iterator over <code>ChildInfo</code>s for the given <code>NodeState</code>.
      *
      * @param nodeId
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
      */
-    public Iterator getChildNodeInfos(NodeId nodeId) throws NoSuchItemStateException, ItemStateException;
+    public Iterator getChildNodeInfos(NodeId nodeId) throws ItemNotFoundException, RepositoryException;
 
     /**
      * Returns the NodeReferences for the NodeState with the given ID.

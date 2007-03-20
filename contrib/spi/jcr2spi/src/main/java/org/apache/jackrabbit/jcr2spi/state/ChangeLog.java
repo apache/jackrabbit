@@ -26,6 +26,7 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.commons.collections.iterators.IteratorChain;
 
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.RepositoryException;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.LinkedHashSet;
@@ -128,7 +129,7 @@ public class ChangeLog {
     /**
      * Revert the changes listed within this changelog
      */
-    public void undo() throws ItemStateException {
+    public void undo() throws RepositoryException {
         // TODO: check if states are reverted in the correct order
         Iterator[] its = new Iterator[] {addedStates(), deletedStates(), modifiedStates()};
         IteratorChain chain = new IteratorChain(its);
@@ -290,7 +291,7 @@ public class ChangeLog {
                                     }
                                 }
                             }
-                        } catch (ItemStateException e) {
+                        } catch (RepositoryException e) {
                             // should never occur -> ignore
                         }
                     }

@@ -28,7 +28,6 @@ import org.apache.jackrabbit.jcr2spi.operation.LockRelease;
 import org.apache.jackrabbit.jcr2spi.operation.LockRefresh;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.Status;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateLifeCycleListener;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
@@ -307,8 +306,9 @@ public class LockManagerImpl implements LockManager, SessionListener {
         }
         try {
             return entry.getNodeState();
-        } catch (ItemStateException e) {
-            // may occur if the nodeState is not accessible
+        } catch (RepositoryException e) {
+            // may occur if the nodeState is not accessible or some generic
+            // error occured.
             // for this case, assume that no lock exists and delegate final
             // validation to the spi-implementation.
             log.warn("Error while accessing lock holding NodeState", e);
@@ -335,13 +335,13 @@ public class LockManagerImpl implements LockManager, SessionListener {
             if (lockedEntry.denotesNode()) {
                 try {
                     lockHoldingState = ((NodeEntry) lockedEntry).getNodeState();
-                } catch (ItemStateException e) {
+                } catch (RepositoryException e) {
                     log.warn("Cannot build LockState");
                     throw new RepositoryException("Cannot build LockState", e);
                 }
             } else {
                 // should never occur
-                throw new RepositoryException("Internal error.");
+                throw new RepositoryException("Internal error: NodeId points to a Property.");
             }
         }
 
@@ -369,12 +369,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
         NodeState nState = nodeState;
         // access first non-NEW state
         while (nState.getStatus() == Status.NEW) {
-            try {
-                nState = nState.getParent();
-            } catch (ItemStateException e) {
-                // should never occur, since NEW states must have an accessible parent
-                throw new RepositoryException("Intenal error", e);
-            }
+            nState = nState.getParent();
         }
 
         // shortcut: check if a given state holds a lock, which has been
@@ -541,7 +536,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
                 try {
                     PropertyState ps = lockHoldingState.getPropertyState(QName.JCR_LOCKISDEEP);
                     ps.addListener(this);
-                } catch (ItemStateException e) {
+                } catch (RepositoryException e) {
                     log.warn("Internal error", e);
                 }
             }
@@ -552,7 +547,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
                 try {
                     PropertyState ps = lockHoldingState.getPropertyState(QName.JCR_LOCKISDEEP);
                     ps.removeListener(this);
-                } catch (ItemStateException e) {
+                } catch (RepositoryException e) {
                     log.warn("Internal error", e);
                 }
             }

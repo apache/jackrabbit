@@ -19,15 +19,14 @@ package org.apache.jackrabbit.jcr2spi.hierarchy;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
-import org.apache.jackrabbit.jcr2spi.state.StaleItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemNotFoundException;
 import java.lang.ref.WeakReference;
 
 /**
@@ -84,11 +83,11 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
      * a call to {@link ItemState#isValid()} does not equivocally return false.
      *
      * @return the <code>ItemState</code> where this reference points to.
-     * @throws NoSuchItemStateException if the referenced <code>ItemState</code>
-     *                                  does not exist.
-     * @throws ItemStateException       if an error occurs.
+     * @throws ItemNotFoundException if the referenced <code>ItemState</code>
+     * does not exist.
+     * @throws RepositoryException if an error occurs.
      */
-    ItemState resolve() throws NoSuchItemStateException, ItemStateException {
+    ItemState resolve() throws ItemNotFoundException, RepositoryException {
         // check if already resolved
         ItemState state = internalGetItemState();
         // not yet resolved. retrieve and keep weak reference to state
@@ -96,9 +95,11 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
             try {
                 state = doResolve();
                 target = new WeakReference(state);
-            } catch (NoSuchItemStateException e) {
+            } catch (ItemNotFoundException e) {
                 remove();
                 throw e;
+            } catch (RepositoryException e) {
+                e.printStackTrace();
             }
         } else if (state.getStatus() == Status.INVALIDATED) {
             // completely reload this entry, but don't reload recursively
@@ -112,11 +113,11 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
      * <code>ItemState</code> of this reference.
      *
      * @return the <code>ItemState</code> where this reference points to.
-     * @throws NoSuchItemStateException if the referenced <code>ItemState</code>
-     *                                  does not exist.
-     * @throws ItemStateException       if an error occurs.
+     * @throws ItemNotFoundException if the referenced <code>ItemState</code>
+     * does not exist.
+     * @throws RepositoryException if another error occurs.
      */
-    abstract ItemState doResolve() throws NoSuchItemStateException, ItemStateException;
+    abstract ItemState doResolve() throws ItemNotFoundException, RepositoryException;
 
     /**
      * Build the Path of this entry
@@ -222,7 +223,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
      * {@inheritDoc}<br>
      * @see HierarchyEntry#getItemState()
      */
-    public ItemState getItemState() throws NoSuchItemStateException, ItemStateException {
+    public ItemState getItemState() throws ItemNotFoundException, RepositoryException {
         ItemState state = resolve();
         return state;
     }
@@ -245,7 +246,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
      * {@inheritDoc}
      * @see HierarchyEntry#revert()
      */
-    public void revert() throws ItemStateException {
+    public void revert() throws RepositoryException {
         ItemState state = internalGetItemState();
         if (state == null) {
             // nothing to do
@@ -304,11 +305,11 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
             // reload the workspace state from the persistent layer
             try {
                 state.reconnect(keepChanges);
-            } catch (NoSuchItemStateException e) {
+            } catch (ItemNotFoundException e) {
                 // remove hierarchyEntry (including all children and set
                 // state-status to REMOVED (or STALE_DESTROYED)
                 remove();
-            } catch (ItemStateException e) {
+            } catch (RepositoryException e) {
                 // TODO: rather throw? remove from parent?
                 log.warn("Exception while reloading property state: " + e);
                 log.debug("Stacktrace: ", e);
@@ -320,7 +321,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
      * {@inheritDoc}
      * @see HierarchyEntry#transientRemove()
      */
-    public void transientRemove() throws ItemStateException {
+    public void transientRemove() throws RepositoryException {
         ItemState state = internalGetItemState();
         if (state == null) {
             // nothing to do -> correct status must be set upon resolution.
@@ -350,7 +351,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
                 // if a conflict with a new entry occurs.
                 break;
             default:
-                throw new ItemStateException("Cannot transiently remove an ItemState with status " + Status.getName(state.getStatus()));
+                throw new RepositoryException("Cannot transiently remove an ItemState with status " + Status.getName(state.getStatus()));
         }
     }
 
@@ -358,7 +359,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
      * {@inheritDoc}
      * @see HierarchyEntry#collectStates(ChangeLog, boolean)
      */
-    public void collectStates(ChangeLog changeLog, boolean throwOnStale) throws StaleItemStateException {
+    public void collectStates(ChangeLog changeLog, boolean throwOnStale) throws InvalidItemStateException {
         ItemState state = internalGetItemState();
         if (state == null) {
             // nothing to do
@@ -368,7 +369,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
         if (throwOnStale && Status.isStale(state.getStatus())) {
             String msg = "Cannot save changes: " + state + " has been modified externally.";
             log.debug(msg);
-            throw new StaleItemStateException(msg);
+            throw new InvalidItemStateException(msg);
         }
         // only interested in transient modifications or stale-modified states
         switch (state.getStatus()) {

@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
@@ -52,7 +51,7 @@ public class SetMixin extends AbstractOperation {
         if (pe != null) {
             try {
                 addAffectedItemState(pe.getPropertyState());
-            } catch (ItemStateException e) {
+            } catch (RepositoryException e) {
                 // should never occur
             }
         }

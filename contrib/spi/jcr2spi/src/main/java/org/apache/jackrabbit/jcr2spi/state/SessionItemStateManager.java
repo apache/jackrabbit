@@ -55,7 +55,6 @@ import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.uuid.UUID;
 
 import javax.jcr.InvalidItemStateException;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -130,7 +129,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @param state the root state of the update operation
      */
     public void save(ItemState state) throws ReferentialIntegrityException,
-        RepositoryException, StaleItemStateException, ItemStateException {
+            InvalidItemStateException, RepositoryException {
         // shortcut, if no modifications are present
         if (!hasPendingChanges()) {
             return;
@@ -155,18 +154,26 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * items of <code>state</code> inside this item state manager.
      *
      * @param itemState the root state of the cancel operation.
-     * @throws ItemStateException if undoing changes made to <code>state</code>
+     * @throws ConstraintViolationException
+     * @throws RepositoryException if undoing changes made to <code>state</code>
      * and descendant items is not a closed set of changes. That is, at least
      * another item needs to be canceled as well in another sub-tree.
      */
-    public void undo(ItemState itemState) throws ItemStateException, ConstraintViolationException {
-        ChangeLog changeLog = getChangeLog(itemState, false);
-        if (!changeLog.isEmpty()) {
-            // let changelog revert all changes
-            changeLog.undo();
-            // remove transient states and related operations from the t-statemanager
-            transientStateMgr.dispose(changeLog);
-            changeLog.reset();
+    public void undo(ItemState itemState) throws ConstraintViolationException, RepositoryException {
+        try {
+            ChangeLog changeLog = getChangeLog(itemState, false);
+            if (!changeLog.isEmpty()) {
+                // let changelog revert all changes
+                changeLog.undo();
+                // remove transient states and related operations from the t-statemanager
+                transientStateMgr.dispose(changeLog);
+                changeLog.reset();
+            }
+        } catch (InvalidItemStateException e) {
+            // should never get here
+            String msg = "Unable to undo item.";
+            log.debug(msg);
+            throw new RepositoryException(e);
         }
     }
 
@@ -336,45 +343,40 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         NodeState nState = operation.getNodeState();
         NodeEntry nEntry = (NodeEntry) nState.getHierarchyEntry();
 
-        try {
-            // new array of mixinNames to be set on the nodestate (and corresponding property state)
-            PropertyEntry mixinEntry = nEntry.getPropertyEntry(QName.JCR_MIXINTYPES);
-            if (mixinNames != null && mixinNames.length > 0) {
-                // update/create corresponding property state
-                if (mixinEntry != null) {
-                    // execute value of existing property
-                    PropertyState pState = mixinEntry.getPropertyState();
-                    int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
-                    setPropertyStateValue(pState, getQValues(mixinNames, qValueFactory), PropertyType.NAME, options);
-                } else {
-                    // create new jcr:mixinTypes property
-                    EffectiveNodeType ent = validator.getEffectiveNodeType(nState);
-                    QPropertyDefinition pd = ent.getApplicablePropertyDefinition(QName.JCR_MIXINTYPES, PropertyType.NAME, true);
-                    QValue[] mixinValue = getQValues(mixinNames, qValueFactory);
-                    int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
-                    addPropertyState(nState, pd.getQName(), pd.getRequiredType(), mixinValue, pd, options);
-                }
-                nState.markModified();
-                transientStateMgr.addOperation(operation);
+        // new array of mixinNames to be set on the nodestate (and corresponding property state)
+        PropertyEntry mixinEntry = nEntry.getPropertyEntry(QName.JCR_MIXINTYPES);
+        if (mixinNames != null && mixinNames.length > 0) {
+            // update/create corresponding property state
+            if (mixinEntry != null) {
+                // execute value of existing property
+                PropertyState pState = mixinEntry.getPropertyState();
+                int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
+                setPropertyStateValue(pState, getQValues(mixinNames, qValueFactory), PropertyType.NAME, options);
             } else {
-                // remove the jcr:mixinTypes property state if already present
-                if (mixinEntry != null) {
-                    PropertyState pState = mixinEntry.getPropertyState();
-                    boolean newMixinState = pState.getStatus() == Status.NEW;
-                    int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
-                    removeItemState(pState, options);
-                    // only added the remove-mixin operation if it doesn't revert
-                    // a previous 'add-mixin' (which has been removed automatically
-                    // upon notification of removing the prop-state).
-                    if (!newMixinState) {
-                        nState.markModified();
-                        transientStateMgr.addOperation(operation);
-                    }
+                // create new jcr:mixinTypes property
+                EffectiveNodeType ent = validator.getEffectiveNodeType(nState);
+                QPropertyDefinition pd = ent.getApplicablePropertyDefinition(QName.JCR_MIXINTYPES, PropertyType.NAME, true);
+                QValue[] mixinValue = getQValues(mixinNames, qValueFactory);
+                int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
+                addPropertyState(nState, pd.getQName(), pd.getRequiredType(), mixinValue, pd, options);
+            }
+            nState.markModified();
+            transientStateMgr.addOperation(operation);
+        } else {
+            // remove the jcr:mixinTypes property state if already present
+            if (mixinEntry != null) {
+                PropertyState pState = mixinEntry.getPropertyState();
+                boolean newMixinState = pState.getStatus() == Status.NEW;
+                int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
+                removeItemState(pState, options);
+                // only added the remove-mixin operation if it doesn't revert
+                // a previous 'add-mixin' (which has been removed automatically
+                // upon notification of removing the prop-state).
+                if (!newMixinState) {
+                    nState.markModified();
+                    transientStateMgr.addOperation(operation);
                 }
             }
-        } catch (ItemStateException e) {
-            // should not occur, since existance has been asserted before
-            throw new RepositoryException(e);
         }
     }
 
@@ -398,12 +400,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     public void visit(ReorderNodes operation) throws ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         NodeState parent = operation.getParentState();
         // modify the parent node state
-        try {
-            parent.reorderChildNodeEntries(operation.getInsertNode(), operation.getBeforeNode());
-        } catch (NoSuchItemStateException e) {
-            // invalid reorder-ids
-            throw new ItemNotFoundException(e);
-        }
+        parent.reorderChildNodeEntries(operation.getInsertNode(), operation.getBeforeNode());
         // remember the operation
         transientStateMgr.addOperation(operation);
     }
@@ -532,28 +529,28 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     /**
      *
      * @param itemState
-     * @param throwOnStale Throws StaleItemStateException if either the given
+     * @param throwOnStale Throws InvalidItemStateException if either the given
      * <code>ItemState</code> or any of its decendants is stale and the flag is true.
      * @return
-     * @throws StaleItemStateException if a stale <code>ItemState</code> is
+     * @throws InvalidItemStateException if a stale <code>ItemState</code> is
      * encountered while traversing the state hierarchy. The <code>changeLog</code>
      * might have been populated with some transient item states. A client should
      * therefore not reuse the <code>changeLog</code> if such an exception is thrown.
-     * @throws ItemStateException if <code>state</code> is a new item state.
+     * @throws RepositoryException if <code>state</code> is a new item state.
      */
-    private ChangeLog getChangeLog(ItemState itemState, boolean throwOnStale) throws StaleItemStateException, ItemStateException, ConstraintViolationException {
+    private ChangeLog getChangeLog(ItemState itemState, boolean throwOnStale) throws InvalidItemStateException, ConstraintViolationException, RepositoryException {
         // build changelog for affected and decendant states only
         ChangeLog changeLog = new ChangeLog(itemState);
         // fail-fast test: check status of this item's state
         if (itemState.getStatus() == Status.NEW) {
             String msg = "Cannot save an item with status NEW (" +itemState+ ").";
             log.debug(msg);
-            throw new ItemStateException(msg);
+            throw new RepositoryException(msg);
         }
         if (throwOnStale && Status.isStale(itemState.getStatus())) {
             String msg =  "Attempt to save an item, that has been externally modified (" +itemState+ ").";
             log.debug(msg);
-            throw new StaleItemStateException(msg);
+            throw new InvalidItemStateException(msg);
         }
         // collect transient/stale states that should be persisted or reverted
         itemState.getHierarchyEntry().collectStates(changeLog, throwOnStale);
@@ -658,7 +655,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         try {
             itemState.getHierarchyEntry().transientRemove();
             success = true;
-        } catch (ItemStateException e) {
+        } catch (RepositoryException e) {
             throw new RepositoryException("Cannot remove item: " + e.getMessage(), e);
         } finally {
             if (!success) {

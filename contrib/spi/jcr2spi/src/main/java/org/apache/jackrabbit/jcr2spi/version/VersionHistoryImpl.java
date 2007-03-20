@@ -26,7 +26,6 @@ import org.apache.jackrabbit.jcr2spi.LazyItemIterator;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
@@ -373,9 +372,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             }
         } catch (NameException e) {
             throw new RepositoryException(e);
-        } catch (ItemStateException e) {
-            // should not occure
-            throw new RepositoryException(e);
         }
     }
 
@@ -431,10 +427,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
 
     private void refreshEntry(NodeEntry entry) throws RepositoryException {
         // TODO: check again.. is this correct? or should NodeEntry be altered
-        try {
-            entry.getNodeState();
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        }
+        entry.getNodeState();
     }
 }

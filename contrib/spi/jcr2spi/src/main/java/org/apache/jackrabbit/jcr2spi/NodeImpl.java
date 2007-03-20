@@ -28,9 +28,7 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
-import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NodeReferences;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
@@ -230,14 +228,7 @@ public class NodeImpl extends ItemImpl implements Node {
         Path.PathElement srcName = getReorderPath(srcChildRelPath).getNameElement();
         Path.PathElement beforeName = (destChildRelPath == null) ? null : getReorderPath(destChildRelPath).getNameElement();
 
-        Operation op;
-        try {
-            op = ReorderNodes.create(getNodeState(), srcName, beforeName);
-        } catch (NoSuchItemStateException e) {
-            throw new ItemNotFoundException(e.getMessage(), e);
-        } catch (ItemStateException e) {
-            throw new RepositoryException("Unable to reorder nodes: " + e.getMessage(), e);
-        }
+        Operation op = ReorderNodes.create(getNodeState(), srcName, beforeName);
         session.getSessionItemStateManager().execute(op);
     }
 
@@ -737,7 +728,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 try {
                     PropertyState ps = getNodeState().getPropertyState(QName.JCR_MIXINTYPES);
                     mixinValue = StateUtility.getMixinNames(ps);
-                } catch (ItemStateException e) {
+                } catch (RepositoryException e) {
                     // should never occur
                     log.error("Internal error", e);
                 }
@@ -1359,8 +1350,6 @@ public class NodeImpl extends ItemImpl implements Node {
             return (Property) itemMgr.getItem(pEntry);
         } catch (AccessDeniedException e) {
             throw new PathNotFoundException(qName.toString());
-        } catch (ItemNotFoundException e) {
-            throw new PathNotFoundException(qName.toString());
         }
     }
 
@@ -1445,7 +1434,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     private Property createProperty(QName qName, int type, QPropertyDefinition def,
                                     QValue[] qvs)
-        throws PathNotFoundException, ConstraintViolationException, RepositoryException {
+        throws ConstraintViolationException, RepositoryException {
         Operation op = AddProperty.create(getNodeState(), qName, type, def, qvs);
         session.getSessionItemStateManager().execute(op);
         return getProperty(qName);

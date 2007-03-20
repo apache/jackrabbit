@@ -22,15 +22,13 @@ import org.apache.jackrabbit.jcr2spi.state.ItemStateLifeCycleListener;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
+import javax.jcr.ItemNotFoundException;
 import java.util.Map;
 import java.util.Iterator;
 
@@ -71,17 +69,11 @@ public class UniqueIdResolver implements ItemStateCreationListener, EntryFactory
         return (entry != null) ? entry : null;
     }
 
-    public NodeEntry resolve(NodeId nodeId, NodeEntry rootEntry) throws PathNotFoundException, RepositoryException {
+    public NodeEntry resolve(NodeId nodeId, NodeEntry rootEntry) throws ItemNotFoundException, RepositoryException {
         NodeEntry entry = lookup(nodeId);
         if (entry == null) {
-            try {
-                NodeState state = isf.createDeepNodeState(nodeId, rootEntry);
-                entry = state.getNodeEntry();
-            } catch (NoSuchItemStateException e) {
-                throw new PathNotFoundException(e);
-            } catch (ItemStateException e) {
-                throw new RepositoryException(e);
-            }
+            NodeState state = isf.createDeepNodeState(nodeId, rootEntry);
+            entry = state.getNodeEntry();
         }
         return entry;
     }

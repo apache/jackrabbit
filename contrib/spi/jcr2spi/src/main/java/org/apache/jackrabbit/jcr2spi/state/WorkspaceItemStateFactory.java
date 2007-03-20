@@ -72,15 +72,10 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
     /**
      * @inheritDoc
      * @see ItemStateFactory#createRootState(NodeEntry)
-     * @param entry
      */
-    public NodeState createRootState(NodeEntry entry) throws ItemStateException {
-        try {
-            NodeInfo info = service.getNodeInfo(sessionInfo, service.getRootId(sessionInfo));
-            return createNodeState(info, entry);
-        } catch (RepositoryException e) {
-            throw new ItemStateException("Internal error while building root state.");
-        }
+    public NodeState createRootState(NodeEntry entry) throws ItemNotFoundException, RepositoryException {
+        NodeInfo info = service.getNodeInfo(sessionInfo, service.getRootId(sessionInfo));
+        return createNodeState(info, entry);
     }
 
     /**
@@ -91,20 +86,16 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @see ItemStateFactory#createNodeState(NodeId,NodeEntry)
      */
     public NodeState createNodeState(NodeId nodeId, NodeEntry entry)
-            throws NoSuchItemStateException, ItemStateException {
+            throws ItemNotFoundException, RepositoryException {
         try {
             NodeInfo info = service.getNodeInfo(sessionInfo, nodeId);
             return createNodeState(info, entry);
         } catch (PathNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage(), e);
-        } catch (ItemNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage(), e);
-        } catch (RepositoryException e) {
-            throw new ItemStateException(e.getMessage(), e);
+            throw new ItemNotFoundException(e.getMessage(), e);
         }
     }
 
-    public NodeState createDeepNodeState(NodeId nodeId, NodeEntry anyParent) throws NoSuchItemStateException, ItemStateException {
+    public NodeState createDeepNodeState(NodeId nodeId, NodeEntry anyParent) throws ItemNotFoundException, RepositoryException {
         try {
             NodeInfo info = service.getNodeInfo(sessionInfo, nodeId);
             // node for nodeId exists -> build missing entries in hierarchy
@@ -125,17 +116,13 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
                 }
             }
             if (entry == anyParent) {
-                throw new ItemStateException("Internal error while getting deep itemState");
+                throw new RepositoryException("Internal error while getting deep itemState");
             }
             return createNodeState(info, entry);
         } catch (PathNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage(), e);
-        } catch (ItemNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage(), e);
-        }  catch (RepositoryException e) {
-            throw new ItemStateException(e.getMessage(), e);
+            throw new ItemNotFoundException(e.getMessage(), e);
         } catch (MalformedPathException e) {
-            throw new ItemStateException(e.getMessage(), e);
+            throw new RepositoryException(e.getMessage(), e);
         }
     }
 
@@ -148,20 +135,16 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      */
     public PropertyState createPropertyState(PropertyId propertyId,
                                              PropertyEntry entry)
-            throws NoSuchItemStateException, ItemStateException {
+            throws ItemNotFoundException, RepositoryException {
         try {
             PropertyInfo info = service.getPropertyInfo(sessionInfo, propertyId);
             return createPropertyState(info, entry);
         } catch (PathNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage());
-        } catch (ItemNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage());
-        } catch (RepositoryException e) {
-            throw new ItemStateException(e.getMessage());
+            throw new ItemNotFoundException(e.getMessage());
         }
     }
 
-    public PropertyState createDeepPropertyState(PropertyId propertyId, NodeEntry anyParent) throws NoSuchItemStateException, ItemStateException {
+    public PropertyState createDeepPropertyState(PropertyId propertyId, NodeEntry anyParent) throws ItemNotFoundException, RepositoryException {
         try {
             PropertyInfo info = service.getPropertyInfo(sessionInfo, propertyId);
             // prop for propertyId exists -> build missing entries in hierarchy
@@ -193,13 +176,9 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             }
             return createPropertyState(info, propEntry);
         } catch (PathNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage());
-        } catch (ItemNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage());
-        } catch (RepositoryException e) {
-            throw new ItemStateException(e.getMessage());
+            throw new ItemNotFoundException(e.getMessage());
         } catch (MalformedPathException e) {
-            throw new ItemStateException(e.getMessage());
+            throw new RepositoryException(e.getMessage());
         }
     }
 
@@ -209,16 +188,8 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @param nodeId
      */
     public Iterator getChildNodeInfos(NodeId nodeId)
-        throws NoSuchItemStateException, ItemStateException {
-        try {
-            return service.getChildInfos(sessionInfo, nodeId);
-        } catch (PathNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage());
-        } catch (ItemNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage());
-        } catch (RepositoryException e) {
-            throw new ItemStateException(e.getMessage());
-        }
+            throws ItemNotFoundException, RepositoryException {
+        return service.getChildInfos(sessionInfo, nodeId);
     }
 
     /**
@@ -252,8 +223,10 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @param info the <code>NodeInfo</code> to use to create the <code>NodeState</code>.
      * @param entry
      * @return the new <code>NodeState</code>.
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
      */
-    private NodeState createNodeState(NodeInfo info, NodeEntry entry) throws NoSuchItemStateException, RepositoryException {
+    private NodeState createNodeState(NodeInfo info, NodeEntry entry) throws ItemNotFoundException, RepositoryException {
         assertMatchingPath(info, entry);
 
         // make sure the entry has the correct ItemId
@@ -284,9 +257,6 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
                 EffectiveNodeType ent = ntReg.getEffectiveNodeType(parentState.getNodeTypeNames());
                 definition = ent.getApplicableNodeDefinition(info.getQName(), info.getNodetype(), ntReg);
             } catch (RepositoryException e) {
-                // should not get here
-                log.warn("Internal error", e.getMessage());
-            } catch (ItemStateException e) {
                 // should not get here
                 log.warn("Internal error", e.getMessage());
             } catch (NodeTypeConflictException e) {
@@ -323,8 +293,11 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      *               <code>PropertyState</code>.
      * @param entry
      * @return the new <code>PropertyState</code>.
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
      */
-    private PropertyState createPropertyState(PropertyInfo info, PropertyEntry entry) throws NoSuchItemStateException, RepositoryException {
+    private PropertyState createPropertyState(PropertyInfo info, PropertyEntry entry)
+            throws ItemNotFoundException, RepositoryException {
         assertMatchingPath(info, entry);
 
         // make sure uuid part of id is correct
@@ -348,9 +321,6 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
                 } else {
                     definition = service.getPropertyDefinition(sessionInfo, entry.getId());
                 }
-            } catch (ItemStateException e) {
-                // should not get here
-                log.warn("Internal error", e.getMessage());
             } catch (RepositoryException e) {
                 // should not get here
                 log.warn("Internal error", e.getMessage());
@@ -375,10 +345,16 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * Validation check: Path of the given ItemInfo must match to the Path of
      * the HierarchyEntry. This is required for Items that are identified by
      * a uniqueID that may move within the hierarchy upon restore or clone.
+     *
+     * @param info
+     * @param entry
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
      */
-    private void assertMatchingPath(ItemInfo info, HierarchyEntry entry) throws NoSuchItemStateException, RepositoryException {
+    private void assertMatchingPath(ItemInfo info, HierarchyEntry entry)
+            throws ItemNotFoundException, RepositoryException {
         if (!info.getPath().equals(entry.getWorkspacePath())) {
-            throw new NoSuchItemStateException("HierarchyEntry does not belong the given ItemInfo.");
+            throw new ItemNotFoundException("HierarchyEntry does not belong the given ItemInfo.");
         }
     }
 

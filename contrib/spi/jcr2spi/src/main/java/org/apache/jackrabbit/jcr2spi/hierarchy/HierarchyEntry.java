@@ -18,14 +18,13 @@ package org.apache.jackrabbit.jcr2spi.hierarchy;
 
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
-import org.apache.jackrabbit.jcr2spi.state.StaleItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemNotFoundException;
 
 /**
  * <code>HierarchyEntry</code>...
@@ -101,7 +100,7 @@ public interface HierarchyEntry {
      * @throws ItemStateException If an error occurs while retrieving the
      * <code>ItemState</code>.
      */
-    public ItemState getItemState() throws NoSuchItemStateException, ItemStateException;
+    public ItemState getItemState() throws ItemNotFoundException, RepositoryException;
 
     /**
      * Invalidates the underlying <code>ItemState</code> if available. If the
@@ -119,8 +118,9 @@ public interface HierarchyEntry {
      * adding, modifying or removing item states. 'Existing' item states
      * are reverted to their initial state and their status is reset to {@link Status#EXISTING}.
      *
+     * @throws RepositoryException if an error occurs.
      */
-    public void revert() throws ItemStateException;
+    public void revert() throws RepositoryException;
 
     /**
      * Reloads this hierarchy entry and the corresponding ItemState, if this
@@ -141,10 +141,10 @@ public interface HierarchyEntry {
      * if the item has been transiently added before. In the latter case, the
      * corresponding HierarchyEntries can be removed as well from their parent.
      *
-     * @throws ItemStateException if an error occurs while removing any of the item
-     * state. e.g. an item state is not valid anymore.
+     * @throws RepositoryException if an error occurs while removing any of the item
+     * states e.g. an item state is not valid anymore.
      */
-    public void transientRemove() throws ItemStateException;
+    public void transientRemove() throws RepositoryException;
 
     /**
      * Removes this <code>HierarchyEntry</code> from its parent and sets the
@@ -164,9 +164,9 @@ public interface HierarchyEntry {
      * @param changeLog the <code>ChangeLog</code> collecting the transient
      * item states present in a given tree.
      * @param throwOnStale If the given flag is true, this methods throws
-     * StaleItemStateException if this state is stale.
-     * @throws StaleItemStateException if <code>throwOnStale</code> is true and
+     * InvalidItemStateException if this state is stale.
+     * @throws InvalidItemStateException if <code>throwOnStale</code> is true and
      * this state is stale.
      */
-    public void collectStates(ChangeLog changeLog, boolean throwOnStale) throws StaleItemStateException;
+    public void collectStates(ChangeLog changeLog, boolean throwOnStale) throws InvalidItemStateException;
 }
