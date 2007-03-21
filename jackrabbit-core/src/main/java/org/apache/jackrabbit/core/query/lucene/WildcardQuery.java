@@ -156,12 +156,7 @@ public class WildcardQuery extends Query implements TransformConstants {
     /**
      * The <code>Weight</code> implementation for this <code>WildcardQuery</code>.
      */
-    private class WildcardQueryWeight implements Weight {
-
-        /**
-         * The searcher in use
-         */
-        private final Searcher searcher;
+    private class WildcardQueryWeight extends AbstractWeight {
 
         /**
          * Creates a new <code>WildcardQueryWeight</code> instance using
@@ -169,8 +164,12 @@ public class WildcardQuery extends Query implements TransformConstants {
          *
          * @param searcher a <code>Searcher</code> instance.
          */
-        public WildcardQueryWeight(Searcher searcher) {
-            this.searcher = searcher;
+        public WildcardQueryWeight(final Searcher searcher) {
+            super(searcher, new ScorerFactory() {
+                public Scorer createScorer(IndexReader reader) {
+                    return new WildcardQueryScorer(searcher.getSimilarity(), reader);
+                }
+            });
         }
 
         /**
@@ -200,17 +199,6 @@ public class WildcardQuery extends Query implements TransformConstants {
          * {@inheritDoc}
          */
         public void normalize(float norm) {
-        }
-
-        /**
-         * Creates a scorer for this <code>WildcardQuery</code>.
-         *
-         * @param reader a reader for accessing the index.
-         * @return a <code>WildcardQueryScorer</code>.
-         * @throws IOException if an error occurs while reading from the index.
-         */
-        public Scorer scorer(IndexReader reader) throws IOException {
-            return new WildcardQueryScorer(searcher.getSimilarity(), reader);
         }
 
         /**
@@ -269,21 +257,21 @@ public class WildcardQuery extends Query implements TransformConstants {
             // check cache
             synchronized (cache) {
                 Map m = (Map) cache.get(reader);
-                if (m == null) {
+            if (m == null) {
                     m = new LRUMap(10);
                     cache.put(reader, m);
-                }
-                resultMap = m;
+            }
+            resultMap = m;
             }
             synchronized (resultMap) {
-                BitSet result = (BitSet) resultMap.get(cacheKey);
-                if (result == null) {
-                    result = new BitSet(reader.maxDoc());
-                } else {
-                    hitsCalculated = true;
-                }
-                hits = result;
+            BitSet result = (BitSet) resultMap.get(cacheKey);
+            if (result == null) {
+                result = new BitSet(reader.maxDoc());
+            } else {
+                hitsCalculated = true;
             }
+            hits = result;
+        }
         }
 
         /**
@@ -312,7 +300,8 @@ public class WildcardQuery extends Query implements TransformConstants {
         /**
          * {@inheritDoc}
          */
-        public boolean skipTo(int target) {
+        public boolean skipTo(int target) throws IOException {
+            calculateHits();
             nextDoc = hits.nextSetBit(target);
             return nextDoc > -1;
         }
@@ -355,9 +344,7 @@ public class WildcardQuery extends Query implements TransformConstants {
             }
             hitsCalculated = true;
             // put to cache
-            synchronized (resultMap) {
-                resultMap.put(cacheKey, hits);
-            }
+            resultMap.put(cacheKey, hits);
         }
 
     }
