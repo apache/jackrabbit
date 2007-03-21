@@ -204,7 +204,7 @@ abstract class DocId {
          */
         int getDocumentNumber(IndexReader reader) throws IOException {
             synchronized (this) {
-                if (this.reader != null && this.reader.get() == reader) {
+                if (this.reader != null && reader.equals(this.reader.get())) {
                     return docNumber;
                 }
             }
