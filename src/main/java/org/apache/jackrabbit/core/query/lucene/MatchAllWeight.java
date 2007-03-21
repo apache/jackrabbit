@@ -22,26 +22,18 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
-import org.apache.lucene.search.Weight;
 
 import java.io.IOException;
 
 /**
  * This class implements the Weight calculation for the MatchAllQuery.
  */
-class MatchAllWeight implements Weight {
+class MatchAllWeight extends AbstractWeight {
 
     /**
      * the MatchAllQuery
      */
     private final Query query;
-
-    private final String field;
-
-    /**
-     * the current Searcher instance
-     */
-    private final Searcher searcher;
 
     /**
      * the weight value
@@ -62,10 +54,13 @@ class MatchAllWeight implements Weight {
      * @param query
      * @param searcher
      */
-    MatchAllWeight(Query query, Searcher searcher, String field) {
+    MatchAllWeight(Query query, Searcher searcher, final String field) {
+        super(searcher, new ScorerFactory() {
+            public Scorer createScorer(IndexReader reader) throws IOException {
+                return new MatchAllScorer(reader, field);
+            }
+        });
         this.query = query;
-        this.searcher = searcher;
-        this.field = field;
     }
 
     /**
@@ -97,31 +92,6 @@ class MatchAllWeight implements Weight {
     public void normalize(float queryNorm) {
         queryWeight *= queryNorm;                   // normalize query weight
         value = queryWeight * idf;                  // idf for document
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Scorer scorer(IndexReader reader) throws IOException {
-        if (reader instanceof MultiIndexReader) {
-            MultiIndexReader mir = (MultiIndexReader) reader;
-            IndexReader readers[] = mir.getIndexReaders();
-            int starts[] = new int[readers.length + 1];
-            int maxDoc = 0;
-            for (int i = 0; i < readers.length; i++) {
-                starts[i] = maxDoc;
-                maxDoc += readers[i].maxDoc();
-            }
-
-            starts[readers.length] = maxDoc;
-            Scorer scorers[] = new Scorer[readers.length];
-            for (int i = 0; i < readers.length; i++)
-                scorers[i] = scorer(readers[i]);
-
-            return new MultiScorer(searcher.getSimilarity(), scorers, starts);
-        } else {
-            return new MatchAllScorer(reader, field);
-        }
     }
 
     /**
