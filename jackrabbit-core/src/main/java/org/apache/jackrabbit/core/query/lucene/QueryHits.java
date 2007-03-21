@@ -62,6 +62,7 @@ public class QueryHits {
      */
     public final void close() throws IOException {
         reader.close();
+        PerQueryCache.getInstance().dispose();
     }
 
     /**

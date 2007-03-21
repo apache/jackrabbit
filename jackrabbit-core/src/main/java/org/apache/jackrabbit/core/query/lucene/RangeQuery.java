@@ -29,15 +29,14 @@ import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.TermDocs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.commons.collections.map.LRUMap;
 
 import java.io.IOException;
 import java.util.BitSet;
 import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.HashMap;
 
 /**
  * Implements a variant of the lucene class {@link org.apache.lucene.search.RangeQuery}.
@@ -51,12 +50,6 @@ public class RangeQuery extends Query implements TransformConstants {
      * Logger instance for this class.
      */
     private static final Logger log = LoggerFactory.getLogger(RangeQuery.class);
-
-    /**
-     * Simple result cache for previously calculated hits.
-     * key=IndexReader value=Map{key=String:range,value=BitSet:hits}
-     */
-    private static final Map cache = new WeakHashMap();
 
     /**
      * The lower term. May be <code>null</code> if <code>upperTerm</code> is not
@@ -292,15 +285,14 @@ public class RangeQuery extends Query implements TransformConstants {
             key.append(transform);
             this.cacheKey = key.toString();
             // check cache
-            synchronized (cache) {
-                Map m = (Map) cache.get(reader);
+            PerQueryCache cache = PerQueryCache.getInstance();
+            Map m = (Map) cache.get(RangeQueryScorer.class, reader);
             if (m == null) {
-                    m = new LRUMap(10);
-                    cache.put(reader, m);
+                m = new HashMap();
+                cache.put(RangeQueryScorer.class, reader, m);
             }
             resultMap = m;
-            }
-            synchronized (resultMap) {
+
             BitSet result = (BitSet) resultMap.get(cacheKey);
             if (result == null) {
                 result = new BitSet(reader.maxDoc());
@@ -308,7 +300,6 @@ public class RangeQuery extends Query implements TransformConstants {
                 hitsCalculated = true;
             }
             hits = result;
-        }
         }
 
         /**
