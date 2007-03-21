@@ -27,12 +27,12 @@ import org.apache.lucene.search.Similarity;
 
 import java.io.IOException;
 import java.util.BitSet;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * The MatchAllScorer implements a Scorer that scores / collects all
  * documents in the index that match a field.
- * In case there are no filters, this MatchAllScores simply collects
- * all documents in the index that are not marked as deleted.
  */
 class MatchAllScorer extends Scorer {
 
@@ -136,6 +136,21 @@ class MatchAllScorer extends Scorer {
      *                     the search index.
      */
     private void calculateDocFilter() throws IOException {
+        PerQueryCache cache = PerQueryCache.getInstance();
+        Map readerCache = (Map) cache.get(MatchAllScorer.class, reader);
+        if (readerCache == null) {
+            readerCache = new HashMap();
+            cache.put(MatchAllScorer.class, reader, readerCache);
+        }
+        // get BitSet for field
+        docFilter = (BitSet) readerCache.get(field);
+
+        if (docFilter != null) {
+            // use cached BitSet;
+            return;
+        }
+
+        // otherwise calculate new
         docFilter = new BitSet(reader.maxDoc());
         // we match all terms
         TermEnum terms = reader.terms(new Term(FieldNames.PROPERTIES, field));
@@ -157,5 +172,8 @@ class MatchAllScorer extends Scorer {
         } finally {
             terms.close();
         }
+
+        // put BitSet into cache
+        readerCache.put(field, docFilter);
     }
 }

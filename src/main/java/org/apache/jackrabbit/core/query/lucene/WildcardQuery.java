@@ -31,12 +31,11 @@ import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.Similarity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.commons.collections.map.LRUMap;
 
 import java.io.IOException;
 import java.util.BitSet;
-import java.util.WeakHashMap;
 import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Implements a wildcard query on a lucene field with an embedded property name
@@ -75,12 +74,6 @@ public class WildcardQuery extends Query implements TransformConstants {
      * provided pattern.
      */
     private final int transform;
-
-    /**
-     * Simple result cache for previously calculated hits.
-     * key=IndexReader value=Map{key=String:pattern,value=BitSet:hits}
-     */
-    private static final Map cache = new WeakHashMap();
 
     /**
      * Creates a new <code>WildcardQuery</code>.
@@ -255,15 +248,14 @@ public class WildcardQuery extends Query implements TransformConstants {
             this.reader = reader;
             this.cacheKey = field + '\uFFFF' + propName + '\uFFFF' + transform +'\uFFFF' + pattern;
             // check cache
-            synchronized (cache) {
-                Map m = (Map) cache.get(reader);
+            PerQueryCache cache = PerQueryCache.getInstance();
+            Map m = (Map) cache.get(WildcardQueryScorer.class, reader);
             if (m == null) {
-                    m = new LRUMap(10);
-                    cache.put(reader, m);
+                m = new HashMap();
+                cache.put(WildcardQueryScorer.class, reader, m);
             }
             resultMap = m;
-            }
-            synchronized (resultMap) {
+
             BitSet result = (BitSet) resultMap.get(cacheKey);
             if (result == null) {
                 result = new BitSet(reader.maxDoc());
@@ -271,7 +263,6 @@ public class WildcardQuery extends Query implements TransformConstants {
                 hitsCalculated = true;
             }
             hits = result;
-        }
         }
 
         /**
