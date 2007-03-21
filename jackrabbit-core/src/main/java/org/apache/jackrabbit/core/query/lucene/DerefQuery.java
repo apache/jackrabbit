@@ -241,6 +241,7 @@ class DerefQuery extends Query {
          * {@inheritDoc}
          */
         public boolean skipTo(int target) throws IOException {
+            calculateChildren();
             nextDoc = hits.nextSetBit(target);
             return nextDoc > -1;
         }

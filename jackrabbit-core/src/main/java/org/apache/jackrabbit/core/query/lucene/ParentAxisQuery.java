@@ -243,6 +243,7 @@ class ParentAxisQuery extends Query {
          * {@inheritDoc}
          */
         public boolean skipTo(int target) throws IOException {
+            calculateParent();
             nextDoc = hits.nextSetBit(target);
             return nextDoc > -1;
         }
