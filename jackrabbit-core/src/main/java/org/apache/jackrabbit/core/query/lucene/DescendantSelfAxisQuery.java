@@ -27,8 +27,6 @@ import org.apache.lucene.search.Weight;
 
 import java.io.IOException;
 import java.util.BitSet;
-import java.util.Map;
-import java.util.HashMap;
 
 /**
  * Implements a lucene <code>Query</code> which filters a sub query by checking
@@ -36,11 +34,6 @@ import java.util.HashMap;
  * nodes selected by a context query.
  */
 class DescendantSelfAxisQuery extends Query {
-
-    /**
-     * Default score is 1.0f.
-     */
-    private static final Float DEFAULT_SCORE = new Float(1.0f);
 
     /**
      * The context query
@@ -207,28 +200,9 @@ class DescendantSelfAxisQuery extends Query {
         private final BitSet contextHits;
 
         /**
-         * BitSet storing the id's of selected documents from the sub query
+         * Set <code>true</code> once the context hits have been calculated.
          */
-        private final BitSet subHits;
-
-        /**
-         * Map that contains the scores for the sub hits. To save memory
-         * only scores that are not equal to 1.0f are put to this map.
-         * <p/>
-         * key=[Integer] id of selected document from sub query<br>
-         * value=[Float] score for that document
-         */
-        private final Map scores = new HashMap();
-
-        /**
-         * The next document id to return
-         */
-        private int nextDoc = -1;
-
-        /**
-         * Set <code>true</code> once the sub contextHits have been calculated.
-         */
-        private boolean subHitsCalculated = false;
+        private boolean contextHitsCalculated = false;
 
         /**
          * Creates a new <code>DescendantSelfAxisScorer</code>.
@@ -244,41 +218,25 @@ class DescendantSelfAxisQuery extends Query {
             this.hResolver = hResolver;
             // todo reuse BitSets?
             this.contextHits = new BitSet(reader.maxDoc());
-            this.subHits = new BitSet(reader.maxDoc());
         }
 
         /**
          * {@inheritDoc}
          */
         public boolean next() throws IOException {
-            calculateSubHits();
-            nextDoc = subHits.nextSetBit(nextDoc + 1);
+            collectContextHits();
+            if (!subScorer.next() || contextHits.isEmpty()) {
+                return false;
+            }
+            int nextDoc = subScorer.doc();
             while (nextDoc > -1) {
-                // check if nextDoc is really valid against the context query
 
-                // check self if necessary
-                if (includeSelf) {
-                    if (contextHits.get(nextDoc)) {
-                        return true;
-                    }
-                }
-
-                // check if nextDoc is a descendant of one of the context nodes
-                int parentDoc = hResolver.getParent(nextDoc);
-                while (parentDoc != -1 && !contextHits.get(parentDoc)) {
-                    // traverse
-                    parentDoc = hResolver.getParent(parentDoc);
-                }
-
-                if (parentDoc != -1) {
-                    // since current parentDoc is a descendant of one of the context
-                    // docs we can promote parentDoc to the context hits
-                    contextHits.set(parentDoc);
+                if (isValid(nextDoc)) {
                     return true;
                 }
 
                 // try next
-                nextDoc = subHits.nextSetBit(nextDoc + 1);
+                nextDoc = subScorer.next() ? subScorer.doc() : -1;
             }
             return false;
         }
@@ -287,51 +245,42 @@ class DescendantSelfAxisQuery extends Query {
          * {@inheritDoc}
          */
         public int doc() {
-            return nextDoc;
+            return subScorer.doc();
         }
 
         /**
          * {@inheritDoc}
          */
         public float score() throws IOException {
-            Float score = (Float) scores.get(new Integer(nextDoc));
-            if (score == null) {
-                score = DEFAULT_SCORE;
-            }
-            return score.floatValue();
+            return subScorer.score();
         }
 
         /**
          * {@inheritDoc}
          */
         public boolean skipTo(int target) throws IOException {
-            nextDoc = target - 1;
-            return next();
+            boolean match = subScorer.skipTo(target);
+            if (match) {
+                collectContextHits();
+                if (isValid(subScorer.doc())) {
+                    return true;
+                } else {
+                    // find next valid
+                    return next();
+                }
+            } else {
+                return true;
+            }
         }
 
-        private void calculateSubHits() throws IOException {
-            if (!subHitsCalculated) {
-
+        private void collectContextHits() throws IOException {
+            if (!contextHitsCalculated) {
                 contextScorer.score(new HitCollector() {
                     public void collect(int doc, float score) {
                         contextHits.set(doc);
                     }
                 }); // find all
-
-                if (contextHits.isEmpty()) {
-                    // no need to execute sub scorer, context is empty
-                } else {
-                    subScorer.score(new HitCollector() {
-                        public void collect(int doc, float score) {
-                            subHits.set(doc);
-                            if (score != DEFAULT_SCORE.floatValue()) {
-                                scores.put(new Integer(doc), new Float(score));
-                            }
-                        }
-                    });
-                }
-
-                subHitsCalculated = true;
+                contextHitsCalculated = true;
             }
         }
 
@@ -342,7 +291,39 @@ class DescendantSelfAxisQuery extends Query {
         public Explanation explain(int doc) throws IOException {
             throw new UnsupportedOperationException();
         }
+
+        /**
+         * Returns <code>true</code> if <code>doc</code> is a valid match from
+         * the sub scorer against the context hits. The caller must ensure
+         * that the context hits are calculated before this method is called!
+         *
+         * @param doc the document number.
+         * @return <code>true</code> if <code>doc</code> is valid.
+         * @throws IOException if an error occurs while reading from the index.
+         */
+        private boolean isValid(int doc) throws IOException {
+            // check self if necessary
+            if (includeSelf) {
+                if (contextHits.get(doc)) {
+                    return true;
+                }
+            }
+
+            // check if doc is a descendant of one of the context nodes
+            int parentDoc = hResolver.getParent(doc);
+
+            // traverse
+            while (parentDoc != -1 && !contextHits.get(parentDoc)) {
+                parentDoc = hResolver.getParent(parentDoc);
+            }
+
+            if (parentDoc != -1) {
+                // since current parentDoc is a descendant of one of the context
+                // docs we can promote parentDoc to the context hits
+                contextHits.set(parentDoc);
+                return true;
+            }
+            return false;
+        }
     }
-
-
 }
