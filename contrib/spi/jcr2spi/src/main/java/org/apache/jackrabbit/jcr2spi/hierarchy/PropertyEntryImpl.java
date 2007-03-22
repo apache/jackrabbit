@@ -122,14 +122,9 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
      * @see HierarchyEntry#remove()
      */
     public void remove() {
-        ItemState state = internalGetItemState();
-        if (state != null) {
-            if (state.getStatus() == Status.NEW) {
-                state.setStatus(Status.REMOVED);
-            } else {
-                state.getWorkspaceState().setStatus(Status.REMOVED);
-            }
+        removeEntry(this);
+        if (getStatus() != Status.STALE_DESTROYED) {
+            parent.internalRemovePropertyEntry(getQName());
         }
-        parent.internalRemovePropertyEntry(getQName());
     }
 }

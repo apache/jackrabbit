@@ -444,7 +444,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     }
 
     //------------------------------------------< UpdatableItemStateManager >---
-    // TODO: review
     /**
      * Creates a new batch from the single workspace operation and executes it.
      *
@@ -483,8 +482,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         }
         try {
             new OperationVisitorImpl(sessionInfo).execute(changes);
-            // TODO: remove parameter CacheBehaviour
-            changes.persisted(CacheBehaviour.INVALIDATE);
+            changes.persisted();
         } finally {
             updateSync.release();
         }
@@ -493,23 +491,26 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     /**
      * Dispose this <code>WorkspaceManager</code>
      */
-    public void dispose() {
-        if (changeFeed != null) {
-            changeFeed.interrupt();
-        }
-        hierarchyManager.dispose();
+    public synchronized void dispose() {
         try {
+            updateSync.acquire();
+            if (changeFeed != null) {
+                changeFeed.interrupt();
+            }
+            hierarchyManager.dispose();
             service.dispose(sessionInfo);
-        } catch (RepositoryException e) {
-            log.warn("Exception while disposing session info: " + e);
+        } catch (Exception e) {
+            log.warn("Exception while disposing WorkspaceManager: " + e);
+        } finally {
+            updateSync.release();
         }
     }
     //------------------------------------------------------< AccessManager >---
     /**
      * @see AccessManager#isGranted(NodeState, Path, String[])
      */
-    public boolean isGranted(NodeState parentState, Path relPath, String[] actions) throws ItemNotFoundException, RepositoryException {
-        // TODO: correct?
+    public boolean isGranted(NodeState parentState, Path relPath, String[] actions)
+            throws ItemNotFoundException, RepositoryException {
         if (parentState.getStatus() == Status.NEW) {
             return true;
         }
@@ -607,7 +608,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     }
 
     //--------------------------------------------------------------------------
-
     /**
      * Called when local or external events occured. This method is called after
      * changes have been applied to the repository.
@@ -620,7 +620,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             log.debug("received {} event bundles.", new Integer(eventBundles.length));
             for (int i = 0; i < eventBundles.length; i++) {
                 log.debug("BundleId: {}", eventBundles[i].getBundleId());
-                log.debug("IsLocal:  {}", new Boolean(eventBundles[i].isLocal()));
+                log.debug("IsLocal:  {}", Boolean.valueOf(eventBundles[i].isLocal()));
                 for (EventIterator it = eventBundles[i].getEvents(); it.hasNext(); ) {
                     Event e = it.nextEvent();
                     String type;

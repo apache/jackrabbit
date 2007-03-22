@@ -663,8 +663,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         try {
             itemState.getHierarchyEntry().transientRemove();
             success = true;
-        } catch (RepositoryException e) {
-            throw new RepositoryException("Cannot remove item: " + e.getMessage(), e);
         } finally {
             if (!success) {
                 // TODO: TOBEFIXED undo state modifications

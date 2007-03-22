@@ -227,15 +227,8 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @see HierarchyEntry#remove()
      */
     public void remove() {
-        ItemState state = internalGetItemState();
-        if (state != null) {
-            if (state.getStatus() == Status.NEW) {
-                state.setStatus(Status.REMOVED);
-            } else {
-                state.getWorkspaceState().setStatus(Status.REMOVED);
-            }
-        }
-        if (parent.childNodeEntries != null) {
+        removeEntry(this);
+        if (getStatus() != Status.STALE_DESTROYED && parent.childNodeEntries != null) {
             NodeEntry removed = parent.childNodeEntries.remove(this);
             if (removed == null) {
                 // try attic
@@ -248,14 +241,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         // since this (i.e. the parent is removed as well).
         for (Iterator it = getAllChildEntries(true, true); it.hasNext();) {
             HierarchyEntryImpl ce = (HierarchyEntryImpl) it.next();
-            state = ce.internalGetItemState();
-            if (state != null) {
-                if (state.getStatus() == Status.NEW) {
-                    state.setStatus(Status.REMOVED);
-                } else {
-                    state.getWorkspaceState().setStatus(Status.REMOVED);
-                }
-            }
+            removeEntry(ce);
         }
     }
 
@@ -268,7 +254,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @inheritDoc
      * @see HierarchyEntry#collectStates(ChangeLog, boolean)
      */
-    public void collectStates(ChangeLog changeLog, boolean throwOnStale) throws InvalidItemStateException {
+    public synchronized void collectStates(ChangeLog changeLog, boolean throwOnStale) throws InvalidItemStateException {
         super.collectStates(changeLog, throwOnStale);
 
         // collect transient child states including properties in attic.
@@ -654,8 +640,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      */
     public synchronized Iterator getPropertyEntries() {
         Collection props;
-        ItemState state = internalGetItemState();
-        if (state != null && state.getStatus() == Status.EXISTING_MODIFIED) {
+        if (getStatus() == Status.EXISTING_MODIFIED) {
             // filter out removed properties
             props = new ArrayList();
             // use array since upon validation the entry might be removed.
@@ -678,7 +663,18 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @see NodeEntry#addPropertyEntry(QName)
      */
     public PropertyEntry addPropertyEntry(QName propName) throws ItemExistsException {
-        // TODO: check if correct, that check for existing prop can be omitted.
+        // TODO: check for existing prop.
+        return internalAddPropertyEntry(propName);
+    }
+
+    /**
+     * Internal method that adds a PropertyEntry without checking of that entry
+     * exists.
+     *
+     * @param propName
+     * @return
+     */
+    private PropertyEntry internalAddPropertyEntry(QName propName) {
         PropertyEntry entry = PropertyEntryImpl.create(this, propName, factory);
         properties.put(propName, entry);
 
@@ -715,7 +711,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             for (Iterator it = diff.iterator(); it.hasNext();) {
                 QName propName = (QName) it.next();
                 PropertyEntry pEntry = (PropertyEntry) properties.get(propName);
-                pEntry.remove();
+                if (pEntry != null) {
+                    pEntry.remove();
+                }
             }
         }
     }
@@ -837,8 +835,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @param childEvent
      * @see NodeEntry#refresh(Event)
      */
-    public synchronized void refresh(Event childEvent) {
-        boolean modified = false; // TODO: see todo below
+    public void refresh(Event childEvent) {
         QName eventName = childEvent.getQPath().getNameElement().getName();
         switch (childEvent.getType()) {
             case Event.NODE_ADDED:
@@ -856,38 +853,30 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                     cne = childNodeEntries().get(eventName, index);
                 }
                 if (cne == null) {
-                    cne = internalAddNodeEntry(eventName, uniqueChildID, index, childNodeEntries());
-                    modified = true;
+                    internalAddNodeEntry(eventName, uniqueChildID, index, childNodeEntries());
                 } else {
                     // child already exists -> deal with NEW entries, that were
                     // added by some other session.
                     // TODO: TOBEFIXED
-
                 }
                 break;
 
             case Event.PROPERTY_ADDED:
                 // create a new property reference if it has not been
                 // added by some earlier 'add' event
-                if (!hasPropertyEntry(eventName)) {
-                    try {
-                        addPropertyEntry(eventName);
-                        modified = true;
-                    } catch (ItemExistsException e) {
-                        log.warn("Internal error", e);
-                        // TODO
-                    }
+                HierarchyEntry child = lookupEntry(childEvent.getItemId(), childEvent.getQPath());
+                if (child == null) {
+                    internalAddPropertyEntry(eventName);
                 } else {
-                    // TODO: TOBEFIXED deal with NEW entries
+                    child.reload(false, true);
                 }
                 break;
 
             case Event.NODE_REMOVED:
             case Event.PROPERTY_REMOVED:
-                HierarchyEntry child = lookupEntry(childEvent.getItemId(), childEvent.getQPath());
+                child = lookupEntry(childEvent.getItemId(), childEvent.getQPath());
                 if (child != null) {
                     child.remove();
-                    modified = true;
                 } // else: child-Entry has not been loaded yet -> ignore
                 break;
 
@@ -902,25 +891,16 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                     // (i.e. this NodeEntry) since both props are protected
                     if (StateUtility.isUuidOrMixin(eventName)) {
                         notifyUUIDorMIXINModified((PropertyEntry) child);
-                        modified = true;
                     }
                 } else {
                     // prop-Entry has not been loaded yet -> add propEntry
-                    try {
-                        addPropertyEntry(eventName);
-                        modified = true;
-                    } catch (ItemExistsException e) {
-                        log.warn("Internal error", e);
-                        // TODO
-                    }
+                    internalAddPropertyEntry(eventName);
                 }
                 break;
             default:
                 // ILLEGAL
                 throw new IllegalArgumentException("Illegal event type " + childEvent.getType() + " for NodeState.");
         }
-
-        // TODO: check if status of THIS_state must be marked modified...
     }
 
     //-------------------------------------------------< HierarchyEntryImpl >---
@@ -960,7 +940,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @param builder builder currently being used
      * @param hEntry HierarchyEntry of the state the path should be built for.
      */
-    private static void buildPath(Path.PathBuilder builder, NodeEntryImpl nEntry, boolean wspPath) {
+    private static void buildPath(Path.PathBuilder builder, NodeEntryImpl nEntry, boolean wspPath) throws RepositoryException {
         NodeEntryImpl parentEntry = (wspPath && nEntry.revertInfo != null) ? nEntry.revertInfo.oldParent : nEntry.parent;
         // shortcut for root state
         if (parentEntry == null) {
@@ -974,6 +954,11 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         int index = (wspPath) ? nEntry.getWorkspaceIndex() : nEntry.getIndex();
         QName name = (wspPath) ? nEntry.getWorkspaceQName() : nEntry.getQName();
         // add to path
+        if (index == Path.INDEX_UNDEFINED) {
+            throw new RepositoryException("Invalid index " + index + " with nodeEntry " + nEntry);
+        }
+
+        // TODO: check again. special treatment for index 0 for consistency with PathFormat.parse
         if (index == Path.INDEX_DEFAULT) {
             builder.addLast(name);
         } else {
@@ -1117,8 +1102,10 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                     state.setMixinTypeNames(StateUtility.getMixinNames(ps));
                 } // nodestate not yet loaded -> ignore change
             }
+        } catch (ItemNotFoundException e) {
+            log.debug("Property with name " + child.getQName() + " does not exist (anymore)");
         } catch (RepositoryException e) {
-            log.error("Internal Error", e);
+            log.debug("Unable to access child property " + child.getQName(), e.getMessage());
         }
     }
 
