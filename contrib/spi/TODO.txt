@@ -6,66 +6,36 @@ NOTE: This list only contains major open issues.
       Minor known issues and problems are marked throughout the code with TODO.
 
 
-1) RepositoryServiceImpl in Spi2Dav  (missing)
-   
-   missing implementation for:
-   > Clone
-   > Copy between Workspaces
-   > Impersonate
-   
-   
-2) SPI: interfaces  (improve)
+--------------------------------------------------------------------------------
+Known Issues and TODOs SPI
+--------------------------------------------------------------------------------
 
-   > review usage of jackrabbit-commons classes (QName, Path)
+- IMPROVE: review usage of jackrabbit-commons classes (QName, Path)
+
+- IMPROVE: RepositoryService, Batch: check consistency of throw clauses.
+
+- IMPROVE: Transactions, XASessionInfo
 
 
-3) SPI: RepositoryService, Batch (improve)
+--------------------------------------------------------------------------------
+Known Issues and TODOs with jcr2spi
+--------------------------------------------------------------------------------
 
-   > check consistency of throw clauses.
+- IMPROVE: Replace ItemState-duality by copy on write behaviour
 
-
-4) Locking: Handling of LockTokens  (problem)
-
-   There are 2 methods in JSR 170 that deal with handling of LockTokens:
-   Session.addLockToken, Session.removeLockToken. The spec defines, that
-    
-   a) session-scoped locks may not be transfered to another session
-   b) only one Session object must be lock holder. adding a token that is
-      still present with another session is not possible.
-
-   This causes the following issues with the SPI
-
-   a) session-scoped locks are currently not implemented properly (see 5)
-   b) no session info is transfered over the SPI boundary nor are the addLT/
-      removeLT methods passed over the SPI.
-      consequently its (with the current design) not possible to detect, whether
-      the given locktoken is still hold by another Session object.
-
-
-5) Observation (problem)
-
-   - assertion that the same event doesn't get processed multiple times
-
-   - EventImpl: with the current setup spi2dav connects to a default 
-     jackrabbit jcr-server reflecting JCR calls. consequently event discovery
-     will only return JCR events.
-     Additional information defined by the SPI Event interface cannot be 
-     retrieved from the information sent by jcr-server.
-
-
-6) AddNode (problem)
+- IMPROVE: AddNode 
  
    In order to be able to return the created Node, it would be required to
    now its Id if the operation succeeded, since the Node name passed to the
    call may not identify the new Node in case of same-name-siblings.
+   
+   
+--------------------------------------------------------------------------------
+Known Issues and TODOs with spi2dav
+--------------------------------------------------------------------------------
 
-
-8) Transactions (work in progress)
-
-   Definition of XASessionInfo must be reviewed.
-
-
-10) AccessManager.canRead() seems useless, since the jcr2spi client is only
-    able to access Items it can read anyway. Remove method and calls to it
-
-
+- MISSING: implementation for:
+   > Clone
+   > Copy between Workspaces
+   > Impersonate
+   
