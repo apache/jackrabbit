@@ -95,7 +95,7 @@ public class SetValueBinaryTest extends AbstractJCRTest {
      * Test the persistence of a property modified with an input stream
      * parameter and saved from the parent Node
      */
-    public void testBooleanParent() throws RepositoryException, IOException {
+    public void testBinaryParent() throws RepositoryException, IOException {
         InputStream in = value.getStream();
         try {
             property1.setValue(in);
@@ -115,7 +115,7 @@ public class SetValueBinaryTest extends AbstractJCRTest {
      * Test the deletion of a property by assigning it a null value, saved from
      * the Session
      */
-    public void testRemoveBooleanSession() throws RepositoryException {
+    public void testRemoveBinarySession() throws RepositoryException {
         property1.setValue((InputStream) null);
         superuser.save();
 
@@ -131,7 +131,7 @@ public class SetValueBinaryTest extends AbstractJCRTest {
      * Test the deletion of a property by assigning it a null value, saved from
      * the parent Node
      */
-    public void testRemoveBooleanParent() throws RepositoryException {
+    public void testRemoveBinaryParent() throws RepositoryException {
         property1.setValue((Value) null);
         node.save();
 
