@@ -141,10 +141,12 @@ public interface HierarchyEntry {
      * if the item has been transiently added before. In the latter case, the
      * corresponding HierarchyEntries can be removed as well from their parent.
      *
+     * @throws InvalidItemStateException if this entry has been removed in the
+     * mean time.
      * @throws RepositoryException if an error occurs while removing any of the item
      * states e.g. an item state is not valid anymore.
      */
-    public void transientRemove() throws RepositoryException;
+    public void transientRemove() throws InvalidItemStateException, RepositoryException;
 
     /**
      * Removes this <code>HierarchyEntry</code> from its parent and sets the

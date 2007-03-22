@@ -17,13 +17,13 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.commons.collections.iterators.IteratorChain;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.util.StateUtility;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.QNodeDefinition;
@@ -127,7 +127,7 @@ public class NodeState extends ItemState {
     public ItemId getId() {
         return getNodeId();
     }
-    
+
     /**
      * @see ItemState#merge(ItemState, boolean)
      */
@@ -325,20 +325,19 @@ public class NodeState extends ItemState {
      * @see PropertyEntry#getPropertyState()
      */
     public PropertyState getPropertyState(QName propertyName) throws ItemNotFoundException, RepositoryException {
-        PropertyEntry child = getNodeEntry().getPropertyEntry(propertyName);
-        if (child != null) {
-            return child.getPropertyState();
+        HierarchyEntry child = getNodeEntry().getDeepEntry(Path.create(propertyName, Path.INDEX_UNDEFINED));
+        if (child != null && !child.denotesNode()) {
+            return ((PropertyEntry) child).getPropertyState();
         } else {
-            // TODO; correct?
             throw new ItemNotFoundException("Child Property with name " + propertyName + " does not exist.");
         }
     }
 
     /**
      * {@inheritDoc}
-     * @see ItemState#persisted(ChangeLog, CacheBehaviour)
+     * @see ItemState#persisted(ChangeLog)
      */
-    void persisted(ChangeLog changeLog, CacheBehaviour cacheBehaviour) throws IllegalStateException {
+    void persisted(ChangeLog changeLog) throws IllegalStateException {
         checkIsSessionState();
 
         // remember parent states that have need to adjust their uniqueID/mixintypes
@@ -348,8 +347,10 @@ public class NodeState extends ItemState {
         // process deleted states from the changelog
         for (Iterator it = changeLog.deletedStates(); it.hasNext();) {
             ItemState delState = (ItemState) it.next();
-
-            // delState.overlayedState.getHierarchyEntry().remove();
+            if (Status.isTerminal(delState.getStatus())) {
+                log.debug("Removal of State " + delState + " has already been completed.");
+                continue;
+            }
             delState.getHierarchyEntry().remove();
 
             // adjust parent states unless the parent is removed as well
@@ -373,16 +374,18 @@ public class NodeState extends ItemState {
             ItemState addedState = (ItemState) it.next();
             try {
                 NodeState parent = addedState.getParent();
-                // connect the new state to its overlayed state (including update
-                // via merging in order to be aware of autocreated values,
-                // changed definition etc.
-                addedState.reconnect(false);
-
                 // if parent is modified -> remember for final status reset
                 if (parent.getStatus() == Status.EXISTING_MODIFIED) {
                     modifiedParent(parent, addedState, modParents);
                 }
-                it.remove();
+                if (addedState.getStatus() == Status.EXISTING) {
+                    log.debug("Adding new state " + addedState + " has already been completed.");
+                } else {
+                    // connect the new state to its overlayed state (including update
+                    // via merging in order to be aware of autocreated values,
+                    // changed definition etc.
+                    addedState.reconnect(false);
+                }
             } catch (RepositoryException e) {
                 // should never occur
                 log.error("Internal error:", e.getMessage());
@@ -391,6 +394,10 @@ public class NodeState extends ItemState {
 
         for (Iterator it = changeLog.modifiedStates(); it.hasNext();) {
             ItemState modState = (ItemState) it.next();
+            if (modState.getStatus() == Status.EXISTING) {
+                log.debug("Modified state has already been processed");
+                continue;
+            }
             if (modState.isNode()) {
                 if (StateUtility.isMovedState((NodeState) modState)) {
                     // set definition of overlayed according to session-state
@@ -399,7 +406,6 @@ public class NodeState extends ItemState {
 
                     // and mark the moved state existing
                     modState.setStatus(Status.EXISTING);
-                    it.remove();
                 } else {
                     // remember state as modified only for later processing
                     if (!modParents.containsKey(modState)) {
@@ -422,7 +428,6 @@ public class NodeState extends ItemState {
                         log.warn("Internal error:", e.getMessage());
                     }
                 }
-                it.remove();
             }
         }
 
@@ -432,7 +437,7 @@ public class NodeState extends ItemState {
         for (Iterator it = modParents.keySet().iterator(); it.hasNext();) {
             NodeState parent = (NodeState) it.next();
             List l = (List) modParents.get(parent);
-            adjustNodeState(parent, (PropertyState[]) l.toArray(new PropertyState[l.size()]), cacheBehaviour);
+            adjustNodeState(parent, (PropertyState[]) l.toArray(new PropertyState[l.size()]));
         }
 
         /* finally check if all entries in the changelog have been processed
@@ -468,7 +473,7 @@ public class NodeState extends ItemState {
 
         NodeEntry before = (beforeNode == null) ? null : beforeNode.getNodeEntry();
         insertNode.getNodeEntry().orderBefore(before);
-        
+
         // mark this state as modified
         markModified();
     }
@@ -522,8 +527,7 @@ public class NodeState extends ItemState {
      * @param parent
      * @param props
      */
-    private static void adjustNodeState(NodeState parent, PropertyState[] props,
-                                        CacheBehaviour cacheBehaviour) {
+    private static void adjustNodeState(NodeState parent, PropertyState[] props) {
         NodeState overlayed = (NodeState) parent.overlayedState;
         if (overlayed != null) {
             for (int i = 0; i < props.length; i++) {
@@ -549,14 +553,11 @@ public class NodeState extends ItemState {
 
             // set parent status to 'existing'
             parent.setStatus(Status.EXISTING);
-            if (cacheBehaviour != CacheBehaviour.OBSERVATION) {
-                // TODO: really necessary???
-                try {
-                    parent.reconnect(false);
-                } catch (RepositoryException e) {
-                    // TODO: handle properly
-                    log.error("Internal error", e);
-                }
+            try {
+                parent.reconnect(false);
+            } catch (RepositoryException e) {
+                // TODO: handle properly
+                log.error("Internal error", e);
             }
         } else {
             // should never occur.

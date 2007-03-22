@@ -20,10 +20,11 @@ import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.AddNode;
 import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.name.QName;
 import org.apache.commons.collections.iterators.IteratorChain;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.RepositoryException;
@@ -39,6 +40,15 @@ import java.util.Collection;
  */
 public class ChangeLog {
 
+    /**
+     * Logger instance for this class.
+     */
+    private static final Logger log = LoggerFactory.getLogger(ChangeLog.class);
+
+    /**
+     * The changelog target: Root item of the tree whose changes are contained
+     * in this changelog.
+     */
     private final ItemState target;
     /**
      * Added states
@@ -118,12 +128,11 @@ public class ChangeLog {
 
     /**
      * Call this method when this change log has been sucessfully persisted.
-     * This implementation will call {@link ItemState#persisted(ChangeLog, CacheBehaviour)
+     * This implementation will call {@link ItemState#persisted(ChangeLog)
      * ItemState.refresh(this)} on the target item of this change log.
-     * TODO: remove parameter CacheBehaviour
      */
-    public void persisted(CacheBehaviour cacheBehaviour) {
-        target.persisted(this, cacheBehaviour);
+    public void persisted() {
+        target.persisted(this);
     }
 
     /**
@@ -217,12 +226,14 @@ public class ChangeLog {
     }
 
     /**
+     * Adjust this ChangeLog according to the status change with the given
+     * ItemState:
      * Remove all entries and operation related to the given ItemState, that
      * are not used any more (respecting the status change).
      *
      * @param state
      */
-    public void removeAffected(ItemState state, int previousStatus) {
+    public void statusChanged(ItemState state, int previousStatus) {
         switch (state.getStatus()) {
             case (Status.EXISTING):
                 switch (previousStatus) {
@@ -248,68 +259,73 @@ public class ChangeLog {
             case Status.EXISTING_MODIFIED:
                 modified(state);
                 break;
-            case (Status.REMOVED):
-                if (previousStatus == Status.NEW) {
-                    // was new and now removed again
-                    addedStates.remove(state);
-                    deletedStates.remove(state);
-                    // remove operations performed on the removed state
-                    removeAffectedOperations(state);
-                    /* remove the add-operation as well:
-                       since the affected state of an 'ADD' operation is the parent
-                       instead of the added-state, the set of operations
-                       need to be searched for the parent state && the proper
-                       operation type.
-                       SET_MIXIN can be is a special case of adding a property */
-                    NodeEntry parentEntry = state.getHierarchyEntry().getParent();
-                    if (parentEntry != null && parentEntry.isAvailable()) {
-                        try {
-                            NodeState parent = parentEntry.getNodeState();
-                            if (parent.getStatus() != Status.REMOVED) {
-                                for (Iterator it = operations.iterator(); it.hasNext();) {
-                                    Operation op = (Operation) it.next();
-                                    if (op instanceof AddNode) {
-                                        AddNode operation = (AddNode) op;
-                                        if (operation.getParentState() == parent
-                                                && operation.getNodeName().equals(state.getQName())) {
-                                            // TODO: this will not work for name name siblings!
-                                            it.remove();
-                                            break;
-                                        }
-                                    } else if (op instanceof AddProperty) {
-                                        AddProperty operation = (AddProperty) op;
-                                        if (operation.getParentState() == parent
-                                                && operation.getPropertyName().equals(state.getQName())) {
-                                            it.remove();
-                                            break;
-                                        }
-                                    } else if (op instanceof SetMixin &&
-                                        QName.JCR_MIXINTYPES.equals(state.getQName()) &&
-                                        ((SetMixin)op).getNodeState() == parent) {
-                                        it.remove();
-                                        break;
-                                    }
-                                }
-                            }
-                        } catch (RepositoryException e) {
-                            // should never occur -> ignore
-                        }
-                    }
-                } else if (previousStatus == Status.EXISTING_REMOVED) {
-                    // was removed and is now saved
-                    deletedStates.remove(state);
-                    removeAffectedOperations(state);
-                }
-                break;
             case (Status.EXISTING_REMOVED):
                 deleted(state);
-                removeAffectedOperations(state);
+                // removeAffectedOperations(state);
                 break;
-            case Status.STALE_DESTROYED:
-                // state is now stale. remove from modified
-                modifiedStates.remove(state);
-                removeAffectedOperations(state);
+            case (Status.REMOVED):
+                switch (previousStatus) {
+                    case Status.EXISTING_REMOVED:
+                        // was removed and is now saved
+                        deletedStates.remove(state);
+                        removeAffectedOperations(state);
+                        break;
+                    case Status.NEW:
+                        newStateRemoved(state);
+                        break;
+                }
                 break;
+        }
+    }
+
+    private void newStateRemoved(ItemState state) {
+        NodeEntry parentEntry = state.getHierarchyEntry().getParent();
+        if (!parentEntry.isAvailable() || Status.isTerminal(parentEntry.getStatus())) {
+            return; // TODO: check if correct
+        }
+        // was new and now removed again
+        addedStates.remove(state);
+
+        // remove any operations performed on the removed state
+        removeAffectedOperations(state);
+
+        /* remove the add-operation as well:
+           since the affected state of an 'ADD' operation is the parent instead
+           of the added-state, the set of operations need to be searched for the
+           parent state && the proper operation type.
+           SET_MIXIN is considered as a special case of adding a property
+         */
+        NodeState parent;
+        try {
+            parent = parentEntry.getNodeState();
+        } catch (RepositoryException e) {
+            // should never occur
+            log.error("Internal error:", e);
+            return;
+        }
+        for (Iterator it = operations.iterator(); it.hasNext();) {
+            Operation op = (Operation) it.next();
+            if (op instanceof AddNode) {
+                AddNode operation = (AddNode) op;
+                if (operation.getParentState() == parent
+                        && operation.getNodeName().equals(state.getQName())) {
+                    // TODO: this will not work for name name siblings!
+                    it.remove();
+                    break;
+                }
+            } else if (op instanceof AddProperty) {
+                AddProperty operation = (AddProperty) op;
+                if (operation.getParentState() == parent
+                        && operation.getPropertyName().equals(state.getQName())) {
+                    it.remove();
+                    break;
+                }
+            } else if (op instanceof SetMixin &&
+                    QName.JCR_MIXINTYPES.equals(state.getQName()) &&
+                    ((SetMixin)op).getNodeState() == parent) {
+                it.remove();
+                break;
+            }
         }
     }
 

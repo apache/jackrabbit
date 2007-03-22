@@ -161,6 +161,16 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
         }
     }
 
+    static void removeEntry(HierarchyEntryImpl entry) {
+        ItemState state = entry.internalGetItemState();
+        if (state != null) {
+            if (state.getStatus() == Status.NEW) {
+                state.setStatus(Status.REMOVED);
+            } else {
+                state.getWorkspaceState().setStatus(Status.REMOVED);
+            }
+        }
+    }
     //-----------------------------------------------------< HierarchyEntry >---
     /**
      * @inheritDoc
@@ -321,7 +331,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
      * {@inheritDoc}
      * @see HierarchyEntry#transientRemove()
      */
-    public void transientRemove() throws RepositoryException {
+    public void transientRemove() throws InvalidItemStateException, RepositoryException {
         ItemState state = internalGetItemState();
         if (state == null) {
             // nothing to do -> correct status must be set upon resolution.
@@ -350,6 +360,9 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
                 // removed propertyEntry is automatically moved to the 'attic'
                 // if a conflict with a new entry occurs.
                 break;
+            case Status.REMOVED:
+            case Status.STALE_DESTROYED:
+                throw new InvalidItemStateException("Item has already been removed by someone else. Status = " + Status.getName(state.getStatus()));
             default:
                 throw new RepositoryException("Cannot transiently remove an ItemState with status " + Status.getName(state.getStatus()));
         }
@@ -371,13 +384,14 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
             log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
-        // only interested in transient modifications or stale-modified states
+        // only interested in transient modifications or stale states
         switch (state.getStatus()) {
             case Status.NEW:
                 changeLog.added(state);
                 break;
             case Status.EXISTING_MODIFIED:
             case Status.STALE_MODIFIED:
+            case Status.STALE_DESTROYED:
                 changeLog.modified(state);
                 break;
             case Status.EXISTING_REMOVED:

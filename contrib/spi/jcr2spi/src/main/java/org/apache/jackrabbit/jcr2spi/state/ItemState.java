@@ -22,7 +22,6 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
@@ -396,7 +395,7 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      * @param changeLog
      * @throws IllegalStateException if this state is a 'workspace' state.
      */
-    abstract void persisted(ChangeLog changeLog, CacheBehaviour cacheBehaviour) throws IllegalStateException;
+    abstract void persisted(ChangeLog changeLog) throws IllegalStateException;
 
     /**
      * Connect this state to some underlying overlayed state.

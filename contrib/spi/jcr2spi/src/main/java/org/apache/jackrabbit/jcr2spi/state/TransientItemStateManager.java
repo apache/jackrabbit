@@ -170,9 +170,9 @@ public class TransientItemStateManager implements ItemStateCreationListener {
             case Status.EXISTING_MODIFIED:
             case Status.EXISTING_REMOVED:
             case Status.REMOVED:
-            case Status.STALE_DESTROYED:
-                changeLog.removeAffected(state, previousStatus);
+                changeLog.statusChanged(state, previousStatus);
                 break;
+            case Status.STALE_DESTROYED:
             case Status.STALE_MODIFIED:
                 // state is now stale. keep in modified. wait until refreshed
             case Status.MODIFIED:
