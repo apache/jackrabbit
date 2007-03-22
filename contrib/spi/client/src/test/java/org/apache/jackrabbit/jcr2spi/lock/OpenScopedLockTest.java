@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
-import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import javax.jcr.lock.LockException;
 import javax.jcr.lock.Lock;
