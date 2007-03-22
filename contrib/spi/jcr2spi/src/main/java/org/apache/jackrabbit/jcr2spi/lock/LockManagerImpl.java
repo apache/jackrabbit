@@ -43,6 +43,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.Item;
 import javax.jcr.Session;
+import javax.jcr.ItemNotFoundException;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -375,8 +376,9 @@ public class LockManagerImpl implements LockManager, SessionListener {
         // shortcut: check if a given state holds a lock, which has been
         // store in the lock map. see below (LockImpl) for the conditions that
         // must be met in order a lock can be stored.
-        if (lockMap.containsKey(nState)) {
-            return (LockImpl) lockMap.get(nState);
+        LockImpl l = getLockFromMap(nState);
+        if (l != null) {
+            return l;
         }
 
         LockState lState;
@@ -388,8 +390,9 @@ public class LockManagerImpl implements LockManager, SessionListener {
                 return null;
             } else {
                 // check lockMap again with the lockholding state
-                if (lockMap.containsKey(lockHoldingState)) {
-                    return (LockImpl) lockMap.get(lockHoldingState);
+                l = getLockFromMap(nState);
+                if (l != null) {
+                    return l;
                 }
                 lState = buildLockState(lockHoldingState);
             }
@@ -403,9 +406,8 @@ public class LockManagerImpl implements LockManager, SessionListener {
             // Test again if a Lock object is stored in the lockmap. Otherwise
             // build the lock object and retrieve lock holding node. note that this
             // may fail if the session does not have permission to see this node.
-            LockImpl lock;
-            if (lockMap.containsKey(lState.lockHoldingState)) {
-                lock = (LockImpl) lockMap.get(lState.lockHoldingState);
+            LockImpl lock = getLockFromMap(lState.lockHoldingState);
+            if (lock != null) {
                 lock.lockState.lockInfo = lState.lockInfo;
             } else {
                 Item lockHoldingNode = itemManager.getItem(lState.lockHoldingState.getHierarchyEntry());
@@ -423,6 +425,18 @@ public class LockManagerImpl implements LockManager, SessionListener {
         }
     }
 
+    private LockImpl getLockFromMap(NodeState nodeState) {
+        try {
+            LockImpl l = (LockImpl) lockMap.get(nodeState);
+            if (l != null && l.isLive()) {
+                return l;
+            }
+        } catch (RepositoryException e) {
+            // ignore
+        }
+        return null;
+    }
+    
     //----------------------------< Notification about modified lock-tokens >---
     /**
      * Notify all <code>Lock</code>s that have been accessed so far about the
@@ -545,15 +559,22 @@ public class LockManagerImpl implements LockManager, SessionListener {
         private void stopListening() {
             if (cacheBehaviour == CacheBehaviour.OBSERVATION) {
                 try {
-                    PropertyState ps = lockHoldingState.getPropertyState(QName.JCR_LOCKISDEEP);
-                    ps.removeListener(this);
-                } catch (RepositoryException e) {
-                    log.warn("Internal error", e);
+                    if (lockHoldingState.hasPropertyName(QName.JCR_LOCKISDEEP)) {
+                        PropertyState ps = lockHoldingState.getPropertyState(QName.JCR_LOCKISDEEP);
+                        ps.removeListener(this);
+                    }
+                } catch (ItemNotFoundException e) {
+                    log.debug("jcr:isDeep doesn't exist any more.");
+                } catch (Exception e) {
+                    log.warn(e.getMessage());
                 }
             }
         }
 
         //-------------------------------------< ItemStateLifeCycleListener >---
+        /**
+         * @see ItemStateLifeCycleListener#statusChanged(ItemState, int)
+         */
         public void statusChanged(ItemState state, int previousStatus) {
             if (!isLive) {
                 // since we only monitor the removal of the lock (by means
@@ -568,8 +589,9 @@ public class LockManagerImpl implements LockManager, SessionListener {
                     // a call to LockManager#unlock -> clean up and set isLive
                     // flag to false.
                     unlocked();
+                    break;
                default:
-                   // not interested (Todo correct?)
+                   // not interested
             }
         }
     }
@@ -582,6 +604,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
 
         private final LockState lockState;
         private final Node node;
+        private boolean reloadInfo = false; // TODO: find better solution
 
         /**
          *
@@ -599,10 +622,16 @@ public class LockManagerImpl implements LockManager, SessionListener {
                 lockMap.put(lockState.lockHoldingState, this);
                 lockState.startListening();
             } else if (isHoldBySession()) {
-                // TODO: TOBEFIXED. since another session may become lock-holder for
-                // an open-scoped lock, the map entry and the lock information
-                // stored therein may become outdated.
                 lockMap.put(lockState.lockHoldingState, this);
+                // open-scoped locks: the map entry and the lock information
+                // stored therein may become outdated if the token is transfered
+                // to another session -> info must be reloaded.
+                if (!isSessionScoped()) {
+                    reloadInfo = true;
+                }
+            } else {
+                // foreign lock: info must be reloaded.
+                reloadInfo = true;
             }
         }
 
@@ -631,6 +660,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
          * @see Lock#getLockToken()
          */
         public String getLockToken() {
+            updateLockInfo();
             return getLockInfo().getLockToken();
         }
 
@@ -638,6 +668,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
          * @see Lock#isLive()
          */
         public boolean isLive() throws RepositoryException {
+            updateLockInfo();
             return lockState.isLive;
         }
 
@@ -701,9 +732,31 @@ public class LockManagerImpl implements LockManager, SessionListener {
         }
 
         //--------------------------------------------------------< private >---
+        /**
+         * @return <code>LockInfo</code> stored within the <code>LockState</code>
+         */
         private LockInfo getLockInfo() {
             return lockState.lockInfo;
         }
+
+        /**
+         * Make sure the lock info is really up to date.
+         * TODO: find better solution.
+         */
+        private void updateLockInfo() {
+            if (reloadInfo) {
+                try {
+                    lockState.reloadLockInfo();
+                } catch (LockException e) {
+                    lockState.unlocked();
+                } catch (RepositoryException e) {
+                    log.error("Internal error", e);
+                }
+            } // else: nothing to do.
+        }
+        /**
+         * @return true if this lock is hold by this session. false otherwise.
+         */
         private boolean isHoldBySession() {
             return lockState.lockInfo.getLockToken() != null;
         }
