@@ -429,7 +429,7 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
      * property do not match. The exception has to be thrown either immediately
      * (by this method) or on save.
      */
-    public void testValueConstraintVioloationExceptionBecauseOfInvalidTypeParameter()
+    public void testValueConstraintViolationExceptionBecauseOfInvalidTypeParameter()
         throws NotExecutableException, RepositoryException {
 
         // locate a property definition of type string
@@ -466,7 +466,7 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
      * property do not match. The exception has to be thrown either immediately
      * (by this method) or on save.
      */
-    public void testStringConstraintVioloationExceptionBecauseOfInvalidTypeParameter()
+    public void testStringConstraintViolationExceptionBecauseOfInvalidTypeParameter()
         throws NotExecutableException, RepositoryException {
 
         // locate a property definition of type string
@@ -502,7 +502,7 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
      * parameter and the type of the property do not match. The exception has to
      * be thrown either immediately (by this method) or on save.
      */
-    public void testValuesConstraintVioloationExceptionBecauseOfInvalidTypeParameter()
+    public void testValuesConstraintViolationExceptionBecauseOfInvalidTypeParameter()
         throws NotExecutableException, RepositoryException {
 
         // locate a property definition of type string
