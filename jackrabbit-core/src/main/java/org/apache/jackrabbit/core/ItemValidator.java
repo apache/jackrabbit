@@ -71,7 +71,7 @@ public class ItemValidator {
      *
      * @param ntReg      node type registry
      * @param hierMgr    hierarchy manager
-     * @param nsResolver namespace resolver
+     * @param resolver   path resolver
      */
     public ItemValidator(NodeTypeRegistry ntReg,
                          HierarchyManager hierMgr,
