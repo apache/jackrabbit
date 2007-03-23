@@ -25,7 +25,6 @@ import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeConstants;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
 
 import javax.jcr.version.OnParentVersionAction;
 import javax.jcr.RepositoryException;
@@ -79,16 +78,6 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, NodeTypeCo
 
     /**
      *
-     * @param itemDefElement
-     * @param nsResolver
-     * @throws RepositoryException
-     */
-    QItemDefinitionImpl(Element itemDefElement, NamespaceResolver nsResolver) throws RepositoryException {
-         this(null, itemDefElement, nsResolver);
-    }
-
-    /**
-     *
      * @param declaringNodeType
      * @param itemDefElement
      * @param nsResolver
@@ -97,9 +86,9 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, NodeTypeCo
     QItemDefinitionImpl(QName declaringNodeType, Element itemDefElement, NamespaceResolver nsResolver)
         throws RepositoryException {
         try {
-            // TODO: webdav server sends jcr names -> nsResolver required. improve this.
-            if (DomUtil.hasChildElement(itemDefElement, DECLARINGNODETYPE_ATTRIBUTE, null)) {
-                QName dnt = NameFormat.parse(itemDefElement.getAttribute(DECLARINGNODETYPE_ATTRIBUTE), nsResolver);
+            String attr = itemDefElement.getAttribute(DECLARINGNODETYPE_ATTRIBUTE);
+            if (attr != null) {
+                QName dnt = NameFormat.parse(attr, nsResolver);
                 if (declaringNodeType != null && !declaringNodeType.equals(dnt)) {
                     throw new RepositoryException("Declaring nodetype mismatch: In element = '" + dnt + "', Declaring nodetype = '" + declaringNodeType + "'");
                 }
