@@ -103,7 +103,11 @@ public class NodeTest extends AbstractJCRTest {
      * Calls {@link javax.jcr.Node#getCorrespondingNodePath(String)} on  a node
      * that has no corresponding node in second workspace
      */
-    public void testGetCorrespondingNodePathItemNotFoundException() throws RepositoryException {
+    public void testGetCorrespondingNodePathItemNotFoundException() throws RepositoryException, NotExecutableException {
+      
+        // make sure the repository supports multiple workspaces
+        super.ensureMultipleWorkspacesSupported();
+      
         // get default workspace test root node using superuser session
         Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
 
@@ -126,7 +130,10 @@ public class NodeTest extends AbstractJCRTest {
      * Creates a node with same path in both workspaces to check if {@link
      * javax.jcr.Node#getCorrespondingNodePath(String)} works properly.
      */
-    public void testGetCorrespondingNodePath() throws RepositoryException {
+    public void testGetCorrespondingNodePath() throws RepositoryException, NotExecutableException {
+      
+        // make sure the repository supports multiple workspaces
+        super.ensureMultipleWorkspacesSupported();
 
         // get default workspace test root node using superuser session
         Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
@@ -160,7 +167,10 @@ public class NodeTest extends AbstractJCRTest {
      * a String property that can be modified in <code>javax.jcr.tck.nodetype</code>
      * for testing</li> </ul>
      */
-    public void testUpdateInvalidItemStateException() throws RepositoryException {
+    public void testUpdateInvalidItemStateException() throws RepositoryException, NotExecutableException {
+
+        // make sure the repository supports multiple workspaces
+        super.ensureMultipleWorkspacesSupported();
 
         // get default workspace test root node using superuser session
         Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
@@ -254,7 +264,11 @@ public class NodeTest extends AbstractJCRTest {
      * name of a String property that can be modified in
      * <code>javax.jcr.tck.nodetype</code> for testing</li> </ul>
      */
-    public void testUpdate() throws RepositoryException {
+    public void testUpdate() throws RepositoryException, NotExecutableException {
+
+        // make sure the repository supports multiple workspaces
+        super.ensureMultipleWorkspacesSupported();
+
         // get default workspace test root node using superuser session
         Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
 
