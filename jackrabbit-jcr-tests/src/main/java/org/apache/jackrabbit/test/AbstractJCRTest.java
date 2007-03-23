@@ -518,6 +518,20 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected boolean isSupported(String descriptorKey) throws RepositoryException {
         return "true".equals(helper.getRepository().getDescriptor(descriptorKey));
     }
+    
+    /**
+     * Checks that the repository supports multiple workspace, otherwise aborts with
+     * {@link NotExecutableException}.
+     * @throws NotExecutableException when the repository only supports a single
+     * workspace
+     */
+    protected void ensureMultipleWorkspacesSupported() throws RepositoryException, NotExecutableException {
+        String workspacenames[] = superuser.getWorkspace().getAccessibleWorkspaceNames();
+        if (workspacenames == null || workspacenames.length < 2) {
+            throw new NotExecutableException("This repository does not seem to support multiple workspaces.");
+        }
+    }
+    
 
     /**
      * Reverts any pending changes made by <code>s</code> and deletes any nodes
