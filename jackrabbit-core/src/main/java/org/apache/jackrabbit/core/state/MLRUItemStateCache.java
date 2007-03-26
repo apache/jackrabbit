@@ -139,8 +139,8 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
             cache.put(id, entry);
             totalMem += entry.size;
             shrinkIfRequired();
-            if (numWrites++%10000 == 0 && log.isDebugEnabled()) {
-                log.info(this + " size=" + cache.size() + ", " + totalMem + "/" + maxMem);
+            if (numWrites++ % 10000 == 0 && log.isDebugEnabled()) {
+                log.debug(this + " size=" + cache.size() + ", " + totalMem + "/" + maxMem);
             }
         }
     }
