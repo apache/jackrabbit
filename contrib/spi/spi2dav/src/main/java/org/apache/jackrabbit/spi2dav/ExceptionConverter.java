@@ -19,7 +19,11 @@ package org.apache.jackrabbit.spi2dav;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.client.methods.DavMethod;
+import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
+import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.commons.httpclient.methods.PutMethod;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.w3c.dom.Element;
@@ -42,6 +46,10 @@ public class ExceptionConverter {
     private ExceptionConverter() {}
 
     static RepositoryException generate(DavException davExc) throws RepositoryException {
+        return generate(davExc, null);
+    }
+
+    static RepositoryException generate(DavException davExc, DavMethod method) throws RepositoryException {
         String msg = davExc.getMessage();
         if (davExc.hasErrorCondition()) {
             try {
@@ -74,7 +82,16 @@ public class ExceptionConverter {
         // make sure an exception is generated
         switch (davExc.getErrorCode()) {
             // TODO: mapping DAV_error to jcr-exception is ambiguous. to be improved
-            case DavServletResponse.SC_NOT_FOUND : return new ItemNotFoundException(msg);
+            case DavServletResponse.SC_NOT_FOUND :
+                if (method != null && (method instanceof DeleteMethod ||
+                                       method instanceof MkColMethod ||
+                                       method instanceof PutMethod)) {
+                    // target item has probably while transient changes have
+                    // been made.
+                    throw new InvalidItemStateException(msg);
+                } else {
+                    return new ItemNotFoundException(msg);
+                }
             case DavServletResponse.SC_LOCKED : return new LockException(msg);
             case DavServletResponse.SC_METHOD_NOT_ALLOWED : return new ConstraintViolationException(msg);
             case DavServletResponse.SC_CONFLICT : return new InvalidItemStateException(msg);

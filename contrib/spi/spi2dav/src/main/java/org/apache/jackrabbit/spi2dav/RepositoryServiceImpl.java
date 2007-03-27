@@ -929,13 +929,16 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             batchImpl.dispose();
             return;
         }
+
+        DavMethod method = null;
         try {
             HttpClient client = batchImpl.start();
             boolean success = false;
+
             try {
                 Iterator it = batchImpl.methods();
                 while (it.hasNext()) {
-                    DavMethod method = (DavMethod) it.next();
+                    method = (DavMethod) it.next();
                     initMethod(method, batchImpl, true);
 
                     client.executeMethod(method);
@@ -952,7 +955,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
-            throw ExceptionConverter.generate(e);
+            throw ExceptionConverter.generate(e, method);
         } finally {
             batchImpl.dispose();
         }
@@ -966,6 +969,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         QName nodeName = new QName(QName.NS_DEFAULT_URI, UUID.randomUUID().toString());
         String uri = getItemUri(parentId, nodeName, sessionInfo);
         MkColMethod method = new MkColMethod(uri);
+        method.addRequestHeader(ItemResourceConstants.IMPORT_UUID_BEHAVIOR, Integer.valueOf(uuidBehaviour).toString());
         method.setRequestEntity(new InputStreamRequestEntity(xmlStream, "text/xml"));
         execute(method, sessionInfo);
     }
@@ -1249,7 +1253,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
 
             PropPatchMethod method = new PropPatchMethod(getItemUri(nodeId, sessionInfo), changeList);
-            // TODO: ev. evaluate response ??? change return type of RepositoryService.resolveMergeConflict()?
             execute(method, sessionInfo);
         } catch (IOException e) {
             throw new RepositoryException(e);
@@ -1759,14 +1762,17 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
         private HttpClient start() throws RepositoryException {
             checkConsumed();
+            String uri = getItemUri(targetId, sessionInfo);
             try {
-                String uri = getItemUri(targetId, sessionInfo);
                 // start special 'lock'
                 LockMethod method = new LockMethod(uri, TransactionConstants.LOCAL, TransactionConstants.TRANSACTION, null, DavConstants.INFINITE_TIMEOUT, true);
                 initMethod(method, sessionInfo, true);
 
                 HttpClient client = getClient(sessionInfo);
                 client.executeMethod(method);
+                if (method.getStatusCode() == DavServletResponse.SC_PRECONDITION_FAILED) {
+                    throw new InvalidItemStateException("Unable to persist transient changes.");
+                }
                 method.checkSuccess();
 
                 batchId = method.getLockToken();
@@ -1783,7 +1789,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             checkConsumed();
 
             String uri = getItemUri(targetId, sessionInfo);
-
             UnLockMethod method = null;
             try {
                 // make sure the lock initially created is removed again on the
