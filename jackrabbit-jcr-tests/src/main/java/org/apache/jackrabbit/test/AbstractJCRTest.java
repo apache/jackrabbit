@@ -26,8 +26,11 @@ import javax.jcr.NamespaceRegistry;
 import javax.jcr.Repository;
 import javax.jcr.NamespaceException;
 import javax.jcr.RangeIterator;
+import javax.jcr.Value;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NodeType;
+
 import java.util.StringTokenizer;
 import java.util.Random;
 import java.util.List;
@@ -529,6 +532,28 @@ public abstract class AbstractJCRTest extends JUnitTest {
         String workspacenames[] = superuser.getWorkspace().getAccessibleWorkspaceNames();
         if (workspacenames == null || workspacenames.length < 2) {
             throw new NotExecutableException("This repository does not seem to support multiple workspaces.");
+        }
+    }
+    
+    /**
+     * Checks that the repository can set the property to the required type, otherwise aborts with
+     * {@link NotExecutableException}.
+     * @throws NotExecutableException when setting the property to the required
+     * type is not supported
+     */
+    protected void ensureCanSetProperty(Node node, String propertyName, Value val) throws NotExecutableException, RepositoryException {
+        
+        boolean canSetIt = node.getPrimaryNodeType().canSetProperty(propertyName, val);
+        if (! canSetIt) {
+            // check mixins
+            NodeType mixins[] = node.getMixinNodeTypes();
+            for (int i = 0; i < mixins.length && !canSetIt; i++) {
+                canSetIt |= mixins[i].canSetProperty(propertyName, val);
+            }
+        }
+      
+        if (! canSetIt) {
+            throw new NotExecutableException("configured property name " + propertyName + " can not be set on node " + node.getPath());
         }
     }
     

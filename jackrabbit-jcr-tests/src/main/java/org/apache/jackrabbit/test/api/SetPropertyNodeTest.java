@@ -52,6 +52,10 @@ public class SetPropertyNodeTest extends AbstractJCRTest {
         */
         testRootNode.save();
 
+        // abort test if the repository does not allow setting
+        // reference properties on this node
+        ensureCanSetProperty(testNode, propertyName1, testNode.getSession().getValueFactory().createValue(n1));
+
         if (!n1.isNodeType(mixReferenceable)) {
             throw new NotExecutableException("Node " + nodeName2 + " with nodetype " + testNodeType + " is not mix:referenceable.");
         }
