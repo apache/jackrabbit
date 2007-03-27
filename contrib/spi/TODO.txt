@@ -21,6 +21,10 @@ Known Issues and TODOs SPI
 Known Issues and TODOs with jcr2spi
 --------------------------------------------------------------------------------
 
+- BUG: CacheBehaviour.OBSERVATION doesn't work properly
+
+- BUG: Observation: filtering events by nodetype, uuid doesn't work
+
 - IMPROVE: Replace ItemState-duality by copy on write behaviour
 
 - IMPROVE: AddNode 
