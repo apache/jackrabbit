@@ -40,6 +40,10 @@ public class SetPropertyDoubleTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         super.setUp();
         testNode = testRootNode.addNode(nodeName1, testNodeType);
+
+        // abort test if the repository does not allow setting
+        // double properties on this node
+        ensureCanSetProperty(testNode, propertyName1, testNode.getSession().getValueFactory().createValue(0.0d));
     }
 
     /**
