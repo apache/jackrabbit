@@ -63,6 +63,10 @@ public class SetValueDoubleTest extends AbstractJCRTest {
         // create a new node under the testRootNode
         node = testRootNode.addNode(nodeName1, testNodeType);
 
+        // abort test if the repository does not allow setting
+        // double properties on this node
+        ensureCanSetProperty(node, propertyName1, node.getSession().getValueFactory().createValue(0.0d));
+
         // create a new single-value property and save it
         property1 = node.setProperty(propertyName1, 0.0d);
         superuser.save();
