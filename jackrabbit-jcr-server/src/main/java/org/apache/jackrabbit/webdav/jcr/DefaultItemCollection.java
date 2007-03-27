@@ -380,14 +380,23 @@ public class DefaultItemCollection extends AbstractItemResource
                     n.addNode(memberName);
                 } else {
                     // MKCOL, which is not allowed for existing resources
+                    int uuidBehavior = ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
+                    String str = inputContext.getProperty(IMPORT_UUID_BEHAVIOR);
+                    if (str != null) {
+                        try {
+                            uuidBehavior = Integer.parseInt(str);
+                        } catch (NumberFormatException e) {
+                            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
+                        }
+                    }
                     if (getTransactionId() == null) {
                         // if not part of a transaction directely import on workspace
                         // since changes would be explicitely saved in the
                         // complete-call.
-                        getRepositorySession().getWorkspace().importXML(itemPath, in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+                        getRepositorySession().getWorkspace().importXML(itemPath, in, uuidBehavior);
                     } else {
                         // changes will not be persisted unless the tx is completed.
-                        getRepositorySession().importXML(itemPath, in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+                        getRepositorySession().importXML(itemPath, in, uuidBehavior);
                     }
                 }
             } else {

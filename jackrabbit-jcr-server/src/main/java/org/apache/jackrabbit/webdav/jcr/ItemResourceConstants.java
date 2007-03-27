@@ -57,6 +57,8 @@ public interface ItemResourceConstants {
      */
     public static final Namespace NAMESPACE = Namespace.getNamespace("dcr", "http://www.day.com/jcr/webdav/1.0");
 
+    public static final String IMPORT_UUID_BEHAVIOR = "ImportUUIDBehavior";
+
     // xml element names
     public static final String XML_PRIMARYNODETYPE = "primarynodetype";
     public static final String XML_VALUE = "value";
