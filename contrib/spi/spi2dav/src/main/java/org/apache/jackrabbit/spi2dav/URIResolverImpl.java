@@ -104,8 +104,8 @@ class URIResolverImpl implements URIResolver {
         return getWorkspaceUri(workspaceName) + Text.escapePath(ItemResourceConstants.ROOT_ITEM_RESOURCEPATH);
     }
 
-    String getItemUri(ItemId itemId, String workspaceName,
-                      SessionInfo sessionInfo) throws RepositoryException {
+    String getItemUri(ItemId itemId, String workspaceName, SessionInfo sessionInfo)
+            throws RepositoryException {
         IdURICache cache = getCache(workspaceName);
         // check if uri is available from cache
         if (cache.containsItemId(itemId)) {
