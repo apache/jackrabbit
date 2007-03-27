@@ -49,7 +49,11 @@ public class SessionProviderImpl implements SessionProvider {
                               String workspace)
         throws LoginException, RepositoryException, ServletException {
         Credentials creds = cp.getCredentials(request);
-        return repository.login(creds, workspace);
+        if (creds == null) {
+            return repository.login(workspace);
+        } else {
+            return repository.login(creds, workspace);
+        }
     }
 
     /**
