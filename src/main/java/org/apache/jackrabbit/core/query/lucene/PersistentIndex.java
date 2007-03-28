@@ -42,7 +42,7 @@ class PersistentIndex extends AbstractIndex {
     private static final String WRITE_LOCK = IndexWriter.WRITE_LOCK_NAME;
 
     /** Name of the commit lock file */
-    private static final String COMMIT_LOCK = IndexWriter.COMMIT_LOCK_NAME;
+    private static final String COMMIT_LOCK = "commit.lock";
 
     /** The name of this persistent index */
     private final String name;
