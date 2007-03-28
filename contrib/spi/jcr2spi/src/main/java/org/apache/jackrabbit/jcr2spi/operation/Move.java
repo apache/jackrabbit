@@ -20,7 +20,6 @@ import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -82,22 +81,19 @@ public class Move extends AbstractOperation {
      * modification. Otherwise, the moved state as well as both parent states
      * are invalidated.
      *
-     * @see Operation#persisted(CacheBehaviour)
-     * @param cacheBehaviour
+     * @see Operation#persisted()
      */
-    public void persisted(CacheBehaviour cacheBehaviour) {
-        if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
-            // non-recursive invalidation
-            try {
-                srcState.getNodeEntry().move(destName, destParentState.getNodeEntry(), false);
-                // TODO: TOBEFIXED. moved state ev. got a new definition.
-            } catch (RepositoryException e) {
-                // should not occure
-                log.error("Internal error", e);
-                srcParentState.getHierarchyEntry().invalidate(false);
-                destParentState.getHierarchyEntry().invalidate(false);
-                srcState.getHierarchyEntry().invalidate(false);
-            }
+    public void persisted() {
+        // non-recursive invalidation
+        try {
+            srcState.getNodeEntry().move(destName, destParentState.getNodeEntry(), false);
+            // TODO: TOBEFIXED. moved state ev. got a new definition.
+        } catch (RepositoryException e) {
+            // should not occure
+            log.error("Internal error", e);
+            srcParentState.getHierarchyEntry().invalidate(false);
+            destParentState.getHierarchyEntry().invalidate(false);
+            srcState.getHierarchyEntry().invalidate(false);
         }
     }
     //----------------------------------------< Access Operation Parameters >---

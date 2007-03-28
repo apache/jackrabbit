@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.NodeId;
@@ -64,25 +63,22 @@ public class Restore extends AbstractOperation {
      * invalidated, otherwise the given <code>NodeState</code> that has been
      * updated and all its decendants.
      *
-     * @see Operation#persisted(CacheBehaviour)
-     * @param cacheBehaviour
+     * @see Operation#persisted()
      */
-    public void persisted(CacheBehaviour cacheBehaviour) {
-        if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
-            NodeEntry entry;
-            if (nodeState == null || removeExisting) {
-                // invalidate the complete tree
-                // -> start searching root-entry from any version-entry or
-                //    from the given nodestate
-                entry = (nodeState == null) ? versionStates[0].getNodeEntry() : nodeState.getNodeEntry();
-                while (entry.getParent() != null) {
-                    entry = entry.getParent();
-                }
-            } else {
-                entry = nodeState.getNodeEntry();
+    public void persisted() {
+        NodeEntry entry;
+        if (nodeState == null || removeExisting) {
+            // invalidate the complete tree
+            // -> start searching root-entry from any version-entry or
+            //    from the given nodestate
+            entry = (nodeState == null) ? versionStates[0].getNodeEntry() : nodeState.getNodeEntry();
+            while (entry.getParent() != null) {
+                entry = entry.getParent();
             }
-            entry.invalidate(true);
+        } else {
+            entry = nodeState.getNodeEntry();
         }
+        entry.invalidate(true);
     }
     //----------------------------------------< Access Operation Parameters >---
 

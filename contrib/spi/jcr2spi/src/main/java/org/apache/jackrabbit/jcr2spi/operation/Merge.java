@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.NodeId;
@@ -66,18 +65,15 @@ public class Merge extends AbstractOperation {
     /**
      * Invalidates the target nodestate and all descendants.
      *
-     * @see Operation#persisted(CacheBehaviour)
-     * @param cacheBehaviour
+     * @see Operation#persisted()
      */
-    public void persisted(CacheBehaviour cacheBehaviour) {
-        if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
-            try {
-                mgr.getVersionHistoryNodeState(nodeState).invalidate(true);
-            } catch (RepositoryException e) {
-                log.warn("Error while retrieving VersionHistory state:", e.getMessage());
-            }
-            nodeState.getHierarchyEntry().invalidate(true);
+    public void persisted() {
+        try {
+            mgr.getVersionHistoryNodeState(nodeState).invalidate(true);
+        } catch (RepositoryException e) {
+            log.warn("Error while retrieving VersionHistory state:", e.getMessage());
         }
+        nodeState.getHierarchyEntry().invalidate(true);
     }
 
     //----------------------------------------< Access Operation Parameters >---

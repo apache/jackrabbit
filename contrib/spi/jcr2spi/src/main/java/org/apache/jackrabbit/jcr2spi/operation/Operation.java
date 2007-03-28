@@ -23,7 +23,6 @@ import javax.jcr.ItemExistsException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 
 import javax.jcr.version.VersionException;
 import java.util.Collection;
@@ -58,5 +57,5 @@ public interface Operation {
     /**
      * Informs this Operation that it has been successfully executed.
      */
-    public void persisted(CacheBehaviour cacheBehaviour);
+    public void persisted();
 }

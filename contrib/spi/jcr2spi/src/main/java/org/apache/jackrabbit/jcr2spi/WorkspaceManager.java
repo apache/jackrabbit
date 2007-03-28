@@ -465,8 +465,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             the HierarchyEventListener.
             */
             new OperationVisitorImpl(sessionInfo).execute(operation);
-            // TODO: remove parameter CacheBehaviour
-            operation.persisted(CacheBehaviour.INVALIDATE);
+            operation.persisted();
         } finally {
             updateSync.release();
         }

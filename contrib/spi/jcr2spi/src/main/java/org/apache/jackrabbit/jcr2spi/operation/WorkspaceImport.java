@@ -1,7 +1,6 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.spi.NodeId;
 
@@ -47,25 +46,22 @@ public class WorkspaceImport extends AbstractOperation {
      * Invalidates the <code>NodeState</code> that has been updated and all
      * its decendants.
      *
-     * @see Operation#persisted(CacheBehaviour)
-     * @param cacheBehaviour
+     * @see Operation#persisted()
      */
-    public void persisted(CacheBehaviour cacheBehaviour) {
-        if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
-            NodeEntry entry;
-            if (uuidBehaviour == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING ||
+    public void persisted() {
+        NodeEntry entry;
+        if (uuidBehaviour == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING ||
                 uuidBehaviour == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING) {
-                // invalidate the complete tree
-                entry = nodeState.getNodeEntry();
-                while (entry.getParent() != null) {
-                    entry = entry.getParent();
-                }
-                entry.invalidate(true);
-            } else {
-                // import only added new items below the import target. therefore
-                // recursive invalidation is not required. // TODO correct?
-                nodeState.getNodeEntry().invalidate(false);
+            // invalidate the complete tree
+            entry = nodeState.getNodeEntry();
+            while (entry.getParent() != null) {
+                entry = entry.getParent();
             }
+            entry.invalidate(true);
+        } else {
+            // import only added new items below the import target. therefore
+            // recursive invalidation is not required. // TODO correct?
+            nodeState.getNodeEntry().invalidate(false);
         }
     }
 
