@@ -262,6 +262,11 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 root.addSelectProperty(node.getName());
                 return data;
             }
+
+            public Object visit(ASTExcerptFunction node, Object data) {
+                root.addSelectProperty(new QName(QName.NS_REP_URI, "excerpt(.)"));
+                return data;
+            }
         }, root);
 
         return data;
@@ -538,6 +543,11 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         }
         parent.addOperand(new PropertyFunctionQueryNode(parent, PropertyFunctionQueryNode.UPPER_CASE));
         return parent;
+    }
+
+    public Object visit(ASTExcerptFunction node, Object data) {
+        // do nothing
+        return data;
     }
 
     //------------------------< internal >--------------------------------------

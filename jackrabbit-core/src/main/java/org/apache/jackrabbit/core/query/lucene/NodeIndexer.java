@@ -42,6 +42,7 @@ import javax.jcr.RepositoryException;
 
 import java.io.InputStream;
 import java.io.Reader;
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.Set;
@@ -78,6 +79,12 @@ public class NodeIndexer {
     protected final TextExtractor extractor;
 
     /**
+     * If set to <code>true</code> the fulltext field is stored and and a term
+     * vector is created with offset information.
+     */
+    protected boolean supportHighlighting = false;
+
+    /**
      * Creates a new node indexer.
      *
      * @param node          the node state to index.
@@ -101,6 +108,16 @@ public class NodeIndexer {
      */
     public NodeId getNodeId() {
         return node.getNodeId();
+    }
+
+    /**
+     * If set to <code>true</code> additional information is stored in the index
+     * to support highlighting using the rep:excerpt pseudo property.
+     *
+     * @param b <code>true</code> to enable highlighting support.
+     */
+    public void setSupportHighlighting(boolean b) {
+        supportHighlighting = b;
     }
 
     /**
@@ -276,7 +293,7 @@ public class NodeIndexer {
                 InputStream stream =
                         ((BLOBFileValue) internalValue).getStream();
                 Reader reader = extractor.extractText(stream, type, encoding);
-                doc.add(new Field(FieldNames.FULLTEXT, reader));
+                doc.add(createFulltextField(reader));
             }
         } catch (Exception e) {
             // TODO: How to recover from a transient indexing failure?
@@ -458,11 +475,7 @@ public class NodeIndexer {
                 Field.TermVector.NO));
         if (tokenized) {
             // also create fulltext index of this value
-            doc.add(new Field(FieldNames.FULLTEXT,
-                    stringValue,
-                    Field.Store.NO,
-                    Field.Index.TOKENIZED,
-                    Field.TermVector.NO));
+            doc.add(createFulltextField(stringValue));
             // create fulltext index on property
             int idx = fieldName.indexOf(':');
             fieldName = fieldName.substring(0, idx + 1)
@@ -498,5 +511,61 @@ public class NodeIndexer {
                 Field.Store.NO,
                 Field.Index.UN_TOKENIZED,
                 Field.TermVector.NO));
+    }
+
+    /**
+     * Creates a fulltext field for the string <code>value</code>.
+     *
+     * @param value the string value.
+     * @return a lucene field.
+     */
+    protected Field createFulltextField(String value) {
+        if (supportHighlighting) {
+            // store field compressed if greater than 16k
+            Field.Store stored;
+            if (value.length() > 0x4000) {
+                stored = Field.Store.COMPRESS;
+            } else {
+                stored = Field.Store.YES;
+            }
+            return new Field(FieldNames.FULLTEXT, value, stored,
+                    Field.Index.TOKENIZED, Field.TermVector.WITH_OFFSETS);
+        } else {
+            return new Field(FieldNames.FULLTEXT, value,
+                    Field.Store.NO, Field.Index.TOKENIZED);
+        }
+    }
+
+    /**
+     * Creates a fulltext field for the reader <code>value</code>.
+     *
+     * @param value the reader value.
+     * @return a lucene field.
+     */
+    protected Field createFulltextField(Reader value) {
+        if (supportHighlighting) {
+            // need to create a string value
+            StringBuffer textExtract = new StringBuffer();
+            char[] buffer = new char[1024];
+            int len;
+            try {
+                while ((len = value.read(buffer)) > -1) {
+                    textExtract.append(buffer, 0, len);
+                }
+            } catch (IOException e) {
+                log.warn("Exception reading value for fulltext field: " +
+                        e.getMessage());
+                log.debug("Dump:", e);
+            } finally {
+                try {
+                    value.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
+            return createFulltextField(textExtract.toString());
+        } else {
+            return new Field(FieldNames.FULLTEXT, value);
+        }
     }
 }
