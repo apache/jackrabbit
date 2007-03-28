@@ -541,14 +541,14 @@ public abstract class AbstractJCRTest extends JUnitTest {
      * @throws NotExecutableException when setting the property to the required
      * type is not supported
      */
-    protected void ensureCanSetProperty(Node node, String propertyName, Value val) throws NotExecutableException, RepositoryException {
+    protected void ensureCanSetProperty(Node node, String propertyName, Value value) throws NotExecutableException, RepositoryException {
         
-        boolean canSetIt = node.getPrimaryNodeType().canSetProperty(propertyName, val);
+        boolean canSetIt = node.getPrimaryNodeType().canSetProperty(propertyName, value);
         if (! canSetIt) {
             // check mixins
             NodeType mixins[] = node.getMixinNodeTypes();
             for (int i = 0; i < mixins.length && !canSetIt; i++) {
-                canSetIt |= mixins[i].canSetProperty(propertyName, val);
+                canSetIt |= mixins[i].canSetProperty(propertyName, value);
             }
         }
       
@@ -557,6 +557,27 @@ public abstract class AbstractJCRTest extends JUnitTest {
         }
     }
     
+    /**
+     * Checks that the repository can set the property to the required type, otherwise aborts with
+     * {@link NotExecutableException}.
+     * @throws NotExecutableException when setting the property to the required
+     * type is not supported
+     */
+    protected void ensureCanSetProperty(Node node, String propertyName, Value[] values) throws NotExecutableException, RepositoryException {
+      
+        boolean canSetIt = node.getPrimaryNodeType().canSetProperty(propertyName, values);
+        if (! canSetIt) {
+            // check mixins
+            NodeType mixins[] = node.getMixinNodeTypes();
+            for (int i = 0; i < mixins.length && !canSetIt; i++) {
+                canSetIt |= mixins[i].canSetProperty(propertyName, values);
+            }
+        }
+      
+        if (! canSetIt) {
+            throw new NotExecutableException("configured property name " + propertyName + " can not be set on node " + node.getPath());
+        }
+    }
 
     /**
      * Reverts any pending changes made by <code>s</code> and deletes any nodes

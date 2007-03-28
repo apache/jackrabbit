@@ -17,8 +17,10 @@
 package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.*;
+import javax.jcr.nodetype.ConstraintViolationException;
 
 /**
  * <code>ReferencesTest</code> contains the test cases for the references.
@@ -33,15 +35,31 @@ public class ReferencesTest extends AbstractJCRTest {
     /**
      * Tests Node.getReferences()
      */
-    public void testReferences() throws RepositoryException {
+    public void testReferences() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixReferenceable);
+        try {
+            n1.addMixin(mixReferenceable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be present in the node type
+        }
+
         // with some impls. the mixin type has only affect upon save
         testRootNode.save();
 
+        // make sure the node is now referenceable
+        assertTrue("test node should be mix:referenceable", n1.isNodeType(mixReferenceable));
+        
         // create references: n2.p1 -> n1
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
-        Property p1 = n2.setProperty(propertyName1, new Value[]{superuser.getValueFactory().createValue(n1)});
+        
+        Value[] values = new Value[]{superuser.getValueFactory().createValue(n1)};
+        
+        // abort test if the repository does not allow setting
+        // reference properties on this node
+        ensureCanSetProperty(n2, propertyName1, values);
+        
+        Property p1 = n2.setProperty(propertyName1, values);
         testRootNode.save();
         PropertyIterator iter = n1.getReferences();
         if (iter.hasNext()) {
@@ -97,14 +115,28 @@ public class ReferencesTest extends AbstractJCRTest {
     /**
      * Tests Property.getNode();
      */
-    public void testReferenceTarget() throws RepositoryException {
+    public void testReferenceTarget() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixReferenceable);
+        try {
+            n1.addMixin(mixReferenceable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be present in the node type
+        }
+        
         // with some impls. the mixin type has only affect upon save
         testRootNode.save();
 
+        // make sure the node is now referenceable
+        assertTrue("test node should be mix:referenceable", n1.isNodeType(mixReferenceable));
+
         // create references: n2.p1 -> n1
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
+
+        // abort test if the repository does not allow setting
+        // reference properties on this node
+        ensureCanSetProperty(n2, propertyName1, n2.getSession().getValueFactory().createValue(n1));
+
         n2.setProperty(propertyName1, n1);
         testRootNode.save();
         assertEquals("Wrong reference target.", n2.getProperty(propertyName1).getNode(), n1);
@@ -115,16 +147,32 @@ public class ReferencesTest extends AbstractJCRTest {
     /**
      * Tests changing a reference property
      */
-    public void testAlterReference() throws RepositoryException {
+    public void testAlterReference() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixReferenceable);
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
-        n2.addMixin(mixReferenceable);
+
+        try {
+            n1.addMixin(mixReferenceable);
+            n2.addMixin(mixReferenceable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be present in the node type
+        }
+
         // with some impls. the mixin type has only affect upon save
         testRootNode.save();
 
+        // make sure the nodes are now referenceable
+        assertTrue("test node should be mix:referenceable", n1.isNodeType(mixReferenceable));
+        assertTrue("test node should be mix:referenceable", n2.isNodeType(mixReferenceable));
+
         // create references: n3.p1 -> n1
         Node n3 = testRootNode.addNode(nodeName3, testNodeType);
+
+        // abort test if the repository does not allow setting
+        // reference properties on this node
+        ensureCanSetProperty(n3, propertyName1, n3.getSession().getValueFactory().createValue(n1));
+
         n3.setProperty(propertyName1, n1);
         testRootNode.save();
         assertEquals("Wrong reference target.", n3.getProperty(propertyName1).getNode(), n1);
