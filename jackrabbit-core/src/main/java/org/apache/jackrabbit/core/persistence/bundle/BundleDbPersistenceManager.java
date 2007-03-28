@@ -413,8 +413,8 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         } else if (metaData.storesUpperCaseIdentifiers()) {
             tableName = tableName.toUpperCase();
         }
-
-        ResultSet rs = metaData.getTables(null, null, tableName, null);
+        String userName = metaData.getUserName();
+        ResultSet rs = metaData.getTables(null, userName, tableName, null);
         boolean schemaExists;
         try {
             schemaExists = rs.next();
