@@ -43,6 +43,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
 import org.apache.commons.collections.iterators.AbstractIteratorDecorator;
 
 import javax.jcr.RepositoryException;
@@ -222,6 +223,19 @@ public class SearchIndex extends AbstractQueryHandler {
      * Default value is: {@link Integer#MAX_VALUE}.
      */
     private int resultFetchSize = Integer.MAX_VALUE;
+
+    /**
+     * If set to <code>true</code> the fulltext field is stored and and a term
+     * vector is created with offset information.
+     * <p/>
+     * Default value is: <code>false</code>.
+     */
+    private boolean supportHighlighting = false;
+
+    /**
+     * The excerpt provider class. Implements {@link ExcerptProvider}.
+     */
+    private Class excerptProviderClass = DefaultXMLExcerpt.class;
 
     /**
      * Indicates if this <code>SearchIndex</code> is closed and cannot be used
@@ -418,22 +432,9 @@ public class SearchIndex extends AbstractQueryHandler {
                                   QName[] orderProps,
                                   boolean[] orderSpecs) throws IOException {
         checkOpen();
-        QueryHandler parentHandler = getContext().getParentHandler();
-        IndexReader parentReader = null;
-        if (parentHandler instanceof SearchIndex) {
-            parentReader = ((SearchIndex) parentHandler).index.getIndexReader();
-        }
-
         SortField[] sortFields = createSortFields(orderProps, orderSpecs);
 
-        IndexReader reader = index.getIndexReader();
-        if (parentReader != null) {
-            // todo FIXME not type safe
-            CachingMultiReader[] readers = {(CachingMultiReader) reader,
-                                            (CachingMultiReader) parentReader};
-            reader = new CombinedIndexReader(readers);
-        }
-
+        IndexReader reader = getIndexReader();
         IndexSearcher searcher = new IndexSearcher(reader);
         Hits hits;
         if (sortFields.length > 0) {
@@ -442,6 +443,27 @@ public class SearchIndex extends AbstractQueryHandler {
             hits = searcher.search(query);
         }
         return new QueryHits(hits, reader);
+    }
+
+    /**
+     * Creates an excerpt provider for the given <code>query</code>.
+     *
+     * @param query the query.
+     * @return an excerpt provider for the given <code>query</code>.
+     * @throws IOException if the provider cannot be created.
+     */
+    public ExcerptProvider createExcerptProvider(Query query)
+            throws IOException {
+        ExcerptProvider ep;
+        try {
+            ep = (ExcerptProvider) excerptProviderClass.newInstance();
+        } catch (Exception e) {
+            IOException ex = new IOException();
+            ex.initCause(e);
+            throw ex;
+        }
+        ep.init(query, this);
+        return ep;
     }
 
     /**
@@ -467,6 +489,31 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public NamespaceMappings getNamespaceMappings() {
         return index.getNamespaceMappings();
+    }
+
+    /**
+     * Returns an index reader for this search index. The caller of this method
+     * is responsible for closing the index reader when he is finished using
+     * it.
+     *
+     * @return an index reader for this search index.
+     * @throws IOException the index reader cannot be obtained.
+     */
+    public IndexReader getIndexReader() throws IOException {
+        QueryHandler parentHandler = getContext().getParentHandler();
+        IndexReader parentReader = null;
+        if (parentHandler instanceof SearchIndex) {
+            parentReader = ((SearchIndex) parentHandler).index.getIndexReader();
+        }
+
+        IndexReader reader = index.getIndexReader();
+        if (parentReader != null) {
+            // todo FIXME not type safe
+            CachingMultiReader[] readers = {(CachingMultiReader) reader,
+                                            (CachingMultiReader) parentReader};
+            reader = new CombinedIndexReader(readers);
+        }
+        return reader;
     }
 
     /**
@@ -513,8 +560,10 @@ public class SearchIndex extends AbstractQueryHandler {
     protected Document createDocument(NodeState node,
                                       NamespaceMappings nsMappings)
             throws RepositoryException {
-        return new NodeIndexer(node, getContext().getItemStateManager(),
-                nsMappings, extractor).createDoc();
+        NodeIndexer indexer = new NodeIndexer(node,
+                getContext().getItemStateManager(), nsMappings, extractor);
+        indexer.setSupportHighlighting(supportHighlighting);
+        return indexer.createDoc();
     }
 
     /**
@@ -934,6 +983,52 @@ public class SearchIndex extends AbstractQueryHandler {
         return extractorTimeout;
     }
 
+    /**
+     * If set to <code>true</code> additional information is stored in the index
+     * to support highlighting using the rep:excerpt pseudo property.
+     *
+     * @param b <code>true</code> to enable highlighting support.
+     */
+    public void setSupportHighlighting(boolean b) {
+        supportHighlighting = b;
+    }
+
+    /**
+     * @return <code>true</code> if highlighting support is enabled.
+     */
+    public boolean getSupportHighlighting() {
+        return supportHighlighting;
+    }
+
+    /**
+     * Sets the class name for the {@link ExcerptProvider} that should be used
+     * for the rep:excerpt pseudo property in a query.
+     *
+     * @param className the name of a class that implements {@link
+     *                  ExcerptProvider}.
+     */
+    public void setExcerptProviderClass(String className) {
+        try {
+            Class clazz = Class.forName(className);
+            if (ExcerptProvider.class.isAssignableFrom(clazz)) {
+                excerptProviderClass = clazz;
+            } else {
+                log.warn("Invalid value for excerptProviderClass, {} does " +
+                        "not implement ExcerptProvider interface.", className);
+            }
+        } catch (ClassNotFoundException e) {
+            log.warn("Invalid value for excerptProviderClass, class {} not " +
+                    "found.", className);
+        }
+    }
+
+    /**
+     * @return the class name of the excerpt provider implementation.
+     */
+    public String getExcerptProviderClass() {
+        return excerptProviderClass.getName();
+    }
+
     //----------------------------< internal >----------------------------------
 
     /**
@@ -945,6 +1040,6 @@ public class SearchIndex extends AbstractQueryHandler {
     private void checkOpen() throws IOException {
         if (closed) {
             throw new IOException("query handler closed and cannot be used anymore.");
-}
+        }
     }
 }

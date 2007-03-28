@@ -97,4 +97,8 @@ class DefaultParserVisitor implements JCRSQLParserVisitor {
     public Object visit(ASTUpperFunction node, Object data) {
         return data;
     }
+
+    public Object visit(ASTExcerptFunction node, Object data) {
+        return data;
+    }
 }

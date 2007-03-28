@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Implements a lucene <code>Query</code> which returns the child nodes of the
@@ -119,6 +120,13 @@ class ChildAxisQuery extends Query {
      */
     protected Weight createWeight(Searcher searcher) {
         return new ChildAxisWeight(searcher);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void extractTerms(Set terms) {
+        contextQuery.extractTerms(terms);
     }
 
     /**

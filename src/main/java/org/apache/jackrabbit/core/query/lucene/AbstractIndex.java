@@ -221,8 +221,8 @@ abstract class AbstractIndex {
         }
         if (indexWriter == null) {
             indexWriter = new IndexWriter(getDirectory(), analyzer, false);
-			// since lucene 2.0 setMaxBuffereDocs is equivalent to previous minMergeDocs attribute
-			indexWriter.setMaxBufferedDocs(minMergeDocs);
+            // since lucene 2.0 setMaxBuffereDocs is equivalent to previous minMergeDocs attribute
+            indexWriter.setMaxBufferedDocs(minMergeDocs);
             indexWriter.setMaxMergeDocs(maxMergeDocs);
             indexWriter.setMergeFactor(mergeFactor);
             indexWriter.setMaxFieldLength(maxFieldLength);
@@ -335,26 +335,9 @@ abstract class AbstractIndex {
             for (Enumeration fields = doc.fields(); fields.hasMoreElements(); ) {
                 Field f = (Field) fields.nextElement();
                 Field field = null;
-                Field.TermVector tv;
-                if (f.isTermVectorStored()) {
-                    tv = Field.TermVector.YES;
-                } else {
-                    tv = Field.TermVector.NO;
-                }
-                Field.Store stored;
-                if (f.isStored()) {
-                    stored = Field.Store.YES;
-                } else {
-                    stored = Field.Store.NO;
-                }
-                Field.Index indexed;
-                if (!f.isIndexed()) {
-                    indexed = Field.Index.NO;
-                } else if (f.isTokenized()) {
-                    indexed = Field.Index.TOKENIZED;
-                } else {
-                    indexed = Field.Index.UN_TOKENIZED;
-                }
+                Field.TermVector tv = getTermVectorParameter(f);
+                Field.Store stored = getStoreParameter(f);
+                Field.Index indexed = getIndexParameter(f);
                 if (f.readerValue() != null) {
                     // replace all readers with empty string reader
                     field = new Field(f.name(), new StringReader(""), tv);
@@ -365,6 +348,7 @@ abstract class AbstractIndex {
                     field = new Field(f.name(), f.binaryValue(), stored);
                 }
                 if (field != null) {
+                    field.setOmitNorms(f.getOmitNorms());
                     copy.add(field);
                 }
             }
@@ -399,8 +383,8 @@ abstract class AbstractIndex {
     void setMinMergeDocs(int minMergeDocs) {
         this.minMergeDocs = minMergeDocs;
         if (indexWriter != null) {
-			// since lucene 2.0 setMaxBuffereDocs is equivalent to previous minMergeDocs attribute
-			indexWriter.setMaxBufferedDocs(minMergeDocs);
+            // since lucene 2.0 setMaxBuffereDocs is equivalent to previous minMergeDocs attribute
+            indexWriter.setMaxBufferedDocs(minMergeDocs);
         }
     }
 
@@ -431,6 +415,60 @@ abstract class AbstractIndex {
         this.maxFieldLength = maxFieldLength;
         if (indexWriter != null) {
             indexWriter.setMaxFieldLength(maxFieldLength);
+        }
+    }
+
+    //------------------------------< internal >--------------------------------
+
+    /**
+     * Returns the index parameter set on <code>f</code>.
+     *
+     * @param f a lucene field.
+     * @return the index parameter on <code>f</code>.
+     */
+    private Field.Index getIndexParameter(Field f) {
+        if (!f.isIndexed()) {
+            return Field.Index.NO;
+        } else if (f.isTokenized()) {
+            return Field.Index.TOKENIZED;
+        } else {
+            return Field.Index.UN_TOKENIZED;
+        }
+    }
+
+    /**
+     * Returns the store parameter set on <code>f</code>.
+     *
+     * @param f a lucene field.
+     * @return the store parameter on <code>f</code>.
+     */
+    private Field.Store getStoreParameter(Field f) {
+        if (f.isCompressed()) {
+            return Field.Store.COMPRESS;
+        } else if (f.isStored()) {
+            return Field.Store.YES;
+        } else {
+            return Field.Store.NO;
+        }
+    }
+
+    /**
+     * Returns the term vector parameter set on <code>f</code>.
+     *
+     * @param f a lucene field.
+     * @return the term vector parameter on <code>f</code>.
+     */
+    private Field.TermVector getTermVectorParameter(Field f) {
+        if (f.isStorePositionWithTermVector() && f.isStoreOffsetWithTermVector()) {
+            return Field.TermVector.WITH_POSITIONS_OFFSETS;
+        } else if (f.isStorePositionWithTermVector()) {
+            return Field.TermVector.WITH_POSITIONS;
+        } else if (f.isStoreOffsetWithTermVector()) {
+            return Field.TermVector.WITH_OFFSETS;
+        } else if (f.isTermVectorStored()) {
+            return Field.TermVector.YES;
+        } else {
+            return Field.TermVector.NO;
         }
     }
 

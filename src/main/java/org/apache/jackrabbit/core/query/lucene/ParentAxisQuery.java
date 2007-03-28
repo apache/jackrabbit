@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.util.BitSet;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Set;
 
 /**
  * <code>ParentAxisQuery</code> selects the parent nodes of a context query.
@@ -79,6 +80,13 @@ class ParentAxisQuery extends Query {
      */
     protected Weight createWeight(Searcher searcher) {
         return new ParentAxisWeight(searcher);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void extractTerms(Set terms) {
+        contextQuery.extractTerms(terms);
     }
 
     /**

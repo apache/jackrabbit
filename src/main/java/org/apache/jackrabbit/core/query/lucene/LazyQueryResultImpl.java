@@ -120,6 +120,11 @@ public class LazyQueryResultImpl implements QueryResult {
     private final boolean docOrder;
 
     /**
+     * The excerpt provider or <code>null</code> if none was created yet.
+     */
+    private ExcerptProvider excerptProvider;
+
+    /**
      * Creates a new query result.
      *
      * @param index         the search index where the query is executed.
@@ -190,7 +195,15 @@ public class LazyQueryResultImpl implements QueryResult {
      * {@inheritDoc}
      */
     public RowIterator getRows() throws RepositoryException {
-        return new RowIteratorImpl(getNodeIterator(), selectProps, resolver);
+        if (excerptProvider == null) {
+            try {
+                excerptProvider = index.createExcerptProvider(query);
+            } catch (IOException e) {
+                throw new RepositoryException(e);
+            }
+        }
+        return new RowIteratorImpl(getNodeIterator(),
+                selectProps, resolver, excerptProvider);
     }
 
     /**
