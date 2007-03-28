@@ -27,6 +27,7 @@ import org.apache.lucene.search.Weight;
 
 import java.io.IOException;
 import java.util.BitSet;
+import java.util.Set;
 
 /**
  * Implements a lucene <code>Query</code> which filters a sub query by checking
@@ -106,6 +107,14 @@ class DescendantSelfAxisQuery extends Query {
      */
     public String toString(String field) {
         return "DescendantSelfAxisQuery";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void extractTerms(Set terms) {
+        contextQuery.extractTerms(terms);
+        subQuery.extractTerms(terms);
     }
 
     //------------------------< DescendantSelfAxisWeight >--------------------------

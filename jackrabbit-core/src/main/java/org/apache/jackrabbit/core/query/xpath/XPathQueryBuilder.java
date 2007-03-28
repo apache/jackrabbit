@@ -928,6 +928,14 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 } catch (NameException e) {
                     exceptions.add(e);
                 }
+            } else if (queryNode.getType() == QueryNode.TYPE_PATH) {
+                // use function name as name of a pseudo property in select clause
+                try {
+                    QName name = NameFormat.parse(fName + "()", resolver);
+                    root.addSelectProperty(name);
+                } catch (NameException e) {
+                    exceptions.add(e);
+                }
             } else {
                 exceptions.add(new InvalidQueryException("Unsupported function: " + fName));
             }

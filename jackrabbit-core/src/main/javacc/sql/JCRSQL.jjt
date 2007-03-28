@@ -106,6 +106,7 @@ TOKEN [ IGNORE_CASE ] :
 | < ESCAPE: "ESCAPE" >
 | < SELECT: "SELECT" >
 | < BETWEEN: "BETWEEN" >
+| < EXCERPT: "EXCERPT" >
 | < CONTAINS: "CONTAINS" >
 }
 
@@ -272,7 +273,7 @@ void SelectList() :
 {}
 {
     (<ASTERISK>)
-  | (Identifier() (<PERIOD> Identifier() { Node n = jjtree.popNode(); jjtree.popNode(); jjtree.pushNode(n); } )? (<COMMA> Identifier() (<PERIOD> Identifier() { Node n = jjtree.popNode(); jjtree.popNode(); jjtree.pushNode(n); } )? )*)
+  | ((ExcerptFunction() | Identifier() (<PERIOD> Identifier() { Node n = jjtree.popNode(); jjtree.popNode(); jjtree.pushNode(n); } )?) (<COMMA> (ExcerptFunction() | Identifier() (<PERIOD> Identifier() { Node n = jjtree.popNode(); jjtree.popNode(); jjtree.pushNode(n); } )?) )*)
 }
 
 void TableExpression() #void :
@@ -605,6 +606,15 @@ QName Identifier() :
   )
   {
     return jjtThis.getName();
+  }
+}
+
+QName ExcerptFunction() :
+{}
+{
+  <EXCERPT> "(" <PERIOD> ")"
+  {
+    return new QName(QName.NS_REP_URI, "excerpt(.)");
   }
 }
 

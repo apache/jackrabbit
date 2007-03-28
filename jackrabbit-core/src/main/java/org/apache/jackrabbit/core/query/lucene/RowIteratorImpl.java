@@ -25,6 +25,8 @@ import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.value.LongValue;
 import org.apache.jackrabbit.value.PathValue;
 import org.apache.jackrabbit.value.StringValue;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Property;
@@ -37,12 +39,18 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.io.IOException;
 
 /**
  * Implements the {@link javax.jcr.query.RowIterator} interface returned by
  * a {@link javax.jcr.query.QueryResult}.
  */
 class RowIteratorImpl implements RowIterator {
+
+    /**
+     * The logger instance for this class.
+     */
+    private static final Logger log = LoggerFactory.getLogger(RowIteratorImpl.class);
 
     /**
      * Iterator over nodes, that constitute the result set.
@@ -60,6 +68,11 @@ class RowIteratorImpl implements RowIterator {
     private final NamespaceResolver resolver;
 
     /**
+     * The excerpt provider.
+     */
+    private final ExcerptProvider excerptProvider;
+
+    /**
      * Creates a new <code>RowIteratorImpl</code> that iterates over the result
      * nodes.
      *
@@ -70,11 +83,31 @@ class RowIteratorImpl implements RowIterator {
      *                   <code>Session</code>.
      */
     RowIteratorImpl(ScoreNodeIterator nodes, QName[] properties, NamespaceResolver resolver) {
+        this(nodes, properties, resolver, null);
+    }
+
+    /**
+     * Creates a new <code>RowIteratorImpl</code> that iterates over the result
+     * nodes.
+     *
+     * @param nodes      a <code>ScoreNodeIterator</code> that contains the
+     *                   nodes of the query result.
+     * @param properties <code>QName</code> of the select properties.
+     * @param resolver   <code>NamespaceResolver</code> of the user
+     *                   <code>Session</code>.
+     * @param exProvider the excerpt provider associated with the query result
+     *                   that created this row iterator.
+     */
+    RowIteratorImpl(ScoreNodeIterator nodes,
+                    QName[] properties,
+                    NamespaceResolver resolver,
+                    ExcerptProvider exProvider) {
         this.nodes = nodes;
         this.properties = properties;
         this.resolver = resolver;
+        this.excerptProvider = exProvider;
     }
-
+    
     /**
      * Returns the next <code>Row</code> in the iteration.
      *
@@ -213,11 +246,13 @@ class RowIteratorImpl implements RowIterator {
                             tmp[i] = null;
                         }
                     } else {
-                        // property not set or jcr:path / jcr:score
+                        // property not set or jcr:path / jcr:score / jcr:highlight
                         if (QName.JCR_PATH.equals(properties[i])) {
                             tmp[i] = PathValue.valueOf(node.getPath());
                         } else if (QName.JCR_SCORE.equals(properties[i])) {
-                            tmp[i] = new LongValue((int) (score * 1000f));
+                            tmp[i] = new LongValue(Math.round(score * 1000f));
+                        } else if (isExcerptFunction(properties[i])) {
+                            tmp[i] = getExcerpt();
                         } else {
                             tmp[i] = null;
                         }
@@ -267,13 +302,50 @@ class RowIteratorImpl implements RowIterator {
                     if (QName.JCR_PATH.equals(prop)) {
                         return PathValue.valueOf(node.getPath());
                     } else if (QName.JCR_SCORE.equals(prop)) {
-                        return new LongValue((int) (score * 1000f));
+                        return new LongValue(Math.round(score * 1000f));
+                    } else if (isExcerptFunction(prop)) {
+                        return getExcerpt();
                     } else {
                         return null;
                     }
                 }
             } catch (NameException e) {
                 throw new RepositoryException(e.getMessage(), e);
+            }
+        }
+
+        /**
+         * @param name a QName.
+         * @return <code>true</code> if <code>name</code> is the rep:excerpt
+         *         function, <code>false</code> otherwise.
+         */
+        private boolean isExcerptFunction(QName name) {
+            return name.getNamespaceURI().equals(QName.NS_REP_URI) &&
+                    name.getLocalName().startsWith("excerpt(");
+        }
+
+        /**
+         * Returns an excerpt for the node associated with this row.
+         *
+         * @return a StringValue or <code>null</code> if the excerpt cannot be
+         *         created or an error occurs.
+         */
+        private Value getExcerpt() {
+            if (excerptProvider == null) {
+                return null;
+            }
+            try {
+                long time = System.currentTimeMillis();
+                String excerpt = excerptProvider.getExcerpt(node.getNodeId(), 3, 150);
+                time = System.currentTimeMillis() - time;
+                log.debug("Created excerpt in {} ms.", new Long(time));
+                if (excerpt != null) {
+                    return new StringValue(excerpt);
+                } else {
+                    return null;
+                }
+            } catch (IOException e) {
+                return null;
             }
         }
     }
