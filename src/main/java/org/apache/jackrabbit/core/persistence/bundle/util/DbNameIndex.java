@@ -27,9 +27,13 @@ import java.sql.Statement;
 /**
  * Implements a {@link StringIndex} that stores and retrieves the names from a
  * table in a database.
- *
+ * <p/>
  * Note that this class is not threadsafe by itself. it needs to be synchronized
  * by the using application.
+ * <p/>
+ * Due to a bug with oracle that treats empty strings a null values
+ * (see JCR-815), all empty strings are replaced by a ' '. since names never
+ * start with a space, this it not problematic yet.
  */
 public class DbNameIndex implements StringIndex {
 
@@ -88,9 +92,10 @@ public class DbNameIndex implements StringIndex {
         // check cache
         Integer index = (Integer) string2Index.get(string);
         if (index == null) {
-            int idx = getIndex(string);
+            String dbString = string.length() == 0 ? " " : string;
+            int idx = getIndex(dbString);
             if (idx == -1) {
-                idx = insertString(string);
+                idx = insertString(dbString);
             }
             index = new Integer(idx);
             string2Index.put(string, index);
@@ -112,6 +117,9 @@ public class DbNameIndex implements StringIndex {
             s = getString(idx);
             if (s == null) {
                 throw new IllegalStateException("String empty???");
+            }
+            if (s.equals(" ")) {
+                s = "";
             }
             index2String.put(index, s);
             string2Index.put(s, index);
@@ -172,11 +180,11 @@ public class DbNameIndex implements StringIndex {
     }
 
     /**
-     * Retrieves the string from the database for the givein index.
+     * Retrieves the string from the database for the given index.
      * @param index the index to retrieve the string for.
      * @return the string or <code>null</code> if not found.
      */
-    private String getString(int index) {
+    protected String getString(int index) {
         PreparedStatement stmt = nameSelect;
         ResultSet rs = null;
         try {
