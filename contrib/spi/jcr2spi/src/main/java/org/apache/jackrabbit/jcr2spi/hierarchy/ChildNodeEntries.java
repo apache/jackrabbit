@@ -25,7 +25,6 @@ import org.apache.commons.collections.list.AbstractLinkedList;
 import org.apache.commons.collections.iterators.UnmodifiableIterator;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.HashMap;
@@ -370,7 +369,12 @@ final class ChildNodeEntries implements Collection {
             LinkedEntries.LinkNode previous = getLinkNode(nodeName, previousIndex);
             if (previous == null) {
                 // add missing entry (or entries)
-                parent.addNodeEntry(nodeName, null, previousIndex);
+                try {
+                    parent.addNodeEntry(nodeName, null, previousIndex);
+                } catch (RepositoryException e) {
+                    // should never occur
+                    log.debug("Internal error", e.getMessage());
+                }
 
             } // else: all intermediate entries exist
         } // else: undefined or default index are not affected

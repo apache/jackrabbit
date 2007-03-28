@@ -56,12 +56,7 @@ public interface Operation {
     public Collection getAffectedItemStates();
 
     /**
-     * In case of {@link CacheBehaviour#INVALIDATE}
-     * the result of the operation will not be pushed by observation events.
-     * Instead the workspace operations must make sure, that the affected
-     * item states are properly refreshed or invalidated.
-     *
-     * @param cacheBehaviour
+     * Informs this Operation that it has been successfully executed.
      */
     public void persisted(CacheBehaviour cacheBehaviour);
 }

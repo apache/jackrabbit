@@ -98,8 +98,6 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
             } catch (ItemNotFoundException e) {
                 remove();
                 throw e;
-            } catch (RepositoryException e) {
-                e.printStackTrace();
             }
         } else if (state.getStatus() == Status.INVALIDATED) {
             // completely reload this entry, but don't reload recursively

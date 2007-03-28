@@ -76,9 +76,13 @@ public class RemoveLabel extends AbstractOperation {
      */
     public void persisted(CacheBehaviour cacheBehaviour) {
         if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
-            NodeEntry vhEntry = (NodeEntry) versionHistoryState.getHierarchyEntry();
-            NodeEntry lnEntry = vhEntry.getNodeEntry(QName.JCR_VERSIONLABELS, Path.INDEX_DEFAULT);
-            lnEntry.invalidate(true);
+            try {
+                NodeEntry vhEntry = (NodeEntry) versionHistoryState.getHierarchyEntry();
+                NodeEntry lnEntry = vhEntry.getNodeEntry(QName.JCR_VERSIONLABELS, Path.INDEX_DEFAULT);
+                lnEntry.invalidate(true);
+            } catch (RepositoryException e) {
+                log.debug(e.getMessage());
+            }
         }
     }
 
