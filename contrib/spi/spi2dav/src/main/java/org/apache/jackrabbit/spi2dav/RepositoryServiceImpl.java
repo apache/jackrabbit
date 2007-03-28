@@ -969,7 +969,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         QName nodeName = new QName(QName.NS_DEFAULT_URI, UUID.randomUUID().toString());
         String uri = getItemUri(parentId, nodeName, sessionInfo);
         MkColMethod method = new MkColMethod(uri);
-        method.addRequestHeader(ItemResourceConstants.IMPORT_UUID_BEHAVIOR, Integer.valueOf(uuidBehaviour).toString());
+        method.addRequestHeader(ItemResourceConstants.IMPORT_UUID_BEHAVIOR, new Integer(uuidBehaviour).toString());
         method.setRequestEntity(new InputStreamRequestEntity(xmlStream, "text/xml"));
         execute(method, sessionInfo);
     }
