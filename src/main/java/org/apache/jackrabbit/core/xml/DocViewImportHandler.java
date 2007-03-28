@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.util.ISO9075;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +58,29 @@ class DocViewImportHandler extends TargetImportHandler {
      */
     DocViewImportHandler(Importer importer) {
         super(importer);
+    }
+
+    /**
+     * Parses the given string as a list of JCR names. Any whitespace sequence
+     * is supported as a names separator instead of just a single space to
+     * be more liberal in what we accept. The current namespace context is
+     * used to convert the prefixed name strings to QNames.
+     *
+     * @param value string value
+     * @return the parsed names
+     * @throws SAXException if an invalid name was encountered
+     */
+    private QName[] parseNames(String value) throws SAXException {
+        String[] names = value.split("\\p{Space}+");
+        QName[] qnames = new QName[names.length];
+        for (int i = 0; i < names.length; i++) {
+            try {
+                qnames[i] = NameFormat.parse(names[i], nsContext);
+            } catch (NameException ne) {
+                throw new SAXException("Invalid name: " + names[i], ne);
+            }
+        }
+        return qnames;
     }
 
     /**
@@ -147,6 +171,34 @@ class DocViewImportHandler extends TargetImportHandler {
         }
     }
 
+    /**
+     * Processes the given <code>name</code>, i.e. decodes it and checks
+     * the format of the decoded name.
+     *
+     * @param name name to process
+     * @return the decoded and valid jcr name or the original name if it is
+     *         not encoded or if the resulting decoded name would be illegal.
+     */
+    private QName processName(QName name) {
+        QName decoded = ISO9075.decode(name);
+        if (decoded != name) {
+            // only need to check format of decoded name since
+            // an xml name is always a legal jcr name
+            // (http://issues.apache.org/jira/browse/JCR-821)
+            try {
+                NameFormat.checkFormat(decoded.getLocalName());
+                return decoded;
+            } catch (IllegalNameException ine) {
+                // decoded name would be illegal according to jsr 170,
+                // use encoded name as a fallback
+                log.warn("encountered illegal encoded name '"
+                        + name.getLocalName() + "': "
+                        + ine.getMessage());
+            }
+        }
+        return name;
+    }
+
     //-------------------------------------------------------< ContentHandler >
 
     /**
@@ -163,8 +215,8 @@ class DocViewImportHandler extends TargetImportHandler {
 
         try {
             QName nodeName = new QName(namespaceURI, localName);
-            // decode node name
-            nodeName = ISO9075.decode(nodeName);
+            // process node name
+            nodeName = processName(nodeName);
 
             // properties
             NodeId id = null;
@@ -179,8 +231,8 @@ class DocViewImportHandler extends TargetImportHandler {
                     continue;
                 }
                 QName propName = new QName(atts.getURI(i), atts.getLocalName(i));
-                // decode property name
-                propName = ISO9075.decode(propName);
+                // process property name
+                propName = processName(propName);
 
                 // value(s)
                 String attrValue = atts.getValue(i);
@@ -227,29 +279,6 @@ class DocViewImportHandler extends TargetImportHandler {
         } catch (RepositoryException re) {
             throw new SAXException(re);
         }
-    }
-
-    /**
-     * Parses the given string as a list of JCR names. Any whitespace sequence
-     * is supported as a names separator instead of just a single space to
-     * be more liberal in what we accept. The current namespace context is
-     * used to convert the prefixed name strings to QNames.
-     *
-     * @param value string value
-     * @return the parsed names
-     * @throws SAXException if an invalid name was encountered
-     */
-    private QName[] parseNames(String value) throws SAXException {
-        String[] names = value.split("\\p{Space}+");
-        QName[] qnames = new QName[names.length];
-        for (int i = 0; i < names.length; i++) {
-            try {
-                qnames[i] = NameFormat.parse(names[i], nsContext);
-            } catch (NameException ne) {
-                throw new SAXException("Invalid name: " + names[i], ne);
-            }
-        }
-        return qnames;
     }
 
     /**
