@@ -92,6 +92,8 @@ public interface NodeEntry extends HierarchyEntry {
      *
      * @param path
      * @return the entry at the given path.
+     * @throws PathNotFoundException
+     * @throws RepositoryException
      */
     public HierarchyEntry getDeepEntry(Path path) throws PathNotFoundException, RepositoryException;
 
@@ -135,8 +137,9 @@ public interface NodeEntry extends HierarchyEntry {
      * @param index 1-based index if there are same-name child node entries.
      * @return The <code>NodeEntry</code> with the specified name and index
      * or <code>null</code> if there's no matching entry.
+     * @throws RepositoryException If an unexpected error occurs.
      */
-    public NodeEntry getNodeEntry(QName nodeName, int index);
+    public NodeEntry getNodeEntry(QName nodeName, int index) throws RepositoryException;
 
     /**
      * Returns the <code>NodeEntry</code> with the specified
@@ -146,16 +149,18 @@ public interface NodeEntry extends HierarchyEntry {
      * @param childId the id of the child entry.
      * @return the <code>NodeEntry</code> with the specified
      * <code>NodeId</code> or <code>null</code> if there's no matching entry.
+     * @throws RepositoryException If an unexpected error occurs.
      */
-    public NodeEntry getNodeEntry(NodeId childId);
+    public NodeEntry getNodeEntry(NodeId childId) throws RepositoryException;
 
     /**
      * Returns a unmodifiable iterator of <code>NodeEntry</code> objects
      * denoting the the valid child NodeEntries present on this <code>NodeEntry</code>.
      *
      * @return iterator of <code>NodeEntry</code> objects
+     * @throws RepositoryException If an unexpected error occurs.
      */
-    public Iterator getNodeEntries();
+    public Iterator getNodeEntries() throws RepositoryException;
 
     /**
      * Returns a unmodifiable List of <code>NodeEntry</code>s with the
@@ -163,8 +168,9 @@ public interface NodeEntry extends HierarchyEntry {
      *
      * @param nodeName name of the child node entries that should be returned
      * @return list of <code>NodeEntry</code> objects
+     * @throws RepositoryException If an unexpected error occurs.
      */
-    public List getNodeEntries(QName nodeName);
+    public List getNodeEntries(QName nodeName) throws RepositoryException;
 
     /**
      * Adds a new child NodeEntry to this entry.
@@ -172,8 +178,9 @@ public interface NodeEntry extends HierarchyEntry {
      * @param nodeName
      * @param uniqueID
      * @return the new <code>NodeEntry</code>
+     * @throws RepositoryException If an unexpected error occurs.
      */
-    public NodeEntry addNodeEntry(QName nodeName, String uniqueID, int index);
+    public NodeEntry addNodeEntry(QName nodeName, String uniqueID, int index) throws RepositoryException;
 
     /**
      * Adds a new, transient child <code>NodeEntry</code>
@@ -183,9 +190,9 @@ public interface NodeEntry extends HierarchyEntry {
      * @param primaryNodeType
      * @param definition
      * @return
-     * @throws ItemExistsException
+     * @throws RepositoryException If an error occurs.
      */
-    public NodeState addNewNodeEntry(QName nodeName, String uniqueID, QName primaryNodeType, QNodeDefinition definition) throws ItemExistsException;
+    public NodeState addNewNodeEntry(QName nodeName, String uniqueID, QName primaryNodeType, QNodeDefinition definition) throws RepositoryException;
 
     /**
      * Determines if there is a property entry with the specified <code>QName</code>.
@@ -218,8 +225,10 @@ public interface NodeEntry extends HierarchyEntry {
      *
      * @param propName
      * @return
+     * @throws ItemExistsException if a child item exists with the given name
+     * @throws RepositoryException if an unexpected error occurs.
      */
-    public PropertyEntry addPropertyEntry(QName propName) throws ItemExistsException;
+    public PropertyEntry addPropertyEntry(QName propName) throws ItemExistsException, RepositoryException;
 
     /**
      * Adds property entries for the given <code>QName</code>s. It depends on
@@ -229,15 +238,18 @@ public interface NodeEntry extends HierarchyEntry {
      *
      * @param propNames
      * @throws ItemExistsException
+     * @throws RepositoryException if an unexpected error occurs.
      */
-    public void addPropertyEntries(Collection propNames) throws ItemExistsException;
+    public void addPropertyEntries(Collection propNames) throws ItemExistsException, RepositoryException;
 
     /**
      *
      * @param propName
-     * @return
+     * @return The PropertyState associated with the new property entry.
+     * @throws ItemExistsException
+     * @throws RepositoryException if an unexpected error occurs.
      */
-    public PropertyState addNewPropertyEntry(QName propName, QPropertyDefinition definition) throws ItemExistsException;
+    public PropertyState addNewPropertyEntry(QName propName, QPropertyDefinition definition) throws ItemExistsException, RepositoryException;
 
     /**
      * Reorders this NodeEntry before the sibling entry specified by the given
@@ -245,13 +257,16 @@ public interface NodeEntry extends HierarchyEntry {
      *
      * @param beforeEntry the child node where to insert the node before. If
      * <code>null</code> this entry is moved to the end of its parents child node entries.
+     * @throws RepositoryException If an unexpected error occurs.
      */
-    public void orderBefore(NodeEntry beforeEntry) ;
+    public void orderBefore(NodeEntry beforeEntry) throws RepositoryException;
 
     /**
      * @param newName
      * @param newParent
-     * @return
+     * @return the moved entry
+     * @throws RepositoryException If the entry to be moved is not a child of this
+     * NodeEntry or if an unexpected error occurs.
      */
     public NodeEntry move(QName newName, NodeEntry newParent, boolean transientMove) throws RepositoryException;
 

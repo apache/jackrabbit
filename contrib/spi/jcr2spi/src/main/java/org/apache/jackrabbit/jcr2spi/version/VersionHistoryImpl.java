@@ -60,7 +60,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
 
     public VersionHistoryImpl(ItemManager itemMgr, SessionImpl session,
                               NodeState state, ItemLifeCycleListener[] listeners)
-        throws VersionException {
+        throws VersionException, RepositoryException {
         super(itemMgr, session, state, listeners);
         this.vhEntry = (NodeEntry) state.getHierarchyEntry();
 

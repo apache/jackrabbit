@@ -54,8 +54,8 @@ public class HierarchyEventListener implements InternalEventListener {
         if (cacheBehaviour == CacheBehaviour.OBSERVATION) {
             EventFilter filter = null;
             try {
-                // TODO: improve. for now listen to everything
-                filter = wspManager.createEventFilter(Event.ALL_TYPES, Path.ROOT, true, null, null, false);
+                // listen to all events except 'local' ones
+                filter = wspManager.createEventFilter(Event.ALL_TYPES, Path.ROOT, true, null, null, true);
             } catch (RepositoryException e) {
                 // spi does not support observation, or another error occurred.
             }
@@ -84,6 +84,10 @@ public class HierarchyEventListener implements InternalEventListener {
      * @see InternalEventListener#onEvent(EventBundle)
      */
     public void onEvent(EventBundle eventBundle) {
+        if (eventBundle.isLocal()) {
+            log.debug("Local event bundle -> not processed by HierarchyEventListener.");
+            return;
+        }
         pushEvents(getEventCollection(eventBundle));
     }
 
@@ -95,6 +99,7 @@ public class HierarchyEventListener implements InternalEventListener {
      */
     private void pushEvents(Collection events) {
         if (events.isEmpty()) {
+            log.debug("Empty event bundle");
             return;
         }
         // collect set of removed node ids

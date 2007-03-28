@@ -236,6 +236,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             }
         }
 
+        // TODO: deal with childNodeAttic
         // now traverse all child-entries and mark the attached states removed
         // without removing the child-entries themselves. this is not required
         // since this (i.e. the parent is removed as well).
@@ -258,7 +259,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         super.collectStates(changeLog, throwOnStale);
 
         // collect transient child states including properties in attic.
-        for (Iterator it = getAllChildEntries(false, true); it.hasNext();) {
+        for (Iterator it = getAllChildEntries(true, true); it.hasNext();) {
             HierarchyEntry ce = (HierarchyEntry) it.next();
             ce.collectStates(changeLog, throwOnStale);
         }
@@ -477,15 +478,20 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @see NodeEntry#hasNodeEntry(QName)
      */
     public synchronized boolean hasNodeEntry(QName nodeName) {
-        List namedEntries = childNodeEntries().get(nodeName);
-        if (namedEntries.isEmpty()) {
+        try {
+            List namedEntries = childNodeEntries().get(nodeName);
+            if (namedEntries.isEmpty()) {
+                return false;
+            } else {
+                // copy list since during validation the childNodeEntries may be
+                // modified if upon NodeEntry.getItemState the entry is removed.
+                List l = new ArrayList(namedEntries.size());
+                l.addAll(namedEntries);
+                return EntryValidation.containsValidNodeEntry(l.iterator());
+            }
+        } catch (RepositoryException e) {
+            log.debug("Unable to determine if a child node with name " + nodeName + " exists.");
             return false;
-        } else {
-            // copy list since during validation the childNodeEntries may be
-            // modified if upon NodeEntry.getItemState the entry is removed.
-            List l = new ArrayList(namedEntries.size());
-            l.addAll(namedEntries);
-            return EntryValidation.containsValidNodeEntry(l.iterator());
         }
     }
 
@@ -494,14 +500,19 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @see NodeEntry#hasNodeEntry(QName, int)
      */
     public synchronized boolean hasNodeEntry(QName nodeName, int index) {
-        return EntryValidation.isValidNodeEntry(childNodeEntries().get(nodeName, index));
+        try {
+            return EntryValidation.isValidNodeEntry(childNodeEntries().get(nodeName, index));
+        } catch (RepositoryException e) {
+            log.debug("Unable to determine if a child node with name " + nodeName + " exists.");
+            return false;
+        }
     }
 
     /**
      * @inheritDoc
      * @see NodeEntry#getNodeEntry(QName, int)
      */
-    public synchronized NodeEntry getNodeEntry(QName nodeName, int index) {
+    public synchronized NodeEntry getNodeEntry(QName nodeName, int index) throws RepositoryException {
         NodeEntry cne = childNodeEntries().get(nodeName, index);
         if (EntryValidation.isValidNodeEntry(cne)) {
             return cne;
@@ -515,7 +526,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @inheritDoc
      * @see NodeEntry#getNodeEntry(NodeId)
      */
-    public synchronized NodeEntry getNodeEntry(NodeId childId) {
+    public synchronized NodeEntry getNodeEntry(NodeId childId) throws RepositoryException {
         String uid = childId.getUniqueID();
         Path path = childId.getPath();
         NodeEntry cne;
@@ -539,7 +550,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @inheritDoc
      * @see NodeEntry#getNodeEntries()
      */
-    public synchronized Iterator getNodeEntries() {
+    public synchronized Iterator getNodeEntries() throws RepositoryException {
         Collection entries = new ArrayList();
         Object[] arr = childNodeEntries().toArray();
         for (int i = 0; i < arr.length; i++) {
@@ -552,13 +563,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     }
 
     /**
-     * Returns a unmodifiable list of <code>NodeEntry</code>s with the
-     * specified name.
-     *
-     * @param nodeName name of the child node entries that should be returned
-     * @return list of <code>NodeEntry</code> objects
+     * @see NodeEntry#getNodeEntries(QName)
      */
-    public synchronized List getNodeEntries(QName nodeName) {
+    public synchronized List getNodeEntries(QName nodeName) throws RepositoryException {
         List namedEntries = childNodeEntries().get(nodeName);
         if (namedEntries.isEmpty()) {
             return Collections.EMPTY_LIST;
@@ -581,7 +588,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @inheritDoc
      * @see NodeEntry#addNodeEntry(QName, String, int)
      */
-    public NodeEntry addNodeEntry(QName nodeName, String uniqueID, int index) {
+    public NodeEntry addNodeEntry(QName nodeName, String uniqueID, int index) throws RepositoryException {
         return internalAddNodeEntry(nodeName, uniqueID, index, childNodeEntries());
     }
 
@@ -590,7 +597,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @see NodeEntry#addNewNodeEntry(QName, String, QName, QNodeDefinition)
      */
     public NodeState addNewNodeEntry(QName nodeName, String uniqueID,
-                                     QName primaryNodeType, QNodeDefinition definition) throws ItemExistsException {
+                                     QName primaryNodeType, QNodeDefinition definition) throws RepositoryException {
         NodeEntryImpl entry = internalAddNodeEntry(nodeName, uniqueID, Path.INDEX_UNDEFINED, childNodeEntries());
         NodeState state = factory.getItemStateFactory().createNewNodeState(entry, primaryNodeType, definition);
         entry.internalSetItemState(state);
@@ -690,7 +697,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @inheritDoc
      * @see NodeEntry#addPropertyEntries(Collection)
      */
-    public void addPropertyEntries(Collection propNames) throws ItemExistsException {
+    public void addPropertyEntries(Collection propNames) throws ItemExistsException, RepositoryException {
         Set diff = new HashSet();
         diff.addAll(properties.keySet());
         boolean containsExtra = diff.removeAll(propNames);
@@ -722,7 +729,8 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @inheritDoc
      * @see NodeEntry#addNewPropertyEntry(QName, QPropertyDefinition)
      */
-    public PropertyState addNewPropertyEntry(QName propName, QPropertyDefinition definition) throws ItemExistsException {
+    public PropertyState addNewPropertyEntry(QName propName, QPropertyDefinition definition)
+            throws ItemExistsException, RepositoryException {
         // check for an existing property
         PropertyEntry existing = (PropertyEntry) properties.get(propName);
         if (existing != null) {
@@ -779,7 +787,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @inheritDoc
      * @see NodeEntry#orderBefore(NodeEntry)
      */
-    public void orderBefore(NodeEntry beforeEntry) {
+    public void orderBefore(NodeEntry beforeEntry) throws RepositoryException {
         if (Status.NEW == getStatus()) {
             // new states get remove upon revert
             parent.childNodeEntries().reorder(this, beforeEntry);
@@ -846,19 +854,21 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 }
                 // first check if no matching child entry exists.
                 // TODO: TOBEFIXED for SNSs
-                NodeEntry cne;
-                if (uniqueChildID != null) {
-                    cne = childNodeEntries().get(eventName, uniqueChildID);
-                } else {
-                    cne = childNodeEntries().get(eventName, index);
-                }
-                if (cne == null) {
-                    internalAddNodeEntry(eventName, uniqueChildID, index, childNodeEntries());
-                } else {
-                    // child already exists -> deal with NEW entries, that were
-                    // added by some other session.
-                    // TODO: TOBEFIXED
-                }
+                if (childNodeEntries != null) {
+                    NodeEntry cne;
+                    if (uniqueChildID != null) {
+                        cne = childNodeEntries.get(eventName, uniqueChildID);
+                    } else {
+                        cne = childNodeEntries.get(eventName, index);
+                    }
+                    if (cne == null) {
+                        internalAddNodeEntry(eventName, uniqueChildID, index, childNodeEntries);
+                    } else {
+                        // child already exists -> deal with NEW entries, that were
+                        // added by some other session.
+                        // TODO: TOBEFIXED
+                    }
+                } // else: childNodeEntries not yet loaded -> ignore
                 break;
 
             case Event.PROPERTY_ADDED:
@@ -882,7 +892,10 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
             case Event.PROPERTY_CHANGED:
                 child = lookupEntry(childEvent.getItemId(), childEvent.getQPath());
-                if (child != null) {
+                if (child == null) {
+                    // prop-Entry has not been loaded yet -> add propEntry
+                    internalAddPropertyEntry(eventName);
+                } else if (child.isAvailable()) {
                     // Reload data from server and try to merge them with the
                     // current session-state. if the latter is transiently
                     // modified and merge fails it must be marked STALE afterwards.
@@ -892,17 +905,13 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                     if (StateUtility.isUuidOrMixin(eventName)) {
                         notifyUUIDorMIXINModified((PropertyEntry) child);
                     }
-                } else {
-                    // prop-Entry has not been loaded yet -> add propEntry
-                    internalAddPropertyEntry(eventName);
-                }
+                } // else: existing entry but state not yet built -> ignore event
                 break;
             default:
                 // ILLEGAL
                 throw new IllegalArgumentException("Illegal event type " + childEvent.getType() + " for NodeState.");
         }
     }
-
     //-------------------------------------------------< HierarchyEntryImpl >---
     /**
      * @inheritDoc
@@ -1130,91 +1139,82 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      *
      * @return
      */
-    private ChildNodeEntries childNodeEntries() {
-        if (childNodeEntries == null) {
-            loadChildNodeEntries();
-        } else if (childNodeEntries.getStatus() == ChildNodeEntries.STATUS_INVALIDATED) {
-            reloadChildNodeEntries(childNodeEntries);
-            childNodeEntries.setStatus(ChildNodeEntries.STATUS_OK);
+    private ChildNodeEntries childNodeEntries() throws InvalidItemStateException, RepositoryException {
+        try {
+            if (childNodeEntries == null) {
+                childNodeEntries = new ChildNodeEntries(this);
+                loadChildNodeEntries();
+            } else if (childNodeEntries.getStatus() == ChildNodeEntries.STATUS_INVALIDATED) {
+                reloadChildNodeEntries(childNodeEntries);
+                childNodeEntries.setStatus(ChildNodeEntries.STATUS_OK);
+            }
+        } catch (ItemNotFoundException e) {
+            log.debug("NodeEntry does not exist (anymore) -> remove.");
+            remove();
+            throw new InvalidItemStateException(e);
         }
         return childNodeEntries;
     }
 
-    private void loadChildNodeEntries() {
-        try {
-            childNodeEntries = new ChildNodeEntries(this);
-            if (getStatus() == Status.NEW || Status.isTerminal(getStatus())) {
-                return; // cannot retrieve child-entries from persistent layer
-            }
+    private void loadChildNodeEntries() throws ItemNotFoundException, RepositoryException {
 
-            NodeId id = getWorkspaceId();
-            Iterator it = factory.getItemStateFactory().getChildNodeInfos(id);
-            // simply add all child entries to the empty collection
-            while (it.hasNext()) {
-                ChildInfo ci = (ChildInfo) it.next();
-                internalAddNodeEntry(ci.getName(), ci.getUniqueID(), ci.getIndex(), childNodeEntries);
-            }
-        } catch (ItemNotFoundException e) {
-            log.error("Cannot retrieve child node entries.", e);
-            // ignore (TODO correct?)
-        } catch (RepositoryException e) {
-            log.error("Cannot retrieve child node entries.", e);
-            // ignore (TODO correct?)
+        if (getStatus() == Status.NEW || Status.isTerminal(getStatus())) {
+            return; // cannot retrieve child-entries from persistent layer
+        }
+
+        NodeId id = getWorkspaceId();
+        Iterator it = factory.getItemStateFactory().getChildNodeInfos(id);
+        // simply add all child entries to the empty collection
+        while (it.hasNext()) {
+            ChildInfo ci = (ChildInfo) it.next();
+            internalAddNodeEntry(ci.getName(), ci.getUniqueID(), ci.getIndex(), childNodeEntries);
         }
     }
 
-    private void reloadChildNodeEntries(ChildNodeEntries cnEntries) {
+    private void reloadChildNodeEntries(ChildNodeEntries cnEntries) throws ItemNotFoundException, RepositoryException {
         if (getStatus() == Status.NEW || Status.isTerminal(getStatus())) {
             // nothing to do
             return;
         }
-        try {
-            NodeId id = getWorkspaceId();
-            Iterator it = factory.getItemStateFactory().getChildNodeInfos(id);
-            // create list from all ChildInfos (for multiple loop)
-            List cInfos = new ArrayList();
-            while (it.hasNext()) {
-                cInfos.add((ChildInfo) it.next());
-            }
-            // first make sure the ordering of all existing entries is ok
-            NodeEntry entry = null;
-            for (it = cInfos.iterator(); it.hasNext();) {
-                ChildInfo ci = (ChildInfo) it.next();
-                NodeEntry nextEntry = cnEntries.get(ci);
-                if (nextEntry != null) {
-                    if (entry != null) {
-                        cnEntries.reorder(entry, nextEntry);
-                    }
-                    entry = nextEntry;
+        NodeId id = getWorkspaceId();
+        Iterator it = factory.getItemStateFactory().getChildNodeInfos(id);
+        // create list from all ChildInfos (for multiple loop)
+        List cInfos = new ArrayList();
+        while (it.hasNext()) {
+            cInfos.add((ChildInfo) it.next());
+        }
+        // first make sure the ordering of all existing entries is ok
+        NodeEntry entry = null;
+        for (it = cInfos.iterator(); it.hasNext();) {
+            ChildInfo ci = (ChildInfo) it.next();
+            NodeEntry nextEntry = cnEntries.get(ci);
+            if (nextEntry != null) {
+                if (entry != null) {
+                    cnEntries.reorder(entry, nextEntry);
                 }
+                entry = nextEntry;
             }
-            // then insert the 'new' entries
-            List newEntries = new ArrayList();
-            for (it = cInfos.iterator(); it.hasNext();) {
-                ChildInfo ci = (ChildInfo) it.next();
-                NodeEntry beforeEntry = cnEntries.get(ci);
-                if (beforeEntry == null) {
-                    NodeEntry ne = new NodeEntryImpl(this, ci.getName(), ci.getUniqueID(), factory);
-                    newEntries.add(ne);
-                } else {
-                    // insert all new entries from the list BEFORE the existing
-                    // 'nextEntry'. Then clear the list.
-                    for (int i = 0; i < newEntries.size(); i++) {
-                        cnEntries.add((NodeEntry) newEntries.get(i), beforeEntry);
-                    }
-                    newEntries.clear();
+        }
+        // then insert the 'new' entries
+        List newEntries = new ArrayList();
+        for (it = cInfos.iterator(); it.hasNext();) {
+            ChildInfo ci = (ChildInfo) it.next();
+            NodeEntry beforeEntry = cnEntries.get(ci);
+            if (beforeEntry == null) {
+                NodeEntry ne = new NodeEntryImpl(this, ci.getName(), ci.getUniqueID(), factory);
+                newEntries.add(ne);
+            } else {
+                // insert all new entries from the list BEFORE the existing
+                // 'nextEntry'. Then clear the list.
+                for (int i = 0; i < newEntries.size(); i++) {
+                    cnEntries.add((NodeEntry) newEntries.get(i), beforeEntry);
                 }
+                newEntries.clear();
             }
-            // deal with new entries at the end
-            for (int i = 0; i < newEntries.size(); i++) {
-                cnEntries.add((NodeEntry) newEntries.get(i));
-            }
-        } catch (ItemNotFoundException e) {
-            log.error("Cannot retrieve child node entries.", e);
-            // ignore (TODO correct?)
-        } catch (RepositoryException e) {
-            log.error("Cannot retrieve child node entries.", e);
-            // ignore (TODO correct?)
+        }
+        // deal with new entries at the end
+        for (int i = 0; i < newEntries.size(); i++) {
+            cnEntries.add((NodeEntry) newEntries.get(i));
         }
     }
 
@@ -1259,7 +1259,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @throws ItemNotFoundException if the given entry isn't a valid child of
      * this <code>NodeEntry</code>.
      */
-    private int getChildIndex(NodeEntry cne) throws ItemNotFoundException {
+    private int getChildIndex(NodeEntry cne) throws ItemNotFoundException, RepositoryException {
         List sns = childNodeEntries().get(cne.getQName());
         // index is one based
         int index = Path.INDEX_DEFAULT;
@@ -1291,7 +1291,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     /**
      * Special handling for MOVE and REORDER with same-name-siblings
      */
-    private void createSiblingRevertInfos() {
+    private void createSiblingRevertInfos() throws RepositoryException {
         if (revertInfo != null) {
             return; // nothing to do
         }
@@ -1311,7 +1311,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     /**
      * Revert a transient move and reordering of child entries
      */
-    private void revertTransientChanges() {
+    private void revertTransientChanges() throws RepositoryException {
         if (revertInfo == null) {
             return; // nothing to do
         }
@@ -1464,7 +1464,11 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                     // stop listening
                     state.removeListener(this);
                     // remove from the attic
-                    revertTransientChanges();
+                    try {
+                        revertTransientChanges();
+                    } catch (RepositoryException e) {
+                        log.warn("Internal error", e);
+                    }
                     break;
             }
         }

@@ -98,7 +98,7 @@ public class TransientItemStateManager implements ItemStateCreationListener {
      */
     NodeState createNewNodeState(QName nodeName, String uniqueID, QName nodeTypeName,
                                  QNodeDefinition definition, NodeState parent)
-        throws ItemExistsException {
+            throws RepositoryException {
 
         parent.checkIsSessionState();
         NodeState nodeState = ((NodeEntry) parent.getHierarchyEntry()).addNewNodeEntry(nodeName, uniqueID, nodeTypeName, definition);

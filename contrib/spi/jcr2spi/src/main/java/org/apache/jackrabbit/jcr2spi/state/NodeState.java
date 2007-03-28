@@ -468,7 +468,7 @@ public class NodeState extends ItemState {
      * <code>beforeNode</code> is not a child node of this <code>NodeState</code>.
      */
     synchronized void reorderChildNodeEntries(NodeState insertNode, NodeState beforeNode)
-        throws ItemNotFoundException {
+        throws ItemNotFoundException, RepositoryException {
         checkIsSessionState();
 
         NodeEntry before = (beforeNode == null) ? null : beforeNode.getNodeEntry();
