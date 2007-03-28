@@ -221,12 +221,12 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
         }
 
         if (Status.isTerminal(oldStatus)) {
-            throw new IllegalStateException("State is already in terminal status " + oldStatus);
+            throw new IllegalStateException("State is already in terminal status " + Status.getName(oldStatus));
         }
         if (Status.isValidStatusChange(oldStatus, newStatus, isWorkspaceState)) {
             status = newStatus;
         } else {
-            throw new IllegalArgumentException("Invalid new status " + newStatus + " for state with status " + oldStatus);
+            throw new IllegalArgumentException("Invalid new status " + Status.getName(newStatus) + " for state with status " + Status.getName(oldStatus));
         }
         // notifiy listeners about status change
         // copy listeners to array to avoid ConcurrentModificationException
