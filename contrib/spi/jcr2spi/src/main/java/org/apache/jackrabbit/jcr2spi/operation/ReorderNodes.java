@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.NodeId;
 
@@ -65,10 +64,9 @@ public class ReorderNodes extends AbstractOperation {
     /**
      * Throws UnsupportedOperationException
      *
-     * @see Operation#persisted(CacheBehaviour)
-     * @param cacheBehaviour
+     * @see Operation#persisted()
      */
-    public void persisted(CacheBehaviour cacheBehaviour) {
+    public void persisted() {
         throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
     }
     //----------------------------------------< Access Operation Parameters >---

@@ -21,7 +21,6 @@ import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.spi.NodeId;
 
 import javax.jcr.version.VersionException;
@@ -50,10 +49,9 @@ public class LockRefresh extends AbstractOperation {
     }
 
     /**
-     * @see Operation#persisted(CacheBehaviour)
-     * @param cacheBehaviour
+     * @see Operation#persisted()
      */
-    public void persisted(CacheBehaviour cacheBehaviour) {
+    public void persisted() {
         // nothing to do.
     }
     

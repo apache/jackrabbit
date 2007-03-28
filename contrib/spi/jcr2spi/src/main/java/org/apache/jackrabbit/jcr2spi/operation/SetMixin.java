@@ -20,7 +20,6 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.spi.NodeId;
 
 import javax.jcr.RepositoryException;
@@ -70,10 +69,9 @@ public class SetMixin extends AbstractOperation {
     /**
      * Throws UnsupportedOperationException
      *
-     * @see Operation#persisted(CacheBehaviour)
-     * @param cacheBehaviour
+     * @see Operation#persisted()
      */
-    public void persisted(CacheBehaviour cacheBehaviour) {
+    public void persisted() {
         throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
     }
 

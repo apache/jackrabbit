@@ -20,7 +20,6 @@ import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,25 +60,22 @@ public class RemoveVersion extends Remove {
      * Invalidates the <code>NodeState</code> that has been updated and all
      * its decendants. Second, the parent state gets invalidated.
      *
-     * @see Operation#persisted(CacheBehaviour)
-     * @param cacheBehaviour
+     * @see Operation#persisted()
      */
-    public void persisted(CacheBehaviour cacheBehaviour) {
-        if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
-            // invaliate the versionable node as well (version related properties)
-            if (versionableEntry != null) {
-                Iterator propEntries = versionableEntry.getPropertyEntries();
-                while (propEntries.hasNext()) {
-                    PropertyEntry pe = (PropertyEntry) propEntries.next();
-                    pe.invalidate(false);
-                }
-                versionableEntry.invalidate(false);
+    public void persisted() {
+        // invaliate the versionable node as well (version related properties)
+        if (versionableEntry != null) {
+            Iterator propEntries = versionableEntry.getPropertyEntries();
+            while (propEntries.hasNext()) {
+                PropertyEntry pe = (PropertyEntry) propEntries.next();
+                pe.invalidate(false);
             }
-
-            // invalidate the versionhistory entry and all its children
-            // in order to the the v-graph recalculated
-            removeState.getHierarchyEntry().getParent().invalidate(true);
+            versionableEntry.invalidate(false);
         }
+
+        // invalidate the versionhistory entry and all its children
+        // in order to the the v-graph recalculated
+        removeState.getHierarchyEntry().getParent().invalidate(true);
     }
 
     //------------------------------------------------------------< Factory >---

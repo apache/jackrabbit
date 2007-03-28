@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
@@ -58,25 +57,22 @@ public class Checkout extends AbstractOperation {
     /**
      * Invalidate the target <code>NodeState</code>.
      *
-     * @see Operation#persisted(CacheBehaviour)
-     * @param cacheBehaviour
+     * @see Operation#persisted()
      */
-    public void persisted(CacheBehaviour cacheBehaviour) {
-        if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
-            try {
-                mgr.getVersionHistoryNodeState(nodeState).invalidate(true);
-            } catch (RepositoryException e) {
-                log.warn("Internal error", e);
-            }
-            // non-recursive invalidation (but including all properties)
-            NodeEntry nodeEntry = (NodeEntry) nodeState.getHierarchyEntry();
-            Iterator entries = nodeEntry.getPropertyEntries();
-            while (entries.hasNext()) {
-                PropertyEntry pe = (PropertyEntry) entries.next();
-                pe.invalidate(false);
-            }
-            nodeEntry.invalidate(false);
+    public void persisted() {
+        try {
+            mgr.getVersionHistoryNodeState(nodeState).invalidate(true);
+        } catch (RepositoryException e) {
+            log.warn("Internal error", e);
         }
+        // non-recursive invalidation (but including all properties)
+        NodeEntry nodeEntry = (NodeEntry) nodeState.getHierarchyEntry();
+        Iterator entries = nodeEntry.getPropertyEntries();
+        while (entries.hasNext()) {
+            PropertyEntry pe = (PropertyEntry) entries.next();
+            pe.invalidate(false);
+        }
+        nodeEntry.invalidate(false);
     }
 
     //----------------------------------------< Access Operation Parameters >---

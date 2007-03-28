@@ -21,9 +21,11 @@ Known Issues and TODOs SPI
 Known Issues and TODOs with jcr2spi
 --------------------------------------------------------------------------------
 
-- BUG: CacheBehaviour.OBSERVATION doesn't work properly
+- BUG: observation && CacheBehaviour.OBSERVATION 
 
 - BUG: Observation: filtering events by nodetype, uuid doesn't work
+
+- BUG: Reverting combined move/reorder operations
 
 - IMPROVE: Replace ItemState-duality by copy on write behaviour
 
@@ -32,8 +34,8 @@ Known Issues and TODOs with jcr2spi
    In order to be able to return the created Node, it would be required to
    now its Id if the operation succeeded, since the Node name passed to the
    call may not identify the new Node in case of same-name-siblings.
-   
-   
+
+
 --------------------------------------------------------------------------------
 Known Issues and TODOs with spi2dav
 --------------------------------------------------------------------------------

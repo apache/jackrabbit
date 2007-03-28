@@ -19,7 +19,6 @@ package org.apache.jackrabbit.jcr2spi.operation;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.spi.NodeId;
 
 import javax.jcr.RepositoryException;
@@ -63,19 +62,16 @@ public class ResolveMergeConflict extends AbstractOperation {
      * Invalidates the <code>NodeState</code> that had a merge conflict pending
      * and all its child properties.
      *
-     * @see Operation#persisted(CacheBehaviour)
-     * @param cacheBehaviour
+     * @see Operation#persisted()
      */
-    public void persisted(CacheBehaviour cacheBehaviour) {
-        if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
-            // non-recursive invalidation BUT including all properties
-            Iterator propEntries = ((NodeEntry) nodeState.getHierarchyEntry()).getPropertyEntries();
-            while (propEntries.hasNext()) {
-                PropertyEntry pe = (PropertyEntry) propEntries.next();
-                pe.invalidate(false);
-            }
-            nodeState.getHierarchyEntry().invalidate(false);
+    public void persisted() {
+        // non-recursive invalidation BUT including all properties
+        Iterator propEntries = ((NodeEntry) nodeState.getHierarchyEntry()).getPropertyEntries();
+        while (propEntries.hasNext()) {
+            PropertyEntry pe = (PropertyEntry) propEntries.next();
+            pe.invalidate(false);
         }
+        nodeState.getHierarchyEntry().invalidate(false);
     }
     //----------------------------------------< Access Operation Parameters >---
     public NodeId getNodeId() {

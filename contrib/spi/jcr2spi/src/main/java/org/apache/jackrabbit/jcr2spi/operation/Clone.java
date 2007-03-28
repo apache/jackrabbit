@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.name.Path;
 import org.slf4j.Logger;
@@ -60,21 +59,18 @@ public class Clone extends AbstractCopy {
     }
 
     /**
-     * @see Operation#persisted(CacheBehaviour)
-     * @param cacheBehaviour
+     * @see Operation#persisted()
      */
-    public void persisted(CacheBehaviour cacheBehaviour) {
-        if (cacheBehaviour == CacheBehaviour.INVALIDATE) {
-            if (removeExisting) {
-                // invalidate the complete tree -> find root-hierarchy-entry
-                HierarchyEntry he = destParentState.getHierarchyEntry();
-                while (he.getParent() != null) {
-                    he = he.getParent();
-                }
-                he.invalidate(true);
-            } else {
-                super.persisted(cacheBehaviour);
+    public void persisted() {
+        if (removeExisting) {
+            // invalidate the complete tree -> find root-hierarchy-entry
+            HierarchyEntry he = destParentState.getHierarchyEntry();
+            while (he.getParent() != null) {
+                he = he.getParent();
             }
+            he.invalidate(true);
+        } else {
+            super.persisted();
         }
     }
 
