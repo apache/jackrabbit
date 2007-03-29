@@ -96,7 +96,16 @@ public class OraclePersistenceManager extends BundleDbPersistenceManager {
     protected DbNameIndex createDbNameIndex() throws SQLException {
         return new NGKDbNameIndex(con, schemaObjectPrefix);
     }
-    
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return <code>true</code>
+     */
+    protected boolean checkTablesWithUser() {
+        return true;
+    }
+
     /**
      * Since Oracle only supports table names up to 30 characters in
      * length illegal characters are simply replaced with "_" rather than

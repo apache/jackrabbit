@@ -406,23 +406,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * @throws RepositoryException if an error occurs.
      */
     protected void checkSchema() throws SQLException, RepositoryException {
-        DatabaseMetaData metaData = con.getMetaData();
-        String tableName = schemaObjectPrefix + "BUNDLE";
-        if (metaData.storesLowerCaseIdentifiers()) {
-            tableName = tableName.toLowerCase();
-        } else if (metaData.storesUpperCaseIdentifiers()) {
-            tableName = tableName.toUpperCase();
-        }
-        String userName = metaData.getUserName();
-        ResultSet rs = metaData.getTables(null, userName, tableName, null);
-        boolean schemaExists;
-        try {
-            schemaExists = rs.next();
-        } finally {
-            rs.close();
-        }
-
-        if (!schemaExists) {
+        if (!checkTablesExist()) {
             // read ddl from resources
             InputStream in = getClass().getResourceAsStream(schema + ".ddl");
             if (in == null) {
@@ -460,6 +444,44 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                 stmt.close();
             }
         }
+    }
+
+    /**
+     * Checks if the database table exist.
+     *
+     * @return <code>true</code> if the tables exist;
+     *         <code>false</code> otherwise.
+     *
+     * @throws SQLException if an SQL erro occurs.
+     */
+    protected boolean checkTablesExist() throws SQLException {
+        DatabaseMetaData metaData = con.getMetaData();
+        String tableName = schemaObjectPrefix + "BUNDLE";
+        if (metaData.storesLowerCaseIdentifiers()) {
+            tableName = tableName.toLowerCase();
+        } else if (metaData.storesUpperCaseIdentifiers()) {
+            tableName = tableName.toUpperCase();
+        }
+        String userName = checkTablesWithUser() ? metaData.getUserName() : null;
+        ResultSet rs = metaData.getTables(null, userName, tableName, null);
+        try {
+            return rs.next();
+        } finally {
+            rs.close();
+        }
+    }
+
+    /**
+     * Indicates if the username should be included when retrieving the tables
+     * during {@link #checkTablesExist()}.
+     * <p/>
+     * Please note that this currently only needs to be changed for oracle based
+     * persistence managers.
+     *
+     * @return <code>false</code>
+     */
+    protected boolean checkTablesWithUser() {
+        return false;
     }
 
     /**
