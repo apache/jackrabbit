@@ -66,6 +66,10 @@ public class NodeUUIDTest extends AbstractJCRTest {
         defaultRootNode.save();
 
 
+        // abort test if the repository does not allow setting
+        // reference properties on this node
+        ensureCanSetProperty(referencingNode, propertyName1, referencingNode.getSession().getValueFactory().createValue(refTargetNode));
+
         // set the reference
         referencingNode.setProperty(propertyName1, refTargetNode);
 
