@@ -26,6 +26,8 @@ import javax.jcr.Property;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.ConstraintViolationException;
+
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.util.Calendar;
@@ -210,10 +212,20 @@ public class SetValueValueFormatExceptionTest extends AbstractJCRTest {
 
         Property booleanProperty = createProperty(PropertyType.BOOLEAN, false);
         try {
-            Node referenceableNode = testRootNode.addNode(nodeName3);
-            referenceableNode.addMixin(mixReferenceable);
+            Node referenceableNode = testRootNode.addNode(nodeName3, testNodeType);
+            
+            try {
+                referenceableNode.addMixin(mixReferenceable);
+            }
+            catch (ConstraintViolationException ex) {
+                // may already be present in the node type
+            }
+
             // some implementations may require a save after addMixin()
             testRootNode.save();
+
+            // make sure the node is now referenceable
+            assertTrue("test node should be mix:referenceable", referenceableNode.isNodeType(mixReferenceable));
 
             booleanProperty.setValue(referenceableNode);
             fail("Property.setValue(Node) must throw a ValueFormatException " +
