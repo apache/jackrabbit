@@ -46,7 +46,7 @@ public class LocatorFactoryImplEx extends AbstractLocatorFactory {
             return resourcePath;
         }
 
-        if (resourcePath.startsWith(wspPath)) {
+        if (resourcePath.equals(wspPath) || startsWithWorkspace(resourcePath, wspPath)) {
             String repositoryPath = resourcePath.substring(wspPath.length());
             return (repositoryPath.length() == 0) ? "/" : repositoryPath;
         } else {
@@ -62,6 +62,14 @@ public class LocatorFactoryImplEx extends AbstractLocatorFactory {
         if (repositoryPath == null) {
             throw new IllegalArgumentException("Cannot build resource path from 'null' repository path");
         }
-        return (wspPath == null || repositoryPath.startsWith(wspPath)) ? repositoryPath : wspPath + repositoryPath;
+        return (startsWithWorkspace(repositoryPath, wspPath)) ? repositoryPath : wspPath + repositoryPath;
+    }
+
+    private boolean startsWithWorkspace(String repositoryPath, String wspPath) {
+        if (wspPath == null) {
+            return true;
+        } else {
+            return repositoryPath.startsWith(wspPath + "/");
+        }
     }
 }
