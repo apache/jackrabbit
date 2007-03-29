@@ -578,6 +578,8 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         if (isFilteredResource(destination)) {
             throw new DavException(DavServletResponse.SC_FORBIDDEN);
         }
+        // make sure, that src and destination belong to the same workspace
+        checkSameWorkspace(destination.getLocator());
         try {
             String destItemPath = destination.getLocator().getRepositoryPath();
             getJcrSession().getWorkspace().move(locator.getRepositoryPath(), destItemPath);
@@ -605,6 +607,8 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             // otherwise it doesn't make a difference
             throw new DavException(DavServletResponse.SC_FORBIDDEN, "Unable to perform shallow copy.");
         }
+        // make sure, that src and destination belong to the same workspace
+        checkSameWorkspace(destination.getLocator());
         try {
             String destItemPath = destination.getLocator().getRepositoryPath();
             getJcrSession().getWorkspace().copy(locator.getRepositoryPath(), destItemPath);
@@ -873,6 +877,13 @@ public class DavResourceImpl implements DavResource, JcrConstants {
 
     private boolean isFilteredItem(Item item) {
         return filter != null && filter.isFilteredItem(item);
+    }
+
+    private void checkSameWorkspace(DavResourceLocator otherLoc) throws DavException {
+        String wspname = getJcrSession().getWorkspace().getName();
+        if (!wspname.equals(otherLoc.getWorkspaceName())) {
+            throw new DavException(DavServletResponse.SC_FORBIDDEN, "Workspace mismatch: expected '" + wspname + "'; found: '" + otherLoc.getWorkspaceName() + "'");
+        }
     }
 
     //--------------------------------------------------------< inner class >---
