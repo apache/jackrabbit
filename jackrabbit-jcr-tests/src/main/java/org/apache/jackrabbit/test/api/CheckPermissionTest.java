@@ -40,7 +40,7 @@ public class CheckPermissionTest extends AbstractJCRTest {
      * denied.</li> </ul>
      */
     public void testCheckPermission() throws Exception {
-        testRootNode.addNode(nodeName2);
+        testRootNode.addNode(nodeName2, testNodeType);
         superuser.save();
 
         Session readOnly = helper.getReadOnlySession();
