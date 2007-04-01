@@ -467,7 +467,8 @@ Performance
 
    In a world where multiprocessor servers and multicore or soon even
    manycore processors are commonplace it is essential for best performance
-   that a software system like a content repository  
+   that a software system like a content repository uses every opportunity
+   for increased concurrency.  
 
    The revision model makes it possible to avoid all blocking of read
    operations and requires write synchronization only when new revisions are
