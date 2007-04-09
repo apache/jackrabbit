@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
+import java.rmi.server.RMIClientSocketFactory;
+import java.rmi.server.RMIServerSocketFactory;
 
 import javax.jcr.Item;
 import javax.jcr.NamespaceRegistry;
@@ -87,6 +89,30 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
  * @see org.apache.jackrabbit.rmi.server.ServerObject
  */
 public interface RemoteAdapterFactory {
+
+    /**
+     * Returns the RMI port to use.
+     *
+     * @return RMI port number
+     * @since 1.3
+     */
+    int getPort();
+
+    /**
+     * Returns the RMI client socket factory to use.
+     *
+     * @return RMI client socket factory
+     * @since 1.3
+     */
+    RMIClientSocketFactory getClientSocketFactory(); 
+
+    /**
+     * Returns the RMI server socket factory to use.
+     *
+     * @return RMI server socket factory
+     * @since 1.3
+     */
+    RMIServerSocketFactory getServerSocketFactory();
 
     /**
      * Returns a remote adapter for the given local repository.
