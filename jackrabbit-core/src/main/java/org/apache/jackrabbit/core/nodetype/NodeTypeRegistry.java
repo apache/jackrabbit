@@ -362,24 +362,32 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             notifyReRegistered(name);
             return entNew;
         }
+        
+       	String message = "The following nodetype change contains non-trivial changes."
+                + "Up until now only trivial changes are supported."
+                + " (see javadoc for "
+                + NodeTypeDefDiff.class.getName()
+                + "):\n" + diff.toString();
+        throw new RepositoryException(message);
 
+        // TODO Implement checkForConflictingContent()
         // make sure existing content would not conflict
         // with new node type definition
-        checkForConflictingContent(ntd);
-
+        //checkForConflictingContent(ntd);
+        //
         // unregister old node type definition
-        internalUnregister(name);
+        //internalUnregister(name);
         // register new definition
-        EffectiveNodeType entNew = internalRegister(ntd);
-
+        //EffectiveNodeType entNew = internalRegister(ntd);
+        //
         // persist modified node type definitions
-        customNTDefs.remove(name);
-        customNTDefs.add(ntd);
-        persistCustomNodeTypeDefs(customNTDefs);
-
+        //customNTDefs.remove(name);
+        //customNTDefs.add(ntd);
+        //persistCustomNodeTypeDefs(customNTDefs);
+        //
         // notify listeners
-        notifyReRegistered(name);
-        return entNew;
+        //notifyReRegistered(name);
+        //return entNew;
     }
 
     /**

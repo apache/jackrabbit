@@ -118,20 +118,22 @@ public class NodeTypeDefDiff {
             // assume TRIVIAL change by default
             type = TRIVIAL;
 
-            // check supertypes (MAJOR modification)
-            if (supertypesChanged()) {
-                type = MAJOR;
+            // check supertypes
+            int tmpType = supertypesDiff(); 
+            if (tmpType > type) {
+                type = tmpType;
             }
 
             // check mixin flag (MAJOR modification)
-            if (oldDef.isMixin() != newDef.isMixin()) {
-                type = MAJOR;
+            tmpType = mixinFlagDiff();
+            if (tmpType > type) {
+                type = tmpType;
             }
 
             // no need to check orderableChildNodes flag (TRIVIAL modification)
 
             // check property definitions
-            int tmpType = buildPropDefDiffs();
+            tmpType = buildPropDefDiffs();
             if (tmpType > type) {
                 type = tmpType;
             }
@@ -208,22 +210,15 @@ public class NodeTypeDefDiff {
     /**
      * @return
      */
-    public boolean supertypesChanged() {
-        return !Arrays.equals(oldDef.getSupertypes(), newDef.getSupertypes());
+    public int mixinFlagDiff() {
+        return oldDef.isMixin() != newDef.isMixin() ? MAJOR : NONE;
     }
 
     /**
      * @return
      */
-    public boolean propertyDefsChanged() {
-        return !Arrays.equals(oldDef.getPropertyDefs(), newDef.getPropertyDefs());
-    }
-
-    /**
-     * @return
-     */
-    public boolean childNodeDefsChanged() {
-        return !Arrays.equals(oldDef.getChildNodeDefs(), newDef.getChildNodeDefs());
+    public int supertypesDiff() {
+        return !Arrays.equals(oldDef.getSupertypes(), newDef.getSupertypes()) ? MAJOR : NONE;
     }
 
     /**
@@ -339,8 +334,61 @@ public class NodeTypeDefDiff {
 
         return maxType;
     }
+    
+    public String toString() {
+        String result = this.getClass().getSimpleName() + "[\n\tnodeTypeName="
+                + oldDef.getName();
+        
+        result += ",\n\tmixinFlagDiff=" + modificationTypeToString(mixinFlagDiff());
+        result += ",\n\tsupertypesDiff=" + modificationTypeToString(supertypesDiff());
+
+        result += ",\n\tpropertyDifferences=[\n";
+        result += toString(propDefDiffs);
+        result += "\t]";
+
+        result += ",\n\tchildNodeDifferences=[\n";
+        result += toString(childNodeDefDiffs);
+        result += "\t]\n";
+        result += "]\n";
+
+        return result;
+    }
+
+    private String toString(List childItemDefDiffs) {
+        String result = "";
+        for (Iterator iter = childItemDefDiffs.iterator(); iter.hasNext();) {
+            ChildItemDefDiff propDefDiff = (ChildItemDefDiff) iter.next();
+            result += "\t\t" + propDefDiff;
+            if (iter.hasNext()) {
+                result += ",";
+            }
+            result += "\n";
+        }
+        return result;
+    }
+
+    private String modificationTypeToString(int modifcationType) {
+        String typeString = "unknown";
+        switch (modifcationType) {
+            case NONE:
+                typeString = "NONE";
+                break;
+            case TRIVIAL:
+                typeString = "TRIVIAL";
+                break;
+            case MINOR:
+                typeString = "MINOR";
+                break;
+            case MAJOR:
+                typeString = "MAJOR";
+                break;
+        }
+        return typeString;
+    }
+
 
     //--------------------------------------------------------< inner classes >
+
     abstract class ChildItemDefDiff {
         protected final ItemDef oldDef;
         protected final ItemDef newDef;
@@ -414,6 +462,28 @@ public class NodeTypeDefDiff {
             return oldDef != null && newDef != null
                     && !oldDef.equals(newDef);
         }
+
+        public String toString() {
+            String typeString = modificationTypeToString(getType());
+
+            String operationString;
+            if (isAdded()) {
+                operationString = "ADDED";
+            } else if (isModified()) {
+                operationString = "MODIFIED";
+            } else if (isRemoved()) {
+                operationString = "REMOVED";
+            } else {
+                operationString = "NONE";
+            }
+
+            ItemDef itemDefinition = (oldDef != null) ? oldDef : newDef;
+
+            return getClass().getSimpleName() + "[itemName="
+                    + itemDefinition.getName() + ", type=" + typeString
+                    + ", operation=" + operationString + "]";
+        }
+
     }
 
     public class PropDefDiff extends ChildItemDefDiff {
