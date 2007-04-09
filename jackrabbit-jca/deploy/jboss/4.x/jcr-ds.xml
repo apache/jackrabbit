@@ -23,6 +23,6 @@
 		<connection-definition>javax.jcr.Repository</connection-definition>
 		<config-property name="homeDir" type="java.lang.String">/temp/jackrabbit</config-property>
 		<config-property name="configFile" type="java.lang.String">classpath:repository.xml</config-property>
-		<config-property name="bindSessionToTrasaction" type="java.lang.Boolean">true</config-property>
+		<config-property name="bindSessionToTransaction" type="java.lang.Boolean">true</config-property>
     </tx-connection-factory>
 </connection-factories>
