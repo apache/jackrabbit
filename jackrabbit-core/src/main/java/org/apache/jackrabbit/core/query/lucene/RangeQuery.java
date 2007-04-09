@@ -183,13 +183,19 @@ public class RangeQuery extends Query implements TransformConstants {
          *
          * @param searcher a <code>Searcher</code> instance.
          */
-        RangeQueryWeight(final Searcher searcher) {
-            super(searcher, new ScorerFactory() {
-                public Scorer createScorer(IndexReader reader) {
-                    return new RangeQueryScorer(searcher.getSimilarity(), reader);
-                }
-            });
+        RangeQueryWeight(Searcher searcher) {
+            super(searcher);
         }
+
+        /**
+         * Creates a {@link RangeQueryScorer} instance.
+         *
+         * @param reader index reader
+         * @return a {@link RangeQueryScorer} instance
+         */
+        protected Scorer createScorer(IndexReader reader) {
+            return new RangeQueryScorer(searcher.getSimilarity(), reader);
+        };
 
         /**
          * Returns this <code>RangeQuery</code>.

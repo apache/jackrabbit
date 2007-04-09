@@ -157,12 +157,18 @@ public class WildcardQuery extends Query implements TransformConstants {
          *
          * @param searcher a <code>Searcher</code> instance.
          */
-        public WildcardQueryWeight(final Searcher searcher) {
-            super(searcher, new ScorerFactory() {
-                public Scorer createScorer(IndexReader reader) {
-                    return new WildcardQueryScorer(searcher.getSimilarity(), reader);
-                }
-            });
+        public WildcardQueryWeight(Searcher searcher) {
+            super(searcher);
+        }
+
+        /**
+         * Creates a {@link WildcardQueryScorer} instance.
+         *
+         * @param reader index reader
+         * @return a {@link WildcardQueryScorer} instance
+         */
+        protected Scorer createScorer(IndexReader reader) {
+            return new WildcardQueryScorer(searcher.getSimilarity(), reader);
         }
 
         /**

@@ -31,6 +31,11 @@ import java.io.IOException;
 class MatchAllWeight extends AbstractWeight {
 
     /**
+     * Name of the field to match.
+     */
+    private final String field;
+
+    /**
      * the MatchAllQuery
      */
     private final Query query;
@@ -53,14 +58,22 @@ class MatchAllWeight extends AbstractWeight {
     /**
      * @param query
      * @param searcher
+     * @param field name of the field to match 
      */
-    MatchAllWeight(Query query, Searcher searcher, final String field) {
-        super(searcher, new ScorerFactory() {
-            public Scorer createScorer(IndexReader reader) throws IOException {
-                return new MatchAllScorer(reader, field);
-            }
-        });
+    MatchAllWeight(Query query, Searcher searcher, String field) {
+        super(searcher);
         this.query = query;
+        this.field = field;
+    }
+
+    /**
+     * Creates a {@link MatchAllScorer} instance.
+     *
+     * @param reader index reader
+     * @return a {@link MatchAllScorer} instance
+     */
+    protected Scorer createScorer(IndexReader reader) throws IOException {
+        return new MatchAllScorer(reader, field);
     }
 
     /**

@@ -35,11 +35,6 @@ abstract class AbstractWeight implements Weight {
     protected final Searcher searcher;
 
     /**
-     * The factory, which creates the scorer instances for this weight.
-     */
-    private final ScorerFactory factory;
-
-    /**
      * Creates a new <code>AbstractWeight</code> for the given
      * <code>searcher</code>. Specific scorer instances are created using the
      * provided scorer <code>factory</code>.
@@ -47,10 +42,20 @@ abstract class AbstractWeight implements Weight {
      * @param searcher the searcher instance for this weight.
      * @param factory the scorer factory.
      */
-    public AbstractWeight(Searcher searcher, ScorerFactory factory) {
+    public AbstractWeight(Searcher searcher) {
         this.searcher = searcher;
-        this.factory = factory;
     }
+
+    /**
+     * Abstract factory method for crating a scorer instance for the
+     * specified reader.
+     *
+     * @param reader the index reader the created scorer instance should use
+     * @return the scorer instance
+     * @throws IOException if an error occurs while reading from the index
+     */
+    protected abstract Scorer createScorer(IndexReader reader)
+            throws IOException;
 
     /**
      * {@inheritDoc}
@@ -76,23 +81,8 @@ abstract class AbstractWeight implements Weight {
 
             return new MultiScorer(searcher.getSimilarity(), scorers, starts);
         } else {
-            return factory.createScorer(reader);
+            return createScorer(reader);
         }
     }
 
-    /**
-     * Simple factory for creating scorer instances.
-     */
-    public interface ScorerFactory {
-
-        /**
-         * Creates a Scorer instance for the specified reader.
-         *
-         * @param reader the index reader the created scorer instance should
-         *               use.
-         * @return the scorer instance.
-         * @throws IOException if an error occurs while reading from the index.
-         */
-        public Scorer createScorer(IndexReader reader) throws IOException;
-    }
 }
