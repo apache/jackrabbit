@@ -17,6 +17,9 @@
 package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
+import java.rmi.server.RMIClientSocketFactory;
+import java.rmi.server.RMIServerSocketFactory;
+import java.rmi.server.RMISocketFactory;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -99,14 +102,13 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     private static final int DEFAULT_BUFFER_SIZE = 100;
 
     /** The buffer size of iterators created by this factory. */
-    private int bufferSize;
+    private int bufferSize = DEFAULT_BUFFER_SIZE;
 
-    /**
-     * Creates a server adapter factory with the default iterator buffer size.
-     */
-    public ServerAdapterFactory() {
-        bufferSize = DEFAULT_BUFFER_SIZE;
-    }
+    private int port = 0;
+
+    private RMIClientSocketFactory clientSocketFactory = null;
+
+    private RMIServerSocketFactory serverSocketFactory = null;
 
     /**
      * Returns the iterator buffer size.
@@ -124,6 +126,82 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
      */
     public void setBufferSize(int bufferSize) {
         this.bufferSize = bufferSize;
+    }
+
+    /**
+     * Returns the RMI port to use.
+     *
+     * @return RMI port number
+     * @since 1.3
+     */
+    public int getPort() {
+        return port;
+    }
+
+    /**
+     * Sets the RMI port to use.
+     *
+     * @param port RMI port number
+     * @since 1.3
+     */
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    /**
+     * Returns the RMI client socket factory to use.
+     *
+     * @return RMI client socket factory
+     * @since 1.3
+     */
+    public RMIClientSocketFactory getClientSocketFactory() {
+        RMIClientSocketFactory factory = clientSocketFactory;
+        if (factory == null) {
+            factory = RMISocketFactory.getSocketFactory();
+        }
+        if (factory == null) {
+            factory = RMISocketFactory.getDefaultSocketFactory();
+        }
+        return factory;
+    }
+
+    /**
+     * Sets the RMI client socket factory to use.
+     *
+     * @param factory RMI client socket factory,
+     *                or <code>null</code> to use the default
+     * @since 1.3
+     */
+    public void setClientSocketFactory(RMIClientSocketFactory factory) {
+        clientSocketFactory = factory;
+    }
+
+    /**
+     * Returns the RMI server socket factory to use.
+     *
+     * @return RMI server socket factory
+     * @since 1.3
+     */
+    public RMIServerSocketFactory getServerSocketFactory() {
+        RMIServerSocketFactory factory = serverSocketFactory;
+        if (factory == null) {
+            factory = RMISocketFactory.getSocketFactory();
+        }
+        if (factory == null) {
+            factory = RMISocketFactory.getDefaultSocketFactory();
+        }
+        return factory;
+    }
+
+    /**
+     * Sets the RMI server socket factory to use.
+     *
+     * @param factory RMI server socket factory,
+     *                or <code>null</code> to use the default
+     * @since 1.3
+     */
+    public void setServerSocketFactory(RMIServerSocketFactory factory) {
+        serverSocketFactory = factory;
     }
 
     /**
