@@ -20,6 +20,8 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Weight;
 
+import java.util.Set;
+
 /**
  * Specialized query that returns / scores all pages in the search index.
  * <p>Use this Query to perform a match '*'.
@@ -60,5 +62,11 @@ class MatchAllQuery extends Query {
      */
     public String toString(String field) {
         return "%";
+    }
+
+    /**
+     * Does nothing but simply returns. There are no terms to extract.
+     */
+    public void extractTerms(Set terms) {
     }
 }
