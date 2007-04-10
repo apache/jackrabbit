@@ -73,7 +73,8 @@ public class WorkspaceCopyTest extends AbstractWorkspaceCopyTest {
      */
     public void testCopyNodesConstraintViolationException() throws RepositoryException {
         // if parent node is nt:base then no sub nodes can be created
-        Node subNodesNotAllowedNode = testRootNode.addNode(nodeName3, ntBase);
+        String nodetype = testNodeTypeNoChildren == null ? ntBase : testNodeTypeNoChildren;
+        Node subNodesNotAllowedNode = testRootNode.addNode(nodeName3, nodetype);
         testRootNode.save();
         try {
             String dstAbsPath = subNodesNotAllowedNode.getPath() + "/" + node2.getName();
