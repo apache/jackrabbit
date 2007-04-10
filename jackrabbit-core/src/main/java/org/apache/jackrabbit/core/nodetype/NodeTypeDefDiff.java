@@ -336,7 +336,7 @@ public class NodeTypeDefDiff {
     }
     
     public String toString() {
-        String result = this.getClass().getSimpleName() + "[\n\tnodeTypeName="
+        String result = getClass().getName() + "[\n\tnodeTypeName="
                 + oldDef.getName();
         
         result += ",\n\tmixinFlagDiff=" + modificationTypeToString(mixinFlagDiff());
@@ -479,7 +479,7 @@ public class NodeTypeDefDiff {
 
             ItemDef itemDefinition = (oldDef != null) ? oldDef : newDef;
 
-            return getClass().getSimpleName() + "[itemName="
+            return getClass().getName() + "[itemName="
                     + itemDefinition.getName() + ", type=" + typeString
                     + ", operation=" + operationString + "]";
         }
