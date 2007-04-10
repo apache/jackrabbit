@@ -310,8 +310,8 @@ public class NodeTest extends AbstractJCRTest {
     public void testAddNodeConstraintViolationExceptionUndefinedNodeType() throws RepositoryException {
         // get default workspace test root node using superuser session
         Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
-
-        Node defaultTestNode = defaultRootNode.addNode(nodeName1, ntBase);
+        String nodetype = testNodeTypeNoChildren == null ? ntBase : testNodeTypeNoChildren;
+        Node defaultTestNode = defaultRootNode.addNode(nodeName1, nodetype);
 
         try {
             defaultTestNode.addNode(nodeName2);

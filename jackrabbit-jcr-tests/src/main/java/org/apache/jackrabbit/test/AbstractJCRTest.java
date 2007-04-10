@@ -202,6 +202,11 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected String testNodeType;
 
     /**
+     * A node type that does not allow any child nodes, such as nt:base.
+     */
+    protected String testNodeTypeNoChildren;
+
+    /**
      * Name of a node that will be created during a test case.
      */
     protected String nodeName1;
@@ -262,6 +267,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
         // cut off '/' to build testPath
         testPath = testRoot.substring(1);
         testNodeType = getProperty(RepositoryStub.PROP_NODETYPE);
+        testNodeTypeNoChildren = getProperty(RepositoryStub.PROP_NODETYPENOCHILDREN);
         // setup node names
         nodeName1 = getProperty(RepositoryStub.PROP_NODE_NAME1);
         if (nodeName1 == null) {
