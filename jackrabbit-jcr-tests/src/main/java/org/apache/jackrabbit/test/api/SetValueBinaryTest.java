@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.Property;
 import javax.jcr.Value;
@@ -126,7 +127,11 @@ public class SetValueBinaryTest extends AbstractJCRTest {
      * Test the deletion of a property by assigning it a null value, saved from
      * the Session
      */
-    public void testRemoveBinarySession() throws RepositoryException {
+    public void testRemoveBinarySession() throws RepositoryException, NotExecutableException {
+        if (property1.getDefinition().isMandatory() || property1.getDefinition().isProtected()) {
+            throw new NotExecutableException("property " + property1.getName() + " can not be removed");
+        }
+      
         property1.setValue((InputStream) null);
         superuser.save();
 
@@ -142,7 +147,11 @@ public class SetValueBinaryTest extends AbstractJCRTest {
      * Test the deletion of a property by assigning it a null value, saved from
      * the parent Node
      */
-    public void testRemoveBinaryParent() throws RepositoryException {
+    public void testRemoveBinaryParent() throws RepositoryException, NotExecutableException {
+        if (property1.getDefinition().isMandatory() || property1.getDefinition().isProtected()) {
+            throw new NotExecutableException("property " + property1.getName() + " can not be removed");
+        }
+
         property1.setValue((Value) null);
         node.save();
 
