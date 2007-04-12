@@ -17,8 +17,10 @@
 package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.Node;
+import javax.jcr.Property;
 
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
@@ -134,6 +136,12 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
     public void testRemoveInputStreamPropertySession() throws Exception {
         testNode.setProperty(propertyName1, is1);
         superuser.save();
+
+        Property property = testNode.getProperty(propertyName1);
+        if (property.getDefinition().isMandatory() || property.getDefinition().isProtected()) {
+            throw new NotExecutableException("property " + property.getName() + " can not be removed");
+        }
+
         testNode.setProperty(propertyName1, (InputStream) null);
         superuser.save();
         assertFalse("Removing property with Node.setProperty(String, (InputStream)null) and Session.save() not working",
@@ -148,6 +156,12 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
     public void testRemoveInputStreamPropertyParent() throws Exception {
         testNode.setProperty(propertyName1, is1);
         testRootNode.save();
+        
+        Property property = testNode.getProperty(propertyName1);
+        if (property.getDefinition().isMandatory() || property.getDefinition().isProtected()) {
+            throw new NotExecutableException("property " + property.getName() + " can not be removed");
+        }
+
         testNode.setProperty(propertyName1, (InputStream) null);
         testRootNode.save();
         assertFalse("Removing property with Node.setProperty(String, (InputStream)null) and parentNode.save() not working",
