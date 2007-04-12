@@ -429,8 +429,6 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                     // read next sql stmt
                     sql = reader.readLine();
                 }
-                // commit the changes
-                con.commit();
             } catch (IOException e) {
                 String msg = "Configuration error: unable to read schema '" + schema + "': " + e;
                 log.debug(msg);
