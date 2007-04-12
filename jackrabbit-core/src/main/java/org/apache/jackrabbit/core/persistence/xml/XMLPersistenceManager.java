@@ -122,26 +122,58 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     private BLOBStore blobStore;
 
     /**
+     * Template for the subdirectory path for the files associated with
+     * a single node. The template is processed by replacing each
+     * "<code>x</code>" with the next hex digit in the UUID string.
+     * All other characters in the template are used as-is.
+     */
+    private String nodePathTemplate = "xxxx/xxxx/xxxxxxxxxxxxxxxxxxxxxxxx";
+
+    /**
      * Creates a new <code>XMLPersistenceManager</code> instance.
      */
     public XMLPersistenceManager() {
         initialized = false;
     }
 
+    /**
+     * Returns the node path template.
+     *
+     * @return node path template
+     */
+    public String getNodePathTemplate() {
+        return nodePathTemplate;
+    }
+
+    /**
+     * Sets the node path template.
+     *
+     * @param template node path template
+     */
+    public void setNodePathTemplate(String template) {
+        nodePathTemplate = template;
+    }
+
+    /**
+     * Builds the path of the node folder for the given node identifier
+     * based on the configured node path template.
+     *
+     * @param id node identifier
+     * @return node folder path
+     */
     private String buildNodeFolderPath(NodeId id) {
         StringBuffer sb = new StringBuffer();
         char[] chars = id.getUUID().toString().toCharArray();
         int cnt = 0;
-        for (int i = 0; i < chars.length; i++) {
-            if (chars[i] == '-') {
-                continue;
+        for (int i = 0; i < nodePathTemplate.length(); i++) {
+            char ch = nodePathTemplate.charAt(i);
+            if (ch == 'x' && cnt < chars.length) {
+                ch = chars[cnt++];
+                if (ch == '-') {
+                    ch = chars[cnt++];
+                }
             }
-            //if (cnt > 0 && cnt % 4 == 0) {
-            if (cnt == 4 || cnt == 8) {
-                sb.append('/');
-            }
-            sb.append(chars[i]);
-            cnt++;
+            sb.append(ch);
         }
         return sb.toString();
     }
