@@ -25,7 +25,6 @@ import java.util.Hashtable;
 import javax.jcr.Repository;
 import javax.naming.Context;
 import javax.naming.Name;
-import javax.naming.NamingException;
 import javax.naming.RefAddr;
 import javax.naming.Reference;
 import javax.naming.spi.ObjectFactory;
@@ -36,7 +35,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteRepository;
  * Object factory for JCR-RMI clients. This factory can be used either
  * directly or as a JNDI object factory.
  *
- * @author Jukka Zitting
  * @see ClientRepository
  */
 public class ClientRepositoryFactory implements ObjectFactory {
@@ -70,65 +68,49 @@ public class ClientRepositoryFactory implements ObjectFactory {
 
     /**
      * Returns a client wrapper for a remote content repository. The remote
-     * repository is looked up from the RMI registry using the given URL and
-     * wrapped into a {@link ClientRepository ClientRepository} adapter.
+     * repository is looked up from the RMI registry using the given URL by
+     * the returned {@link SafeClientRepository} instance.
      *
      * @param url the RMI URL of the remote repository
      * @return repository client
-     * @throws ClassCastException    if the URL points to an unknown object
-     * @throws MalformedURLException if the URL is malformed
-     * @throws NotBoundException     if the URL points to nowhere
-     * @throws RemoteException       on RMI errors
      */
-    public synchronized Repository getRepository(String url) throws
-            ClassCastException, MalformedURLException,
-            NotBoundException, RemoteException {
-        RemoteRepository remote = (RemoteRepository) Naming.lookup(url);
-        return factory.getRepository(remote);
+    public Repository getRepository(final String url) {
+        return new SafeClientRepository(factory) {
+
+            protected RemoteRepository getRemoteRepository()
+                    throws RemoteException {
+                try {
+                    return (RemoteRepository) Naming.lookup(url);
+                } catch (MalformedURLException e) {
+                    throw new RemoteException("Malformed URL: " + url, e);
+                } catch (NotBoundException e) {
+                    throw new RemoteException("No target found: " + url, e);
+                } catch (ClassCastException e) {
+                    throw new RemoteException("Unknown target: " + url, e);
+                }
+            }
+            
+        };
     }
 
     /**
-     * Utility method for looking up the URL within the given RefAddr object.
-     * Feeds the content of the RefAddr object to
-     * {@link #getRepository(String) getRepository(String)} and wraps all
-     * errors to {@link NamingException NamingExceptions}.
-     * <p>
-     * Used by {@link #getObjectInstance(Object, Name, Context, Hashtable) getObjectInstance()}.
-     *
-     * @param url the URL reference
-     * @return repository client
-     * @throws NamingException on all errors
-     */
-    private Repository getRepository(RefAddr url) throws NamingException {
-        try {
-            return getRepository((String) url.getContent());
-        } catch (Exception ex) {
-            throw new NamingException(ex.getMessage());
-        }
-    }
-
-    /**
-     * JNDI factory method for creating JCR-RMI clients. Looks up a
-     * remote repository using the reference parameter "url" as the RMI URL
-     * and returns a client wrapper for the remote repository.
+     * JNDI factory method for creating JCR-RMI clients. Creates a lazy
+     * client repository instance that uses the reference parameter "url"
+     * as the RMI URL where the remote repository is looked up when accessed.
      *
      * @param object      reference parameters
      * @param name        unused
      * @param context     unused
      * @param environment unused
      * @return repository client
-     * @throws NamingException on all errors
      */
     public Object getObjectInstance(
-            Object object, Name name, Context context, Hashtable environment)
-            throws NamingException {
+            Object object, Name name, Context context, Hashtable environment) {
         if (object instanceof Reference) {
             Reference reference = (Reference) object;
-            if (Repository.class.getName().equals(reference.getClassName())) {
-                RefAddr url = reference.get(URL_PARAMETER);
-                if (url != null) {
-                    return getRepository(url);
-                }
+            RefAddr url = reference.get(URL_PARAMETER);
+            if (url != null && url.getContent() != null) {
+                return getRepository(url.getContent().toString());
             }
         }
         return null;
