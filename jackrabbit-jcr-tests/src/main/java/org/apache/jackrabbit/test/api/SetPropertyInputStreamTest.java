@@ -44,6 +44,14 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         super.setUp();
         testNode = testRootNode.addNode(nodeName1, testNodeType);
+        testRootNode.save();
+        
+        // special case for repositories that do allow binary property
+        // values, but only on jcr:content/jcr:data
+        if (propertyName1.equals("jcr:data") && testNode.hasNode("jcr:content")
+            && testNode.getNode("jcr:content").isNodeType("nt:resource") && ! testNode.hasProperty("jcr:data")) {
+          testNode = testNode.getNode("jcr:content");
+        }
     }
 
     /**
