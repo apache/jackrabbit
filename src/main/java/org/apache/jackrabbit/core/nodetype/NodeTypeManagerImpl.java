@@ -288,7 +288,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
                     ntReg.reregisterNodeType(nodeTypeDef);
                     nodeTypes.add(getNodeType(nodeTypeDef.getName()));
                 }
-                return (NodeType[]) nodeTypes.toArray(new NodeTypeDef[nodeTypes.size()]);
+                return (NodeType[]) nodeTypes.toArray(new NodeType[nodeTypes.size()]);
             } else {
                 return registerNodeTypes(nodeTypeDefs);
             }
