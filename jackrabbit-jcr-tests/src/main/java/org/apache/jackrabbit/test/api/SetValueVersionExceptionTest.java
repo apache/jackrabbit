@@ -266,9 +266,22 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
     public void testNode()
         throws NotExecutableException, RepositoryException {
 
+        String nodeType3 = getProperty("nodetype3");
+
         // create a referenceable node
-        Node referenceableNode = testRootNode.addNode(nodeName3);
-        referenceableNode.addMixin(mixReferenceable);
+        Node referenceableNode = (nodeType3 == null)
+            ? testRootNode.addNode(nodeName3)
+            : testRootNode.addNode(nodeName3, nodeType3);
+
+        // try to make it referenceable if it is not
+        if (!referenceableNode.isNodeType(mixReferenceable)) {
+            if (referenceableNode.canAddMixin(mixReferenceable)) {
+              referenceableNode.addMixin(mixReferenceable);
+            } else {
+                throw new NotExecutableException("Failed to set up required test items.");
+            }
+        }
+
         // implementation specific if mixin takes effect immediately or upon save
         testRootNode.save();
 
@@ -285,6 +298,9 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
                 throw new NotExecutableException("Failed to set up required test items.");
             }
         }
+
+        // fail early when reference properties are not suppoerted
+        ensureCanSetProperty(node, refPropName, node.getSession().getValueFactory().createValue(referenceableNode));
 
         Property property = node.setProperty(refPropName, referenceableNode);
         testRootNode.save();
