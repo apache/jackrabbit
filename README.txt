@@ -5,7 +5,7 @@ Welcome to Apache Jackrabbit  <http://jackrabbit.apache.org/>
 License (see also LICENSE.txt)
 ==============================
 
-Collective work: Copyright 2006 The Apache Software Foundation.
+Collective work: Copyright 2007 The Apache Software Foundation.
 
 Licensed to the Apache Software Foundation (ASF) under one or more
 contributor license agreements.  See the NOTICE file distributed with
