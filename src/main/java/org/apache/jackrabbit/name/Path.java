@@ -1194,9 +1194,8 @@ public final class Path implements Serializable {
          * @return hash code
          */
         public int hashCode() {
-            // @todo treat index==0 as index==1?
             int h = 17;
-            h = 37 * h + index;
+            h = 37 * h + normalizeIndex(index);
             h = 37 * h + name.hashCode();
             return h;
         }
@@ -1216,12 +1215,22 @@ public final class Path implements Serializable {
             if (obj instanceof PathElement) {
                 PathElement other = (PathElement) obj;
                 return name.equals(other.name)
-                        // @todo treat index==0 as index==1?
-                        && index == other.index;
+                        && normalizeIndex(index) == normalizeIndex(other.index);
             }
             return false;
         }
 
+        /**
+         * Normalizes index value {@link Path#INDEX_UNDEFINED} to
+         * {@link Path#INDEX_DEFAULT} for {@link #equals(Object)} and
+         * {@link #hashCode()}.
+         * @param index
+         * @return normalized index
+         */
+        private int normalizeIndex(int index) {
+            return index == Path.INDEX_UNDEFINED ? Path.INDEX_DEFAULT : index;
+        }
+      
         /**
          * Returns <code>true</code> if this element denotes the <i>root</i> element,
          * otherwise returns <code>false</code>.
