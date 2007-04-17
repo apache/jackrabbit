@@ -70,11 +70,23 @@ public class ClientRepositoryFactory implements ObjectFactory {
      * Returns a client wrapper for a remote content repository. The remote
      * repository is looked up from the RMI registry using the given URL by
      * the returned {@link SafeClientRepository} instance.
+     * <p>
+     * The current implementation of this method will not throw any of the
+     * declared exceptions (because of the {@link SafeClientRepository} being
+     * used), but the throws clauses are kept for backwards compatibility and
+     * potential future use. Clients should be prepared to handle exceptions
+     * from this method.
      *
      * @param url the RMI URL of the remote repository
      * @return repository client
+     * @throws MalformedURLException if the given URL is malfored
+     * @throws NotBoundException if the given URL points to nothing
+     * @throws ClassCastException if the given URL points to something unknown
+     * @throws RemoteException if the remote repository can not be accessed
      */
-    public Repository getRepository(final String url) {
+    public Repository getRepository(final String url)
+            throws MalformedURLException, NotBoundException,
+            ClassCastException, RemoteException {
         return new SafeClientRepository(factory) {
 
             protected RemoteRepository getRemoteRepository()
@@ -110,7 +122,11 @@ public class ClientRepositoryFactory implements ObjectFactory {
             Reference reference = (Reference) object;
             RefAddr url = reference.get(URL_PARAMETER);
             if (url != null && url.getContent() != null) {
-                return getRepository(url.getContent().toString());
+                try {
+                    return getRepository(url.getContent().toString());
+                } catch (Exception e) {
+                    return null;
+                }
             }
         }
         return null;
