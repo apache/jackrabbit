@@ -19,7 +19,6 @@ package org.apache.jackrabbit.rmi.server;
 import java.rmi.RemoteException;
 import java.rmi.server.RMIClientSocketFactory;
 import java.rmi.server.RMIServerSocketFactory;
-import java.rmi.server.RMISocketFactory;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -155,14 +154,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
      * @since 1.3
      */
     public RMIClientSocketFactory getClientSocketFactory() {
-        RMIClientSocketFactory factory = clientSocketFactory;
-        if (factory == null) {
-            factory = RMISocketFactory.getSocketFactory();
-        }
-        if (factory == null) {
-            factory = RMISocketFactory.getDefaultSocketFactory();
-        }
-        return factory;
+        return clientSocketFactory;
     }
 
     /**
@@ -183,14 +175,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
      * @since 1.3
      */
     public RMIServerSocketFactory getServerSocketFactory() {
-        RMIServerSocketFactory factory = serverSocketFactory;
-        if (factory == null) {
-            factory = RMISocketFactory.getSocketFactory();
-        }
-        if (factory == null) {
-            factory = RMISocketFactory.getDefaultSocketFactory();
-        }
-        return factory;
+        return serverSocketFactory;
     }
 
     /**
