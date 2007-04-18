@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.config.AccessManagerConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
@@ -72,6 +73,9 @@ import javax.jcr.Workspace;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.observation.EventListener;
+import javax.jcr.observation.EventListenerIterator;
+import javax.jcr.observation.ObservationManager;
 import javax.jcr.version.VersionException;
 import javax.security.auth.Subject;
 import javax.xml.parsers.ParserConfigurationException;
@@ -91,6 +95,7 @@ import java.io.PrintStream;
 import java.security.AccessControlException;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -1215,6 +1220,30 @@ public class SessionImpl implements Session, NamePathResolver, Dumpable {
     }
 
     /**
+     * Utility method that removes all registered event listeners.
+     */
+    private void removeRegisteredEventListeners() {
+        try {
+            ObservationManager manager = getWorkspace().getObservationManager();
+            // Use a copy to avoid modifying the set of registered listeners
+            // while iterating over it
+            Collection listeners =
+                IteratorUtils.toList(manager.getRegisteredEventListeners());
+            Iterator iterator = listeners.iterator();
+            while (iterator.hasNext()) {
+                EventListener listener = (EventListener) iterator.next();
+                try {
+                    manager.removeEventListener(listener);
+                } catch (RepositoryException e) {
+                    log.warn("Error removing event listener: " + listener, e);
+                }
+            }
+        } catch (RepositoryException e) {
+            log.warn("Error removing event listeners", e);
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     public synchronized void logout() {
@@ -1222,6 +1251,10 @@ public class SessionImpl implements Session, NamePathResolver, Dumpable {
             // ignore
             return;
         }
+
+        // JCR-798: Remove all registered event listeners to avoid concurrent
+        // access to session internals by the event delivery or even listeners
+        removeRegisteredEventListeners();
 
         // discard any pending changes first as those might
         // interfere with subsequent operations
