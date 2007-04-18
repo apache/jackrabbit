@@ -4,4 +4,4 @@ create table ${schemaObjectPrefix}REFS (NODE_ID binary(16) not null, REFS_DATA l
 create unique index ${schemaObjectPrefix}REFS_IDX on ${schemaObjectPrefix}REFS (NODE_ID)
 create table ${schemaObjectPrefix}BINVAL (BINVAL_ID varchar(64) not null, BINVAL_DATA longblob not null)
 create unique index ${schemaObjectPrefix}BINVAL_IDX on ${schemaObjectPrefix}BINVAL (BINVAL_ID)
-create table ${schemaObjectPrefix}NAMES (ID INTEGER AUTO_INCREMENT PRIMARY KEY, NAME varchar(255) not null)
+create table ${schemaObjectPrefix}NAMES (ID INTEGER AUTO_INCREMENT PRIMARY KEY, NAME varchar(255) character set utf8 collate utf8_bin not null)
