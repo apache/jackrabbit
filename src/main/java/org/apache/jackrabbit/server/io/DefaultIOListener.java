@@ -47,7 +47,7 @@ public class DefaultIOListener implements IOListener {
      * @see IOListener#onEnd(IOHandler, IOContext, boolean)
      */
     public void onEnd(IOHandler handler, IOContext ioContext, boolean success) {
-        ioLog.info("Result for IOHandler (" + handler.getName() + "): " + (success ? "OK" : "Failed"));
+        ioLog.debug("Result for IOHandler (" + handler.getName() + "): " + (success ? "OK" : "Failed"));
     }
 
     /**
