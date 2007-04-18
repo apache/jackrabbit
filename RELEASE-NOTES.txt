@@ -64,6 +64,7 @@ Improvements
   [JCR-818] - test granularity for calendar (date) properties
   [JCR-830] - SetValueBinaryTest: some repositories have constraints on ...
   [JCR-846] - support for DB2 in BundleDbPersistenceManager
+  [JCR-847] - Provide a Method getCredentialsProvider to the ...
 
 Bug fixes
 
