@@ -68,9 +68,6 @@ public class ServerObject extends UnicastRemoteObject {
      */
     protected ServerObject(RemoteAdapterFactory factory)
             throws RemoteException {
-        super(factory.getPort(),
-                factory.getClientSocketFactory(),
-                factory.getServerSocketFactory());
         this.factory = factory;
     }
 

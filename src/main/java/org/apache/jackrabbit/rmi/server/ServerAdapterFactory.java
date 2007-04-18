@@ -103,12 +103,6 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     /** The buffer size of iterators created by this factory. */
     private int bufferSize = DEFAULT_BUFFER_SIZE;
 
-    private int port = 0;
-
-    private RMIClientSocketFactory clientSocketFactory = null;
-
-    private RMIServerSocketFactory serverSocketFactory = null;
-
     /**
      * Returns the iterator buffer size.
      *
@@ -125,68 +119,6 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
      */
     public void setBufferSize(int bufferSize) {
         this.bufferSize = bufferSize;
-    }
-
-    /**
-     * Returns the RMI port to use.
-     *
-     * @return RMI port number
-     * @since 1.3
-     */
-    public int getPort() {
-        return port;
-    }
-
-    /**
-     * Sets the RMI port to use.
-     *
-     * @param port RMI port number
-     * @since 1.3
-     */
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    /**
-     * Returns the RMI client socket factory to use.
-     *
-     * @return RMI client socket factory
-     * @since 1.3
-     */
-    public RMIClientSocketFactory getClientSocketFactory() {
-        return clientSocketFactory;
-    }
-
-    /**
-     * Sets the RMI client socket factory to use.
-     *
-     * @param factory RMI client socket factory,
-     *                or <code>null</code> to use the default
-     * @since 1.3
-     */
-    public void setClientSocketFactory(RMIClientSocketFactory factory) {
-        clientSocketFactory = factory;
-    }
-
-    /**
-     * Returns the RMI server socket factory to use.
-     *
-     * @return RMI server socket factory
-     * @since 1.3
-     */
-    public RMIServerSocketFactory getServerSocketFactory() {
-        return serverSocketFactory;
-    }
-
-    /**
-     * Sets the RMI server socket factory to use.
-     *
-     * @param factory RMI server socket factory,
-     *                or <code>null</code> to use the default
-     * @since 1.3
-     */
-    public void setServerSocketFactory(RMIServerSocketFactory factory) {
-        serverSocketFactory = factory;
     }
 
     /**
