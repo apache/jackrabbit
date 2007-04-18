@@ -18,6 +18,7 @@ package org.apache.jackrabbit.j2ee;
 
 import org.apache.jackrabbit.server.AbstractWebdavServlet;
 import org.apache.jackrabbit.server.BasicCredentialsProvider;
+import org.apache.jackrabbit.server.CredentialsProvider;
 import org.apache.jackrabbit.server.SessionProvider;
 import org.apache.jackrabbit.server.SessionProviderImpl;
 import org.apache.jackrabbit.webdav.DavLocatorFactory;
@@ -277,12 +278,23 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
      */
     public synchronized SessionProvider getSessionProvider() {
         if (sessionProvider == null) {
-            sessionProvider = new SessionProviderImpl(
-                new BasicCredentialsProvider(
-                    getInitParameter(INIT_PARAM_MISSING_AUTH_MAPPING))
-            );
+            sessionProvider = new SessionProviderImpl(getCredentialsProvider());
         }
         return sessionProvider;
+    }
+
+    /**
+     * Factory method for creating the credentials provider to be used for
+     * accessing the credentials associated with a request. The default
+     * implementation returns a {@link BasicCredentialsProvider} instance,
+     * but subclasses can override this method to add support for other
+     * types of credentials.
+     *
+     * @return the credentilas provider
+     * @since 1.3
+     */
+    protected CredentialsProvider getCredentialsProvider() {
+    	return new BasicCredentialsProvider(getInitParameter(INIT_PARAM_MISSING_AUTH_MAPPING));
     }
 
     /**
