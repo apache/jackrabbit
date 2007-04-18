@@ -41,14 +41,14 @@ public class CacheManager implements CacheAccessListener {
     /** The logger instance. */
     private static Logger log = LoggerFactory.getLogger(CacheManager.class);
 
-    /** The amount of memory to distribute accross the caches. */
-    private static final long MAX_MEMORY = 16 * 1024 * 1024;
+    /** The default maximum amount of memory to distribute accross the caches. */
+    private static final long DEFAULT_MAX_MEMORY = 16 * 1024 * 1024;
 
-    /** The minimum size of a cache. */
-    private static final long MIN_MEMORY_PER_CACHE = 128 * 1024;
+    /** The default minimum size of a cache. */
+    private static final long DEFAULT_MIN_MEMORY_PER_CACHE = 128 * 1024;
 
-    /** The maximum memory per cache (unless, there is some unused memory). */
-    private static final long MAX_MEMORY_PER_CACHE = 4 * 1024 * 1024;
+    /** The default maximum memory per cache. */
+    private static final long DEFAULT_MAX_MEMORY_PER_CACHE = 4 * 1024 * 1024;
 
     /** The set of caches (weakly referenced). */
     private WeakHashMap caches = new WeakHashMap();
@@ -59,8 +59,43 @@ public class CacheManager implements CacheAccessListener {
     /** The size of a big object, to detect if a cache is full or not. */
     private static final int BIG_OBJECT_SIZE = 16 * 1024;
 
+    /** The amount of memory to distribute accross the caches. */
+    private long maxMemory = DEFAULT_MAX_MEMORY;
+
+    /** The minimum size of a cache. */
+    private long minMemoryPerCache = DEFAULT_MIN_MEMORY_PER_CACHE;
+
+    /** The maximum memory per cache (unless, there is some unused memory). */
+    private long maxMemoryPerCache = DEFAULT_MAX_MEMORY_PER_CACHE;
+
     /** The last time the caches where resized. */
     private volatile long nextResize = System.currentTimeMillis() + SLEEP;
+
+    
+    public long getMaxMemory() {
+        return maxMemory;
+    }
+
+    public void setMaxMemory(final long maxMemory) {
+        this.maxMemory = maxMemory;
+    }
+
+    public long getMaxMemoryPerCache() {
+        return maxMemoryPerCache;
+    }
+
+    public void setMaxMemoryPerCache(final long maxMemoryPerCache) {
+        this.maxMemoryPerCache = maxMemoryPerCache;
+    }
+
+    public long getMinMemoryPerCache() {
+        return minMemoryPerCache;
+    }
+
+    public void setMinMemoryPerCache(final long minMemoryPerCache) {
+        this.minMemoryPerCache = minMemoryPerCache;
+    }
+    
 
     /**
      * After one of the caches is accessed a number of times, this method is called.
@@ -118,27 +153,27 @@ public class CacheManager implements CacheAccessListener {
         // and find out how many caches are full
         // 50% is distributed according to access count,
         // and 50% according to memory used
-        double memoryPerAccess = (double) MAX_MEMORY / 2.
+        double memoryPerAccess = (double) maxMemory / 2.
                 / Math.max(1., (double) totalAccessCount);
-        double memoryPerUsed = (double) MAX_MEMORY / 2.
+        double memoryPerUsed = (double) maxMemory / 2.
                 / Math.max(1., (double) totalMemoryUsed);
         int fullCacheCount = 0;
         for (int i = 0; i < infos.length; i++) {
             CacheInfo info = infos[i];
             long mem = (long) (memoryPerAccess * info.getAccessCount());
             mem += (long) (memoryPerUsed * info.getMemoryUsed());
-            mem = Math.min(mem, MAX_MEMORY_PER_CACHE);
+            mem = Math.min(mem, maxMemoryPerCache);
             if (info.wasFull()) {
                 fullCacheCount++;
             } else {
                 mem = Math.min(mem, info.getMemoryUsed());
             }
-            mem = Math.min(mem, MAX_MEMORY_PER_CACHE);
-            mem = Math.max(mem, MIN_MEMORY_PER_CACHE);
+            mem = Math.min(mem, maxMemoryPerCache);
+            mem = Math.max(mem, minMemoryPerCache);
             info.setMemory(mem);
         }
         // calculate the unused memory
-        long unusedMemory = MAX_MEMORY;
+        long unusedMemory = maxMemory;
         for (int i = 0; i < infos.length; i++) {
             unusedMemory -= infos[i].getMemory();
         }

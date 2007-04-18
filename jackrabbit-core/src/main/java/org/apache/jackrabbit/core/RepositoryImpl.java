@@ -330,9 +330,20 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
     }
 
     /**
-     * Get the item state cache factory of this repository.
+     * Get the cache manager of this repository, useful
+     * for setting its memory parameters.
      *
      * @return the cache manager
+     * @since 1.3
+     */
+    public CacheManager getCacheManager() {
+        return cacheMgr;
+    }
+
+    /**
+     * Get the item state cache factory of this repository.
+     *
+     * @return the cache factory
      */
     public ItemStateCacheFactory getItemStateCacheFactory() {
         return cacheFactory;
