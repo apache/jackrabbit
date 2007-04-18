@@ -1,0 +1,7 @@
+create table ${schemaObjectPrefix}BUNDLE (NODE_ID CHAR(16) FOR BIT DATA not null, BUNDLE_DATA blob(100M) not null)
+create unique index ${schemaObjectPrefix}BUNDLE_IDX on ${schemaObjectPrefix}BUNDLE (NODE_ID)
+create table ${schemaObjectPrefix}REFS (NODE_ID CHAR(16) FOR BIT DATA not null, REFS_DATA blob(100M) not null)
+create unique index ${schemaObjectPrefix}REFS_IDX on ${schemaObjectPrefix}REFS (NODE_ID)
+create table ${schemaObjectPrefix}BINVAL (BINVAL_ID varchar(64) not null, BINVAL_DATA blob(1000M) not null)
+create unique index ${schemaObjectPrefix}BINVAL_IDX on ${schemaObjectPrefix}BINVAL (BINVAL_ID)
+create table ${schemaObjectPrefix}NAMES (ID INTEGER GENERATED ALWAYS AS IDENTITY, NAME varchar(255) not null)
