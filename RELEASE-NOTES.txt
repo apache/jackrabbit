@@ -151,10 +151,10 @@ The components contained in the released source archive are listed below
 
         Core of the Apache Jackrabbit content repository implementation.
 
-    * Jackrabbit Index Filters (jackrabbit-index-filters-1.3.jar)
+    * Jackrabbit Text Extractors (jackrabbit-text-extractors-1.3.jar)
 
-        Text indexing filters for Jackrabbit. Includes example filters
-        for Adobe PDF and MS Excel, PowerPoint, and Word.
+        Full text extraction for for Jackrabbit. Includes support for
+        example for Adobe PDF and MS Excel, PowerPoint and word files.
 
     * Jackrabbit JCR-RMI (jackrabbit-jcr-rmi-1.3.jar)
 
@@ -197,6 +197,14 @@ Apache Jackrabbit 1.3 is fully compatible with the previous 1.x releases.
 A previous Apache Jackrabbit 1.x installation can be upgraded by replacing
 the relevant jar files with the new versions. No changes to repository
 contents are needed.
+
+This release replaces the previous jackrabbit-index-filters component with
+an improved jackrabbit-text-extractors component. An existing Jackrabbit
+installation can be upgraded to use the new text extraction components by
+deploying the new jackrabbit-text-extractors jar file and updating the
+relevant search index configuration. Jackrabbit still supports old index
+filter configurations, but to use them you need to leave the old
+jackrabbit-index-filters jar file in place.
 
 See below for a more detailed description of the structural changes in
 the Apache Jackrabbit 1.2 release.
