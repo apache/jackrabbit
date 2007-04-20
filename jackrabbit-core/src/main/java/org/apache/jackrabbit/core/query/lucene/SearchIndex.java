@@ -566,6 +566,14 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
+     * @return the indexing configuration or <code>null</code> if there is
+     *         none.
+     */
+    public IndexingConfiguration getIndexingConfig() {
+        return indexingConfig;
+    }
+
+    /**
      * Returns an index reader for this search index. The caller of this method
      * is responsible for closing the index reader when he is finished using
      * it.
