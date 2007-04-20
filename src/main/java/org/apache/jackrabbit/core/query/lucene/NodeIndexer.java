@@ -58,6 +58,11 @@ public class NodeIndexer {
     private static final Logger log = LoggerFactory.getLogger(NodeIndexer.class);
 
     /**
+     * The default boost for a lucene field: 1.0f.
+     */
+    protected static final float DEFAULT_BOOST = 1.0f;
+
+    /**
      * The <code>NodeState</code> of the node to index
      */
     protected final NodeState node;
@@ -79,6 +84,11 @@ public class NodeIndexer {
     protected final TextExtractor extractor;
 
     /**
+     * The indexing configuration or <code>null</code> if none is available.
+     */
+    protected IndexingConfiguration indexingConfig;
+
+    /**
      * If set to <code>true</code> the fulltext field is stored and and a term
      * vector is created with offset information.
      */
@@ -93,9 +103,9 @@ public class NodeIndexer {
      * @param extractor     content extractor
      */
     public NodeIndexer(NodeState node,
-                          ItemStateManager stateProvider,
-                          NamespaceMappings mappings,
-                          TextExtractor extractor) {
+                       ItemStateManager stateProvider,
+                       NamespaceMappings mappings,
+                       TextExtractor extractor) {
         this.node = node;
         this.stateProvider = stateProvider;
         this.mappings = mappings;
@@ -121,6 +131,15 @@ public class NodeIndexer {
     }
 
     /**
+     * Sets the indexing configuration for this node indexer.
+     *
+     * @param config the indexing configuration.
+     */
+    public void setIndexingConfiguration(IndexingConfiguration config) {
+        this.indexingConfig = config;
+    }
+
+    /**
      * Creates a lucene Document.
      *
      * @return the lucene Document with the index layout.
@@ -129,6 +148,8 @@ public class NodeIndexer {
      */
     protected Document createDoc() throws RepositoryException {
         Document doc = new Document();
+
+        doc.setBoost(getNodeBoost());
 
         // special fields
         // UUID
@@ -224,33 +245,61 @@ public class NodeIndexer {
         Object internalValue = value.internalValue();
         switch (value.getType()) {
             case PropertyType.BINARY:
-                addBinaryValue(doc, fieldName, internalValue);
+                if (isIndexed(name)) {
+                    addBinaryValue(doc, fieldName, internalValue);
+                }
                 break;
             case PropertyType.BOOLEAN:
-                addBooleanValue(doc, fieldName, internalValue);
+                if (isIndexed(name)) {
+                    addBooleanValue(doc, fieldName, internalValue);
+                }
                 break;
             case PropertyType.DATE:
-                addCalendarValue(doc, fieldName, internalValue);
+                if (isIndexed(name)) {
+                    addCalendarValue(doc, fieldName, internalValue);
+                }
                 break;
             case PropertyType.DOUBLE:
-                addDoubleValue(doc, fieldName, internalValue);
+                if (isIndexed(name)) {
+                    addDoubleValue(doc, fieldName, internalValue);
+                }
                 break;
             case PropertyType.LONG:
-                addLongValue(doc, fieldName, internalValue);
+                if (isIndexed(name)) {
+                    addLongValue(doc, fieldName, internalValue);
+                }
                 break;
             case PropertyType.REFERENCE:
-                addReferenceValue(doc, fieldName, internalValue);
+                if (isIndexed(name)) {
+                    addReferenceValue(doc, fieldName, internalValue);
+                }
                 break;
             case PropertyType.PATH:
-                addPathValue(doc, fieldName, internalValue);
+                if (isIndexed(name)) {
+                    addPathValue(doc, fieldName, internalValue);
+                }
                 break;
             case PropertyType.STRING:
-                // do not fulltext index jcr:uuid String
-                boolean tokenize = !name.equals(QName.JCR_UUID);
-                addStringValue(doc, fieldName, internalValue, tokenize);
+                if (isIndexed(name)) {
+                    // never fulltext index jcr:uuid String
+                    if (name.equals(QName.JCR_UUID)) {
+                        addStringValue(doc, fieldName, internalValue,
+                                false, false, DEFAULT_BOOST);
+                    } else {
+                        addStringValue(doc, fieldName, internalValue,
+                                true, isIncludedInNodeIndex(name),
+                                getPropertyBoost(name));
+                    }
+                }
                 break;
             case PropertyType.NAME:
-                addNameValue(doc, fieldName, internalValue);
+                // jcr:primaryType and jcr:mixinTypes are required for correct
+                // node type resolution in queries
+                if (isIndexed(name) ||
+                        name.equals(QName.JCR_PRIMARYTYPE) ||
+                        name.equals(QName.JCR_MIXINTYPES)) {
+                    addNameValue(doc, fieldName, internalValue);
+                }
                 break;
             default:
                 throw new IllegalArgumentException("illegal internal value type");
@@ -450,7 +499,7 @@ public class NodeIndexer {
      *             addStringValue(Document, String, Object, boolean)} instead.
      */
     protected void addStringValue(Document doc, String fieldName, Object internalValue) {
-        addStringValue(doc, fieldName, internalValue, true);
+        addStringValue(doc, fieldName, internalValue, true, true, DEFAULT_BOOST);
     }
 
     /**
@@ -464,7 +513,30 @@ public class NodeIndexer {
      * @param tokenized     If <code>true</code> the string is also tokenized
      *                      and fulltext indexed.
      */
-    protected void addStringValue(Document doc, String fieldName, Object internalValue, boolean tokenized) {
+    protected void addStringValue(Document doc, String fieldName,
+                                  Object internalValue, boolean tokenized) {
+        addStringValue(doc, fieldName, internalValue, tokenized, true, DEFAULT_BOOST);
+    }
+
+    /**
+     * Adds the string value to the document both as the named field and
+     * optionally for full text indexing if <code>tokenized</code> is
+     * <code>true</code>.
+     *
+     * @param doc                The document to which to add the field
+     * @param fieldName          The name of the field to add
+     * @param internalValue      The value for the field to add to the
+     *                           document.
+     * @param tokenized          If <code>true</code> the string is also
+     *                           tokenized and fulltext indexed.
+     * @param includeInNodeIndex If <code>true</code> the string is also
+     *                           tokenized and added to the node scope fulltext
+     *                           index.
+     * @param boost              the boost value for this string field.
+     */
+    protected void addStringValue(Document doc, String fieldName,
+                                  Object internalValue, boolean tokenized,
+                                  boolean includeInNodeIndex, float boost) {
         String stringValue = String.valueOf(internalValue);
 
         // simple String
@@ -474,16 +546,21 @@ public class NodeIndexer {
                 Field.Index.UN_TOKENIZED,
                 Field.TermVector.NO));
         if (tokenized) {
-            // also create fulltext index of this value
-            doc.add(createFulltextField(stringValue));
             // create fulltext index on property
             int idx = fieldName.indexOf(':');
             fieldName = fieldName.substring(0, idx + 1)
                     + FieldNames.FULLTEXT_PREFIX + fieldName.substring(idx + 1);
-            doc.add(new Field(fieldName, stringValue,
+            Field f = new Field(fieldName, stringValue,
                     Field.Store.NO,
                     Field.Index.TOKENIZED,
-                    Field.TermVector.NO));
+                    Field.TermVector.NO);
+            f.setBoost(boost);
+            doc.add(f);
+
+            if (includeInNodeIndex) {
+                // also create fulltext index of this value
+                doc.add(createFulltextField(stringValue));
+            }
         }
     }
 
@@ -566,6 +643,63 @@ public class NodeIndexer {
             return createFulltextField(textExtract.toString());
         } else {
             return new Field(FieldNames.FULLTEXT, value);
+        }
+    }
+
+    /**
+     * Returns <code>true</code> if the property with the given name should be
+     * indexed.
+     *
+     * @param propertyName name of a property.
+     * @return <code>true</code> if the property should be fulltext indexed;
+     *         <code>false</code> otherwise.
+     */
+    protected boolean isIndexed(QName propertyName) {
+        if (indexingConfig == null) {
+            return true;
+        } else {
+            return indexingConfig.isIndexed(node, propertyName);
+        }
+    }
+
+    /**
+     * Returns <code>true</code> if the property with the given name should also
+     * be added to the node scope index.
+     *
+     * @param propertyName the name of a property.
+     * @return <code>true</code> if it should be added to the node scope index;
+     *         <code>false</code> otherwise.
+     */
+    protected boolean isIncludedInNodeIndex(QName propertyName) {
+        if (indexingConfig == null) {
+            return true;
+        } else {
+            return indexingConfig.isIncludedInNodeScopeIndex(node, propertyName);
+        }
+    }
+
+    /**
+     * Returns the boost value for the given property name.
+     *
+     * @param propertyName the name of a property.
+     * @return the boost value for the given property name.
+     */
+    protected float getPropertyBoost(QName propertyName) {
+        if (indexingConfig == null) {
+            return DEFAULT_BOOST;
+        } else {
+            return indexingConfig.getPropertyBoost(node, propertyName);
+        }
+    }
+
+    /**
+     * @return the boost value for this {@link #node} state.
+     */
+    protected float getNodeBoost() {
+        if (indexingConfig == null) {
+            return DEFAULT_BOOST;
+        } else {
+            return indexingConfig.getNodeBoost(node);
         }
     }
 }
