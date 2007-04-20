@@ -26,17 +26,21 @@ import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.query.QueryHandler;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateIterator;
+import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.extractor.DefaultTextExtractor;
 import org.apache.jackrabbit.extractor.TextExtractor;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiReader;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -45,9 +49,14 @@ import org.apache.lucene.search.SortField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.commons.collections.iterators.AbstractIteratorDecorator;
+import org.xml.sax.SAXException;
+import org.w3c.dom.Element;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.File;
 import java.util.Iterator;
@@ -56,6 +65,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Implements a {@link org.apache.jackrabbit.core.query.QueryHandler} using
@@ -130,6 +141,11 @@ public class SearchIndex extends AbstractQueryHandler {
      * Text extractor for extracting text content of binary properties.
      */
     private TextExtractor extractor;
+
+    /**
+     * The namespace mappings used internally.
+     */
+    private NamespaceMappings nsMappings;
 
     /**
      * The location of the search index.
@@ -238,6 +254,28 @@ public class SearchIndex extends AbstractQueryHandler {
     private Class excerptProviderClass = DefaultXMLExcerpt.class;
 
     /**
+     * The path to the indexing configuration file.
+     */
+    private String indexingConfigPath;
+
+    /**
+     * The DOM with the indexing configuration or <code>null</code> if there
+     * is no such configuration.
+     */
+    private Element indexingConfiguration;
+
+    /**
+     * The indexing configuration.
+     */
+    private IndexingConfiguration indexingConfig;
+
+    /**
+     * The indexing configuration class.
+     * Implements {@link IndexingConfiguration}.
+     */
+    private Class indexingConfigurationClass = IndexingConfigurationImpl.class;
+
+    /**
      * Indicates if this <code>SearchIndex</code> is closed and cannot be used
      * anymore.
      */
@@ -269,10 +307,10 @@ public class SearchIndex extends AbstractQueryHandler {
         }
 
         extractor = createTextExtractor();
+        indexingConfig = createIndexingConfiguration();
 
         File indexDir = new File(path);
 
-        NamespaceMappings nsMappings;
         if (context.getParentHandler() instanceof SearchIndex) {
             // use system namespace mappings
             SearchIndex sysIndex = (SearchIndex) context.getParentHandler();
@@ -353,9 +391,14 @@ public class SearchIndex extends AbstractQueryHandler {
     public void updateNodes(NodeIdIterator remove, NodeStateIterator add)
             throws RepositoryException, IOException {
         checkOpen();
+        final Map aggregateRoots = new HashMap();
+        final Set removedNodeIds = new HashSet();
+        final Set addedNodeIds = new HashSet();
         index.update(new AbstractIteratorDecorator(remove) {
             public Object next() {
-                return ((NodeId) super.next()).getUUID();
+                NodeId nodeId = (NodeId) super.next();
+                removedNodeIds.add(nodeId);
+                return nodeId.getUUID();
             }
         }, new AbstractIteratorDecorator(add) {
             public Object next() {
@@ -363,6 +406,8 @@ public class SearchIndex extends AbstractQueryHandler {
                 if (state == null) {
                     return null;
                 }
+                addedNodeIds.add(state.getNodeId());
+                removedNodeIds.remove(state.getNodeId());
                 Document doc = null;
                 try {
                     doc = createDocument(state, getNamespaceMappings());
@@ -370,9 +415,38 @@ public class SearchIndex extends AbstractQueryHandler {
                     log.error("Exception while creating document for node: "
                             + state.getNodeId() + ": " + e.toString());
                 }
+                retrieveAggregateRoot(state, aggregateRoots);
                 return doc;
             }
         });
+
+        // remove any aggregateRoot nodes that are new
+        // and therefore already up-to-date
+        aggregateRoots.keySet().removeAll(addedNodeIds);
+
+        // based on removed NodeIds get affected aggregate root nodes
+        retrieveAggregateRoot(removedNodeIds, aggregateRoots);
+
+        // update aggregates if there are any affected
+        if (aggregateRoots.size() > 0) {
+            index.update(new AbstractIteratorDecorator(
+                    aggregateRoots.keySet().iterator()) {
+                public Object next() {
+                    return ((NodeId) super.next()).getUUID();
+                }
+            }, new AbstractIteratorDecorator(aggregateRoots.values().iterator()) {
+                public Object next() {
+                    NodeState state = (NodeState) super.next();
+                    try {
+                        return createDocument(state, getNamespaceMappings());
+                    } catch (RepositoryException e) {
+                        log.error("Exception while creating document for node: "
+                                + state.getNodeId() + ": " + e.toString());
+                    }
+                    return null;
+                }
+            });
+        }
     }
 
     /**
@@ -488,7 +562,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * @return the namespace mappings for the internal representation.
      */
     public NamespaceMappings getNamespaceMappings() {
-        return index.getNamespaceMappings();
+        return nsMappings;
     }
 
     /**
@@ -563,7 +637,10 @@ public class SearchIndex extends AbstractQueryHandler {
         NodeIndexer indexer = new NodeIndexer(node,
                 getContext().getItemStateManager(), nsMappings, extractor);
         indexer.setSupportHighlighting(supportHighlighting);
-        return indexer.createDoc();
+        indexer.setIndexingConfiguration(indexingConfig);
+        Document doc = indexer.createDoc();
+        mergeAggregatedNodeIndexes(node, doc);
+        return doc;
     }
 
     /**
@@ -588,6 +665,193 @@ public class SearchIndex extends AbstractQueryHandler {
                     extractorBackLog, extractorTimeout);
         }
         return txtExtr;
+    }
+
+    /**
+     * @return the fulltext indexing configuration or <code>null</code> if there
+     *         is no configuration.
+     */
+    protected IndexingConfiguration createIndexingConfiguration() {
+        Element docElement = getIndexingConfigurationDOM();
+        if (docElement == null) {
+            return null;
+        }
+        try {
+            IndexingConfiguration idxCfg = (IndexingConfiguration)
+                    indexingConfigurationClass.newInstance();
+            idxCfg.init(docElement, getContext());
+            return idxCfg;
+        } catch (Exception e) {
+            log.warn("Exception initializing indexing configuration from: " +
+                    indexingConfigPath, e);
+        }
+        log.warn(indexingConfigPath + " ignored.");
+        return null;
+    }
+
+    /**
+     * Returns the document element of the indexing configuration or
+     * <code>null</code> if there is no indexing configuration.
+     *
+     * @return the indexing configuration or <code>null</code> if there is
+     *         none.
+     */
+    protected Element getIndexingConfigurationDOM() {
+        if (indexingConfiguration != null) {
+            return indexingConfiguration;
+        }
+        if (indexingConfigPath == null) {
+            return null;
+        }
+        File config = new File(indexingConfigPath);
+        if (!config.exists()) {
+            log.warn("File does not exist: " + indexingConfigPath);
+            return null;
+        } else if (!config.canRead()) {
+            log.warn("Cannot read file: " + indexingConfigPath);
+            return null;
+        }
+        try {
+            DocumentBuilderFactory factory =
+                    DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            builder.setEntityResolver(new IndexingConfigurationEntityResolver());
+            indexingConfiguration = builder.parse(config).getDocumentElement();
+        } catch (ParserConfigurationException e) {
+            log.warn("Unable to create XML parser", e);
+        } catch (IOException e) {
+            log.warn("Exception parsing " + indexingConfigPath, e);
+        } catch (SAXException e) {
+            log.warn("Exception parsing " + indexingConfigPath, e);
+        }
+        return indexingConfiguration;
+    }
+
+    /**
+     * Merges the fulltext indexed fields of the aggregated node states into
+     * <code>doc</code>.
+     *
+     * @param state the node state on which <code>doc</code> was created.
+     * @param doc the lucene document with index fields from <code>state</code>.
+     */
+    protected void mergeAggregatedNodeIndexes(NodeState state, Document doc) {
+        if (indexingConfig != null) {
+            AggregateRule aggregateRules[] = indexingConfig.getAggregateRules();
+            if (aggregateRules == null) {
+                return;
+            }
+            try {
+                for (int i = 0; i < aggregateRules.length; i++) {
+                    NodeState[] aggregates = aggregateRules[i].getAggregatedNodeStates(state);
+                    if (aggregates == null) {
+                        continue;
+                    }
+                    for (int j = 0; j < aggregates.length; j++) {
+                        Document aDoc = createDocument(aggregates[j],
+                                getNamespaceMappings());
+                        // transfer fields to doc if there are any
+                        Field[] fulltextFields = aDoc.getFields(FieldNames.FULLTEXT);
+                        if (fulltextFields != null) {
+                            for (int k = 0; k < fulltextFields.length; k++) {
+                                doc.add(fulltextFields[k]);
+                            }
+                            doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID,
+                                    aggregates[j].getNodeId().getUUID().toString(),
+                                    Field.Store.NO,
+                                    Field.Index.NO_NORMS));
+                        }
+                    }
+                    // only use first aggregate definition that matches
+                    break;
+                }
+            } catch (Exception e) {
+                // do not fail if aggregate cannot be created
+                log.warn("Exception while building indexing aggregate for " +
+                        "node with UUID: " + state.getNodeId().getUUID(), e);
+            }
+        }
+    }
+
+    /**
+     * Retrieves the root of the indexing aggregate for <code>state</code> and
+     * puts it into <code>map</code>.
+     *
+     * @param state the node state for which we want to retrieve the aggregate
+     *              root.
+     * @param map   aggregate roots are collected in this map. Key=NodeId,
+     *              value=NodeState.
+     */
+    protected void retrieveAggregateRoot(NodeState state, Map map) {
+        if (indexingConfig != null) {
+            AggregateRule aggregateRules[] = indexingConfig.getAggregateRules();
+            if (aggregateRules == null) {
+                return;
+            }
+            try {
+                for (int i = 0; i < aggregateRules.length; i++) {
+                    NodeState root = aggregateRules[i].getAggregateRoot(state);
+                    if (root != null) {
+                        map.put(root.getNodeId(), root);
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Unable to get aggregate root for " +
+                        state.getNodeId().getUUID(), e);
+            }
+        }
+    }
+
+    /**
+     * Retrieves the root of the indexing aggregate for <code>removedNodeIds</code>
+     * and puts it into <code>map</code>.
+     *
+     * @param removedNodeIds the ids of removed nodes.
+     * @param map            aggregate roots are collected in this map.
+     *                       Key=NodeId, value=NodeState.
+     */
+    protected void retrieveAggregateRoot(Set removedNodeIds, Map map) {
+        if (indexingConfig != null) {
+            AggregateRule aggregateRules[] = indexingConfig.getAggregateRules();
+            if (aggregateRules == null) {
+                return;
+            }
+            int found = 0;
+            long time = System.currentTimeMillis();
+            try {
+                IndexReader reader = index.getIndexReader();
+                try {
+                    Term aggregateUUIDs = new Term(
+                            FieldNames.AGGREGATED_NODE_UUID, "");
+                    TermDocs tDocs = reader.termDocs();
+                    try {
+                        ItemStateManager ism = getContext().getItemStateManager();
+                        for (Iterator it = removedNodeIds.iterator(); it.hasNext(); ) {
+                            NodeId id = (NodeId) it.next();
+                            aggregateUUIDs = aggregateUUIDs.createTerm(
+                                    id.getUUID().toString());
+                            tDocs.seek(aggregateUUIDs);
+                            while (tDocs.next()) {
+                                Document doc = reader.document(tDocs.doc());
+                                String uuid = doc.get(FieldNames.UUID);
+                                NodeId nId = new NodeId(UUID.fromString(uuid));
+                                map.put(nId, ism.getItemState(nId));
+                                found++;
+                            }
+                        }
+                    } finally {
+                        tDocs.close();
+                    }
+                } finally {
+                    reader.close();
+                }
+            } catch (Exception e) {
+                log.warn("Exception while retrieving aggregate roots", e);
+            }
+            time = System.currentTimeMillis() - time;
+            log.debug("Retrieved {} aggregate roots in {} ms.",
+                    new Integer(found), new Long(time));
+        }
     }
 
     //----------------------------< internal >----------------------------------
@@ -1027,6 +1291,52 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public String getExcerptProviderClass() {
         return excerptProviderClass.getName();
+    }
+
+    /**
+     * Sets the path to the indexing configuration file.
+     *
+     * @param path the path to the configuration file.
+     */
+    public void setIndexingConfiguration(String path) {
+        indexingConfigPath = path;
+    }
+
+    /**
+     * @return the path to the indexing configuration file.
+     */
+    public String getIndexingConfiguration() {
+        return indexingConfigPath;
+    }
+
+    /**
+     * Sets the name of the class that implements {@link IndexingConfiguration}.
+     * The default value is <code>org.apache.jackrabbit.core.query.lucene.IndexingConfigurationImpl</code>.
+     *
+     * @param className the name of the class that implements {@link
+     *                  IndexingConfiguration}.
+     */
+    public void setIndexingConfigurationClass(String className) {
+        try {
+            Class clazz = Class.forName(className);
+            if (IndexingConfiguration.class.isAssignableFrom(clazz)) {
+                indexingConfigurationClass = clazz;
+            } else {
+                log.warn("Invalid value for indexingConfigurationClass, {} " +
+                        "does not implement IndexingConfiguration interface.",
+                        className);
+            }
+        } catch (ClassNotFoundException e) {
+            log.warn("Invalid value for indexingConfigurationClass, class {} " +
+                    "not found.", className);
+        }
+    }
+
+    /**
+     * @return the class name of the indexing configuration implementation.
+     */
+    public String getIndexingConfigurationClass() {
+        return indexingConfigurationClass.getName();
     }
 
     //----------------------------< internal >----------------------------------

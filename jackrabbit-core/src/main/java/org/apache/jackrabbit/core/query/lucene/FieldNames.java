@@ -71,6 +71,12 @@ public class FieldNames {
     public static final String PROPERTIES = "_:PROPERTIES".intern();
 
     /**
+     * Name of the field that contains the UUIDs of the aggregated nodes. The
+     * terms are not tokenized and not stored, only indexed.
+     */
+    public static final String AGGREGATED_NODE_UUID = "_:AGGR_NODE_UUID".intern();
+
+    /**
      * Returns a named value for use as a term in the index. The named
      * value is of the form: <code>fieldName</code> + '\uFFFF' + value
      *
