@@ -18,13 +18,16 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.value.LongValue;
 import org.apache.jackrabbit.value.PathValue;
 import org.apache.jackrabbit.value.StringValue;
+import org.apache.jackrabbit.util.ISO9075;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -33,6 +36,7 @@ import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 import java.util.Arrays;
@@ -51,6 +55,17 @@ class RowIteratorImpl implements RowIterator {
      * The logger instance for this class.
      */
     private static final Logger log = LoggerFactory.getLogger(RowIteratorImpl.class);
+
+    /**
+     * The name of the excerpt function without prefix but with left parenthesis.
+     */
+    private static final String EXCERPT_FUNC_LPAR = "excerpt(";
+
+    /**
+     * The start QName for the rep:excerpt function: rep:excerpt(
+     */
+    private static final QName REP_EXCERPT_LPAR = new QName(
+            QName.NS_REP_URI, EXCERPT_FUNC_LPAR);
 
     /**
      * Iterator over nodes, that constitute the result set.
@@ -310,7 +325,12 @@ class RowIteratorImpl implements RowIterator {
                     }
                 }
             } catch (NameException e) {
-                throw new RepositoryException(e.getMessage(), e);
+                if (isExcerptFunction(propertyName)) {
+                    // excerpt function with parameter
+                    return getExcerpt(propertyName);
+                } else {
+                    throw new RepositoryException(e.getMessage(), e);
+                }
             }
         }
 
@@ -321,7 +341,22 @@ class RowIteratorImpl implements RowIterator {
          */
         private boolean isExcerptFunction(QName name) {
             return name.getNamespaceURI().equals(QName.NS_REP_URI) &&
-                    name.getLocalName().startsWith("excerpt(");
+                    name.getLocalName().startsWith(EXCERPT_FUNC_LPAR);
+        }
+
+        /**
+         * @param name a String.
+         * @return <code>true</code> if <code>name</code> is the rep:excerpt
+         *         function, <code>false</code> otherwise.
+         */
+        private boolean isExcerptFunction(String name) {
+            try {
+                return name.startsWith(
+                        NameFormat.format(REP_EXCERPT_LPAR, resolver));
+            } catch (NoPrefixDeclaredException e) {
+                // will never happen
+                return false;
+            }
         }
 
         /**
@@ -331,12 +366,50 @@ class RowIteratorImpl implements RowIterator {
          *         created or an error occurs.
          */
         private Value getExcerpt() {
+            return createExcerpt(node.getNodeId());
+        }
+
+        /**
+         * Returns an excerpt for the node indicated by the relative path
+         * parameter of the rep:excerpt function. The relative path is resolved
+         * against the node associated with this row.
+         *
+         * @param excerptCall the rep:excerpt function with the parameter as
+         *                    string.
+         * @return a StringValue or <code>null</code> if the excerpt cannot be
+         *         created or an error occurs.
+         * @throws RepositoryException if the function call is not well-formed.
+         */
+        private Value getExcerpt(String excerptCall) throws RepositoryException {
+            int idx = excerptCall.indexOf(EXCERPT_FUNC_LPAR);
+            int end = excerptCall.lastIndexOf(')');
+            if (end == -1) {
+                throw new RepositoryException("Missing right parenthesis");
+            }
+            String pathStr = excerptCall.substring(
+                    idx + EXCERPT_FUNC_LPAR.length(), end).trim();
+            try {
+                NodeImpl n = (NodeImpl) node.getNode(ISO9075.decode(pathStr));
+                return createExcerpt(n.getNodeId());
+            } catch (PathNotFoundException e) {
+                // does not exist
+                return null;
+            }
+        }
+
+        /**
+         * Creates an excerpt for node with the given <code>id</code>.
+         *
+         * @return a StringValue or <code>null</code> if the excerpt cannot be
+         *         created or an error occurs.
+         */
+        private Value createExcerpt(NodeId id) {
             if (excerptProvider == null) {
                 return null;
             }
             try {
                 long time = System.currentTimeMillis();
-                String excerpt = excerptProvider.getExcerpt(node.getNodeId(), 3, 150);
+                String excerpt = excerptProvider.getExcerpt(id, 3, 150);
                 time = System.currentTimeMillis() - time;
                 log.debug("Created excerpt in {} ms.", new Long(time));
                 if (excerpt != null) {
