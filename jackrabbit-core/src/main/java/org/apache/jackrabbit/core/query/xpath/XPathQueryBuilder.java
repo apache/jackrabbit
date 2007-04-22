@@ -923,8 +923,9 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 // use function name as name of a pseudo property in a relation
                 try {
                     QName name = NameFormat.parse(fName + "()", resolver);
+                    Path.PathElement element = Path.PathElement.create(name);
                     RelationQueryNode relNode = (RelationQueryNode) queryNode;
-                    relNode.setRelativePath(Path.create(name, 0));
+                    relNode.addPathElement(element);
                 } catch (NameException e) {
                     exceptions.add(e);
                 }

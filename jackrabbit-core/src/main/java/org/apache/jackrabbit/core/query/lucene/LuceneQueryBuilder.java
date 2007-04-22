@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.SearchManager;
 import org.apache.jackrabbit.core.query.AndQueryNode;
 import org.apache.jackrabbit.core.query.DerefQueryNode;
 import org.apache.jackrabbit.core.query.ExactQueryNode;
@@ -38,7 +39,6 @@ import org.apache.jackrabbit.core.query.DefaultQueryNodeVisitor;
 import org.apache.jackrabbit.core.query.lucene.fulltext.QueryParser;
 import org.apache.jackrabbit.core.query.lucene.fulltext.ParseException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
@@ -47,6 +47,7 @@ import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.XMLChar;
+import org.apache.jackrabbit.util.ISO9075;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.analysis.Analyzer;
@@ -639,149 +640,183 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             exceptions.add(e);
         }
 
-        switch (node.getOperation()) {
-            case QueryConstants.OPERATION_EQ_VALUE:      // =
-            case QueryConstants.OPERATION_EQ_GENERAL:
-                BooleanQuery or = new BooleanQuery();
-                for (int i = 0; i < stringValues.length; i++) {
-                    Term t = new Term(FieldNames.PROPERTIES,
-                                FieldNames.createNamedValue(field, stringValues[i]));
-                    Query q;
-                    if (transform[0] == TransformConstants.TRANSFORM_UPPER_CASE) {
-                        q = new CaseTermQuery.Upper(t);
-                    } else if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
-                        q = new CaseTermQuery.Lower(t);
-                    } else {
-                        q = new TermQuery(t);
+        // support for fn:name()
+        QName propName = relPath.getNameElement().getName();
+        if (propName.getNamespaceURI().equals(SearchManager.NS_FN_URI) &&
+                propName.getLocalName().equals("name()")) {
+            if (node.getValueType() != QueryConstants.TYPE_STRING) {
+                exceptions.add(new InvalidQueryException("Name function can " +
+                        "only be used in conjunction with a string literal"));
+                return data;
+            }
+            if (node.getOperation() != QueryConstants.OPERATION_EQ_VALUE &&
+                    node.getOperation() != QueryConstants.OPERATION_EQ_GENERAL) {
+                exceptions.add(new InvalidQueryException("Name function can " +
+                        "only be used in conjunction with an equals operator"));
+                return data;
+            }
+            // check if string literal is a valid XML QName
+            if (XMLChar.isValidName(node.getStringValue())) {
+                // parse string literal as JCR QName
+                try {
+                    String translatedQName = nsMappings.translatePropertyName(
+                            ISO9075.decode(node.getStringValue()),
+                            session.getNamespaceResolver());
+                    Term t = new Term(FieldNames.LABEL, translatedQName);
+                    query = new TermQuery(t);
+                } catch (NameException e) {
+                    exceptions.add(e);
+                    return data;
+                }
+            } else {
+                // will never match -> create dummy query
+                query = new TermQuery(new Term(FieldNames.UUID, ""));
+            }
+        } else {
+            switch (node.getOperation()) {
+                case QueryConstants.OPERATION_EQ_VALUE:      // =
+                case QueryConstants.OPERATION_EQ_GENERAL:
+                    BooleanQuery or = new BooleanQuery();
+                    for (int i = 0; i < stringValues.length; i++) {
+                        Term t = new Term(FieldNames.PROPERTIES,
+                                    FieldNames.createNamedValue(field, stringValues[i]));
+                        Query q;
+                        if (transform[0] == TransformConstants.TRANSFORM_UPPER_CASE) {
+                            q = new CaseTermQuery.Upper(t);
+                        } else if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
+                            q = new CaseTermQuery.Lower(t);
+                        } else {
+                            q = new TermQuery(t);
+                        }
+                        or.add(q, Occur.SHOULD);
                     }
-                    or.add(q, Occur.SHOULD);
-                }
-                query = or;
-                if (node.getOperation() == QueryConstants.OPERATION_EQ_VALUE) {
-                    query = createSingleValueConstraint(or, field);
-                }
-                break;
-            case QueryConstants.OPERATION_GE_VALUE:      // >=
-            case QueryConstants.OPERATION_GE_GENERAL:
-                or = new BooleanQuery();
-                for (int i = 0; i < stringValues.length; i++) {
-                    Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
-                    Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, "\uFFFF"));
-                    or.add(new RangeQuery(lower, upper, true, transform[0]), Occur.SHOULD);
-                }
-                query = or;
-                if (node.getOperation() == QueryConstants.OPERATION_GE_VALUE) {
-                    query = createSingleValueConstraint(or, field);
-                }
-                break;
-            case QueryConstants.OPERATION_GT_VALUE:      // >
-            case QueryConstants.OPERATION_GT_GENERAL:
-                or = new BooleanQuery();
-                for (int i = 0; i < stringValues.length; i++) {
-                    Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
-                    Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, "\uFFFF"));
-                    or.add(new RangeQuery(lower, upper, false, transform[0]), Occur.SHOULD);
-                }
-                query = or;
-                if (node.getOperation() == QueryConstants.OPERATION_GT_VALUE) {
-                    query = createSingleValueConstraint(or, field);
-                }
-                break;
-            case QueryConstants.OPERATION_LE_VALUE:      // <=
-            case QueryConstants.OPERATION_LE_GENERAL:      // <=
-                or = new BooleanQuery();
-                for (int i = 0; i < stringValues.length; i++) {
-                    Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, ""));
-                    Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
-                    or.add(new RangeQuery(lower, upper, true, transform[0]), Occur.SHOULD);
-                }
-                query = or;
-                if (node.getOperation() == QueryConstants.OPERATION_LE_VALUE) {
-                    query = createSingleValueConstraint(query, field);
-                }
-                break;
-            case QueryConstants.OPERATION_LIKE:          // LIKE
-                // the like operation always has one string value.
-                // no coercing, see above
-                if (stringValues[0].equals("%")) {
+                    query = or;
+                    if (node.getOperation() == QueryConstants.OPERATION_EQ_VALUE) {
+                        query = createSingleValueConstraint(or, field);
+                    }
+                    break;
+                case QueryConstants.OPERATION_GE_VALUE:      // >=
+                case QueryConstants.OPERATION_GE_GENERAL:
+                    or = new BooleanQuery();
+                    for (int i = 0; i < stringValues.length; i++) {
+                        Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
+                        Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, "\uFFFF"));
+                        or.add(new RangeQuery(lower, upper, true, transform[0]), Occur.SHOULD);
+                    }
+                    query = or;
+                    if (node.getOperation() == QueryConstants.OPERATION_GE_VALUE) {
+                        query = createSingleValueConstraint(or, field);
+                    }
+                    break;
+                case QueryConstants.OPERATION_GT_VALUE:      // >
+                case QueryConstants.OPERATION_GT_GENERAL:
+                    or = new BooleanQuery();
+                    for (int i = 0; i < stringValues.length; i++) {
+                        Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
+                        Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, "\uFFFF"));
+                        or.add(new RangeQuery(lower, upper, false, transform[0]), Occur.SHOULD);
+                    }
+                    query = or;
+                    if (node.getOperation() == QueryConstants.OPERATION_GT_VALUE) {
+                        query = createSingleValueConstraint(or, field);
+                    }
+                    break;
+                case QueryConstants.OPERATION_LE_VALUE:      // <=
+                case QueryConstants.OPERATION_LE_GENERAL:      // <=
+                    or = new BooleanQuery();
+                    for (int i = 0; i < stringValues.length; i++) {
+                        Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, ""));
+                        Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
+                        or.add(new RangeQuery(lower, upper, true, transform[0]), Occur.SHOULD);
+                    }
+                    query = or;
+                    if (node.getOperation() == QueryConstants.OPERATION_LE_VALUE) {
+                        query = createSingleValueConstraint(query, field);
+                    }
+                    break;
+                case QueryConstants.OPERATION_LIKE:          // LIKE
+                    // the like operation always has one string value.
+                    // no coercing, see above
+                    if (stringValues[0].equals("%")) {
+                        query = new MatchAllQuery(field);
+                    } else {
+                        query = new WildcardQuery(FieldNames.PROPERTIES, field, stringValues[0], transform[0]);
+                    }
+                    break;
+                case QueryConstants.OPERATION_LT_VALUE:      // <
+                case QueryConstants.OPERATION_LT_GENERAL:
+                    or = new BooleanQuery();
+                    for (int i = 0; i < stringValues.length; i++) {
+                        Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, ""));
+                        Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
+                        or.add(new RangeQuery(lower, upper, false, transform[0]), Occur.SHOULD);
+                    }
+                    query = or;
+                    if (node.getOperation() == QueryConstants.OPERATION_LT_VALUE) {
+                        query = createSingleValueConstraint(or, field);
+                    }
+                    break;
+                case QueryConstants.OPERATION_NE_VALUE:      // !=
+                    // match nodes with property 'field' that includes svp and mvp
+                    BooleanQuery notQuery = new BooleanQuery();
+                    notQuery.add(new MatchAllQuery(field), Occur.SHOULD);
+                    // exclude all nodes where 'field' has the term in question
+                    for (int i = 0; i < stringValues.length; i++) {
+                        Term t = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
+                        Query q;
+                        if (transform[0] == TransformConstants.TRANSFORM_UPPER_CASE) {
+                            q = new CaseTermQuery.Upper(t);
+                        } else if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
+                            q = new CaseTermQuery.Lower(t);
+                        } else {
+                            q = new TermQuery(t);
+                        }
+                        notQuery.add(q, Occur.MUST_NOT);
+                    }
+                    // and exclude all nodes where 'field' is multi valued
+                    notQuery.add(new TermQuery(new Term(FieldNames.MVP, field)), Occur.MUST_NOT);
+                    query = notQuery;
+                    break;
+                case QueryConstants.OPERATION_NE_GENERAL:    // !=
+                    // that's:
+                    // all nodes with property 'field'
+                    // minus the nodes that have a single property 'field' that is
+                    //    not equal to term in question
+                    // minus the nodes that have a multi-valued property 'field' and
+                    //    all values are equal to term in question
+                    notQuery = new BooleanQuery();
+                    notQuery.add(new MatchAllQuery(field), Occur.SHOULD);
+                    for (int i = 0; i < stringValues.length; i++) {
+                        // exclude the nodes that have the term and are single valued
+                        Term t = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
+                        Query svp = new NotQuery(new TermQuery(new Term(FieldNames.MVP, field)));
+                        BooleanQuery and = new BooleanQuery();
+                        Query q;
+                        if (transform[0] == TransformConstants.TRANSFORM_UPPER_CASE) {
+                            q = new CaseTermQuery.Upper(t);
+                        } else if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
+                            q = new CaseTermQuery.Lower(t);
+                        } else {
+                            q = new TermQuery(t);
+                        }
+                        and.add(q, Occur.MUST);
+                        and.add(svp, Occur.MUST);
+                        notQuery.add(and, Occur.MUST_NOT);
+                    }
+                    // todo above also excludes multi-valued properties that contain
+                    //      multiple instances of only stringValues. e.g. text={foo, foo}
+                    query = notQuery;
+                    break;
+                case QueryConstants.OPERATION_NULL:
+                    query = new NotQuery(new MatchAllQuery(field));
+                    break;
+                case QueryConstants.OPERATION_NOT_NULL:
                     query = new MatchAllQuery(field);
-                } else {
-                    query = new WildcardQuery(FieldNames.PROPERTIES, field, stringValues[0], transform[0]);
-                }
-                break;
-            case QueryConstants.OPERATION_LT_VALUE:      // <
-            case QueryConstants.OPERATION_LT_GENERAL:
-                or = new BooleanQuery();
-                for (int i = 0; i < stringValues.length; i++) {
-                    Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, ""));
-                    Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
-                    or.add(new RangeQuery(lower, upper, false, transform[0]), Occur.SHOULD);
-                }
-                query = or;
-                if (node.getOperation() == QueryConstants.OPERATION_LT_VALUE) {
-                    query = createSingleValueConstraint(or, field);
-                }
-                break;
-            case QueryConstants.OPERATION_NE_VALUE:      // !=
-                // match nodes with property 'field' that includes svp and mvp
-                BooleanQuery notQuery = new BooleanQuery();
-                notQuery.add(new MatchAllQuery(field), Occur.SHOULD);
-                // exclude all nodes where 'field' has the term in question
-                for (int i = 0; i < stringValues.length; i++) {
-                    Term t = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
-                    Query q;
-                    if (transform[0] == TransformConstants.TRANSFORM_UPPER_CASE) {
-                        q = new CaseTermQuery.Upper(t);
-                    } else if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
-                        q = new CaseTermQuery.Lower(t);
-                    } else {
-                        q = new TermQuery(t);
-                    }
-                    notQuery.add(q, Occur.MUST_NOT);
-                }
-                // and exclude all nodes where 'field' is multi valued
-                notQuery.add(new TermQuery(new Term(FieldNames.MVP, field)), Occur.MUST_NOT);
-                query = notQuery;
-                break;
-            case QueryConstants.OPERATION_NE_GENERAL:    // !=
-                // that's:
-                // all nodes with property 'field'
-                // minus the nodes that have a single property 'field' that is
-                //    not equal to term in question
-                // minus the nodes that have a multi-valued property 'field' and
-                //    all values are equal to term in question
-                notQuery = new BooleanQuery();
-                notQuery.add(new MatchAllQuery(field), Occur.SHOULD);
-                for (int i = 0; i < stringValues.length; i++) {
-                    // exclude the nodes that have the term and are single valued
-                    Term t = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
-                    Query svp = new NotQuery(new TermQuery(new Term(FieldNames.MVP, field)));
-                    BooleanQuery and = new BooleanQuery();
-                    Query q;
-                    if (transform[0] == TransformConstants.TRANSFORM_UPPER_CASE) {
-                        q = new CaseTermQuery.Upper(t);
-                    } else if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
-                        q = new CaseTermQuery.Lower(t);
-                    } else {
-                        q = new TermQuery(t);
-                    }
-                    and.add(q, Occur.MUST);
-                    and.add(svp, Occur.MUST);
-                    notQuery.add(and, Occur.MUST_NOT);
-                }
-                // todo above also excludes multi-valued properties that contain
-                //      multiple instances of only stringValues. e.g. text={foo, foo}
-                query = notQuery;
-                break;
-            case QueryConstants.OPERATION_NULL:
-                query = new NotQuery(new MatchAllQuery(field));
-                break;
-            case QueryConstants.OPERATION_NOT_NULL:
-                query = new MatchAllQuery(field);
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown relation operation: "
-                        + node.getOperation());
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown relation operation: "
+                            + node.getOperation());
+            }
         }
 
         if (relPath.getLength() > 1) {
