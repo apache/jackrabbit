@@ -25,6 +25,7 @@ import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Weight;
 
 import java.io.IOException;
+import java.util.Set;
 
 /**
  * Implements a query that negates documents of a context query. Documents
@@ -64,6 +65,13 @@ class NotQuery extends Query {
      */
     public String toString(String field) {
         return "NotQuery";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void extractTerms(Set terms) {
+        context.extractTerms(terms);
     }
 
     /**
