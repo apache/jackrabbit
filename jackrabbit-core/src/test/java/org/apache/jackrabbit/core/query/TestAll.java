@@ -48,6 +48,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(UpperLowerCaseQueryTest.class);
         suite.addTestSuite(ChildAxisQueryTest.class);
         suite.addTestSuite(QueryResultTest.class);
+        suite.addTestSuite(FnNameQueryTest.class);
 
         // exclude long running tests per default
         //suite.addTestSuite(MassiveRangeTest.class);
