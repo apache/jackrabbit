@@ -68,8 +68,8 @@ public class RMIConfig extends AbstractConfig {
 
     public void init(ServletConfig ctx) throws ServletException {
         super.init(ctx);
-        // enable rmi if port was set
-        rmiEnabled = rmiPort >= 0;
+        // enable RMI if either port or url was defined
+        rmiEnabled = rmiPort >=0 || rmiUri != null;
     }
 
     public String getRmiName() {

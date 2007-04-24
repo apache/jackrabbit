@@ -468,11 +468,13 @@ public class RepositoryStartupServlet extends HttpServlet {
             RemoteFactoryDelegater rmf = (RemoteFactoryDelegater) clazz.newInstance();
             remote = rmf.createRemoteRepository(repository);
         } catch (RemoteException e) {
+            log.error("Unable to create RMI repository.", e);
             throw new ServletException("Unable to create remote repository.", e);
         } catch (NoClassDefFoundError e) {
             throw new ServletException("Unable to create RMI repository. jcr-rmi.jar might be missing.", e);
         } catch (Exception e) {
-            throw new ServletException("Unable to create RMI repository. jcr-rmi.jar might be missing.", e);
+            log.error("Unable to create RMI repository.", e);
+            throw new ServletException("Unable to create RMI repository. jcr-rmi.jar might be missing.");
         }
 
         try {
