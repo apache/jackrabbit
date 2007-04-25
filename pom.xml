@@ -280,6 +280,13 @@
       <timezone>+1</timezone>
     </developer>
     <developer>
+      <name>Christophe Lombart</name>
+      <id>clombart</id>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
       <name>Stefano Mazzocchi</name>
       <id>stefano</id>
       <email/>
