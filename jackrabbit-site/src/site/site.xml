@@ -46,6 +46,7 @@
         <item name="JCR-RMI"                    href="/doc/components/jcr-rmi.html"/>
         <item name="WebDAV Library"             href="/doc/components/webdav.html"/>
         <item name="JCR Server"                 href="/doc/components/jcr-server.html"/>
+        <item name="Repository Classloader"     href="/doc/components/classloader.html"/>
         <item name="Web Application"            href="/doc/components/webapp.html"/>
         <item name="JCA Resource Adapter"       href="/doc/components/jca.html"/>
       </item>
