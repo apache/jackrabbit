@@ -27,6 +27,15 @@
       </p>
       <subsection name="News in 2007">
         <dl>
+          <dt><strong>April 25, 2007: Apache Jackrabbit 1.3 released</strong></dt>
+          <dd>
+            From the release notes: "<em>Apache Jackrabbit 1.3 an incremental
+            feature release. The most notable changes in this release are
+            support for query result highlighting, performance improvements
+            thanks to a new bundle persistence manager, and a new classloader
+            component for loading Java classes from a content repository.
+            Many smaller improvements and bug fixes are also included.</em>"
+          </dd>
           <dt><strong>March 11, 2007: Apache Jackrabbit 1.2.3 released</strong></dt>
           <dd>
             From the release notes: "<em>Apache Jackrabbit 1.2.3 is patch
