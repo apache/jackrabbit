@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<test jcr:primaryType="nt:unstructured" title="Page_x0020_Title"
+	xmlns:jcr="http://www.jcp.org/jcr/1.0"
+	xmlns:graffito="http://incubator.apache.org/graffito"
+	xmlns:mix="http://www.jcp.org/jcr/mix/1.0" xmlns:rep="internal"
+	xmlns:nt="http://www.jcp.org/jcr/nt/1.0"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:fn="http://www.w3.org/2004/10/xpath-functions"
+	xmlns:sv="http://www.jcp.org/jcr/sv/1.0" xmlns="">
+	<collection-element1 jcr:primaryType="graffito:paragraph"
+		jcr:uuid="60ff5b3d-cd00-4cce-9374-20860dbffac6"
+		jcr:isCheckedOut="true"
+		jcr:versionHistory="4c39a5cc-0e64-4627-8151-3425733cd555"
+		graffito:text="Para_x0020_1"
+		jcr:baseVersion="60302342-93db-482c-80cc-1881407ba9bc"
+		jcr:predecessors="60302342-93db-482c-80cc-1881407ba9bc" />
+	<collection-element2 jcr:primaryType="graffito:paragraph"
+		jcr:uuid="2524f2fc-1f1d-4d60-940f-53d503ef2847"
+		jcr:isCheckedOut="true"
+		jcr:versionHistory="3f68a72c-661a-445d-a336-648783addcbf"
+		graffito:text="Para_x0020_2"
+		jcr:baseVersion="25101f16-33d2-4770-bb3d-7fdd4e767a01"
+		jcr:predecessors="25101f16-33d2-4770-bb3d-7fdd4e767a01" />
+	<collection-element3 jcr:primaryType="graffito:paragraph"
+		jcr:uuid="09a5a1c4-5c1e-40d0-b11c-637197400be0"
+		jcr:isCheckedOut="true"
+		jcr:versionHistory="740c05d1-77dc-415a-8613-870a4f86c2fa"
+		graffito:text="Para_x0020_4"
+		jcr:baseVersion="f533756d-05e7-4ea2-b894-74d6fba4978d"
+		jcr:predecessors="f533756d-05e7-4ea2-b894-74d6fba4978d" />
+	<collection-element4 jcr:primaryType="graffito:paragraph"
+		jcr:uuid="cd182817-15e3-4a74-8a7a-56ff6d342549"
+		jcr:isCheckedOut="true"
+		jcr:versionHistory="9e08be9d-3fa8-40f5-8aad-144184d1b490"
+		graffito:text="Para_x0020_5"
+		jcr:baseVersion="6a4b7e76-76d3-42e4-8a38-51359d4cd47f"
+		jcr:predecessors="6a4b7e76-76d3-42e4-8a38-51359d4cd47f" />
+</test>

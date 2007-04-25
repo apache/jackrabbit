@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE graffito-jcr PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/test-config/graffito-jcr-mapping.dtd">
+<graffito-jcr>
+    
+  
+	<class-descriptor className="org.apache.portals.graffito.jcr.spring.test.model.News"   discriminator="true">
+		<field-descriptor fieldName="path" path="true" />
+		<field-descriptor fieldName="creationDate" jcrName="graffito:creationDate" />
+		<field-descriptor fieldName="content" jcrName="graffito:content" />
+	</class-descriptor>
+
+	<class-descriptor className="org.apache.portals.graffito.jcr.spring.test.model.Article"  discriminator="true">		
+		<field-descriptor fieldName="path" path="true" />
+		<field-descriptor fieldName="title" jcrName="graffito:title" />
+		<field-descriptor fieldName="description" jcrName="graffito:description" />		
+		<field-descriptor fieldName="author" jcrName="graffito:author" />
+		<field-descriptor fieldName="creationDate" jcrName="graffito:creationDate" />
+		<field-descriptor fieldName="content" jcrName="graffito:content" />						
+	</class-descriptor>
+
+</graffito-jcr>
+ 

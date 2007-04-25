@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+ 
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<nodeTypes xmlns:nt="http://www.jcp.org/jcr/nt/1.0"
+	xmlns:jcr="http://www.jcp.org/jcr/1.0" xmlns:rep="internal"
+	xmlns:sv="http://www.jcp.org/jcr/sv/1.0"
+	xmlns:test="http://www.apache.org/jackrabbit/test"
+	xmlns:mix="http://www.jcp.org/jcr/mix/1.0"
+	xmlns:graffito="http://incubator.apache.org/graffito">
+	<nodeType name="graffito:C" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>mix:versionable</supertype>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="graffito:id" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+	<propertyDefinition name="graffito:name" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+  </nodeType>
+
+  <nodeType name="graffito:paragraph" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>mix:versionable</supertype>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="graffito:text" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+  </nodeType>
+  
+  <nodeType name="graffito:page" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>mix:versionable</supertype>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="graffito:title" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    <childNodeDefinition name="*" defaultPrimaryType="graffito:paragraph" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSiblings="true">
+      <requiredPrimaryTypes>
+        <requiredPrimaryType>graffito:paragraph</requiredPrimaryType>
+      </requiredPrimaryTypes>
+    </childNodeDefinition>    
+  </nodeType>
+  
+    <nodeType name="graffito:pagewithoutsibling" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>mix:versionable</supertype>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="graffito:title" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    <childNodeDefinition name="*" defaultPrimaryType="graffito:paragraph" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSiblings="false">
+      <requiredPrimaryTypes>
+        <requiredPrimaryType>graffito:paragraph</requiredPrimaryType>
+      </requiredPrimaryTypes>
+    </childNodeDefinition>    
+  </nodeType>
+
+  <nodeType name="graffito:element" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>mix:versionable</supertype>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="graffito:id" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="graffito:text" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />    
+  </nodeType>
+  
+   <nodeType name="graffito:cmsobjectimpl" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="graffito:name" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+
+  </nodeType>
+
+   <nodeType name="graffito:contentimpl" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>graffito:cmsobjectimpl</supertype>
+    </supertypes>
+  </nodeType>
+
+   <nodeType name="graffito:documentstream" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>mix:versionable</supertype>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="graffito:encoding" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="graffito:binarycontent" requiredType="Binary" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />    
+  </nodeType>
+
+
+   <nodeType name="graffito:documentimpl" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>graffito:contentimpl</supertype>
+    </supertypes>    
+    <propertyDefinition name="graffito:contenttype" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="graffito:size" requiredType="Long" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />    
+    <childNodeDefinition name="*" defaultPrimaryType="graffito:documentstream" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSiblings="false">
+      <requiredPrimaryTypes>
+        <requiredPrimaryType>graffito:documentstream</requiredPrimaryType>
+      </requiredPrimaryTypes>
+    </childNodeDefinition>        
+  </nodeType>
+  
+  <nodeType name="graffito:folderimpl" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>graffito:cmsobjectimpl</supertype>       
+    </supertypes>    
+    <childNodeDefinition name="*" defaultPrimaryType="graffito:cmsobjectimpl" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSiblings="true">
+      <requiredPrimaryTypes>
+        <requiredPrimaryType>graffito:cmsobjectimpl</requiredPrimaryType>         
+      </requiredPrimaryTypes>
+    </childNodeDefinition>        
+  </nodeType>
+                                                         
+    <nodeType name="graffito:discriminatorobject" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>mix:versionable</supertype>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="graffito:content" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+  </nodeType>
+  
+
+   <nodeType name="graffito:discriminator" isMixin="true">
+    <supertypes>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <propertyDefinition name="graffito:classname" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />    
+  </nodeType>
+   
+
+   <nodeType name="graffito:cmsobject" isMixin="true">
+    <supertypes>
+      <supertype>nt:base</supertype>
+    </supertypes>
+  </nodeType>    
+
+   <nodeType name="graffito:folder" isMixin="true">
+    <supertypes>
+      <supertype>graffito:cmsobject</supertype>
+    </supertypes>
+  </nodeType>    
+
+   <nodeType name="graffito:content" isMixin="true">
+    <supertypes>
+      <supertype>graffito:cmsobject</supertype>
+    </supertypes>
+  </nodeType>    
+
+   <nodeType name="graffito:document" isMixin="true">
+    <supertypes>
+      <supertype>graffito:content</supertype>
+    </supertypes>
+  </nodeType>    
+
+
+   <nodeType name="graffito:propertytest" >
+    <supertypes>
+      <supertype>nt:base</supertype>
+    </supertypes>
+     <propertyDefinition name="graffito:requiredProp" requiredType="String" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />   
+     <propertyDefinition name="graffito:requiredWithConstraintsProp" requiredType="String" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" >   
+     	<valueConstraints>
+        	<valueConstraint>abc</valueConstraint>
+	        <valueConstraint>def</valueConstraint>
+	        <valueConstraint>ghi</valueConstraint>
+	 	</valueConstraints>     
+     </propertyDefinition>
+     <propertyDefinition name="graffito:autoCreatedProp" requiredType="String" autoCreated="true" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" >   
+            <defaultValues>
+                <defaultValue>autoCreatePropValue</defaultValue>
+            </defaultValues>
+     </propertyDefinition>
+     <propertyDefinition name="graffito:autoCreatedWithConstraintsProp" requiredType="String" autoCreated="true" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" >   
+        <defaultValues>
+            <defaultValue>ccc</defaultValue>
+        </defaultValues>
+     	<valueConstraints>
+        	<valueConstraint>bbb</valueConstraint>
+	        <valueConstraint>ccc</valueConstraint>
+	        <valueConstraint>ddd</valueConstraint>
+	 	</valueConstraints>     
+            
+     </propertyDefinition>
+     <propertyDefinition name="graffito:mandatoryProp" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />     
+     <propertyDefinition name="graffito:mandatoryWithConstaintsProp" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" >     
+     	<valueConstraints>
+        	<valueConstraint>xx</valueConstraint>
+	        <valueConstraint>yy</valueConstraint>
+	 	</valueConstraints>      
+     </propertyDefinition>     						  
+     <propertyDefinition name="graffito:protectedWithDefaultValueProp" requiredType="String" autoCreated="true" mandatory="false" onParentVersion="COPY" protected="true" multiple="false" >     
+            <defaultValues>
+                <defaultValue>protectedValue</defaultValue>
+            </defaultValues>     
+     </propertyDefinition>
+   </nodeType> 
+</nodeTypes>
+

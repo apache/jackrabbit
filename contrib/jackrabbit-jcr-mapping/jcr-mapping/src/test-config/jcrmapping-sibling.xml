@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE graffito-jcr PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/graffito-jcr-mapping.dtd">
+<graffito-jcr>
+
+	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.Page" jcrNodeType="graffito:pagewithoutsibling" discriminator="false" >
+		<field-descriptor fieldName="path" path="true" />
+		<field-descriptor fieldName="title" jcrName="graffito:title" />
+		<collection-descriptor fieldName="paragraphs" proxy="false" 
+		                       elementClassName="org.apache.portals.graffito.jcr.testmodel.Paragraph" 
+		                       collectionConverter="org.apache.portals.graffito.jcr.persistence.collectionconverter.impl.NTCollectionConverterImpl" />
+	</class-descriptor>
+
+	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.Paragraph" jcrNodeType="graffito:paragraph" discriminator="false" >
+		<field-descriptor fieldName="path" path="true" />
+		<field-descriptor fieldName="text" jcrName="graffito:text"/>
+	</class-descriptor>
+
+<class-descriptor
+		className="org.apache.portals.graffito.jcr.testmodel.Atomic" jcrNodeType="nt:unstructured" discriminator="true" >
+		<field-descriptor fieldName="path" path="true" />
+		<field-descriptor fieldName="string" jcrName="string" />
+		<field-descriptor fieldName="booleanObject" jcrName="booleanObject" />
+		<field-descriptor fieldName="booleanPrimitive" jcrName="booleanPrimitive" />
+		<field-descriptor fieldName="integerObject" jcrName="integerObject" />
+		<field-descriptor fieldName="intPrimitive" jcrName="intPrimitive" />
+		<field-descriptor fieldName="byteArray" jcrName="byteArray" />
+		<field-descriptor fieldName="calendar" jcrName="calendar" />
+		<field-descriptor fieldName="date" jcrName="date" />
+		<field-descriptor fieldName="doubleObject" jcrName="doubleObject" />
+		<field-descriptor fieldName="doublePrimitive" jcrName="doublePrimitive" />
+		<field-descriptor fieldName="inputStream" jcrName="inputStream" />
+		<field-descriptor fieldName="timestamp" jcrName="timestamp" />
+	</class-descriptor>
+
+</graffito-jcr>
+ 
