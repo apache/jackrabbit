@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" 
+    "http://www.springframework.org/dtd/spring-beans.dtd">
+<!--
+	Local transaction manager only for JackRabbit
+	    
+    $Id: applicationContext-jr-local.xml,v 1.1 2005/10/10 09:20:42 costin Exp $
+    -->    
+<beans>
+	<bean id="jcrTransactionManager"
+		class="org.springmodules.jcr.jackrabbit.LocalTransactionManager">
+		<property name="sessionFactory" ref="jcrSessionFactory"/>
+	</bean>
+	
+	<bean id="repository" class="org.springmodules.jcr.jackrabbit.RepositoryFactoryBean">
+		<!-- normal factory beans params -->
+		<property name="configuration" value="src/test-config/repository-xml.xml"/>
+		<property name="homeDir" value="target/repository"/>
+	</bean>
+</beans>

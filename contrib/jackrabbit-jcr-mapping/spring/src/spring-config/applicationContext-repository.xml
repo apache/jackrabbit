@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" 
+    "http://www.springframework.org/dtd/spring-beans.dtd">
+<!--
+	JSR-170 configuration support. Note that the transaction managers are defined
+	in separate files.
+	    
+    $Id: applicationContext-repository.xml,v 1.2 2005/10/10 09:20:42 costin Exp $
+    -->    
+<beans default-lazy-init="true">
+	<!-- import resource="applicationContext-jr-jca.xml"/ -->
+	<import resource="applicationContext-jr-local.xml"/>
+
+	
+	<bean id="jcrSessionFactory" class="org.apache.portals.graffito.jcr.spring.JackrabbitSessionFactory">
+		<property name="repository" ref="repository"/>
+		<property name="credentials">
+			<bean class="javax.jcr.SimpleCredentials">
+				<constructor-arg index="0" value="superuser"/>
+				<!-- create the credentials using a bean factory -->
+				<constructor-arg index="1">
+					<bean factory-bean="password"
+					      factory-method="toCharArray"/>
+				</constructor-arg>
+			</bean>
+		</property>
+
+			
+	</bean>
+	
+	<!-- create the password to return it as a char[] -->
+	<bean id="password" class="java.lang.String">
+		<constructor-arg index="0" value="superuser"/>
+	</bean>
+	
+	
+	<bean id="jcrMappingDescriptor" class="org.apache.portals.graffito.jcr.mapper.impl.DigesterMapperImpl">
+		<constructor-arg index="0" value="./src/test-config/jcrmapping.xml"/>
+	</bean>
+	
+	<bean id="jcrMappingTemplate" class="org.apache.portals.graffito.jcr.spring.JcrMappingTemplate">
+		<constructor-arg index="0" ref="jcrSessionFactory"/>
+		<constructor-arg index="1" ref="jcrMappingDescriptor"/>
+	</bean>
+	
+	<bean id="baseTransactionProxy" class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean" 
+		abstract="true">
+		<property name="transactionManager">
+			<ref bean="jcrTransactionManager"/>
+		</property>
+		<property name="transactionAttributes">
+			<props>
+				<prop key="*">PROPAGATION_REQUIRED</prop>
+			</props>
+		</property>
+	</bean>	
+	
+	
+	<bean id="org.apache.portals.graffito.jcr.spring.test.components.impl.NewsServiceImpl" 
+	      class="org.apache.portals.graffito.jcr.spring.test.components.impl.NewsServiceImpl" >
+		<property name="jcrMappingTemplate" ref="jcrMappingTemplate"/>					
+	</bean>		
+	
+	<bean id="org.apache.portals.graffito.jcr.spring.test.components.NewsService" parent="baseTransactionProxy" 
+	      name="org.apache.portals.graffito.jcr.spring.test.components.NewsService" >
+		<property name="proxyInterfaces">
+			<value>org.apache.portals.graffito.jcr.spring.test.components.NewsService</value>
+		</property>
+		<property name="target">
+			<ref bean="org.apache.portals.graffito.jcr.spring.test.components.impl.NewsServiceImpl"/>
+		</property>
+		<property name="transactionAttributes">
+			<props>
+				
+				<prop key="*">PROPAGATION_REQUIRED</prop>
+			</props>
+		</property>
+	</bean>	   	
+
+	<bean id="org.apache.portals.graffito.jcr.spring.test.components.impl.ArticleServiceImpl" 
+	      class="org.apache.portals.graffito.jcr.spring.test.components.impl.ArticleServiceImpl" >
+		<property name="jcrMappingTemplate" ref="jcrMappingTemplate"/>			
+		<property name="newsService" ref="org.apache.portals.graffito.jcr.spring.test.components.NewsService"/>			
+	</bean>		
+	
+	<bean id="org.apache.portals.graffito.jcr.spring.test.components.ArticleService" parent="baseTransactionProxy" 
+	      name="org.apache.portals.graffito.jcr.spring.test.components.ArticleService" >
+		<property name="proxyInterfaces">
+			<value>org.apache.portals.graffito.jcr.spring.test.components.ArticleService</value>
+		</property>
+		<property name="target">
+			<ref bean="org.apache.portals.graffito.jcr.spring.test.components.impl.ArticleServiceImpl"/>
+		</property>
+		<property name="transactionAttributes">
+			<props>
+			
+				<prop key="*">PROPAGATION_REQUIRED</prop>
+			</props>
+		</property>
+	</bean>	   
+	
+
+</beans>

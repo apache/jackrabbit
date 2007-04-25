@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE graffito-jcr PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/graffito-jcr-mapping.dtd">
+<graffito-jcr>
+	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.D"  jcrNodeType="nt:unstructured" jcrSuperTypes="nt:base">
+		<field-descriptor fieldName="path" path="true" />
+		<field-descriptor fieldName="d1" jcrName="d1" jcrType="String" jcrAutoCreated="false" jcrMandatory="false"
+        jcrOnParentVersion="IGNORE" jcrProtected="false" jcrMultiple="false" />
+		
+		<bean-descriptor fieldName="b1" jcrName="b1" converter="org.apache.portals.graffito.jcr.persistence.beanconverter.impl.InlineBeanConverterImpl" />
+
+	</class-descriptor>
+	
+	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.E"  jcrNodeType="nt:unstructured" jcrSuperTypes="nt:base">
+		<field-descriptor fieldName="path" path="true" />
+		<field-descriptor fieldName="d1" 
+						  jcrName="d1" 
+						  jcrType="String" 
+						  jcrAutoCreated="false" 
+						  jcrMandatory="false"
+        				  jcrOnParentVersion="IGNORE" 
+        				  jcrProtected="false" 
+        				  jcrMultiple="false" />
+		
+		<bean-descriptor  fieldName="b1" 
+						  jcrName="b1"
+						  converter="org.apache.portals.graffito.jcr.persistence.beanconverter.FakeBeanConverter" />
+
+	</class-descriptor>
+	
+	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.DFull"  jcrNodeType="nt:unstructured" jcrSuperTypes="nt:base">
+		<field-descriptor fieldName="path" path="true" />
+		<field-descriptor fieldName="d1" jcrName="d1" jcrType="String" jcrAutoCreated="false" jcrMandatory="false"
+        jcrOnParentVersion="IGNORE" jcrProtected="false" jcrMultiple="false" />
+		
+		<field-descriptor fieldName="b1" jcrName="b1" jcrType="String" jcrAutoCreated="false" jcrMandatory="false"
+        jcrOnParentVersion="IGNORE" jcrProtected="false" jcrMultiple="false" />
+
+		<field-descriptor fieldName="b2" jcrName="b2" jcrType="String" jcrAutoCreated="false" jcrMandatory="false"
+        jcrOnParentVersion="IGNORE" jcrProtected="false" jcrMultiple="false" />
+	</class-descriptor>
+</graffito-jcr>
+ 

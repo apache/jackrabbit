@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE graffito-jcr PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/graffito-jcr-mapping.dtd">
+<graffito-jcr>
+
+	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.HierarchyNode"  jcrNodeType="nt:hierarchyNode" >
+		<field-descriptor fieldName="path" path="true" />
+		<field-descriptor fieldName="creationDate" jcrName="jcr:created"/>	
+	</class-descriptor>	
+	
+	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.Folder"  jcrNodeType="nt:folder"
+	                  extend="org.apache.portals.graffito.jcr.testmodel.HierarchyNode" >
+		<field-descriptor fieldName="path" path="true" />
+		<collection-descriptor fieldName="children" proxy="false" autoUpdate="false" 
+		                       elementClassName="org.apache.portals.graffito.jcr.testmodel.HierarchyNode" 
+		                       collectionConverter="org.apache.portals.graffito.jcr.persistence.collectionconverter.impl.NTCollectionConverterImpl" />
+
+	</class-descriptor>	
+	
+	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.File"  jcrNodeType="nt:file" 
+	                  extend="org.apache.portals.graffito.jcr.testmodel.HierarchyNode" >
+	                  
+		<field-descriptor fieldName="path" path="true" />
+		<bean-descriptor  fieldName="resource"  jcrName="jcr:content" />
+	</class-descriptor>
+		
+    <class-descriptor className="org.apache.portals.graffito.jcr.testmodel.Resource"  jcrNodeType="nt:resource">
+		<field-descriptor fieldName="mimeType" jcrName="jcr:mimeType"/>	
+		<!-- field-descriptor fieldName="encoding" jcrName="jcr:encoding"/ -->	
+		<field-descriptor fieldName="data" jcrName="jcr:data"/>	
+		<field-descriptor fieldName="lastModified" jcrName="jcr:lastModified"/>	
+	</class-descriptor>	
+
+    <class-descriptor className="org.apache.portals.graffito.jcr.testmodel.PropertyTest" jcrNodeType="graffito:propertytest" >
+		<field-descriptor fieldName="path" path="true" />
+		<field-descriptor fieldName="requiredProp" jcrName="graffito:requiredProp" />
+		<field-descriptor fieldName="requiredWithConstraintsProp" jcrName="graffito:requiredWithConstraintsProp" jcrValueConstraints="abc,def,ghi" />
+		<field-descriptor fieldName="autoCreatedProp" jcrName="graffito:autoCreatedProp" jcrDefaultValue="aaa" />
+		<field-descriptor fieldName="autoCreatedWithConstraintsProp" jcrName="graffito:autoCreatedWithConstraintsProp" jcrDefaultValue="ccc" jcrValueConstraints="bbb,ccc,ddd"/>
+		<field-descriptor fieldName="mandatoryProp" jcrName="graffito:mandatoryProp" jcrMandatory="true" />				
+		<field-descriptor fieldName="mandatoryWithConstaintsProp" jcrName="graffito:mandatoryWithConstaintsProp" jcrMandatory="true" jcrValueConstraints="xx,yy"/>						
+		<field-descriptor fieldName="protectedWithDefaultValueProp" jcrName="graffito:protectedWithDefaultValueProp" jcrProtected="true"/>
+	</class-descriptor>			
+</graffito-jcr>
+ 
