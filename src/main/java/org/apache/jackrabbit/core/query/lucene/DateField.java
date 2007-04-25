@@ -23,7 +23,7 @@ import java.util.Date;
  * a way that the resulting <code>String</code> is suitable for indexing and
  * sorting.
  */
-class DateField {
+public class DateField {
 
     private DateField() {
     }
