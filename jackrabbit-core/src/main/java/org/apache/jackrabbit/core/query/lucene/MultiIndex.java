@@ -781,7 +781,11 @@ public class MultiIndex {
         // remove it from the lists if index is registered
         indexes.remove(index);
         indexNames.removeName(index.getName());
-        deletable.addName(index.getName());
+        // during recovery it may happen that an index had already been marked
+        // deleted, so we need to check if it is already marked deleted.
+        if (!deletable.contains(index.getName())) {
+            deletable.addName(index.getName());
+        }
     }
 
     /**
