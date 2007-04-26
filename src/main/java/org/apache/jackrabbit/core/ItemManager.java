@@ -732,7 +732,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
     /**
      * {@inheritDoc}
      */
-    public void stateCreated(ItemState created) {
+    public synchronized void stateCreated(ItemState created) {
         ItemImpl item = retrieveItem(created.getId());
         if (item != null) {
             item.stateCreated(created);
@@ -742,7 +742,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
     /**
      * {@inheritDoc}
      */
-    public void stateModified(ItemState modified) {
+    public synchronized void stateModified(ItemState modified) {
         ItemImpl item = retrieveItem(modified.getId());
         if (item != null) {
             item.stateModified(modified);
@@ -752,7 +752,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
     /**
      * {@inheritDoc}
      */
-    public void stateDestroyed(ItemState destroyed) {
+    public synchronized void stateDestroyed(ItemState destroyed) {
         ItemImpl item = retrieveItem(destroyed.getId());
         if (item != null) {
             item.stateDestroyed(destroyed);
@@ -762,7 +762,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
     /**
      * {@inheritDoc}
      */
-    public void stateDiscarded(ItemState discarded) {
+    public synchronized void stateDiscarded(ItemState discarded) {
         ItemImpl item = retrieveItem(discarded.getId());
         if (item != null) {
             item.stateDiscarded(discarded);
