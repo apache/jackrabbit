@@ -21,6 +21,10 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Node;
+import javax.jcr.version.Version;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * <code>ConcurrentVersioningTest</code> contains test cases that run version
@@ -37,7 +41,7 @@ public class ConcurrentVersioningTest extends AbstractJCRTest {
      * The total number of operations to execute. E.g. number of checkins
      * performed by the threads.
      */
-    private static final int NUM_OPERATIONS = 100;
+    private static final int NUM_OPERATIONS = 200;
 
     public void testConcurrentAddVersionable() throws RepositoryException {
         runTask(new Task() {
@@ -88,6 +92,33 @@ public class ConcurrentVersioningTest extends AbstractJCRTest {
                         n.checkin();
                         n.checkout();
                     }
+                } finally {
+                    session.logout();
+                }
+            }
+        }, CONCURRENCY);
+    }
+
+    public void testConcurrentRestore() throws RepositoryException {
+        runTask(new Task() {
+            public void execute(Session session, Node test) throws RepositoryException {
+                try {
+                    Node n = test.addNode("test");
+                    n.addMixin(mixVersionable);
+                    session.save();
+                    // create 3 version
+                    List versions = new ArrayList();
+                    for (int i = 0; i < 3; i++) {
+                        n.checkout();
+                        versions.add(n.checkin());
+                    }
+                    // do random restores
+                    Random rand = new Random();
+                    for (int i = 0; i < NUM_OPERATIONS / CONCURRENCY; i++) {
+                        Version v = (Version) versions.get(rand.nextInt(versions.size()));
+                        n.restore(v, true);
+                    }
+                    n.checkout();
                 } finally {
                     session.logout();
                 }
