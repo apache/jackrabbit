@@ -215,6 +215,11 @@ public class DatabaseJournal extends AbstractJournal {
 
     /**
      * {@inheritDoc}
+     * <p/>
+     * This journal is locked by incrementing the current value in the table
+     * named <code>GLOBAL_REVISION</code>, which effectively write-locks this
+     * table. The updated value is then saved away and remembered in the
+     * appended record, because a save may entail multiple appends (JCR-884).
      */
     protected void doLock() throws JournalException {
         ResultSet rs = null;
@@ -278,22 +283,32 @@ public class DatabaseJournal extends AbstractJournal {
 
     /**
      * {@inheritDoc}
+     * <p/>
+     * Save away the locked revision inside the newly appended record.
      */
-    protected long append(String producerId, InputStream in, int length)
+    protected void appending(AppendRecord record) {
+        record.setRevision(lockedRevision);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * We have already saved away the revision for this record.
+     */
+    protected void append(AppendRecord record, InputStream in, int length)
             throws JournalException {
 
         try {
             try {
                 insertRevisionStmt.clearParameters();
                 insertRevisionStmt.clearWarnings();
-                insertRevisionStmt.setLong(1, lockedRevision);
+                insertRevisionStmt.setLong(1, record.getRevision());
                 insertRevisionStmt.setString(2, getId());
-                insertRevisionStmt.setString(3, producerId);
+                insertRevisionStmt.setString(3, record.getProducerId());
                 insertRevisionStmt.setBinaryStream(4, in, length);
                 insertRevisionStmt.execute();
 
                 con.commit();
-                return lockedRevision;
             } finally {
                 try {
                     con.setAutoCommit(true);

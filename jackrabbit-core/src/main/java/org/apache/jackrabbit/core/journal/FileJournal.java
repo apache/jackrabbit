@@ -169,7 +169,7 @@ public class FileJournal extends AbstractJournal {
     /**
      * {@inheritDoc}
      */
-    protected long append(String producerId, InputStream in, int length)
+    protected void append(AppendRecord record, InputStream in, int length)
             throws JournalException {
 
         try {
@@ -181,9 +181,10 @@ public class FileJournal extends AbstractJournal {
             if (recordLog.isNew()) {
                 recordLog.init(globalRevision.get());
             }
-            long revision = recordLog.append(getId(), producerId, in, length);
+            long revision = recordLog.append(getId(),
+                    record.getProducerId(), in, length);
             globalRevision.set(revision);
-            return revision;
+            record.setRevision(revision);
 
         } catch (IOException e) {
             String msg = "Unable to append new record to journal '" + journalFile + "'.";

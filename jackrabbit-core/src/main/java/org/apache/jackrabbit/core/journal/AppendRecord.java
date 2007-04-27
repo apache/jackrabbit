@@ -138,6 +138,15 @@ public class AppendRecord extends AbstractRecord {
     }
 
     /**
+     * Set the revision this record represents.
+     *
+     * @param revision revision
+     */
+    protected void setRevision(long revision) {
+        this.revision = revision;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public void writeByte(int n) throws JournalException {
@@ -239,7 +248,7 @@ public class AppendRecord extends AbstractRecord {
             InputStream in = openInput();
 
             try {
-                revision = journal.append(producerId, in, length);
+                journal.append(this, in, length);
                 succeeded = true;
             } finally {
                 try {
