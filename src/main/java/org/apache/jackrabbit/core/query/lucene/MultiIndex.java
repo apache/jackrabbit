@@ -299,6 +299,16 @@ public class MultiIndex {
             // now that we are ready, start index merger
             merger.start();
 
+            if (redoLogApplied) {
+                // wait for the index merge to finish pending jobs
+                try {
+                    merger.waitUntilIdle();
+                } catch (InterruptedException e) {
+                    // move on
+                }
+                flush();
+            }
+
             // do an initial index if there are no indexes at all
             if (indexNames.size() == 0) {
                 reindexing = true;
@@ -572,7 +582,7 @@ public class MultiIndex {
         try {
             // if we are reindexing there is already an active transaction
             if (!reindexing) {
-                executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
+                executeAndLog(new Start(Action.INTERNAL_TRANS_REPL_INDEXES));
             }
             // delete obsolete indexes
             Set names = new HashSet(Arrays.asList(obsoleteIndexes));
@@ -1173,10 +1183,15 @@ public class MultiIndex {
         public static final int TYPE_DELETE_INDEX = 7;
 
         /**
-         * Transaction identifier for internal actions like index replace or
-         * volatile index commit triggered by timer thread.
+         * Transaction identifier for internal actions like volatile index
+         * commit triggered by timer thread.
          */
         static final long INTERNAL_TRANSACTION = -1;
+
+        /**
+         * Transaction identifier for internal action that replaces indexs.
+         */
+        static final long INTERNAL_TRANS_REPL_INDEXES = -2;
 
         /**
          * The id of the transaction that executed this action.
@@ -1567,6 +1582,7 @@ public class MultiIndex {
         public void undo(MultiIndex index) throws IOException {
             if (index.hasIndex(indexName)) {
                 PersistentIndex idx = index.getOrCreateIndex(indexName, false);
+                idx.close();
                 index.deleteIndex(idx);
             }
         }
