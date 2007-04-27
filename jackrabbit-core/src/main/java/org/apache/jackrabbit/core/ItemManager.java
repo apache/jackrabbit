@@ -120,7 +120,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
     /**
      * Disposes this <code>ItemManager</code> and frees resources.
      */
-    void dispose() {
+    synchronized void dispose() {
         itemCache.clear();
     }
 
@@ -596,7 +596,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      * @return the item reference stored in the corresponding cache entry
      *         or <code>null</code> if there's no corresponding cache entry.
      */
-    private ItemImpl retrieveItem(ItemId id) {
+    private synchronized ItemImpl retrieveItem(ItemId id) {
         return (ItemImpl) itemCache.get(id);
     }
 
@@ -606,7 +606,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      *
      * @param item the item to cache
      */
-    private void cacheItem(ItemImpl item) {
+    private synchronized void cacheItem(ItemImpl item) {
         ItemId id = item.getId();
         if (itemCache.containsKey(id)) {
             log.warn("overwriting cached item " + id);
@@ -622,7 +622,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      *
      * @param id id of the item to remove from the cache
      */
-    private void evictItem(ItemId id) {
+    private synchronized void evictItem(ItemId id) {
         if (log.isDebugEnabled()) {
             log.debug("removing item " + id + " from cache");
         }
@@ -704,7 +704,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
     /**
      * {@inheritDoc}
      */
-    public void dump(PrintStream ps) {
+    public synchronized void dump(PrintStream ps) {
         ps.println("ItemManager (" + this + ")");
         ps.println();
         ps.println("Items in cache:");
@@ -732,7 +732,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
     /**
      * {@inheritDoc}
      */
-    public synchronized void stateCreated(ItemState created) {
+    public void stateCreated(ItemState created) {
         ItemImpl item = retrieveItem(created.getId());
         if (item != null) {
             item.stateCreated(created);
@@ -742,7 +742,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
     /**
      * {@inheritDoc}
      */
-    public synchronized void stateModified(ItemState modified) {
+    public void stateModified(ItemState modified) {
         ItemImpl item = retrieveItem(modified.getId());
         if (item != null) {
             item.stateModified(modified);
@@ -752,7 +752,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
     /**
      * {@inheritDoc}
      */
-    public synchronized void stateDestroyed(ItemState destroyed) {
+    public void stateDestroyed(ItemState destroyed) {
         ItemImpl item = retrieveItem(destroyed.getId());
         if (item != null) {
             item.stateDestroyed(destroyed);
@@ -762,7 +762,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
     /**
      * {@inheritDoc}
      */
-    public synchronized void stateDiscarded(ItemState discarded) {
+    public void stateDiscarded(ItemState discarded) {
         ItemImpl item = retrieveItem(discarded.getId());
         if (item != null) {
             item.stateDiscarded(discarded);
