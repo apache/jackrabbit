@@ -272,16 +272,27 @@ public abstract class AbstractJournal implements Journal {
     protected abstract void doLock() throws JournalException;
 
     /**
-     * Append a record backed by a file. Subclass responsibility.
+     * Notification method called by an appended record at creation time.
+     * May be overridden by subclasses to save some context information
+     * inside the appended record.
      *
-     * @param producerId producer identifier
+     * @param record record that was appended
+     */
+    protected void appending(AppendRecord record) {
+        // nothing to be done here
+    }
+
+    /**
+     * Append a record backed by a file. On exit, the new revision must have
+     * been set inside the appended record. Subclass responsibility.
+     *
+     * @param record record to append
      * @param in input stream
      * @param length number of bytes in input stream
-     * @return the new record's revision
      *
      * @throws JournalException if an error occurs
      */
-    protected abstract long append(String producerId, InputStream in, int length)
+    protected abstract void append(AppendRecord record, InputStream in, int length)
             throws JournalException;
 
     /**
