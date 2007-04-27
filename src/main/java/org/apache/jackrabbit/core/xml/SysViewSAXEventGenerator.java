@@ -43,6 +43,21 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
     public static final String CDATA_TYPE = "CDATA";
     public static final String ENUMERATION_TYPE = "ENUMERATION";
 
+    private static final String NS_XMLSCHEMA_INSTANCE_URI = "http://www.w3.org/2001/XMLSchema-instance";
+    private static final String NS_XMLSCHEMA_INSTANCE_PREFIX = "xsi";
+    private static final String NS_XMLSCHEMA_URI = "http://www.w3.org/2001/XMLSchema";
+    private static final String NS_XMLSCHEMA_PREFIX = "xs";
+
+    private static final Attributes ATTRS_EMPTY = new AttributesImpl();
+    private static final Attributes ATTRS_BINARY_ENCODED_VALUE;
+    static {
+        AttributesImpl attrs = new AttributesImpl();
+        attrs.addAttribute(QName.NS_XMLNS_URI, NS_XMLSCHEMA_INSTANCE_PREFIX, "xmlns:" + NS_XMLSCHEMA_INSTANCE_PREFIX, CDATA_TYPE, NS_XMLSCHEMA_INSTANCE_URI);
+        attrs.addAttribute(QName.NS_XMLNS_URI, NS_XMLSCHEMA_PREFIX, "xmlns:" + NS_XMLSCHEMA_PREFIX, CDATA_TYPE, NS_XMLSCHEMA_URI);
+        attrs.addAttribute(NS_XMLSCHEMA_INSTANCE_URI, "type", NS_XMLSCHEMA_INSTANCE_PREFIX + ":type", "CDATA", NS_XMLSCHEMA_PREFIX + ":base64Binary");
+        ATTRS_BINARY_ENCODED_VALUE = attrs;
+    }
+
     /**
      * Name resolver for producing qualified XML names.
      */
@@ -151,8 +166,27 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
             for (int i = 0; i < vals.length; i++) {
                 Value val = vals[i];
 
+                Attributes attributes = ATTRS_EMPTY;
+                boolean mustSendBinary = false;
+
+                if (val.getType() != PropertyType.BINARY) {
+                    String ser = val.getString();
+                    for (int ci = 0; ci < ser.length() && mustSendBinary == false; ci++) {
+                        char c = ser.charAt(ci);
+                        if (c >= 0 && c < 32 && c != '\r' && c != '\n' && c != '\t') {
+                            mustSendBinary = true;
+                        }
+                    }
+
+                    if (mustSendBinary) {
+                        contentHandler.startPrefixMapping(NS_XMLSCHEMA_INSTANCE_PREFIX, NS_XMLSCHEMA_INSTANCE_URI);
+                        contentHandler.startPrefixMapping(NS_XMLSCHEMA_PREFIX, NS_XMLSCHEMA_URI);
+                        attributes = ATTRS_BINARY_ENCODED_VALUE;
+                    }
+                }
+
                 // start value element
-                startElement(QName.SV_VALUE, new AttributesImpl());
+                startElement(QName.SV_VALUE, attributes);
 
                 // characters
                 Writer writer = new Writer() {
@@ -171,7 +205,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
                     }
                 };
                 try {
-                    ValueHelper.serialize(val, false, writer);
+                    ValueHelper.serialize(val, false, mustSendBinary, writer);
                     // no need to close our Writer implementation
                     //writer.close();
                 } catch (IOException ioe) {
@@ -187,6 +221,11 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
 
                 // end value element
                 endElement(QName.SV_VALUE);
+
+                if (mustSendBinary) {
+                    contentHandler.endPrefixMapping(NS_XMLSCHEMA_INSTANCE_PREFIX);
+                    contentHandler.endPrefixMapping(NS_XMLSCHEMA_PREFIX);
+                }
             }
         }
     }
