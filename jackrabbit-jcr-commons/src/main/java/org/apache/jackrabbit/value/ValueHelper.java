@@ -562,7 +562,7 @@ public class ValueHelper {
             throws IllegalStateException, RepositoryException {
         StringWriter writer = new StringWriter();
         try {
-            serialize(value, encodeBlanks, writer);
+            serialize(value, encodeBlanks, false, writer);
         } catch (IOException ioe) {
             throw new RepositoryException("failed to serialize value",
                     ioe);
@@ -571,6 +571,15 @@ public class ValueHelper {
     }
 
     /**
+     * @deprecated use {@link #serialize(Value, boolean, boolean, Writer)} instead
+     */
+    public static void serialize(Value value, boolean encodeBlanks,
+        Writer writer)
+        throws IllegalStateException, IOException, RepositoryException {
+        serialize(value, encodeBlanks, false, writer);
+    }
+    
+      /**
      * Outputs the serialized value to a <code>Writer</code>. The serialization
      * format is the same as used by Document & System View XML, i.e.
      * binary values will be Base64-encoded whereas for all others
@@ -579,13 +588,14 @@ public class ValueHelper {
      * @param value        the value to be serialized
      * @param encodeBlanks if <code>true</code> space characters will be encoded
      *                     as <code>"_x0020_"</code> within he output string.
+     * @param enforceBase64 if <code>true</code>, base64 encoding will always be used
      * @param writer       writer to output the encoded data
      * @throws IllegalStateException if the given value is in an illegal state
      * @throws IOException           if an i/o error occured during the
      *                               serialization
      * @throws RepositoryException   if an error occured during the serialization.
      */
-    public static void serialize(Value value, boolean encodeBlanks,
+    public static void serialize(Value value, boolean encodeBlanks, boolean enforceBase64,
                                  Writer writer)
             throws IllegalStateException, IOException, RepositoryException {
         if (value.getType() == PropertyType.BINARY) {
@@ -606,11 +616,17 @@ public class ValueHelper {
             }
         } else {
             String textVal = value.getString();
-            if (encodeBlanks) {
-                // enocde blanks in string
-                textVal = Text.replace(textVal, " ", "_x0020_");
+            if (enforceBase64) {
+                byte bytes[] = textVal.getBytes("UTF-8");
+                Base64.encode(bytes, 0, bytes.length, writer);
             }
-            writer.write(textVal);
+            else {
+                if (encodeBlanks) {
+                    // enocde blanks in string
+                    textVal = Text.replace(textVal, " ", "_x0020_");
+                }
+                writer.write(textVal);
+            }
         }
     }
 
