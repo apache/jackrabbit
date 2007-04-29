@@ -225,9 +225,9 @@ public abstract class AbstractSession implements Session {
             TransformerHandler handler = stf.newTransformerHandler();
 
             Transformer transformer = handler.getTransformer();
-            transformer.setParameter(OutputKeys.METHOD, "xml");
-            transformer.setParameter(OutputKeys.ENCODING, "UTF-8");
-            transformer.setParameter(OutputKeys.INDENT, "no");
+            transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            transformer.setOutputProperty(OutputKeys.INDENT, "no");
 
             handler.setResult(new StreamResult(stream));
             return handler;
