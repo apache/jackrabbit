@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.util.BitSet;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Set;
 
 /**
  * Implements a wildcard query on a lucene field with an embedded property name
@@ -74,6 +75,12 @@ public class WildcardQuery extends Query implements TransformConstants {
      * provided pattern.
      */
     private final int transform;
+
+    /**
+     * The standard multi term query to execute wildcard queries. This is only
+     * set if the pattern matches less than {@link org.apache.lucene.search.BooleanQuery#maxClauseCount}.
+     */
+    private Query multiTermQuery;
 
     /**
      * Creates a new <code>WildcardQuery</code>.
@@ -118,7 +125,8 @@ public class WildcardQuery extends Query implements TransformConstants {
             }
         };
         try {
-            return stdWildcardQuery.rewrite(reader);
+            multiTermQuery = stdWildcardQuery.rewrite(reader);
+            return multiTermQuery;
         } catch (BooleanQuery.TooManyClauses e) {
             // MultiTermQuery not possible
             log.debug("Too many terms to enumerate, using custom WildcardQuery.");
@@ -144,6 +152,15 @@ public class WildcardQuery extends Query implements TransformConstants {
      */
     public String toString(String field) {
         return propName + ":" + pattern;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void extractTerms(Set terms) {
+        if (multiTermQuery != null) {
+            multiTermQuery.extractTerms(terms);
+        }
     }
 
     /**
