@@ -36,11 +36,9 @@ abstract class AbstractWeight implements Weight {
 
     /**
      * Creates a new <code>AbstractWeight</code> for the given
-     * <code>searcher</code>. Specific scorer instances are created using the
-     * provided scorer <code>factory</code>.
+     * <code>searcher</code>.
      *
      * @param searcher the searcher instance for this weight.
-     * @param factory the scorer factory.
      */
     public AbstractWeight(Searcher searcher) {
         this.searcher = searcher;
