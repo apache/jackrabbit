@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.HashMap;
+import java.util.Set;
 
 /**
  * Implements a variant of the lucene class {@link org.apache.lucene.search.RangeQuery}.
@@ -73,6 +74,12 @@ public class RangeQuery extends Query implements TransformConstants {
      * term.
      */
     private final int transform;
+
+    /**
+     * The rewritten range query or <code>null</code> if the range spans more
+     * than {@link org.apache.lucene.search.BooleanQuery#maxClauseCount} terms.
+     */
+    private Query stdRangeQuery;
 
     /**
      * Creates a new RangeQuery. The lower or the upper term may be
@@ -117,7 +124,8 @@ public class RangeQuery extends Query implements TransformConstants {
             Query stdRangeQueryImpl
                     = new org.apache.lucene.search.RangeQuery(lowerTerm, upperTerm, inclusive);
             try {
-                return stdRangeQueryImpl.rewrite(reader);
+                stdRangeQuery = stdRangeQueryImpl.rewrite(reader);
+                return stdRangeQuery;
             } catch (BooleanQuery.TooManyClauses e) {
                 log.debug("Too many terms to enumerate, using custom RangeQuery");
                 // failed, use own implementation
@@ -161,6 +169,15 @@ public class RangeQuery extends Query implements TransformConstants {
             buffer.append(Float.toString(getBoost()));
         }
         return buffer.toString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */ 
+    public void extractTerms(Set terms) {
+        if (stdRangeQuery != null) {
+            stdRangeQuery.extractTerms(terms);
+        }
     }
 
     /**
