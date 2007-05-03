@@ -30,6 +30,7 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.util.name.NamespaceMapping;
+import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
 
@@ -632,7 +633,7 @@ public class CompactNodeTypeDefReader {
      */
     private QName toQName(String stringName) throws ParseException {
         try {
-            return NameFormat.parse(stringName, nsMapping);
+            return ISO9075.decode(NameFormat.parse(stringName, nsMapping));
         } catch (NameException e) {
             lexer.fail("Error while parsing '" + stringName + "'", e);
             return null;
