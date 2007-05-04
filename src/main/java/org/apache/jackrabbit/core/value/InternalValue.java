@@ -315,12 +315,7 @@ public class InternalValue {
                     throw new RepositoryException("internal error: encountered unregistered namespace", npde);
                 }
             case PropertyType.NAME:
-                try {
-                    return NameValue.valueOf(NameFormat.format((QName) val, nsResolver));
-                } catch (NoPrefixDeclaredException npde) {
-                    // should never get here...
-                    throw new RepositoryException("internal error: encountered unregistered namespace", npde);
-                }
+                return NameValue.valueOf((QName) val, nsResolver);
             case PropertyType.STRING:
                 return new StringValue((String) val);
             default:
