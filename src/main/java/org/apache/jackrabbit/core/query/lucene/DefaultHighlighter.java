@@ -20,14 +20,12 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.TermPositionVector;
 import org.apache.lucene.index.TermVectorOffsetInfo;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.Query;
 import org.apache.jackrabbit.util.Text;
 
 /**
@@ -70,34 +68,29 @@ class DefaultHighlighter {
     }
 
     /**
-     * @param tvec    the term position vector for this hit
-     * @param query   the {@link Query query object} which must already have
-     *                been rewritten into primitive types
-     * @param field   the field name
-     * @param text    the original text that was used to create the tokens.
-     * @param prepend the string used to prepend a highlighted token, for
-     *                example <tt>&quot;&lt;b&gt;&quot;</tt>
-     * @param append  the string used to append a highlighted token, for example
-     *                <tt>&quot;&lt;/b&gt;&quot;</tt>
+     * @param tvec       the term position vector for this hit
+     * @param queryTerms the query terms.
+     * @param text       the original text that was used to create the tokens.
+     * @param prepend    the string used to prepend a highlighted token, for
+     *                   example <tt>&quot;&lt;b&gt;&quot;</tt>
+     * @param append     the string used to append a highlighted token, for
+     *                   example <tt>&quot;&lt;/b&gt;&quot;</tt>
      * @return a String with text fragments where tokens from the query are
      *         highlighted
      */
     public static String highlight(TermPositionVector tvec,
-                                   Query query,
-                                   String field,
+                                   Set queryTerms,
                                    String text,
                                    String prepend,
                                    String append)
             throws IOException {
-        return highlight(tvec, query, field, text, prepend, append,
+        return highlight(tvec, queryTerms, text, prepend, append,
                 DEFAULT_MAXFRAGMENTS, DEFAULT_SURROUND);
     }
 
     /**
      * @param tvec         the term position vector for this hit
-     * @param query        the {@link Query query object} which must already
-     *                     have been rewritten into primitive types
-     * @param field        the field name
+     * @param queryTerms   the query terms.
      * @param text         the original text that was used to create the tokens.
      * @param prepend      the string used to prepend a highlighted token, for
      *                     example <tt>&quot;&lt;b&gt;&quot;</tt>
@@ -110,24 +103,15 @@ class DefaultHighlighter {
      *         highlighted
      */
     public static String highlight(TermPositionVector tvec,
-                                   Query query,
-                                   String field,
+                                   Set queryTerms,
                                    String text,
                                    String prepend,
                                    String append,
                                    int maxFragments,
                                    int surround)
             throws IOException {
-        Set extractedTerms = new HashSet();
-        query.extractTerms(extractedTerms);
-        // only keep terms for given field
-        for (Iterator it = extractedTerms.iterator(); it.hasNext(); ) {
-            if (!((Term) it.next()).field().equals(field)) {
-                it.remove();
-            }
-        }
-        String[] terms = new String[extractedTerms.size()];
-        Iterator it = extractedTerms.iterator();
+        String[] terms = new String[queryTerms.size()];
+        Iterator it = queryTerms.iterator();
         for (int i = 0; it.hasNext(); i++) {
             terms[i] = ((Term) it.next()).text();
         }
