@@ -52,7 +52,7 @@
 <!ELEMENT index-rule (property*)>
 <!ATTLIST index-rule nodeType CDATA #REQUIRED
                      condition CDATA #IMPLIED
-                     boost CDATA #IMPLIED "1.0">
+                     boost CDATA "1.0">
 
 <!--
     A property element defines the boost value for a matching property and a
@@ -62,5 +62,5 @@
     is not of type string.
 -->
 <!ELEMENT property (#PCDATA)>
-<!ATTLIST property boost CDATA #IMPLIED "1.0"
-                   nodeScopeIndex CDATA #IMPLIED "true">
+<!ATTLIST property boost CDATA "1.0"
+                   nodeScopeIndex CDATA "true">
