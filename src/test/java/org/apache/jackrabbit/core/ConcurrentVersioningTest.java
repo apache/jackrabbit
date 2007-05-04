@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
-
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Node;
@@ -30,7 +28,7 @@ import java.util.Random;
  * <code>ConcurrentVersioningTest</code> contains test cases that run version
  * operations with concurrent threads.
  */
-public class ConcurrentVersioningTest extends AbstractJCRTest {
+public class ConcurrentVersioningTest extends AbstractConcurrencyTest {
 
     /**
      * The number of threads.
@@ -46,15 +44,11 @@ public class ConcurrentVersioningTest extends AbstractJCRTest {
     public void testConcurrentAddVersionable() throws RepositoryException {
         runTask(new Task() {
             public void execute(Session session, Node test) throws RepositoryException {
-                try {
-                    // add versionable nodes
-                    for (int i = 0; i < NUM_OPERATIONS / CONCURRENCY; i++) {
-                        Node n = test.addNode("test" + i);
-                        n.addMixin(mixVersionable);
-                        session.save();
-                    }
-                } finally {
-                    session.logout();
+                // add versionable nodes
+                for (int i = 0; i < NUM_OPERATIONS / CONCURRENCY; i++) {
+                    Node n = test.addNode("test" + i);
+                    n.addMixin(mixVersionable);
+                    session.save();
                 }
             }
         }, CONCURRENCY);
@@ -63,18 +57,14 @@ public class ConcurrentVersioningTest extends AbstractJCRTest {
     public void testConcurrentCheckin() throws RepositoryException {
         runTask(new Task() {
             public void execute(Session session, Node test) throws RepositoryException {
-                try {
-                    Node n = test.addNode("test");
-                    n.addMixin(mixVersionable);
-                    session.save();
-                    for (int i = 0; i < NUM_OPERATIONS / CONCURRENCY; i++) {
-                        n.checkout();
-                        n.checkin();
-                    }
+                Node n = test.addNode("test");
+                n.addMixin(mixVersionable);
+                session.save();
+                for (int i = 0; i < NUM_OPERATIONS / CONCURRENCY; i++) {
                     n.checkout();
-                } finally {
-                    session.logout();
+                    n.checkin();
                 }
+                n.checkout();
             }
         }, CONCURRENCY);
     }
@@ -82,18 +72,14 @@ public class ConcurrentVersioningTest extends AbstractJCRTest {
     public void testConcurrentCreateAndCheckinCheckout() throws RepositoryException {
         runTask(new Task() {
             public void execute(Session session, Node test) throws RepositoryException {
-                try {
-                    // add versionable nodes
-                    for (int i = 0; i < NUM_OPERATIONS / CONCURRENCY; i++) {
-                        Node n = test.addNode("test" + i);
-                        n.addMixin(mixVersionable);
-                        session.save();
-                        n.checkout();
-                        n.checkin();
-                        n.checkout();
-                    }
-                } finally {
-                    session.logout();
+                // add versionable nodes
+                for (int i = 0; i < NUM_OPERATIONS / CONCURRENCY; i++) {
+                    Node n = test.addNode("test" + i);
+                    n.addMixin(mixVersionable);
+                    session.save();
+                    n.checkout();
+                    n.checkin();
+                    n.checkout();
                 }
             }
         }, CONCURRENCY);
@@ -102,78 +88,23 @@ public class ConcurrentVersioningTest extends AbstractJCRTest {
     public void testConcurrentRestore() throws RepositoryException {
         runTask(new Task() {
             public void execute(Session session, Node test) throws RepositoryException {
-                try {
-                    Node n = test.addNode("test");
-                    n.addMixin(mixVersionable);
-                    session.save();
-                    // create 3 version
-                    List versions = new ArrayList();
-                    for (int i = 0; i < 3; i++) {
-                        n.checkout();
-                        versions.add(n.checkin());
-                    }
-                    // do random restores
-                    Random rand = new Random();
-                    for (int i = 0; i < NUM_OPERATIONS / CONCURRENCY; i++) {
-                        Version v = (Version) versions.get(rand.nextInt(versions.size()));
-                        n.restore(v, true);
-                    }
+                Node n = test.addNode("test");
+                n.addMixin(mixVersionable);
+                session.save();
+                // create 3 version
+                List versions = new ArrayList();
+                for (int i = 0; i < 3; i++) {
                     n.checkout();
-                } finally {
-                    session.logout();
+                    versions.add(n.checkin());
                 }
+                // do random restores
+                Random rand = new Random();
+                for (int i = 0; i < NUM_OPERATIONS / CONCURRENCY; i++) {
+                    Version v = (Version) versions.get(rand.nextInt(versions.size()));
+                    n.restore(v, true);
+                }
+                n.checkout();
             }
         }, CONCURRENCY);
-    }
-
-    //----------------------------< internal >----------------------------------
-
-    private void runTask(Task task, int concurrency) throws RepositoryException {
-        Thread[] threads = new Thread[concurrency];
-        for (int i = 0; i < concurrency; i++) {
-            Session s = helper.getSuperuserSession();
-            Node test = s.getRootNode().addNode(testPath + "/node" + i);
-            s.save();
-            threads[i] = new Thread(new Executor(s, test, task));
-        }
-        for (int i = 0; i < threads.length; i++) {
-            threads[i].start();
-        }
-        for (int i = 0; i < threads.length; i++) {
-            try {
-                threads[i].join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public interface Task {
-
-        public abstract void execute(Session session, Node test)
-                throws RepositoryException;
-    }
-
-    private static class Executor implements Runnable {
-
-        protected final Session session;
-
-        protected final Node test;
-
-        protected final Task task;
-
-        public Executor(Session session, Node test, Task task) {
-            this.session = session;
-            this.test = test;
-            this.task = task;
-        }
-
-        public void run() {
-            try {
-                task.execute(session, test);
-            } catch (RepositoryException e) {
-                e.printStackTrace();
-            }
-        }
     }
 }
