@@ -18,6 +18,9 @@ package org.apache.jackrabbit.value;
 
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -57,6 +60,28 @@ public class NameValue extends BaseValue {
             return new NameValue(s);
         } else {
             throw new ValueFormatException("not a valid name format");
+        }
+    }
+
+    /**
+     * Returns a new <code>NameValue</code> initialized to the value represented
+     * by the specified <code>QName</code> formatted to a string using the
+     * specified <code>resolver</code>.
+     *
+     * @param name     the name to format.
+     * @param resolver a namespace resolver the resolve the URI in the name to a
+     *                 prefix.
+     * @return a newly constructed <code>NameValue</code> representing the the
+     *         specified value.
+     * @throws ValueFormatException If the <code>QName</code> contains a URI
+     *                              that is not known to <code>resolver</code>.
+     */
+    public static NameValue valueOf(QName name, NamespaceResolver resolver)
+            throws ValueFormatException {
+        try {
+            return new NameValue(NameFormat.format(name, resolver));
+        } catch (NoPrefixDeclaredException e) {
+            throw new ValueFormatException(e.getMessage());
         }
     }
 
