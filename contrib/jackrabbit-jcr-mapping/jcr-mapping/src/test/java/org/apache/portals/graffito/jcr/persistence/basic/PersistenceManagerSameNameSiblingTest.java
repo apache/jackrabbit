@@ -226,7 +226,7 @@ public class PersistenceManagerSameNameSiblingTest extends TestBase
 	protected void initPersistenceManager() throws UnsupportedRepositoryOperationException, javax.jcr.RepositoryException
 	{
 		Repository repository = RepositoryUtil.getRepository("repositoryTest");
-		String[] files = { "./src/test-config/jcrmapping-sibling.xml" };
+		String[] files = { "./src/test/test-config/jcrmapping-sibling.xml" };
 		session = RepositoryUtil.login(repository, "superuser", "superuser");
 
 		
