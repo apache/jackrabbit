@@ -176,8 +176,10 @@ class DefaultHighlighter {
         int skip;
         int nextStart;
         int skippedChars;
+        int firstWhitespace;
         for (int i = 0; i < bestFragmentsList.size(); i++) {
             fi = (FragmentInfo) bestFragmentsList.get(i);
+            fi.trim();
             nextStart = fi.getStartOffset();
             skip = nextStart - pos;
             if (skip > surround * 2) {
@@ -212,19 +214,39 @@ class DefaultHighlighter {
                 pos += skip;
             }
             // start fragment
-            skippedChars = 0;
             cbuf = new char[nextStart - pos];
+            skippedChars = Math.max(cbuf.length - 1, 0);
+            firstWhitespace = skippedChars;
             reader.read(cbuf, 0, nextStart - pos);
             pos += (nextStart - pos);
             sb.append(START_FRAGMENT_SEPARATOR);
-            // find first whitespace
-            for (; skippedChars < cbuf.length; skippedChars++) {
-                if (Character.isWhitespace(cbuf[skippedChars])) {
-                    skippedChars += 1;
-                    break;
+            // find last period followed by whitespace
+            if (cbuf.length > 0) {
+                for (; skippedChars >= 0; skippedChars--) {
+                    if (Character.isWhitespace(cbuf[skippedChars])) {
+                        firstWhitespace = skippedChars;
+                        if (skippedChars - 1 >= 0 &&
+                                cbuf[skippedChars - 1] == '.') {
+                            skippedChars++;
+                            break;
+                        }
+                    }
+                }
+            }
+            boolean sentenceStart = true;
+            if (skippedChars == -1) {
+                if (pos == cbuf.length) {
+                    // this fragment is the start of the text -> skip none
+                    skippedChars = 0;
+                } else {
+                    sentenceStart = false;
+                    skippedChars = firstWhitespace + 1;
                 }
             }
 
+            if (!sentenceStart) {
+                sb.append("... ");
+            }
             sb.append(Text.encodeIllegalXMLCharacters(
                     new String(cbuf, skippedChars, cbuf.length - skippedChars)));
 
@@ -272,6 +294,10 @@ class DefaultHighlighter {
                 }
                 sb.append(Text.encodeIllegalXMLCharacters(
                         new String(cbuf, 0, EOF ? skip : (surround - skippedChars))));
+                char lastChar = sb.charAt(sb.length() - 1);
+                if (lastChar != '.' && lastChar != '!' && lastChar != '?') {
+                    sb.append(" ...");
+                }
                 sb.append(END_FRAGMENT_SEPARATOR);
             }
         }
@@ -319,6 +345,16 @@ class DefaultHighlighter {
 
         public int numTerms() {
             return numTerms;
+        }
+
+        public void trim() {
+            int end = startOffset + (mergeGap / 2);
+            for (Iterator it = offsetInfosList.iterator(); it.hasNext(); ) {
+                TermVectorOffsetInfo tvoi = (TermVectorOffsetInfo) it.next();
+                if (tvoi.getStartOffset() > end) {
+                    it.remove();
+                }
+            }
         }
     }
 
