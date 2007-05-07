@@ -103,12 +103,15 @@ class DefaultXMLExcerpt implements ExcerptProvider {
                 // if a term text ends with characters that are considered noise
                 // then the offset of the next field will be off by the number
                 // of noise characters.
-                // therefore we delete noise characters at the end of the text
-                for (int j = text.length() - 1; j >= 0; j--) {
-                    if (Character.isLetterOrDigit(text.charAt(j))) {
-                        break;
-                    } else {
-                        text.deleteCharAt(j);
+                // therefore we delete noise characters at the end of the text.
+                // this process is required for all but the last field
+                if (i < fields.length - 1) {
+                    for (int j = text.length() - 1; j >= 0; j--) {
+                        if (Character.isLetterOrDigit(text.charAt(j))) {
+                            break;
+                        } else {
+                            text.deleteCharAt(j);
+                        }
                     }
                 }
                 separator = " ";
