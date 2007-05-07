@@ -167,7 +167,7 @@ public abstract class TestBase extends TestCase
     protected void registerNodeTypes(Session session) 
     throws InvalidNodeTypeDefException, javax.jcr.RepositoryException, IOException {
         InputStream xml = new FileInputStream(
-                "./src/test-config/nodetypes/custom_nodetypes.xml");
+                "./src/test/test-config/nodetypes/custom_nodetypes.xml");
 
         // HINT: throws InvalidNodeTypeDefException, IOException
         NodeTypeDef[] types = NodeTypeReader.read(xml);
@@ -193,13 +193,13 @@ public abstract class TestBase extends TestCase
 	protected void initPersistenceManager() throws UnsupportedRepositoryOperationException, javax.jcr.RepositoryException
 	{
 		Repository repository = RepositoryUtil.getRepository("repositoryTest");
-		String[] files = { "./src/test-config/jcrmapping.xml", 
-						   "./src/test-config/jcrmapping-proxy.xml",
-                           "./src/test-config/jcrmapping-atomic.xml",
-                           "./src/test-config/jcrmapping-beandescriptor.xml",
-                           "./src/test-config/jcrmapping-inheritance.xml",
-                           "./src/test-config/jcrmapping-jcrnodetypes.xml", 
-                           "./src/test-config/jcrmapping-uuid.xml"};
+		String[] files = { "./src/test/test-config/jcrmapping.xml", 
+						   "./src/test/test-config/jcrmapping-proxy.xml",
+                           "./src/test/test-config/jcrmapping-atomic.xml",
+                           "./src/test/test-config/jcrmapping-beandescriptor.xml",
+                           "./src/test/test-config/jcrmapping-inheritance.xml",
+                           "./src/test/test-config/jcrmapping-jcrnodetypes.xml", 
+                           "./src/test/test-config/jcrmapping-uuid.xml"};
 		session = RepositoryUtil.login(repository, "superuser", "superuser");
 		persistenceManager = new PersistenceManagerImpl(session, files);
 		

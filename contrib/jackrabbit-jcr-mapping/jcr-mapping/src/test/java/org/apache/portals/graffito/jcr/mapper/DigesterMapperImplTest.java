@@ -70,7 +70,7 @@ public class DigesterMapperImplTest extends TestCase {
 		try {
 
 			Mapper mapper = new DigesterMapperImpl(
-					"./src/test-config/jcrmapping-testdigester.xml");
+					"./src/test/test-config/jcrmapping-testdigester.xml");
 					
 			assertNotNull("Mapper is null", mapper);
 
@@ -107,7 +107,7 @@ public class DigesterMapperImplTest extends TestCase {
 		try {
 
 			Mapper mapper = new DigesterMapperImpl(
-					"./src/test-config/jcrmapping-testdigester.xml");
+					"./src/test/test-config/jcrmapping-testdigester.xml");
 					
 			assertNotNull("Mapper is null", mapper);
 
@@ -128,7 +128,7 @@ public class DigesterMapperImplTest extends TestCase {
 	public void testDiscriminatorSetting() {
 		try {
 
-			Mapper mapper = new DigesterMapperImpl("./src/test-config/jcrmapping-testdigester.xml");
+			Mapper mapper = new DigesterMapperImpl("./src/test/test-config/jcrmapping-testdigester.xml");
 
 			assertNotNull("Mapper is null", mapper);
 
@@ -149,8 +149,8 @@ public class DigesterMapperImplTest extends TestCase {
 	public void testMapperOptionalProperties() {
 		try {
 
-			String[] files = { "./src/test-config/jcrmapping.xml",
-					           "./src/test-config/jcrmapping-jcrnodetypes.xml"};			
+			String[] files = { "./src/test/test-config/jcrmapping.xml",
+					           "./src/test/test-config/jcrmapping-jcrnodetypes.xml"};			
 
 			Mapper mapper = new DigesterMapperImpl(files);
 			
@@ -234,10 +234,10 @@ public class DigesterMapperImplTest extends TestCase {
 	 */
 	public void testMapperNtHierarchy() {
 		try {
-			String[] files = { "./src/test-config/jcrmapping.xml",
-					"./src/test-config/jcrmapping-atomic.xml",
-					"./src/test-config/jcrmapping-beandescriptor.xml",
-					"./src/test-config/jcrmapping-inheritance.xml" };			
+			String[] files = { "./src/test/test-config/jcrmapping.xml",
+					"./src/test/test-config/jcrmapping-atomic.xml",
+					"./src/test/test-config/jcrmapping-beandescriptor.xml",
+					"./src/test/test-config/jcrmapping-inheritance.xml" };			
 			
 			Mapper mapper = new DigesterMapperImpl(files);
 
@@ -330,11 +330,11 @@ public class DigesterMapperImplTest extends TestCase {
 	 */	
 	public void testMapperNtConcreteClass() {
 		try {
-			String[] files = { "./src/test-config/jcrmapping.xml",
-					"./src/test-config/jcrmapping-atomic.xml",
-					"./src/test-config/jcrmapping-beandescriptor.xml",
-					"./src/test-config/jcrmapping-inheritance.xml" };
-			//      		String[] files = {  "./src/test-config/jcrmapping-inheritance.xml"};
+			String[] files = { "./src/test/test-config/jcrmapping.xml",
+					"./src/test/test-config/jcrmapping-atomic.xml",
+					"./src/test/test-config/jcrmapping-beandescriptor.xml",
+					"./src/test/test-config/jcrmapping-inheritance.xml" };
+			//      		String[] files = {  "./src/test/test-config/jcrmapping-inheritance.xml"};
 
 			Mapper mapper = new DigesterMapperImpl(files);
 
@@ -396,7 +396,7 @@ public class DigesterMapperImplTest extends TestCase {
 	 */
 	public void testInterfaceWithDiscriminator() {
 		try {
-			String[] files = {"./src/test-config/jcrmapping-inheritance.xml"};
+			String[] files = {"./src/test/test-config/jcrmapping-inheritance.xml"};
 			Mapper mapper = new DigesterMapperImpl(files);
 
 			assertNotNull("Mapper is null", mapper);
@@ -436,7 +436,7 @@ public class DigesterMapperImplTest extends TestCase {
 	public void testInterfaceWithoutDiscriminator() 
 	{
 		try {
-			String[] files = {"./src/test-config/jcrmapping-inheritance.xml"};
+			String[] files = {"./src/test/test-config/jcrmapping-inheritance.xml"};
 			Mapper mapper = new DigesterMapperImpl(files);
 
 			assertNotNull("Mapper is null", mapper);
@@ -487,7 +487,7 @@ public class DigesterMapperImplTest extends TestCase {
 	 */
 	public void testProxy() {
 		try {
-			String[] files = { "./src/test-config/jcrmapping-proxy.xml" };
+			String[] files = { "./src/test/test-config/jcrmapping-proxy.xml" };
 
 			Mapper mapper = new DigesterMapperImpl(files);
 			assertNotNull("Mapper is null", mapper);
