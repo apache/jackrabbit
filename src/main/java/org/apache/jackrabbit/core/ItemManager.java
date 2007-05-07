@@ -33,9 +33,7 @@ import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,13 +90,14 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
     /**
      * A cache for item instances created by this <code>ItemManager</code>
      */
-    private Map itemCache;
+    private final Map itemCache;
 
     /**
      * Creates a new per-session instance <code>ItemManager</code> instance.
      *
      * @param itemStateProvider the item state provider associated with
      *                          the new instance
+     * @param hierMgr           the hierarchy manager
      * @param session           the session associated with the new instance
      * @param rootNodeDef       the definition of the root node
      * @param rootNodeId        the id of the root node
@@ -120,8 +119,10 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
     /**
      * Disposes this <code>ItemManager</code> and frees resources.
      */
-    synchronized void dispose() {
-        itemCache.clear();
+    void dispose() {
+        synchronized (itemCache) {
+            itemCache.clear();
+        }
     }
 
     private NodeDefinition getDefinition(NodeState state)
@@ -596,8 +597,10 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      * @return the item reference stored in the corresponding cache entry
      *         or <code>null</code> if there's no corresponding cache entry.
      */
-    private synchronized ItemImpl retrieveItem(ItemId id) {
-        return (ItemImpl) itemCache.get(id);
+    private ItemImpl retrieveItem(ItemId id) {
+        synchronized (itemCache) {
+            return (ItemImpl) itemCache.get(id);
+        }
     }
 
     /**
@@ -606,15 +609,17 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      *
      * @param item the item to cache
      */
-    private synchronized void cacheItem(ItemImpl item) {
-        ItemId id = item.getId();
-        if (itemCache.containsKey(id)) {
-            log.warn("overwriting cached item " + id);
+    private void cacheItem(ItemImpl item) {
+        synchronized (itemCache) {
+            ItemId id = item.getId();
+            if (itemCache.containsKey(id)) {
+                log.warn("overwriting cached item " + id);
+            }
+            if (log.isDebugEnabled()) {
+                log.debug("caching item " + id);
+            }
+            itemCache.put(id, item);
         }
-        if (log.isDebugEnabled()) {
-            log.debug("caching item " + id);
-        }
-        itemCache.put(id, item);
     }
 
     /**
@@ -622,11 +627,13 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      *
      * @param id id of the item to remove from the cache
      */
-    private synchronized void evictItem(ItemId id) {
+    private void evictItem(ItemId id) {
         if (log.isDebugEnabled()) {
             log.debug("removing item " + id + " from cache");
         }
-        itemCache.remove(id);
+        synchronized (itemCache) {
+            itemCache.remove(id);
+        }
     }
 
     //-------------------------------------------------< misc. helper methods >
@@ -709,21 +716,23 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         ps.println();
         ps.println("Items in cache:");
         ps.println();
-        Iterator iter = itemCache.keySet().iterator();
-        while (iter.hasNext()) {
-            ItemId id = (ItemId) iter.next();
-            ItemImpl item = (ItemImpl) itemCache.get(id);
-            if (item.isNode()) {
-                ps.print("Node: ");
-            } else {
-                ps.print("Property: ");
+        synchronized (itemCache) {
+            Iterator iter = itemCache.keySet().iterator();
+            while (iter.hasNext()) {
+                ItemId id = (ItemId) iter.next();
+                ItemImpl item = (ItemImpl) itemCache.get(id);
+                if (item.isNode()) {
+                    ps.print("Node: ");
+                } else {
+                    ps.print("Property: ");
+                }
+                if (item.isTransient()) {
+                    ps.print("transient ");
+                } else {
+                    ps.print("          ");
+                }
+                ps.println(id + "\t" + item.safeGetJCRPath() + " (" + item + ")");
             }
-            if (item.isTransient()) {
-                ps.print("transient ");
-            } else {
-                ps.print("          ");
-            }
-            ps.println(id + "\t" + item.safeGetJCRPath() + " (" + item + ")");
         }
     }
 
