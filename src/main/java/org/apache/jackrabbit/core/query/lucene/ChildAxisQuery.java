@@ -56,7 +56,7 @@ class ChildAxisQuery extends Query {
     /**
      * The context query
      */
-    private final Query contextQuery;
+    private Query contextQuery;
 
     /**
      * The nameTest to apply on the child axis, or <code>null</code> if all
@@ -127,6 +127,18 @@ class ChildAxisQuery extends Query {
      */
     public void extractTerms(Set terms) {
         contextQuery.extractTerms(terms);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Query rewrite(IndexReader reader) throws IOException {
+        Query cQuery = contextQuery.rewrite(reader);
+        if (cQuery == contextQuery) {
+            return this;
+        } else {
+            return new ChildAxisQuery(itemMgr, cQuery, nameTest, position);
+        }
     }
 
     /**
