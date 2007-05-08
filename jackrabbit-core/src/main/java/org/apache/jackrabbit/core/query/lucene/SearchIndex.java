@@ -276,6 +276,16 @@ public class SearchIndex extends AbstractQueryHandler {
     private Class indexingConfigurationClass = IndexingConfigurationImpl.class;
 
     /**
+     * The class that implements {@link SynonymProvider}.
+     */
+    private Class synonymProviderClass;
+
+    /**
+     * The currently set synonym provider.
+     */
+    private SynonymProvider synProvider;
+
+    /**
      * Indicates if this <code>SearchIndex</code> is closed and cannot be used
      * anymore.
      */
@@ -308,6 +318,7 @@ public class SearchIndex extends AbstractQueryHandler {
 
         extractor = createTextExtractor();
         indexingConfig = createIndexingConfiguration();
+        synProvider = createSynonymProvider();
 
         File indexDir = new File(path);
 
@@ -574,6 +585,24 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
+     * @return the synonym provider of this search index. If none is set for
+     *         this search index the synonym provider of the parent handler is
+     *         returned if there is any.
+     */
+    public SynonymProvider getSynonymProvider() {
+        if (synProvider != null) {
+            return synProvider;
+        } else {
+            QueryHandler handler = getContext().getParentHandler();
+            if (handler instanceof SearchIndex) {
+                return ((SearchIndex) handler).getSynonymProvider();
+            } else {
+                return null;
+            }
+        }
+    }
+
+    /**
      * Returns an index reader for this search index. The caller of this method
      * is responsible for closing the index reader when he is finished using
      * it.
@@ -695,6 +724,23 @@ public class SearchIndex extends AbstractQueryHandler {
         }
         log.warn(indexingConfigPath + " ignored.");
         return null;
+    }
+
+    /**
+     * @return the configured synonym provider or <code>null</code> if none is
+     *         configured or an error occurs.
+     */
+    protected SynonymProvider createSynonymProvider() {
+        SynonymProvider sp = null;
+        if (synonymProviderClass != null) {
+            try {
+                sp = (SynonymProvider) synonymProviderClass.newInstance();
+            } catch (Exception e) {
+                log.warn("Exception initializing synonym provider: " +
+                        synonymProviderClass, e);
+            }
+        }
+        return sp;
     }
 
     /**
@@ -1345,6 +1391,38 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public String getIndexingConfigurationClass() {
         return indexingConfigurationClass.getName();
+    }
+
+    /**
+     * Sets the name of the class that implements {@link SynonymProvider}. The
+     * default value is <code>null</code> (none set).
+     *
+     * @param className name of the class that implements {@link
+     *                  SynonymProvider}.
+     */
+    public void setSynonymProviderClass(String className) {
+        try {
+            Class clazz = Class.forName(className);
+            if (SynonymProvider.class.isAssignableFrom(clazz)) {
+                synonymProviderClass = clazz;
+            } else {
+                log.warn("Invalid value for synonymProviderClass, {} " +
+                        "does not implement SynonymProvider interface.",
+                        className);
+            }
+        } catch (ClassNotFoundException e) {
+            log.warn("Invalid value for synonymProviderClass, class {} " +
+                    "not found.", className);
+        }
+    }
+
+    /**
+     * @return the class name of the synonym provider implementation or
+     *         <code>null</code> if none is set.
+     */
+    public String getSynonymProviderClass() {
+        return synonymProviderClass != null ?
+                synonymProviderClass.getName() : null;
     }
 
     //----------------------------< internal >----------------------------------
