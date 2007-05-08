@@ -109,6 +109,18 @@ class DerefQuery extends Query {
         // no terms to extract
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public Query rewrite(IndexReader reader) throws IOException {
+        Query cQuery = contextQuery.rewrite(reader);
+        if (cQuery == contextQuery) {
+            return this;
+        } else {
+            return new DerefQuery(cQuery, refProperty, nameTest);
+        }
+    }
+
     //-------------------< DerefWeight >------------------------------------
 
     /**

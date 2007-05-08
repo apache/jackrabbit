@@ -117,6 +117,19 @@ class DescendantSelfAxisQuery extends Query {
         subQuery.extractTerms(terms);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public Query rewrite(IndexReader reader) throws IOException {
+        Query cQuery = contextQuery.rewrite(reader);
+        Query sQuery = subQuery.rewrite(reader);
+        if (cQuery == contextQuery && sQuery == subQuery) {
+            return this;
+        } else {
+            return new DescendantSelfAxisQuery(cQuery, sQuery, includeSelf);
+        }
+    }
+
     //------------------------< DescendantSelfAxisWeight >--------------------------
 
     /**
