@@ -113,6 +113,9 @@
               the pool are busy, incomming work is put into a wait queue. If the wait queue
               reaches the back log size incomming extractor work will not be queued anymore
               but will be executed with the current thread.
+            - synonymProviderClass: the name of a class that implements
+              org.apache.jackrabbit.core.query.lucene.SynonymProvider. The
+              default value is null (-> not set).
 
             Note: all parameters (except path) in this SearchIndex config are default
             values and can be omitted.
