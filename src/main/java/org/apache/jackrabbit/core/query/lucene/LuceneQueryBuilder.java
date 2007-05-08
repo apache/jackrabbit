@@ -114,6 +114,11 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
     private PropertyTypeRegistry propRegistry;
 
     /**
+     * The synonym provider or <code>null</code> if none is configured.
+     */
+    private SynonymProvider synonymProvider;
+
+    /**
      * Exceptions thrown during tree translation
      */
     private List exceptions = new ArrayList();
@@ -121,25 +126,30 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
     /**
      * Creates a new <code>LuceneQueryBuilder</code> instance.
      *
-     * @param root          the root node of the abstract query tree.
-     * @param session       of the user executing this query.
-     * @param sharedItemMgr the shared item state manager of the workspace.
-     * @param nsMappings    namespace resolver for internal prefixes.
-     * @param analyzer      for parsing the query statement of the contains function.
-     * @param propReg       the property type registry.
+     * @param root            the root node of the abstract query tree.
+     * @param session         of the user executing this query.
+     * @param sharedItemMgr   the shared item state manager of the workspace.
+     * @param nsMappings      namespace resolver for internal prefixes.
+     * @param analyzer        for parsing the query statement of the contains
+     *                        function.
+     * @param propReg         the property type registry.
+     * @param synonymProvider the synonym provider or <code>null</code> if node
+     *                        is configured.
      */
     private LuceneQueryBuilder(QueryRootNode root,
                                SessionImpl session,
                                ItemStateManager sharedItemMgr,
                                NamespaceMappings nsMappings,
                                Analyzer analyzer,
-                               PropertyTypeRegistry propReg) {
+                               PropertyTypeRegistry propReg,
+                               SynonymProvider synonymProvider) {
         this.root = root;
         this.session = session;
         this.sharedItemMgr = sharedItemMgr;
         this.nsMappings = nsMappings;
         this.analyzer = analyzer;
         this.propRegistry = propReg;
+        this.synonymProvider = synonymProvider;
     }
 
     /**
@@ -150,8 +160,10 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
      * @param session       of the user executing the query.
      * @param sharedItemMgr the shared item state manager of the workspace.
      * @param nsMappings    namespace resolver for internal prefixes.
-     * @param analyzer      for parsing the query statement of the contains function.
-     * @param propReg       the property type registry to lookup type information.
+     * @param analyzer      for parsing the query statement of the contains
+     *                      function.
+     * @param propReg       the property type registry to lookup type
+     *                      information.
      * @return the lucene query tree.
      * @throws RepositoryException if an error occurs during the translation.
      */
@@ -162,9 +174,38 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                                     Analyzer analyzer,
                                     PropertyTypeRegistry propReg)
             throws RepositoryException {
+        return createQuery(root, session, sharedItemMgr, 
+                nsMappings, analyzer, propReg, null);
+    }
+
+    /**
+     * Creates a lucene {@link org.apache.lucene.search.Query} tree from an
+     * abstract query tree.
+     *
+     * @param root            the root node of the abstract query tree.
+     * @param session         of the user executing the query.
+     * @param sharedItemMgr   the shared item state manager of the workspace.
+     * @param nsMappings      namespace resolver for internal prefixes.
+     * @param analyzer        for parsing the query statement of the contains
+     *                        function.
+     * @param propReg         the property type registry to lookup type
+     *                        information.
+     * @param synonymProvider the synonym provider or <code>null</code> if node
+     *                        is configured.
+     * @return the lucene query tree.
+     * @throws RepositoryException if an error occurs during the translation.
+     */
+    public static Query createQuery(QueryRootNode root,
+                                    SessionImpl session,
+                                    ItemStateManager sharedItemMgr,
+                                    NamespaceMappings nsMappings,
+                                    Analyzer analyzer,
+                                    PropertyTypeRegistry propReg,
+                                    SynonymProvider synonymProvider)
+            throws RepositoryException {
 
         LuceneQueryBuilder builder = new LuceneQueryBuilder(root, session,
-                sharedItemMgr, nsMappings, analyzer, propReg);
+                sharedItemMgr, nsMappings, analyzer, propReg, synonymProvider);
 
         Query q = builder.createLuceneQuery();
         if (builder.exceptions.size() > 0) {
@@ -329,7 +370,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 tmp.append(propName.getLocalName());
                 fieldname = tmp.toString();
             }
-            QueryParser parser = new QueryParser(fieldname, analyzer);
+            QueryParser parser = new QueryParser(
+                    fieldname, analyzer, synonymProvider);
             parser.setOperator(QueryParser.DEFAULT_OPERATOR_AND);
             // replace unescaped ' with " and escaped ' with just '
             StringBuffer query = new StringBuffer();
