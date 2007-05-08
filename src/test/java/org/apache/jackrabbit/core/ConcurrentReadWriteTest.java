@@ -21,6 +21,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.PropertyIterator;
 import javax.jcr.Property;
+import javax.jcr.InvalidItemStateException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
@@ -67,6 +68,8 @@ public class ConcurrentReadWriteTest extends AbstractConcurrencyTest {
                                             p.getValue();
                                         }
                                     }
+                                } catch (InvalidItemStateException e) {
+                                    // ignore
                                 } catch (RepositoryException e) {
                                     System.out.println(e);
                                 }
