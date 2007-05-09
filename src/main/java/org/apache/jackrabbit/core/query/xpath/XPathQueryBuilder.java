@@ -150,6 +150,11 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     static final QName JCR_SCORE = new QName(QName.NS_JCR_URI, "score");
 
     /**
+     * QName for rep:similar
+     */
+    static final QName REP_SIMILAR = new QName(QName.NS_REP_URI, "similar");
+
+    /**
      * String constant for operator 'eq'
      */
     private static final String OP_EQ = "eq";
@@ -918,6 +923,28 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     }
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for fn:upper-case()"));
+                }
+            } else if (NameFormat.format(REP_SIMILAR, resolver).equals(fName)) {
+                if (node.jjtGetNumChildren() == 2) {
+                    if (queryNode instanceof NAryQueryNode) {
+                        NAryQueryNode parent = (NAryQueryNode) queryNode;
+                        RelationQueryNode rel = new RelationQueryNode(
+                                parent, RelationQueryNode.OPERATION_SIMILAR);
+                        parent.addOperand(rel);
+                        // get path string
+                        node.jjtGetChild(1).jjtAccept(this, rel);
+                        // check if string is set
+                        if (rel.getStringValue() == null) {
+                            exceptions.add(new InvalidQueryException(
+                                    "Argument for rep:similar() must be of type string"));
+                        }
+                    } else {
+                        exceptions.add(new InvalidQueryException(
+                                "Unsupported location for rep:similar()"));
+                    }
+                } else {
+                    exceptions.add(new InvalidQueryException(
+                            "Wrong number of arguments for rep:similar()"));
                 }
             } else if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                 // use function name as name of a pseudo property in a relation
