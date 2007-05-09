@@ -18,6 +18,11 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SearchManager;
+import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.HierarchyManagerImpl;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.query.AndQueryNode;
 import org.apache.jackrabbit.core.query.DerefQueryNode;
 import org.apache.jackrabbit.core.query.ExactQueryNode;
@@ -99,6 +104,11 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
     private ItemStateManager sharedItemMgr;
 
     /**
+     * A hierarchy manager based on {@link #sharedItemMgr} to resolve paths.
+     */
+    private HierarchyManager hmgr;
+
+    /**
      * Namespace mappings to internal prefixes
      */
     private NamespaceMappings nsMappings;
@@ -129,6 +139,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
      * @param root            the root node of the abstract query tree.
      * @param session         of the user executing this query.
      * @param sharedItemMgr   the shared item state manager of the workspace.
+     * @param hmgr            a hierarchy manager based on sharedItemMgr.
      * @param nsMappings      namespace resolver for internal prefixes.
      * @param analyzer        for parsing the query statement of the contains
      *                        function.
@@ -139,6 +150,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
     private LuceneQueryBuilder(QueryRootNode root,
                                SessionImpl session,
                                ItemStateManager sharedItemMgr,
+                               HierarchyManager hmgr,
                                NamespaceMappings nsMappings,
                                Analyzer analyzer,
                                PropertyTypeRegistry propReg,
@@ -146,6 +158,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         this.root = root;
         this.session = session;
         this.sharedItemMgr = sharedItemMgr;
+        this.hmgr = hmgr;
         this.nsMappings = nsMappings;
         this.analyzer = analyzer;
         this.propRegistry = propReg;
@@ -204,8 +217,12 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                                     SynonymProvider synonymProvider)
             throws RepositoryException {
 
-        LuceneQueryBuilder builder = new LuceneQueryBuilder(root, session,
-                sharedItemMgr, nsMappings, analyzer, propReg, synonymProvider);
+        NodeId id = ((NodeImpl) session.getRootNode()).getNodeId();
+        HierarchyManager hmgr = new HierarchyManagerImpl(
+                id, sharedItemMgr, session);
+        LuceneQueryBuilder builder = new LuceneQueryBuilder(
+                root, session, sharedItemMgr, hmgr, nsMappings,
+                analyzer, propReg, synonymProvider);
 
         Query q = builder.createLuceneQuery();
         if (builder.exceptions.size() > 0) {
@@ -653,6 +670,19 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             default:
                 throw new IllegalArgumentException("Unknown relation type: "
                         + node.getValueType());
+        }
+
+        if (node.getOperation() == QueryConstants.OPERATION_SIMILAR) {
+            try {
+                ItemId id = hmgr.resolvePath(session.getQPath(node.getStringValue()));
+                String uuid = "";
+                if (id != null && id.denotesNode()) {
+                    uuid = ((NodeId) id).getUUID().toString();
+                }
+                return new SimilarityQuery(uuid, analyzer);
+            } catch (Exception e) {
+                exceptions.add(e);
+            }
         }
 
         if (node.getRelativePath() == null) {

@@ -234,6 +234,8 @@ public class QueryTreeDump implements QueryNodeVisitor {
             buffer.append("NOT NULL");
         } else if (node.getOperation() == QueryConstants.OPERATION_NULL) {
             buffer.append("IS NULL");
+        } else if (node.getOperation() == QueryConstants.OPERATION_SIMILAR) {
+            buffer.append("similarity");
         } else {
             buffer.append("!!UNKNOWN OPERATION!!");
         }
