@@ -340,7 +340,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             }, data);
             QName identifier = tmp[0];
 
-            if (identifier.equals(QName.JCR_PATH)) {
+            if (identifier != null && identifier.equals(QName.JCR_PATH)) {
                 if (tmp[1] != null) {
                     // simply ignore, this is a join of a mixin node type
                 } else {
@@ -405,6 +405,9 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 star.setValue("%");
                 predicateNode = createRelationQueryNode(parent,
                         identifier, type, star);
+            } else if (type == QueryConstants.OPERATION_SIMILAR) {
+                predicateNode = createRelationQueryNode(parent, null, type,
+                        (ASTLiteral) node.children[0]);
             } else {
                 throw new IllegalArgumentException("Unknown operation type: " + type);
             }
@@ -573,9 +576,12 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         RelationQueryNode node = null;
 
         try {
-            Path.PathBuilder builder = new Path.PathBuilder();
-            builder.addLast(propertyName);
-            Path relPath = builder.getPath();
+            Path relPath = null;
+            if (propertyName != null) {
+                Path.PathBuilder builder = new Path.PathBuilder();
+                builder.addLast(propertyName);
+                relPath = builder.getPath();
+            }
             if (literal.getType() == QueryConstants.TYPE_DATE) {
                 SimpleDateFormat format = new SimpleDateFormat(DATE_PATTERN);
                 Date date = format.parse(stringValue);

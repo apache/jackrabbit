@@ -107,6 +107,7 @@ TOKEN [ IGNORE_CASE ] :
 | < SELECT: "SELECT" >
 | < BETWEEN: "BETWEEN" >
 | < EXCERPT: "EXCERPT" >
+| < SIMILAR: "SIMILAR" >
 | < CONTAINS: "CONTAINS" >
 }
 
@@ -358,6 +359,17 @@ void Predicate() :
           jjtThis.setOperationType(jjtThis.isNegate() ? QueryConstants.OPERATION_NE_GENERAL : QueryConstants.OPERATION_EQ_GENERAL);
         }
       )
+    )
+  |
+    (
+      <SIMILAR> "(" { jjtThis.setOperationType(QueryConstants.OPERATION_SIMILAR); }
+        value = CharStringLiteral()
+          {
+            ASTLiteral s = new ASTLiteral(JJTLITERAL);
+            s.setType(QueryConstants.TYPE_STRING);
+            s.setValue(value);
+            jjtree.pushNode(s);
+          } ")"
     )
   )
 }

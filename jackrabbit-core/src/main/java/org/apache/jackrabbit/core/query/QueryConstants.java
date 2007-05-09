@@ -144,4 +144,11 @@ public interface QueryConstants {
      * is not null operation: identifier IS NOT NULL
      */
     int OPERATION_NOT_NULL = OPERATION_NULL + 1;
+
+    /**
+     * similar operation:
+     * XPath: rep:similar(path_string)
+     * SQL: SIMILAR(path_string)
+     */
+    int OPERATION_SIMILAR = OPERATION_NOT_NULL + 1;
 }
