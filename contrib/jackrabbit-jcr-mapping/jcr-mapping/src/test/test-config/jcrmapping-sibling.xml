@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE graffito-jcr PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/graffito-jcr-mapping.dtd">
-<graffito-jcr>
+<!DOCTYPE jackrabbit-ocm PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/jackrabbit-ocm.dtd">
+<jackrabbit-ocm>
 
-	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.Page" jcrNodeType="graffito:pagewithoutsibling" discriminator="false" >
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Page" jcrNodeType="ocm:pagewithoutsibling" discriminator="false" >
 		<field-descriptor fieldName="path" path="true" />
-		<field-descriptor fieldName="title" jcrName="graffito:title" />
+		<field-descriptor fieldName="title" jcrName="ocm:title" />
 		<collection-descriptor fieldName="paragraphs" proxy="false" 
-		                       elementClassName="org.apache.portals.graffito.jcr.testmodel.Paragraph" 
-		                       collectionConverter="org.apache.portals.graffito.jcr.persistence.collectionconverter.impl.NTCollectionConverterImpl" />
+		                       elementClassName="org.apache.jackrabbit.ocm.testmodel.Paragraph" 
+		                       collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.NTCollectionConverterImpl" />
 	</class-descriptor>
 
-	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.Paragraph" jcrNodeType="graffito:paragraph" discriminator="false" >
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Paragraph" jcrNodeType="ocm:paragraph" discriminator="false" >
 		<field-descriptor fieldName="path" path="true" />
-		<field-descriptor fieldName="text" jcrName="graffito:text"/>
+		<field-descriptor fieldName="text" jcrName="ocm:text"/>
 	</class-descriptor>
 
 <class-descriptor
-		className="org.apache.portals.graffito.jcr.testmodel.Atomic" jcrNodeType="nt:unstructured" discriminator="true" >
+		className="org.apache.jackrabbit.ocm.testmodel.Atomic" jcrNodeType="nt:unstructured" discriminator="true" >
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="string" jcrName="string" />
 		<field-descriptor fieldName="booleanObject" jcrName="booleanObject" />
@@ -33,5 +33,5 @@
 		<field-descriptor fieldName="timestamp" jcrName="timestamp" />
 	</class-descriptor>
 
-</graffito-jcr>
+</jackrabbit-ocm>
  
