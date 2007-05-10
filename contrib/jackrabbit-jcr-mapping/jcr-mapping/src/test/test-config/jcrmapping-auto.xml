@@ -1,65 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE graffito-jcr PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/graffito-jcr-mapping.dtd">
-<graffito-jcr>    
+<!DOCTYPE jackrabbit-ocm PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/jackrabbit-ocm.dtd">
+<jackrabbit-ocm>    
 
      <!-- INTERFACE MAPPING   -->	
      
-	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.interfaces.CmsObject"  interface="true" discriminator="false"
-	                                   jcrNodeType="graffito:cmsobject" />
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject"  interface="true" discriminator="false"
+	                                   jcrNodeType="ocm:cmsobject" />
 
-	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.interfaces.Folder"  interface="true" discriminator="false" 
-	                                   extend="org.apache.portals.graffito.jcr.testmodel.interfaces.CmsObject"  jcrNodeType="graffito:folder" />
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.interfaces.Folder"  interface="true" discriminator="false" 
+	                                   extend="org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject"  jcrNodeType="ocm:folder" />
 
-	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.interfaces.Content"  interface="true" discriminator="false" 
-	                                   extend="org.apache.portals.graffito.jcr.testmodel.interfaces.CmsObject"  jcrNodeType="graffito:content"  />
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.interfaces.Content"  interface="true" discriminator="false" 
+	                                   extend="org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject"  jcrNodeType="ocm:content"  />
 	                                   
-	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.interfaces.Document"  interface="true" discriminator="false" 
-	                                   extend="org.apache.portals.graffito.jcr.testmodel.interfaces.Content"  jcrNodeType="graffito:document"  />
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.interfaces.Document"  interface="true" discriminator="false" 
+	                                   extend="org.apache.jackrabbit.ocm.testmodel.interfaces.Content"  jcrNodeType="ocm:document"  />
 	                                   
 	                                   
 	
      <!-- CLASS MAPPING. The FolderImpl has  the autoRetrieve, autoUpdate & autoInsert parameters set to false  -->	
 
-	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.inheritance.impl.CmsObjectImpl" jcrNodeType="graffito:cmsobjectimpl"  
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.CmsObjectImpl" jcrNodeType="ocm:cmsobjectimpl"  
 	                                   discriminator="false" abstract="true" >
-		<implement-descriptor interfaceName="org.apache.portals.graffito.jcr.testmodel.interfaces.CmsObject" />	  	                                    
+		<implement-descriptor interfaceName="org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject" />	  	                                    
 		
 		<field-descriptor fieldName="path" path="true" />
-		<field-descriptor fieldName="name" jcrName="graffito:name"  id="true" />
+		<field-descriptor fieldName="name" jcrName="ocm:name"  id="true" />
 		<bean-descriptor  fieldName="parentFolder"  					 
-						  converter="org.apache.portals.graffito.jcr.persistence.beanconverter.impl.ParentBeanConverterImpl" />
+						  converter="org.apache.jackrabbit.ocm.persistence.beanconverter.impl.ParentBeanConverterImpl" />
 
 	</class-descriptor>     
 
-	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.inheritance.impl.FolderImpl" jcrNodeType="graffito:folderimpl" 
-	                                    extend="org.apache.portals.graffito.jcr.testmodel.inheritance.impl.CmsObjectImpl" discriminator="false"  >
-		<implement-descriptor interfaceName="org.apache.portals.graffito.jcr.testmodel.interfaces.Folder" />	  		                                    
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.FolderImpl" jcrNodeType="ocm:folderimpl" 
+	                                    extend="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.CmsObjectImpl" discriminator="false"  >
+		<implement-descriptor interfaceName="org.apache.jackrabbit.ocm.testmodel.interfaces.Folder" />	  		                                    
 		<collection-descriptor fieldName="children" proxy="true" autoUpdate="false" autoInsert="false" autoRetrieve="false" 
-		                       elementClassName="org.apache.portals.graffito.jcr.testmodel.inheritance.impl.CmsObjectImpl" 
-		                       collectionConverter="org.apache.portals.graffito.jcr.persistence.collectionconverter.impl.NTCollectionConverterImpl" />
+		                       elementClassName="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.CmsObjectImpl" 
+		                       collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.NTCollectionConverterImpl" />
 	</class-descriptor >	
 
-	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.inheritance.impl.ContentImpl" jcrNodeType="graffito:contentimpl" abstract="true"
-	                                   extend="org.apache.portals.graffito.jcr.testmodel.inheritance.impl.CmsObjectImpl" discriminator="false"  >
-       		<implement-descriptor interfaceName="org.apache.portals.graffito.jcr.testmodel.interfaces.Content" />	  		                                    
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.ContentImpl" jcrNodeType="ocm:contentimpl" abstract="true"
+	                                   extend="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.CmsObjectImpl" discriminator="false"  >
+       		<implement-descriptor interfaceName="org.apache.jackrabbit.ocm.testmodel.interfaces.Content" />	  		                                    
 	</class-descriptor>	
 		
-	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.inheritance.impl.DocumentImpl" jcrNodeType="graffito:documentimpl" 
-	                                    extend="org.apache.portals.graffito.jcr.testmodel.inheritance.impl.ContentImpl" discriminator="false" >
-		<implement-descriptor interfaceName="org.apache.portals.graffito.jcr.testmodel.interfaces.Document" />	  		                                    	                                    
-		<field-descriptor fieldName="contentType" jcrName="graffito:contenttype" />  
-		<field-descriptor fieldName="size" jcrName="graffito:size" />  	
-		<bean-descriptor fieldName="documentStream" jcrName="graffito:documentstream"  autoUpdate="false" autoInsert="false" autoRetrieve="false"  />			
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.DocumentImpl" jcrNodeType="ocm:documentimpl" 
+	                                    extend="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.ContentImpl" discriminator="false" >
+		<implement-descriptor interfaceName="org.apache.jackrabbit.ocm.testmodel.interfaces.Document" />	  		                                    	                                    
+		<field-descriptor fieldName="contentType" jcrName="ocm:contenttype" />  
+		<field-descriptor fieldName="size" jcrName="ocm:size" />  	
+		<bean-descriptor fieldName="documentStream" jcrName="ocm:documentstream"  autoUpdate="false" autoInsert="false" autoRetrieve="false"  />			
 	</class-descriptor >	
 
-	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.inheritance.impl.DocumentStream" jcrNodeType="graffito:documentstream"  discriminator="false"  >
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.DocumentStream" jcrNodeType="ocm:documentstream"  discriminator="false"  >
 		<field-descriptor fieldName="path" path="true" />
-		<field-descriptor fieldName="encoding" jcrName="graffito:encoding" />
-		<field-descriptor fieldName="content" jcrName="graffito:binarycontent" />
+		<field-descriptor fieldName="encoding" jcrName="ocm:encoding" />
+		<field-descriptor fieldName="content" jcrName="ocm:binarycontent" />
 	</class-descriptor>     
 	
-</graffito-jcr>
+</jackrabbit-ocm>
  
  
  

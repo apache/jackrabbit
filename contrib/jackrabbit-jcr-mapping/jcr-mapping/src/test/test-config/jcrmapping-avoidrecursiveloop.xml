@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE graffito-jcr PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/graffito-jcr-mapping.dtd">
-<graffito-jcr>
+<!DOCTYPE jackrabbit-ocm PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/jackrabbit-ocm.dtd">
+<jackrabbit-ocm>
 
 	<class-descriptor
-		className="org.apache.portals.graffito.jcr.testmodel.crossreference.A" jcrNodeType="nt:unstructured" >		
+		className="org.apache.jackrabbit.ocm.testmodel.crossreference.A" jcrNodeType="nt:unstructured" >		
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="a1" jcrName="a1" />
 		<field-descriptor fieldName="a2" jcrName="a2" />
 		<bean-descriptor fieldName="b" jcrName="b" proxy="false" />	
 		<collection-descriptor fieldName="collection"  proxy="false" 
-		                       elementClassName="org.apache.portals.graffito.jcr.testmodel.crossreference.B" 
-		                       collectionConverter="org.apache.portals.graffito.jcr.persistence.collectionconverter.impl.NTCollectionConverterImpl" />                               
+		                       elementClassName="org.apache.jackrabbit.ocm.testmodel.crossreference.B" 
+		                       collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.NTCollectionConverterImpl" />                               
 	</class-descriptor>
 
-	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.crossreference.B"  jcrNodeType="nt:unstructured" >
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.crossreference.B"  jcrNodeType="nt:unstructured" >
 		<field-descriptor fieldName="b1" jcrName="b1"  />		
         <field-descriptor fieldName="b2" jcrName="b2"  />
-        <bean-descriptor fieldName="a" jcrName="a" proxy="false" converter="org.apache.portals.graffito.jcr.persistence.beanconverter.impl.ParentBeanConverterImpl" />
+        <bean-descriptor fieldName="a" jcrName="a" proxy="false" converter="org.apache.jackrabbit.ocm.persistence.beanconverter.impl.ParentBeanConverterImpl" />
 	</class-descriptor>
 
-</graffito-jcr>
+</jackrabbit-ocm>
  

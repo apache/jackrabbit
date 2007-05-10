@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE graffito-jcr PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/graffito-jcr-mapping.dtd">
-<graffito-jcr>
+<!DOCTYPE jackrabbit-ocm PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/jackrabbit-ocm.dtd">
+<jackrabbit-ocm>
     
-	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.proxy.Main" 	jcrNodeType="nt:unstructured"  >
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.proxy.Main" 	jcrNodeType="nt:unstructured"  >
 		<!-- Field-descriptor is used to map simple attributes to jcr property -->
 		<field-descriptor fieldName="path" path="true" />
 		<bean-descriptor fieldName="proxyDetail" jcrName="proxydetail" proxy="true" jcrNodeType="nt:unstructured" />		
@@ -11,15 +11,15 @@
 		<bean-descriptor fieldName="detail" jcrName="detail" proxy="false" jcrNodeType="nt:unstructured" />		
 		
 		<collection-descriptor fieldName="proxyCollection" jcrName="proxycollection" proxy="true"
-                                                  elementClassName="org.apache.portals.graffito.jcr.testmodel.proxy.Detail" jcrNodeType="nt:unstructured"/>
+                                                  elementClassName="org.apache.jackrabbit.ocm.testmodel.proxy.Detail" jcrNodeType="nt:unstructured"/>
         <collection-descriptor fieldName="nullProxyCollection" jcrName="nullproxycollection" proxy="true"
-                                                  elementClassName="org.apache.portals.graffito.jcr.testmodel.proxy.Detail" jcrNodeType="nt:unstructured"/>                                                  		
+                                                  elementClassName="org.apache.jackrabbit.ocm.testmodel.proxy.Detail" jcrNodeType="nt:unstructured"/>                                                  		
 	</class-descriptor>
 
-	<class-descriptor 	className="org.apache.portals.graffito.jcr.testmodel.proxy.Detail" jcrNodeType="nt:unstructured" >		
+	<class-descriptor 	className="org.apache.jackrabbit.ocm.testmodel.proxy.Detail" jcrNodeType="nt:unstructured" >		
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="field" jcrName="field" />
 	</class-descriptor>
 	
-</graffito-jcr>
+</jackrabbit-ocm>
  

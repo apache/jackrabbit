@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE graffito-jcr PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/graffito-jcr-mapping.dtd">
-<graffito-jcr>
+<!DOCTYPE jackrabbit-ocm PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/jackrabbit-ocm.dtd">
+<jackrabbit-ocm>
 
 
 
@@ -12,7 +12,7 @@
 		
 	-->
 	<class-descriptor
-		className="org.apache.portals.graffito.jcr.testmodel.A"
+		className="org.apache.jackrabbit.ocm.testmodel.A"
 		jcrNodeType="nt:unstructured" jcrMixinTypes="mixin:a,mixin:b">
 		<!-- Field-descriptor is used to map simple attributes to jcr property -->
 		<field-descriptor fieldName="path" path="true" />
@@ -24,7 +24,7 @@
 			* proxy="true" => use lazy laoding for this attribute b when retrieving A
 		-->
 		<bean-descriptor fieldName="b" jcrName="b" proxy="false"
-			converter="org.apache.portals.graffito.jcr.persistence.beanconverter.impl.InlineBeanConverterImpl"
+			converter="org.apache.jackrabbit.ocm.persistence.beanconverter.impl.InlineBeanConverterImpl"
 			jcrNodeType="nt:unstructured" jcrAutoCreated="false"
 			jcrMandatory="false" jcrOnParentVersion="IGNORE" jcrProtected="false"
 			jcrSameNameSiblings="false" />
@@ -36,19 +36,19 @@
 		-->
 		<collection-descriptor fieldName="collection"
 			jcrName="collection" proxy="false"
-			elementClassName="org.apache.portals.graffito.jcr.testmodel.C"
-			jcrNodeType="graffito:C" jcrAutoCreated="false" jcrMandatory="false"
+			elementClassName="org.apache.jackrabbit.ocm.testmodel.C"
+			jcrNodeType="ocm:C" jcrAutoCreated="false" jcrMandatory="false"
 			jcrOnParentVersion="IGNORE" jcrProtected="false"
 			jcrSameNameSiblings="false" />
 
 		<collection-descriptor fieldName="emptyCollection"
 			jcrName="emptyCollection" proxy="false"
-			elementClassName="org.apache.portals.graffito.jcr.testmodel.C" />
+			elementClassName="org.apache.jackrabbit.ocm.testmodel.C" />
 
 	</class-descriptor>
 
 	<class-descriptor
-		className="org.apache.portals.graffito.jcr.testmodel.B"
+		className="org.apache.jackrabbit.ocm.testmodel.B"
 		jcrNodeType="nt:unstructured" jcrSuperTypes="nt:base">
 		<!-- Field-descriptor is used to map simple attributes to jcr property -->
 
@@ -63,40 +63,40 @@
 	</class-descriptor>
 
 	<class-descriptor
-		className="org.apache.portals.graffito.jcr.testmodel.C"
-		jcrNodeType="graffito:C" discriminator="false">
+		className="org.apache.jackrabbit.ocm.testmodel.C"
+		jcrNodeType="ocm:C" discriminator="false">
 		<!-- Field-descriptor is used to map simple attributes to jcr property -->
-		<field-descriptor fieldName="id" jcrName="graffito:id"
+		<field-descriptor fieldName="id" jcrName="ocm:id"
 			id="true" />
-		<field-descriptor fieldName="name" jcrName="graffito:name" />
+		<field-descriptor fieldName="name" jcrName="ocm:name" />
 	</class-descriptor>
 
 
 	<class-descriptor
-		className="org.apache.portals.graffito.jcr.testmodel.hashmap.Main"
+		className="org.apache.jackrabbit.ocm.testmodel.hashmap.Main"
 		jcrNodeType="nt:unstructured">
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="text" jcrName="text" />
 		<collection-descriptor fieldName="elements" proxy="false"
-			elementClassName="org.apache.portals.graffito.jcr.testmodel.hashmap.Element"
-			collectionConverter="org.apache.portals.graffito.jcr.persistence.collectionconverter.impl.NTCollectionConverterImpl"
-			collectionClassName="org.apache.portals.graffito.jcr.testmodel.hashmap.HashMapElement" />
+			elementClassName="org.apache.jackrabbit.ocm.testmodel.hashmap.Element"
+			collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.NTCollectionConverterImpl"
+			collectionClassName="org.apache.jackrabbit.ocm.testmodel.hashmap.HashMapElement" />
 
 	</class-descriptor>
 
 	<class-descriptor
-		className="org.apache.portals.graffito.jcr.testmodel.hashmap.Element"
-		jcrNodeType="graffito:element" discriminator="false">
-		<field-descriptor fieldName="id" jcrName="graffito:id" />
-		<field-descriptor fieldName="text" jcrName="graffito:text" />
+		className="org.apache.jackrabbit.ocm.testmodel.hashmap.Element"
+		jcrNodeType="ocm:element" discriminator="false">
+		<field-descriptor fieldName="id" jcrName="ocm:id" />
+		<field-descriptor fieldName="text" jcrName="ocm:text" />
 	</class-descriptor>
 	
 	
 	<class-descriptor
-		className="org.apache.portals.graffito.jcr.testmodel.uuid.A" jcrNodeType="nt:unstructured" >
+		className="org.apache.jackrabbit.ocm.testmodel.uuid.A" jcrNodeType="nt:unstructured" >
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="uuid" uuid="true" />
         <field-descriptor fieldName="stringData" jcrName="stringData" />
 	</class-descriptor>
 	
-</graffito-jcr>
+</jackrabbit-ocm>

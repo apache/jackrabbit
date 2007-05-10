@@ -1,41 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE graffito-jcr PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/graffito-jcr-mapping.dtd">
-<graffito-jcr>
+<!DOCTYPE jackrabbit-ocm PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/jackrabbit-ocm.dtd">
+<jackrabbit-ocm>
     <class-descriptor
-		className="org.apache.portals.graffito.jcr.testmodel.uuid.A" jcrNodeType="nt:unstructured" jcrMixinTypes="mix:referenceable" >
+		className="org.apache.jackrabbit.ocm.testmodel.uuid.A" jcrNodeType="nt:unstructured" jcrMixinTypes="mix:referenceable" >
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="uuid" uuid="true" />
         <field-descriptor fieldName="stringData" jcrName="stringData" />
 	</class-descriptor>
 	
 	<class-descriptor
-		className="org.apache.portals.graffito.jcr.testmodel.uuid.B" jcrNodeType="nt:unstructured"  >
+		className="org.apache.jackrabbit.ocm.testmodel.uuid.B" jcrNodeType="nt:unstructured"  >
 		<field-descriptor fieldName="path" path="true" />
-		<field-descriptor fieldName="reference2A" jcrName="reference2A" converter="org.apache.portals.graffito.jcr.persistence.atomictypeconverter.impl.ReferenceTypeConverterImpl" /> 
+		<field-descriptor fieldName="reference2A" jcrName="reference2A" converter="org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.ReferenceTypeConverterImpl" /> 
 		<collection-descriptor fieldName="multiReferences" jcrName="multiReferences" proxy="false" 		                      
-		                       collectionConverter="org.apache.portals.graffito.jcr.persistence.collectionconverter.impl.ReferenceCollectionConverterImpl" />
+		                       collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.ReferenceCollectionConverterImpl" />
 		
 	</class-descriptor>
 
 	<class-descriptor
-		className="org.apache.portals.graffito.jcr.testmodel.uuid.B2" jcrNodeType="nt:unstructured"  >
+		className="org.apache.jackrabbit.ocm.testmodel.uuid.B2" jcrNodeType="nt:unstructured"  >
 		<field-descriptor fieldName="path" path="true" />
-		<bean-descriptor fieldName="a" jcrName="a" converter="org.apache.portals.graffito.jcr.persistence.beanconverter.impl.ReferenceBeanConverterImpl" />
+		<bean-descriptor fieldName="a" jcrName="a" converter="org.apache.jackrabbit.ocm.persistence.beanconverter.impl.ReferenceBeanConverterImpl" />
 		<collection-descriptor fieldName="multiReferences" jcrName="multiReferences" proxy="false" 		                      
-		                       collectionConverter="org.apache.portals.graffito.jcr.persistence.collectionconverter.impl.BeanReferenceCollectionConverterImpl" />
+		                       collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.BeanReferenceCollectionConverterImpl" />
 		
 	</class-descriptor>	
 			
 	
-	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.uuid.Ancestor"  abstract="true" jcrMixinTypes="mix:referenceable">
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.uuid.Ancestor"  abstract="true" jcrMixinTypes="mix:referenceable">
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="uuid" uuid="true" />
 	</class-descriptor>
 
-	<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.uuid.Descendant" jcrMixinTypes="mix:referenceable"
-	                  extend="org.apache.portals.graffito.jcr.testmodel.uuid.Ancestor">
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.uuid.Descendant" jcrMixinTypes="mix:referenceable"
+	                  extend="org.apache.jackrabbit.ocm.testmodel.uuid.Ancestor">
         <field-descriptor fieldName="stringData" jcrName="stringData" />
 	</class-descriptor >	
-</graffito-jcr>
+</jackrabbit-ocm>
  

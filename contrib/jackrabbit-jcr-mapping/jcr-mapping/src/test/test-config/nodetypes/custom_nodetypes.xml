@@ -20,175 +20,175 @@
 	xmlns:sv="http://www.jcp.org/jcr/sv/1.0"
 	xmlns:test="http://www.apache.org/jackrabbit/test"
 	xmlns:mix="http://www.jcp.org/jcr/mix/1.0"
-	xmlns:graffito="http://incubator.apache.org/graffito">
-	<nodeType name="graffito:C" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+	xmlns:ocm="http://jackrabbit.apache.org/ocm">
+	<nodeType name="ocm:C" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>mix:versionable</supertype>
       <supertype>nt:base</supertype>
     </supertypes>
     <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
-    <propertyDefinition name="graffito:id" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
-	<propertyDefinition name="graffito:name" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="ocm:id" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+	<propertyDefinition name="ocm:name" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
   </nodeType>
 
-  <nodeType name="graffito:paragraph" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+  <nodeType name="ocm:paragraph" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>mix:versionable</supertype>
       <supertype>nt:base</supertype>
     </supertypes>
     <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
-    <propertyDefinition name="graffito:text" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="ocm:text" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
   </nodeType>
   
-  <nodeType name="graffito:page" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+  <nodeType name="ocm:page" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>mix:versionable</supertype>
       <supertype>nt:base</supertype>
     </supertypes>
     <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
-    <propertyDefinition name="graffito:title" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
-    <childNodeDefinition name="*" defaultPrimaryType="graffito:paragraph" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSiblings="true">
+    <propertyDefinition name="ocm:title" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    <childNodeDefinition name="*" defaultPrimaryType="ocm:paragraph" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSiblings="true">
       <requiredPrimaryTypes>
-        <requiredPrimaryType>graffito:paragraph</requiredPrimaryType>
+        <requiredPrimaryType>ocm:paragraph</requiredPrimaryType>
       </requiredPrimaryTypes>
     </childNodeDefinition>    
   </nodeType>
   
-    <nodeType name="graffito:pagewithoutsibling" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <nodeType name="ocm:pagewithoutsibling" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>mix:versionable</supertype>
       <supertype>nt:base</supertype>
     </supertypes>
     <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
-    <propertyDefinition name="graffito:title" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
-    <childNodeDefinition name="*" defaultPrimaryType="graffito:paragraph" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSiblings="false">
+    <propertyDefinition name="ocm:title" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    <childNodeDefinition name="*" defaultPrimaryType="ocm:paragraph" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSiblings="false">
       <requiredPrimaryTypes>
-        <requiredPrimaryType>graffito:paragraph</requiredPrimaryType>
+        <requiredPrimaryType>ocm:paragraph</requiredPrimaryType>
       </requiredPrimaryTypes>
     </childNodeDefinition>    
   </nodeType>
 
-  <nodeType name="graffito:element" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+  <nodeType name="ocm:element" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>mix:versionable</supertype>
       <supertype>nt:base</supertype>
     </supertypes>
     <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
-    <propertyDefinition name="graffito:id" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
-    <propertyDefinition name="graffito:text" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />    
+    <propertyDefinition name="ocm:id" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="ocm:text" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />    
   </nodeType>
   
-   <nodeType name="graffito:cmsobjectimpl" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+   <nodeType name="ocm:cmsobjectimpl" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>nt:base</supertype>
     </supertypes>
     <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
-    <propertyDefinition name="graffito:name" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="ocm:name" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
 
   </nodeType>
 
-   <nodeType name="graffito:contentimpl" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+   <nodeType name="ocm:contentimpl" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
-      <supertype>graffito:cmsobjectimpl</supertype>
+      <supertype>ocm:cmsobjectimpl</supertype>
     </supertypes>
   </nodeType>
 
-   <nodeType name="graffito:documentstream" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+   <nodeType name="ocm:documentstream" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>mix:versionable</supertype>
       <supertype>nt:base</supertype>
     </supertypes>
     <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
-    <propertyDefinition name="graffito:encoding" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
-    <propertyDefinition name="graffito:binarycontent" requiredType="Binary" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />    
+    <propertyDefinition name="ocm:encoding" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="ocm:binarycontent" requiredType="Binary" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />    
   </nodeType>
 
 
-   <nodeType name="graffito:documentimpl" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+   <nodeType name="ocm:documentimpl" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
-      <supertype>graffito:contentimpl</supertype>
+      <supertype>ocm:contentimpl</supertype>
     </supertypes>    
-    <propertyDefinition name="graffito:contenttype" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
-    <propertyDefinition name="graffito:size" requiredType="Long" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />    
-    <childNodeDefinition name="*" defaultPrimaryType="graffito:documentstream" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSiblings="false">
+    <propertyDefinition name="ocm:contenttype" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="ocm:size" requiredType="Long" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />    
+    <childNodeDefinition name="*" defaultPrimaryType="ocm:documentstream" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSiblings="false">
       <requiredPrimaryTypes>
-        <requiredPrimaryType>graffito:documentstream</requiredPrimaryType>
+        <requiredPrimaryType>ocm:documentstream</requiredPrimaryType>
       </requiredPrimaryTypes>
     </childNodeDefinition>        
   </nodeType>
   
-  <nodeType name="graffito:folderimpl" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+  <nodeType name="ocm:folderimpl" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
-      <supertype>graffito:cmsobjectimpl</supertype>       
+      <supertype>ocm:cmsobjectimpl</supertype>       
     </supertypes>    
-    <childNodeDefinition name="*" defaultPrimaryType="graffito:cmsobjectimpl" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSiblings="true">
+    <childNodeDefinition name="*" defaultPrimaryType="ocm:cmsobjectimpl" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSiblings="true">
       <requiredPrimaryTypes>
-        <requiredPrimaryType>graffito:cmsobjectimpl</requiredPrimaryType>         
+        <requiredPrimaryType>ocm:cmsobjectimpl</requiredPrimaryType>         
       </requiredPrimaryTypes>
     </childNodeDefinition>        
   </nodeType>
                                                          
-    <nodeType name="graffito:discriminatorobject" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <nodeType name="ocm:discriminatorobject" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>mix:versionable</supertype>
       <supertype>nt:base</supertype>
     </supertypes>
     <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
-    <propertyDefinition name="graffito:content" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="ocm:content" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
   </nodeType>
   
 
-   <nodeType name="graffito:discriminator" isMixin="true">
+   <nodeType name="ocm:discriminator" isMixin="true">
     <supertypes>
       <supertype>nt:base</supertype>
     </supertypes>
-    <propertyDefinition name="graffito:classname" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />    
+    <propertyDefinition name="ocm:classname" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />    
   </nodeType>
    
 
-   <nodeType name="graffito:cmsobject" isMixin="true">
+   <nodeType name="ocm:cmsobject" isMixin="true">
     <supertypes>
       <supertype>nt:base</supertype>
     </supertypes>
   </nodeType>    
 
-   <nodeType name="graffito:folder" isMixin="true">
+   <nodeType name="ocm:folder" isMixin="true">
     <supertypes>
-      <supertype>graffito:cmsobject</supertype>
+      <supertype>ocm:cmsobject</supertype>
     </supertypes>
   </nodeType>    
 
-   <nodeType name="graffito:content" isMixin="true">
+   <nodeType name="ocm:content" isMixin="true">
     <supertypes>
-      <supertype>graffito:cmsobject</supertype>
+      <supertype>ocm:cmsobject</supertype>
     </supertypes>
   </nodeType>    
 
-   <nodeType name="graffito:document" isMixin="true">
+   <nodeType name="ocm:document" isMixin="true">
     <supertypes>
-      <supertype>graffito:content</supertype>
+      <supertype>ocm:content</supertype>
     </supertypes>
   </nodeType>    
 
 
-   <nodeType name="graffito:propertytest" >
+   <nodeType name="ocm:propertytest" >
     <supertypes>
       <supertype>nt:base</supertype>
     </supertypes>
-     <propertyDefinition name="graffito:requiredProp" requiredType="String" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />   
-     <propertyDefinition name="graffito:requiredWithConstraintsProp" requiredType="String" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" >   
+     <propertyDefinition name="ocm:requiredProp" requiredType="String" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />   
+     <propertyDefinition name="ocm:requiredWithConstraintsProp" requiredType="String" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" >   
      	<valueConstraints>
         	<valueConstraint>abc</valueConstraint>
 	        <valueConstraint>def</valueConstraint>
 	        <valueConstraint>ghi</valueConstraint>
 	 	</valueConstraints>     
      </propertyDefinition>
-     <propertyDefinition name="graffito:autoCreatedProp" requiredType="String" autoCreated="true" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" >   
+     <propertyDefinition name="ocm:autoCreatedProp" requiredType="String" autoCreated="true" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" >   
             <defaultValues>
                 <defaultValue>autoCreatePropValue</defaultValue>
             </defaultValues>
      </propertyDefinition>
-     <propertyDefinition name="graffito:autoCreatedWithConstraintsProp" requiredType="String" autoCreated="true" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" >   
+     <propertyDefinition name="ocm:autoCreatedWithConstraintsProp" requiredType="String" autoCreated="true" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" >   
         <defaultValues>
             <defaultValue>ccc</defaultValue>
         </defaultValues>
@@ -199,14 +199,14 @@
 	 	</valueConstraints>     
             
      </propertyDefinition>
-     <propertyDefinition name="graffito:mandatoryProp" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />     
-     <propertyDefinition name="graffito:mandatoryWithConstaintsProp" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" >     
+     <propertyDefinition name="ocm:mandatoryProp" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />     
+     <propertyDefinition name="ocm:mandatoryWithConstaintsProp" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" >     
      	<valueConstraints>
         	<valueConstraint>xx</valueConstraint>
 	        <valueConstraint>yy</valueConstraint>
 	 	</valueConstraints>      
      </propertyDefinition>     						  
-     <propertyDefinition name="graffito:protectedWithDefaultValueProp" requiredType="String" autoCreated="true" mandatory="false" onParentVersion="COPY" protected="true" multiple="false" >     
+     <propertyDefinition name="ocm:protectedWithDefaultValueProp" requiredType="String" autoCreated="true" mandatory="false" onParentVersion="COPY" protected="true" multiple="false" >     
             <defaultValues>
                 <defaultValue>protectedValue</defaultValue>
             </defaultValues>     

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE graffito-jcr PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/graffito-jcr-mapping.dtd">
-<graffito-jcr>
+<!DOCTYPE jackrabbit-ocm PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/jackrabbit-ocm.dtd">
+<jackrabbit-ocm>
     <class-descriptor
-		className="org.apache.portals.graffito.jcr.testmodel.Atomic" jcrNodeType="nt:unstructured" discriminator="true" >
+		className="org.apache.jackrabbit.ocm.testmodel.Atomic" jcrNodeType="nt:unstructured" discriminator="true" >
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="string" jcrName="string" />
 		<field-descriptor fieldName="booleanObject" jcrName="booleanObject" />
@@ -17,26 +17,26 @@
 		<field-descriptor fieldName="doublePrimitive" jcrName="doublePrimitive" />
 		<field-descriptor fieldName="inputStream" jcrName="inputStream" />
 		<field-descriptor fieldName="timestamp" jcrName="timestamp" />
-		<field-descriptor fieldName="int2boolean" jcrName="int2boolean" converter="org.apache.portals.graffito.jcr.persistence.atomic.Int2BooleanTypeConverterImpl" />
-		<field-descriptor fieldName="namedProperty" jcrName="namedProperty" converter="org.apache.portals.graffito.jcr.persistence.atomictypeconverter.impl.NameTypeConverterImpl" />
-		<field-descriptor fieldName="pathProperty" jcrName="pathProperty" converter="org.apache.portals.graffito.jcr.persistence.atomictypeconverter.impl.PathTypeConverterImpl" />
-		<field-descriptor fieldName="undefinedProperty" jcrName="undefinedProperty" converter="org.apache.portals.graffito.jcr.persistence.atomictypeconverter.impl.UndefinedTypeConverterImpl" />
+		<field-descriptor fieldName="int2boolean" jcrName="int2boolean" converter="org.apache.jackrabbit.ocm.persistence.atomic.Int2BooleanTypeConverterImpl" />
+		<field-descriptor fieldName="namedProperty" jcrName="namedProperty" converter="org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.NameTypeConverterImpl" />
+		<field-descriptor fieldName="pathProperty" jcrName="pathProperty" converter="org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.PathTypeConverterImpl" />
+		<field-descriptor fieldName="undefinedProperty" jcrName="undefinedProperty" converter="org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.UndefinedTypeConverterImpl" />
 	</class-descriptor>
 
     <class-descriptor
-		className="org.apache.portals.graffito.jcr.testmodel.MultiValue" jcrNodeType="nt:unstructured" discriminator="true" >
+		className="org.apache.jackrabbit.ocm.testmodel.MultiValue" jcrNodeType="nt:unstructured" discriminator="true" >
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="name" jcrName="name" />
 		<collection-descriptor fieldName="multiValues" jcrName="multiValue" proxy="false" 
 		                       elementClassName="java.lang.String" 
-		                       collectionConverter="org.apache.portals.graffito.jcr.persistence.collectionconverter.impl.MultiValueCollectionConverterImpl" />
+		                       collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.MultiValueCollectionConverterImpl" />
 
 		<collection-descriptor fieldName="nullMultiValues" jcrName="nullMultiValue" proxy="false" 
 		                       elementClassName="java.lang.String" 
-		                       collectionConverter="org.apache.portals.graffito.jcr.persistence.collectionconverter.impl.MultiValueCollectionConverterImpl" />
+		                       collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.MultiValueCollectionConverterImpl" />
 		                       
 
 	</class-descriptor> 
 	
-</graffito-jcr>
+</jackrabbit-ocm>
  
