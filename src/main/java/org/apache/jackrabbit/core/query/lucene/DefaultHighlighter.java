@@ -62,8 +62,6 @@ class DefaultHighlighter {
 
     public static final String END_FRAGMENT_SEPARATOR = "</fragment>";
 
-    public static final String EMPTY_EXCERPT = "<excerpt/>";
-
     private DefaultHighlighter() {
     }
 
@@ -89,24 +87,34 @@ class DefaultHighlighter {
     }
 
     /**
-     * @param tvec         the term position vector for this hit
-     * @param queryTerms   the query terms.
-     * @param text         the original text that was used to create the tokens.
-     * @param prepend      the string used to prepend a highlighted token, for
-     *                     example <tt>&quot;&lt;b&gt;&quot;</tt>
-     * @param append       the string used to append a highlighted token, for
-     *                     example <tt>&quot;&lt;/b&gt;&quot;</tt>
-     * @param maxFragments the maximum number of fragments
-     * @param surround     the maximum number of chars surrounding a highlighted
-     *                     token
+     * @param tvec          the term position vector for this hit
+     * @param queryTerms    the query terms.
+     * @param text          the original text that was used to create the
+     *                      tokens.
+     * @param excerptStart  this string is prepended to the excerpt
+     * @param excerptEnd    this string is appended to the excerpt
+     * @param fragmentStart this string is prepended to every fragment
+     * @param fragmentEnd   this string is appended to the end of every
+     *                      fragement.
+     * @param hlStart       the string used to prepend a highlighted token, for
+     *                      example <tt>&quot;&lt;b&gt;&quot;</tt>
+     * @param hlEnd         the string used to append a highlighted token, for
+     *                      example <tt>&quot;&lt;/b&gt;&quot;</tt>
+     * @param maxFragments  the maximum number of fragments
+     * @param surround      the maximum number of chars surrounding a
+     *                      highlighted token
      * @return a String with text fragments where tokens from the query are
      *         highlighted
      */
     public static String highlight(TermPositionVector tvec,
                                    Set queryTerms,
                                    String text,
-                                   String prepend,
-                                   String append,
+                                   String excerptStart,
+                                   String excerptEnd,
+                                   String fragmentStart,
+                                   String fragmentEnd,
+                                   String hlStart,
+                                   String hlEnd,
                                    int maxFragments,
                                    int surround)
             throws IOException {
@@ -130,20 +138,52 @@ class DefaultHighlighter {
             java.util.Arrays.sort(offsets, new TermVectorOffsetInfoSorter());
         }
 
-        return mergeFragments(offsets, new StringReader(text), prepend,
+        return mergeFragments(offsets, new StringReader(text), excerptStart,
+                excerptEnd, fragmentStart, fragmentEnd, hlStart, hlEnd,
+                maxFragments, surround);
+    }
+
+    /**
+     * @param tvec         the term position vector for this hit
+     * @param queryTerms   the query terms.
+     * @param text         the original text that was used to create the tokens.
+     * @param prepend      the string used to prepend a highlighted token, for
+     *                     example <tt>&quot;&lt;b&gt;&quot;</tt>
+     * @param append       the string used to append a highlighted token, for
+     *                     example <tt>&quot;&lt;/b&gt;&quot;</tt>
+     * @param maxFragments the maximum number of fragments
+     * @param surround     the maximum number of chars surrounding a highlighted
+     *                     token
+     * @return a String with text fragments where tokens from the query are
+     *         highlighted
+     */
+    public static String highlight(TermPositionVector tvec,
+                                   Set queryTerms,
+                                   String text,
+                                   String prepend,
+                                   String append,
+                                   int maxFragments,
+                                   int surround)
+            throws IOException {
+        return highlight(tvec, queryTerms, text, START_EXCERPT, END_EXCERPT,
+                START_FRAGMENT_SEPARATOR, END_FRAGMENT_SEPARATOR, prepend,
                 append, maxFragments, surround);
     }
 
     private static String mergeFragments(TermVectorOffsetInfo[] offsets,
                                          StringReader reader,
-                                         String prefix,
-                                         String suffix,
+                                         String excerptStart,
+                                         String excerptEnd,
+                                         String fragmentStart,
+                                         String fragmentEnd,
+                                         String hlStart,
+                                         String hlEnd,
                                          int maxFragments,
                                          int surround)
             throws IOException {
         if (offsets == null || offsets.length == 0) {
             // nothing to highlight
-            return EMPTY_EXCERPT;
+            return excerptStart + excerptEnd;
         }
         int lastOffset = offsets.length; // Math.min(10, offsets.length); // 10 terms is plenty?
         ArrayList fragmentInfoList = new ArrayList();
@@ -170,7 +210,7 @@ class DefaultHighlighter {
         java.util.Collections.sort(bestFragmentsList, new FragmentInfoPositionSorter());
 
         // merge #maxFragments fragments
-        StringBuffer sb = new StringBuffer(START_EXCERPT);
+        StringBuffer sb = new StringBuffer(excerptStart);
         int pos = 0;
         char[] cbuf;
         int skip;
@@ -201,7 +241,7 @@ class DefaultHighlighter {
                     }
                     sb.append(Text.encodeIllegalXMLCharacters(
                             new String(cbuf, 0, surround - skippedChars)));
-                    sb.append(END_FRAGMENT_SEPARATOR);
+                    sb.append(fragmentEnd);
                 }
             }
 
@@ -219,7 +259,7 @@ class DefaultHighlighter {
             firstWhitespace = skippedChars;
             reader.read(cbuf, 0, nextStart - pos);
             pos += (nextStart - pos);
-            sb.append(START_FRAGMENT_SEPARATOR);
+            sb.append(fragmentStart);
             // find last period followed by whitespace
             if (cbuf.length > 0) {
                 for (; skippedChars >= 0; skippedChars--) {
@@ -260,14 +300,14 @@ class DefaultHighlighter {
                     pos += (nextStart - pos);
                     sb.append(cbuf, 0, charsRead);
                 }
-                sb.append(prefix);
+                sb.append(hlStart);
                 nextStart = ti.getEndOffset();
                 // print term
                 cbuf = new char[nextStart - pos];
                 reader.read(cbuf, 0, nextStart - pos);
                 pos += (nextStart - pos);
                 sb.append(cbuf);
-                sb.append(suffix);
+                sb.append(hlEnd);
             }
         }
         if (pos != 0) {
@@ -298,10 +338,10 @@ class DefaultHighlighter {
                 if (lastChar != '.' && lastChar != '!' && lastChar != '?') {
                     sb.append(" ...");
                 }
-                sb.append(END_FRAGMENT_SEPARATOR);
+                sb.append(fragmentEnd);
             }
         }
-        sb.append(END_EXCERPT);
+        sb.append(excerptEnd);
         return sb.toString();
     }
 

@@ -23,16 +23,8 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 
 /**
- * <code>ExcerptProvider</code> defines an interface to get an XML excerpt
- * of a matching node.<br/>
- * E.g. if you search for 'jackrabbit' and 'query' you may get the following
- * result for a node:
- * <pre>
- * &lt;excerpt>
- *     &lt;fragment>&lt;highlight>Jackrabbit&lt;/highlight> implements both the mandatory XPath and optional SQL &lt;highlight>query&lt;/highlight> syntax.&lt;/fragment>
- *     &lt;fragment>Before parsing the XPath &lt;highlight>query&lt;/highlight> in &lt;highlight>Jackrabbit&lt;/highlight>, the statement is surrounded&lt;/fragment>
- * &lt;/excerpt>
- * </pre>
+ * <code>ExcerptProvider</code> defines an interface to create an excerpt for
+ * a matching node. The format of the excerpt is implementation specific. 
  */
 public interface ExcerptProvider {
 
