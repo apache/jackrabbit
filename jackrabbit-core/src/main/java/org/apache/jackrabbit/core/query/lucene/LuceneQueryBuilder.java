@@ -675,7 +675,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         if (node.getOperation() == QueryConstants.OPERATION_SIMILAR) {
             try {
                 ItemId id = hmgr.resolvePath(session.getQPath(node.getStringValue()));
-                String uuid = "";
+                String uuid = "x";
                 if (id != null && id.denotesNode()) {
                     uuid = ((NodeId) id).getUUID().toString();
                 }

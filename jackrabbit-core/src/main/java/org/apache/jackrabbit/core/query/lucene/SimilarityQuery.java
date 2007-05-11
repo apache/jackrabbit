@@ -67,7 +67,7 @@ public class SimilarityQuery extends Query {
             return similarityQuery.rewrite(reader);
         } else {
             // return dummy query that never matches
-            return new TermQuery(new Term(FieldNames.UUID, ""));
+            return new TermQuery(new Term(FieldNames.UUID, "x"));
         }
     }
 
