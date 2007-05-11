@@ -1396,12 +1396,15 @@ public abstract class ItemImpl implements Item, ItemStateListener {
     }
 
     /**
-     * {@inheritDoc}
+     * Returns the session associated with this item.
+     * <p>
+     * Since Jackrabbit 1.4 it is safe to use this method regardless
+     * of item state.
+     *
+     * @see http://issues.apache.org/jira/browse/JCR-911
+     * @return current session
      */
-    public Session getSession() throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
+    public Session getSession() {
         return session;
     }
 
