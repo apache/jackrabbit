@@ -21,28 +21,26 @@ import org.apache.lucene.index.TermPositionVector;
 import java.io.IOException;
 
 /**
- * <code>DefaultXMLExcerpt</code> creates an XML excerpt of a matching node.
- * <br/>
- * E.g. if you search for 'jackrabbit' and 'query' you may get the following
- * result for a node:
+ * <code>DefaultHTMLExcerpt</code> creates a HTML excerpt with the following
+ * format:
  * <pre>
- * &lt;excerpt>
- *     &lt;fragment>&lt;highlight>Jackrabbit&lt;/highlight> implements both the mandatory XPath and optional SQL &lt;highlight>query&lt;/highlight> syntax.&lt;/fragment>
- *     &lt;fragment>Before parsing the XPath &lt;highlight>query&lt;/highlight> in &lt;highlight>Jackrabbit&lt;/highlight>, the statement is surrounded&lt;/fragment>
- * &lt;/excerpt>
+ * &lt;div>
+ *     &lt;span>&lt;strong>Jackrabbit&lt;/strong> implements both the mandatory XPath and optional SQL &lt;strong>query&lt;/strong> syntax.&lt;/span>
+ *     &lt;span>Before parsing the XPath &lt;strong>query&lt;/strong> in &lt;strong>Jackrabbit&lt;/strong>, the statement is surrounded&lt;/span>
+ * &lt;/div>
  * </pre>
  */
-class DefaultXMLExcerpt extends AbstractExcerpt {
+public class DefaultHTMLExcerpt extends AbstractExcerpt {
 
     /**
      * {@inheritDoc}
      */
     protected String createExcerpt(TermPositionVector tpv,
-                                 String text,
-                                 int maxFragments,
-                                 int maxFragmentSize)
-            throws IOException {
+                                   String text,
+                                   int maxFragments,
+                                   int maxFragmentSize) throws IOException {
         return DefaultHighlighter.highlight(tpv, getQueryTerms(), text,
-                "<highlight>", "</highlight>", maxFragments, maxFragmentSize / 2);
+                "<div>", "</div>", "<span>", "</span>", "<strong>", "</strong>",
+                maxFragments, maxFragmentSize / 2);
     }
 }

@@ -251,7 +251,7 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * The excerpt provider class. Implements {@link ExcerptProvider}.
      */
-    private Class excerptProviderClass = DefaultXMLExcerpt.class;
+    private Class excerptProviderClass = DefaultHTMLExcerpt.class;
 
     /**
      * The path to the indexing configuration file.
