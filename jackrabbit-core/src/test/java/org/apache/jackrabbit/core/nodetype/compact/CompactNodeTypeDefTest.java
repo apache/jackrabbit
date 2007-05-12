@@ -30,13 +30,14 @@ import org.apache.jackrabbit.util.name.NamespaceMapping;
 
 import javax.jcr.PropertyType;
 import javax.jcr.version.OnParentVersionAction;
-import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.List;
 
 public class CompactNodeTypeDefTest extends TestCase {
-    private static final String TEST_FILE = "applications/test/cnd-reader-test-input.cnd";
+    private static final String TEST_FILE = "cnd-reader-test-input.cnd";
     private static final String NS_PREFIX = "ex";
     private static final String NS_URI = "http://example.org/jackrabbit/example";
 
@@ -102,7 +103,10 @@ public class CompactNodeTypeDefTest extends TestCase {
     public void testCompactNodeTypeDef() throws Exception {
 
         // Read in node type def from test file
-        CompactNodeTypeDefReader cndReader = new CompactNodeTypeDefReader(new FileReader(TEST_FILE), TEST_FILE);
+        Reader reader = new InputStreamReader(
+            getClass().getClassLoader().getResourceAsStream(TEST_FILE));
+        CompactNodeTypeDefReader cndReader =
+            new CompactNodeTypeDefReader(reader, TEST_FILE);
         List ntdList = cndReader.getNodeTypeDefs();
         NamespaceMapping nsm = cndReader.getNamespaceMapping();
         NodeTypeDef ntd = (NodeTypeDef)ntdList.get(0);
