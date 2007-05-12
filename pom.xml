@@ -37,36 +37,6 @@
   <description>Jackrabbit content repository implementation</description>
 
   <build>
-    <resources>
-      <resource>
-        <directory>${basedir}/src/main/java</directory>
-        <includes>
-          <include>**/*.xml</include>
-          <include>**/*.properties</include>
-          <include>**/*.ddl</include>
-          <include>META-INF/services/*</include>
-          <include>**/*.cnd</include>
-          <include>**/*.dtd</include>
-        </includes>
-      </resource>
-    </resources>
-    <testResources>
-      <testResource>
-        <directory>${basedir}/applications/test</directory>
-        <includes>
-          <include>*.properties</include>
-          <include>*.xml</include>
-        </includes>
-      </testResource>
-      <testResource>
-        <directory>${basedir}/src/test/java</directory>
-        <includes>
-          <include>**/*.cnd</include>
-          <include>**/*.xml</include>
-          <include>**/*.txt</include>
-        </includes>
-      </testResource>
-    </testResources>
     <plugins>
       <plugin>
         <artifactId>maven-antrun-plugin</artifactId>
