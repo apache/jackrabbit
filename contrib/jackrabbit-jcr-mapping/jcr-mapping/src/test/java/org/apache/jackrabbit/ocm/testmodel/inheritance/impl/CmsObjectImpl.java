@@ -35,44 +35,49 @@ public class CmsObjectImpl implements CmsObject
     protected String name;
     protected Folder parentFolder;
     
-	/* (non-Javadoc)
-	 * @see org.apache.portals.graffito.jcr.testmodel.inheritance.impl.CmsObject#getName()
-	 */
+
+    /**
+     * 
+     * @see org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject#getName()
+     */
 	public String getName() {
 		return name;
 	}
-	/* (non-Javadoc)
-	 * @see org.apache.portals.graffito.jcr.testmodel.inheritance.impl.CmsObject#setName(java.lang.String)
+	
+	/**
+	 * 
+	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject#setName(java.lang.String)
 	 */
 	public void setName(String name) {
 		this.name = name;
 	}
-	/* (non-Javadoc)
-	 * @see org.apache.portals.graffito.jcr.testmodel.inheritance.impl.CmsObject#getPath()
+	
+	/**
+	 * 
+	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject#getPath()
 	 */
 	public String getPath() {
 		return path;
 	}
-	/* (non-Javadoc)
-	 * @see org.apache.portals.graffito.jcr.testmodel.inheritance.impl.CmsObject#setPath(java.lang.String)
+	/**
+	 * 
+	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject#setPath(java.lang.String)
 	 */
 	public void setPath(String path) {
 		this.path = path;
 	}
-	/* (non-Javadoc)
-	 * @see org.apache.portals.graffito.jcr.testmodel.inheritance.impl.CmsObject#getParentFolder()
+	/**
+	 * 
+	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject#getParentFolder()
 	 */
 	public Folder getParentFolder() {
 		return parentFolder;
 	}
-	/* (non-Javadoc)
-	 * @see org.apache.portals.graffito.jcr.testmodel.inheritance.impl.CmsObject#setParentFolder(org.apache.portals.graffito.jcr.testmodel.inheritance.impl.FolderImpl)
+	/**
+	 * 
+	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject#setParentFolder(org.apache.jackrabbit.ocm.testmodel.interfaces.Folder)
 	 */
 	public void setParentFolder(Folder parentFolder) {
 		this.parentFolder = parentFolder;
 	}
-	
-	
-        
-        
 }

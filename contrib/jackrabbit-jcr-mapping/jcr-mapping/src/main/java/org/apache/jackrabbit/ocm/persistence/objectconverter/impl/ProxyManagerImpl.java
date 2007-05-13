@@ -39,8 +39,10 @@ public class ProxyManagerImpl implements ProxyManager
 	private final static Log log = LogFactory.getLog(ProxyManagerImpl.class);
 	
 	 
-	/* (non-Javadoc)
-	 * @see org.apache.portals.graffito.jcr.persistence.objectconverter.impl.ProxyManager#createBeanProxy(javax.jcr.Session, org.apache.portals.graffito.jcr.persistence.objectconverter.ObjectConverter, java.lang.Class, java.lang.String)
+
+	/**
+	 * 
+	 * @see org.apache.jackrabbit.ocm.persistence.objectconverter.ProxyManager#createBeanProxy(javax.jcr.Session, org.apache.jackrabbit.ocm.persistence.objectconverter.ObjectConverter, java.lang.Class, java.lang.String)
 	 */
 	public  Object createBeanProxy(Session session, ObjectConverter objectConverter, Class beanClass, String path) 
 	{
@@ -57,9 +59,9 @@ public class ProxyManagerImpl implements ProxyManager
 		return  Enhancer.create(beanClass, loader);
 	}
 
-	
-	/* (non-Javadoc)
-	 * @see org.apache.portals.graffito.jcr.persistence.objectconverter.impl.ProxyManager#createCollectionProxy(javax.jcr.Session, org.apache.portals.graffito.jcr.persistence.collectionconverter.CollectionConverter, javax.jcr.Node, org.apache.portals.graffito.jcr.mapper.model.CollectionDescriptor, java.lang.Class)
+	/**
+	 * 
+	 * @see org.apache.jackrabbit.ocm.persistence.objectconverter.ProxyManager#createCollectionProxy(javax.jcr.Session, org.apache.jackrabbit.ocm.persistence.collectionconverter.CollectionConverter, javax.jcr.Node, org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor, java.lang.Class)
 	 */
 	public  Object createCollectionProxy(Session session, CollectionConverter collectionConverter, Node parentNode,  CollectionDescriptor collectionDescriptor, Class collectionFieldClass) 
 	{	

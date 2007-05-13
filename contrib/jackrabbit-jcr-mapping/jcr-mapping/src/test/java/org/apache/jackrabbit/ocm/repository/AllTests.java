@@ -34,7 +34,7 @@ public class AllTests {
     }
 
     public static Test buildSuite() {
-        TestSuite suite= new TestSuite("Test for org.apache.portals.graffito.jcr.repository");
+        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.repository");
         //$JUnit-BEGIN$
         suite.addTestSuite(RepositoryUtilTest.class);
        

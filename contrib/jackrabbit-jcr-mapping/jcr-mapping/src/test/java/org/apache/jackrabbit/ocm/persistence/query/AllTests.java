@@ -34,7 +34,7 @@ public class AllTests {
     }
 
     public static Test buildSuite() {
-        TestSuite suite= new TestSuite("Test for org.apache.portals.graffito.jcr.persistence.query");
+        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.persistence.query");
         //$JUnit-BEGIN$
         suite.addTestSuite(PersistenceManagerAtomicQueryTest.class);
         suite.addTestSuite(PersistenceManagerIteratorQueryTest.class);

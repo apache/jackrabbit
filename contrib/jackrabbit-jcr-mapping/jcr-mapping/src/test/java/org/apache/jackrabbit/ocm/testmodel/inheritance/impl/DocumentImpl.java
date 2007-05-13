@@ -37,48 +37,53 @@ public class DocumentImpl extends ContentImpl implements Document
     protected DocumentStream documentStream;
 
 
-    /* (non-Javadoc)
-	 * @see org.apache.portals.graffito.jcr.testmodel.inheritance.impl.Document#getContentType()
-	 */
+    /**
+     * 
+     * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Document#getContentType()
+     */
     public String getContentType()
     {
         return this.contentType;
     }
 
-    /* (non-Javadoc)
-	 * @see org.apache.portals.graffito.jcr.testmodel.inheritance.impl.Document#setContentType(java.lang.String)
-	 */
+    /**
+     * 
+     * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Document#setContentType(java.lang.String)
+     */
     public void setContentType(String contentType)
     {
         this.contentType = contentType;
     }
 
-
-    /* (non-Javadoc)
-	 * @see org.apache.portals.graffito.jcr.testmodel.inheritance.impl.Document#getSize()
-	 */
+    /**
+     * 
+     * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Document#getSize()
+     */
     public long getSize()
     {
         return size;
     }
 
-    /* (non-Javadoc)
-	 * @see org.apache.portals.graffito.jcr.testmodel.inheritance.impl.Document#setSize(long)
-	 */
+    /**
+     * 
+     * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Document#setSize(long)
+     */
     public void setSize(long size)
     {
         this.size = size;
     }
 
-	/* (non-Javadoc)
-	 * @see org.apache.portals.graffito.jcr.testmodel.inheritance.impl.Document#getDocumentStream()
+	/**
+	 * 
+	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Document#getDocumentStream()
 	 */
 	public DocumentStream getDocumentStream() {
 		return documentStream;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.apache.portals.graffito.jcr.testmodel.inheritance.impl.Document#setDocumentStream(org.apache.portals.graffito.jcr.testmodel.inheritance.impl.DocumentStream)
+	/**
+	 * 
+	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Document#setDocumentStream(org.apache.jackrabbit.ocm.testmodel.inheritance.impl.DocumentStream)
 	 */
 	public void setDocumentStream(DocumentStream documentStream) {
 		this.documentStream = documentStream;

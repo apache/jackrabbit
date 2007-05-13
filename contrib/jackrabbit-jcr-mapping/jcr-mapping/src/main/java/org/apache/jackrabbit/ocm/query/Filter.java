@@ -21,7 +21,7 @@ import org.apache.jackrabbit.ocm.exception.IncorrectAtomicTypeException;
 
 /**
  * 
- * Graffito JCR Filter interface.
+ * JCR Filter interface.
  * 
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  *

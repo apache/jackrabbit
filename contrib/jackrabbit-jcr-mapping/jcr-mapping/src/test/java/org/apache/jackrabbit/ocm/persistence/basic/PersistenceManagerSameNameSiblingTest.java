@@ -205,7 +205,7 @@ public class PersistenceManagerSameNameSiblingTest extends TestBase
 				}
 				else
 				{
-					 a.setByteArray("This is small object stored in a Graffito repository".getBytes());
+					 a.setByteArray("This is small object stored in the repository".getBytes());
 					 a.setInputStream(new ByteArrayInputStream("Another Stream".getBytes()));
 				}
 				persistenceManager.insert(a);

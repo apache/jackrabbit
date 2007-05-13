@@ -34,7 +34,7 @@ public class AllTests {
     }
 
     public static Test buildSuite() {
-        TestSuite suite= new TestSuite("Test for  org.apache.portals.graffito.jcr.persistence.inheritance");
+        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.persistence.inheritance");
         //$JUnit-BEGIN$
         suite.addTestSuite(PersistenceManagerInheritanceConcreteClassTest.class);
         suite.addTestSuite(PersistenceManagerInheritanceHierarchyTest.class);        

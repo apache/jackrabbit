@@ -34,7 +34,7 @@ public class AllTests {
     }
 
     public static Test buildSuite() {
-        TestSuite suite= new TestSuite("Test for org.apache.portals.graffito.jcr.persistence.version");
+        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.persistence.version");
         //$JUnit-BEGIN$
         suite.addTestSuite(PersistenceManagerBasicVersionningTest.class);
        
