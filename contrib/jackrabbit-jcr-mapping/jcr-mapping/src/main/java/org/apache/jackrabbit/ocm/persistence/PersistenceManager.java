@@ -346,5 +346,25 @@ public interface PersistenceManager
      * @param keepChanges
      */
     public void refresh(boolean keepChanges);
+    
+    /**
+     *  Move an object
+     *   
+     * @param srcPath path of the object to move
+     * @param destPath destination path
+     * 
+     * @throws PersistenceException
+     */
+    public void move(String srcPath, String destPath) throws PersistenceException;
+    
+    /**
+     * Copy an object 
+     * 
+     * @param srcPath path of the object to copy
+     * @param destPath destination path
+     * 
+     * @throws PersistenceException
+     */
+    public void copy(String srcPath, String destPath) throws PersistenceException; 
         
 }

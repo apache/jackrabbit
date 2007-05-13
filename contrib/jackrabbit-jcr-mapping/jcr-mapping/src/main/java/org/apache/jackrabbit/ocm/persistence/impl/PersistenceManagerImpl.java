@@ -31,6 +31,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -1110,10 +1111,84 @@ public class PersistenceManagerImpl implements PersistenceManager {
         catch(RepositoryException e) {
             throw new PersistenceException("Cannot refresh current session ", e);
         }
-
-		
 	}
     
-    
+	/**
+	 * 
+	 * @see org.apache.jackrabbit.ocm.persistence.PersistenceManager#move(java.lang.String, java.lang.String)
+	 */
+    public void move(String srcPath, String destPath){
+        Workspace workspace = session.getWorkspace();
+        try {
+            
+        	workspace.move(srcPath,destPath);
+            
+        }catch(javax.jcr.nodetype.ConstraintViolationException cve){
+            throw new PersistenceException(
+                    "Cannot move the object from " + srcPath + " to " + destPath + "." + " Violation of a nodetype or attempt to move under a property detected", cve);
+            
+        }catch(javax.jcr.version.VersionException ve){
+            throw new VersionException(
+                    "Cannot move the object from " + srcPath + " to " + destPath + "." + " Parent node of source or destination is versionable and checked in ", ve);
+            
+        }catch(javax.jcr.AccessDeniedException ade){
+            throw new PersistenceException(
+                    "Cannot move the object from " + srcPath + " to " + destPath + "." + " Session does not have access permissions", ade);
+            
+        }catch(javax.jcr.PathNotFoundException pnf){
+            throw new PersistenceException(
+                    "Cannot move the object from " + srcPath + " to " + destPath + "." + " Node at source or destination does not exist ", pnf);
+            
+        }catch(javax.jcr.ItemExistsException ie){
+            throw new PersistenceException(
+                    "Cannot move the object from " + srcPath + " to " + destPath + "." + " It might already exist at destination path.", ie);
+            
+        }catch(javax.jcr.lock.LockException le){
+            throw new PersistenceException(
+                    "Cannot move the object from " + srcPath + " to " + destPath + "." + "Violation of a lock detected", le);
+            
+        }catch(javax.jcr.RepositoryException re){
+            throw new PersistenceException(
+                    "Cannot move the object from " + srcPath + " to " + destPath + "." , re);
+        }   
+    }
 
+    /**
+     * 
+     * @see org.apache.jackrabbit.ocm.persistence.PersistenceManager#copy(java.lang.String, java.lang.String)
+     */
+    public void copy(String srcPath, String destPath){
+        Workspace workspace = session.getWorkspace();
+        try{
+            workspace.copy(srcPath,destPath);
+            
+        }catch(javax.jcr.nodetype.ConstraintViolationException cve){
+            throw new PersistenceException(
+                    "Cannot copy the object from " + srcPath + " to " + destPath + "." + "Violation of a nodetype or attempt to copy under property detected ", cve);
+            
+        }catch(javax.jcr.version.VersionException ve){
+            throw new VersionException(
+                    "Cannot copy the object from " + srcPath + " to " + destPath + "." + "Parent node of source or destination is versionable and checked in ", ve);
+            
+        }catch(javax.jcr.AccessDeniedException ade){
+            throw new PersistenceException(
+                    "Cannot copy the object from " + srcPath + " to " + destPath + "." + " Session does not have access permissions", ade);
+            
+        }catch(javax.jcr.PathNotFoundException pnf){
+            throw new PersistenceException(
+                    "Cannot copy the object from " + srcPath + " to " + destPath + "." + "Node at source or destination does not exist ", pnf);
+            
+        }catch(javax.jcr.ItemExistsException ie){
+            throw new PersistenceException(
+                    "Cannot copy the object from " + srcPath + " to " + destPath + "." + "It might already exist at destination path.", ie);
+            
+        }catch(javax.jcr.lock.LockException le){
+            throw new PersistenceException(
+                    "Cannot copy the object from " + srcPath + " to " + destPath + "." + "Violation of a lock detected", le);
+            
+        }catch(javax.jcr.RepositoryException re){
+            throw new PersistenceException(
+                    "Cannot copy the node from " + srcPath + " to " + destPath + "." , re);
+        }
+    }    
 }
