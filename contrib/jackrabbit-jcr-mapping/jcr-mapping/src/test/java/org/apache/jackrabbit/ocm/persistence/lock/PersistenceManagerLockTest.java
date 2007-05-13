@@ -139,6 +139,17 @@ public class PersistenceManagerLockTest extends TestBase
             // Check if the object is locked
             // --------------------------------------------------------------------------------
             assertFalse("the object is locked", persistenceManager.isLocked("/test"));
+
+            // --------------------------------------------------------------------------------
+            // Lock & update 
+            // --------------------------------------------------------------------------------
+            lockToken = persistenceManager.lock("/test", true, false);
+            a = (A) persistenceManager.getObject("/test");
+            a.setA1("new a1 Value");
+            persistenceManager.update(a);
+            persistenceManager.save();
+            persistenceManager.unlock("/test", lockToken);
+            
             
             // --------------------------------------------------------------------------------
             // Remove the object

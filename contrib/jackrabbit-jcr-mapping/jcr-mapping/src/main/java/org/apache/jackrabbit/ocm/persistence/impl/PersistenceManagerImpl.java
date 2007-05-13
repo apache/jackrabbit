@@ -1000,8 +1000,12 @@ public class PersistenceManagerImpl implements PersistenceManager {
         if (node.isLocked()) {
             Lock lock = node.getLock();
             String lockOwner = lock.getLockOwner();
-            final String path = lock.getNode().getPath();
-            throw new LockedException(lockOwner, path);
+            
+            if (! session.getUserID().equals(lockOwner))
+            {
+                final String path = lock.getNode().getPath();
+                throw new LockedException(lockOwner, path);
+            }
         }
     }
 
