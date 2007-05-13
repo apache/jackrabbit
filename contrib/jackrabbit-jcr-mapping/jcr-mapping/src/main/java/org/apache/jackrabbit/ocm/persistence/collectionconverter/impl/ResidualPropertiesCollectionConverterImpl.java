@@ -99,9 +99,7 @@ public class ResidualPropertiesCollectionConverterImpl extends
             }
 
             ManageableCollection collection = ManageableCollectionUtil.getManageableCollection(collectionFieldClass);
-            String elementClassName = collectionDescriptor.getElementClassName();
-            Class elementClass = ReflectionUtils.forName(elementClassName);
-            AtomicTypeConverter atomicTypeConverter = (AtomicTypeConverter) atomicTypeConverters.get(elementClass);
+            AtomicTypeConverter atomicTypeConverter = getAtomicTypeConverter(collectionDescriptor);
 
             while (pi.hasNext()) {
                 Property prop = pi.nextProperty();
@@ -172,6 +170,8 @@ public class ResidualPropertiesCollectionConverterImpl extends
             }
         }
 
+        AtomicTypeConverter atomicTypeConverter = getAtomicTypeConverter(collectionDescriptor);
+
         try {
             Map map = (Map) collection;
             ValueFactory valueFactory = session.getValueFactory();
@@ -193,14 +193,12 @@ public class ResidualPropertiesCollectionConverterImpl extends
                     int i = 0;
                     for (Iterator vi = valueList.iterator(); vi.hasNext();) {
                         value = vi.next();
-                        AtomicTypeConverter atomicTypeConverter = (AtomicTypeConverter) atomicTypeConverters.get(value.getClass());
                         jcrValues[i++] = atomicTypeConverter.getValue(
                             valueFactory, value);
                     }
                     parentNode.setProperty(name, jcrValues);
                 } else {
                     // single value
-                    AtomicTypeConverter atomicTypeConverter = (AtomicTypeConverter) atomicTypeConverters.get(value.getClass());
                     Value jcrValue = atomicTypeConverter.getValue(valueFactory,
                         value);
                     parentNode.setProperty(name, jcrValue);
@@ -211,5 +209,31 @@ public class ResidualPropertiesCollectionConverterImpl extends
                 + collectionDescriptor.getFieldName() + " of class "
                 + collectionDescriptor.getClassDescriptor().getClassName(), vfe);
         }
+    }
+    
+    /**
+     * Returns the AtomicTypeConverter for the element class of the described
+     * collection. If no such converter can be found a PersistenceException
+     * is thrown.
+     * 
+     * @param collectionDescriptor The descriptor of the collection for whose
+     *      elements an AtomicTypeConverter is requested.
+     *      
+     * @return The AtomicTypeConverter for the elements of the collection
+     * 
+     * @throws PersistenceException if no such type converter is registered
+     */
+    private AtomicTypeConverter getAtomicTypeConverter(CollectionDescriptor collectionDescriptor) {
+        String elementClassName = collectionDescriptor.getElementClassName();
+        Class elementClass = ReflectionUtils.forName(elementClassName);
+        AtomicTypeConverter atc = (AtomicTypeConverter) atomicTypeConverters.get(elementClass);
+        if (atc != null) {
+            return atc;
+        }
+        
+        throw new PersistenceException(
+            "Cannot get AtomicTypeConverter for element class "
+                + elementClassName + " of class "
+                + collectionDescriptor.getClassDescriptor().getClassName());
     }
 }
