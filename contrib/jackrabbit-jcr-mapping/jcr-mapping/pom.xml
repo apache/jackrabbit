@@ -140,35 +140,4 @@
     </dependency>    
   </dependencies>
 
-  <!-- ====================================================================== -->
-  <!-- B U I L D                                                              -->
-  <!-- ====================================================================== -->
-  <!-- build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <excludes>
-            <exclude>**</exclude>
-          </excludes>
-          <forkMode>once</forkMode>
-          <argLine>-Xmx128m -enableassertions</argLine>
-        </configuration>
-        <executions>
-          <execution>
-            <id>do_test</id>
-            <configuration>
-              <includes>
-                <include>**/*TestAll.java</include>
-              </includes>
-            </configuration>
-            <goals>
-              <goal>test</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build -->
-
 </project>
