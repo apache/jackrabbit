@@ -29,51 +29,31 @@ import org.apache.jackrabbit.ocm.persistence.collectionconverter.ManageableColle
  */
 public class ManagedHashMap extends HashMap implements ManageableCollection {
 
-    /**
-     * 
-     */
     public ManagedHashMap() {
     }
 
-    /**
-     * @param initialCapacity
-     */
     public ManagedHashMap(int initialCapacity) {
         super(initialCapacity);
     }
 
-    /**
-     * @param m
-     */
     public ManagedHashMap(Map m) {
         super(m);
     }
 
-    /**
-     * @param initialCapacity
-     * @param loadFactor
-     */
     public ManagedHashMap(int initialCapacity, float loadFactor) {
         super(initialCapacity, loadFactor);
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.portals.graffito.jcr.persistence.collectionconverter.ManageableCollection#addObject(java.lang.Object)
-     */
+
     public void addObject(Object object) {
         put(object, object);
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.portals.graffito.jcr.persistence.collectionconverter.ManageableCollection#getIterator()
-     */
     public Iterator getIterator() {
         return values().iterator();
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.portals.graffito.jcr.persistence.collectionconverter.ManageableCollection#getSize()
-     */
+
     public int getSize() {
         return size();
     }

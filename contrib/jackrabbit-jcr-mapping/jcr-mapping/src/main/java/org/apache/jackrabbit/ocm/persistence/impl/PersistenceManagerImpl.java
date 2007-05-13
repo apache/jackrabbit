@@ -85,7 +85,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
     protected Mapper mapper;
 
     /**
-     * The Graffito query manager
+     * The query manager
      */
     protected QueryManager queryManager;
 
@@ -123,7 +123,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
      * Creates a new <code>PersistenceManager</code> based on a JCR session and some xml mapping files. 
      *
      * @param session The JCR session
-     * @param xmlMappingFiles Graffito JCR mapping file used mainly to create the <code>Mapper</code> component
+     * @param xmlMappingFiles the JCR mapping files used mainly to create the <code>Mapper</code> component
      */
     public PersistenceManagerImpl(Session session,String[] xmlMappingFiles ) 
     {

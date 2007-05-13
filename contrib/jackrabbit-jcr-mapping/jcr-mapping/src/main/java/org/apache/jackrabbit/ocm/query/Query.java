@@ -18,7 +18,7 @@
 package org.apache.jackrabbit.ocm.query;
 
 /**
- * Graffito JCR Query interface
+ * JCR Query interface
  * 
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  *

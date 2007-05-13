@@ -34,7 +34,7 @@ public class AllTests {
     }
 
     public static Test buildSuite() {
-        TestSuite suite= new TestSuite("Test for org.apache.portals.graffito.jcr.persistence.interfaces");
+        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.persistence.interfaces");
         //$JUnit-BEGIN$
         suite.addTestSuite(PersistenceManagerInterfaceConcreteClassTest.class);
         suite.addTestSuite(PersistenceManagerInterfaceHierarchyTest.class);        

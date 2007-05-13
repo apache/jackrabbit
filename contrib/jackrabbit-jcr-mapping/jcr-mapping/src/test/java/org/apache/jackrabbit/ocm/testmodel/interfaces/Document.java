@@ -20,26 +20,13 @@ import org.apache.jackrabbit.ocm.testmodel.inheritance.impl.DocumentStream;
 
 public interface Document extends Content {
 
-	/** 
-	 * @see org.apache.portals.graffito.model.DocumentImpl#getContentType()
-	 */
+
 	public String getContentType();
 
-	/**
-	 * @see org.apache.portals.graffito.model.DocumentImpl#setContentType(java.lang.String)
-	 */
 	public void setContentType(String contentType);
 
-	/**
-	 * 
-	 * @see org.apache.portals.graffito.model.DocumentImpl#getSize()
-	 */
 	public long getSize();
 
-	/**
-	 * 
-	 * @see org.apache.portals.graffito.model.DocumentImpl#setSize(long)
-	 */
 	public void setSize(long size);
 
 	public DocumentStream getDocumentStream();

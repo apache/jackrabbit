@@ -36,7 +36,7 @@ public class AllTests {
     }
 
     public static Test buildSuite() throws Exception {
-        TestSuite suite= new TestSuite("Graffito OCM Tests");
+        TestSuite suite= new TestSuite("Jackrabbit OCM Tests");
         suite.addTest(org.apache.jackrabbit.ocm.mapper.AllTests.buildSuite());     
         suite.addTest(org.apache.jackrabbit.ocm.persistence.atomic.AllTests.buildSuite());
         suite.addTest(org.apache.jackrabbit.ocm.persistence.auto.AllTests.buildSuite());

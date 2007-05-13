@@ -122,7 +122,7 @@ public class RepositoryUtilTest extends TestCase
             
             // TODO custom node types not implemented yet
             
-            //NodeType nodeType = nodeTypeManager.getNodeType("graffito:folder");
+            //NodeType nodeType = nodeTypeManager.getNodeType("ocm:folder");
             //assertNotNull("Root node is null", nodeType);
             
             session.logout();

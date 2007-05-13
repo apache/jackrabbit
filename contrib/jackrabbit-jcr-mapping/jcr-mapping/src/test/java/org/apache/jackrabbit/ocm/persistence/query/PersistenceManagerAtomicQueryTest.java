@@ -159,7 +159,7 @@ public class PersistenceManagerAtomicQueryTest extends TestBase
 			assertTrue("Invalid number of objects - should be = 50 ", result.size() == 50);
 			
 			filter = queryManager.createFilter(Atomic.class);			
-			filter.addContains("byteArray", "Graffito");
+			filter.addContains("byteArray", "ocm");
 			query = queryManager.createQuery(filter);
 			
 			result = persistenceManager.getObjects(query);			
@@ -214,7 +214,7 @@ public class PersistenceManagerAtomicQueryTest extends TestBase
 				}
 				else
 				{
-					 a.setByteArray("This is small object stored in a Graffito repository".getBytes());
+					 a.setByteArray("This is small object stored in the ocm repository".getBytes());
 					 a.setInputStream(new ByteArrayInputStream("Another Stream".getBytes()));
 				}
 				persistenceManager.insert(a);

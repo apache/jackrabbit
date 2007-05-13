@@ -36,23 +36,26 @@ public class FolderImpl extends CmsObjectImpl implements Folder
 
     protected List children = new ArrayList();
 
-	/* (non-Javadoc)
-	 * @see org.apache.portals.graffito.jcr.testmodel.inheritance.impl.Folder#getChildren()
+	/**
+	 * 
+	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Folder#getChildren()
 	 */
 	public List getChildren() {
 		return children;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.apache.portals.graffito.jcr.testmodel.inheritance.impl.Folder#setChildren(java.util.List)
+	/**
+	 * 
+	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Folder#setChildren(java.util.List)
 	 */
 	public void setChildren(List children) {
 		this.children = children;
 	}
     
-    /* (non-Javadoc)
-	 * @see org.apache.portals.graffito.jcr.testmodel.inheritance.impl.Folder#addChild(org.apache.portals.graffito.jcr.testmodel.inheritance.impl.CmsObjectImpl)
-	 */
+    /**
+     * 
+     * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Folder#addChild(org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject)
+     */
     public void addChild(CmsObject child)
     {
     	    children.add(child);

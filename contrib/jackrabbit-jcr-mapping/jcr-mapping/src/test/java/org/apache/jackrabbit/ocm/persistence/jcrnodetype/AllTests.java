@@ -34,7 +34,7 @@ public class AllTests {
     }
 
     public static Test buildSuite() {
-        TestSuite suite= new TestSuite("Test for org.apache.portals.graffito.jcr.persistence.jcrnodetype");
+        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.persistence.jcrnodetype");
         //$JUnit-BEGIN$
         suite.addTestSuite(PersistenceManagerJcrNodeTypeTest.class);                
         suite.addTestSuite(PersistenceManagerJcrPropertyTest.class);

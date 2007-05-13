@@ -34,7 +34,7 @@ public class AllTests {
     }
 
     public static Test buildSuite() {
-        TestSuite suite= new TestSuite("Test for org.apache.portals.graffito.jcr.persistence.basic");
+        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.persistence.basic");
         //$JUnit-BEGIN$
         suite.addTestSuite(PersistenceManagerLockTest.class);
         //$JUnit-END$

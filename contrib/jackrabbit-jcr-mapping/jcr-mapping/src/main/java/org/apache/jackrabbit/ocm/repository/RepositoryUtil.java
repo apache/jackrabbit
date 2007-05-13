@@ -43,17 +43,17 @@ import org.apache.jackrabbit.util.Text;
 public class RepositoryUtil
 {
     
-    /** Graffito namespace prefix constant.
-     */
+    /** namespace prefix constant */
     public static final String OCM_NAMESPACE_PREFIX   = "ocm";
 
-    /** Graffito namespace constant.
-     */
+    /** namespace constant */
     public static final String OCM_NAMESPACE          = "http://jackrabbit.apache.org/ocm";    
+    
     /** Item path separator */
     public static final String PATH_SEPARATOR = "/";
     
-    private final static Log log = LogFactory.getLog(RepositoryUtil.class);  
+    private final static Log log = LogFactory.getLog(RepositoryUtil.class);
+    
     /**
      * Register a new repository 
      * 
@@ -237,7 +237,7 @@ public class RepositoryUtil
     
     /**
      * Setup the session. 
-     * Until now, we check only if the Graffito namespace prefix exist in the repository
+     * Until now, we check only if the namespace prefix exist in the repository
      * 
      */
     private static void setupSession(Session session) throws RepositoryException
@@ -245,20 +245,20 @@ public class RepositoryUtil
          try
          {
             String[] jcrNamespaces = session.getWorkspace().getNamespaceRegistry().getPrefixes();
-            boolean createGraffitoNamespace = true;
+            boolean createNamespace = true;
             for (int i = 0; i < jcrNamespaces.length; i++)
             {
                 if (jcrNamespaces[i].equals(OCM_NAMESPACE_PREFIX))
                 {
-                    createGraffitoNamespace = false;
-                    log.debug("Graffito namespace exists.");
+                    createNamespace = false;
+                    log.debug("Jackrabbit OCM namespace exists.");
                 }
             }
              
-            if (createGraffitoNamespace)
+            if (createNamespace)
             {
                 session.getWorkspace().getNamespaceRegistry().registerNamespace(OCM_NAMESPACE_PREFIX, OCM_NAMESPACE);
-                log.info("Successfully created graffito namespace.");
+                log.info("Successfully created Jackrabbit OCM namespace.");
             }
             
             if (session.getRootNode() != null)

@@ -169,7 +169,7 @@ public interface PersistenceManager
     
     /**
      * Retrieve an object matching to a query     
-     * @param query The Graffito Query object used to seach the object
+     * @param query The Query object used to seach the object
      * @return The object found or null
      * @throws PersistenceException when it is not possible to retrieve the object 
      * 
