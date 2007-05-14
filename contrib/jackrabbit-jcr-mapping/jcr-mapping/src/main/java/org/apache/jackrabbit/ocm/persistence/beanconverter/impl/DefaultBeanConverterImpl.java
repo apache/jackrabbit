@@ -60,7 +60,22 @@ public class DefaultBeanConverterImpl extends AbstractBeanConverterImpl  impleme
 	public void update(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Object object, ClassDescriptor parentClassDescriptor, Object parent)
 			throws PersistenceException, RepositoryException,	JcrMappingException 
 	{
-		objectConverter.update(session, parentNode, beanDescriptor.getJcrName(), object);
+		try 
+		{
+			String jcrNodeName = beanDescriptor.getJcrName(); 
+			if (parentNode.hasNode(jcrNodeName))
+			{		
+			   objectConverter.update(session, parentNode, beanDescriptor.getJcrName() , object);
+			}
+			else 
+			{
+			   objectConverter.insert(session, parentNode, beanDescriptor.getJcrName() , object);
+			}
+		} 
+		catch (javax.jcr.RepositoryException e) 
+		{
+			throw new RepositoryException(e);	
+		}
 	}
 
 	public Object getObject(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Class beanClass, Object parent)
