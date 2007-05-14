@@ -136,17 +136,27 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
                                  CollectionDescriptor collectionDescriptor,
                                  ManageableCollection collection) throws RepositoryException {
         
-    	    String jcrName = getCollectionJcrName(collectionDescriptor);
-        if (collection == null)
+    	String jcrName = getCollectionJcrName(collectionDescriptor);
+    	boolean hasNode = parentNode.hasNode(jcrName);
+        // If the new value for the collection is null, drop the node matching to the collection
+    	if (collection == null)
         {
-            if (parentNode.hasNode(jcrName)) 
+            if (hasNode) 
             {
                 parentNode.getNode(jcrName).remove();
             }
             return;
         }
 
+    	// If there is not yet a node matching to the collection, insert the collection 
+    	if (! hasNode)
+    	{
+    		this.doInsertCollection(session, parentNode, collectionDescriptor, collection);
+    		return;
+    	}
         
+    	// update process
+    	
         ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass( ReflectionUtils.forName(collectionDescriptor.getElementClassName()));         
         Node collectionNode = parentNode.getNode(jcrName);
         //  If the collection elements have not an id, it is not possible to find the matching JCR nodes => delete the complete collection
@@ -221,7 +231,7 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
         
         while (children.hasNext()) {
             Node itemNode = children.nextNode();
-            Object item = objectConverter.getObject(session, itemNode.getPath());
+            Object item = objectConverter.getObject(session, elementClass, itemNode.getPath());
             collection.addObject(item);
         }
 
