@@ -637,6 +637,7 @@ public class ClusterNode implements Runnable,
                 record = journal.getProducer(PRODUCER_ID).append();
                 record.writeString(workspace);
                 write(record, nodeId);
+                record.writeChar('\0');
                 record.update();
                 setRevision(record.getRevision());
                 succeeded = true;
