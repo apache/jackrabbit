@@ -183,7 +183,23 @@ class DefaultHighlighter {
             throws IOException {
         if (offsets == null || offsets.length == 0) {
             // nothing to highlight
-            return excerptStart + excerptEnd;
+            StringBuffer text = new StringBuffer(excerptStart);
+            text.append(fragmentStart);
+            int min = text.length();
+            char[] buf = new char[surround * 2];
+            int len = reader.read(buf);
+            text.append(buf, 0, len);
+            if (len == buf.length) {
+                for (int i = text.length() - 1; i > min; i--) {
+                    if (Character.isWhitespace(text.charAt(i))) {
+                        text.delete(i, text.length());
+                        text.append(" ...");
+                        break;
+                    }
+                }
+            }
+            text.append(fragmentEnd).append(excerptEnd);
+            return text.toString();
         }
         int lastOffset = offsets.length; // Math.min(10, offsets.length); // 10 terms is plenty?
         ArrayList fragmentInfoList = new ArrayList();
@@ -334,12 +350,14 @@ class DefaultHighlighter {
                 }
                 sb.append(Text.encodeIllegalXMLCharacters(
                         new String(cbuf, 0, EOF ? skip : (surround - skippedChars))));
-                char lastChar = sb.charAt(sb.length() - 1);
-                if (lastChar != '.' && lastChar != '!' && lastChar != '?') {
-                    sb.append(" ...");
+                if (!EOF) {
+                    char lastChar = sb.charAt(sb.length() - 1);
+                    if (lastChar != '.' && lastChar != '!' && lastChar != '?') {
+                        sb.append(" ...");
+                    }
                 }
-                sb.append(fragmentEnd);
             }
+            sb.append(fragmentEnd);
         }
         sb.append(excerptEnd);
         return sb.toString();

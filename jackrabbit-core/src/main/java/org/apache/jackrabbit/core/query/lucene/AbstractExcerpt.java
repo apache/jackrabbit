@@ -24,20 +24,28 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.index.TermPositionVector;
+import org.apache.lucene.index.TermVectorOffsetInfo;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.Token;
 import org.apache.jackrabbit.core.NodeId;
 
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.Reader;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.TreeMap;
+import java.util.SortedMap;
+import java.util.Arrays;
 
 /**
  * <code>AbstractExcerpt</code> implements base functionality for an excerpt
  * provider.
  */
-public abstract class AbstractExcerpt implements ExcerptProvider {
+public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
 
     /**
      * Logger instance for this class.
@@ -144,6 +152,14 @@ public abstract class AbstractExcerpt implements ExcerptProvider {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public String highlight(String text) throws IOException {
+        return createExcerpt(createTermPositionVector(text),
+                text, 1, (text.length() + 1) * 2);
+    }
+
+    /**
      * Creates an excerpt for the given <code>text</code> using token offset
      * information provided by <code>tpv</code>.
      *
@@ -180,5 +196,86 @@ public abstract class AbstractExcerpt implements ExcerptProvider {
             }
         }
         return relevantTerms;
+    }
+
+    /**
+     * @param text the text.
+     * @return a <code>TermPositionVector</code> for the given text.
+     */
+    private TermPositionVector createTermPositionVector(String text) {
+        // term -> TermVectorOffsetInfo[]
+        final SortedMap termMap = new TreeMap();
+        Reader r = new StringReader(text);
+        TokenStream ts = index.getTextAnalyzer().tokenStream("", r);
+        Token t;
+        try {
+            while ((t = ts.next()) != null) {
+                TermVectorOffsetInfo[] info =
+                        (TermVectorOffsetInfo[]) termMap.get(t.termText());
+                if (info == null) {
+                    info = new TermVectorOffsetInfo[1];
+                } else {
+                    TermVectorOffsetInfo[] tmp = info;
+                    info = new TermVectorOffsetInfo[tmp.length + 1];
+                    System.arraycopy(tmp, 0, info, 0, tmp.length);
+                }
+                info[info.length - 1] = new TermVectorOffsetInfo(
+                        t.startOffset(), t.endOffset());
+                termMap.put(t.termText(), info);
+            }
+        } catch (IOException e) {
+            // should never happen, we are reading from a string
+        }
+
+        return new TermPositionVector() {
+
+            private String[] terms =
+                    (String[]) termMap.keySet().toArray(new String[termMap.size()]);
+
+            public int[] getTermPositions(int index) {
+                return null;
+            }
+
+            public TermVectorOffsetInfo[] getOffsets(int index) {
+                TermVectorOffsetInfo[] info = TermVectorOffsetInfo.EMPTY_OFFSET_INFO;
+                if (index >= 0 && index < terms.length) {
+                    info = (TermVectorOffsetInfo[]) termMap.get(terms[index]);
+                }
+                return info;
+            }
+
+            public String getField() {
+                return "";
+            }
+
+            public int size() {
+                return terms.length;
+            }
+
+            public String[] getTerms() {
+                return terms;
+            }
+
+            public int[] getTermFrequencies() {
+                int[] freqs = new int[terms.length];
+                for (int i = 0; i < terms.length; i++) {
+                    freqs[i] = ((TermVectorOffsetInfo[]) termMap.get(terms[i])).length;
+                }
+                return freqs;
+            }
+
+            public int indexOf(String term) {
+                int res = Arrays.binarySearch(terms, term);
+                return res >= 0 ? res : -1;
+            }
+
+            public int[] indexesOf(String[] terms, int start, int len) {
+                int res[] = new int[len];
+                for (int i = 0; i < len; i++) {
+                    res[i] = indexOf(terms[i]);
+                }
+                return res;
+            }
+        };
     }
 }

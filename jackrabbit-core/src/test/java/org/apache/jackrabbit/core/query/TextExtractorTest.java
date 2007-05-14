@@ -32,14 +32,20 @@ public class TextExtractorTest extends AbstractQueryTest {
 
     private static final String TEST_FOLDER = "test-data";
 
+    private int fileCount = 0;
+
     public void testImport() throws Exception {
         File sourceFolder = new File(TEST_FOLDER);
         // only run if there is test data
         if (!sourceFolder.exists()) {
             return;
         }
+        long time = System.currentTimeMillis();
         addContents(sourceFolder,
                 testRootNode.addNode(sourceFolder.getName(), "nt:folder"));
+        superuser.save();
+        time = System.currentTimeMillis() - time;
+        System.out.println("Imported " + fileCount + " files in " + time + " ms.");
     }
 
     /**
@@ -56,8 +62,10 @@ public class TextExtractorTest extends AbstractQueryTest {
                 } else {
                     addFile(n, f);
                     System.out.println("Added file: " + f.getAbsolutePath());
-                    // save after a file had been added
-                    n.getSession().save();
+                    // save after 100 files
+                    if (++fileCount % 100 == 0) {
+                        n.getSession().save();
+                    }
                 }
             }
         }
