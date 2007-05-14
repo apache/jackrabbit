@@ -21,8 +21,8 @@ import java.util.List;
 
 import javax.jcr.Session;
 
-import org.apache.portals.graffito.jcr.mapper.model.ClassDescriptor;
-import org.apache.portals.graffito.jcr.mapper.model.MappingDescriptor;
+import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
+import org.apache.jackrabbit.ocm.mapper.model.MappingDescriptor;
 
 import org.apache.portals.graffito.jcr.nodemanagement.exception.NamespaceCreationException;
 import org.apache.portals.graffito.jcr.nodemanagement.exception.NodeTypeCreationException;

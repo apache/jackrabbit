@@ -25,10 +25,10 @@ import javax.jcr.nodetype.PropertyDefinition;
 
 import junit.framework.*;
 
-import org.apache.portals.graffito.jcr.mapper.model.BeanDescriptor;
-import org.apache.portals.graffito.jcr.mapper.model.ClassDescriptor;
-import org.apache.portals.graffito.jcr.mapper.model.CollectionDescriptor;
-import org.apache.portals.graffito.jcr.mapper.model.FieldDescriptor;
+import org.apache.jackrabbit.ocm.mapper.model.BeanDescriptor;
+import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
+import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
+import org.apache.jackrabbit.ocm.mapper.model.FieldDescriptor;
 
 import org.apache.portals.graffito.jcr.nodemanagement.TestBase;
 import org.apache.portals.graffito.jcr.nodemanagement.exception.NamespaceCreationException;
@@ -86,16 +86,16 @@ public class NodeTypeManagerImplTest extends TestBase {
     public void testCreateNodeTypesFromConfiguration() throws Exception
     {
         getJackrabbitNodeTypeManagerImpl().createNodeTypesFromConfiguration(session,
-                new FileInputStream("./src/config/jackrabbit/nodetypes_test1.xml"));
+                new FileInputStream("./src/test/test-config/jackrabbit/nodetypes_test1.xml"));
         
-        NodeType test1 = session.getWorkspace().getNodeTypeManager().getNodeType("graffito:test1");
+        NodeType test1 = session.getWorkspace().getNodeTypeManager().getNodeType("ocm:test1");
         assertNotNull(test1);
         assertFalse(test1.isMixin());
         assertFalse(test1.hasOrderableChildNodes());
         assertEquals(test1.getPrimaryItemName(), "test1");
         assertEquals(test1.getSupertypes().length, 1);
         assertEquals(test1.getSupertypes()[0].getName(), "nt:base");
-        assertTrue(containsPropertyDefintion(test1.getPropertyDefinitions(), "graffito:testProperty"));
+        assertTrue(containsPropertyDefintion(test1.getPropertyDefinitions(), "ocm:testProperty"));
     }
     
     /**
@@ -106,12 +106,12 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.TestClass");
-        classDescriptor.setJcrNodeType("graffito:test2");
+        classDescriptor.setJcrNodeType("ocm:test2");
         classDescriptor.setJcrSuperTypes("nt:base");
         
         FieldDescriptor field1 = new FieldDescriptor();
         field1.setFieldName("a");
-        field1.setJcrName("graffito:a");
+        field1.setJcrName("ocm:a");
         field1.setJcrType("String");
         field1.setJcrAutoCreated(true);
         field1.setJcrMandatory(true);
@@ -120,7 +120,7 @@ public class NodeTypeManagerImplTest extends TestBase {
 
         FieldDescriptor field2 = new FieldDescriptor();
         field2.setFieldName("b");
-        field2.setJcrName("graffito:b");
+        field2.setJcrName("ocm:b");
         field2.setJcrType("Long");
         field1.setJcrAutoCreated(false);
         field1.setJcrMandatory(true);
@@ -129,26 +129,26 @@ public class NodeTypeManagerImplTest extends TestBase {
 
         getJackrabbitNodeTypeManagerImpl().createSingleNodeType(session, classDescriptor);
         
-        NodeType testNodeType = session.getWorkspace().getNodeTypeManager().getNodeType("graffito:test2");
+        NodeType testNodeType = session.getWorkspace().getNodeTypeManager().getNodeType("ocm:test2");
         assertNotNull(testNodeType);
         assertFalse(testNodeType.isMixin());
-        assertEquals(testNodeType.getName(), "graffito:test2");
+        assertEquals(testNodeType.getName(), "ocm:test2");
         assertEquals(testNodeType.getSupertypes().length, 1);
         assertEquals(testNodeType.getSupertypes()[0].getName(), "nt:base");
 
-        // 2 defined in graffito:test2 and 2 inherited from nt:base
+        // 2 defined in ocm:test2 and 2 inherited from nt:base
         assertEquals(testNodeType.getPropertyDefinitions().length, 4);
         
-        assertTrue(containsProperty("graffito:a", testNodeType.getPropertyDefinitions()));
-        assertTrue(containsProperty("graffito:b", testNodeType.getPropertyDefinitions()));
+        assertTrue(containsProperty("ocm:a", testNodeType.getPropertyDefinitions()));
+        assertTrue(containsProperty("ocm:b", testNodeType.getPropertyDefinitions()));
         assertTrue(containsProperty("jcr:primaryType", testNodeType.getPropertyDefinitions()));
         assertTrue(containsProperty("jcr:mixinTypes", testNodeType.getPropertyDefinitions()));
         
-        PropertyDefinition propDef1 = getPropertyDefinition(testNodeType.getPropertyDefinitions(), "graffito:a");
+        PropertyDefinition propDef1 = getPropertyDefinition(testNodeType.getPropertyDefinitions(), "ocm:a");
         System.out.println(getJackrabbitNodeTypeManagerImpl().showPropertyDefinition(propDef1));
         // TODO test all properties
         
-        PropertyDefinition propDef2 = getPropertyDefinition(testNodeType.getPropertyDefinitions(), "graffito:b");
+        PropertyDefinition propDef2 = getPropertyDefinition(testNodeType.getPropertyDefinitions(), "ocm:b");
         System.out.println(getJackrabbitNodeTypeManagerImpl().showPropertyDefinition(propDef2));
         // TODO test all properties
     }
@@ -172,10 +172,10 @@ public class NodeTypeManagerImplTest extends TestBase {
 
         getJackrabbitNodeTypeManagerImpl().createSingleNodeType(session, classDescriptor);
         
-        NodeType test3 = session.getWorkspace().getNodeTypeManager().getNodeType("graffito:test3");
+        NodeType test3 = session.getWorkspace().getNodeTypeManager().getNodeType("ocm:test3");
         assertNotNull(test3);
         assertFalse(test3.isMixin());
-        assertEquals(test3.getName(), "graffito:test3");
+        assertEquals(test3.getName(), "ocm:test3");
         assertEquals(test3.getSupertypes().length, 1);
         assertEquals(test3.getSupertypes()[0].getName(), "nt:base");        
     }
@@ -198,10 +198,10 @@ public class NodeTypeManagerImplTest extends TestBase {
 
         getJackrabbitNodeTypeManagerImpl().createSingleNodeType(session, classDescriptor);
         
-        NodeType test4 = session.getWorkspace().getNodeTypeManager().getNodeType("graffito:test.Test4Class");
+        NodeType test4 = session.getWorkspace().getNodeTypeManager().getNodeType("ocm:test.Test4Class");
         assertNotNull(test4);
         assertFalse(test4.isMixin());
-        assertEquals(test4.getName(), "graffito:test.Test4Class");
+        assertEquals(test4.getName(), "ocm:test.Test4Class");
         assertEquals(test4.getSupertypes().length, 1);
         assertEquals(test4.getSupertypes()[0].getName(), "nt:base");        
     }
@@ -214,8 +214,8 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test5Class");
-        classDescriptor.setJcrNodeType("graffito:test5");
-        classDescriptor.setJcrSuperTypes("graffito:test2");
+        classDescriptor.setJcrNodeType("ocm:test5");
+        classDescriptor.setJcrSuperTypes("ocm:test2");
         
         FieldDescriptor field1 = new FieldDescriptor();
         field1.setFieldName("abc");
@@ -223,15 +223,15 @@ public class NodeTypeManagerImplTest extends TestBase {
 
         getJackrabbitNodeTypeManagerImpl().createSingleNodeType(session, classDescriptor);
         
-        NodeType test5 = session.getWorkspace().getNodeTypeManager().getNodeType("graffito:test5");
+        NodeType test5 = session.getWorkspace().getNodeTypeManager().getNodeType("ocm:test5");
         assertNotNull(test5);
         assertFalse(test5.isMixin());
-        assertEquals(test5.getName(), "graffito:test5");
-        // nt:base and graffito:test2
+        assertEquals(test5.getName(), "ocm:test5");
+        // nt:base and ocm:test2
         assertEquals(test5.getSupertypes().length, 2);
-        assertTrue(containsSuperType("graffito:test2", test5.getSupertypes()));
+        assertTrue(containsSuperType("ocm:test2", test5.getSupertypes()));
         assertTrue(containsSuperType("nt:base", test5.getSupertypes()));
-        assertTrue(containsProperty("graffito:abc", test5.getPropertyDefinitions()));
+        assertTrue(containsProperty("ocm:abc", test5.getPropertyDefinitions()));
     }
     
     /**
@@ -274,7 +274,7 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test9Class");
-        classDescriptor.setJcrNodeType("graffito:test9");
+        classDescriptor.setJcrNodeType("ocm:test9");
         classDescriptor.setJcrSuperTypes("nt:base");
         
         CollectionDescriptor collection1 = new CollectionDescriptor();
@@ -285,12 +285,12 @@ public class NodeTypeManagerImplTest extends TestBase {
         
         getJackrabbitNodeTypeManagerImpl().createSingleNodeType(session, classDescriptor);
         
-        NodeType test9 = session.getWorkspace().getNodeTypeManager().getNodeType("graffito:test9");
+        NodeType test9 = session.getWorkspace().getNodeTypeManager().getNodeType("ocm:test9");
         assertNotNull(test9);
         // not check node type definition, assuming other tests have done that
         
         // assert property definition a
-        PropertyDefinition propDef = getPropertyDefinition(test9.getPropertyDefinitions(), "graffito:a");
+        PropertyDefinition propDef = getPropertyDefinition(test9.getPropertyDefinitions(), "ocm:a");
         assertNotNull(propDef);
         assertEquals(propDef.getRequiredType(), PropertyType.STRING);
     }
@@ -303,7 +303,7 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test10Class");
-        classDescriptor.setJcrNodeType("graffito:test10");
+        classDescriptor.setJcrNodeType("ocm:test10");
         classDescriptor.setJcrSuperTypes("nt:base");
         
         BeanDescriptor bean1 = new BeanDescriptor();
@@ -314,12 +314,12 @@ public class NodeTypeManagerImplTest extends TestBase {
         
         getJackrabbitNodeTypeManagerImpl().createSingleNodeType(session, classDescriptor);
         
-        NodeType test10 = session.getWorkspace().getNodeTypeManager().getNodeType("graffito:test10");
+        NodeType test10 = session.getWorkspace().getNodeTypeManager().getNodeType("ocm:test10");
         assertNotNull(test10);
         // not check node type definition, assuming other tests have done that
         
         // assert property definition a
-        PropertyDefinition propDef = getPropertyDefinition(test10.getPropertyDefinitions(), "graffito:a");
+        PropertyDefinition propDef = getPropertyDefinition(test10.getPropertyDefinitions(), "ocm:a");
         assertNotNull(propDef);
         assertEquals(propDef.getRequiredType(), PropertyType.STRING);
         
@@ -333,7 +333,7 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test13Class");
-        classDescriptor.setJcrNodeType("graffito:test13");
+        classDescriptor.setJcrNodeType("ocm:test13");
         classDescriptor.setJcrSuperTypes("nt:base");
 
         CollectionDescriptor collection1 = new CollectionDescriptor();
@@ -345,12 +345,12 @@ public class NodeTypeManagerImplTest extends TestBase {
 
         getJackrabbitNodeTypeManagerImpl().createSingleNodeType(session, classDescriptor);
         
-        NodeType test13 = session.getWorkspace().getNodeTypeManager().getNodeType("graffito:test13");
+        NodeType test13 = session.getWorkspace().getNodeTypeManager().getNodeType("ocm:test13");
         assertNotNull(test13);
         // not check node type definition, assuming other tests have done that
         
         // assert property definition a
-        PropertyDefinition propDef = getPropertyDefinition(test13.getPropertyDefinitions(), "graffito:a");
+        PropertyDefinition propDef = getPropertyDefinition(test13.getPropertyDefinitions(), "ocm:a");
         assertNotNull(propDef);
         assertEquals(propDef.getRequiredType(), PropertyType.STRING);
     }
@@ -363,7 +363,7 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test14Class");
-        classDescriptor.setJcrNodeType("graffito:test14");
+        classDescriptor.setJcrNodeType("ocm:test14");
         classDescriptor.setJcrSuperTypes("nt:base");
 
         BeanDescriptor bean1 = new BeanDescriptor();
@@ -375,12 +375,12 @@ public class NodeTypeManagerImplTest extends TestBase {
 
         getJackrabbitNodeTypeManagerImpl().createSingleNodeType(session, classDescriptor);
         
-        NodeType test14 = session.getWorkspace().getNodeTypeManager().getNodeType("graffito:test14");
+        NodeType test14 = session.getWorkspace().getNodeTypeManager().getNodeType("ocm:test14");
         assertNotNull(test14);
         // not check node type definition, assuming other tests have done that
         
         // assert property definition a
-        PropertyDefinition propDef = getPropertyDefinition(test14.getPropertyDefinitions(), "graffito:a");
+        PropertyDefinition propDef = getPropertyDefinition(test14.getPropertyDefinitions(), "ocm:a");
         assertNotNull(propDef);
         assertEquals(propDef.getRequiredType(), PropertyType.STRING);
 
@@ -394,7 +394,7 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test11Class");
-        classDescriptor.setJcrNodeType("graffito:test11");
+        classDescriptor.setJcrNodeType("ocm:test11");
         classDescriptor.setJcrSuperTypes("nt:base");
 
         CollectionDescriptor collection1 = new CollectionDescriptor();
@@ -405,12 +405,12 @@ public class NodeTypeManagerImplTest extends TestBase {
 
         getJackrabbitNodeTypeManagerImpl().createSingleNodeType(session, classDescriptor);
         
-        NodeType test11 = session.getWorkspace().getNodeTypeManager().getNodeType("graffito:test11");
+        NodeType test11 = session.getWorkspace().getNodeTypeManager().getNodeType("ocm:test11");
         assertNotNull(test11);
         // not check node type definition, assuming other tests have done that
         
         // assert child node definition a
-        NodeDefinition nodeDef = getChildNodeDefinition(test11.getChildNodeDefinitions(), "graffito:b");
+        NodeDefinition nodeDef = getChildNodeDefinition(test11.getChildNodeDefinitions(), "ocm:b");
         assertNotNull(nodeDef);
         assertNotNull(nodeDef.getRequiredPrimaryTypes());
         assertEquals(nodeDef.getRequiredPrimaryTypes().length, 1);
@@ -425,7 +425,7 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test12Class");
-        classDescriptor.setJcrNodeType("graffito:test12");
+        classDescriptor.setJcrNodeType("ocm:test12");
         classDescriptor.setJcrSuperTypes("nt:base");
 
         BeanDescriptor bean1 = new BeanDescriptor();
@@ -436,12 +436,12 @@ public class NodeTypeManagerImplTest extends TestBase {
 
         getJackrabbitNodeTypeManagerImpl().createSingleNodeType(session, classDescriptor);
         
-        NodeType test12 = session.getWorkspace().getNodeTypeManager().getNodeType("graffito:test12");
+        NodeType test12 = session.getWorkspace().getNodeTypeManager().getNodeType("ocm:test12");
         assertNotNull(test12);
         // not check node type definition, assuming other tests have done that
         
         // assert property definition a
-        NodeDefinition nodeDef = getChildNodeDefinition(test12.getChildNodeDefinitions(), "graffito:b");
+        NodeDefinition nodeDef = getChildNodeDefinition(test12.getChildNodeDefinitions(), "ocm:b");
         assertNotNull(nodeDef);
         assertNotNull(nodeDef);
         assertNotNull(nodeDef.getRequiredPrimaryTypes());
@@ -457,35 +457,35 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test6Class");
-        classDescriptor.setJcrNodeType("graffito:test6");
+        classDescriptor.setJcrNodeType("ocm:test6");
         classDescriptor.setJcrSuperTypes("nt:base");
         
         FieldDescriptor field1 = new FieldDescriptor();
         field1.setFieldName("a");
-        field1.setJcrName("graffito:a");
+        field1.setJcrName("ocm:a");
         field1.setJcrType("String");
         classDescriptor.addFieldDescriptor(field1);
 
         FieldDescriptor field2 = new FieldDescriptor();
         field2.setFieldName("b");
-        field2.setJcrName("graffito:b");
+        field2.setJcrName("ocm:b");
         field2.setJcrType("Long");
         classDescriptor.addFieldDescriptor(field2);
         
         ClassDescriptor classDescriptor2 = new ClassDescriptor();
         classDescriptor2.setClassName("test.Test7Class");
-        classDescriptor2.setJcrNodeType("graffito:test7");
+        classDescriptor2.setJcrNodeType("ocm:test7");
         classDescriptor2.setJcrSuperTypes("nt:base");
         
         FieldDescriptor field3 = new FieldDescriptor();
         field3.setFieldName("a");
-        field3.setJcrName("graffito:a");
+        field3.setJcrName("ocm:a");
         field3.setJcrType("String");
         classDescriptor2.addFieldDescriptor(field3);
 
         FieldDescriptor field4 = new FieldDescriptor();
         field4.setFieldName("b");
-        field4.setJcrName("graffito:b");
+        field4.setJcrName("ocm:b");
         field4.setJcrType("Long");
         classDescriptor2.addFieldDescriptor(field4);
         
@@ -495,10 +495,10 @@ public class NodeTypeManagerImplTest extends TestBase {
         
         getJackrabbitNodeTypeManagerImpl().createNodeTypes(session, classDescriptorArray);
         
-        NodeType test6 = session.getWorkspace().getNodeTypeManager().getNodeType("graffito:test6");
+        NodeType test6 = session.getWorkspace().getNodeTypeManager().getNodeType("ocm:test6");
         assertNotNull(test6);
         
-        NodeType test7 = session.getWorkspace().getNodeTypeManager().getNodeType("graffito:test7");
+        NodeType test7 = session.getWorkspace().getNodeTypeManager().getNodeType("ocm:test7");
         assertNotNull(test7);
     }
     
@@ -510,7 +510,7 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test8Class");
-        classDescriptor.setJcrNodeType("graffito:test8");
+        classDescriptor.setJcrNodeType("ocm:test8");
         classDescriptor.setJcrSuperTypes("nt:base");
 
         FieldDescriptor field1 = new FieldDescriptor();
@@ -521,10 +521,10 @@ public class NodeTypeManagerImplTest extends TestBase {
 
         getJackrabbitNodeTypeManagerImpl().createSingleNodeType(session, classDescriptor);
         
-        NodeType test8 = session.getWorkspace().getNodeTypeManager().getNodeType("graffito:test8");
+        NodeType test8 = session.getWorkspace().getNodeTypeManager().getNodeType("ocm:test8");
         assertNotNull(test8);
         // not implemented yet in jackrabbit
-        // getJackrabbitNodeTypeManagerImpl().removeSingleNodeType(session, "graffito:test8");    
+        // getJackrabbitNodeTypeManagerImpl().removeSingleNodeType(session, "ocm:test8");    
     }    
 
     /** Returns true if a given property is found in an array of property

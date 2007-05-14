@@ -16,38 +16,47 @@
  */
 package org.apache.portals.graffito.jcr.nodemanagement.impl;
 
-import javax.jcr.Repository;
 import javax.jcr.Session;
 
-import org.apache.portals.graffito.jcr.repository.RepositoryUtil;
 import org.apache.portals.graffito.jcr.nodemanagement.RepositorySession;
 
-/** This class is the Jackrabbit JCR Repository session implementation.
- *
+/** 
+ * This class is the Jeceira JCR Repository session implementation.
+ * TODO : 
+ * 		Uncomment the code in this class &  Add Jeceira dependencies in maven pom.xml
+ *      I don't know which Jeceira version to use.
+ *      If nobody is interested by a Jeceira support, I would like to suggest to drop this class 
+ *       
  * @author <a href="mailto:okiessler@apache.org">Oliver Kiessler</a>
  */
-public class JackrabbitRepositorySession implements RepositorySession
+public class JeceiraRepositorySession implements RepositorySession
 {
     
-    /** Creates a new instance of JackrabbitRepositorySession. */
-    public JackrabbitRepositorySession()
+    /** Creates a new instance of JeceiraRepositorySession. */
+    public JeceiraRepositorySession()
     {
     }
-    
+
     /**
      * @see org.apache.portals.graffito.jcr.nodemanagement.RepositorySession#getSession
-     */
+     */    
     public Session getSession(String username, String password,
             RepositoryConfiguration configuration)
     {
+        Session session = null;
 
-        RepositoryUtil.registerRepository(configuration.getRepositoryName(),
-                configuration.getConfigurationFile(),
-                configuration.getRepositoryPath());
         
-        Repository repository =
-                RepositoryUtil.getRepository(configuration.getRepositoryName());
+//        try {
+//            RepositoryFactory repositoryFactory = RepositoryFactory.getInstance();
+//            Repository repository = repositoryFactory.getRepository(configuration.getRepositoryName());
+//            
+//            session = repository.login();
+//        }
+//        catch (RepositoryException re)
+//        {
+//            re.printStackTrace();
+//        }
         
-        return RepositoryUtil.login(repository, username, password);
-    }
+        return session;
+    } 
 }
