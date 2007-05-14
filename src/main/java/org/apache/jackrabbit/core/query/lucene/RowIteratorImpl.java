@@ -303,7 +303,12 @@ class RowIteratorImpl implements RowIterator {
             try {
                 QName prop = NameFormat.parse(propertyName, resolver);
                 if (!propertySet.contains(prop)) {
-                    throw new ItemNotFoundException(propertyName);
+                    if (isExcerptFunction(propertyName)) {
+                        // excerpt function with parameter
+                        return getExcerpt(propertyName);
+                    } else {
+                        throw new ItemNotFoundException(propertyName);
+                    }
                 }
                 if (node.hasProperty(prop)) {
                     Property p = node.getProperty(prop);
@@ -388,12 +393,19 @@ class RowIteratorImpl implements RowIterator {
             }
             String pathStr = excerptCall.substring(
                     idx + EXCERPT_FUNC_LPAR.length(), end).trim();
+            String decodedPath = ISO9075.decode(pathStr);
             try {
-                NodeImpl n = (NodeImpl) node.getNode(ISO9075.decode(pathStr));
+                NodeImpl n = (NodeImpl) node.getNode(decodedPath);
                 return createExcerpt(n.getNodeId());
             } catch (PathNotFoundException e) {
-                // does not exist
-                return null;
+                // does not exist or references a property
+                try {
+                    Property p = node.getProperty(decodedPath);
+                    return highlight(p.getValue().getString());
+                } catch (PathNotFoundException e1) {
+                    // does not exist
+                    return null;
+                }
             }
         }
 
@@ -417,6 +429,28 @@ class RowIteratorImpl implements RowIterator {
                 } else {
                     return null;
                 }
+            } catch (IOException e) {
+                return null;
+            }
+        }
+
+        /**
+         * Highlights the matching terms in the passed <code>text</code>.
+         *
+         * @return a StringValue or <code>null</code> if highlighting fails.
+         */
+        private Value highlight(String text) {
+            if (!(excerptProvider instanceof HighlightingExcerptProvider)) {
+                return null;
+            }
+            HighlightingExcerptProvider hep =
+                    (HighlightingExcerptProvider) excerptProvider;
+            try {
+                long time = System.currentTimeMillis();
+                text = hep.highlight(text);
+                time = System.currentTimeMillis() - time;
+                log.debug("Highlighted text in {} ms.", new Long(time));
+                return new StringValue(text);
             } catch (IOException e) {
                 return null;
             }
