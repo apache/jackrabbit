@@ -32,15 +32,15 @@ import java.io.IOException;
  * &lt;/excerpt>
  * </pre>
  */
-class DefaultXMLExcerpt extends AbstractExcerpt {
+public class DefaultXMLExcerpt extends AbstractExcerpt {
 
     /**
      * {@inheritDoc}
      */
     protected String createExcerpt(TermPositionVector tpv,
-                                 String text,
-                                 int maxFragments,
-                                 int maxFragmentSize)
+                                   String text,
+                                   int maxFragments,
+                                   int maxFragmentSize)
             throws IOException {
         return DefaultHighlighter.highlight(tpv, getQueryTerms(), text,
                 "<highlight>", "</highlight>", maxFragments, maxFragmentSize / 2);
