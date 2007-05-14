@@ -89,6 +89,14 @@ public class PersistenceManagerAvoidRecursiveLoopTest extends TestBase
             a.setA1("a1");
             a.setA2("a2");
             
+            persistenceManager.insert(a);
+            persistenceManager.save();
+
+            // --------------------------------------------------------------------------------
+            // Get the object
+            // --------------------------------------------------------------------------------           
+            a = (A) persistenceManager.getObject( "/test");
+            assertNotNull("a is null", a);
             
             B b = new B();
             b.setB1("b1");
@@ -109,7 +117,7 @@ public class PersistenceManagerAvoidRecursiveLoopTest extends TestBase
             b2.setA(a);
             a.addB(b2);
 
-            persistenceManager.insert(a);
+            persistenceManager.update(a);
             persistenceManager.save();
             
 
@@ -120,11 +128,11 @@ public class PersistenceManagerAvoidRecursiveLoopTest extends TestBase
             assertNotNull("a is null", a);
             assertTrue("Duplicate instance a", a == a.getB().getA());
             
-//            Collection collection = a.getCollection();
-//            assertTrue("Invalid number of items in the collection", collection.size() == 2);
-//            B[] bs = (B[])collection.toArray();
-//            assertTrue("Duplicate instance a", a == bs[0].getA());
-//            assertTrue("Duplicate instance a", a == bs[1].getA());
+            Collection collection = a.getCollection();
+            assertTrue("Invalid number of items in the collection", collection.size() == 2);
+            B[] bs = (B[]) collection.toArray(new B[2]);
+            assertTrue("Duplicate instance a", a == bs[0].getA());
+            assertTrue("Duplicate instance a", a == bs[1].getA());
             
         }
         catch (Exception e)
