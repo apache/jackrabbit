@@ -24,8 +24,8 @@ import javax.jcr.Session;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.apache.portals.graffito.jcr.mapper.model.ClassDescriptor;
-import org.apache.portals.graffito.jcr.mapper.model.MappingDescriptor;
+import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
+import org.apache.jackrabbit.ocm.mapper.model.MappingDescriptor;
 import org.apache.portals.graffito.jcr.nodemanagement.NodeTypeManager;
 import org.apache.portals.graffito.jcr.nodemanagement.exception.NamespaceCreationException;
 import org.apache.portals.graffito.jcr.nodemanagement.exception.NodeTypeCreationException;

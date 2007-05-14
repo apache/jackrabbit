@@ -16,15 +16,13 @@
  */
 package org.apache.portals.graffito.jcr.nodemanagement;
 
-import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.nodetype.PropertyDefinition;
 
 import junit.framework.TestCase;
+
 import org.apache.portals.graffito.jcr.nodemanagement.impl.RepositoryConfiguration;
 import org.apache.portals.graffito.jcr.nodemanagement.impl.RepositorySessionFactory;
-
-import org.apache.portals.graffito.jcr.repository.RepositoryUtil;
 
 /** Base class of JUnit test cases.
  *
@@ -44,7 +42,7 @@ public class TestBase  extends TestCase
         if (session == null)
         {
             RepositoryConfiguration configuration = new RepositoryConfiguration();
-            configuration.setConfigurationFile("./src/config/jackrabbit/repository.xml");
+            configuration.setConfigurationFile("./src/test/test-config/jackrabbit/repository.xml");
             configuration.setRepositoryName("repositoryTest");
             configuration.setRepositoryPath("./target/repository");
             session = RepositorySessionFactory.getSession(RepositorySessionFactory.JACKRABBIT, "superuser", "superuser", configuration);

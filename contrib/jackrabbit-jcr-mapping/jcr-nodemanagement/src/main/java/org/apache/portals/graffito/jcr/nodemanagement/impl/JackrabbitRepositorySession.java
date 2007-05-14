@@ -17,44 +17,37 @@
 package org.apache.portals.graffito.jcr.nodemanagement.impl;
 
 import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import com.jeceira.repository.RepositoryFactory;
-
+import org.apache.jackrabbit.ocm.repository.RepositoryUtil;
 import org.apache.portals.graffito.jcr.nodemanagement.RepositorySession;
 
-/** This class is the Jeceira JCR Repository session implementation.
+/** This class is the Jackrabbit JCR Repository session implementation.
  *
  * @author <a href="mailto:okiessler@apache.org">Oliver Kiessler</a>
  */
-public class JeceiraRepositorySession implements RepositorySession
+public class JackrabbitRepositorySession implements RepositorySession
 {
     
-    /** Creates a new instance of JeceiraRepositorySession. */
-    public JeceiraRepositorySession()
+    /** Creates a new instance of JackrabbitRepositorySession. */
+    public JackrabbitRepositorySession()
     {
     }
-
+    
     /**
      * @see org.apache.portals.graffito.jcr.nodemanagement.RepositorySession#getSession
-     */    
+     */
     public Session getSession(String username, String password,
             RepositoryConfiguration configuration)
     {
-        Session session = null;
+
+        RepositoryUtil.registerRepository(configuration.getRepositoryName(),
+                configuration.getConfigurationFile(),
+                configuration.getRepositoryPath());
         
-        try {
-            RepositoryFactory repositoryFactory = RepositoryFactory.getInstance();
-            Repository repository = repositoryFactory.getRepository(configuration.getRepositoryName());
-            
-            session = repository.login();
-        }
-        catch (RepositoryException re)
-        {
-            re.printStackTrace();
-        }
+        Repository repository =
+                RepositoryUtil.getRepository(configuration.getRepositoryName());
         
-        return session;
-    } 
+        return RepositoryUtil.login(repository, username, password);
+    }
 }

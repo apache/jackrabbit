@@ -24,11 +24,11 @@ public abstract class BaseNamespaceHelper {
     
     /** Default namespace if none is specified.
      */
-    public static final String DEFAULT_NAMESPACE = "graffito";
+    public static final String DEFAULT_NAMESPACE = "ocm";
     
     /** Default namespace URI if none is specified.
      */
-    public static final String DEFAULT_NAMESPACE_URI = "http://incubator.apache.org/graffito";    
+    public static final String DEFAULT_NAMESPACE_URI = "http://jackrabbit.apache.org/ocm";    
     
     /** Creates a new instance of BaseNamespaceHelper. */
     public BaseNamespaceHelper() {
