@@ -86,7 +86,7 @@ public class NodeTypeManagerImplTest extends TestBase {
     public void testCreateNodeTypesFromConfiguration() throws Exception
     {
         getJackrabbitNodeTypeManagerImpl().createNodeTypesFromConfiguration(session,
-                new FileInputStream("./src/test/test-config/jackrabbit/nodetypes_test1.xml"));
+                new FileInputStream("./src/test/config/jackrabbit/nodetypes_test1.xml"));
         
         NodeType test1 = session.getWorkspace().getNodeTypeManager().getNodeType("ocm:test1");
         assertNotNull(test1);
