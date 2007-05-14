@@ -925,18 +925,21 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     exceptions.add(new InvalidQueryException("Unsupported location for fn:upper-case()"));
                 }
             } else if (NameFormat.format(REP_SIMILAR, resolver).equals(fName)) {
-                if (node.jjtGetNumChildren() == 2) {
+                if (node.jjtGetNumChildren() == 3) {
                     if (queryNode instanceof NAryQueryNode) {
                         NAryQueryNode parent = (NAryQueryNode) queryNode;
                         RelationQueryNode rel = new RelationQueryNode(
                                 parent, RelationQueryNode.OPERATION_SIMILAR);
                         parent.addOperand(rel);
-                        // get path string
+                        // assign path
                         node.jjtGetChild(1).jjtAccept(this, rel);
+
+                        // get path string
+                        node.jjtGetChild(2).jjtAccept(this, rel);
                         // check if string is set
                         if (rel.getStringValue() == null) {
                             exceptions.add(new InvalidQueryException(
-                                    "Argument for rep:similar() must be of type string"));
+                                    "Second argument for rep:similar() must be of type string"));
                         }
                     } else {
                         exceptions.add(new InvalidQueryException(

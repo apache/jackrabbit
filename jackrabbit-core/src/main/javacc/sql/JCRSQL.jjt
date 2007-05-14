@@ -363,6 +363,8 @@ void Predicate() :
   |
     (
       <SIMILAR> "(" { jjtThis.setOperationType(QueryConstants.OPERATION_SIMILAR); }
+        ("." | identifier = Identifier() { jjtThis.setIdentifier(identifier); })
+        ","
         value = CharStringLiteral()
           {
             ASTLiteral s = new ASTLiteral(JJTLITERAL);

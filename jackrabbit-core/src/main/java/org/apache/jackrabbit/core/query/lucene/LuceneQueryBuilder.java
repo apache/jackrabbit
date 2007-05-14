@@ -50,6 +50,7 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.XMLChar;
 import org.apache.jackrabbit.util.ISO9075;
@@ -672,20 +673,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         + node.getValueType());
         }
 
-        if (node.getOperation() == QueryConstants.OPERATION_SIMILAR) {
-            try {
-                ItemId id = hmgr.resolvePath(session.getQPath(node.getStringValue()));
-                String uuid = "x";
-                if (id != null && id.denotesNode()) {
-                    uuid = ((NodeId) id).getUUID().toString();
-                }
-                return new SimilarityQuery(uuid, analyzer);
-            } catch (Exception e) {
-                exceptions.add(e);
-            }
-        }
-
-        if (node.getRelativePath() == null) {
+        if (node.getRelativePath() == null &&
+                node.getOperation() != QueryConstants.OPERATION_SIMILAR) {
             exceptions.add(new InvalidQueryException("@* not supported in predicate"));
             return data;
         }
@@ -704,6 +693,24 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         }, null);
 
         Path relPath = node.getRelativePath();
+        if (node.getOperation() == QueryConstants.OPERATION_SIMILAR) {
+            // this is a bit ugly:
+            // add the name of a dummy property because relPath actually
+            // references a property. whereas the relPath of the similar
+            // operation references a node
+            Path.PathBuilder builder;
+            if (relPath == null) {
+                builder = new Path.PathBuilder();
+            } else {
+                builder = new Path.PathBuilder(relPath);
+            }
+            builder.addLast(QName.JCR_PRIMARYTYPE);
+            try {
+                relPath = builder.getPath();
+            } catch (MalformedPathException e) {
+                // will never happen
+            }
+        }
         String field = "";
         try {
             field = NameFormat.format(relPath.getNameElement().getName(), nsMappings);
@@ -742,7 +749,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 }
             } else {
                 // will never match -> create dummy query
-                query = new TermQuery(new Term(FieldNames.UUID, ""));
+                query = new TermQuery(new Term(FieldNames.UUID, "x"));
             }
         } else {
             switch (node.getOperation()) {
@@ -881,6 +888,18 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     break;
                 case QueryConstants.OPERATION_NULL:
                     query = new NotQuery(new MatchAllQuery(field));
+                    break;
+                case QueryConstants.OPERATION_SIMILAR:
+                    String uuid = "x";
+                    try {
+                        ItemId id = hmgr.resolvePath(session.getQPath(node.getStringValue()));
+                        if (id != null && id.denotesNode()) {
+                            uuid = ((NodeId) id).getUUID().toString();
+                        }
+                    } catch (Exception e) {
+                        exceptions.add(e);
+                    }
+                    query = new SimilarityQuery(uuid, analyzer);
                     break;
                 case QueryConstants.OPERATION_NOT_NULL:
                     query = new MatchAllQuery(field);
