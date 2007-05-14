@@ -42,7 +42,7 @@ public class TestBase  extends TestCase
         if (session == null)
         {
             RepositoryConfiguration configuration = new RepositoryConfiguration();
-            configuration.setConfigurationFile("./src/test/test-config/jackrabbit/repository.xml");
+            configuration.setConfigurationFile("./src/test/config/jackrabbit/repository.xml");
             configuration.setRepositoryName("repositoryTest");
             configuration.setRepositoryPath("./target/repository");
             session = RepositorySessionFactory.getSession(RepositorySessionFactory.JACKRABBIT, "superuser", "superuser", configuration);
