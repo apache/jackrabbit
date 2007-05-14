@@ -29,6 +29,7 @@ import org.apache.jackrabbit.ocm.testmodel.C;
 public class A
 {
 	private String path; 
+	private String uuid; 
     private String a1;
     private String a2;
     private B b;    
@@ -41,6 +42,17 @@ public class A
 	public void setPath(String path) {
 		this.path = path;
 	}
+	
+	
+	public String getUuid() {
+		return uuid;
+	}
+	
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
+	
+	
 	/**
      * @return Returns the a1.
      */
