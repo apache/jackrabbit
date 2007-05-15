@@ -637,42 +637,42 @@
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-api</artifactId>
-        <version>${version}</version>
+        <version>1.4-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-jcr-commons</artifactId>
-        <version>${version}</version>
+        <version>1.4-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-text-extractors</artifactId>
-        <version>${version}</version>
+        <version>1.4-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-jcr-rmi</artifactId>
-        <version>${version}</version>
+        <version>1.4-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-core</artifactId>
-        <version>${version}</version>
+        <version>1.4-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-jcr-tests</artifactId>
-        <version>${version}</version>
+        <version>1.4-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-webdav</artifactId>
-        <version>${version}</version>
+        <version>1.4-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-jcr-server</artifactId>
-        <version>${version}</version>
+        <version>1.4-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
