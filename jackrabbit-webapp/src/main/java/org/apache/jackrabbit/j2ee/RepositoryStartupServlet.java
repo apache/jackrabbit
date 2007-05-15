@@ -19,7 +19,8 @@ package org.apache.jackrabbit.j2ee;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.apache.jackrabbit.rmi.server.ServerAdapterFactory;
+import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitServerAdapterFactory;
+import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
@@ -623,13 +624,14 @@ public class RepositoryStartupServlet extends HttpServlet {
      */
     protected static class RMIRemoteFactoryDelegater extends RemoteFactoryDelegater {
 
-        // only used to enforce linking upon Class.forName()
-        static String FactoryClassName = ServerAdapterFactory.class.getName();
+    	private static final RemoteAdapterFactory FACTORY =
+    		new JackrabbitServerAdapterFactory();
 
         public Remote createRemoteRepository(Repository repository)
                 throws RemoteException {
-            return new ServerAdapterFactory().getRemoteRepository(repository);
+            return FACTORY.getRemoteRepository(repository);
         }
+
     }
 
     //-------------------------------------------------< Installer Routines >---
