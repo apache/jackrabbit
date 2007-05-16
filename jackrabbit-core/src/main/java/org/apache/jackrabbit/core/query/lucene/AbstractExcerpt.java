@@ -82,10 +82,7 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
             throws IOException {
         IndexReader reader = index.getIndexReader();
         try {
-            if (!rewritten) {
-                query = query.rewrite(reader);
-                rewritten = true;
-            }
+            checkRewritten(reader);
             Term idTerm = new Term(FieldNames.UUID, id.getUUID().toString());
             TermDocs tDocs = reader.termDocs(idTerm);
             int docNumber;
@@ -112,6 +109,9 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
             StringBuffer text = new StringBuffer();
             String separator = "";
             for (int i = 0; i < fields.length; i++) {
+                if (fields[i].stringValue().length() == 0) {
+                    continue;
+                }
                 text.append(separator);
                 text.append(fields[i].stringValue());
                 // this is a hack! in general multiple fields with the same
@@ -155,6 +155,7 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
      * {@inheritDoc}
      */
     public String highlight(String text) throws IOException {
+        checkRewritten(null);
         return createExcerpt(createTermPositionVector(text),
                 text, 1, (text.length() + 1) * 2);
     }
@@ -196,6 +197,33 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
             }
         }
         return relevantTerms;
+    }
+
+    /**
+     * Makes sure the {@link #query} is rewritten. If the query is already
+     * rewritten, this method returns immediately.
+     *
+     * @param reader an optional index reader, if none is passed this method
+     *               will retrieve one from the {@link #index} and close it
+     *               again after the rewrite operation.
+     * @throws IOException if an error occurs while the query is rewritten.
+     */
+    private void checkRewritten(IndexReader reader) throws IOException {
+        if (!rewritten) {
+            IndexReader r = reader;
+            if (r == null) {
+                r = index.getIndexReader();
+            }
+            try {
+                query = query.rewrite(r);
+            } finally {
+                // only close reader if this method opened one
+                if (reader == null) {
+                    r.close();
+                }
+            }
+            rewritten = true;
+        }
     }
 
     /**
