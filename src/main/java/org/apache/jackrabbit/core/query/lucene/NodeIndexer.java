@@ -538,6 +538,9 @@ public class NodeIndexer {
                                   Object internalValue, boolean tokenized,
                                   boolean includeInNodeIndex, float boost) {
         String stringValue = String.valueOf(internalValue);
+        if (stringValue.length() == 0) {
+            return;
+        }
 
         // simple String
         doc.add(new Field(FieldNames.PROPERTIES,
