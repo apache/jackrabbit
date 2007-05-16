@@ -53,7 +53,7 @@ public class SimilarityQuery extends Query {
         MoreLikeThis more = new MoreLikeThis(reader);
         more.setAnalyzer(analyzer);
         more.setFieldNames(new String[]{FieldNames.FULLTEXT});
-        more.setMinWordLen(3);
+        more.setMinWordLen(4);
         Query similarityQuery = null;
         TermDocs td = reader.termDocs(new Term(FieldNames.UUID, uuid));
         try {
