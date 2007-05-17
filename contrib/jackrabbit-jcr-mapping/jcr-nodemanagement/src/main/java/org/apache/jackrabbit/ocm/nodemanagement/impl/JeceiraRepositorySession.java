@@ -14,11 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.portals.graffito.jcr.nodemanagement.impl;
+package org.apache.jackrabbit.ocm.nodemanagement.impl;
 
 import javax.jcr.Session;
 
-import org.apache.portals.graffito.jcr.nodemanagement.RepositorySession;
+import org.apache.jackrabbit.ocm.nodemanagement.RepositorySession;
 
 /** 
  * This class is the Jeceira JCR Repository session implementation.
@@ -38,7 +38,7 @@ public class JeceiraRepositorySession implements RepositorySession
     }
 
     /**
-     * @see org.apache.portals.graffito.jcr.nodemanagement.RepositorySession#getSession
+     * @see org.apache.jackrabbit.ocm.nodemanagement.RepositorySession#getSession
      */    
     public Session getSession(String username, String password,
             RepositoryConfiguration configuration)

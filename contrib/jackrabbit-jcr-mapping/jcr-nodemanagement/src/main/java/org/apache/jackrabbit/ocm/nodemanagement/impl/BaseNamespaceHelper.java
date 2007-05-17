@@ -14,25 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.portals.graffito.jcr.nodemanagement.exception;
+package org.apache.jackrabbit.ocm.nodemanagement.impl;
 
-/** Exception that is thrown when a JCR node type could not be removed.
+/** Base class of all namespace helpers.
  *
  * @author <a href="mailto:okiessler@apache.org">Oliver Kiessler</a>
  */
-public class NodeTypeRemovalException extends BaseNodeManagementException
-{
+public abstract class BaseNamespaceHelper {
     
-    /** Creates a new instance of NodeTypeRemovalException. */
-    public NodeTypeRemovalException()
-    {
-    }
-    
-    /** Creates a new instance of NodeTypeRemovalException. 
-     * @param wrappedException Root exception
+    /** Default namespace if none is specified.
      */
-    public NodeTypeRemovalException(Exception wrappedException)
-    {
-        setWrappedException(wrappedException);
+    public static final String DEFAULT_NAMESPACE = "ocm";
+    
+    /** Default namespace URI if none is specified.
+     */
+    public static final String DEFAULT_NAMESPACE_URI = "http://jackrabbit.apache.org/ocm";    
+    
+    /** Creates a new instance of BaseNamespaceHelper. */
+    public BaseNamespaceHelper() {
     }
 }

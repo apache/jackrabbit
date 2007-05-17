@@ -14,26 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.portals.graffito.jcr.nodemanagement;
+package org.apache.jackrabbit.ocm.nodemanagement.exception;
 
-import javax.jcr.Session;
-
-import org.apache.portals.graffito.jcr.nodemanagement.impl.RepositoryConfiguration;
-
-/** Represents to JCR repository connection parameter.
+/** Exception that is thrown when a JCR node type could not be removed.
  *
  * @author <a href="mailto:okiessler@apache.org">Oliver Kiessler</a>
  */
-public interface RepositorySession
+public class NodeTypeRemovalException extends BaseNodeManagementException
 {
     
-    /** Connects to a JCR repository and returns a session to it.
-     * 
-     * @param username Username to connect to repository
-     * @param password Password
-     * @param configuration Repository configuration
-     * @return session
+    /** Creates a new instance of NodeTypeRemovalException. */
+    public NodeTypeRemovalException()
+    {
+    }
+    
+    /** Creates a new instance of NodeTypeRemovalException. 
+     * @param wrappedException Root exception
      */
-    Session getSession(String username, String password,
-            RepositoryConfiguration configuration);
+    public NodeTypeRemovalException(Exception wrappedException)
+    {
+        setWrappedException(wrappedException);
+    }
 }

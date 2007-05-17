@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.portals.graffito.jcr.nodemanagement.impl.jackrabbit;
+package org.apache.jackrabbit.ocm.nodemanagement.impl.jackrabbit;
 
 import javax.jcr.NamespaceRegistry;
 
 import org.apache.jackrabbit.core.nodetype.ItemDef;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.ocm.nodemanagement.impl.BaseNamespaceHelper;
 
-import org.apache.portals.graffito.jcr.nodemanagement.impl.BaseNamespaceHelper;
 
 /** Jackrabbit namespace helper class.
  *
@@ -64,9 +64,8 @@ public class NamespaceHelper extends BaseNamespaceHelper
                 }
                 else if (parts.length == 1) 
                 {
-                    // no namespace set, use default graffito namespace
-                    qName = new QName(DEFAULT_NAMESPACE_URI,
-                            parts[0]);
+                    // no namespace set, use default  namespace
+                    qName = new QName(DEFAULT_NAMESPACE_URI, parts[0]);
                 }
             }
         }

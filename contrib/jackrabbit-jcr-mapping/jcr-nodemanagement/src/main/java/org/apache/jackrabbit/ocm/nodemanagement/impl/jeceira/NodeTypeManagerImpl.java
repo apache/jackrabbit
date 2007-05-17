@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.portals.graffito.jcr.nodemanagement.impl.jeceira;
+package org.apache.jackrabbit.ocm.nodemanagement.impl.jeceira;
 
 import java.io.InputStream;
 import java.util.List;
@@ -26,11 +26,11 @@ import org.apache.commons.logging.LogFactory;
 
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.MappingDescriptor;
-import org.apache.portals.graffito.jcr.nodemanagement.NodeTypeManager;
-import org.apache.portals.graffito.jcr.nodemanagement.exception.NamespaceCreationException;
-import org.apache.portals.graffito.jcr.nodemanagement.exception.NodeTypeCreationException;
-import org.apache.portals.graffito.jcr.nodemanagement.exception.NodeTypeRemovalException;
-import org.apache.portals.graffito.jcr.nodemanagement.exception.OperationNotSupportedException;
+import org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager;
+import org.apache.jackrabbit.ocm.nodemanagement.exception.NamespaceCreationException;
+import org.apache.jackrabbit.ocm.nodemanagement.exception.NodeTypeCreationException;
+import org.apache.jackrabbit.ocm.nodemanagement.exception.NodeTypeRemovalException;
+import org.apache.jackrabbit.ocm.nodemanagement.exception.OperationNotSupportedException;
 
 /** This is the NodeTypeManager implementation for Jeceira.
  *
@@ -49,7 +49,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager {
     }
     
     /**
-     * @see org.apache.portals.graffito.jcr.nodemanagement.NodeTypeManager#createNamespace
+     * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createNamespace
      */
     public void createNamespace(Session session, String namespace, String namespaceUri)
     throws NamespaceCreationException
@@ -90,7 +90,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager {
     }
     
     /**
-     * @see org.apache.portals.graffito.jcr.nodemanagement.NodeTypeManager#createNodeTypesFromConfiguration
+     * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createNodeTypesFromConfiguration
      */
     public void createNodeTypesFromConfiguration(Session session,
             InputStream jcrRepositoryConfigurationFile)

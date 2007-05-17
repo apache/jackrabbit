@@ -14,15 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.portals.graffito.jcr.nodemanagement;
+package org.apache.jackrabbit.ocm.nodemanagement;
 
 import javax.jcr.Session;
 import javax.jcr.nodetype.PropertyDefinition;
 
 import junit.framework.TestCase;
 
-import org.apache.portals.graffito.jcr.nodemanagement.impl.RepositoryConfiguration;
-import org.apache.portals.graffito.jcr.nodemanagement.impl.RepositorySessionFactory;
+import org.apache.jackrabbit.ocm.nodemanagement.impl.RepositoryConfiguration;
+import org.apache.jackrabbit.ocm.nodemanagement.impl.RepositorySessionFactory;
 
 /** Base class of JUnit test cases.
  *

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.portals.graffito.jcr.nodemanagement.impl.jackrabbit;
+package org.apache.jackrabbit.ocm.nodemanagement.impl.jackrabbit;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -46,11 +46,11 @@ import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.FieldDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.MappingDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.PropertyDefDescriptor;
-import org.apache.portals.graffito.jcr.nodemanagement.NodeTypeManager;
-import org.apache.portals.graffito.jcr.nodemanagement.exception.NamespaceCreationException;
-import org.apache.portals.graffito.jcr.nodemanagement.exception.NodeTypeCreationException;
-import org.apache.portals.graffito.jcr.nodemanagement.exception.NodeTypeRemovalException;
-import org.apache.portals.graffito.jcr.nodemanagement.exception.OperationNotSupportedException;
+import org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager;
+import org.apache.jackrabbit.ocm.nodemanagement.exception.NamespaceCreationException;
+import org.apache.jackrabbit.ocm.nodemanagement.exception.NodeTypeCreationException;
+import org.apache.jackrabbit.ocm.nodemanagement.exception.NodeTypeRemovalException;
+import org.apache.jackrabbit.ocm.nodemanagement.exception.OperationNotSupportedException;
 
 /** This is the NodeTypeManager implementation for Apache Jackrabbit.
  *
@@ -73,7 +73,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
     }
     
     /**
-     * @see org.apache.portals.graffito.jcr.nodemanagement.NodeTypeManager#createNamespace
+     * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createNamespace
      */
     public void createNamespace(Session session, String namespace, String namespaceUri)
     throws NamespaceCreationException
@@ -94,7 +94,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
     }
     
     /**
-     * @see org.apache.portals.graffito.jcr.nodemanagement.NodeTypeManager#createNodeTypes
+     * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createNodeTypes
      */    
     public void createNodeTypes(Session session, MappingDescriptor mappingDescriptor)
     throws NodeTypeCreationException
@@ -110,7 +110,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
     }
     
     /**
-     * @see org.apache.portals.graffito.jcr.nodemanagement.NodeTypeManager#createNodeTypes
+     * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createNodeTypes
      */     
     public void createNodeTypes(Session session, ClassDescriptor[] classDescriptors)
     throws NodeTypeCreationException
@@ -131,7 +131,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
     }
 
     /**
-     * @see org.apache.portals.graffito.jcr.nodemanagement.NodeTypeManager#createNodeTypesFromMappingFiles
+     * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createNodeTypesFromMappingFiles
      */       
     public void createNodeTypesFromMappingFiles(Session session,
             InputStream[] mappingXmlFiles)
@@ -140,7 +140,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
     }
     
     /**
-     * @see org.apache.portals.graffito.jcr.nodemanagement.NodeTypeManager#createSingleNodeType
+     * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createSingleNodeType
      */ 
     public void createSingleNodeType(Session session, ClassDescriptor classDescriptor)
     throws NodeTypeCreationException
@@ -407,7 +407,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
     }
 
     /**
-     * @see org.apache.portals.graffito.jcr.nodemanagement.NodeTypeManager#createSingleNodeTypeFromMappingFile
+     * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createSingleNodeTypeFromMappingFile
      */     
     public void createSingleNodeTypeFromMappingFile(Session session,
             InputStream mappingXmlFile, String jcrNodeType)
@@ -416,7 +416,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
     }
     
     /**
-     * @see org.apache.portals.graffito.jcr.nodemanagement.NodeTypeManager#createNodeTypeFromClass
+     * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createNodeTypeFromClass
      */     
     public void createNodeTypeFromClass(Session session, Class clazz,
             String jcrNodeType, boolean reflectSuperClasses)
@@ -425,7 +425,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
     }
     
     /**
-     * @see org.apache.portals.graffito.jcr.nodemanagement.NodeTypeManager#createNodeTypesFromConfiguration
+     * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createNodeTypesFromConfiguration
      */  
     public void createNodeTypesFromConfiguration(Session session,
             InputStream jcrRepositoryConfigurationFile)
@@ -465,7 +465,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
     }
     
     /**
-     * @see org.apache.portals.graffito.jcr.nodemanagement.NodeTypeManager#removeNodeTypes
+     * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#removeNodeTypes
      */     
     public void removeNodeTypes(Session session, InputStream[] mappingXmlFiles)
     throws NodeTypeRemovalException
@@ -473,7 +473,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
     }
     
     /**
-     * @see org.apache.portals.graffito.jcr.nodemanagement.NodeTypeManager#removeSingleNodeType
+     * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#removeSingleNodeType
      */     
     public void removeSingleNodeType(Session session, String jcrNodeType)
     throws NodeTypeRemovalException
@@ -504,7 +504,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
     }
 
     /**
-     * @see org.apache.portals.graffito.jcr.nodemanagement.NodeTypeManager#getPrimaryNodeTypeNames
+     * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#getPrimaryNodeTypeNames
      */    
     public List getPrimaryNodeTypeNames(Session session, String namespace)
     {
@@ -512,7 +512,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
     }
     
     /**
-     * @see org.apache.portals.graffito.jcr.nodemanagement.NodeTypeManager#getAllPrimaryNodeTypeNames
+     * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#getAllPrimaryNodeTypeNames
      */    
     public List getAllPrimaryNodeTypeNames(Session session)
     {
