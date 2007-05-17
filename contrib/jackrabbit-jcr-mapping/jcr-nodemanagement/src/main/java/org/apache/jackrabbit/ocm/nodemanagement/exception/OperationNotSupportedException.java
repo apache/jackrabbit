@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.portals.graffito.jcr.nodemanagement.exception;
+package org.apache.jackrabbit.ocm.nodemanagement.exception;
 
 /** Exception that is thrown if a JCR operation is not supported by
  * a JCR repository implementation.

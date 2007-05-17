@@ -14,23 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.portals.graffito.jcr.nodemanagement.impl;
+package org.apache.jackrabbit.ocm.nodemanagement.exception;
 
-/** Base class of all namespace helpers.
+/** Exception that is thrown when a JCR namespace could not be created.
  *
  * @author <a href="mailto:okiessler@apache.org">Oliver Kiessler</a>
  */
-public abstract class BaseNamespaceHelper {
+public class NamespaceCreationException extends BaseNodeManagementException
+{
+
+    /** Creates a new instance of NamespaceCreationException. */
+    public NamespaceCreationException()
+    {
+    }
     
-    /** Default namespace if none is specified.
+    /** Creates a new instance of NamespaceCreationException. 
+     * @param wrappedException Root exception
      */
-    public static final String DEFAULT_NAMESPACE = "ocm";
-    
-    /** Default namespace URI if none is specified.
-     */
-    public static final String DEFAULT_NAMESPACE_URI = "http://jackrabbit.apache.org/ocm";    
-    
-    /** Creates a new instance of BaseNamespaceHelper. */
-    public BaseNamespaceHelper() {
+    public NamespaceCreationException(Exception wrappedException)
+    {
+        setWrappedException(wrappedException);
     }
 }

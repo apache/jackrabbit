@@ -14,25 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.portals.graffito.jcr.nodemanagement.exception;
+package org.apache.jackrabbit.ocm.nodemanagement;
 
-/** Exception that is thrown when a JCR namespace could not be created.
+import javax.jcr.Session;
+
+import org.apache.jackrabbit.ocm.nodemanagement.impl.RepositoryConfiguration;
+
+/** Represents to JCR repository connection parameter.
  *
  * @author <a href="mailto:okiessler@apache.org">Oliver Kiessler</a>
  */
-public class NamespaceCreationException extends BaseNodeManagementException
+public interface RepositorySession
 {
-
-    /** Creates a new instance of NamespaceCreationException. */
-    public NamespaceCreationException()
-    {
-    }
     
-    /** Creates a new instance of NamespaceCreationException. 
-     * @param wrappedException Root exception
+    /** Connects to a JCR repository and returns a session to it.
+     * 
+     * @param username Username to connect to repository
+     * @param password Password
+     * @param configuration Repository configuration
+     * @return session
      */
-    public NamespaceCreationException(Exception wrappedException)
-    {
-        setWrappedException(wrappedException);
-    }
+    Session getSession(String username, String password,
+            RepositoryConfiguration configuration);
 }

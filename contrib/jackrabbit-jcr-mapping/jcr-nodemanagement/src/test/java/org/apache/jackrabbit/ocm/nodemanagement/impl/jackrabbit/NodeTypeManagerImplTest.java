@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.portals.graffito.jcr.nodemanagement.impl.jackrabbit;
+package org.apache.jackrabbit.ocm.nodemanagement.impl.jackrabbit;
 
 import java.io.FileInputStream;
 
@@ -29,10 +29,11 @@ import org.apache.jackrabbit.ocm.mapper.model.BeanDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.FieldDescriptor;
+import org.apache.jackrabbit.ocm.nodemanagement.TestBase;
+import org.apache.jackrabbit.ocm.nodemanagement.exception.NamespaceCreationException;
+import org.apache.jackrabbit.ocm.nodemanagement.exception.NodeTypeCreationException;
+import org.apache.jackrabbit.ocm.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl;
 
-import org.apache.portals.graffito.jcr.nodemanagement.TestBase;
-import org.apache.portals.graffito.jcr.nodemanagement.exception.NamespaceCreationException;
-import org.apache.portals.graffito.jcr.nodemanagement.exception.NodeTypeCreationException;
 
 /** JUnit test for NodeTypeManagerImpl.
  *
@@ -54,9 +55,6 @@ public class NodeTypeManagerImplTest extends TestBase {
         return suite;
     }
 
-    /**
-     * Test of createNamespace method, of class org.apache.portals.graffito.jcr.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl.
-     */
     public void testCreateNamespace() throws Exception
     {
         getJackrabbitNodeTypeManagerImpl().createNamespace(session,
@@ -79,10 +77,7 @@ public class NodeTypeManagerImplTest extends TestBase {
         assertTrue(failed);
     }
 
-    /**
-     * Test of createNodeTypesFromConfiguration method, of class org.apache.portals.graffito.jcr.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl.
-     * @throws java.lang.Exception 
-     */
+    
     public void testCreateNodeTypesFromConfiguration() throws Exception
     {
         getJackrabbitNodeTypeManagerImpl().createNodeTypesFromConfiguration(session,
@@ -98,10 +93,6 @@ public class NodeTypeManagerImplTest extends TestBase {
         assertTrue(containsPropertyDefintion(test1.getPropertyDefinitions(), "ocm:testProperty"));
     }
     
-    /**
-     * Test of createSingleNodeType method, of class org.apache.portals.graffito.jcr.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl.
-     * @throws java.lang.Exception 
-     */
     public void testCreateSingleNodeType() throws Exception
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
@@ -153,10 +144,6 @@ public class NodeTypeManagerImplTest extends TestBase {
         // TODO test all properties
     }
     
-    /**
-     * Test of createSingleNodeType method, of class org.apache.portals.graffito.jcr.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl.
-     * @throws java.lang.Exception 
-     */
     public void testCreateSingleNodeTypeNoNamespace() throws Exception
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
@@ -180,10 +167,6 @@ public class NodeTypeManagerImplTest extends TestBase {
         assertEquals(test3.getSupertypes()[0].getName(), "nt:base");        
     }
     
-    /**
-     * Test of createSingleNodeType method, of class org.apache.portals.graffito.jcr.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl.
-     * @throws java.lang.Exception 
-     */
     public void testCreateSingleNodeTypeNoJcrNodeTypeSet() throws Exception
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
@@ -206,10 +189,6 @@ public class NodeTypeManagerImplTest extends TestBase {
         assertEquals(test4.getSupertypes()[0].getName(), "nt:base");        
     }
     
-    /**
-     * Test of createSingleNodeType method, of class org.apache.portals.graffito.jcr.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl.
-     * @throws java.lang.Exception 
-     */
     public void testCreateSingleNodeTypeIncompleteFieldDescriptorProperties() throws Exception
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
@@ -234,10 +213,6 @@ public class NodeTypeManagerImplTest extends TestBase {
         assertTrue(containsProperty("ocm:abc", test5.getPropertyDefinitions()));
     }
     
-    /**
-     * Test of createSingleNodeType method, of class org.apache.portals.graffito.jcr.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl.
-     * @throws java.lang.Exception 
-     */
     public void testCreateSingleNodeTypeNtNamespace() throws Exception
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
@@ -266,10 +241,6 @@ public class NodeTypeManagerImplTest extends TestBase {
         assertTrue(failed);
     }
     
-    /**
-     * Test of createSingleNodeType method, of class org.apache.portals.graffito.jcr.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl.
-     * @throws java.lang.Exception 
-     */
     public void testCreateSingleNodeTypeWithPropertyForCollection() throws Exception
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
@@ -295,10 +266,6 @@ public class NodeTypeManagerImplTest extends TestBase {
         assertEquals(propDef.getRequiredType(), PropertyType.STRING);
     }
     
-    /**
-     * Test of createSingleNodeType method, of class org.apache.portals.graffito.jcr.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl.
-     * @throws java.lang.Exception 
-     */
     public void testCreateSingleNodeTypeWithPropertyForBean() throws Exception
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
@@ -325,10 +292,6 @@ public class NodeTypeManagerImplTest extends TestBase {
         
     }
     
-    /**
-     * Test of createSingleNodeType method, of class org.apache.portals.graffito.jcr.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl.
-     * @throws java.lang.Exception 
-     */
     public void testCreateSingleNodeTypeWithPropertyForCollectionDefinitionConflict() throws Exception
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
@@ -355,10 +318,6 @@ public class NodeTypeManagerImplTest extends TestBase {
         assertEquals(propDef.getRequiredType(), PropertyType.STRING);
     }
     
-    /**
-     * Test of createSingleNodeType method, of class org.apache.portals.graffito.jcr.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl.
-     * @throws java.lang.Exception 
-     */
     public void testCreateSingleNodeTypeWithPropertyForBeanDefinitionConflict() throws Exception
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
@@ -386,10 +345,6 @@ public class NodeTypeManagerImplTest extends TestBase {
 
     }
     
-    /**
-     * Test of createSingleNodeType method, of class org.apache.portals.graffito.jcr.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl.
-     * @throws java.lang.Exception 
-     */
     public void testCreateSingleNodeTypeWithChildNodeForCollection() throws Exception
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
@@ -417,10 +372,6 @@ public class NodeTypeManagerImplTest extends TestBase {
         assertEquals(nodeDef.getRequiredPrimaryTypes()[0].getName(), "nt:unstructured");
     }
     
-    /**
-     * Test of createSingleNodeType method, of class org.apache.portals.graffito.jcr.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl.
-     * @throws java.lang.Exception 
-     */
     public void testCreateSingleNodeTypeWithChildNodeForBean() throws Exception
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
@@ -449,10 +400,6 @@ public class NodeTypeManagerImplTest extends TestBase {
         assertEquals(nodeDef.getRequiredPrimaryTypes()[0].getName(), "nt:unstructured");
     }
     
-    /**
-     * Test of createNodeTypes method, of class org.apache.portals.graffito.jcr.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl.
-     * @throws java.lang.Exception 
-     */    
     public void testCreateNodeTypes() throws Exception
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
@@ -502,10 +449,6 @@ public class NodeTypeManagerImplTest extends TestBase {
         assertNotNull(test7);
     }
     
-    /**
-     * Test of removeSingleNodeType method, of class org.apache.portals.graffito.jcr.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl.
-     * @throws java.lang.Exception 
-     */    
     public void testRemoveSingleNodeType() throws Exception
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();

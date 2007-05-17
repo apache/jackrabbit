@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.portals.graffito.jcr.nodemanagement;
+package org.apache.jackrabbit.ocm.nodemanagement;
 
 import java.io.InputStream;
 import java.util.List;
@@ -23,27 +23,26 @@ import javax.jcr.Session;
 
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.MappingDescriptor;
+import org.apache.jackrabbit.ocm.nodemanagement.exception.NamespaceCreationException;
+import org.apache.jackrabbit.ocm.nodemanagement.exception.NodeTypeCreationException;
+import org.apache.jackrabbit.ocm.nodemanagement.exception.NodeTypeRemovalException;
+import org.apache.jackrabbit.ocm.nodemanagement.exception.OperationNotSupportedException;
 
-import org.apache.portals.graffito.jcr.nodemanagement.exception.NamespaceCreationException;
-import org.apache.portals.graffito.jcr.nodemanagement.exception.NodeTypeCreationException;
-import org.apache.portals.graffito.jcr.nodemanagement.exception.NodeTypeRemovalException;
-import org.apache.portals.graffito.jcr.nodemanagement.exception.OperationNotSupportedException;
 
 /** This interface defines the API for JCR Node Type Management implementations.
  * It does not contain any JCR vendor specific methods.
  *
  * Classes that implement this interface are used to create custom node types in
  * a JCR repository. Each JCR repository has its own way of doing this as it is
- * not defined by the JSR-170 spec. The default implementation of graffito
- * jcr-nodemanagement is Jackrabbit.
+ * not defined by the JSR-170 spec. The default implementation of jcr-nodemanagement is Jackrabbit.
  *
  * In order to create JCR custom node types you need to provide an established
  * session to a JCR repository. The user that is logged into has to have the
  * necessary permissions to create nodes (user has to have "superuser" rights).
  *
- * The JCR Node Type Management tools are an extension to the graffito jcr-mapping
- * tools. NodeTypeManager implementations depend on the graffito jcr-mapping
- * xml file and the object model defined by graffito jcr-mapping.
+ * The JCR Node Type Management tools are an extension to the jcr-mapping
+ * tools. NodeTypeManager implementations depend on the jcr-mapping
+ * xml file and the object model defined by jcr-mapping.
  *
  * @author <a href="mailto:okiessler@apache.org">Oliver Kiessler</a>
  */
@@ -58,11 +57,11 @@ public interface NodeTypeManager {
     throws NamespaceCreationException;
     
     /** This method creates JCR node types based on the MappingDescriptor object
-     * which is created by a graffito jcr-mapping Mapper implementation. A
-     * Mapper reads one to many graffito-jcr mapping XML File.
+     * which is created by a jcr-mapping Mapper implementation. A
+     * Mapper reads one to many jcr mapping XML File.
      *
      * @param session Repository session
-     * @param mappingDescriptor Mapping descriptor object created by graffito
+     * @param mappingDescriptor Mapping descriptor object created by 
      * jcr-mapping
      * @throws NodeTypeCreationException NodeTypeCreationException
      */
@@ -70,22 +69,22 @@ public interface NodeTypeManager {
     throws NodeTypeCreationException;
     
     /** This method creates JCR node types based on ClassDescriptor objects
-     * which are created by a graffito jcr-mapping Mapper implementation. A
-     * Mapper reads one to many graffito-jcr mapping XML File.
+     * which are created by a  jcr-mapping Mapper implementation. A
+     * Mapper reads one to many jcr mapping XML File.
      *
      * @param session Repository session
      * @param classDescriptors Array of ClassDescriptor objects created by
-     * graffito jcr-mapping
+     * jcr-mapping
      * @throws NodeTypeCreationException NodeTypeCreationException
      */
     void createNodeTypes(Session session, ClassDescriptor[] classDescriptors)
     throws NodeTypeCreationException;
     
-    /** This method creates JCR node types based on graffito jcr-mapping xml
+    /** This method creates JCR node types based on jcr-mapping xml
      * files.
      *
      * @param session Repository session
-     * @param mappingXmlFiles InputStreams to graffito jcr-mapping xml files
+     * @param mappingXmlFiles InputStreams to jcr-mapping xml files
      * @throws NodeTypeCreationException NodeTypeCreationException
      */
     void createNodeTypesFromMappingFiles(Session session,
@@ -93,10 +92,10 @@ public interface NodeTypeManager {
             throws NodeTypeCreationException;
     
     /** This method creates a single JCR node type identified by its ClassDescriptor
-     * read from the graffito-jcr mapping file.
+     * read from the jcr mapping file.
      *
      * @param session Repository session
-     * @param classDescriptor ClassDescriptor object created by graffito jcr-mapping
+     * @param classDescriptor ClassDescriptor object created by jcr-mapping
      * @param jcrNodeType Name of the class that needs to be created identified
      * by its jcrNodeType name
      * @throws NodeTypeCreationException NodeTypeCreationException
@@ -105,10 +104,10 @@ public interface NodeTypeManager {
     throws NodeTypeCreationException;
     
     /** This method creates a single JCR node type identified by its jcrNodeType
-     * name defined in a graffito jcr-mapping xml file.
+     * name defined in a jcr-mapping xml file.
      *
      * @param session Repository session
-     * @param mappingXmlFile InputStream to a graffito jcr-mapping xml file
+     * @param mappingXmlFile InputStream to a jcr-mapping xml file
      * @param jcrNodeType Name of the class that needs to be created identified
      * by its jcrNodeType name
      * @throws NodeTypeCreationException NodeTypeCreationException
@@ -145,10 +144,10 @@ public interface NodeTypeManager {
             throws OperationNotSupportedException, NodeTypeCreationException;
     
     /** This method removes all JCR node types that are defined in one to many
-     * graffito jcr-mapping XML files.
+     * jcr-mapping XML files.
      *
      * @param session Repository session
-     * @param mappingXmlFiles InputStreams to graffito jcr-mapping xml file
+     * @param mappingXmlFiles InputStreams to jcr-mapping xml file
      * @throws NodeTypeRemovalException NodeTypeRemovalException
      */
     void removeNodeTypes(Session session, InputStream[] mappingXmlFiles)
