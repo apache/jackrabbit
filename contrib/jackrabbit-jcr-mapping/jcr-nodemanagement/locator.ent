@@ -1,2 +1,0 @@
-<!-- derive locator.ent from parent -->
-<!ENTITY % locator-ent SYSTEM "file:../../locator.ent"> %locator-ent;
