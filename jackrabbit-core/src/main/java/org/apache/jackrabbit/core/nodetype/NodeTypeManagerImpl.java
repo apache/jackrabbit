@@ -21,6 +21,7 @@ import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.util.name.NamespaceMapping;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
@@ -476,14 +477,21 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
     }
 
     /**
-     * {@inheritDoc}
+     * Checks whether a node type with the given name exists.
+     *
+     * @param name node type name
+     * @return <code>true</code> if the named node type exists,
+     *         <code>false</code> otherwise
+     * @throws RepositoryException if the name format is invalid
      */
     public boolean hasNodeType(String name) throws RepositoryException {
         try {
             QName qname = NameFormat.parse(name, nsResolver);
             return getNodeTypeRegistry().isRegistered(qname);
+        } catch (UnknownPrefixException e) {
+            return false;
         } catch (NameException e) {
-           throw new RepositoryException();
+           throw new RepositoryException("Invalid name: " + name, e);
         }
     }
 
