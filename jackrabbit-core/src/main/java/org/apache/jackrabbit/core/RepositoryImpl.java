@@ -57,9 +57,7 @@ import org.apache.jackrabbit.core.state.ManagedMLRUItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
-import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +72,7 @@ import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.util.Arrays;
@@ -418,6 +417,11 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         } catch (IOException e) {
             throw new RepositoryException(
                 "Unable to lock file at " + lock.getAbsolutePath(), e);
+        } catch (OverlappingFileLockException e) {
+            throw new RepositoryException(
+                    "The repository home at " + home.getAbsolutePath()
+                    + " appears to be in use since the file at "
+                    + lock.getAbsolutePath() + " is already locked by the current process.");
         }
         if (repLock == null) {
             throw new RepositoryException(
