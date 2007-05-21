@@ -1118,10 +1118,10 @@ public class PersistenceManagerImpl implements PersistenceManager {
 	 * @see org.apache.jackrabbit.ocm.persistence.PersistenceManager#move(java.lang.String, java.lang.String)
 	 */
     public void move(String srcPath, String destPath){
-        Workspace workspace = session.getWorkspace();
+        //Workspace workspace = session.getWorkspace();
         try {
             
-        	workspace.move(srcPath,destPath);
+        	session.move(srcPath,destPath);
             
         }catch(javax.jcr.nodetype.ConstraintViolationException cve){
             throw new PersistenceException(
