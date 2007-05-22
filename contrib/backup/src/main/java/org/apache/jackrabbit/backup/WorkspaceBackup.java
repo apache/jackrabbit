@@ -85,10 +85,10 @@ public class WorkspaceBackup extends Backup {
         File temp = new File(this.getConf().getWorkFolder() + "wsp.xml");
         try {
             TransformerHandler th = stf.newTransformerHandler();
+            th.getTransformer().setOutputProperty(OutputKeys.METHOD, "xml");
+            th.getTransformer().setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            th.getTransformer().setOutputProperty(OutputKeys.INDENT, "no");
             th.setResult(new StreamResult(new FileOutputStream(temp)));
-            th.getTransformer().setParameter(OutputKeys.METHOD, "xml");
-            th.getTransformer().setParameter(OutputKeys.ENCODING, "UTF-8");
-            th.getTransformer().setParameter(OutputKeys.INDENT, "no");
             
             new SysViewSAXEventGenerator(
                     s.getRootNode(), false, false, th) {
