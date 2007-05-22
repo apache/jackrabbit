@@ -1,0 +1,50 @@
+<xhtml:html xmlns:xhtml="http://www.w3.org/1999/xhtml"
+            xmlns:mathml="http://www.w3.org/1998/Math/MathML">
+  <xhtml:head><xhtml:title>Three Namespaces</xhtml:title></xhtml:head>
+  <xhtml:body>
+    <xhtml:h1 align="center">An Ellipse and a Rectangle</xhtml:h1>
+    <svg:svg xmlns:svg="http://www.w3.org/2000/svg" 
+             width="12cm" height="10cm">
+      <svg:ellipse rx="110" ry="130" />
+      <svg:rect x="4cm" y="1cm" width="3cm" height="6cm" />
+    </svg:svg>
+    <xhtml:p>The equation for ellipses</xhtml:p>
+<mathml:math>
+  <mathml:apply>
+    <mathml:eq/>
+    <mathml:cn> 1 </mathml:cn>
+    <mathml:apply>
+      <mathml:plus/>
+      <mathml:apply>
+        <mathml:divide/>
+        <mathml:apply>
+          <mathml:power/>
+          <mathml:ci> x </mathml:ci>
+          <mathml:cn> 2 </mathml:cn>
+        </mathml:apply>
+        <mathml:apply>
+          <mathml:power/>
+          <mathml:ci> a </mathml:ci>
+          <mathml:cn> 2 </mathml:cn>
+        </mathml:apply>
+      </mathml:apply>
+      <mathml:apply>
+        <mathml:divide/>
+        <mathml:apply>
+          <mathml:power/>
+          <mathml:ci> y </mathml:ci>
+          <mathml:cn> 2 </mathml:cn>
+        </mathml:apply>
+        <mathml:apply>
+          <mathml:power/>
+          <mathml:ci> b </mathml:ci>
+          <mathml:cn> 2 </mathml:cn>
+        </mathml:apply>        
+      </mathml:apply>
+    </mathml:apply>
+ </mathml:apply>
+</mathml:math>
+    <xhtml:hr/>
+    <xhtml:p>Last Modified January 10, 2002</xhtml:p>    
+  </xhtml:body>
+</xhtml:html>
