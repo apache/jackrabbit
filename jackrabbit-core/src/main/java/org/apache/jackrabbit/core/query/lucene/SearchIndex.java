@@ -422,11 +422,11 @@ public class SearchIndex extends AbstractQueryHandler {
                 Document doc = null;
                 try {
                     doc = createDocument(state, getNamespaceMappings());
+                    retrieveAggregateRoot(state, aggregateRoots);
                 } catch (RepositoryException e) {
-                    log.error("Exception while creating document for node: "
+                    log.warn("Exception while creating document for node: "
                             + state.getNodeId() + ": " + e.toString());
                 }
-                retrieveAggregateRoot(state, aggregateRoots);
                 return doc;
             }
         });
@@ -451,7 +451,7 @@ public class SearchIndex extends AbstractQueryHandler {
                     try {
                         return createDocument(state, getNamespaceMappings());
                     } catch (RepositoryException e) {
-                        log.error("Exception while creating document for node: "
+                        log.warn("Exception while creating document for node: "
                                 + state.getNodeId() + ": " + e.toString());
                     }
                     return null;
