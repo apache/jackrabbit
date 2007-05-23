@@ -544,9 +544,6 @@ public class NodeIndexer {
                                   Object internalValue, boolean tokenized,
                                   boolean includeInNodeIndex, float boost) {
         String stringValue = String.valueOf(internalValue);
-        if (stringValue.length() == 0) {
-            return;
-        }
 
         // simple String
         doc.add(new Field(FieldNames.PROPERTIES,
@@ -555,6 +552,9 @@ public class NodeIndexer {
                 Field.Index.UN_TOKENIZED,
                 Field.TermVector.NO));
         if (tokenized) {
+            if (stringValue.length() == 0) {
+                return;
+            }
             // create fulltext index on property
             int idx = fieldName.indexOf(':');
             fieldName = fieldName.substring(0, idx + 1)
