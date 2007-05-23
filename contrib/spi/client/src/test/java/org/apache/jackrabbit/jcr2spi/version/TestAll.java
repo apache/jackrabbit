@@ -16,7 +16,6 @@ package org.apache.jackrabbit.jcr2spi.version;
 import junit.framework.TestCase;
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import org.apache.jackrabbit.jcr2spi.query.QueryTest;
 
 /**
  * <code>TestAll</code>...
