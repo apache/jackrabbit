@@ -927,6 +927,11 @@ public class RepositoryServiceImpl implements RepositoryService {
     private final class BatchImpl implements Batch {
 
         private final SessionInfoImpl sInfo;
+        /* If this batch needs to remove multiple same-name-siblings starting
+           from lower index, the index of the following siblings must be reset
+           in order to avoid PathNotFoundException.
+         */
+        private final Set removedNodeIds = new HashSet();
 
         private boolean failed = false;
 
@@ -1033,7 +1038,8 @@ public class RepositoryServiceImpl implements RepositoryService {
                 public Object run() throws RepositoryException {
                     try {
                         if (itemId.denotesNode()) {
-                            getNode((NodeId) itemId, sInfo).remove();
+                            NodeId nodeId = calcRemoveNodeId(itemId);
+                            getNode(nodeId, sInfo).remove();
                         } else {
                             getProperty((PropertyId) itemId, sInfo).remove();
                         }
@@ -1049,6 +1055,32 @@ public class RepositoryServiceImpl implements RepositoryService {
                     return null;
                 }
             });
+        }
+
+        private NodeId calcRemoveNodeId(ItemId itemId) {
+            NodeId nodeId = (NodeId) itemId;
+            try {
+                Path p = itemId.getPath();
+                if (p != null) {
+                    removedNodeIds.add(itemId);
+                    int index = p.getNameElement().getNormalizedIndex();
+                    if (index > Path.INDEX_DEFAULT && !removedNodeIds.isEmpty()) {
+                        Path.PathElement[] elems = p.getElements();
+                        Path.PathBuilder pb = new Path.PathBuilder();
+                        for (int i = 0; i <= elems.length - 2; i++) {
+                            pb.addLast(elems[i]);
+                        }
+                        pb.addLast(p.getNameElement().getName(), index - 1);
+                        NodeId prevSibling = idFactory.createNodeId(itemId.getUniqueID(), pb.getPath());
+                        if (removedNodeIds.contains(prevSibling)) {
+                            nodeId = prevSibling;
+                        }
+                    }
+                }
+            } catch (MalformedPathException e) {
+                // ignore
+            }
+            return nodeId;
         }
 
         public void reorderNodes(final NodeId parentId,
