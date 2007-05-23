@@ -51,7 +51,7 @@ public class OraclePersistenceManager extends BundleDbPersistenceManager {
      */
     public OraclePersistenceManager() {
         // enable db blob support
-        setExternalBLOBs("false");
+        setExternalBLOBs(false);
     }
 
     public void init(PMContext context) throws Exception {
