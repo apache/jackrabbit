@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
-import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
@@ -126,7 +124,7 @@ public class SharedItemStateManager
      * cache of weak references to ItemState objects issued by this
      * ItemStateManager
      */
-    private final ItemStateReferenceCache cache;
+    private final ItemStateCache cache;
 
     /**
      * Persistence Manager used for loading and storing items
@@ -156,32 +154,14 @@ public class SharedItemStateManager
             new VirtualItemStateProvider[0];
 
     /**
-     * JCR-447: deadlock might occur when this manager is still write-locked and events are dispatched.
-     */
-    private boolean noLockHack = false;
-
-    /**
      * State change dispatcher.
      */
     private final transient StateChangeDispatcher dispatcher = new StateChangeDispatcher();
 
     /**
-     * Read-/Write-Lock to synchronize access on this item state manager.
+     * The locking strategy.
      */
-    private final ReadWriteLock rwLock =
-            new ReentrantWriterPreferenceReadWriteLock() {
-                /**
-                 * Allow reader when there is no active writer, or current
-                 * thread owns the write lock (reentrant).
-                 * <p/>
-                 * the 'noLockHack' is only temporary (hopefully)
-                 */
-                protected boolean allowReader() {
-                    return activeWriter_ == null
-                        || activeWriter_ == Thread.currentThread()
-                        || noLockHack;
-                }
-            };
+    private ISMLocking ismLocking;
 
     /**
      * Update event channel.
@@ -206,6 +186,7 @@ public class SharedItemStateManager
         this.ntReg = ntReg;
         this.usesReferences = usesReferences;
         this.rootNodeId = rootNodeId;
+        this.ismLocking = new DefaultISMLocking();
         // create root node state if it doesn't yet exist
         if (!hasNonVirtualItemState(rootNodeId)) {
             createRootNodeState(rootNodeId, ntReg);
@@ -219,7 +200,9 @@ public class SharedItemStateManager
      * @param noLockHack
      */
     public void setNoLockHack(boolean noLockHack) {
-        this.noLockHack = noLockHack;
+        if (ismLocking instanceof DefaultISMLocking) {
+            ((DefaultISMLocking) ismLocking).setNoLockHack(noLockHack);
+        }
     }
 
     /**
@@ -231,6 +214,18 @@ public class SharedItemStateManager
         this.eventChannel = eventChannel;
     }
 
+    /**
+     * Sets a new locking strategy.
+     *
+     * @param ismLocking the locking strategy for this item state manager.
+     */
+    public void setISMLocking(ISMLocking ismLocking) {
+        if (ismLocking == null) {
+            throw new NullPointerException();
+        }
+        this.ismLocking = ismLocking;
+    }
+
     //-----------------------------------------------------< ItemStateManager >
     /**
      * {@inheritDoc}
@@ -238,7 +233,7 @@ public class SharedItemStateManager
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        acquireReadLock();
+        ISMLocking.ReadLock readLock = acquireReadLock(id);
 
         try {
             // check the virtual root ids (needed for overlay)
@@ -258,7 +253,7 @@ public class SharedItemStateManager
                 }
             }
         } finally {
-            rwLock.readLock().release();
+            readLock.release();
         }
         throw new NoSuchItemStateException(id.toString());
     }
@@ -268,8 +263,9 @@ public class SharedItemStateManager
      */
     public boolean hasItemState(ItemId id) {
 
+        ISMLocking.ReadLock readLock;
         try {
-            acquireReadLock();
+            readLock = acquireReadLock(id);
         } catch (ItemStateException e) {
             return false;
         }
@@ -296,7 +292,7 @@ public class SharedItemStateManager
                 }
             }
         } finally {
-            rwLock.readLock().release();
+            readLock.release();
         }
         return false;
     }
@@ -307,7 +303,7 @@ public class SharedItemStateManager
     public NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        acquireReadLock();
+        ISMLocking.ReadLock readLock = acquireReadLock(id.getTargetId());
 
         try {
             // check persistence manager
@@ -325,7 +321,7 @@ public class SharedItemStateManager
                 }
             }
         } finally {
-            rwLock.readLock().release();
+            readLock.release();
         }
 
         // throw
@@ -337,8 +333,9 @@ public class SharedItemStateManager
      */
     public boolean hasNodeReferences(NodeReferencesId id) {
 
+        ISMLocking.ReadLock readLock;
         try {
-            acquireReadLock();
+            readLock = acquireReadLock(id.getTargetId());
         } catch (ItemStateException e) {
             return false;
         }
@@ -359,7 +356,7 @@ public class SharedItemStateManager
                 }
             }
         } finally {
-            rwLock.readLock().release();
+            readLock.release();
         }
         return false;
     }
@@ -424,9 +421,11 @@ public class SharedItemStateManager
      */
     public void dump(PrintStream ps) {
         ps.println("SharedItemStateManager (" + this + ")");
-        ps.println();
-        ps.print("[referenceCache] ");
-        cache.dump(ps);
+        if (cache instanceof Dumpable) {
+            ps.println();
+            ps.print("[referenceCache] ");
+            ((Dumpable) cache).dump(ps);
+        }
     }
 
     //-------------------------------------------------< misc. public methods >
@@ -494,9 +493,10 @@ public class SharedItemStateManager
         private EventStateCollection events;
 
         /**
-         * Flag indicating whether we are holding write lock.
+         * The write lock we currently hold or <code>null</code> if none is
+         * hold.
          */
-        private boolean holdingWriteLock;
+        private ISMLocking.WriteLock writeLock;
 
         /**
          * Map of attributes stored for this update operation.
@@ -531,10 +531,9 @@ public class SharedItemStateManager
             }
 
             try {
-                acquireWriteLock();
-                holdingWriteLock = true;
+                writeLock = acquireWriteLock(local);
             } finally {
-                if (!holdingWriteLock && eventChannel != null) {
+                if (writeLock == null && eventChannel != null) {
                     eventChannel.updateCancelled(this);
                 }
             }
@@ -697,14 +696,14 @@ public class SharedItemStateManager
                 }
             }
 
+            ISMLocking.ReadLock readLock = null;
             try {
                 /* Let the shared item listeners know about the change */
                 shared.persisted();
 
                 // downgrade to read lock
-                acquireReadLock();
-                rwLock.writeLock().release();
-                holdingWriteLock = false;
+                readLock = writeLock.downgrade();
+                writeLock = null;
 
                 /* notify virtual providers about node references */
                 for (int i = 0; i < virtualNodeReferences.length; i++) {
@@ -725,13 +724,15 @@ public class SharedItemStateManager
                     eventChannel.updateCommitted(this);
                 }
 
+            } catch (InterruptedException e) {
+                throw new ItemStateException("Interrupted while downgrading to read lock");
             } finally {
-                if (holdingWriteLock) {
+                if (writeLock != null) {
                     // exception occured before downgrading lock
-                    rwLock.writeLock().release();
-                    holdingWriteLock = false;
-                } else {
-                    rwLock.readLock().release();
+                    writeLock.release();
+                    writeLock = null;
+                } else if (readLock != null) {
+                    readLock.release();
                 }
             }
         }
@@ -770,9 +771,9 @@ public class SharedItemStateManager
                     state.discard();
                 }
             } finally {
-                if (holdingWriteLock) {
-                    rwLock.writeLock().release();
-                    holdingWriteLock = false;
+                if (writeLock != null) {
+                    writeLock.release();
+                    writeLock = null;
                 }
             }
         }
@@ -864,8 +865,9 @@ public class SharedItemStateManager
     public void externalUpdate(ChangeLog external, EventStateCollection events) {
         boolean holdingWriteLock = false;
 
+        ISMLocking.WriteLock wLock = null;
         try {
-            acquireWriteLock();
+            wLock = acquireWriteLock(external);
             holdingWriteLock = true;
 
             doExternalUpdate(external);
@@ -874,21 +876,25 @@ public class SharedItemStateManager
             log.error(msg);
         }
 
+        ISMLocking.ReadLock rLock = null;
         try {
-            acquireReadLock();
-            rwLock.writeLock().release();
-            holdingWriteLock = false;
-
-            events.dispatch();
-        } catch (ItemStateException e) {
+            if (wLock != null) {
+                rLock = wLock.downgrade();
+                holdingWriteLock = false;
+                events.dispatch();
+            }
+        } catch (InterruptedException e) {
             String msg = "Unable to downgrade to read lock.";
             log.error(msg);
         } finally {
             if (holdingWriteLock) {
-                rwLock.writeLock().release();
-                holdingWriteLock = false;
+                if (wLock != null) {
+                    wLock.release();
+                }
             } else {
-                rwLock.readLock().release();
+                if (rLock != null) {
+                    rLock.release();
+                }
             }
         }
 
@@ -1424,11 +1430,12 @@ public class SharedItemStateManager
     /**
      * Acquires the read lock on this item state manager.
      *
+     * @param id the id of the item for which to acquire a read lock.
      * @throws ItemStateException if the read lock cannot be acquired.
      */
-    private void acquireReadLock() throws ItemStateException {
+    private ISMLocking.ReadLock acquireReadLock(ItemId id) throws ItemStateException {
         try {
-            rwLock.readLock().acquire();
+            return ismLocking.acquireReadLock(id);
         } catch (InterruptedException e) {
             throw new ItemStateException("Interrupted while acquiring read lock");
         }
@@ -1437,11 +1444,12 @@ public class SharedItemStateManager
     /**
      * Acquires the write lock on this item state manager.
      *
+     * @param changeLog the change log for which to acquire a write lock.
      * @throws ItemStateException if the write lock cannot be acquired.
      */
-    private void acquireWriteLock() throws ItemStateException {
+    private ISMLocking.WriteLock acquireWriteLock(ChangeLog changeLog) throws ItemStateException {
         try {
-            rwLock.writeLock().acquire();
+            return ismLocking.acquireWriteLock(changeLog);
         } catch (InterruptedException e) {
             throw new ItemStateException("Interrupted while acquiring write lock");
         }
