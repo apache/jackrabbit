@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.Item;
-import javax.jcr.Node;
 import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -28,6 +27,19 @@ public class ReorderSNSTest extends ReorderTest {
         testRootNode.save();
     }
 
+    public void testIndexAfterReorder() throws RepositoryException {
+        testRootNode.orderBefore(getRelPath(child1), getRelPath(child3));
+        assertTrue(child1.getIndex() == 2);
+        assertTrue(child2.getIndex() == 1);
+        assertTrue(child3.getIndex() == 3);
+        assertTrue(child4.getIndex() == 4);
+
+        testRootNode.save();
+        assertTrue(child1.getIndex() == 2);
+        assertTrue(child2.getIndex() == 1);
+        assertTrue(child3.getIndex() == 3);
+        assertTrue(child4.getIndex() == 4);
+    }
 
     public void testReorder3() throws RepositoryException {
         String pathBefore = child3.getPath();

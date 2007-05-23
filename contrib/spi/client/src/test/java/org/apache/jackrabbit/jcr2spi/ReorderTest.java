@@ -65,7 +65,7 @@ public class ReorderTest extends AbstractJCRTest {
             if (i >= children.length) {
                 fail("Reorder removed a child node.");
             }
-            assertTrue(child.isSame(children[i]));
+            assertTrue("Wrong order of children: " + child + " is not the same as " + children[i], child.isSame(children[i]));
             i++;
         }
     }

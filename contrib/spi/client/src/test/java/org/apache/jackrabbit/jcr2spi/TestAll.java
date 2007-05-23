@@ -49,6 +49,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(MoveNewTreeTest.class);
         suite.addTestSuite(MoveMultipleTest.class);
         suite.addTestSuite(WorkspaceMoveTest.class);
+        suite.addTestSuite(RevertMoveTest.class);
 
         // refresh
         suite.addTestSuite(RefreshFalseTest.class);
