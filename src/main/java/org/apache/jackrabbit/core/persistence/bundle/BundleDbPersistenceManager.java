@@ -296,20 +296,12 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     /**
-     * Returns if uses external (filesystem) blob store.
-     * @return if uses external (filesystem) blob store.
-     */
-    public String getExternalBLOBs() {
-        return String.valueOf(externalBLOBs);
-    }
-
-    /**
-     * Sets the flag for external (filsystem) blob store usage.
+     * Sets the flag for external (filesystem) blob store usage.
      * @param externalBLOBs a value of "true" indicates that an external blob
      *        store is to be used.
      */
-    public void setExternalBLOBs(String externalBLOBs) {
-        this.externalBLOBs = Boolean.valueOf(externalBLOBs).booleanValue();
+    public void setExternalBLOBs(boolean externalBLOBs) {
+        this.externalBLOBs = externalBLOBs;
     }
 
     /**
