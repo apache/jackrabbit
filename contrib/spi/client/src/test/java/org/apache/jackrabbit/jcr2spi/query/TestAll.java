@@ -16,8 +16,6 @@ package org.apache.jackrabbit.jcr2spi.query;
 import junit.framework.TestCase;
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import org.apache.jackrabbit.jcr2spi.nodetype.AddMixinTest;
-import org.apache.jackrabbit.jcr2spi.nodetype.RemoveMixinTest;
 
 /**
  * <code>TestAll</code>...

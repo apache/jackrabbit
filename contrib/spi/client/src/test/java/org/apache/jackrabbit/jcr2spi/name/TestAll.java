@@ -16,9 +16,6 @@ package org.apache.jackrabbit.jcr2spi.name;
 import junit.framework.TestCase;
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import org.apache.jackrabbit.jcr2spi.lock.SessionScopedLockTest;
-import org.apache.jackrabbit.jcr2spi.lock.OpenScopedLockTest;
-import org.apache.jackrabbit.jcr2spi.lock.DeepLockTest;
 
 /**
  * <code>TestAll</code>...
