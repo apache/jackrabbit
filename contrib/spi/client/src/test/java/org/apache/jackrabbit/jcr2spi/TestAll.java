@@ -35,6 +35,7 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(AccessByRelativePathTest.class);
         suite.addTestSuite(SNSIndexTest.class);
+        suite.addTestSuite(NodeOrderTest.class);
 
         // set/add property
         suite.addTestSuite(AddNewPropertyTest.class);
