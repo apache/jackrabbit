@@ -448,8 +448,6 @@ public class DatabaseJournal extends AbstractJournal {
                     // read next sql stmt
                     sql = reader.readLine();
                 }
-                // commit the changes
-                con.commit();
             } finally {
                 close(in);
                 close(stmt);
