@@ -219,9 +219,10 @@ public class DatabaseJournal extends AbstractJournal {
 
     /**
      * Creates a new database connection. This method is called inside
-     * {@link #init()} or when a connection has been dropped and must be
-     * reacquired. Base implementation uses <code>java.sql.DriverManager</code>
-     * to get the connection. May be overridden by subclasses.
+     * {@link #init(String, org.apache.jackrabbit.name.NamespaceResolver)} or
+     * when a connection has been dropped and must be reacquired. Base
+     * implementation uses <code>java.sql.DriverManager</code> to get the
+     * connection. May be overridden by subclasses.
      *
      * @see #init()
      * @return new connection
