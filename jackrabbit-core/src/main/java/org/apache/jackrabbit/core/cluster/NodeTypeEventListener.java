@@ -17,8 +17,10 @@
 package org.apache.jackrabbit.core.cluster;
 
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
+import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.util.Collection;
 
 /**
@@ -35,4 +37,25 @@ public interface NodeTypeEventListener {
      */
     public void externalRegistered(Collection ntDefs)
             throws RepositoryException, InvalidNodeTypeDefException;
+
+    /**
+     * Called when a node type has been externally re-registered.
+     *
+     * @param ntDef node type definition
+     * @throws RepositoryException if an error occurs
+     * @throws NoSuchNodeTypeException if the node type had not yet been registered
+     * @throws InvalidNodeTypeDefException if the node type definition is invalid
+     */
+    public void externalReregistered(NodeTypeDef ntDef)
+        throws NoSuchNodeTypeException, InvalidNodeTypeDefException, RepositoryException;
+
+    /**
+     * Called when one or more node types have been externally unregistered.
+     *
+     * @param ntNames node type qnames
+     * @throws RepositoryException if an error occurs
+     * @throws NoSuchNodeTypeException if a node type is already unregistered
+     */
+    public void externalUnregistered(Collection ntNames)
+        throws RepositoryException, NoSuchNodeTypeException;
 }

@@ -200,8 +200,23 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @throws InvalidNodeTypeDefException if the given node type definition is invalid.
      * @throws RepositoryException if a repository error occurs.
      */
-    public synchronized void registerNodeTypes(Collection ntDefs)
+    public void registerNodeTypes(Collection ntDefs)
             throws InvalidNodeTypeDefException, RepositoryException {
+
+        registerNodeTypes(ntDefs, false);
+    }
+
+    /**
+     * Internal implementation of {@link #registerNodeTypes(Collection)}
+     *
+     * @param ntDefs a collection of <code>NodeTypeDef<code> objects
+     * @param external whether this invocation should be considered external
+     * @throws InvalidNodeTypeDefException if the given node type definition is invalid.
+     * @throws RepositoryException if a repository error occurs.
+     */
+    private synchronized void registerNodeTypes(Collection ntDefs, boolean external)
+            throws InvalidNodeTypeDefException, RepositoryException {
+
         // validate and register new node type definitions
         internalRegister(ntDefs);
         // persist new node type definitions
@@ -211,8 +226,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         }
         persistCustomNodeTypeDefs(customNTDefs);
 
-        // inform cluster
-        if (eventChannel != null) {
+        // inform cluster if this is not an external invocation
+        if (!external && eventChannel != null) {
             eventChannel.registered(ntDefs);
         }
 
@@ -237,8 +252,25 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @throws RepositoryException if another error occurs
      * @see #unregisterNodeType(QName)
      */
-    public synchronized void unregisterNodeTypes(Collection ntNames)
+    public void unregisterNodeTypes(Collection ntNames)
             throws NoSuchNodeTypeException, RepositoryException {
+
+        unregisterNodeTypes(ntNames, false);
+    }
+
+    /**
+     * Internal implementation of {@link #unregisterNodeTypes(Collection)}
+     *
+     * @param ntNames a collection of <code>QName</code> objects denoting the
+     *                node types to be unregistered
+     * @param external whether this invocation should be considered external
+     * @throws NoSuchNodeTypeException if any of the specified names does not
+     *                                 denote a registered node type.
+     * @throws RepositoryException if another error occurs
+     */
+    private synchronized void unregisterNodeTypes(Collection ntNames, boolean external)
+            throws NoSuchNodeTypeException, RepositoryException {
+
         // do some preliminary checks
         for (Iterator iter = ntNames.iterator(); iter.hasNext();) {
             QName ntName = (QName) iter.next();
@@ -272,6 +304,11 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
 
         // all preconditions are met, node types can now safely be unregistered
         internalUnregister(ntNames);
+
+        // inform cluster if this is not an external invocation
+        if (!external && eventChannel != null) {
+            eventChannel.unregistered(ntNames);
+        }
 
         // persist removal of node type definitions & notify listeners
         for (Iterator iter = ntNames.iterator(); iter.hasNext();) {
@@ -307,15 +344,39 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     }
 
     /**
-     * @param ntd
-     * @return
-     * @throws NoSuchNodeTypeException
-     * @throws InvalidNodeTypeDefException
-     * @throws RepositoryException
+     * Reregister a node type.
+     * @param ntd node type definition
+     * @return the new effective node type
+     * @throws NoSuchNodeTypeException if <code>ntd</code> refers to an
+     *                                 unknown node type
+     * @throws InvalidNodeTypeDefException if the node type definition
+     *                                     is invalid
+     * @throws RepositoryException if another error occurs
      */
-    public synchronized EffectiveNodeType reregisterNodeType(NodeTypeDef ntd)
+    public EffectiveNodeType reregisterNodeType(NodeTypeDef ntd)
             throws NoSuchNodeTypeException, InvalidNodeTypeDefException,
             RepositoryException {
+
+        return reregisterNodeType(ntd, false);
+    }
+
+    /**
+     * Internal implementation of {@link #reregisterNodeType(NodeTypeDef)}.
+     *
+     * @param ntd node type definition
+     * @param external whether this invocation should be considered external
+     * @return the new effective node type
+     * @throws NoSuchNodeTypeException if <code>ntd</code> refers to an
+     *                                 unknown node type
+     * @throws InvalidNodeTypeDefException if the node type definition
+     *                                     is invalid
+     * @throws RepositoryException if another error occurs
+     */
+    private synchronized EffectiveNodeType reregisterNodeType(NodeTypeDef ntd,
+                                                              boolean external)
+            throws NoSuchNodeTypeException, InvalidNodeTypeDefException,
+            RepositoryException {
+
         QName name = ntd.getName();
         if (!registeredNTDefs.containsKey(name)) {
             throw new NoSuchNodeTypeException(name.toString());
@@ -357,6 +418,11 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             customNTDefs.add(ntd);
             // persist node type definitions
             persistCustomNodeTypeDefs(customNTDefs);
+
+            // inform cluster if this is not an external invocation
+            if (!external && eventChannel != null) {
+                eventChannel.reregistered(ntd);
+            }
 
             // notify listeners
             notifyReRegistered(name);
@@ -608,19 +674,26 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     public void externalRegistered(Collection ntDefs)
             throws RepositoryException, InvalidNodeTypeDefException {
 
-        // validate and register new node type definitions
-        internalRegister(ntDefs);
-        // persist new node type definitions
-        for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
-            NodeTypeDef ntDef = (NodeTypeDef) iter.next();
-            customNTDefs.add(ntDef);
-        }
-        persistCustomNodeTypeDefs(customNTDefs);
-        // notify listeners
-        for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
-            NodeTypeDef ntDef = (NodeTypeDef) iter.next();
-            notifyRegistered(ntDef.getName());
-        }
+        registerNodeTypes(ntDefs, true);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void externalReregistered(NodeTypeDef ntDef)
+            throws NoSuchNodeTypeException, InvalidNodeTypeDefException,
+            RepositoryException {
+
+        reregisterNodeType(ntDef, true);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void externalUnregistered(Collection ntNames)
+            throws RepositoryException, NoSuchNodeTypeException {
+
+        unregisterNodeTypes(ntNames, true);
     }
 
     //---------------------------------------------------------< overridables >
