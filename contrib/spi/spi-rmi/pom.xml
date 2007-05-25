@@ -54,6 +54,40 @@
         </includes>
       </resource>
     </resources>
+    <plugins>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <dependencies>
+          <!-- 
+            See: http://jira.codehaus.org/browse/MANTRUN-23
+          -->
+          <dependency>
+            <groupId>sun</groupId>
+            <artifactId>tools</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${java.home}/../lib/tools.jar</systemPath>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <id>rmic</id>
+            <phase>process-classes</phase>
+            <configuration>
+              <tasks>
+                <rmic base="${project.build.outputDirectory}"
+                      verify="true"
+                      includes="org/apache/jackrabbit/spi/rmi/server/Server*.class"
+                      classpathref="maven.compile.classpath"/>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 
   <dependencies>
