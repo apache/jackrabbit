@@ -44,6 +44,7 @@
         <p/>
         <ul>
             <li><a href="<%= request.getContextPath() %><%= SimpleWebdavServlet.getPathPrefix(pageContext.getServletContext()) %>/default/">Browser View</a></li>
+            <li><a href="<%= request.getContextPath() %>/search.jsp">Search</a> for files in Workspace default</li>
             <li>Context Path: <%= request.getContextPath() %></li>
             <li>Resource Path Prefix: <%= SimpleWebdavServlet.getPathPrefix(pageContext.getServletContext()) %></li>
             <li>Workspace Name: see /WEB-INF/repository/repository.xml (Default = 'default')</li>
