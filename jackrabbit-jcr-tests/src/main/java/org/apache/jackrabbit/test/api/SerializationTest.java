@@ -23,6 +23,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
+import org.xml.sax.helpers.DefaultHandler;
 
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.InvalidSerializedDataException;
@@ -735,6 +736,7 @@ public class SerializationTest extends AbstractJCRTest {
         reader.setFeature("http://xml.org/sax/features/namespaces", true);
         reader.setFeature("http://xml.org/sax/features/namespace-prefixes", false);
         reader.setContentHandler(handler);
+        reader.setErrorHandler(new DefaultHandler());
         return reader;
     }
 }
