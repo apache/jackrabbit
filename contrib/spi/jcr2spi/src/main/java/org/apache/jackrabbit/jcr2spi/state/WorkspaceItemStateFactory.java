@@ -165,11 +165,9 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             }
             // create PropertyEntry for the last element if not existing yet
             QName propName = missingElems[i].getName();
-            PropertyEntry propEntry;
-            if (!entry.hasPropertyEntry(propName)) {
+            PropertyEntry propEntry = entry.getPropertyEntry(propName);
+            if (propEntry == null) {
                 propEntry = entry.addPropertyEntry(propName);
-            } else {
-                propEntry = entry.getPropertyEntry(propName);
             }
             return createPropertyState(info, propEntry);
         } catch (PathNotFoundException e) {
@@ -309,7 +307,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    private void assertMatchingPath(ItemInfo info, HierarchyEntry entry)
+    private static void assertMatchingPath(ItemInfo info, HierarchyEntry entry)
             throws ItemNotFoundException, RepositoryException {
         if (!info.getPath().equals(entry.getWorkspacePath())) {
             throw new ItemNotFoundException("HierarchyEntry does not belong the given ItemInfo.");

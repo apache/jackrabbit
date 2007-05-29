@@ -142,16 +142,20 @@ public interface NodeEntry extends HierarchyEntry {
     public NodeEntry getNodeEntry(QName nodeName, int index) throws RepositoryException;
 
     /**
-     * Returns the <code>NodeEntry</code> with the specified
-     * <code>NodeId</code> or <code>null</code> if there's no matching
-     * entry.
+     * Returns the valid <code>NodeEntry</code> with the specified name
+     * and index or <code>null</code> if there's no matching entry. If
+     * <code>loadIfNotFound</code> is true, the implementation must make
+     * sure, that it's list of child entries is up to date and eventually
+     * try to load the node entry.
      *
-     * @param childId the id of the child entry.
-     * @return the <code>NodeEntry</code> with the specified
-     * <code>NodeId</code> or <code>null</code> if there's no matching entry.
+     * @param nodeName <code>QName</code> object specifying a node name.
+     * @param index 1-based index if there are same-name child node entries.
+     * @param loadIfNotFound
+     * @return The <code>NodeEntry</code> with the specified name and index
+     * or <code>null</code> if there's no matching entry.
      * @throws RepositoryException If an unexpected error occurs.
      */
-    public NodeEntry getNodeEntry(NodeId childId) throws RepositoryException;
+    public NodeEntry getNodeEntry(QName nodeName, int index, boolean loadIfNotFound) throws RepositoryException;
 
     /**
      * Returns a unmodifiable iterator of <code>NodeEntry</code> objects
@@ -210,8 +214,24 @@ public interface NodeEntry extends HierarchyEntry {
      * @param propName <code>QName</code> object specifying a property name.
      * @return The <code>PropertyEntry</code> with the specified name or
      * <code>null</code> if no matching entry exists.
+     * @throws RepositoryException If an unexpected error occurs.
      */
-    public PropertyEntry getPropertyEntry(QName propName);
+    public PropertyEntry getPropertyEntry(QName propName) throws RepositoryException;
+
+    /**
+     * Returns the valid <code>PropertyEntry</code> with the specified name
+     * or <code>null</code> if no matching entry exists.  If
+     * <code>loadIfNotFound</code> is true, the implementation must make
+     * sure, that it's list of property entries is up to date and eventually
+     * try to load the property entry with the given name.
+     *
+     * @param propName <code>QName</code> object specifying a property name.
+     * @param loadIfNotFound
+     * @return The <code>PropertyEntry</code> with the specified name or
+     * <code>null</code> if no matching entry exists.
+     * @throws RepositoryException If an unexpected error occurs.
+     */
+    public PropertyEntry getPropertyEntry(QName propName,  boolean loadIfNotFound) throws RepositoryException;
 
     /**
      * Returns an unmodifiable Iterator over those children that represent valid
@@ -222,9 +242,12 @@ public interface NodeEntry extends HierarchyEntry {
     public Iterator getPropertyEntries();
 
     /**
+     * Add an existing <code>PropertyEntry</code> with the given name.
+     * Please note the difference to {@link #addNewPropertyEntry(QName, QPropertyDefinition)
+     * which adds a new, transient entry.
      *
      * @param propName
-     * @return
+     * @return the <code>PropertyEntry</code>
      * @throws ItemExistsException if a child item exists with the given name
      * @throws RepositoryException if an unexpected error occurs.
      */
@@ -243,6 +266,8 @@ public interface NodeEntry extends HierarchyEntry {
     public void addPropertyEntries(Collection propNames) throws ItemExistsException, RepositoryException;
 
     /**
+     * Add a new, transient <code>PropertyEntry</code> to this <code>NodeEntry</code>
+     * and return the <code>PropertyState</code> associated with the new entry.
      *
      * @param propName
      * @return The PropertyState associated with the new property entry.
@@ -262,6 +287,13 @@ public interface NodeEntry extends HierarchyEntry {
     public void orderBefore(NodeEntry beforeEntry) throws RepositoryException;
 
     /**
+     * Moves this <code>NodeEntry</code> as new child entry of the
+     * <code>NodeEntry</code> identified by <code>newParent</code> and/or renames
+     * it to <code>newName</code>. If <code>transientMove</code> is true, an
+     * implementation must make sure, that reverting this modification by calling
+     * {@link HierarchyEntry#revert()} on the common ancestor of both parents
+     * moves this NodeEntry back and resets the name to its original value.
+     *
      * @param newName
      * @param newParent
      * @return the moved entry

@@ -18,8 +18,6 @@ package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
-import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.spi.NodeId;
 
 import javax.jcr.RepositoryException;
@@ -46,13 +44,10 @@ public class SetMixin extends AbstractOperation {
         addAffectedItemState(nodeState);
         // add the jcr:mixinTypes property state as affected if it already exists
         // and therefore gets modified by this operation.
-        PropertyEntry pe = ((NodeEntry) nodeState.getHierarchyEntry()).getPropertyEntry(QName.JCR_MIXINTYPES);
-        if (pe != null) {
-            try {
-                addAffectedItemState(pe.getPropertyState());
-            } catch (RepositoryException e) {
-                // should never occur
-            }
+        try {
+            addAffectedItemState(nodeState.getPropertyState(QName.JCR_MIXINTYPES));
+        } catch (RepositoryException e) {
+            // jcr:mixinTypes does not exist -> ignore
         }
     }
 

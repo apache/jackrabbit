@@ -166,12 +166,14 @@ public class Move extends AbstractOperation {
             throw new ItemExistsException("Move destination already exists (Property).");
         } else if (destEntry.hasNodeEntry(destName)) {
             NodeEntry existing = destEntry.getNodeEntry(destName, Path.INDEX_DEFAULT);
-            try {
-                if (!existing.getNodeState().getDefinition().allowsSameNameSiblings()) {
-                    throw new ItemExistsException("Node existing at move destination does not allow same name siblings.");
+            if (existing != null) {
+                try {
+                    if (!existing.getNodeState().getDefinition().allowsSameNameSiblings()) {
+                        throw new ItemExistsException("Node existing at move destination does not allow same name siblings.");
+                    }
+                } catch (ItemNotFoundException e) {
+                    // existing apparent not valid any more -> probably no conflict
                 }
-            } catch (ItemNotFoundException e) {
-                // existing apparent not valid any more -> probably no conflict
             }
         }
 

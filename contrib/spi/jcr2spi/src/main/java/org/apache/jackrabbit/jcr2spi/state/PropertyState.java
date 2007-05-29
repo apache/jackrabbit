@@ -28,7 +28,6 @@ import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.jcr2spi.nodetype.ValueConstraint;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
-import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,11 +39,6 @@ import java.util.Iterator;
 public class PropertyState extends ItemState {
 
     private static Logger log = LoggerFactory.getLogger(PropertyState.class);
-
-    /**
-     * The PropertyEntry associated with the state
-     */
-    private final PropertyEntry hierarchyEntry;
 
     /**
      * Property definition
@@ -77,7 +71,6 @@ public class PropertyState extends ItemState {
                             ItemStateFactory isf) {
         super(overlayedState, initialStatus, isf);
 
-        this.hierarchyEntry = overlayedState.hierarchyEntry;
         this.definition = overlayedState.definition;
         this.multiValued = overlayedState.multiValued;
 
@@ -94,9 +87,8 @@ public class PropertyState extends ItemState {
     protected PropertyState(PropertyEntry entry, boolean multiValued, QPropertyDefinition definition,
                             int initialStatus, boolean isWorkspaceState,
                             ItemStateFactory isf, ItemDefinitionProvider definitionProvider) {
-        super(initialStatus, isWorkspaceState, isf, definitionProvider);
+        super(initialStatus, isWorkspaceState, entry, isf, definitionProvider);
 
-        this.hierarchyEntry = entry;
         this.definition = definition;
         this.multiValued = multiValued;
         init(PropertyType.UNDEFINED, QValue.EMPTY_ARRAY);
@@ -126,13 +118,6 @@ public class PropertyState extends ItemState {
 
 
     //----------------------------------------------------------< ItemState >---
-    /**
-     * @see ItemState#getHierarchyEntry()
-     */
-    public HierarchyEntry getHierarchyEntry() {
-        return hierarchyEntry;
-    }
-
     /**
      * Always returns false.
      *

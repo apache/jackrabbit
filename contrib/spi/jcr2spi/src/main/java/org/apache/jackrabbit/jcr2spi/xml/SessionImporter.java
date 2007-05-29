@@ -475,6 +475,7 @@ public class SessionImporter implements Importer, SessionListener {
             }
 
             // and set mixin types
+            // TODO: missing validation
             Operation sm = SetMixin.create(childState, nodeInfo.getMixinNames());
             stateMgr.execute(sm);
             return childState;
