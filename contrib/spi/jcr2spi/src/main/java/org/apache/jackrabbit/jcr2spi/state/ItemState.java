@@ -58,6 +58,11 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
     private int status;
 
     /**
+     * The hierarchy entry this state belongs to.
+     */
+    private HierarchyEntry hierarchyEntry;
+
+    /**
      * Listeners (weak references)
      */
     private final transient Collection listeners = new WeakIdentityCollection(5);
@@ -82,7 +87,8 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      * @param isWorkspaceState
      */
     protected ItemState(int initialStatus, boolean isWorkspaceState,
-                        ItemStateFactory isf, ItemDefinitionProvider definitionProvider) {
+                        HierarchyEntry entry, ItemStateFactory isf,
+                        ItemDefinitionProvider definitionProvider) {
         switch (initialStatus) {
             case Status.EXISTING:
             case Status.NEW:
@@ -93,11 +99,15 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
                 log.debug(msg);
                 throw new IllegalArgumentException(msg);
         }
-        overlayedState = null;
-
+        if (entry == null) {
+            throw new IllegalArgumentException("Cannot build ItemState from 'null' HierarchyEntry");
+        }
+        this.hierarchyEntry = entry;
         this.isf = isf;
         this.definitionProvider = definitionProvider;
         this.isWorkspaceState = isWorkspaceState;
+
+        overlayedState = null;
     }
 
     /**
@@ -119,6 +129,10 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
                 log.debug(msg);
                 throw new IllegalArgumentException(msg);
         }
+        if (overlayedState.getHierarchyEntry() == null) {
+            throw new IllegalArgumentException("Cannot build ItemState from 'null' HierarchyEntry");
+        }
+        this.hierarchyEntry = overlayedState.getHierarchyEntry();
         this.isf = isf;
         this.isWorkspaceState = false;
         this.definitionProvider = overlayedState.definitionProvider;
@@ -131,7 +145,9 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      *
      * @return The <code>HierarchyEntry</code> corresponding to this <code>ItemState</code>.
      */
-    public abstract HierarchyEntry getHierarchyEntry();
+    public HierarchyEntry getHierarchyEntry() {
+        return hierarchyEntry;
+    }
 
     /**
      * Returns <code>true</code> if this item state is valid, that is its status

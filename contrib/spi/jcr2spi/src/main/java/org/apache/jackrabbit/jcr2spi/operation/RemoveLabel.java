@@ -76,7 +76,9 @@ public class RemoveLabel extends AbstractOperation {
         try {
             NodeEntry vhEntry = (NodeEntry) versionHistoryState.getHierarchyEntry();
             NodeEntry lnEntry = vhEntry.getNodeEntry(QName.JCR_VERSIONLABELS, Path.INDEX_DEFAULT);
-            lnEntry.invalidate(true);
+            if (lnEntry != null) {
+                lnEntry.invalidate(true);
+            }
         } catch (RepositoryException e) {
             log.debug(e.getMessage());
         }

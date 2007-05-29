@@ -39,7 +39,6 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
 
     /**
      * Cached weak reference to the target ItemState.
-     * // TODO: check correct?
      */
     private WeakReference target;
 
@@ -49,7 +48,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     protected QName name;
 
     /**
-     * The parent <code>HierarchyEntry</code>.
+     * Hard reference to the parent <code>NodeEntry</code>.
      */
     protected NodeEntryImpl parent;
 
@@ -319,7 +318,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
                 remove();
             } catch (RepositoryException e) {
                 // TODO: rather throw? remove from parent?
-                log.warn("Exception while reloading property state: " + e);
+                log.warn("Exception while reloading item state: " + e);
                 log.debug("Stacktrace: ", e);
             }
         }

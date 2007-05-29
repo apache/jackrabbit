@@ -19,11 +19,9 @@ package org.apache.jackrabbit.jcr2spi.state;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
-import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.util.StateUtility;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.QNodeDefinition;
@@ -46,8 +44,6 @@ import java.util.Arrays;
 public class NodeState extends ItemState {
 
     private static Logger log = LoggerFactory.getLogger(NodeState.class);
-
-    private final NodeEntry hierarchyEntry;
 
     /**
      * the name of this node's primary type
@@ -75,8 +71,7 @@ public class NodeState extends ItemState {
                         QNodeDefinition definition, int initialStatus,
                         boolean isWorkspaceState,
                         ItemStateFactory isf, ItemDefinitionProvider definitionProvider) {
-        super(initialStatus, isWorkspaceState, isf, definitionProvider);
-        this.hierarchyEntry = entry;
+        super(initialStatus, isWorkspaceState, entry, isf, definitionProvider);
         this.nodeTypeName = nodeTypeName;
         setMixinTypeNames(mixinTypeNames);
         this.definition = definition;
@@ -93,7 +88,6 @@ public class NodeState extends ItemState {
         super(overlayedState, initialStatus, isf);
 
         synchronized (overlayedState) {
-            hierarchyEntry = overlayedState.hierarchyEntry;
             nodeTypeName = overlayedState.nodeTypeName;
             definition = overlayedState.definition;
             if (mixinTypeNames != null) {
@@ -103,13 +97,6 @@ public class NodeState extends ItemState {
     }
 
     //----------------------------------------------------------< ItemState >---
-    /**
-     * @see ItemState#getHierarchyEntry()
-     */
-    public HierarchyEntry getHierarchyEntry() {
-        return hierarchyEntry;
-    }
-
     /**
      * Determines if this item state represents a node.
      *
@@ -216,7 +203,7 @@ public class NodeState extends ItemState {
 
     /**
      * TODO improve
-     * !! Used by NodeEntryImpl and NodeState only
+     * Used by NodeEntryImpl and NodeState only
      *
      * @param mixinTypeNames
      */
@@ -283,7 +270,8 @@ public class NodeState extends ItemState {
     /**
      * Utility
      * Returns the child <code>NodeState</code> with the specified name
-     * and index or <code>null</code> if there's no matching, valid entry.
+     * and index. Throws <code>ItemNotFoundException</code> if there's no
+     * matching, valid entry.
      *
      * @param nodeName <code>QName</code> object specifying a node name.
      * @param index 1-based index if there are same-name child node entries.
@@ -292,11 +280,11 @@ public class NodeState extends ItemState {
      * @throws RepositoryException
      */
     public NodeState getChildNodeState(QName nodeName, int index) throws ItemNotFoundException, RepositoryException {
-        NodeEntry child = getNodeEntry().getNodeEntry(nodeName, index);
-        if (child != null) {
-            return child.getNodeState();
+        NodeEntry ne = getNodeEntry().getNodeEntry(nodeName, index, true);
+        if (ne != null) {
+            return ne.getNodeState();
         } else {
-            // TODO: correct?
+            // does not exist (any more) or is a property
             throw new ItemNotFoundException("Child node "+ nodeName +" with index " + index + " does not exist.");
         }
     }
@@ -313,7 +301,9 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Utility method that returns the property state with the given name.
+     * Utility method that returns the property state with the given name or
+     * throws an <code>ItemNotFoundException</code> if no matching, valid
+     * property could be found.
      *
      * @param propertyName The name of the property state to return.
      * @throws ItemNotFoundException If there is no (valid) property state
@@ -321,13 +311,13 @@ public class NodeState extends ItemState {
      * @throws RepositoryException If an error occurs while retrieving the
      * property state.
      *
-     * @see NodeEntry#getPropertyEntry(QName)
+     * @see NodeEntry#getPropertyEntry(QName, boolean)
      * @see PropertyEntry#getPropertyState()
      */
     public PropertyState getPropertyState(QName propertyName) throws ItemNotFoundException, RepositoryException {
-        HierarchyEntry child = getNodeEntry().getDeepEntry(Path.create(propertyName, Path.INDEX_UNDEFINED));
-        if (child != null && !child.denotesNode()) {
-            return ((PropertyEntry) child).getPropertyState();
+        PropertyEntry pe = getNodeEntry().getPropertyEntry(propertyName, true);
+        if (pe != null) {
+            return pe.getPropertyState();
         } else {
             throw new ItemNotFoundException("Child Property with name " + propertyName + " does not exist.");
         }

@@ -86,7 +86,7 @@ public class VersionManagerImpl implements VersionManager {
         try {
             // NOTE: since the hierarchy might not be completely loaded or some
             // entry might even not be accessible, the check may not detect
-            // a checked-in parent. ok, as long as the 'server' find out upon
+            // a checked-in parent. ok, as long as the 'server' finds out upon
             // save or upon executing the workspace operation.
             while (!nodeEntry.hasPropertyEntry(QName.JCR_ISCHECKEDOUT)) {
                 NodeEntry parent = nodeEntry.getParent();

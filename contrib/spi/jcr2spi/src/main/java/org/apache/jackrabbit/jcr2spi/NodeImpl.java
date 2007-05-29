@@ -31,7 +31,6 @@ import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeReferences;
 import org.apache.jackrabbit.jcr2spi.state.Status;
-import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
@@ -709,30 +708,35 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * Retrieves all mixins currently present on this node including those,
-     * that have been transiently added and excluding those, that have been
-     * transiently removed.<br>
+     * Retrieves the value of the jcr:mixinTypes property present with this
+     * Node including those that have been transiently added and excluding
+     * those, that have been transiently removed.<br>
      * NOTE, that the result of this method, does NOT represent the list of
-     * mixin-types that currently affect this node. Instead if represents the
-     * current value of the jcr:mixinTypes property.
-     *
+     * mixin-types that currently affect this node.
+     * 
      * @return
      */
     private List getMixinTypes() {
-        QName[] mixinValue = new QName[0];
-        if (hasProperty(QName.JCR_MIXINTYPES)) {
-            if (getNodeState().getStatus() == Status.EXISTING) {
-                mixinValue = getNodeState().getMixinTypeNames();
-            } else {
-                // possibility that a mixin has been transient added
-                try {
-                    PropertyState ps = getNodeState().getPropertyState(QName.JCR_MIXINTYPES);
-                    mixinValue = StateUtility.getMixinNames(ps);
-                } catch (RepositoryException e) {
-                    // should never occur
-                    log.error("Internal error", e);
+        QName[] mixinValue;
+        if (getNodeState().getStatus() == Status.EXISTING) {
+            // jcr:mixinTypes must correspond to the mixins present on the nodestate.
+            mixinValue = getNodeState().getMixinTypeNames();
+        } else {
+            try {
+                PropertyEntry pe = getNodeEntry().getPropertyEntry(QName.JCR_MIXINTYPES);
+                if (pe != null) {
+                    // prop entry exists (and ev. has been transiently mod.)
+                    // -> retrieve mixin types from prop
+                    mixinValue = StateUtility.getMixinNames(pe.getPropertyState());
+                } else {
+                    // prop entry has not been loaded yet -> not modified
+                    mixinValue = getNodeState().getMixinTypeNames();
                 }
-            } // else: no mixins present
+            } catch (RepositoryException e) {
+                // should never occur
+                log.warn("Internal error", e);
+                mixinValue = new QName[0];
+            }
         }
         List l = new ArrayList();
         l.addAll(Arrays.asList(mixinValue));
@@ -1343,7 +1347,7 @@ public class NodeImpl extends ItemImpl implements Node {
     protected Property getProperty(QName qName) throws PathNotFoundException, RepositoryException {
         checkStatus();
         try {
-            PropertyEntry pEntry = getNodeEntry().getPropertyEntry(qName);
+            PropertyEntry pEntry = getNodeEntry().getPropertyEntry(qName, true);
             if (pEntry == null) {
                 throw new PathNotFoundException(qName.toString());
             }
@@ -1589,11 +1593,11 @@ public class NodeImpl extends ItemImpl implements Node {
                 } else if (pe == Path.PARENT_ELEMENT) {
                     targetEntry = getNodeEntry().getParent();
                 } else {
-                    targetEntry = getNodeEntry().getNodeEntry(pe.getName(), pe.getNormalizedIndex());
+                    // try to get child entry + force loading of not known yet
+                    targetEntry = getNodeEntry().getNodeEntry(pe.getName(), pe.getNormalizedIndex(), true);
                 }
-            }
-            if (targetEntry == null) {
-                // rp length > 1 OR child entry has not yet been loaded.
+            } else {
+                // rp length > 1
                 Path p = getQPath(rp);
                 HierarchyEntry entry = session.getHierarchyManager().getHierarchyEntry(p.getCanonicalPath());
                 if (entry.denotesNode()) {
@@ -1626,17 +1630,14 @@ public class NodeImpl extends ItemImpl implements Node {
         PropertyEntry targetEntry = null;
         try {
             Path rp = PathFormat.parse(relPath, session.getNamespaceResolver());
-            if (rp.getLength() == 1) {
+            if (rp.getLength() == 1 && rp.getNameElement().denotesName()) {
                 // a single path element must always denote a name. '.' and '..'
-                // will never point to a property.
-                if (rp.getNameElement().denotesName()) {
-                    QName propName = rp.getNameElement().getName();
-                    // check if property entry exists
-                    targetEntry = getNodeEntry().getPropertyEntry(propName);
-                } // else: entry may not have been loaded yet -> try via H-Mgr
-            }
-
-            if (targetEntry == null) {
+                // will never point to a property. If the NodeEntry does not
+                // contain such a pe, the targetEntry is 'null;
+                QName propName = rp.getNameElement().getName();
+                // check if property entry exists
+                targetEntry = getNodeEntry().getPropertyEntry(propName, true);
+            } else {
                 // build and resolve absolute path
                 Path p = getQPath(rp).getCanonicalPath();
                 try {

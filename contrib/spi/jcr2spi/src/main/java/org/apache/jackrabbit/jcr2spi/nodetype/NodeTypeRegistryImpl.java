@@ -20,7 +20,7 @@ import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.Status;
-import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
+import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
@@ -334,18 +334,16 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
                 // TODO: check if correct (and only used for creating new)
                 QName primaryType = nodeState.getNodeTypeName();
                 allNtNames = new QName[] { primaryType }; // default
-                PropertyEntry mixins = nodeState.getNodeEntry().getPropertyEntry(QName.JCR_MIXINTYPES);
-                if (mixins != null) {
-                    try {
-                        QValue[] values = mixins.getPropertyState().getValues();
-                        allNtNames = new QName[values.length + 1];
-                        for (int i = 0; i < values.length; i++) {
-                            allNtNames[i] = values[i].getQName();
-                        }
-                        allNtNames[values.length] = primaryType;
-                    } catch (RepositoryException e) {
-                        // ignore
+                try {
+                    PropertyState mixins = nodeState.getPropertyState(QName.JCR_MIXINTYPES);
+                    QValue[] values = mixins.getValues();
+                    allNtNames = new QName[values.length + 1];
+                    for (int i = 0; i < values.length; i++) {
+                        allNtNames[i] = values[i].getQName();
                     }
+                    allNtNames[values.length] = primaryType;
+                } catch (RepositoryException e) {
+                    // ignore: apparently no jcr:mixinTypes property exists.
                 }
             }
             return getEffectiveNodeType(allNtNames);
@@ -390,7 +388,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
                 return ent;
             } catch (NodeTypeConflictException ntce) {
                 // should never get here as all known node types should be valid!
-                String msg = "internal error: encountered invalid registered node type " + ntName;
+                String msg = "Internal error: encountered invalid registered node type " + ntName;
                 log.debug(msg);
                 throw new NoSuchNodeTypeException(msg, ntce);
             }
