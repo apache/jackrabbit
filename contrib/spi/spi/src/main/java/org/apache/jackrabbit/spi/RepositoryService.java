@@ -206,7 +206,7 @@ public interface RepositoryService {
     public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException;
 
     /**
-     * Returns a collection of child node entries present on the
+     * Returns a collection of <code>ChildInfo</code>s present on the
      * Node represented by the given parentId.
      *
      * @param sessionInfo
@@ -231,7 +231,7 @@ public interface RepositoryService {
     //-----------------------------------------------< general modification >---
     /**
      * Indicates the start of a set of operations that cause modifications
-     * on the underlaying persistence layer. All modification called on the
+     * on the underlying persistence layer. All modification called on the
      * Batch must be executed at once or non must be executed.
      *
      * @param itemId
