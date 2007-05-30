@@ -324,6 +324,12 @@ public class PathMap {
         public void remove(boolean shift) {
             if (parent != null) {
                 parent.remove(getPathElement(), shift);
+            } else {
+                // Removing the root node is not possible: if it has become
+                // invalid, remove all its children and the associated object
+                children = null;
+                childrenCount = 0;
+                obj = null;
             }
         }
 
