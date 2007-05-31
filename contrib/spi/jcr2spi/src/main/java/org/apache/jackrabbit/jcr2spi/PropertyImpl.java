@@ -356,17 +356,15 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @throws RepositoryException
      */
     private long getLength(QValue value) throws RepositoryException {
-        long length = UNDEFINED_PROPERTY_LENGTH;
+        long length;
         switch (value.getType()) {
-            case PropertyType.STRING:
-            case PropertyType.BINARY:
-            case PropertyType.LONG:
-            case PropertyType.DOUBLE:
-                length = value.getLength();
-                break;
             case PropertyType.NAME:
+            case PropertyType.PATH:
                 Value jcrValue = ValueFormat.getJCRValue(value, session.getNamespaceResolver(), session.getJcrValueFactory());
                 length = jcrValue.getString().length();
+                break;
+            default:
+                length = value.getLength();
                 break;
         }
         return length;
