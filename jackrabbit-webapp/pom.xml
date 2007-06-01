@@ -103,6 +103,46 @@
            </connectors>
          </configuration>
       </plugin>
+      <plugin>
+        <!-- create a jar in addition to our war, to make our servlets reusable -->
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <configuration>
+              <tasks>
+                <jar basedir="${project.build.outputDirectory}"
+                  destfile="${project.build.directory}/jackrabbit-webapp-${project.version}.jar"/>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- add the jar created by maven-antrun-plugin in our artifacts -->
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-artifacts</id>
+            <phase>package</phase>
+            <goals>
+              <goal>attach-artifact</goal>
+            </goals>
+            <configuration>
+                <artifacts>
+                  <artifact>
+                    <file>${project.build.directory}/jackrabbit-webapp-${project.version}.jar</file>
+                    <type>jar</type>
+                  </artifact>
+                </artifacts>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
