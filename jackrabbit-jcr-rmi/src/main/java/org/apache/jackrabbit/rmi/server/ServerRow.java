@@ -31,7 +31,6 @@ import org.apache.jackrabbit.rmi.value.SerialValueFactory;
  * {@link org.apache.jackrabbit.rmi.remote.RemoteRow RemoteRow}
  * interface.
  *
- * @author Philipp Koch
  * @see javax.jcr.query.Row
  * @see org.apache.jackrabbit.rmi.remote.RemoteRow
  */

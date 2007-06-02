@@ -31,7 +31,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
  * {@link org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry RemoteNamespaceRegistry}
  * interface.
  *
- * @author Jukka Zitting
  * @see javax.jcr.NamespaceRegistry
  * @see org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry
  */

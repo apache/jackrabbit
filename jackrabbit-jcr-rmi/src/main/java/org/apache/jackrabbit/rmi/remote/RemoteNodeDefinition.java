@@ -32,9 +32,8 @@ import java.rmi.RemoteException;
  * {@link javax.jcr.nodetype.NodeType NodeType} return values
  * are returned as remote references to the
  * {@link org.apache.jackrabbit.rmi.remote.RemoteNodeType RemoteNodeType}
- * interface. RMI errors are signalled with RemoteExceptions.
+ * interface. RMI errors are signaled with RemoteExceptions.
  *
- * @author Jukka Zitting
  * @see javax.jcr.nodetype.NodeDefinition
  * @see org.apache.jackrabbit.rmi.client.ClientNodeDefinition
  * @see org.apache.jackrabbit.rmi.server.ServerNodeDefinition

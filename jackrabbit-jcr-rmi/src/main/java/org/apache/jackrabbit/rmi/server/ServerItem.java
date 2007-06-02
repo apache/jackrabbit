@@ -33,7 +33,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteNode;
  * and {@link org.apache.jackrabbit.rmi.server.ServerNode ServerNode}
  * adapters.
  *
- * @author Jukka Zitting
  * @see javax.jcr.Item
  * @see org.apache.jackrabbit.rmi.remote.RemoteItem
  */

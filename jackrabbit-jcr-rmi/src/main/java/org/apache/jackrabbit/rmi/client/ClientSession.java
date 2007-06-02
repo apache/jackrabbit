@@ -50,10 +50,9 @@ import org.xml.sax.SAXException;
 /**
  * Local adapter for the JCR-RMI
  * {@link org.apache.jackrabbit.rmi.remote.RemoteSession RemoteSession}
- * inteface. This class makes a remote session locally available using
+ * interface. This class makes a remote session locally available using
  * the JCR {@link javax.jcr.Session Session} interface.
  *
- * @author Jukka Zitting
  * @see javax.jcr.Session
  * @see org.apache.jackrabbit.rmi.remote.RemoteSession
  */

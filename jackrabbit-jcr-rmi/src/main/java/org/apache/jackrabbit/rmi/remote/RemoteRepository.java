@@ -36,9 +36,8 @@ import javax.jcr.RepositoryException;
  * {@link javax.jcr.Session Session} objects are returned as remote references
  * to the {@link RemoteSession RemoteSession} interface. Simple return
  * values and possible exceptions are copied over the network to the client.
- * RMI errors are signalled with RemoteExceptions.
+ * RMI errors are signaled with RemoteExceptions.
  *
- * @author Jukka Zitting
  * @see javax.jcr.Repository
  * @see org.apache.jackrabbit.rmi.client.ClientRepository
  * @see org.apache.jackrabbit.rmi.server.ServerRepository

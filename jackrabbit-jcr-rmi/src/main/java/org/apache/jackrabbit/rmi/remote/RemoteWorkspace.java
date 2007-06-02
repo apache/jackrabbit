@@ -36,9 +36,8 @@ import javax.jcr.RepositoryException;
  * Complex return values like namespace registries and other objects are
  * returned as remote references to the corresponding remote interface. Simple
  * return values and possible exceptions are copied over the network
- * to the client. RMI errors are signalled with RemoteExceptions.
+ * to the client. RMI errors are signaled with RemoteExceptions.
  *
- * @author Jukka Zitting
  * @see javax.jcr.Workspace
  * @see org.apache.jackrabbit.rmi.client.ClientWorkspace
  * @see org.apache.jackrabbit.rmi.server.ServerWorkspace

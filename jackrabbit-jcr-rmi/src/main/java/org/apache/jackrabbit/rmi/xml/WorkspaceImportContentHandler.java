@@ -28,8 +28,6 @@ import javax.jcr.Workspace;
  * method in terms of the
  * {@link Workspace#importXML(String, java.io.InputStream, int) Workspace.importXML(String, InputStream, int)}
  * method.
- *
- * @author Jukka Zitting
  */
 public class WorkspaceImportContentHandler extends ImportContentHandler {
 
@@ -39,16 +37,16 @@ public class WorkspaceImportContentHandler extends ImportContentHandler {
     /** The import content path. */
     private String path;
 
-    /** The UUID behaviour. */
+    /** The UUID behavior. */
     private int uuidBehaviour;
 
     /**
      * Creates a SAX content handler for importing XML data to the given
-     * workspace and path using the given UUID behaviour.
+     * workspace and path using the given UUID behavior.
      *
      * @param workspace repository workspace
      * @param path import content path
-     * @param uuidBehaviour UUID behaviour
+     * @param uuidBehaviour UUID behavior
      */
     public WorkspaceImportContentHandler(Workspace workspace, String path, int uuidBehaviour) {
         this.workspace = workspace;

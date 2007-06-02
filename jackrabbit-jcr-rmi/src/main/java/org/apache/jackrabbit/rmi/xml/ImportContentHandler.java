@@ -32,8 +32,6 @@ import org.xml.sax.SAXException;
  * method. Subclasses can provide different import mechanisms simply by
  * implementing the abstract {@link #importXML(byte[]) importXML(byte[])}
  * method.
- *
- * @author Jukka Zitting
  */
 public abstract class ImportContentHandler implements ContentHandler {
 

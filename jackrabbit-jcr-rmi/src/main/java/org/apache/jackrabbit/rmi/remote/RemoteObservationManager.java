@@ -34,8 +34,6 @@ import javax.jcr.RepositoryException;
  * package comment for a description on how event listener registration and
  * notification is implemented.
  *
- * @author Felix Meschberger
- *
  * @see javax.jcr.observation.ObservationManager
  * @see org.apache.jackrabbit.rmi.client.ClientObservationManager
  * @see org.apache.jackrabbit.rmi.server.ServerObservationManager

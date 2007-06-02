@@ -33,8 +33,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
  * this class is to centralize the handling of the
  * local adapter factory used by the client adapters to
  * instantiate new adapters.
- *
- * @author Jukka Zitting
  */
 public class ClientObject {
 

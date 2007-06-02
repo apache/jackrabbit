@@ -38,9 +38,8 @@ import javax.jcr.RepositoryException;
  * remote references to the
  * {@link org.apache.jackrabbit.rmi.remote.RemoteNodeType RemoteNodeType}
  * interface. Iterator values are transmitted as object arrays. RMI errors
- * are signalled with RemoteExceptions.
+ * are signaled with RemoteExceptions.
  *
- * @author Jukka Zitting
  * @see javax.jcr.nodetype.NodeTypeManager
  * @see org.apache.jackrabbit.rmi.client.ClientNodeTypeManager
  * @see org.apache.jackrabbit.rmi.server.ServerNodeTypeManager

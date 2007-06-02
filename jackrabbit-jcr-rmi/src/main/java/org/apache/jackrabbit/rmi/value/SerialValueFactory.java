@@ -38,9 +38,6 @@ import javax.jcr.ValueFormatException;
  * type of {@link org.apache.jackrabbit.rmi.value.StatefullValue}implementation. The
  * methods of the <code>ValueFactory</code> interface are declared final to
  * guard against breaking the rules.
- *
- * @author Jukka Zitting
- * @author Felix Meschberger
  */
 public class SerialValueFactory implements ValueFactory {
 

@@ -30,10 +30,9 @@ import javax.jcr.RepositoryException;
  * The methods in this interface are documented only with a reference
  * to a corresponding Lock method. The remote object will simply forward
  * the method call to the underlying Lock instance. Return values and
- * possible exceptions are copied over the network. RMI errors are signalled
+ * possible exceptions are copied over the network. RMI errors are signaled
  * with RemoteExceptions.
  *
- * @author Jukka Zitting
  * @see javax.jcr.lock.Lock
  * @see org.apache.jackrabbit.rmi.client.ClientLock
  * @see org.apache.jackrabbit.rmi.server.ServerLock

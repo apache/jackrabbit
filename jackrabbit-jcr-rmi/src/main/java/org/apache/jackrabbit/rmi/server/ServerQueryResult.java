@@ -30,7 +30,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
  * {@link org.apache.jackrabbit.rmi.remote.RemoteQueryResult RemoteQueryResult}
  * interface.
  *
- * @author Philipp Koch
  * @see javax.jcr.query.QueryResult
  * @see org.apache.jackrabbit.rmi.remote.RemoteQueryResult
  */

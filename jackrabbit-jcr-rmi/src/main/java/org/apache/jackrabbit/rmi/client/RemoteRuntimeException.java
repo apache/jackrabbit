@@ -25,8 +25,6 @@ import java.rmi.RemoteException;
  * Note that if a RemoteException is received by call that declares to
  * throw RepositoryExceptions, then the RemoteException is wrapped into
  * a RemoteRepositoryException.
- *
- * @author Jukka Zitting
  */
 public class RemoteRuntimeException extends RuntimeException {
 

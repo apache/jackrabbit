@@ -29,11 +29,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteEventCollection;
 import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
 
 /**
- * The <code>ServerObservationManager</code> class
- *
- * @author Felix Meschberger
- */
-/**
  * Remote adapter for the JCR
  * {@link javax.jcr.observation.ObservationManager ObservationManager} interface.
  * This class makes a local item available as an RMI service using
@@ -46,7 +41,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
  * <a href="../observation/package.html><code>observation</code></a> package
  * comment.
  *
- * @author Felix Meschberger
  * @see javax.jcr.observation.ObservationManager
  * @see org.apache.jackrabbit.rmi.remote.RemoteObservationManager
  */

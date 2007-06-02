@@ -32,14 +32,13 @@ import javax.jcr.Value;
  * to a corresponding PropertyDef method. The remote object will simply
  * forward the method call to the underlying PropertyDef instance. Return
  * values and possible exceptions are copied over the network. RMI errors
- * are signalled with RemoteExceptions.
+ * are signaled with RemoteExceptions.
  * <p>
  * Note that the returned Value objects must be serializable and implemented
  * using classes available on both the client and server side. The
  * {@link org.apache.jackrabbit.rmi.value.SerialValueFactory SerialValueFactory}
  * class provides two convenience methods to satisfy this requirement.
  *
- * @author Jukka Zitting
  * @see javax.jcr.nodetype.PropertyDefinition
  * @see org.apache.jackrabbit.rmi.client.ClientPropertyDefinition
  * @see org.apache.jackrabbit.rmi.server.ServerPropertyDefinition

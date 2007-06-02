@@ -31,10 +31,9 @@ import org.apache.jackrabbit.rmi.value.SerialValueFactory;
 /**
  * Local adapter for the JCR-RMI
  * {@link org.apache.jackrabbit.rmi.remote.RemoteNodeType RemoteNodeType}
- * inteface. This class makes a remote node type locally available using
+ * interface. This class makes a remote node type locally available using
  * the JCR {@link javax.jcr.nodetype.NodeType NodeType} interface.
  *
- * @author Jukka Zitting
  * @see javax.jcr.nodetype.NodeType
  * @see org.apache.jackrabbit.rmi.remote.RemoteNodeType
  */

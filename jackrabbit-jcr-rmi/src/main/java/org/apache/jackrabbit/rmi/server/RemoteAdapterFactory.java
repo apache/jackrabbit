@@ -17,8 +17,6 @@
 package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
-import java.rmi.server.RMIClientSocketFactory;
-import java.rmi.server.RMIServerSocketFactory;
 
 import javax.jcr.Item;
 import javax.jcr.NamespaceRegistry;
@@ -82,8 +80,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
  * factory. Adapter implementations may want to inherit that functionality
  * by subclassing from ServerObject.
  *
- * @author Jukka Zitting
- * @author Philipp Koch
  * @see org.apache.jackrabbit.rmi.client.LocalAdapterFactory
  * @see org.apache.jackrabbit.rmi.server.ServerAdapterFactory
  * @see org.apache.jackrabbit.rmi.server.ServerObject

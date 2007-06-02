@@ -26,7 +26,6 @@ import javax.jcr.ValueFormatException;
  * The <code>NameValue</code> class implements the committed value state for
  * Name values as a part of the State design pattern (Gof) used by this package.
  *
- * @author Felix Meschberger
  * @since 0.16.4.1
  */
 public class NameValue extends BaseNonStreamValue

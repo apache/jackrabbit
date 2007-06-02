@@ -34,10 +34,9 @@ import javax.jcr.RepositoryException;
  * values, as well as possible exceptions, are copied over the network.
  * Complex return values (like Versions) are returned as remote
  * references to the corresponding remote interfaces. Iterator values
- * are transmitted as object arrays. RMI errors are signalled with
+ * are transmitted as object arrays. RMI errors are signaled with
  * RemoteExceptions.
  *
- * @author Felix Meschberger
  * @see javax.jcr.version.Version
  * @see org.apache.jackrabbit.rmi.client.ClientVersion
  * @see org.apache.jackrabbit.rmi.server.ServerVersion

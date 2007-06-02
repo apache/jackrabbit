@@ -34,14 +34,13 @@ import javax.jcr.ValueFormatException;
  * (Gof) used by this package.
  * <p>
  * This class implements {@link #readObject(ObjectInputStream)} and
- * {@link #writeObject(ObjectOutputStream)} overwriting the default behaviour.
- * The reason for this is, that we cannot guarantee delegatee value to be
+ * {@link #writeObject(ObjectOutputStream)} overwriting the default behavior.
+ * The reason for this is, that we cannot guarantee the delegate value to be
  * serializable in which case the {@link #writeObject(ObjectOutputStream)}
  * must first create a serializable value. The
  * {@link #readObject(ObjectInputStream)} method is here just to guarantee
- * symetric implementation.
+ * symmetric implementation.
  *
- * @author Felix Meschberger
  * @since 0.16.4.1
  * @see SerialValue
  */
@@ -50,7 +49,7 @@ final class StatefulValueAdapter implements Serializable, StatefulValue {
     /** The serial version UID */
     private static final long serialVersionUID = -8467636003279312276L;
 
-    /** The delegatee value. */
+    /** The delegate value. */
     private Value delegatee;
 
     /**
