@@ -21,6 +21,8 @@ import java.util.Hashtable;
 
 import javax.jcr.Repository;
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.servlet.ServletException;
 
 import org.apache.jackrabbit.commons.repository.JNDIRepository;
 
@@ -63,19 +65,25 @@ public class JNDIRepositoryServlet extends AbstractRepositoryServlet {
      *
      * @return JNDI repository proxy
      */
-    protected Repository getRepository() {
-        String location = Repository.class.getName().replace('.', '/');
-        Hashtable environment = new Hashtable();
-        Enumeration names = getInitParameterNames();
-        while (names.hasMoreElements()) {
-            String name = (String) names.nextElement();
-            if (name.equals("location")) {
-                location = getInitParameter(name);
-            } else if (!name.equals(Repository.class.getName())) {
-                environment.put(name, getInitParameter(name));
+    protected Repository getRepository() throws ServletException {
+        try {
+            String location = Repository.class.getName().replace('.', '/');
+            Hashtable environment = new Hashtable();
+            Enumeration names = getInitParameterNames();
+            while (names.hasMoreElements()) {
+                String name = (String) names.nextElement();
+                if (name.equals("location")) {
+                    location = getInitParameter(name);
+                } else if (!name.equals(Repository.class.getName())) {
+                    environment.put(name, getInitParameter(name));
+                }
             }
+            return new JNDIRepository(
+                    new InitialContext(environment), location);
+        } catch (NamingException e) {
+            throw new ServletException(
+                    "Repository not found: Invalid JNDI context", e);
         }
-        return new JNDIRepository(environment, location);
     }
 
 }
