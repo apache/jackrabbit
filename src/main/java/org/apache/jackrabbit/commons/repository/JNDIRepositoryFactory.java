@@ -16,11 +16,9 @@
  */
 package org.apache.jackrabbit.commons.repository;
 
-import java.util.Hashtable;
-
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
-import javax.naming.InitialContext;
+import javax.naming.Context;
 import javax.naming.NamingException;
 
 /**
@@ -29,9 +27,9 @@ import javax.naming.NamingException;
 public class JNDIRepositoryFactory implements RepositoryFactory {
 
     /**
-     * JNDI environment settings.
+     * JNDI context from which to look up the repository.
      */
-    private final Hashtable environment;
+    private final Context context;
 
     /**
      * JNDI name of the repository.
@@ -41,11 +39,11 @@ public class JNDIRepositoryFactory implements RepositoryFactory {
     /**
      * Creates a factory for looking up a repository from JNDI.
      *
-     * @param environment JNDI environment settings
+     * @param context JNDI context
      * @param name JNDI name of the repository
      */
-    public JNDIRepositoryFactory(Hashtable environment, String name) {
-        this.environment = environment;
+    public JNDIRepositoryFactory(Context context, String name) {
+        this.context = context;
         this.name = name;
     }
 
@@ -57,7 +55,7 @@ public class JNDIRepositoryFactory implements RepositoryFactory {
      */
     public Repository getRepository() throws RepositoryException {
         try {
-            Object repository = new InitialContext(environment).lookup(name);
+            Object repository = context.lookup(name);
             if (repository instanceof Repository) {
                 return (Repository) repository;
             } else if (repository == null) {
