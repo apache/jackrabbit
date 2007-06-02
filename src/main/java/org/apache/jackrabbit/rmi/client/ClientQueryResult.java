@@ -29,10 +29,9 @@ import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
 /**
  * Local adapter for the JCR-RMI
  * {@link RemoteQueryResult RemoteQueryResult}
- * inteface. This class makes a remote query result locally available using
+ * interface. This class makes a remote query result locally available using
  * the JCR {@link QueryResult QueryResult} interface.
  *
- * @author Philipp Koch
  * @see javax.jcr.query.QueryResult QueryResult
  * @see org.apache.jackrabbit.rmi.remote.RemoteQueryResult
  */

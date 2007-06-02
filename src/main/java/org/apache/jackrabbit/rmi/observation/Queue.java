@@ -22,8 +22,6 @@ import java.util.LinkedList;
  * The <code>Queue</code> class is a very simple queue assuming that there is
  * at least one consumer and potentially multiple producers. This class poses
  * no restrictions on the size of the queue.
- *
- * @author Felix Meschberger
  */
 public class Queue {
 

@@ -33,7 +33,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteSession;
  * {@link org.apache.jackrabbit.rmi.remote.RemoteRepository RemoteRepository}
  * interface.
  *
- * @author Jukka Zitting
  * @see javax.jcr.Repository
  * @see org.apache.jackrabbit.rmi.remote.RemoteRepository
  */

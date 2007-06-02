@@ -35,7 +35,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
  * {@link org.apache.jackrabbit.rmi.server.ServerNodeDefinition ServerNodeDefinition}
  * adapters.
  *
- * @author Jukka Zitting
  * @see javax.jcr.nodetype.ItemDefinition
  * @see org.apache.jackrabbit.rmi.remote.RemoteItemDefinition
  */

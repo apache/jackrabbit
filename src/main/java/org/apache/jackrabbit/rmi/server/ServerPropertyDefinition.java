@@ -32,7 +32,6 @@ import org.apache.jackrabbit.rmi.value.SerialValueFactory;
  * {@link org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition RemotePropertyDefinition}
  * interface.
  *
- * @author Jukka Zitting
  * @see javax.jcr.nodetype.PropertyDefinition
  * @see org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition
  */

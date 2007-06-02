@@ -31,7 +31,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteNode;
  * {@link org.apache.jackrabbit.rmi.remote.RemoteQuery RemoteQuery}
  * interface.
  *
- * @author Philipp Koch
  * @see javax.jcr.query.Query
  * @see org.apache.jackrabbit.rmi.remote.RemoteQuery
  */

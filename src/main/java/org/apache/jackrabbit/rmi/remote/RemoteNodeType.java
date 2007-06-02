@@ -32,11 +32,10 @@ import javax.jcr.Value;
  * to a corresponding NodeType method. The remote object will simply forward
  * the method call to the underlying NodeType instance. Return values
  * and possible exceptions are copied over the network. Complex return
- * values (like NodeTypes and PropertyDefs) are retunred as remote
+ * values (like NodeTypes and PropertyDefs) are returned as remote
  * references to the corresponding remote interfaces. RMI errors are
- * signalled with RemoteExceptions.
+ * signaled with RemoteExceptions.
  *
- * @author Jukka Zitting
  * @see javax.jcr.nodetype.NodeType
  * @see org.apache.jackrabbit.rmi.client.ClientNodeType
  * @see org.apache.jackrabbit.rmi.server.ServerNodeType

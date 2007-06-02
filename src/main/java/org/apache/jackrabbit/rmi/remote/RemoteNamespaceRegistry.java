@@ -34,9 +34,8 @@ import javax.jcr.RepositoryException;
  * to a corresponding NamespaceRegistry method. The remote object will
  * simply forward the method call to the underlying NamespaceRegistry instance.
  * Argument and return values, as well as possible exceptions, are copied
- * over the network. RMI errors are signalled with RemoteExceptions.
+ * over the network. RMI errors are signaled with RemoteExceptions.
  *
- * @author Jukka Zitting
  * @see javax.jcr.NamespaceRegistry
  * @see org.apache.jackrabbit.rmi.client.ClientNamespaceRegistry
  * @see org.apache.jackrabbit.rmi.server.ServerNamespaceRegistry

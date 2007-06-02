@@ -37,7 +37,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
  * {@link org.apache.jackrabbit.rmi.remote.RemoteSession RemoteSession}
  * interface.
  *
- * @author Jukka Zitting
  * @see javax.jcr.Session
  * @see org.apache.jackrabbit.rmi.remote.RemoteSession
  */

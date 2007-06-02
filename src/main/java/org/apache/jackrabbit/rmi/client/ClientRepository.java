@@ -29,10 +29,9 @@ import org.apache.jackrabbit.rmi.remote.RemoteSession;
 /**
  * Local adapter for the JCR-RMI
  * {@link org.apache.jackrabbit.rmi.remote.RemoteRepository RemoteRepository}
- * inteface. This class makes a remote repository locally available using
+ * interface. This class makes a remote repository locally available using
  * the JCR {@link javax.jcr.Repository Repository} interface.
  *
- * @author Jukka Zitting
  * @see javax.jcr.Repository
  * @see org.apache.jackrabbit.rmi.remote.RemoteRepository
  */

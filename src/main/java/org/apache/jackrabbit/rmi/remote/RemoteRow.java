@@ -28,9 +28,8 @@ import javax.jcr.Value;
  * and {@link org.apache.jackrabbit.rmi.client.ClientRow ClientRow}
  * adapter base classes to provide transparent RMI access to remote items.
  * <p>
- * RMI errors are signalled with RemoteExceptions.
+ * RMI errors are signaled with RemoteExceptions.
  *
- * @author Philipp Koch
  * @see javax.jcr.query.Row
  * @see org.apache.jackrabbit.rmi.client.ClientRow
  * @see org.apache.jackrabbit.rmi.server.ServerRow

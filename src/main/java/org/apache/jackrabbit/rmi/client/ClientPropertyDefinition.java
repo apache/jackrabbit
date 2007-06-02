@@ -26,10 +26,9 @@ import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
 /**
  * Local adapter for the JCR-RMI
  * {@link org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition RemotePropertyDefinition}
- * inteface. This class makes a remote property definition locally available
+ * interface. This class makes a remote property definition locally available
  * using the JCR {@link javax.jcr.nodetype.PropertyDefinition PropertyDef} interface.
  *
- * @author Jukka Zitting
  * @see javax.jcr.nodetype.PropertyDefinition
  * @see org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition
  */

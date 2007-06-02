@@ -29,7 +29,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteSession;
 /**
  * A "safe" local adapter for the JCR-RMI
  * {@link org.apache.jackrabbit.rmi.remote.RemoteRepository RemoteRepository}
- * inteface. This class uses an abstract factory method for loading
+ * interface. This class uses an abstract factory method for loading
  * (and reloading) the remote repository instance that is made locally
  * available through the JCR {@link Repository} interface. If the remote
  * reference breaks (a RemoteException is thrown by a remote call), then

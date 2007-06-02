@@ -26,11 +26,10 @@ import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 /**
  * Local adapter for the JCR-RMI
  * {@link org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry RemoteNamespaceRegistry}
- * inteface. This class makes a remote namespace registry locally available
+ * interface. This class makes a remote namespace registry locally available
  * using the JCR {@link javax.jcr.NamespaceRegistry NamespaceRegistry}
  * interface.
  *
- * @author Jukka Zitting
  * @see javax.jcr.NamespaceRegistry
  * @see org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry
  */

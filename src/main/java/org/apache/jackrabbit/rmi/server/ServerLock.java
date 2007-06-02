@@ -30,7 +30,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteLock;
  * the {@link org.apache.jackrabbit.rmi.remote.RemoteLock RemoteLock}
  * interface.
  *
- * @author Jukka Zitting
  * @see javax.jcr.lock.Lock
  * @see org.apache.jackrabbit.rmi.remote.RemoteLock
  */

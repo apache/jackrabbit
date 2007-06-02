@@ -29,14 +29,13 @@ import org.apache.jackrabbit.rmi.remote.RemoteItem;
 /**
  * Local adapter for the JCR-RMI
  * {@link org.apache.jackrabbit.rmi.remote.RemoteItem RemoteItem}
- * inteface. This class makes a remote item locally available using
+ * interface. This class makes a remote item locally available using
  * the JCR {@link javax.jcr.Item Item} interface. Used mainly as the
  * base class for the
  * {@link org.apache.jackrabbit.rmi.client.ClientProperty ClientProperty}
  * and
  * {@link org.apache.jackrabbit.rmi.client.ClientNode ClientNode} adapters.
  *
- * @author Jukka Zitting
  * @see javax.jcr.Item
  * @see org.apache.jackrabbit.rmi.remote.RemoteItem
  */
