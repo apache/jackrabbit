@@ -29,45 +29,45 @@ import javax.jcr.RangeIterator;
  * into {@link PropertyIterator}s. 
  */
 public class PropertyIteratorAdapter extends RangeIteratorDecorator
-		implements PropertyIterator {
+        implements PropertyIterator {
 
-	/**
-	 * Creates an adapter for the given {@link RangeIterator}.
-	 *
-	 * @param iterator iterator of {@link Property} instances
-	 */
-	public PropertyIteratorAdapter(RangeIterator iterator) {
-		super(iterator);
-	}
+    /**
+     * Creates an adapter for the given {@link RangeIterator}.
+     *
+     * @param iterator iterator of {@link Property} instances
+     */
+    public PropertyIteratorAdapter(RangeIterator iterator) {
+        super(iterator);
+    }
 
-	/**
-	 * Creates an adapter for the given {@link Iterator}.
-	 *
-	 * @param iterator iterator of {@link Property} instances
-	 */
-	public PropertyIteratorAdapter(Iterator iterator) {
-		super(new RangeIteratorAdapter(iterator));
-	}
+    /**
+     * Creates an adapter for the given {@link Iterator}.
+     *
+     * @param iterator iterator of {@link Property} instances
+     */
+    public PropertyIteratorAdapter(Iterator iterator) {
+        super(new RangeIteratorAdapter(iterator));
+    }
 
-	/**
-	 * Creates an iterator for the given collection.
-	 *
-	 * @param collection collection of {@link Property} instances
-	 */
-	public PropertyIteratorAdapter(Collection collection) {
-		super(new RangeIteratorAdapter(collection));
-	}
+    /**
+     * Creates an iterator for the given collection.
+     *
+     * @param collection collection of {@link Property} instances
+     */
+    public PropertyIteratorAdapter(Collection collection) {
+        super(new RangeIteratorAdapter(collection));
+    }
 
-	//----------------------------------------------------< PropertyIterator >
+    //----------------------------------------------------< PropertyIterator >
 
-	/**
-	 * Returns the next property.
-	 *
-	 * @return next property
-	 * @throws NoSuchElementException if there is no next property
-	 */
-	public Property nextProperty() {
-		return (Property) next();
-	}
+    /**
+     * Returns the next property.
+     *
+     * @return next property
+     * @throws NoSuchElementException if there is no next property
+     */
+    public Property nextProperty() {
+        return (Property) next();
+    }
 
 }

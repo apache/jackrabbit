@@ -29,45 +29,45 @@ import javax.jcr.nodetype.NodeTypeIterator;
  * into {@link NodeTypeIterator}s. 
  */
 public class NodeTypeIteratorAdapter extends RangeIteratorDecorator
-		implements NodeTypeIterator {
+        implements NodeTypeIterator {
 
-	/**
-	 * Creates an adapter for the given {@link RangeIterator}.
-	 *
-	 * @param iterator iterator of {@link NodeType}s
-	 */
-	public NodeTypeIteratorAdapter(RangeIterator iterator) {
-		super(iterator);
-	}
+    /**
+     * Creates an adapter for the given {@link RangeIterator}.
+     *
+     * @param iterator iterator of {@link NodeType}s
+     */
+    public NodeTypeIteratorAdapter(RangeIterator iterator) {
+        super(iterator);
+    }
 
-	/**
-	 * Creates an adapter for the given {@link Iterator}.
-	 *
-	 * @param iterator iterator of {@link NodeType}s
-	 */
-	public NodeTypeIteratorAdapter(Iterator iterator) {
-		super(new RangeIteratorAdapter(iterator));
-	}
+    /**
+     * Creates an adapter for the given {@link Iterator}.
+     *
+     * @param iterator iterator of {@link NodeType}s
+     */
+    public NodeTypeIteratorAdapter(Iterator iterator) {
+        super(new RangeIteratorAdapter(iterator));
+    }
 
-	/**
-	 * Creates an iterator for the given collection.
-	 *
-	 * @param collection collection of {@link NodeType}s
-	 */
-	public NodeTypeIteratorAdapter(Collection collection) {
-		super(new RangeIteratorAdapter(collection));
-	}
+    /**
+     * Creates an iterator for the given collection.
+     *
+     * @param collection collection of {@link NodeType}s
+     */
+    public NodeTypeIteratorAdapter(Collection collection) {
+        super(new RangeIteratorAdapter(collection));
+    }
 
-	//----------------------------------------------------< NodeTypeIterator >
+    //----------------------------------------------------< NodeTypeIterator >
 
-	/**
-	 * Returns the next node type.
-	 *
-	 * @return next node type
-	 * @throws NoSuchElementException if there is no next node type
-	 */
-	public NodeType nextNodeType() throws NoSuchElementException {
-		return (NodeType) next();
-	}
+    /**
+     * Returns the next node type.
+     *
+     * @return next node type
+     * @throws NoSuchElementException if there is no next node type
+     */
+    public NodeType nextNodeType() throws NoSuchElementException {
+        return (NodeType) next();
+    }
 
 }

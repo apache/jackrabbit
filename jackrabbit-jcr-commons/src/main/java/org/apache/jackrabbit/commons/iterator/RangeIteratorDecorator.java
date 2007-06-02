@@ -25,81 +25,81 @@ import javax.jcr.RangeIterator;
  */
 public class RangeIteratorDecorator implements RangeIterator {
 
-	/**
-	 * The decorated iterator.
-	 */
-	private final RangeIterator iterator;
+    /**
+     * The decorated iterator.
+     */
+    private final RangeIterator iterator;
 
-	/**
-	 * Creates a decorated iterator. Protected since this class is only
-	 * useful when subclassed.
-	 *
-	 * @param iterator the iterator to be decorated
-	 */
-	protected RangeIteratorDecorator(RangeIterator iterator) {
-		this.iterator = iterator;
-	}
+    /**
+     * Creates a decorated iterator. Protected since this class is only
+     * useful when subclassed.
+     *
+     * @param iterator the iterator to be decorated
+     */
+    protected RangeIteratorDecorator(RangeIterator iterator) {
+        this.iterator = iterator;
+    }
 
-	//-------------------------------------------------------< RangeIterator >
+    //-------------------------------------------------------< RangeIterator >
 
-	/**
-	 * Delegated to the underlying iterator.
-	 *
-	 * @return iterator position
-	 */
-	public long getPosition() {
-		return iterator.getPosition();
-	}
+    /**
+     * Delegated to the underlying iterator.
+     *
+     * @return iterator position
+     */
+    public long getPosition() {
+        return iterator.getPosition();
+    }
 
-	/**
-	 * Delegated to the underlying iterator.
-	 *
-	 * @return iterator size
-	 */
-	public long getSize() {
-		return iterator.getSize();
-	}
+    /**
+     * Delegated to the underlying iterator.
+     *
+     * @return iterator size
+     */
+    public long getSize() {
+        return iterator.getSize();
+    }
 
-	/**
-	 * Delegated to the underlying iterator.
-	 *
-	 * @param n number of elements to skip
-	 * @throws NoSuchElementException if skipped past the last element
-	 */
-	public void skip(long n) throws NoSuchElementException {
-		iterator.skip(n);
-	}
+    /**
+     * Delegated to the underlying iterator.
+     *
+     * @param n number of elements to skip
+     * @throws NoSuchElementException if skipped past the last element
+     */
+    public void skip(long n) throws NoSuchElementException {
+        iterator.skip(n);
+    }
 
-	//------------------------------------------------------------< Iterator >
+    //------------------------------------------------------------< Iterator >
 
-	/**
-	 * Delegated to the underlying iterator.
-	 *
-	 * @return <code>true</code> if the iterator has more elements,
-	 *         <code>false</code> otherwise
-	 */
-	public boolean hasNext() {
-		return iterator.hasNext();
-	}
+    /**
+     * Delegated to the underlying iterator.
+     *
+     * @return <code>true</code> if the iterator has more elements,
+     *         <code>false</code> otherwise
+     */
+    public boolean hasNext() {
+        return iterator.hasNext();
+    }
 
-	/**
-	 * Delegated to the underlying iterator.
-	 *
-	 * @return next element
-	 * @throws NoSuchElementException if there are no more elements
-	 */
-	public Object next() throws NoSuchElementException {
-		return iterator.next();
-	}
+    /**
+     * Delegated to the underlying iterator.
+     *
+     * @return next element
+     * @throws NoSuchElementException if there are no more elements
+     */
+    public Object next() throws NoSuchElementException {
+        return iterator.next();
+    }
 
-	/**
-	 * Delegated to the underlying iterator.
-	 *
-	 * @throws UnsupportedOperationException if the operation is not supported
-	 * @throws IllegalStateException if there is no element to be removed
-	 */
-	public void remove()
-			throws UnsupportedOperationException, IllegalStateException {
-		iterator.remove();
-	}
+    /**
+     * Delegated to the underlying iterator.
+     *
+     * @throws UnsupportedOperationException if the operation is not supported
+     * @throws IllegalStateException if there is no element to be removed
+     */
+    public void remove()
+    throws UnsupportedOperationException, IllegalStateException {
+        iterator.remove();
+    }
 }
