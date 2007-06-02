@@ -21,6 +21,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.jackrabbit.commons.AbstractRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Repository that proxies all method calls to another repository.
@@ -28,6 +30,12 @@ import org.apache.jackrabbit.commons.AbstractRepository;
  * {@link RepositoryFactory repository factory}.
  */
 public class ProxyRepository extends AbstractRepository {
+
+    /**
+     * Logger instance.
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(ProxyRepository.class);
 
     /**
      * Factory for accessing the proxied repository.
@@ -54,6 +62,7 @@ public class ProxyRepository extends AbstractRepository {
         try {
             return factory.getRepository().getDescriptorKeys();
         } catch (RepositoryException e) {
+            logger.warn("Unable to access proxied repository", e);
             return new String[0];
         }
     }
@@ -69,7 +78,8 @@ public class ProxyRepository extends AbstractRepository {
         try {
             return factory.getRepository().getDescriptor(key);
         } catch (RepositoryException e) {
-            return e.getMessage();
+            logger.warn("Unable to access proxied repository", e);
+            return null;
         }
     }
 
