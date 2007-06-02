@@ -27,10 +27,9 @@ import org.apache.jackrabbit.rmi.remote.RemoteLock;
 /**
  * Local adapter for the JCR-RMI
  * {@link org.apache.jackrabbit.rmi.remote.RemoteLock RemoteLock}
- * inteface. This class makes a remote lock locally available using
+ * interface. This class makes a remote lock locally available using
  * the JCR {@link javax.jcr.lock.Lock Lock} interface.
  *
- * @author Jukka Zitting
  * @see javax.jcr.lock.Lock
  * @see org.apache.jackrabbit.rmi.remote.RemoteLock
  */

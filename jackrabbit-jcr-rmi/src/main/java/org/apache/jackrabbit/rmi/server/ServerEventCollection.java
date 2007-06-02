@@ -21,7 +21,7 @@ import java.rmi.RemoteException;
 import org.apache.jackrabbit.rmi.remote.RemoteEventCollection;
 
 /**
- * The <code>ServerEventCollection</code> class implemnts the
+ * The <code>ServerEventCollection</code> class implements the
  * {@link org.apache.jackrabbit.rmi.remote.RemoteEventCollection}event to
  * actually sent the server-side event to the client.
  * <p>
@@ -34,8 +34,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteEventCollection;
  * {@link org.apache.jackrabbit.rmi.server.RemoteAdapterFactory}and
  * consequently calls the base class constructor with a <code>null</code>
  * factory.
- *
- * @author Felix Meschberger
  */
 public class ServerEventCollection extends ServerObject implements
         RemoteEventCollection {

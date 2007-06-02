@@ -24,8 +24,6 @@ import javax.jcr.observation.EventIterator;
  * {@link javax.jcr.EventIterator EventIterator} interface.
  * This class is used by the JCR-RMI client adapters to convert
  * node arrays to iterators.
- *
- * @author Felix Meschberger
  */
 public class ArrayEventIterator extends ArrayIterator implements EventIterator {
 

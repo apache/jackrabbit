@@ -31,9 +31,9 @@ import javax.jcr.Value;
  * to a corresponding Node method. The remote object will simply forward
  * the method call to the underlying Node instance. Argument and return
  * values, as well as possible exceptions, are copied over the network.
- * Compex return values (like Nodes and Properties) are returned as remote
+ * Complex return values (like Nodes and Properties) are returned as remote
  * references to the corresponding remote interfaces. Iterator values
- * are transmitted as object arrays. RMI errors are signalled with
+ * are transmitted as object arrays. RMI errors are signaled with
  * RemoteExceptions.
  * <p>
  * Note that only two generic setProperty methods are included in this
@@ -45,7 +45,6 @@ import javax.jcr.Value;
  * {@link org.apache.jackrabbit.rmi.value.SerialValueFactory SerialValueFactory}
  * class provides two convenience methods to satisfy these requirements.
  *
- * @author Jukka Zitting
  * @see javax.jcr.Node
  * @see org.apache.jackrabbit.rmi.client.ClientNode
  * @see org.apache.jackrabbit.rmi.server.ServerNode

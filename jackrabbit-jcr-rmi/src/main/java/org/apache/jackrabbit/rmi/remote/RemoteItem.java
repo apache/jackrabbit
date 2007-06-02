@@ -31,11 +31,10 @@ import javax.jcr.RepositoryException;
  * to a corresponding Item method. The remote object will simply forward
  * the method call to the underlying Item instance. Argument and return
  * values, as well as possible exceptions, are copied over the network.
- * Compex return values (Items and Nodes) are returned as remote references
- * to the corresponding remote interfaces. RMI errors are signalled with
+ * Complex return values (Items and Nodes) are returned as remote references
+ * to the corresponding remote interfaces. RMI errors are signaled with
  * RemoteExceptions.
  *
- * @author Jukka Zitting
  * @see javax.jcr.Item
  * @see org.apache.jackrabbit.rmi.client.ClientItem
  * @see org.apache.jackrabbit.rmi.server.ServerItem

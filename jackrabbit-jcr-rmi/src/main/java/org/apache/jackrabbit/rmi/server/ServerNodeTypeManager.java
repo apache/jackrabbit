@@ -33,7 +33,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
  * {@link org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager RemoteNodeTypeManager}
  * interface.
  *
- * @author Jukka Zitting
  * @see javax.jcr.nodetype.NodeTypeManager
  * @see org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager
  */

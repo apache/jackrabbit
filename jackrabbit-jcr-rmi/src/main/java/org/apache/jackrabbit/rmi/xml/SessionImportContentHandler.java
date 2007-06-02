@@ -28,8 +28,6 @@ import javax.jcr.Session;
  * method in terms of the
  * {@link Session#importXML(String, java.io.InputStream, int) Session.importXML(String, InputStream, int)}
  * method.
- *
- * @author Jukka Zitting
  */
 public class SessionImportContentHandler extends ImportContentHandler {
 
@@ -39,7 +37,7 @@ public class SessionImportContentHandler extends ImportContentHandler {
     /** The import content path. */
     private String path;
 
-    /** The uuid behaviour mode */
+    /** The UUID behavior. */
     private int mode;
 
     /**
@@ -48,7 +46,7 @@ public class SessionImportContentHandler extends ImportContentHandler {
      *
      * @param session repository session
      * @param path import content path
-     * @param uuidBehaviour UUID behaviour mode
+     * @param uuidBehaviour UUID behavior mode
      */
     public SessionImportContentHandler(
             Session session, String path, int uuidBehaviour) {

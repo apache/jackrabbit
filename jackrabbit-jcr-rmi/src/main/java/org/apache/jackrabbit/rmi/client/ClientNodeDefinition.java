@@ -27,10 +27,9 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 /**
  * Local adapter for the JCR-RMI
  * {@link org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition RemoteNodeDefinition}
- * inteface. This class makes a remote node definition locally available using
+ * interface. This class makes a remote node definition locally available using
  * the JCR {@link javax.jcr.nodetype.NodeDefinition NodeDef} interface.
  *
- * @author Jukka Zitting
  * @see javax.jcr.nodetype.NodeDefinition
  * @see org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition
  */

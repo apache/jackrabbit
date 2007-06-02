@@ -28,11 +28,10 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
 /**
  * Local adapter for the JCR-RMI
  * {@link org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager RemoteNodeTypeManager}
- * inteface. This class makes a remote node type manager locally available
+ * interface. This class makes a remote node type manager locally available
  * using the JCR {@link javax.jcr.nodetype.NodeTypeManager NodeTypeManager}
  * interface.
  *
- * @author Jukka Zitting
  * @see javax.jcr.nodetype.NodeTypeManager
  * @see org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager
  */

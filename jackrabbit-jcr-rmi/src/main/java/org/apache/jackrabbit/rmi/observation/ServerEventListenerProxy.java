@@ -41,8 +41,6 @@ import org.slf4j.LoggerFactory;
  * <p>
  * See the package overview for an explanation of the mechanisms implemented for
  * event dispatching.
- *
- * @author Felix Meschberger
  */
 public class ServerEventListenerProxy implements EventListener {
 

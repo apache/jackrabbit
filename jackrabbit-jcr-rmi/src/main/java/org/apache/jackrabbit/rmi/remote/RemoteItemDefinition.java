@@ -31,12 +31,11 @@ import java.rmi.RemoteException;
  * to a corresponding ItemDef method. The remote object will simply forward
  * the method call to the underlying ItemDef instance. Argument and return
  * values, as well as possible exceptions, are copied over the network.
- * Compex {@link javax.jcr.nodetype.NodeType NodeType} return values
+ * Complex {@link javax.jcr.nodetype.NodeType NodeType} return values
  * are returned as remote references to the
  * {@link org.apache.jackrabbit.rmi.remote.RemoteNodeType RemoteNodeType}
- * interface. RMI errors are signalled with RemoteExceptions.
+ * interface. RMI errors are signaled with RemoteExceptions.
  *
- * @author Jukka Zitting
  * @see javax.jcr.nodetype.ItemDefinition
  * @see org.apache.jackrabbit.rmi.client.ClientItemDefinition
  * @see org.apache.jackrabbit.rmi.server.ServerItemDefinition

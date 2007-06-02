@@ -34,10 +34,9 @@ import org.apache.jackrabbit.rmi.value.SerialValueFactory;
 /**
  * Local adapter for the JCR-RMI
  * {@link org.apache.jackrabbit.rmi.remote.RemoteProperty RemoteProperty}
- * inteface. This class makes a remote property locally available using
+ * interface. This class makes a remote property locally available using
  * the JCR {@link javax.jcr.Property Property} interface.
  *
- * @author Jukka Zitting
  * @see javax.jcr.Property
  * @see org.apache.jackrabbit.rmi.remote.RemoteProperty
  */

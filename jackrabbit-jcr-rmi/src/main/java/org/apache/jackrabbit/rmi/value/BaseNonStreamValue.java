@@ -34,8 +34,6 @@ import javax.jcr.ValueFormatException;
  * methods as appropriate except for the {@link #getStream()} which must throw
  * an <code>IllegalStateException</code> for this line of committed non-stream
  * states.
- *
- * @author Felix Meschberger
  */
 public abstract class BaseNonStreamValue implements StatefulValue {
 

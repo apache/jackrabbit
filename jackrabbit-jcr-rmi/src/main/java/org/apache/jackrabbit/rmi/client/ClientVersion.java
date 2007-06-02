@@ -32,7 +32,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersion;
  * interface. This class makes a remote version locally available using
  * the JCR {@link javax.jcr.version.Version Version} interface.
  *
- * @author Felix Meschberger
  * @see javax.jcr.version.Version
  * @see org.apache.jackrabbit.rmi.remote.RemoteVersion
  */

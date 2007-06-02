@@ -77,8 +77,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
  * a local adapter factory. Adapter implementations may want to inherit
  * that functionality by subclassing from ClientObject.
  *
- * @author Jukka Zitting
- * @author Philipp Koch
  * @see org.apache.jackrabbit.rmi.server.RemoteAdapterFactory
  * @see org.apache.jackrabbit.rmi.client.ClientAdapterFactory
  * @see org.apache.jackrabbit.rmi.client.ClientObject

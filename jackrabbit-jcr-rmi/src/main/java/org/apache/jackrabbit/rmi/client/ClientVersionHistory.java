@@ -34,7 +34,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
  * interface. This class makes a remote version history locally available using
  * the JCR {@link javax.jcr.version.VersionHistory VersionHistory} interface.
  *
- * @author Felix Meschberger
  * @see javax.jcr.version.VersionHistory
  * @see org.apache.jackrabbit.rmi.remote.RemoteVersionHistory
  */

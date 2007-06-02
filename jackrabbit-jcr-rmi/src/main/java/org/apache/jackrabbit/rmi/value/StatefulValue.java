@@ -34,8 +34,6 @@ import javax.jcr.Value;
  * the concrete implementations of this class should be used or overwritten as
  * appropriate.
  *
- * @author Felix Meschberger
- *
  * @see org.apache.jackrabbit.rmi.value.SerialValue
  */
 public interface StatefulValue extends Value, Serializable {

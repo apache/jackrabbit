@@ -31,7 +31,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
  * {@link org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition RemoteNodeDefinition}
  * interface.
  *
- * @author Jukka Zitting
  * @see javax.jcr.nodetype.NodeDefinition
  * @see org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition
  */

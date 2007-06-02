@@ -48,7 +48,6 @@ import org.slf4j.LoggerFactory;
  * contracts for them to be handled correctly by this class.
  * </ol>
  *
- * @author Felix Meschberger
  * @see #run()
  */
 public class ClientEventPoll extends Thread {

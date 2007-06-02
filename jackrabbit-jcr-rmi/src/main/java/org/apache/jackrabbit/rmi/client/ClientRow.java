@@ -26,10 +26,9 @@ import org.apache.jackrabbit.rmi.remote.RemoteRow;
 
 /**
  * Local adapter for the JCR-RMI {@link RemoteRow RemoteRow}
- * inteface. This class makes a remote query row locally available using
+ * interface. This class makes a remote query row locally available using
  * the JCR {@link Row Row} interface.
  *
- * @author Philipp Koch
  * @see javax.jcr.query.Row Row
  * @see org.apache.jackrabbit.rmi.remote.RemoteRow
  */

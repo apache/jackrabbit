@@ -76,9 +76,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
  * package as the default adapter implementations. Subclasses can
  * easily override or extend the default adapters by implementing the
  * corresponding factory methods.
- *
- * @author Jukka Zitting
- * @author Philipp Koch
  */
 public class ClientAdapterFactory implements LocalAdapterFactory {
 

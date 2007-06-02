@@ -27,7 +27,6 @@ import javax.jcr.ValueFormatException;
  * for Reference values as a part of the State design pattern (Gof) used by
  * this package.
  *
- * @author Felix Meschberger
  * @since 0.16.4.1
  */
 public class ReferenceValue extends BaseNonStreamValue

@@ -17,8 +17,6 @@
 package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
-import java.rmi.server.RMIClientSocketFactory;
-import java.rmi.server.RMIServerSocketFactory;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -91,9 +89,6 @@ import org.apache.jackrabbit.rmi.server.iterator.ServerVersionIterator;
  * The <code>bufferSize</code> property can be used to configure the
  * size of the buffer used by iterators to speed up iterator traversal
  * over the network.
- *
- * @author Jukka Zitting
- * @author Philipp Koch
  */
 public class ServerAdapterFactory implements RemoteAdapterFactory {
 

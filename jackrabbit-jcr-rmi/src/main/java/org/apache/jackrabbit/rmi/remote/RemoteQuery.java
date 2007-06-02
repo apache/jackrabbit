@@ -27,9 +27,8 @@ import javax.jcr.RepositoryException;
  * and {@link org.apache.jackrabbit.rmi.client.ClientQuery ClientQuery}
  * adapter base classes to provide transparent RMI access to remote items.
  * <p>
- * RMI errors are signalled with RemoteExceptions.
+ * RMI errors are signaled with RemoteExceptions.
  *
- * @author Philipp Koch
  * @see javax.jcr.query.Query
  * @see org.apache.jackrabbit.rmi.client.ClientQuery
  * @see org.apache.jackrabbit.rmi.server.ServerQuery

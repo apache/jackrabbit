@@ -33,7 +33,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
  * {@link org.apache.jackrabbit.rmi.remote.RemoteQueryManager RemoteQueryManager}
  * interface.
  *
- * @author Philipp Koch
  * @see javax.jcr.query.QueryManager
  * @see org.apache.jackrabbit.rmi.remote.RemoteQueryManager
  */

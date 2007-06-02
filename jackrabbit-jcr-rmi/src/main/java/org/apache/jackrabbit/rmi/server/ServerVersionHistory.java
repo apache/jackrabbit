@@ -33,7 +33,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
  * {@link org.apache.jackrabbit.rmi.remote.RemoteVersionHistory RemoteVersionHistory}
  * interface.
  *
- * @author Felix Meschberger
  * @see javax.jcr.version.VersionHistory
  * @see org.apache.jackrabbit.rmi.remote.RemoteVersionHistory
  */

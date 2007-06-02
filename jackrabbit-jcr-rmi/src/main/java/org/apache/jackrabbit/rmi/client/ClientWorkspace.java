@@ -43,8 +43,6 @@ import org.xml.sax.ContentHandler;
  * interface. This class makes a remote workspace locally available using
  * the JCR {@link Workspace Workspace} interface.
  *
- * @author Jukka Zitting
- * @author Philipp Koch
  * @see javax.jcr.Workspace
  * @see org.apache.jackrabbit.rmi.remote.RemoteWorkspace
  */

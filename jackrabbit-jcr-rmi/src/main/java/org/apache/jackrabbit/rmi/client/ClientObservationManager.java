@@ -39,11 +39,9 @@ import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
  * {@link org.apache.jackrabbit.rmi.client.LocalAdapterFactory} and consequently
  * calls the base class constructor with a <code>null</code> factory.
  * <p>
- * See the <a href="../observation/package.html><code>observation</code></a>
+ * See the {@link org.apache.jackrabbit.rmi.observation observation}
  * package comment for a description on how event listener registration and
  * notification is implemented.
- *
- * @author Felix Meschberger
  *
  * @see org.apache.jackrabbit.rmi.observation.ClientEventPoll
  */

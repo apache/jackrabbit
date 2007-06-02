@@ -25,8 +25,6 @@ import java.rmi.RemoteException;
  * created by the server-side event listener proxies and sent to the client-side
  * event poller. On the client-side the enclosed list of events is then sent to
  * the listener identified by the contained listener identifier.
- *
- * @author Felix Meschberger
  */
 public interface RemoteEventCollection extends Remote {
 

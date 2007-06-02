@@ -29,10 +29,9 @@ import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
 
 /**
  * Local adapter for the JCR-RMI {@link RemoteQueryManager RemoteQueryManager}
- * inteface. This class makes a remote query manager locally available using
+ * interface. This class makes a remote query manager locally available using
  * the JCR {@link QueryManager QueryManager} interface.
  *
- * @author Philipp Koch
  * @see javax.jcr.query.QueryManager QueryManager
  * @see org.apache.jackrabbit.rmi.remote.RemoteQueryManager
  */

@@ -42,7 +42,6 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
  * the {@link org.apache.jackrabbit.rmi.remote.RemoteNode RemoteNode}
  * interface.
  *
- * @author Jukka Zitting
  * @see javax.jcr.Node
  * @see org.apache.jackrabbit.rmi.remote.RemoteNode
  */
