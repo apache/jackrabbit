@@ -618,6 +618,7 @@
         <groupId>javax.jcr</groupId>
         <artifactId>jcr</artifactId>
         <version>1.0</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>concurrent</groupId>
@@ -740,6 +741,7 @@
         <groupId>javax.servlet</groupId>
         <artifactId>servlet-api</artifactId>
         <version>2.3</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>xerces</groupId>
