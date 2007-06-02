@@ -86,7 +86,8 @@ public class JNDIBindingServlet extends HttpServlet {
             context =  new InitialContext(environment);
             context.bind(location, new ServletRepository(this));
         } catch (NamingException e) {
-            throw new ServletException("Unable to bind repository in JNDI", e);
+            throw new ServletException(
+                    "Failed to bind repository to JNDI: " + location, e);
         }
     }
 
@@ -97,7 +98,7 @@ public class JNDIBindingServlet extends HttpServlet {
         try {
             context.unbind(location);
         } catch (NamingException e) {
-            log("Unable to unbind repository from JNDI", e);
+            log("Failed to unbind repository from JNDI: " + location, e);
         }
     }
 
