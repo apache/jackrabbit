@@ -29,45 +29,45 @@ import javax.jcr.observation.EventListenerIterator;
  * into {@link EventListenerIterator}s. 
  */
 public class EventListenerIteratorAdapter extends RangeIteratorDecorator
-		implements EventListenerIterator {
+        implements EventListenerIterator {
 
-	/**
-	 * Creates an adapter for the given {@link RangeIterator}.
-	 *
-	 * @param iterator iterator of {@link EventListener}s
-	 */
-	public EventListenerIteratorAdapter(RangeIterator iterator) {
-		super(iterator);
-	}
+    /**
+     * Creates an adapter for the given {@link RangeIterator}.
+     *
+     * @param iterator iterator of {@link EventListener}s
+     */
+    public EventListenerIteratorAdapter(RangeIterator iterator) {
+        super(iterator);
+    }
 
-	/**
-	 * Creates an adapter for the given {@link Iterator}.
-	 *
-	 * @param iterator iterator of {@link EventListener}s
-	 */
-	public EventListenerIteratorAdapter(Iterator iterator) {
-		super(new RangeIteratorAdapter(iterator));
-	}
+    /**
+     * Creates an adapter for the given {@link Iterator}.
+     *
+     * @param iterator iterator of {@link EventListener}s
+     */
+    public EventListenerIteratorAdapter(Iterator iterator) {
+        super(new RangeIteratorAdapter(iterator));
+    }
 
-	/**
-	 * Creates an iterator for the given collection.
-	 *
-	 * @param collection collection of {@link EventListener}s
-	 */
-	public EventListenerIteratorAdapter(Collection collection) {
-		super(new RangeIteratorAdapter(collection));
-	}
+    /**
+     * Creates an iterator for the given collection.
+     *
+     * @param collection collection of {@link EventListener}s
+     */
+    public EventListenerIteratorAdapter(Collection collection) {
+        super(new RangeIteratorAdapter(collection));
+    }
 
-	//-----------------------------------------------< EventListenerIterator >
+    //-----------------------------------------------< EventListenerIterator >
 
-	/**
-	 * Returns the next event listener.
-	 *
-	 * @return next event listener
-	 * @throws NoSuchElementException if there is no next event listener
-	 */
-	public EventListener nextEventListener() {
-		return (EventListener) next();
-	}
+    /**
+     * Returns the next event listener.
+     *
+     * @return next event listener
+     * @throws NoSuchElementException if there is no next event listener
+     */
+    public EventListener nextEventListener() {
+        return (EventListener) next();
+    }
 
 }

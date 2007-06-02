@@ -29,45 +29,45 @@ import javax.jcr.RangeIterator;
  * into {@link NodeIterator}s. 
  */
 public class NodeIteratorAdapter extends RangeIteratorDecorator
-		implements NodeIterator {
+        implements NodeIterator {
 
-	/**
-	 * Creates an adapter for the given {@link RangeIterator}.
-	 *
-	 * @param iterator iterator of {@link Node}s
-	 */
-	public NodeIteratorAdapter(RangeIterator iterator) {
-		super(iterator);
-	}
+    /**
+     * Creates an adapter for the given {@link RangeIterator}.
+     *
+     * @param iterator iterator of {@link Node}s
+     */
+    public NodeIteratorAdapter(RangeIterator iterator) {
+        super(iterator);
+    }
 
-	/**
-	 * Creates an adapter for the given {@link Iterator}.
-	 *
-	 * @param iterator iterator of {@link Node}s
-	 */
-	public NodeIteratorAdapter(Iterator iterator) {
-		super(new RangeIteratorAdapter(iterator));
-	}
+    /**
+     * Creates an adapter for the given {@link Iterator}.
+     *
+     * @param iterator iterator of {@link Node}s
+     */
+    public NodeIteratorAdapter(Iterator iterator) {
+        super(new RangeIteratorAdapter(iterator));
+    }
 
-	/**
-	 * Creates an iterator for the given collection.
-	 *
-	 * @param collection collection of {@link Node}s
-	 */
-	public NodeIteratorAdapter(Collection collection) {
-		super(new RangeIteratorAdapter(collection));
-	}
+    /**
+     * Creates an iterator for the given collection.
+     *
+     * @param collection collection of {@link Node}s
+     */
+    public NodeIteratorAdapter(Collection collection) {
+        super(new RangeIteratorAdapter(collection));
+    }
 
-	//--------------------------------------------------------< NodeIterator >
+    //--------------------------------------------------------< NodeIterator >
 
-	/**
-	 * Returns the next node.
-	 *
-	 * @return next node
-	 * @throws NoSuchElementException if there is no next node
-	 */
-	public Node nextNode() throws NoSuchElementException {
-		return (Node) next();
-	}
+    /**
+     * Returns the next node.
+     *
+     * @return next node
+     * @throws NoSuchElementException if there is no next node
+     */
+    public Node nextNode() throws NoSuchElementException {
+        return (Node) next();
+    }
 
 }

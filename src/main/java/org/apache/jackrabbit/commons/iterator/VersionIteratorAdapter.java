@@ -29,45 +29,45 @@ import javax.jcr.version.VersionIterator;
  * into {@link VersionIterator}s. 
  */
 public class VersionIteratorAdapter extends RangeIteratorDecorator
-		implements VersionIterator {
+        implements VersionIterator {
 
-	/**
-	 * Creates an adapter for the given {@link RangeIterator}.
-	 *
-	 * @param iterator iterator of {@link Version}s
-	 */
-	public VersionIteratorAdapter(RangeIterator iterator) {
-		super(iterator);
-	}
+    /**
+     * Creates an adapter for the given {@link RangeIterator}.
+     *
+     * @param iterator iterator of {@link Version}s
+     */
+    public VersionIteratorAdapter(RangeIterator iterator) {
+        super(iterator);
+    }
 
-	/**
-	 * Creates an adapter for the given {@link Iterator}.
-	 *
-	 * @param iterator iterator of {@link Version}s
-	 */
-	public VersionIteratorAdapter(Iterator iterator) {
-		super(new RangeIteratorAdapter(iterator));
-	}
+    /**
+     * Creates an adapter for the given {@link Iterator}.
+     *
+     * @param iterator iterator of {@link Version}s
+     */
+    public VersionIteratorAdapter(Iterator iterator) {
+        super(new RangeIteratorAdapter(iterator));
+    }
 
-	/**
-	 * Creates an iterator for the given collection.
-	 *
-	 * @param collection collection of {@link Version}s
-	 */
-	public VersionIteratorAdapter(Collection collection) {
-		super(new RangeIteratorAdapter(collection));
-	}
+    /**
+     * Creates an iterator for the given collection.
+     *
+     * @param collection collection of {@link Version}s
+     */
+    public VersionIteratorAdapter(Collection collection) {
+        super(new RangeIteratorAdapter(collection));
+    }
 
-	//-----------------------------------------------------< VersionIterator >
+    //-----------------------------------------------------< VersionIterator >
 
-	/**
-	 * Returns the next version.
-	 *
-	 * @return next version
-	 * @throws NoSuchElementException if there is no next version
-	 */
-	public Version nextVersion() {
-		return (Version) next();
-	}
+    /**
+     * Returns the next version.
+     *
+     * @return next version
+     * @throws NoSuchElementException if there is no next version
+     */
+    public Version nextVersion() {
+        return (Version) next();
+    }
 
 }
