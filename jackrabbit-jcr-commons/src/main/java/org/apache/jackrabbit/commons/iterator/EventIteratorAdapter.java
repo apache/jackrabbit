@@ -29,45 +29,45 @@ import javax.jcr.observation.EventIterator;
  * into {@link EventIterator}s. 
  */
 public class EventIteratorAdapter extends RangeIteratorDecorator
-		implements EventIterator {
+        implements EventIterator {
 
-	/**
-	 * Creates an adapter for the given {@link RangeIterator}.
-	 *
-	 * @param iterator iterator of {@link Event}s
-	 */
-	public EventIteratorAdapter(RangeIterator iterator) {
-		super(iterator);
-	}
+    /**
+     * Creates an adapter for the given {@link RangeIterator}.
+     *
+     * @param iterator iterator of {@link Event}s
+     */
+    public EventIteratorAdapter(RangeIterator iterator) {
+        super(iterator);
+    }
 
-	/**
-	 * Creates an adapter for the given {@link Iterator}.
-	 *
-	 * @param iterator iterator of {@link Event}s.
-	 */
-	public EventIteratorAdapter(Iterator iterator) {
-		super(new RangeIteratorAdapter(iterator));
-	}
+    /**
+     * Creates an adapter for the given {@link Iterator}.
+     *
+     * @param iterator iterator of {@link Event}s.
+     */
+    public EventIteratorAdapter(Iterator iterator) {
+        super(new RangeIteratorAdapter(iterator));
+    }
 
-	/**
-	 * Creates an iterator for the given collection.
-	 *
-	 * @param collection collection of {@link Event}s
-	 */
-	public EventIteratorAdapter(Collection collection) {
-		super(new RangeIteratorAdapter(collection));
-	}
+    /**
+     * Creates an iterator for the given collection.
+     *
+     * @param collection collection of {@link Event}s
+     */
+    public EventIteratorAdapter(Collection collection) {
+        super(new RangeIteratorAdapter(collection));
+    }
 
-	//-------------------------------------------------------< EventIterator >
+    //-------------------------------------------------------< EventIterator >
 
-	/**
-	 * Returns the next event.
-	 *
-	 * @return next event
-	 * @throws NoSuchElementException if there is no next event
-	 */
-	public Event nextEvent() throws NoSuchElementException {
-		return (Event) next();
-	}
+    /**
+     * Returns the next event.
+     *
+     * @return next event
+     * @throws NoSuchElementException if there is no next event
+     */
+    public Event nextEvent() throws NoSuchElementException {
+        return (Event) next();
+    }
 
 }
