@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.commons.repository;
 
-import java.util.Hashtable;
+import javax.naming.Context;
 
 /**
  * Proxy for a repository bound in JNDI. The configured repository is
@@ -30,11 +30,11 @@ public class JNDIRepository extends ProxyRepository {
     /**
      * Creates a proxy for a repository in the given JNDI location.
      *
-     * @param environment JNDI environment settings
+     * @param context JNDI context
      * @param name JNDI name of the proxied repository
      */
-    public JNDIRepository(Hashtable environment, String name) {
-        super(new JNDIRepositoryFactory(environment, name));
+    public JNDIRepository(Context context, String name) {
+        super(new JNDIRepositoryFactory(context, name));
     }
 
 }
