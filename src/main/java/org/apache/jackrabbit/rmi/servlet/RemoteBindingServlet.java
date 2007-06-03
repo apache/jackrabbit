@@ -19,6 +19,7 @@ package org.apache.jackrabbit.rmi.servlet;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.rmi.RemoteException;
+import java.rmi.server.RemoteObject;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -76,7 +77,7 @@ public class RemoteBindingServlet extends HttpServlet {
      * @throws ServletException if the repository could not be instantiated
      */
     protected RemoteRepository getRemoteRepository() throws ServletException {
-        if (remote != null) {
+        if (remote == null) {
             try {
                 RemoteAdapterFactory factory = getRemoteAdapterFactory();
                 remote = factory.getRemoteRepository(new ServletRepository(this));
@@ -132,7 +133,7 @@ public class RemoteBindingServlet extends HttpServlet {
         response.setContentType("application/octet-stream");
         ObjectOutputStream output =
             new ObjectOutputStream(response.getOutputStream());
-        output.writeObject(getRemoteRepository());
+        output.writeObject(RemoteObject.toStub(getRemoteRepository()));
         output.flush();
     }
 
