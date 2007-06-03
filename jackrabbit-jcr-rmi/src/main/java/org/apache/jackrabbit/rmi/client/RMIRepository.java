@@ -32,10 +32,11 @@ public class RMIRepository extends ProxyRepository {
     /**
      * Creates a proxy for the remote repository in the given RMI URL.
      *
+     * @param factory local adapter factory
      * @param url RMI URL of the remote repository
      */
-    public RMIRepository(String url) {
-        super(new RMIRepositoryFactory(url));
+    public RMIRepository(LocalAdapterFactory factory, String url) {
+        super(new RMIRepositoryFactory(factory, url));
     }
 
 }

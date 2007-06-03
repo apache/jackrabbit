@@ -27,8 +27,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
 import org.apache.jackrabbit.commons.servlet.ServletRepository;
+import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitServerAdapterFactory;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
-import org.apache.jackrabbit.rmi.server.ServerAdapterFactory;
 
 /**
  * Servlet that binds a repository from a servlet context attribute in RMI.
@@ -44,8 +44,8 @@ import org.apache.jackrabbit.rmi.server.ServerAdapterFactory;
  *   <dd>
  *     Name of the remote adapter factory class used to create the remote
  *     repository reference. The configured class should have public
- *     constructor that takes no arguments. The default value is
- *     "<code>org.apache.jackrabbit.rmi.server.ServerAdapterFactory</code>".
+ *     constructor that takes no arguments. The default class is
+ *     {@link JackrabbitServerAdapterFactory}.
  *   </dd>
  *   <dt>url</dt>
  *   <dd>
@@ -116,7 +116,7 @@ public class RMIBindingServlet extends HttpServlet {
             throws ServletException {
         String name = getInitParameter(RemoteAdapterFactory.class.getName());
         if (name == null) {
-            name = ServerAdapterFactory.class.getName();
+            name = JackrabbitServerAdapterFactory.class.getName();
         }
         try {
             Class factoryClass = Class.forName(name);
