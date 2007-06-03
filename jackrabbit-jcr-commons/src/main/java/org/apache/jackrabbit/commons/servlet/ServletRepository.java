@@ -51,6 +51,7 @@ import org.apache.jackrabbit.commons.repository.ProxyRepository;
  * }
  * </pre>
  *
+ * @since 1.4
  * @see ServletRepositoryFactory
  */
 public class ServletRepository extends ProxyRepository {

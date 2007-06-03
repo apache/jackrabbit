@@ -51,6 +51,8 @@ import org.apache.jackrabbit.commons.repository.JNDIRepository;
  * <p>
  * This servlet can also be mapped to the URL space. See
  * {@link AbstractRepositoryServlet} for the details.
+ *
+ * @since 1.4
  */
 public class JNDIRepositoryServlet extends AbstractRepositoryServlet {
 
