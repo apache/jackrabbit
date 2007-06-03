@@ -14,16 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.rmi.client;
+package org.apache.jackrabbit.rmi.repository;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.URL;
 
-import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.commons.repository.RepositoryFactory;
+import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 
 /**
@@ -31,12 +30,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteRepository;
  *
  * @since 1.4
  */
-public class URLRMIRepositoryFactory implements RepositoryFactory {
-
-    /**
-     * Local adapter factory.
-     */
-    private final LocalAdapterFactory factory;
+public class URLRemoteRepositoryFactory
+        extends AbstractRemoteRepositoryFactory {
 
     /**
      * URL of the remote repository.
@@ -49,24 +44,25 @@ public class URLRMIRepositoryFactory implements RepositoryFactory {
      * @param factory local adapter factory
      * @param url URL or the remote repository
      */
-    public URLRMIRepositoryFactory(LocalAdapterFactory factory, URL url) {
-        this.factory = factory;
+    public URLRemoteRepositoryFactory(LocalAdapterFactory factory, URL url) {
+        super(factory);
         this.url = url;
     }
 
     /**
      * Looks up and returns a remote repository from the configured URL.
      *
-     * @return local adapter for the remote repository
-     * @throws RepositoryException if the repository could not be accessed
+     * @return remote repository reference
+     * @throws RepositoryException if the remote repository is not available
      */
-    public Repository getRepository() throws RepositoryException {
+    protected RemoteRepository getRemoteRepository()
+            throws RepositoryException {
         try {
             ObjectInputStream input = new ObjectInputStream(url.openStream());
             try {
                 Object remote = input.readObject();
                 if (remote instanceof RemoteRepository) {
-                    return factory.getRepository((RemoteRepository) remote);
+                    return (RemoteRepository) remote;
                 } else if (remote == null) {
                     throw new RepositoryException(
                             "Remote repository not found: The resource at "

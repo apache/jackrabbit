@@ -16,18 +16,18 @@
  */
 package org.apache.jackrabbit.rmi.servlet;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.MalformedURLException;
-import java.rmi.AlreadyBoundException;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
+import java.net.URL;
 
 import javax.servlet.ServletException;
 
 import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitServerAdapterFactory;
 
 /**
- * Servlet that binds a repository from a servlet context attribute in RMI.
+ * Servlet that writes the remote reference of a repository in the servlet
+ * context to the configured URL.
  * <p>
  * The initialization parameters of this servlet are:
  * <dl>
@@ -45,60 +45,42 @@ import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitServerAdapterFactory;
  *   </dd>
  *   <dt>url</dt>
  *   <dd>
- *     RMI URL where to bind the repository in. The default value is
- *     "<code>//localhost/javax/jcr/Repository</code>".
+ *     URL where to store the remote repository reference.
  *   </dd>
  * </dl>
  *
  * @since 1.4
  */
-public class RMIBindingServlet extends RemoteBindingServlet {
+public class URLRemoteBindingServlet extends RemoteBindingServlet {
 
     /**
-     * Serial version UID. 
+     * Serial version UID.
      */
-    private static final long serialVersionUID = 7239156891304655304L;
+    private static final long serialVersionUID = 3187755583290121129L;
 
     /**
-     * Location of the repository within the JNDI context.
-     */
-    private String url;
-
-    /**
-     * Binds a repository from the servlet context in the configured RMI URL.
+     * Writes the remote reference of a repository in the servlet context
+     * to the configured URL.
      *
-     * @throws ServletException if the repository could not be bound in RMI
+     * @throws ServletException if the URL could not be written to
      */
     public void init() throws ServletException {
-        url = getInitParameter("url");
+        String url = getInitParameter("url");
         if (url == null) {
-            url = "//localhost/javax/jcr/Repository";
+            throw new ServletException("Missing init parameter: url");
         }
         try {
-            Naming.bind(url, getRemoteRepository());
+            ObjectOutputStream output = new ObjectOutputStream(
+                    new URL(url).openConnection().getOutputStream());
+            try {
+                output.writeObject(getRemoteRepository());
+            } finally {
+                output.close();
+            }
         } catch (MalformedURLException e) {
-            throw new ServletException("Invalid RMI URL: " + url, e);
-        } catch (AlreadyBoundException e) {
-            throw new ServletException(
-                    "RMI URL is already bound: " + url, e);
-        } catch (RemoteException e) {
-            throw new ServletException(
-                    "Failed to bind repository to RMI: " + url, e);
-        }
-    }
-
-    /**
-     * Unbinds the repository from RMI.
-     */
-    public void destroy() {
-        try {
-            Naming.unbind(url);
-        } catch (MalformedURLException e) {
-            log("Invalid RMI URL: " + url, e);
-        } catch (NotBoundException e) {
-            log("Repository not bound in RMI: " + url, e);
-        } catch (RemoteException e) {
-            log("Failed to unbind repository from RMI: " + url, e);
+            throw new ServletException("Malformed URL: " + url, e);
+        } catch (IOException e) {
+            throw new ServletException("Failed to write to URL: " + url, e);
         }
     }
 

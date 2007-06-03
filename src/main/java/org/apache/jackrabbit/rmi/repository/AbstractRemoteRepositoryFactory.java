@@ -14,23 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.rmi.client;
-
-import java.net.MalformedURLException;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
+package org.apache.jackrabbit.rmi.repository;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.commons.repository.RepositoryFactory;
+import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
+import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 
 /**
- * Factory that looks up a repository from RMI.
+ * Abstract base class for repository factories that make a remote repository
+ * available locally. Subclasses need to implement the
+ * {@link #getRemoteRepository()} method to actually retrieve the remote
+ * repository reference.
  *
  * @since 1.4
  */
-public class RMIRepositoryFactory implements RepositoryFactory {
+public abstract class AbstractRemoteRepositoryFactory
+        implements RepositoryFactory {
 
     /**
      * Local adapter factory.
@@ -38,39 +40,32 @@ public class RMIRepositoryFactory implements RepositoryFactory {
     private final LocalAdapterFactory factory;
 
     /**
-     * RMI URL of the repository.
-     */
-    private final String url;
-
-    /**
      * Creates a factory for looking up a repository from the given RMI URL.
      *
      * @param factory local adapter factory
      * @param url RMI URL of the repository
      */
-    public RMIRepositoryFactory(LocalAdapterFactory factory, String url) {
+    protected AbstractRemoteRepositoryFactory(LocalAdapterFactory factory) {
         this.factory = factory;
-        this.url = url;
     }
 
     /**
-     * Looks up and returns a repository from the configured RMI URL.
+     * Returns a local adapter for the remote repository.
      *
      * @return local adapter for the remote repository
-     * @throws RepositoryException if the repository could not be accessed
+     * @throws RepositoryException if the remote repository is not available
      */
     public Repository getRepository() throws RepositoryException {
-        try {
-            return new ClientRepositoryFactory(factory).getRepository(url);
-        } catch (MalformedURLException e) {
-            throw new RepositoryException("Invalid repository URL: " + url, e);
-        } catch (NotBoundException e) {
-            throw new RepositoryException("Repository not found: " + url, e);
-        } catch (ClassCastException e) {
-            throw new RepositoryException("Invalid repository: " + url, e);
-        } catch (RemoteException e) {
-            throw new RepositoryException("Repository access error: " + url, e);
-        }
+        return factory.getRepository(getRemoteRepository());
     }
+
+    /**
+     * Returns the remote repository reference.
+     *
+     * @return remote repository reference
+     * @throws RepositoryException if the remote repository is not available
+     */
+    protected abstract RemoteRepository getRemoteRepository()
+            throws RepositoryException;
 
 }
