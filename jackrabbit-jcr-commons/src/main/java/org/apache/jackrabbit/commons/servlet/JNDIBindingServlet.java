@@ -47,6 +47,8 @@ import javax.servlet.http.HttpServlet;
  *     instantiating {@link InitialContext} for binding up the repository. 
  *   </dd>
  * </dl>
+ *
+ * @since 1.4
  */
 public class JNDIBindingServlet extends HttpServlet {
 
