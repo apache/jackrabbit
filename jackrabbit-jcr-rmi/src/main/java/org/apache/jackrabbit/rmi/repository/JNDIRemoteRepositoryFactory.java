@@ -14,14 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.rmi.client;
+package org.apache.jackrabbit.rmi.repository;
 
-import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.naming.Context;
 import javax.naming.NamingException;
 
-import org.apache.jackrabbit.commons.repository.RepositoryFactory;
+import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 
 /**
@@ -29,12 +28,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteRepository;
  *
  * @since 1.4
  */
-public class JNDIRMIRepositoryFactory implements RepositoryFactory {
-
-    /**
-     * Local adapter factory.
-     */
-    private final LocalAdapterFactory factory;
+public class JNDIRemoteRepositoryFactory
+        extends AbstractRemoteRepositoryFactory {
 
     /**
      * JNDI context of the remote repository.
@@ -53,24 +48,25 @@ public class JNDIRMIRepositoryFactory implements RepositoryFactory {
      * @param context JNDI context
      * @param location JNDI location
      */
-    public JNDIRMIRepositoryFactory(
+    public JNDIRemoteRepositoryFactory(
             LocalAdapterFactory factory, Context context, String location) {
-        this.factory = factory;
+        super(factory);
         this.context = context;
         this.location = location;
     }
 
     /**
-     * Looks up and returns a remote repository from JNDI.
+     * Looks up a remote repository from JNDI.
      *
-     * @return local adapter for the remote repository
-     * @throws RepositoryException if the repository could not be accessed
+     * @return remote repository reference
+     * @throws RepositoryException if the remote repository is not available
      */
-    public Repository getRepository() throws RepositoryException {
+    protected RemoteRepository getRemoteRepository()
+            throws RepositoryException {
         try {
             Object remote = context.lookup(location);
             if (remote instanceof RemoteRepository) {
-                return factory.getRepository((RemoteRepository) remote);
+                return (RemoteRepository) remote;
             } else if (remote == null) {
                 throw new RepositoryException(
                         "Remote repository not found: The JNDI entry "

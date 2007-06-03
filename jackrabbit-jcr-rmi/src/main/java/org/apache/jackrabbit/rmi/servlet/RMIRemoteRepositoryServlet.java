@@ -20,8 +20,8 @@ import javax.jcr.Repository;
 import javax.servlet.ServletException;
 
 import org.apache.jackrabbit.commons.servlet.AbstractRepositoryServlet;
-import org.apache.jackrabbit.rmi.client.RMIRepository;
 import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
+import org.apache.jackrabbit.rmi.repository.RMIRemoteRepository;
 
 /**
  * Servlet that makes a repository from RMI available as an attribute
@@ -53,12 +53,12 @@ import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
  *
  * @since 1.4
  */
-public class RMIRepositoryServlet extends RemoteRepositoryServlet {
+public class RMIRemoteRepositoryServlet extends RemoteRepositoryServlet {
 
     /**
-     * Serial version UID.
+     * Serial version UID. 
      */
-    private static final long serialVersionUID = 3361176460018801671L;
+    private static final long serialVersionUID = 2410543206806054854L;
 
     /**
      * Creates and returns an RMI repository proxy for the configured RMI URL.
@@ -66,7 +66,7 @@ public class RMIRepositoryServlet extends RemoteRepositoryServlet {
      * @return RMI repository proxy
      */
     protected Repository getRepository() throws ServletException {
-        return new RMIRepository(
+        return new RMIRemoteRepository(
                 getLocalAdapterFactory(),
                 getInitParameter("url", "//localhost/javax/jcr/Repository"));
     }

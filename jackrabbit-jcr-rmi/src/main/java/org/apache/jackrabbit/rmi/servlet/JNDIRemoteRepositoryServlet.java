@@ -25,10 +25,10 @@ import javax.naming.NamingException;
 import javax.servlet.ServletException;
 
 import org.apache.jackrabbit.commons.servlet.AbstractRepositoryServlet;
-import org.apache.jackrabbit.rmi.client.JNDIRMIRepository;
 import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
+import org.apache.jackrabbit.rmi.repository.JNDIRemoteRepository;
 
 /**
  * Servlet that makes a remote repository from JNDI available as an attribute
@@ -66,12 +66,12 @@ import org.apache.jackrabbit.rmi.remote.RemoteRepository;
  *
  * @since 1.4
  */
-public class JNDIRMIRepositoryServlet extends RemoteRepositoryServlet {
+public class JNDIRemoteRepositoryServlet extends RemoteRepositoryServlet {
 
     /**
      * Serial version UID.
      */
-    private static final long serialVersionUID = 3640243088693016475L;
+    private static final long serialVersionUID = 9029928193416404478L;
 
     /**
      * Creates and returns a proxy for the remote repository in the configured
@@ -94,7 +94,7 @@ public class JNDIRMIRepositoryServlet extends RemoteRepositoryServlet {
                     environment.put(name, getInitParameter(name));
                 }
             }
-            return new JNDIRMIRepository(
+            return new JNDIRemoteRepository(
                     getLocalAdapterFactory(),
                     new InitialContext(environment), location);
         } catch (NamingException e) {
