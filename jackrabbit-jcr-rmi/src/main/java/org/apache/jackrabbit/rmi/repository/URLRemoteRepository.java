@@ -16,10 +16,12 @@
  */
 package org.apache.jackrabbit.rmi.repository;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.apache.jackrabbit.commons.repository.ProxyRepository;
 import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
+import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
 
 /**
  * Proxy for a remote repository accessed via a URL. The configured URL is
@@ -40,6 +42,29 @@ public class URLRemoteRepository extends ProxyRepository {
      */
     public URLRemoteRepository(LocalAdapterFactory factory, URL url) {
         super(new URLRemoteRepositoryFactory(factory, url));
+    }
+
+    /**
+     * Creates a proxy for the remote repository at the given URL.
+     * Uses {@link JackrabbitClientAdapterFactory} as the default
+     * local adapter factory.
+     *
+     * @param url URL of the remote repository
+     */
+    public URLRemoteRepository(URL url) {
+        this(new JackrabbitClientAdapterFactory(), url);
+    }
+
+    /**
+     * Creates a proxy for the remote repository at the given URL.
+     * Uses {@link JackrabbitClientAdapterFactory} as the default
+     * local adapter factory.
+     *
+     * @param url URL of the remote repository
+     * @throws MalformedURLException if the given URL is malformed
+     */
+    public URLRemoteRepository(String url) throws MalformedURLException {
+        this(new URL(url));
     }
 
 }

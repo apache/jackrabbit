@@ -17,9 +17,12 @@
 package org.apache.jackrabbit.rmi.repository;
 
 import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 import org.apache.jackrabbit.commons.repository.ProxyRepository;
 import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
+import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
 
 /**
  * Proxy for a remote repository bound in JNDI. The configured repository is
@@ -42,6 +45,30 @@ public class JNDIRemoteRepository extends ProxyRepository {
     public JNDIRemoteRepository(
             LocalAdapterFactory factory, Context context, String location) {
         super(new JNDIRemoteRepositoryFactory(factory, context, location));
+    }
+
+    /**
+     * Creates a proxy for the remote repository in JNDI.
+     * Uses {@link JackrabbitClientAdapterFactory} as the default
+     * local adapter factory.
+     *
+     * @param context JNDI context
+     * @param location JNDI location
+     */
+    public JNDIRemoteRepository(Context context, String location) {
+        this(new JackrabbitClientAdapterFactory(), context, location);
+    }
+
+    /**
+     * Creates a proxy for the remote repository in JNDI.
+     * Uses {@link JackrabbitClientAdapterFactory} as the default
+     * local adapter factory.
+     *
+     * @param location JNDI location in default context
+     * @throws NamingException if the default JNDI context is not available 
+     */
+    public JNDIRemoteRepository(String location) throws NamingException {
+        this(new InitialContext(), location);
     }
 
 }

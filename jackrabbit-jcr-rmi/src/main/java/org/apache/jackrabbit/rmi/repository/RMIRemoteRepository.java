@@ -18,6 +18,7 @@ package org.apache.jackrabbit.rmi.repository;
 
 import org.apache.jackrabbit.commons.repository.ProxyRepository;
 import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
+import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
 
 /**
  * Proxy for a remote repository bound in RMI. The configured repository is
@@ -38,6 +39,17 @@ public class RMIRemoteRepository extends ProxyRepository {
      */
     public RMIRemoteRepository(LocalAdapterFactory factory, String url) {
         super(new RMIRemoteRepositoryFactory(factory, url));
+    }
+
+    /**
+     * Creates a proxy for the remote repository in the given RMI URL.
+     * Uses {@link JackrabbitClientAdapterFactory} as the default
+     * local adapter factory.
+     *
+     * @param url URL of the remote repository
+     */
+    public RMIRemoteRepository(String url) {
+        this(new JackrabbitClientAdapterFactory(), url);
     }
 
 }
