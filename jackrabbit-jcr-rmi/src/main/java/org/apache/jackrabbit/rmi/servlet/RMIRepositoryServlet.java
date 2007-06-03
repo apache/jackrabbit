@@ -20,7 +20,6 @@ import javax.jcr.Repository;
 import javax.servlet.ServletException;
 
 import org.apache.jackrabbit.commons.servlet.AbstractRepositoryServlet;
-import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.client.RMIRepository;
 import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
 
