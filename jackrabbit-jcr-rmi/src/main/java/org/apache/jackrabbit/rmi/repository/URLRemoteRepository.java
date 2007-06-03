@@ -14,29 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.rmi.client;
+package org.apache.jackrabbit.rmi.repository;
+
+import java.net.URL;
 
 import org.apache.jackrabbit.commons.repository.ProxyRepository;
+import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 
 /**
- * Proxy for a remote repository bound in RMI. The configured repository is
- * looked up from RMI lazily during each method call. Thus the RMI entry
- * does not need to exist when this class is instantiated. The RMI entry
- * can also be replaced with another repository during the lifetime of an
- * instance of this class.
+ * Proxy for a remote repository accessed via a URL. The configured URL is
+ * dereferenced lazily during each method call. Thus the resource pointed to
+ * by the URL does not need to exist when this class is instantiated. The
+ * resource can also be replaced with another remote repository instance
+ * during the lifetime of an instance of this class.
  *
  * @since 1.4
  */
-public class RMIRepository extends ProxyRepository {
+public class URLRemoteRepository extends ProxyRepository {
 
     /**
-     * Creates a proxy for the remote repository in the given RMI URL.
+     * Creates a proxy for the remote repository at the given URL.
      *
      * @param factory local adapter factory
-     * @param url RMI URL of the remote repository
+     * @param url URL of the remote repository
      */
-    public RMIRepository(LocalAdapterFactory factory, String url) {
-        super(new RMIRepositoryFactory(factory, url));
+    public URLRemoteRepository(LocalAdapterFactory factory, URL url) {
+        super(new URLRemoteRepositoryFactory(factory, url));
     }
 
 }

@@ -62,12 +62,12 @@ import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
  *
  * @since 1.4
  */
-public class JNDIRMIBindingServlet extends RemoteBindingServlet {
+public class JNDIRemoteBindingServlet extends RemoteBindingServlet {
 
     /**
      * Serial version UID.
      */
-    private static final long serialVersionUID = 3387067305901189614L;
+    private static final long serialVersionUID = -7984144838866544543L;
 
     /**
      * JNDI context to which to bind the repository.
