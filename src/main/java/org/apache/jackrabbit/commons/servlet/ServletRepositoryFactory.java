@@ -42,6 +42,8 @@ import org.apache.jackrabbit.commons.repository.RepositoryFactory;
  *   &lt;/init-param&gt;
  * &lt;/servlet&gt;
  * </pre>
+ *
+ * @since 1.4
  */
 public class ServletRepositoryFactory implements RepositoryFactory {
 

@@ -24,6 +24,8 @@ import org.apache.jackrabbit.commons.repository.RepositoryFactory;
 
 /**
  * Factory that returns a repository from a servlet context attribute.
+ *
+ * @since 1.4
  */
 public class ContextRepositoryFactory implements RepositoryFactory {
 

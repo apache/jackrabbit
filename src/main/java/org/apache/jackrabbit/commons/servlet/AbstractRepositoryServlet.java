@@ -52,6 +52,8 @@ import javax.servlet.http.HttpServletResponse;
  * A repository servlet can also be mapped to the URL space. See the
  * {@link #doGet(HttpServletRequest, HttpServletResponse)} method for
  * the details of the default behavior.
+ *
+ * @since 1.4
  */
 public abstract class AbstractRepositoryServlet extends HttpServlet {
 
