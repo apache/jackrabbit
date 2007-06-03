@@ -66,12 +66,12 @@ import org.apache.jackrabbit.rmi.remote.RemoteRepository;
  *
  * @since 1.4
  */
-public class JNDIRMIRepositoryServlet extends AbstractRepositoryServlet {
+public class JNDIRMIRepositoryServlet extends RemoteRepositoryServlet {
 
     /**
      * Serial version UID.
      */
-    private static final long serialVersionUID = 6345077056681327186L;
+    private static final long serialVersionUID = 3640243088693016475L;
 
     /**
      * Creates and returns a proxy for the remote repository in the configured
@@ -100,35 +100,6 @@ public class JNDIRMIRepositoryServlet extends AbstractRepositoryServlet {
         } catch (NamingException e) {
             throw new ServletException(
                     "Repository not found: Invalid JNDI context", e);
-        }
-    }
-
-    /**
-     * Instantiates and returns the configured local adapter factory.
-     *
-     * @return local adapter factory
-     * @throws ServletException if the factory could not be instantiated
-     */
-    private LocalAdapterFactory getLocalAdapterFactory()
-            throws ServletException {
-        String name = getInitParameter(
-                LocalAdapterFactory.class.getName(),
-                JackrabbitClientAdapterFactory.class.getName());
-        try {
-            Class factoryClass = Class.forName(name);
-            return (LocalAdapterFactory) factoryClass.newInstance();
-        } catch (ClassNotFoundException e) {
-            throw new ServletException(
-                    "Local adapter factory class not found: " + name, e);
-        } catch (InstantiationException e) {
-            throw new ServletException(
-                    "Failed to instantiate the adapter factory: " + name, e);
-        } catch (IllegalAccessException e) {
-            throw new ServletException(
-                    "Adapter factory constructor is not public: " + name, e);
-        } catch (ClassCastException e) {
-            throw new ServletException(
-                    "Invalid local adapter factory class: " + name, e);
         }
     }
 

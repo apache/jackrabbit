@@ -20,15 +20,11 @@ import java.net.MalformedURLException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 
-import org.apache.jackrabbit.commons.servlet.ServletRepository;
 import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitServerAdapterFactory;
-import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 
 /**
  * Servlet that binds a repository from a servlet context attribute in RMI.
@@ -56,23 +52,17 @@ import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
  *
  * @since 1.4
  */
-public class RMIBindingServlet extends HttpServlet {
+public class RMIBindingServlet extends RemoteBindingServlet {
 
     /**
-     * Serial version UID.
+     * Serial version UID. 
      */
-    private static final long serialVersionUID = -207084931471893942L;
+    private static final long serialVersionUID = 7239156891304655304L;
 
     /**
      * Location of the repository within the JNDI context.
      */
     private String url;
-
-    /**
-     * The remote repository reference. Kept to avoid it from being
-     * collected as garbage when no clients are connected.
-     */
-    private Remote remote;
 
     /**
      * Binds a repository from the servlet context in the configured RMI URL.
@@ -84,17 +74,8 @@ public class RMIBindingServlet extends HttpServlet {
         if (url == null) {
             url = "//localhost/javax/jcr/Repository";
         }
-
         try {
-            RemoteAdapterFactory factory = getRemoteAdapterFactory();
-            remote = factory.getRemoteRepository(new ServletRepository(this));
-        } catch (RemoteException e) {
-            throw new ServletException(
-                    "Failed to create the remote repository reference", e);
-        }
-
-        try {
-            Naming.bind(url, remote);
+            Naming.bind(url, getRemoteRepository());
         } catch (MalformedURLException e) {
             throw new ServletException("Invalid RMI URL: " + url, e);
         } catch (AlreadyBoundException e) {
@@ -107,41 +88,10 @@ public class RMIBindingServlet extends HttpServlet {
     }
 
     /**
-     * Instantiates and returns the configured remote adapter factory.
-     *
-     * @return remote adapter factory
-     * @throws ServletException if the factory could not be instantiated
-     */
-    private RemoteAdapterFactory getRemoteAdapterFactory()
-            throws ServletException {
-        String name = getInitParameter(RemoteAdapterFactory.class.getName());
-        if (name == null) {
-            name = JackrabbitServerAdapterFactory.class.getName();
-        }
-        try {
-            Class factoryClass = Class.forName(name);
-            return (RemoteAdapterFactory) factoryClass.newInstance();
-        } catch (ClassNotFoundException e) {
-            throw new ServletException(
-                    "Remote adapter factory class not found: " + name, e);
-        } catch (InstantiationException e) {
-            throw new ServletException(
-                    "Failed to instantiate the adapter factory: " + name, e);
-        } catch (IllegalAccessException e) {
-            throw new ServletException(
-                    "Adapter factory constructor is not public: " + name, e);
-        } catch (ClassCastException e) {
-            throw new ServletException(
-                    "Invalid remote adapter factory class: " + name, e);
-        }
-    }
-
-    /**
      * Unbinds the repository from RMI.
      */
     public void destroy() {
         try {
-            remote = null;
             Naming.unbind(url);
         } catch (MalformedURLException e) {
             log("Invalid RMI URL: " + url, e);
