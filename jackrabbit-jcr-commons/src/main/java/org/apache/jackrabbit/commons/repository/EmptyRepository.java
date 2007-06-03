@@ -25,7 +25,9 @@ import org.apache.jackrabbit.commons.AbstractRepository;
 /**
  * An empty repository with no descriptors and no workspaces. This class
  * can be used as a dummy sentinel in cases where a proper content repository
- * is not available. 
+ * is not available.
+ *
+ * @since 1.4
  */
 public class EmptyRepository extends AbstractRepository {
 

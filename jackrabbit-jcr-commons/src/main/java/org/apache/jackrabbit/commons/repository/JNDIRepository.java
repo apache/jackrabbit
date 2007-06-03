@@ -24,6 +24,8 @@ import javax.naming.Context;
  * does not need to exist when this class is instantiated. The JNDI entry
  * can also be replaced with another repository during the lifetime of an
  * instance of this class.
+ *
+ * @since 1.4
  */
 public class JNDIRepository extends ProxyRepository {
 
