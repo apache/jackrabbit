@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.rmi.servlet;
 
-import java.rmi.Remote;
-import java.rmi.RemoteException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
@@ -26,9 +24,7 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 
-import org.apache.jackrabbit.commons.servlet.ServletRepository;
 import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitServerAdapterFactory;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
@@ -55,7 +51,7 @@ import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
  *   <dd>
  *     Location where to bind the repository in the JNDI directory.
  *     The default value is
- *      "<code>org/apache/jackrabbit/rmi/remote/RepoteRepository</code>".
+ *      "<code>org/apache/jackrabbit/rmi/remote/RemoteRepository</code>".
  *   </dd>
  *   <dt>*</dt>
  *   <dd>
@@ -66,12 +62,12 @@ import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
  *
  * @since 1.4
  */
-public class JNDIRMIBindingServlet extends HttpServlet {
+public class JNDIRMIBindingServlet extends RemoteBindingServlet {
 
     /**
      * Serial version UID.
      */
-    private static final long serialVersionUID = -8981536241655836775L;
+    private static final long serialVersionUID = 3387067305901189614L;
 
     /**
      * JNDI context to which to bind the repository.
@@ -83,12 +79,6 @@ public class JNDIRMIBindingServlet extends HttpServlet {
      */
     private String location =
         RemoteRepository.class.getName().replace('.', '/');
-
-    /**
-     * The remote repository reference. Kept to avoid it from being
-     * collected as garbage when no clients are connected.
-     */
-    private Remote remote;
 
     /**
      * Binds a repository from the servlet context in the configured RMI URL.
@@ -109,12 +99,7 @@ public class JNDIRMIBindingServlet extends HttpServlet {
                 }
             }
             context =  new InitialContext(environment);
-            RemoteAdapterFactory factory = getRemoteAdapterFactory();
-            remote = factory.getRemoteRepository(new ServletRepository(this));
-            context.bind(location, remote);
-        } catch (RemoteException e) {
-            throw new ServletException(
-                    "Failed to create the remote repository reference", e);
+            context.bind(location, getRemoteRepository());
         } catch (NamingException e) {
             throw new ServletException(
                     "Failed to bind remote repository to JNDI: " + location, e);
@@ -129,36 +114,6 @@ public class JNDIRMIBindingServlet extends HttpServlet {
             context.unbind(location);
         } catch (NamingException e) {
             log("Failed to unbind remote repository from JNDI: " + location, e);
-        }
-    }
-
-    /**
-     * Instantiates and returns the configured remote adapter factory.
-     *
-     * @return remote adapter factory
-     * @throws ServletException if the factory could not be instantiated
-     */
-    private RemoteAdapterFactory getRemoteAdapterFactory()
-            throws ServletException {
-        String name = getInitParameter(RemoteAdapterFactory.class.getName());
-        if (name == null) {
-            name = JackrabbitServerAdapterFactory.class.getName();
-        }
-        try {
-            Class factoryClass = Class.forName(name);
-            return (RemoteAdapterFactory) factoryClass.newInstance();
-        } catch (ClassNotFoundException e) {
-            throw new ServletException(
-                    "Remote adapter factory class not found: " + name, e);
-        } catch (InstantiationException e) {
-            throw new ServletException(
-                    "Failed to instantiate the adapter factory: " + name, e);
-        } catch (IllegalAccessException e) {
-            throw new ServletException(
-                    "Adapter factory constructor is not public: " + name, e);
-        } catch (ClassCastException e) {
-            throw new ServletException(
-                    "Invalid remote adapter factory class: " + name, e);
         }
     }
 

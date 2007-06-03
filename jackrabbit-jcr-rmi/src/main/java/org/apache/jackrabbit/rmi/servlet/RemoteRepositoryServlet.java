@@ -16,17 +16,15 @@
  */
 package org.apache.jackrabbit.rmi.servlet;
 
-import javax.jcr.Repository;
 import javax.servlet.ServletException;
 
 import org.apache.jackrabbit.commons.servlet.AbstractRepositoryServlet;
 import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
-import org.apache.jackrabbit.rmi.client.RMIRepository;
 import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
 
 /**
- * Servlet that makes a repository from RMI available as an attribute
- * in the servlet context.
+ * Abstract base class for servlets that make a remote repository available
+ * locally in the servlet context.
  * <p>
  * The supported initialization parameters of this servlet are:
  * <dl>
@@ -42,11 +40,6 @@ import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
  *     public constructor that takes no arguments. The default class is
  *     {@link JackrabbitClientAdapterFactory}.
  *   </dd>
- *   <dt>url</dt>
- *   <dd>
- *     RMI URL of the remote repository. The default value is
- *     "<code>//localhost/javax/jcr/Repository</code>".
- *   </dd>
  * </dl>
  * <p>
  * This servlet can also be mapped to the URL space. See
@@ -54,22 +47,36 @@ import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
  *
  * @since 1.4
  */
-public class RMIRepositoryServlet extends RemoteRepositoryServlet {
+public abstract class RemoteRepositoryServlet
+        extends AbstractRepositoryServlet {
 
     /**
-     * Serial version UID.
-     */
-    private static final long serialVersionUID = 3361176460018801671L;
-
-    /**
-     * Creates and returns an RMI repository proxy for the configured RMI URL.
+     * Instantiates and returns the configured local adapter factory.
      *
-     * @return RMI repository proxy
+     * @return local adapter factory
+     * @throws ServletException if the factory could not be instantiated
      */
-    protected Repository getRepository() throws ServletException {
-        return new RMIRepository(
-                getLocalAdapterFactory(),
-                getInitParameter("url", "//localhost/javax/jcr/Repository"));
+    protected LocalAdapterFactory getLocalAdapterFactory()
+            throws ServletException {
+        String name = getInitParameter(
+                LocalAdapterFactory.class.getName(),
+                JackrabbitClientAdapterFactory.class.getName());
+        try {
+            Class factoryClass = Class.forName(name);
+            return (LocalAdapterFactory) factoryClass.newInstance();
+        } catch (ClassNotFoundException e) {
+            throw new ServletException(
+                    "Local adapter factory class not found: " + name, e);
+        } catch (InstantiationException e) {
+            throw new ServletException(
+                    "Failed to instantiate the adapter factory: " + name, e);
+        } catch (IllegalAccessException e) {
+            throw new ServletException(
+                    "Adapter factory constructor is not public: " + name, e);
+        } catch (ClassCastException e) {
+            throw new ServletException(
+                    "Invalid local adapter factory class: " + name, e);
+        }
     }
 
 }
