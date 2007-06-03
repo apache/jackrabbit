@@ -20,7 +20,9 @@ import javax.jcr.Repository;
 import javax.servlet.ServletException;
 
 import org.apache.jackrabbit.commons.servlet.AbstractRepositoryServlet;
+import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.client.RMIRepository;
+import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
 
 /**
  * Servlet that makes a repository from RMI available as an attribute
@@ -32,6 +34,13 @@ import org.apache.jackrabbit.rmi.client.RMIRepository;
  *   <dd>
  *     Name of the servlet context attribute to put the repository in.
  *     The default value is "<code>javax.jcr.Repository</code>".
+ *   </dd>
+ *   <dt>org.apache.jackrabbit.rmi.client.LocalAdapterFactory</dt>
+ *   <dd>
+ *     Name of the local adapter factory class used to create the local
+ *     adapter for the remote repository. The configured class should have
+ *     public constructor that takes no arguments. The default class is
+ *     {@link JackrabbitClientAdapterFactory}.
  *   </dd>
  *   <dt>url</dt>
  *   <dd>
@@ -59,7 +68,37 @@ public class RMIRepositoryServlet extends AbstractRepositoryServlet {
      */
     protected Repository getRepository() throws ServletException {
         return new RMIRepository(
+                getLocalAdapterFactory(),
                 getInitParameter("url", "//localhost/javax/jcr/Repository"));
+    }
+
+    /**
+     * Instantiates and returns the configured local adapter factory.
+     *
+     * @return local adapter factory
+     * @throws ServletException if the factory could not be instantiated
+     */
+    private LocalAdapterFactory getLocalAdapterFactory()
+            throws ServletException {
+        String name = getInitParameter(
+                LocalAdapterFactory.class.getName(),
+                JackrabbitClientAdapterFactory.class.getName());
+        try {
+            Class factoryClass = Class.forName(name);
+            return (LocalAdapterFactory) factoryClass.newInstance();
+        } catch (ClassNotFoundException e) {
+            throw new ServletException(
+                    "Local adapter factory class not found: " + name, e);
+        } catch (InstantiationException e) {
+            throw new ServletException(
+                    "Failed to instantiate the adapter factory: " + name, e);
+        } catch (IllegalAccessException e) {
+            throw new ServletException(
+                    "Adapter factory constructor is not public: " + name, e);
+        } catch (ClassCastException e) {
+            throw new ServletException(
+                    "Invalid local adapter factory class: " + name, e);
+        }
     }
 
 }
