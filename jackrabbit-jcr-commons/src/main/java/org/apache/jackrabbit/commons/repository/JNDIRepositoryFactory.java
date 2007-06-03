@@ -23,6 +23,8 @@ import javax.naming.NamingException;
 
 /**
  * Factory that looks up a repository from JNDI.
+ *
+ * @since 1.4
  */
 public class JNDIRepositoryFactory implements RepositoryFactory {
 

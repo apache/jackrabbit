@@ -21,6 +21,8 @@ import javax.jcr.RepositoryException;
 
 /**
  * Factory interface for JCR content repositories.
+ *
+ * @since 1.4
  */
 public interface RepositoryFactory {
 

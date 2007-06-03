@@ -28,6 +28,8 @@ import org.slf4j.LoggerFactory;
  * Repository that proxies all method calls to another repository.
  * The other repository is accessed lazily using a
  * {@link RepositoryFactory repository factory}.
+ *
+ * @since 1.4
  */
 public class ProxyRepository extends AbstractRepository {
 
