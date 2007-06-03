@@ -26,7 +26,7 @@ import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.commons.repository.RepositoryFactory;
 
 /**
- * Factory that looks up a repository from JNDI.
+ * Factory that looks up a repository from RMI.
  *
  * @since 1.4
  */
