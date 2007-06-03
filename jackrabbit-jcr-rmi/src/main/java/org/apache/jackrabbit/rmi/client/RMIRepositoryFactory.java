@@ -33,6 +33,11 @@ import org.apache.jackrabbit.commons.repository.RepositoryFactory;
 public class RMIRepositoryFactory implements RepositoryFactory {
 
     /**
+     * Local adapter factory.
+     */
+    private final LocalAdapterFactory factory;
+
+    /**
      * RMI URL of the repository.
      */
     private final String url;
@@ -40,9 +45,11 @@ public class RMIRepositoryFactory implements RepositoryFactory {
     /**
      * Creates a factory for looking up a repository from the given RMI URL.
      *
+     * @param factory local adapter factory
      * @param url RMI URL of the repository
      */
-    public RMIRepositoryFactory(String url) {
+    public RMIRepositoryFactory(LocalAdapterFactory factory, String url) {
+        this.factory = factory;
         this.url = url;
     }
 
@@ -54,7 +61,7 @@ public class RMIRepositoryFactory implements RepositoryFactory {
      */
     public Repository getRepository() throws RepositoryException {
         try {
-            return new ClientRepositoryFactory().getRepository(url);
+            return new ClientRepositoryFactory(factory).getRepository(url);
         } catch (MalformedURLException e) {
             throw new RepositoryException("Invalid repository URL: " + url, e);
         } catch (NotBoundException e) {
