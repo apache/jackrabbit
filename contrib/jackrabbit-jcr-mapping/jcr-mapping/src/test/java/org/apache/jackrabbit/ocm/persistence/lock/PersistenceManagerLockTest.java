@@ -26,11 +26,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.TestBase;
+import org.apache.jackrabbit.ocm.lock.Lock;
 import org.apache.jackrabbit.ocm.persistence.PersistenceManager;
 import org.apache.jackrabbit.ocm.testmodel.A;
 import org.apache.jackrabbit.ocm.testmodel.B;
 import org.apache.jackrabbit.ocm.testmodel.C;
-import org.apache.jackrabbit.ocm.testmodel.Discriminator;
+import org.apache.jackrabbit.ocm.testmodel.Lockable;
 
 /**
  * Test Persistence Manager lock feature
@@ -63,7 +64,11 @@ public class PersistenceManagerLockTest extends TestBase
      */
     public void tearDown() throws Exception
     {
-
+    	if (getPersistenceManager().objectExists("/test"))
+    	{
+    	   getPersistenceManager().remove("/test");
+    	   getPersistenceManager().save();
+    	}
         super.tearDown();
     }
     
@@ -123,7 +128,9 @@ public class PersistenceManagerLockTest extends TestBase
             // --------------------------------------------------------------------------------
             // Lock the object
             // --------------------------------------------------------------------------------           
-            String lockToken = persistenceManager.lock("/test", true, false);
+            
+            Lock lock = persistenceManager.lock("/test", true, false);
+            assertTrue("the Lock owner is not correct", lock.getLockOwner().equals("superuser"));
             
             // --------------------------------------------------------------------------------
             // Check if the object is locked
@@ -133,7 +140,7 @@ public class PersistenceManagerLockTest extends TestBase
             // --------------------------------------------------------------------------------
             // Unlock the object
             // --------------------------------------------------------------------------------           
-            persistenceManager.unlock("/test", lockToken);
+            persistenceManager.unlock("/test", lock.getLockToken());
 
             // --------------------------------------------------------------------------------
             // Check if the object is locked
@@ -143,12 +150,12 @@ public class PersistenceManagerLockTest extends TestBase
             // --------------------------------------------------------------------------------
             // Lock & update 
             // --------------------------------------------------------------------------------
-            lockToken = persistenceManager.lock("/test", true, false);
+            lock = persistenceManager.lock("/test", true, false);
             a = (A) persistenceManager.getObject("/test");
             a.setA1("new a1 Value");
             persistenceManager.update(a);
             persistenceManager.save();
-            persistenceManager.unlock("/test", lockToken);
+            persistenceManager.unlock("/test", lock.getLockToken());
             
             
             // --------------------------------------------------------------------------------
@@ -166,4 +173,86 @@ public class PersistenceManagerLockTest extends TestBase
         
     }        
 
+    /**
+     *  Lock object which is assigned to a custome node type. This jcr node type inherits from mix:lockable
+     *
+     */
+    public void testLockWithNodeType()
+    {
+        try
+        {
+        	PersistenceManager persistenceManager = getPersistenceManager();
+
+
+            // --------------------------------------------------------------------------------
+            // Create an object which is associated to the 
+            // --------------------------------------------------------------------------------
+            Lockable lockable = new Lockable();
+            lockable.setPath("/test");
+            lockable.setA1("a1");
+            lockable.setA2("a2");
+            persistenceManager.insert(lockable);
+            persistenceManager.save();
+            
+
+            // --------------------------------------------------------------------------------
+            // Get the object
+            // --------------------------------------------------------------------------------           
+            lockable = (Lockable) persistenceManager.getObject("/test");
+            assertNotNull("a is null", lockable);
+            
+            // --------------------------------------------------------------------------------
+            // Check if the object is locked
+            // --------------------------------------------------------------------------------
+            assertFalse("the object is locked", persistenceManager.isLocked("/test"));
+            assertNull("Attribute lockowner is not null", lockable.getLockOwner());
+            // --------------------------------------------------------------------------------
+            // Lock the object
+            // --------------------------------------------------------------------------------                       
+            Lock lock = persistenceManager.lock("/test", true, false);
+            
+            // --------------------------------------------------------------------------------
+            // Check if the object is locked
+            // --------------------------------------------------------------------------------
+            assertTrue("the object is not locked", persistenceManager.isLocked("/test"));
+            
+            // --------------------------------------------------------------------------------
+            // Unlock the object
+            // --------------------------------------------------------------------------------           
+            persistenceManager.unlock("/test", lock.getLockToken());
+
+            // --------------------------------------------------------------------------------
+            // Check if the object is locked
+            // --------------------------------------------------------------------------------
+            assertFalse("the object is locked", persistenceManager.isLocked("/test"));
+
+
+            // --------------------------------------------------------------------------------
+            // Lock & update 
+            // --------------------------------------------------------------------------------
+            lock = persistenceManager.lock("/test", true, false);
+            assertTrue("the object is not locked", persistenceManager.isLocked("/test"));
+            lockable = (Lockable) persistenceManager.getObject("/test");
+            assertNotNull("Attribute lockowner is null", lockable.getLockOwner());
+            lockable.setA1("new a1 Value");
+            persistenceManager.update(lockable);
+            persistenceManager.save();
+            persistenceManager.unlock("/test", lock.getLockToken());
+            
+            
+            // --------------------------------------------------------------------------------
+            // Remove the object
+            // --------------------------------------------------------------------------------           
+            persistenceManager.remove(lockable);
+            persistenceManager.save();
+            
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            fail("Exception occurs during the unit test : " + e);
+        }
+        
+    }        
+    
 }

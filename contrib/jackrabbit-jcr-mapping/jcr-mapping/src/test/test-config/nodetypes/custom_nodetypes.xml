@@ -21,7 +21,25 @@
 	xmlns:test="http://www.apache.org/jackrabbit/test"
 	xmlns:mix="http://www.jcp.org/jcr/mix/1.0"
 	xmlns:ocm="http://jackrabbit.apache.org/ocm">
-	<nodeType name="ocm:C" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+	
+   <nodeType name="ocm:discriminator" isMixin="true">
+    <supertypes>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <propertyDefinition name="ocm:classname" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />    
+  </nodeType>
+
+  <nodeType name="ocm:TestLockable" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>mix:lockable</supertype>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="ocm:a1" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+	<propertyDefinition name="ocm:a2" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+  </nodeType>
+  	
+  <nodeType name="ocm:C" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>mix:versionable</supertype>
       <supertype>nt:base</supertype>
@@ -137,15 +155,6 @@
     <propertyDefinition name="ocm:content" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
   </nodeType>
   
-
-   <nodeType name="ocm:discriminator" isMixin="true">
-    <supertypes>
-      <supertype>nt:base</supertype>
-    </supertypes>
-    <propertyDefinition name="ocm:classname" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />    
-  </nodeType>
-   
-
    <nodeType name="ocm:cmsobject" isMixin="true">
     <supertypes>
       <supertype>nt:base</supertype>
