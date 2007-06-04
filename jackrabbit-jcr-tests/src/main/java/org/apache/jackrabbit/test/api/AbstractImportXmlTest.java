@@ -417,9 +417,9 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
         try {
             // disable pretty printing/default line wrapping!
             Transformer t = TransformerFactory.newInstance().newTransformer();
-            t.setParameter(OutputKeys.METHOD, "xml");
-            t.setParameter(OutputKeys.ENCODING, "UTF-8");
-            t.setParameter(OutputKeys.INDENT, "no");
+            t.setOutputProperty(OutputKeys.METHOD, "xml");
+            t.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            t.setOutputProperty(OutputKeys.INDENT, "no");
             Source s = new DOMSource(document);
             Result r = new StreamResult(bos);
             t.transform(s, r);
