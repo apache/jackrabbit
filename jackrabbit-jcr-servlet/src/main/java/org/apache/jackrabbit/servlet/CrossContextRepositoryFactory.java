@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.commons.servlet;
+package org.apache.jackrabbit.servlet;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;

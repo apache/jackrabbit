@@ -32,43 +32,37 @@
     <version>1.4-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
-  <artifactId>jackrabbit-jcr-commons</artifactId>
-  <name>Jackrabbit JCR Commons</name>
-  <description>General purpose classes for use with the JCR API</description>
-
-  <scm>
-    <connection>
-      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-jcr-commons
-    </connection>
-    <developerConnection>
-      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-jcr-commons
-    </developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-jcr-commons</url>
-  </scm>
+  <artifactId>jackrabbit-jcr-servlet</artifactId>
+  <name>Jackrabbit JCR Servlets</name>
+  <description>
+    Servlets and related classes for easy use of JCR content repositories
+    in web applications.
+  </description>
 
   <dependencies>
     <dependency>
       <groupId>javax.jcr</groupId>
       <artifactId>jcr</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-jcr-commons</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-      <scope>test</scope>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-jcr-rmi</artifactId>
+      <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>cglib</groupId>
-      <artifactId>cglib</artifactId>
-      <scope>test</scope>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-core</artifactId>
+      <optional>true</optional>
     </dependency>
   </dependencies>
 

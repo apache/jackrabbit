@@ -53,6 +53,7 @@
     <module>jackrabbit-core</module>
     <module>jackrabbit-text-extractors</module>
     <module>jackrabbit-jcr-rmi</module>
+    <module>jackrabbit-jcr-servlet</module>
     <module>jackrabbit-webdav</module>
     <module>jackrabbit-jcr-server</module>
     <module>jackrabbit-classloader</module>

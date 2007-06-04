@@ -14,62 +14,67 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.commons.servlet;
+package org.apache.jackrabbit.servlet;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
 
 import javax.jcr.Repository;
+import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletException;
-
-import org.apache.jackrabbit.commons.repository.JNDIRepository;
+import javax.servlet.http.HttpServlet;
 
 /**
- * Servlet that makes a repository from JNDI available as an attribute
- * in the servlet context.
+ * Servlet that binds a repository from a servlet context attribute in JNDI.
  * <p>
- * The supported initialization parameters of this servlet are:
+ * The initialization parameters of this servlet are:
  * <dl>
  *   <dt>javax.jcr.Repository</dt>
  *   <dd>
- *     Name of the servlet context attribute to put the repository in.
+ *     Name of the servlet context attribute that contains the repository.
  *     The default value is "<code>javax.jcr.Repository</code>".
  *   </dd>
  *   <dt>location</dt>
  *   <dd>
- *     Location of the repository in the JNDI directory.
+ *     Location where to bind the repository in the JNDI directory.
  *     The default value is "<code>javax/jcr/Repository</code>".
  *   </dd>
  *   <dt>*</dt>
  *   <dd>
  *     All other init parameters are used as the JNDI environment when
- *     instantiating {@link InitialContext} for looking up the repository. 
+ *     instantiating {@link InitialContext} for binding up the repository. 
  *   </dd>
  * </dl>
- * <p>
- * This servlet can also be mapped to the URL space. See
- * {@link AbstractRepositoryServlet} for the details.
  *
  * @since 1.4
  */
-public class JNDIRepositoryServlet extends AbstractRepositoryServlet {
+public class JNDIBindingServlet extends HttpServlet {
 
     /**
      * Serial version UID.
      */
-    private static final long serialVersionUID = 8952525573562952560L;
+    private static final long serialVersionUID = -9033906248473370936L;
 
     /**
-     * Creates and returns a JNDI repository proxy based on the configured
-     * init parameters.
-     *
-     * @return JNDI repository proxy
+     * JNDI context to which to bind the repository.
      */
-    protected Repository getRepository() throws ServletException {
+    private Context context;
+
+    /**
+     * Location of the repository within the JNDI context.
+     */
+    private String location = Repository.class.getName().replace('.', '/');
+
+    /**
+     * Binds a repository from the servlet context in the configured
+     * JNDI location.
+     *
+     * @throws ServletException if the repository could not be bound in JNDI
+     */
+    public void init() throws ServletException {
         try {
-            String location = Repository.class.getName().replace('.', '/');
             Hashtable environment = new Hashtable();
             Enumeration names = getInitParameterNames();
             while (names.hasMoreElements()) {
@@ -80,11 +85,22 @@ public class JNDIRepositoryServlet extends AbstractRepositoryServlet {
                     environment.put(name, getInitParameter(name));
                 }
             }
-            return new JNDIRepository(
-                    new InitialContext(environment), location);
+            context =  new InitialContext(environment);
+            context.bind(location, new ServletRepository(this));
         } catch (NamingException e) {
             throw new ServletException(
-                    "Repository not found: Invalid JNDI context", e);
+                    "Failed to bind repository to JNDI: " + location, e);
+        }
+    }
+
+    /**
+     * Unbinds the repository from JNDI.
+     */
+    public void destroy() {
+        try {
+            context.unbind(location);
+        } catch (NamingException e) {
+            log("Failed to unbind repository from JNDI: " + location, e);
         }
     }
 
