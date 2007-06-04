@@ -90,6 +90,18 @@ class ParentAxisQuery extends Query {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public Query rewrite(IndexReader reader) throws IOException {
+        Query cQuery = contextQuery.rewrite(reader);
+        if (cQuery == contextQuery) {
+            return this;
+        } else {
+            return new ParentAxisQuery(cQuery, nameTest);
+        }
+    }
+
+    /**
      * Always returns 'ParentAxisQuery'.
      *
      * @param field the name of a field.
