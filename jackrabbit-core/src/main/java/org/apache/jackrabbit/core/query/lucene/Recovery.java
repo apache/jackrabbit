@@ -142,6 +142,14 @@ class Recovery {
                 case MultiIndex.Action.TYPE_CREATE_INDEX:
                 case MultiIndex.Action.TYPE_DELETE_INDEX:
                 case MultiIndex.Action.TYPE_DELETE_NODE:
+                    // ignore actions by the index merger.
+                    // the previously created index of a merge has been
+                    // deleted because it was considered dirty.
+                    // we are conservative here and let the index merger do
+                    // its work again.
+                    if (a.getTransactionId() == MultiIndex.Action.INTERNAL_TRANS_REPL_INDEXES) {
+                        continue;
+                    }
                     a.execute(index);
             }
         }
@@ -152,6 +160,10 @@ class Recovery {
             if (losers.contains(new Long(a.getTransactionId()))) {
                 break;
             } else {
+                // ignore actions by the index merger.
+                if (a.getTransactionId() == MultiIndex.Action.INTERNAL_TRANS_REPL_INDEXES) {
+                    continue;
+                }
                 a.execute(index);
             }
         }
