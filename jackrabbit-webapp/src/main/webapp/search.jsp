@@ -246,7 +246,7 @@ body,td,div,.p,a{font-family:arial,sans-serif}
         <td valign=bottom nowrap><font size=-1>Result&nbsp;Page:&nbsp;</font>
         <%
         if (currentPageIndex != ((Long) indexes.get(0)).longValue()) {
-            %><td nowrap align=right class=b><a href=search.jsp?q=<%= q %>&start=<%= currentPageIndex * 10 %>><div id=np></div>Previous</a><%
+            %><td nowrap align=right class=b><a href=search.jsp?q=<%= q %>&start=<%= (currentPageIndex - 1) * 10 %>><div id=np></div>Previous</a><%
         } else {
             %><td nowrap ><div id=nf></div><%
         }
