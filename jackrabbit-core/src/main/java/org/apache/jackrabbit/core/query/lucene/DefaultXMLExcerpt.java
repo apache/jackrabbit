@@ -54,6 +54,11 @@ class DefaultXMLExcerpt implements ExcerptProvider {
     private Query query;
 
     /**
+     * Indicates whether the query is already rewritten.
+     */
+    private boolean rewritten = false;
+
+    /**
      * {@inheritDoc}
      */
     public void init(Query query, SearchIndex index) throws IOException {
@@ -68,6 +73,10 @@ class DefaultXMLExcerpt implements ExcerptProvider {
             throws IOException {
         IndexReader reader = index.getIndexReader();
         try {
+            if (!rewritten) {
+                query = query.rewrite(reader);
+                rewritten = true;
+            }
             Term idTerm = new Term(FieldNames.UUID, id.getUUID().toString());
             TermDocs tDocs = reader.termDocs(idTerm);
             int docNumber;

@@ -67,6 +67,18 @@ class NotQuery extends Query {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public Query rewrite(IndexReader reader) throws IOException {
+        Query cQuery = context.rewrite(reader);
+        if (cQuery == context) {
+            return this;
+        } else {
+            return new NotQuery(cQuery);
+        }
+    }
+
+    /**
      * Implements a weight for this <code>NotQuery</code>.
      */
     private class NotQueryWeight implements Weight {
