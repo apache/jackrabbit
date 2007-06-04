@@ -94,6 +94,26 @@ public class ClusterNode implements Runnable,
     private static final int STOPPED = 2;
 
     /**
+     * Bit indicating this is a registration operation.
+     */
+    private static final int NTREG_REGISTER = 0;
+
+    /**
+     * Bit indicating this is a reregistration operation.
+     */
+    private static final int NTREG_REREGISTER = (1 << 30);
+
+    /**
+     * Bit indicating this is an unregistration operation.
+     */
+    private static final int NTREG_UNREGISTER = (1 << 31);
+
+    /**
+     * Mask used in node type registration operations.
+     */
+    private static final int NTREG_MASK = (NTREG_REREGISTER | NTREG_UNREGISTER);
+
+    /**
      * Logger.
      */
     private static Logger log = LoggerFactory.getLogger(ClusterNode.class);
@@ -405,7 +425,71 @@ public class ClusterNode implements Runnable,
         try {
             record = journal.getProducer(PRODUCER_ID).append();
             record.writeString(null);
-            write(record, ntDefs);
+            write(record, ntDefs, true);
+            record.writeChar('\0');
+            record.update();
+            setRevision(record.getRevision());
+            succeeded = true;
+        } catch (JournalException e) {
+            String msg = "Unable to create log entry: " + e.getMessage();
+            log.error(msg);
+        } catch (Throwable e) {
+            String msg = "Unexpected error while creating log entry.";
+            log.error(msg, e);
+        } finally {
+            if (!succeeded && record != null) {
+                record.cancelUpdate();
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void reregistered(NodeTypeDef ntDef) {
+        if (status != STARTED) {
+            log.info("not started: nodetype operation ignored.");
+            return;
+        }
+        Record record = null;
+        boolean succeeded = false;
+
+        try {
+            record = journal.getProducer(PRODUCER_ID).append();
+            record.writeString(null);
+            write(record, ntDef);
+            record.writeChar('\0');
+            record.update();
+            setRevision(record.getRevision());
+            succeeded = true;
+        } catch (JournalException e) {
+            String msg = "Unable to create log entry: " + e.getMessage();
+            log.error(msg);
+        } catch (Throwable e) {
+            String msg = "Unexpected error while creating log entry.";
+            log.error(msg, e);
+        } finally {
+            if (!succeeded && record != null) {
+                record.cancelUpdate();
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void unregistered(Collection qnames) {
+        if (status != STARTED) {
+            log.info("not started: nodetype operation ignored.");
+            return;
+        }
+        Record record = null;
+        boolean succeeded = false;
+
+        try {
+            record = journal.getProducer(PRODUCER_ID).append();
+            record.writeString(null);
+            write(record, qnames, false);
             record.writeChar('\0');
             record.update();
             setRevision(record.getRevision());
@@ -780,16 +864,46 @@ public class ClusterNode implements Runnable,
     /**
      * Process one or more node type registrations.
      *
-     * @param ntDefs node type definition
+     * @param c collection of node type definitions, if this is a register
+     *          operation; collection of <code>QName</code>s if this is
+     *          an unregister operation
+     * @param register <code>true</code>, if this is a register operation;
+     *                 <code>false</code> otherwise
      */
-    private void process(Collection ntDefs) {
+    private void process(Collection c, boolean register) {
         if (nodeTypeListener == null) {
             String msg = "NodeType listener unavailable.";
             log.error(msg);
             return;
         }
         try {
-            nodeTypeListener.externalRegistered(ntDefs);
+            if (register) {
+                nodeTypeListener.externalRegistered(c);
+            } else {
+                nodeTypeListener.externalUnregistered(c);
+            }
+        } catch (InvalidNodeTypeDefException e) {
+            String msg = "Unable to deliver node type operation: " + e.getMessage();
+            log.error(msg);
+        } catch (RepositoryException e) {
+            String msg = "Unable to deliver node type operation: " + e.getMessage();
+            log.error(msg);
+        }
+    }
+
+    /**
+     * Process a node type re-registration.
+     *
+     * @param ntDef node type definition
+     */
+    private void process(NodeTypeDef ntDef) {
+        if (nodeTypeListener == null) {
+            String msg = "NodeType listener unavailable.";
+            log.error(msg);
+            return;
+        }
+        try {
+            nodeTypeListener.externalReregistered(ntDef);
         } catch (InvalidNodeTypeDefException e) {
             String msg = "Unable to deliver node type operation: " + e.getMessage();
             log.error(msg);
@@ -917,11 +1031,30 @@ public class ClusterNode implements Runnable,
                     process(oldPrefix, newPrefix, uri);
                 } else if (c == 'T') {
                     int size = record.readInt();
-                    HashSet ntDefs = new HashSet();
-                    for (int i = 0; i < size; i++) {
-                        ntDefs.add(record.readNodeTypeDef());
+                    int opcode = size & NTREG_MASK;
+                    size &= ~NTREG_MASK;
+
+                    switch (opcode) {
+                        case NTREG_REGISTER:
+                            HashSet ntDefs = new HashSet();
+                            for (int i = 0; i < size; i++) {
+                                ntDefs.add(record.readNodeTypeDef());
+                            }
+                            process(ntDefs, true);
+                            break;
+                        case NTREG_REREGISTER:
+                            process(record.readNodeTypeDef());
+                            break;
+                        case NTREG_UNREGISTER:
+                            HashSet ntNames = new HashSet();
+                            for (int i = 0; i < size; i++) {
+                                ntNames.add(record.readQName());
+                            }
+                            process(ntNames, false);
+                            break;
+                        default:
+                            throw new IllegalArgumentException("Unknown opcode: " + opcode);
                     }
-                    process(ntDefs);
                 } else {
                     throw new IllegalArgumentException("Unknown entry type: " + c);
                 }
@@ -1060,16 +1193,37 @@ public class ClusterNode implements Runnable,
         write(record, nodeId, false, false, null);
     }
 
-    private static void write(Record record, Collection ntDefs)
+    private static void write(Record record, Collection c, boolean register)
             throws JournalException {
 
         record.writeChar('T');
-        record.writeInt(ntDefs.size());
 
-        Iterator iter = ntDefs.iterator();
-        while (iter.hasNext()) {
-            record.writeNodeTypeDef((NodeTypeDef) iter.next());
+        int size = c.size();
+        if (!register) {
+            size |= NTREG_UNREGISTER;
         }
+        record.writeInt(size);
+
+        Iterator iter = c.iterator();
+        while (iter.hasNext()) {
+            if (register) {
+                record.writeNodeTypeDef((NodeTypeDef) iter.next());
+            } else {
+                record.writeQName((QName) iter.next());
+            }
+        }
+    }
+
+    private static void write(Record record, NodeTypeDef ntDef)
+            throws JournalException {
+
+        record.writeChar('T');
+
+        int size = 1;
+        size |= NTREG_REREGISTER;
+        record.writeInt(size);
+
+        record.writeNodeTypeDef(ntDef);
     }
 
     private static void write(Record record, PropertyOperation operation)
