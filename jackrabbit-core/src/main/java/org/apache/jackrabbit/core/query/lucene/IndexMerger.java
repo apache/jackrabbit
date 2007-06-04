@@ -95,6 +95,11 @@ class IndexMerger extends Thread implements IndexListener {
     private final Sync indexReplacement = new Mutex();
 
     /**
+     * When released, indicates that this index merger is idle.
+     */
+    private final Sync mergerIdle = new Mutex();
+
+    /**
      * Creates an <code>IndexMerger</code>.
      *
      * @param multiIndex the <code>MultiIndex</code>.
@@ -103,6 +108,12 @@ class IndexMerger extends Thread implements IndexListener {
         this.multiIndex = multiIndex;
         setName("IndexMerger");
         setDaemon(true);
+        try {
+            mergerIdle.acquire();
+        } catch (InterruptedException e) {
+            // will never happen, lock is free upon construction
+            throw new InternalError("Unable to acquire mutex after construction");
+        }
     }
 
     /**
@@ -189,6 +200,17 @@ class IndexMerger extends Thread implements IndexListener {
     }
 
     /**
+     * When the calling thread returns this index merger will be idle, that is
+     * there will be no merge tasks pending anymore. The method returns immediately
+     * if there are currently no tasks pending at all.
+     */
+    void waitUntilIdle() throws InterruptedException {
+        mergerIdle.acquire();
+        // and immediately release again
+        mergerIdle.release();
+    }
+
+    /**
      * Signals this <code>IndexMerger</code> to stop and waits until it
      * has terminated.
      */
@@ -233,9 +255,23 @@ class IndexMerger extends Thread implements IndexListener {
      */
     public void run() {
         for (;;) {
+            boolean isIdle = false;
+            if (mergeTasks.size() == 0) {
+                mergerIdle.release();
+                isIdle = true;
+            }
             Merge task = (Merge) mergeTasks.remove();
             if (task == QUIT) {
+                mergerIdle.release();
                 break;
+            }
+            if (isIdle) {
+                try {
+                    mergerIdle.acquire();
+                } catch (InterruptedException e) {
+                    Thread.interrupted();
+                    log.warn("Unable to acquire mergerIdle sync");
+                }
             }
 
             log.debug("accepted merge request");
