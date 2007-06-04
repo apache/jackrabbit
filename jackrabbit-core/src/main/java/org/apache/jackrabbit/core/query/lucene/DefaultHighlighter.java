@@ -26,6 +26,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.index.TermPositionVector;
 import org.apache.lucene.index.TermVectorOffsetInfo;
 import org.apache.lucene.index.Term;
+import org.apache.jackrabbit.util.Text;
 
 /**
  * This is an adapted version of the <code>FulltextHighlighter</code> posted in
@@ -196,7 +197,8 @@ class DefaultHighlighter {
                     if (skippedChars > surround) {
                         skippedChars = surround;
                     }
-                    sb.append(cbuf, 0, surround - skippedChars);
+                    sb.append(Text.encodeIllegalXMLCharacters(
+                            new String(cbuf, 0, surround - skippedChars)));
                     sb.append(END_FRAGMENT_SEPARATOR);
                 }
             }
@@ -223,7 +225,8 @@ class DefaultHighlighter {
                 }
             }
 
-            sb.append(cbuf, skippedChars, cbuf.length - skippedChars);
+            sb.append(Text.encodeIllegalXMLCharacters(
+                    new String(cbuf, skippedChars, cbuf.length - skippedChars)));
 
             // iterate terms
             for (Iterator iter = fi.iterator(); iter.hasNext();) {
@@ -267,7 +270,8 @@ class DefaultHighlighter {
                 } else {
                     skippedChars = 0;
                 }
-                sb.append(cbuf, 0, EOF ? skip : (surround - skippedChars));
+                sb.append(Text.encodeIllegalXMLCharacters(
+                        new String(cbuf, 0, EOF ? skip : (surround - skippedChars))));
                 sb.append(END_FRAGMENT_SEPARATOR);
             }
         }
