@@ -1158,10 +1158,10 @@ public class SessionImpl implements Session, NamePathResolver, Dumpable {
 
         try {
             TransformerHandler th = stf.newTransformerHandler();
+            th.getTransformer().setOutputProperty(OutputKeys.METHOD, "xml");
+            th.getTransformer().setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            th.getTransformer().setOutputProperty(OutputKeys.INDENT, "no");
             th.setResult(new StreamResult(out));
-            th.getTransformer().setParameter(OutputKeys.METHOD, "xml");
-            th.getTransformer().setParameter(OutputKeys.ENCODING, "UTF-8");
-            th.getTransformer().setParameter(OutputKeys.INDENT, "no");
 
             exportDocumentView(absPath, th, skipBinary, noRecurse);
         } catch (TransformerException te) {
@@ -1199,10 +1199,10 @@ public class SessionImpl implements Session, NamePathResolver, Dumpable {
         SAXTransformerFactory stf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
         try {
             TransformerHandler th = stf.newTransformerHandler();
+            th.getTransformer().setOutputProperty(OutputKeys.METHOD, "xml");
+            th.getTransformer().setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            th.getTransformer().setOutputProperty(OutputKeys.INDENT, "no");
             th.setResult(new StreamResult(out));
-            th.getTransformer().setParameter(OutputKeys.METHOD, "xml");
-            th.getTransformer().setParameter(OutputKeys.ENCODING, "UTF-8");
-            th.getTransformer().setParameter(OutputKeys.INDENT, "no");
 
             exportSystemView(absPath, th, skipBinary, noRecurse);
         } catch (TransformerException te) {
