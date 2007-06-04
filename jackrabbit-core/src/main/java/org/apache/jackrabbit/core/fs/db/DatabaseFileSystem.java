@@ -1147,7 +1147,7 @@ public class DatabaseFileSystem implements FileSystem {
 
         if (!schemaExists) {
             // read ddl from resources
-            InputStream in = getClass().getResourceAsStream(schema + ".ddl");
+            InputStream in = DatabaseFileSystem.class.getResourceAsStream(schema + ".ddl");
             if (in == null) {
                 String msg = "Configuration error: unknown schema '" + schema + "'";
                 log.debug(msg);
