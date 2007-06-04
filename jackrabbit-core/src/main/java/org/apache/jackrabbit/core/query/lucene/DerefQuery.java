@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Implements a lucene <code>Query</code> which returns the nodes selected by
@@ -111,6 +112,13 @@ class DerefQuery extends Query {
         } else {
             return new DerefQuery(cQuery, refProperty, nameTest);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void extractTerms(Set terms) {
+        // no terms to extract
     }
 
     //-------------------< DerefWeight >------------------------------------
