@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.rmi.servlet;
+package org.apache.jackrabbit.servlet.remote;
 
 import java.util.Enumeration;
 import java.util.Hashtable;

@@ -14,17 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.rmi.servlet;
+package org.apache.jackrabbit.servlet.remote;
 
+import javax.jcr.Repository;
 import javax.servlet.ServletException;
 
-import org.apache.jackrabbit.commons.servlet.AbstractRepositoryServlet;
-import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
+import org.apache.jackrabbit.rmi.repository.RMIRemoteRepository;
+import org.apache.jackrabbit.servlet.AbstractRepositoryServlet;
 
 /**
- * Abstract base class for servlets that make a remote repository available
- * locally in the servlet context.
+ * Servlet that makes a repository from RMI available as an attribute
+ * in the servlet context.
  * <p>
  * The supported initialization parameters of this servlet are:
  * <dl>
@@ -40,6 +41,11 @@ import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
  *     public constructor that takes no arguments. The default class is
  *     {@link JackrabbitClientAdapterFactory}.
  *   </dd>
+ *   <dt>url</dt>
+ *   <dd>
+ *     RMI URL of the remote repository. The default value is
+ *     "<code>//localhost/javax/jcr/Repository</code>".
+ *   </dd>
  * </dl>
  * <p>
  * This servlet can also be mapped to the URL space. See
@@ -47,36 +53,22 @@ import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
  *
  * @since 1.4
  */
-public abstract class RemoteRepositoryServlet
-        extends AbstractRepositoryServlet {
+public class RMIRemoteRepositoryServlet extends RemoteRepositoryServlet {
 
     /**
-     * Instantiates and returns the configured local adapter factory.
-     *
-     * @return local adapter factory
-     * @throws ServletException if the factory could not be instantiated
+     * Serial version UID. 
      */
-    protected LocalAdapterFactory getLocalAdapterFactory()
-            throws ServletException {
-        String name = getInitParameter(
-                LocalAdapterFactory.class.getName(),
-                JackrabbitClientAdapterFactory.class.getName());
-        try {
-            Class factoryClass = Class.forName(name);
-            return (LocalAdapterFactory) factoryClass.newInstance();
-        } catch (ClassNotFoundException e) {
-            throw new ServletException(
-                    "Local adapter factory class not found: " + name, e);
-        } catch (InstantiationException e) {
-            throw new ServletException(
-                    "Failed to instantiate the adapter factory: " + name, e);
-        } catch (IllegalAccessException e) {
-            throw new ServletException(
-                    "Adapter factory constructor is not public: " + name, e);
-        } catch (ClassCastException e) {
-            throw new ServletException(
-                    "Invalid local adapter factory class: " + name, e);
-        }
+    private static final long serialVersionUID = 2410543206806054854L;
+
+    /**
+     * Creates and returns an RMI repository proxy for the configured RMI URL.
+     *
+     * @return RMI repository proxy
+     */
+    protected Repository getRepository() throws ServletException {
+        return new RMIRemoteRepository(
+                getLocalAdapterFactory(),
+                getInitParameter("url", "//localhost/javax/jcr/Repository"));
     }
 
 }

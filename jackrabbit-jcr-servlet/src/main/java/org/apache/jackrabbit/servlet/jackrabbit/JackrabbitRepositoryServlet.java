@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.servlet;
+package org.apache.jackrabbit.servlet.jackrabbit;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -27,9 +27,9 @@ import javax.jcr.RepositoryException;
 import javax.servlet.ServletException;
 
 import org.apache.jackrabbit.api.JackrabbitRepository;
-import org.apache.jackrabbit.commons.servlet.AbstractRepositoryServlet;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.servlet.AbstractRepositoryServlet;
 
 /**
  * Servlet that makes a Jackrabbit repository available as a servlet context

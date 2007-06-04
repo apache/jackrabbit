@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.rmi.servlet;
+package org.apache.jackrabbit.servlet.remote;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -24,11 +24,11 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletException;
 
-import org.apache.jackrabbit.commons.servlet.AbstractRepositoryServlet;
 import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 import org.apache.jackrabbit.rmi.repository.JNDIRemoteRepository;
+import org.apache.jackrabbit.servlet.AbstractRepositoryServlet;
 
 /**
  * Servlet that makes a remote repository from JNDI available as an attribute

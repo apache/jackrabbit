@@ -14,21 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.rmi.servlet;
+package org.apache.jackrabbit.servlet.remote;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
-import javax.jcr.Repository;
 import javax.servlet.ServletException;
 
-import org.apache.jackrabbit.commons.servlet.AbstractRepositoryServlet;
+import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
-import org.apache.jackrabbit.rmi.repository.URLRemoteRepository;
+import org.apache.jackrabbit.servlet.AbstractRepositoryServlet;
 
 /**
- * Servlet that makes a remote repository from a ULR available as an attribute
- * in the servlet context.
+ * Abstract base class for servlets that make a remote repository available
+ * locally in the servlet context.
  * <p>
  * The supported initialization parameters of this servlet are:
  * <dl>
@@ -44,10 +40,6 @@ import org.apache.jackrabbit.rmi.repository.URLRemoteRepository;
  *     public constructor that takes no arguments. The default class is
  *     {@link JackrabbitClientAdapterFactory}.
  *   </dd>
- *   <dt>url</dt>
- *   <dd>
- *     URL of the remote repository.
- *   </dd>
  * </dl>
  * <p>
  * This servlet can also be mapped to the URL space. See
@@ -55,29 +47,35 @@ import org.apache.jackrabbit.rmi.repository.URLRemoteRepository;
  *
  * @since 1.4
  */
-public class URLRemoteRepositoryServlet extends RemoteRepositoryServlet {
+public abstract class RemoteRepositoryServlet
+        extends AbstractRepositoryServlet {
 
     /**
-     * Serial version UID.
-     */
-    private static final long serialVersionUID = 6144781813459102448L;
-
-    /**
-     * Creates and returns a proxy for the remote repository at the given URL.
+     * Instantiates and returns the configured local adapter factory.
      *
-     * @return repository proxy
+     * @return local adapter factory
+     * @throws ServletException if the factory could not be instantiated
      */
-    protected Repository getRepository() throws ServletException {
-        String url = getInitParameter("url");
-        if (url == null) {
-            throw new ServletException("Missing init parameter: url");
-        }
-
+    protected LocalAdapterFactory getLocalAdapterFactory()
+            throws ServletException {
+        String name = getInitParameter(
+                LocalAdapterFactory.class.getName(),
+                JackrabbitClientAdapterFactory.class.getName());
         try {
-            return new URLRemoteRepository(
-                        getLocalAdapterFactory(), new URL(url));
-        } catch (MalformedURLException e) {
-            throw new ServletException("Invalid repository URL: " + url, e);
+            Class factoryClass = Class.forName(name);
+            return (LocalAdapterFactory) factoryClass.newInstance();
+        } catch (ClassNotFoundException e) {
+            throw new ServletException(
+                    "Local adapter factory class not found: " + name, e);
+        } catch (InstantiationException e) {
+            throw new ServletException(
+                    "Failed to instantiate the adapter factory: " + name, e);
+        } catch (IllegalAccessException e) {
+            throw new ServletException(
+                    "Adapter factory constructor is not public: " + name, e);
+        } catch (ClassCastException e) {
+            throw new ServletException(
+                    "Invalid local adapter factory class: " + name, e);
         }
     }
 

@@ -14,17 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.rmi.servlet;
+package org.apache.jackrabbit.servlet.remote;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import javax.jcr.Repository;
 import javax.servlet.ServletException;
 
-import org.apache.jackrabbit.commons.servlet.AbstractRepositoryServlet;
 import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
-import org.apache.jackrabbit.rmi.repository.RMIRemoteRepository;
+import org.apache.jackrabbit.rmi.repository.URLRemoteRepository;
+import org.apache.jackrabbit.servlet.AbstractRepositoryServlet;
 
 /**
- * Servlet that makes a repository from RMI available as an attribute
+ * Servlet that makes a remote repository from a ULR available as an attribute
  * in the servlet context.
  * <p>
  * The supported initialization parameters of this servlet are:
@@ -43,8 +46,7 @@ import org.apache.jackrabbit.rmi.repository.RMIRemoteRepository;
  *   </dd>
  *   <dt>url</dt>
  *   <dd>
- *     RMI URL of the remote repository. The default value is
- *     "<code>//localhost/javax/jcr/Repository</code>".
+ *     URL of the remote repository.
  *   </dd>
  * </dl>
  * <p>
@@ -53,22 +55,30 @@ import org.apache.jackrabbit.rmi.repository.RMIRemoteRepository;
  *
  * @since 1.4
  */
-public class RMIRemoteRepositoryServlet extends RemoteRepositoryServlet {
+public class URLRemoteRepositoryServlet extends RemoteRepositoryServlet {
 
     /**
-     * Serial version UID. 
+     * Serial version UID.
      */
-    private static final long serialVersionUID = 2410543206806054854L;
+    private static final long serialVersionUID = 6144781813459102448L;
 
     /**
-     * Creates and returns an RMI repository proxy for the configured RMI URL.
+     * Creates and returns a proxy for the remote repository at the given URL.
      *
-     * @return RMI repository proxy
+     * @return repository proxy
      */
     protected Repository getRepository() throws ServletException {
-        return new RMIRemoteRepository(
-                getLocalAdapterFactory(),
-                getInitParameter("url", "//localhost/javax/jcr/Repository"));
+        String url = getInitParameter("url");
+        if (url == null) {
+            throw new ServletException("Missing init parameter: url");
+        }
+
+        try {
+            return new URLRemoteRepository(
+                        getLocalAdapterFactory(), new URL(url));
+        } catch (MalformedURLException e) {
+            throw new ServletException("Invalid repository URL: " + url, e);
+        }
     }
 
 }
