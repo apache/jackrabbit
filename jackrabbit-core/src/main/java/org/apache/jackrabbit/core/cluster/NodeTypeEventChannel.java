@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.cluster;
 
+import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
+
 import java.util.Collection;
 
 /**
@@ -29,6 +31,20 @@ public interface NodeTypeEventChannel {
      * @param ntDefs collection of node type definitions
      */
     public void registered(Collection ntDefs);
+
+    /**
+     * Called when a node types has been re-registered.
+     *
+     * @param ntDef node type definition
+     */
+    public void reregistered(NodeTypeDef ntDef);
+
+    /**
+     * Called when one or more node types have been unregistered.
+     *
+     * @param ntNames collection of node type qnames
+     */
+    public void unregistered(Collection ntNames);
 
     /**
      * Set listener that will receive information about incoming, external node type events.
