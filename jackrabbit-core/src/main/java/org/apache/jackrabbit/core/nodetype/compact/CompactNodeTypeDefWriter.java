@@ -35,6 +35,7 @@ import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.util.ISO9075;
 
 /**
  * Prints node type defs in a compact notation
@@ -378,7 +379,7 @@ public class CompactNodeTypeDefWriter {
                 prefix += ":";
             }
 
-            String resolvedName = prefix + qname.getLocalName();
+            String resolvedName = prefix + ISO9075.encode(qname).getLocalName();
 
             // check for '-' and '+'
             if (resolvedName.indexOf('-') >= 0 || resolvedName.indexOf('+') >= 0) {
