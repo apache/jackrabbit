@@ -366,8 +366,9 @@ public class SearchIndex extends AbstractQueryHandler {
                 Document doc = null;
                 try {
                     doc = createDocument(state, getNamespaceMappings());
+                    retrieveAggregateRoot(state, aggregateRoots);
                 } catch (RepositoryException e) {
-                    log.error("Exception while creating document for node: "
+                    log.warn("Exception while creating document for node: "
                             + state.getNodeId() + ": " + e.toString());
                 }
                 return doc;

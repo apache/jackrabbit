@@ -143,6 +143,12 @@ public class NodeIndexer {
                 doc.add(new Field(FieldNames.PARENT, node.getParentId().toString(), Field.Store.YES, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
                 NodeState parent = (NodeState) stateProvider.getItemState(node.getParentId());
                 NodeState.ChildNodeEntry child = parent.getChildNodeEntry(node.getNodeId());
+                if (child == null) {
+                    // this can only happen when jackrabbit
+                    // is running in a cluster.
+                    throw new RepositoryException("Missing child node entry " +
+                            "for node with id: " + node.getNodeId());
+                }
                 String name = NameFormat.format(child.getName(), mappings);
                 doc.add(new Field(FieldNames.LABEL, name, Field.Store.NO, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
             }
