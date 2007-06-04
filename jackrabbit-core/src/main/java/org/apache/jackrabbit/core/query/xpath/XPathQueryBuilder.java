@@ -335,7 +335,12 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 break;
             case JJTROOT:
             case JJTROOTDESCENDANTS:
-                ((PathQueryNode) queryNode).setAbsolute(true);
+                if (queryNode instanceof PathQueryNode) {
+                    ((PathQueryNode) queryNode).setAbsolute(true);
+                } else {
+                    exceptions.add(new InvalidQueryException(
+                            "Unsupported root level query node: " + queryNode));
+                }
                 break;
             case JJTSTEPEXPR:
                 if (isAttributeAxis(node)) {
