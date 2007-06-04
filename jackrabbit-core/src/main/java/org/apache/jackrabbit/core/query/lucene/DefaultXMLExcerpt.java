@@ -29,6 +29,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Iterator;
 
 /**
  * <code>DefaultXMLExcerpt</code> implements an ExcerptProvider.
@@ -143,7 +146,24 @@ class DefaultXMLExcerpt implements ExcerptProvider {
                                  int maxFragments,
                                  int maxFragmentSize)
             throws IOException {
-        return DefaultHighlighter.highlight(tpv, query, FieldNames.FULLTEXT,
-                text, "<highlight>", "</highlight>", maxFragments, maxFragmentSize / 2);
+
+        Set extractedTerms = new HashSet();
+        Set relevantTerms = new HashSet();
+        query.extractTerms(extractedTerms);
+        // only keep terms for fulltext fields
+        for (Iterator it = extractedTerms.iterator(); it.hasNext(); ) {
+            Term t = (Term) it.next();
+            if (t.field().equals(FieldNames.FULLTEXT)) {
+                relevantTerms.add(t);
+            } else {
+                int idx = t.field().indexOf(FieldNames.FULLTEXT_PREFIX);
+                if (idx != -1) {
+                    relevantTerms.add(new Term(FieldNames.FULLTEXT, t.text()));
+                }
+            }
+        }
+
+        return DefaultHighlighter.highlight(tpv, relevantTerms, text,
+                "<highlight>", "</highlight>", maxFragments, maxFragmentSize / 2);
     }
 }
