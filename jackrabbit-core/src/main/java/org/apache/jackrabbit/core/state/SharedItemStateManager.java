@@ -701,6 +701,11 @@ public class SharedItemStateManager
                 /* Let the shared item listeners know about the change */
                 shared.persisted();
 
+                // downgrade to read lock
+                acquireReadLock();
+                rwLock.writeLock().release();
+                holdingWriteLock = false;
+
                 /* notify virtual providers about node references */
                 for (int i = 0; i < virtualNodeReferences.length; i++) {
                     List virtualRefs = virtualNodeReferences[i];
@@ -711,11 +716,6 @@ public class SharedItemStateManager
                         }
                     }
                 }
-
-                // downgrade to read lock
-                acquireReadLock();
-                rwLock.writeLock().release();
-                holdingWriteLock = false;
 
                 /* dispatch the events */
                 events.dispatch();
