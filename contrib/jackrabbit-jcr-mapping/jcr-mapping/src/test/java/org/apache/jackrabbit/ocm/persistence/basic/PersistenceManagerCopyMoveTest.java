@@ -18,7 +18,8 @@ package org.apache.jackrabbit.ocm.persistence.basic;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
+
+import javax.jcr.Node;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -29,6 +30,7 @@ import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.TestBase;
 import org.apache.jackrabbit.ocm.exception.PersistenceException;
 import org.apache.jackrabbit.ocm.testmodel.A;
+import org.apache.jackrabbit.ocm.testmodel.Atomic;
 import org.apache.jackrabbit.ocm.testmodel.B;
 import org.apache.jackrabbit.ocm.testmodel.C;
 
@@ -116,8 +118,7 @@ public class PersistenceManagerCopyMoveTest extends TestBase
         // --------------------------------------------------------------------------------
         // Copy the object 
         // --------------------------------------------------------------------------------
-        persistenceManager.copy("/test", "/test2");
-        persistenceManager.save();
+        persistenceManager.copy("/test", "/test2");      
         
         // --------------------------------------------------------------------------------
         // Get the object 
@@ -160,87 +161,136 @@ public class PersistenceManagerCopyMoveTest extends TestBase
         
 	}
 
-	public void testMove()
+	public void testSimpleMove()
 	{
 
-        // --------------------------------------------------------------------------------
-        // Create and store an object graph in the repository
-        // --------------------------------------------------------------------------------
-        A a = new A();
-        a.setPath("/test");
-        a.setA1("a1");
-        a.setA2("a2");
-        B b = new B();
-        b.setB1("b1");
-        b.setB2("b2");
-        a.setB(b);
-        
-        C c1 = new C();
-        c1.setId("first");
-        c1.setName("First Element");
-        C c2 = new C();
-        c2.setId("second");
-        c2.setName("Second Element");
-        
-        C c3 = new C();
-        c3.setId("third");
-        c3.setName("Third Element");
-        
-        
-        Collection collection = new ArrayList();
-        collection.add(c1);
-        collection.add(c2);
-        collection.add(c3);
-        
-        a.setCollection(collection);
-        
-        persistenceManager.insert(a);
-        persistenceManager.save();
-		
-        // --------------------------------------------------------------------------------
-        // Copy the object 
-        // --------------------------------------------------------------------------------
-        persistenceManager.move("/test", "/test2");
-        persistenceManager.save();
-        
-        // --------------------------------------------------------------------------------
-        // Get the object 
-        // --------------------------------------------------------------------------------
-        a = (A) persistenceManager.getObject("/test2");
-        assertNotNull("a is null", a);
-        assertTrue("Invalid field a1", a.getA1().equals("a1"));
-        assertTrue("Invalid field b.b1", a.getB().getB1().equals("b1"));
-        assertTrue("Invalid number of items in field collection", a.getCollection().size() == 3);
-                
-        assertFalse("Object with path /test still exists", persistenceManager.objectExists("/test"));
-        
-        // --------------------------------------------------------------------------------
-        // Check exceptions 
-        // --------------------------------------------------------------------------------      
-        try 
-        {
-			persistenceManager.move("/incorrectpath", "/test2");			
-			fail("the copy method accepts an incorrect source path");
-		} catch (PersistenceException e) 
-		{
-			// Nothing to do  - Expected behaviour
-		}       
+        try {
+			// --------------------------------------------------------------------------------
+			// Create and store an object graph in the repository
+			// --------------------------------------------------------------------------------
 
-        try 
-        {
-			persistenceManager.move("/test", "incorrectpath");			
-			fail("the copy method accepts an incorrect destination path");
-		} catch (PersistenceException e) 
+        	Atomic atomic =  new Atomic();
+        	atomic.setPath("/source");
+        	atomic.setString("test atomic");
+        	persistenceManager.insert(atomic);
+        	persistenceManager.save();
+			
+			// --------------------------------------------------------------------------------
+			// Copy the object 
+			// --------------------------------------------------------------------------------
+        	persistenceManager.move("/source", "/result");
+
+			// --------------------------------------------------------------------------------
+			// Get the object 
+			// --------------------------------------------------------------------------------
+			atomic = (Atomic) persistenceManager.getObject("/result");
+			assertNotNull("atomic is null", atomic);
+			assertTrue("Invalid field a1", atomic.getString().equals("test atomic"));			        
+
+			assertFalse("Object with path /source still exists", persistenceManager.objectExists("/source"));
+
+			// --------------------------------------------------------------------------------
+			// Check exceptions 
+			// --------------------------------------------------------------------------------      
+			try 
+			{
+				persistenceManager.move("/incorrectpath", "/test2");			
+				fail("the copy method accepts an incorrect source path");
+			} catch (PersistenceException e) 
+			{
+				// Nothing to do  - Expected behaviour
+			}       
+
+			try 
+			{
+				persistenceManager.move("/test", "incorrectpath");			
+				fail("the copy method accepts an incorrect destination path");
+			} catch (PersistenceException e) 
+			{
+				// Nothing to do  - Expected behaviour
+			}
+			
+			// --------------------------------------------------------------------------------
+			// Remove objects 
+			// --------------------------------------------------------------------------------
+			persistenceManager.remove("/result");
+			persistenceManager.save();
+		} 
+        catch (Exception e) 
 		{
-			// Nothing to do  - Expected behaviour
+        	e.printStackTrace();
+        	fail();
 		}
-		
-        // --------------------------------------------------------------------------------
-        // Remove objects 
-        // --------------------------------------------------------------------------------
-        persistenceManager.remove("/test2");
-        persistenceManager.save();
 		
         
 	}
+	
+	public void testObjectGraphMove()
+	{
+
+        try {
+			// --------------------------------------------------------------------------------
+			// Create and store an object graph in the repository
+			// --------------------------------------------------------------------------------
+			A a = new A();
+			a.setPath("/source");
+			a.setA1("a1");
+			a.setA2("a2");
+			B b = new B();
+			b.setB1("b1");
+			b.setB2("b2");
+			a.setB(b);
+			
+			C c1 = new C();
+			c1.setId("first");
+			c1.setName("First Element");
+			C c2 = new C();
+			c2.setId("second");
+			c2.setName("Second Element");
+			
+			C c3 = new C();
+			c3.setId("third");
+			c3.setName("Third Element");
+			
+			
+			Collection collection = new ArrayList();
+			collection.add(c1);
+			collection.add(c2);
+			collection.add(c3);
+			
+			a.setCollection(collection);
+			
+			persistenceManager.insert(a);
+        	persistenceManager.save();
+			
+			// --------------------------------------------------------------------------------
+			// Copy the object 
+			// --------------------------------------------------------------------------------
+			//persistenceManager
+        	persistenceManager.move("/source", "/result");            
+        	// --------------------------------------------------------------------------------
+			// Get the object 
+			// --------------------------------------------------------------------------------
+			a = (A) persistenceManager.getObject("/result");
+			assertNotNull("a is null", a);
+			assertTrue("Invalid field a1", a.getA1().equals("a1"));
+			assertTrue("Invalid field b.b1", a.getB().getB1().equals("b1"));
+			assertTrue("Invalid number of items in field collection", a.getCollection().size() == 3);
+			        
+			assertFalse("Object with path /source still exists", persistenceManager.objectExists("/source"));
+			
+			// --------------------------------------------------------------------------------
+			// Remove objects 
+			// --------------------------------------------------------------------------------
+			persistenceManager.remove("/result");
+			persistenceManager.save();
+		} 
+        catch (Exception e) 
+		{
+        	e.printStackTrace();
+        	fail();
+		}
+	}
+	
+	
 }
