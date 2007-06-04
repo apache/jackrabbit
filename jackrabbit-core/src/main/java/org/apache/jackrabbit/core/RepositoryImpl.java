@@ -55,6 +55,7 @@ import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ManagedMLRUItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
+import org.apache.jackrabbit.core.util.RepositoryLock;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.name.NamespaceResolver;
@@ -69,10 +70,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.RandomAccessFile;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
-import java.nio.channels.OverlappingFileLockException;
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.util.Arrays;
@@ -103,11 +100,6 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         EventListener {
 
     private static Logger log = LoggerFactory.getLogger(RepositoryImpl.class);
-
-    /**
-     * repository home lock
-     */
-    private static final String REPOSITORY_LOCK = ".lock";
 
     /**
      * hardcoded id of the repository root node
@@ -193,7 +185,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
     /**
      * the lock that guards instantiation of multiple repositories.
      */
-    private FileLock repLock;
+    private RepositoryLock repLock;
 
     /**
      * Clustered node used, <code>null</code> if clustering is not configured.
@@ -232,7 +224,9 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
 
         this.repConfig = repConfig;
 
-        acquireRepositoryLock();
+        // Acquire a lock on the repository home
+        repLock = new RepositoryLock(repConfig.getHomeDir());
+        repLock.acquire();
 
         // setup file systems
         repStore = repConfig.getFileSystemConfig().createFileSystem();
@@ -389,67 +383,6 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             log.error("Unable to start repository, forcing shutdown...");
             shutdown();
             throw e;
-        }
-    }
-
-    /**
-     * Lock the repository home.
-     *
-     * @throws RepositoryException if the repository lock can not be acquired
-     */
-    protected void acquireRepositoryLock() throws RepositoryException {
-        File home = new File(this.repConfig.getHomeDir());
-        File lock = new File(home, REPOSITORY_LOCK);
-
-        if (lock.exists()) {
-            log.warn("Existing lock file at " + lock.getAbsolutePath()
-                    + " detected. Repository was not shut down properly.");
-        } else {
-            try {
-                lock.createNewFile();
-            } catch (IOException e) {
-                throw new RepositoryException(
-                    "Unable to create lock file at " + lock.getAbsolutePath(), e);
-            }
-        }
-        try {
-            repLock = new RandomAccessFile(lock, "rw").getChannel().tryLock();
-        } catch (IOException e) {
-            throw new RepositoryException(
-                "Unable to lock file at " + lock.getAbsolutePath(), e);
-        } catch (OverlappingFileLockException e) {
-            throw new RepositoryException(
-                    "The repository home at " + home.getAbsolutePath()
-                    + " appears to be in use since the file at "
-                    + lock.getAbsolutePath() + " is already locked by the current process.");
-        }
-        if (repLock == null) {
-            throw new RepositoryException(
-                    "The repository home at " + home.getAbsolutePath()
-                    + " appears to be in use since the file at "
-                    + lock.getAbsolutePath() + " is locked by another process.");
-        }
-    }
-
-    /**
-     * Release repository lock
-     */
-    protected void releaseRepositoryLock() {
-        if (repLock != null) {
-            try {
-                FileChannel channel = repLock.channel();
-                repLock.release();
-                channel.close();
-            } catch (IOException e) {
-                // ignore
-            }
-        }
-        repLock = null;
-
-        File home = new File(this.repConfig.getHomeDir());
-        File lock = new File(home, REPOSITORY_LOCK);
-        if (!lock.delete()) {
-            log.error("Unable to release repository lock");
         }
     }
 
@@ -1041,7 +974,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         notifyAll();
 
         // finally release repository lock
-        releaseRepositoryLock();
+        repLock.release();
 
         log.info("Repository has been shutdown");
     }
