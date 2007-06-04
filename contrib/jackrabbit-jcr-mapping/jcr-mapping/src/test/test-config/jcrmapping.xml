@@ -4,11 +4,10 @@
 <jackrabbit-ocm>
     
   
-
 	<!--
 		The following classes are used to test object associations
 		A has an assocition (1..1) with B (field b) => B is mapped as subnode in A
-		A has a collection of C (field "collection" ) => there are n subnodes used to map the "C" collection 
+		A has a collection of C (field "collection") => there are n subnodes used to map the "C" collection 
 		
 	-->
 	<class-descriptor
@@ -59,6 +58,14 @@
 		<field-descriptor fieldName="name" jcrName="ocm:name" />
 	</class-descriptor>
 
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Lockable" jcrNodeType="ocm:TestLockable" >		
+		<field-descriptor fieldName="path" path="true" />
+		<field-descriptor fieldName="a1" jcrName="ocm:a1" />
+		<field-descriptor fieldName="a2" jcrName="ocm:a2" />
+		
+		<!--  lockOwner is null is the object is not locked -->
+    	<field-descriptor fieldName="lockOwner" jcrName="jcr:lockOwner" />
+	</class-descriptor>
 
 	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Page" jcrNodeType="ocm:page" discriminator="false" >
 		<field-descriptor fieldName="path" path="true" />

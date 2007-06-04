@@ -19,10 +19,12 @@ package org.apache.jackrabbit.ocm.persistence;
 import java.util.Collection;
 import java.util.Iterator;
 
+import javax.jcr.Session;
 import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.ocm.exception.IllegalUnlockException;
 import org.apache.jackrabbit.ocm.exception.LockedException;
+import org.apache.jackrabbit.ocm.lock.Lock;
 import org.apache.jackrabbit.ocm.exception.PersistenceException;
 import org.apache.jackrabbit.ocm.query.Query;
 import org.apache.jackrabbit.ocm.query.QueryManager;
@@ -306,12 +308,12 @@ public interface PersistenceManager
      *            is lock deep? See JCR spec: 8.4.3 Shallow and Deep Locks
      * @param isSessionScoped
      *            is lock session scoped? See JCR spec: Session-scoped and Open-scoped Locks
-     * @return lock token - see JCR spec: 8.4.6 Lock Token; Other user  with this token can perform unlock
+     * @return lock - Wrapper object for a JCR lock
      * 
      * @throws LockedException
      *             if path is locked (cannot lock same path again)
      */
-    public String lock(String path, boolean isDeep, boolean isSessionScoped) throws LockedException;
+    public Lock lock(String path, boolean isDeep, boolean isSessionScoped) throws LockedException;
     
     /**
      * Unlock object stored on {@param path }.
@@ -342,7 +344,7 @@ public interface PersistenceManager
     public QueryManager getQueryManager();
     
     /**
-     * Refrsh the underlying jcr session (see the jcr spec)
+     * Refresh the underlying jcr session (see the jcr spec)
      * @param keepChanges
      */
     public void refresh(boolean keepChanges);
@@ -367,4 +369,9 @@ public interface PersistenceManager
      */
     public void copy(String srcPath, String destPath) throws PersistenceException; 
         
+    /**
+     * This method returns the JCR session. The JCR session could be used to make some JCR specific calls.
+     * @return the associated JCR session 
+     */
+    public Session getSession();
 }

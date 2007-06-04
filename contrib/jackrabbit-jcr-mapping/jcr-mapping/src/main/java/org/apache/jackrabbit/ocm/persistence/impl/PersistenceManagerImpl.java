@@ -32,7 +32,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Workspace;
-import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.query.InvalidQueryException;
@@ -62,7 +61,7 @@ import org.apache.jackrabbit.ocm.query.QueryManager;
 import org.apache.jackrabbit.ocm.query.impl.QueryManagerImpl;
 import org.apache.jackrabbit.ocm.version.Version;
 import org.apache.jackrabbit.ocm.version.VersionIterator;
-
+import org.apache.jackrabbit.ocm.lock.Lock;
 /**
  *
  * Default implementation for {@link org.apache.jackrabbit.ocm.persistence.PersistenceManager}
@@ -898,7 +897,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
      *
      * @see org.apache.jackrabbit.ocm.persistence.PersistenceManager#lock(java.lang.String, java.lang.Object, boolean, boolean)
      */
-    public String lock(final String absPath, final boolean isDeep, final boolean isSessionScoped) 
+    public Lock lock(final String absPath, final boolean isDeep, final boolean isSessionScoped) 
     throws LockedException {
         try {
 
@@ -907,9 +906,9 @@ public class PersistenceManagerImpl implements PersistenceManager {
             checkIfNodeLocked(absPath);
 
             Node node = getNode(absPath);
-            Lock lock = node.lock(isDeep, isSessionScoped);
+            javax.jcr.lock.Lock lock = node.lock(isDeep, isSessionScoped);
 
-            return lock.getLockToken();
+            return new Lock(lock);
         } 
         catch (LockException e) {
             // Only one case with LockException remains: if node is not mix:lockable, propably error in custom node types definitions
@@ -938,7 +937,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
                 return;
             }
 
-            Lock lock = node.getLock();
+            javax.jcr.lock.Lock lock = node.getLock();
             lockOwner = lock.getLockOwner();
 
             node.unlock();
@@ -999,7 +998,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
 
         // Node can hold nock or can be locked with precedencor
         if (node.isLocked()) {
-            Lock lock = node.getLock();
+            javax.jcr.lock.Lock lock = node.getLock();
             String lockOwner = lock.getLockOwner();
             
             if (! session.getUserID().equals(lockOwner))
@@ -1118,10 +1117,10 @@ public class PersistenceManagerImpl implements PersistenceManager {
 	 * @see org.apache.jackrabbit.ocm.persistence.PersistenceManager#move(java.lang.String, java.lang.String)
 	 */
     public void move(String srcPath, String destPath){
-        //Workspace workspace = session.getWorkspace();
+        Workspace workspace = session.getWorkspace();
         try {
             
-        	session.move(srcPath,destPath);
+        	workspace.move(srcPath,destPath);
             
         }catch(javax.jcr.nodetype.ConstraintViolationException cve){
             throw new PersistenceException(
