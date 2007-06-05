@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.ocm.testmodel.hashmap;
+package org.apache.jackrabbit.ocm.testmodel.collection;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.apache.jackrabbit.ocm.persistence.collectionconverter.ManageableCollection;
@@ -26,7 +26,7 @@ import org.apache.jackrabbit.ocm.persistence.collectionconverter.ManageableColle
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  * 
  */
-public class HashMapElement extends HashMap implements ManageableCollection
+public class ArrayListElement extends ArrayList implements ManageableCollection
 {
 
     /**
@@ -36,7 +36,7 @@ public class HashMapElement extends HashMap implements ManageableCollection
     {
         if (object instanceof Element)
         {
-            this.put(((Element)object).getId(), object);
+            this.add(object);
         }
     }
 
@@ -45,7 +45,7 @@ public class HashMapElement extends HashMap implements ManageableCollection
      */
     public Iterator getIterator()
     {
-       return  this.values().iterator();
+       return  this.iterator();
     }
     
 	public int getSize()

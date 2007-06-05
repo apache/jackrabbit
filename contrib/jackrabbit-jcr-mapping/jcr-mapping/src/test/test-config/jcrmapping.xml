@@ -82,17 +82,22 @@
 	</class-descriptor>
 
 
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.hashmap.Main" jcrNodeType="nt:unstructured"  >
+	<class-descriptor
+		className="org.apache.jackrabbit.ocm.testmodel.collection.Main"
+		jcrNodeType="nt:unstructured">
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="text" jcrName="text" />
-		<collection-descriptor fieldName="elements"  proxy="false" 
-		                       elementClassName="org.apache.jackrabbit.ocm.testmodel.hashmap.Element" 
-		                       collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.NTCollectionConverterImpl" 
-		                       collectionClassName="org.apache.jackrabbit.ocm.testmodel.hashmap.HashMapElement" />
-		                       
+		<collection-descriptor fieldName="hashMap" jcrName="hashMap" proxy="false"
+			elementClassName="org.apache.jackrabbit.ocm.testmodel.collection.Element"
+			collectionClassName="org.apache.jackrabbit.ocm.testmodel.collection.HashMapElement" />
+
+		<collection-descriptor fieldName="list" jcrName="list" proxy="false"
+			elementClassName="org.apache.jackrabbit.ocm.testmodel.collection.Element"
+			collectionClassName="org.apache.jackrabbit.ocm.testmodel.collection.ArrayListElement" />
+
 	</class-descriptor>
 
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.hashmap.Element" jcrNodeType="ocm:element" discriminator="false" >
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.collection.Element" jcrNodeType="ocm:element" discriminator="false" >
 		<field-descriptor fieldName="id" jcrName="ocm:id"  />
 		<field-descriptor fieldName="text" jcrName="ocm:text" />
 	</class-descriptor>

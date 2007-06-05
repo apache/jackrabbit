@@ -36,8 +36,9 @@ public class AllTests {
     public static Test buildSuite() {
         TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.persistence.collectionconverter");
         //$JUnit-BEGIN$
-        suite.addTestSuite(DefaultCollectionConverterImplTest.class);
-        suite.addTestSuite(HashMapTest.class);
+        suite.addTestSuite(ArrayListTest.class);
+        suite.addTestSuite(DefaultCollectionConverterImplTest.class);        
+        suite.addTestSuite(HashMapTest.class);        
         suite.addTestSuite(MultiValueCollectionConverterImplTest.class);
         suite.addTestSuite(NTCollectionConverterImplTest.class);
         suite.addTestSuite(ResidualPropertiesCollectionConverterImplTest.class);

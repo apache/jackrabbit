@@ -36,9 +36,11 @@ public class AllTests {
     public static Test buildSuite() {
         TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.persistence.basic");
         //$JUnit-BEGIN$
+        suite.addTestSuite(PersistenceManagerAvoidRecursiveLoopTest.class);
+        suite.addTestSuite(PersistenceManagerCopyMoveTest.class);
         suite.addTestSuite(PersistenceManagerRemoveTest.class);
         suite.addTestSuite(PersistenceManagerSameNameSiblingTest.class);
-        suite.addTestSuite(PersistenceManagerTest.class);
+        suite.addTestSuite(PersistenceManagerTest.class);        
         //$JUnit-END$
 
         return suite;
