@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.ocm.persistence.collectionconverter;
 
+import java.util.ArrayList;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -24,24 +26,22 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.TestBase;
 import org.apache.jackrabbit.ocm.persistence.PersistenceManager;
+import org.apache.jackrabbit.ocm.testmodel.collection.ArrayListElement;
 import org.apache.jackrabbit.ocm.testmodel.collection.Element;
-import org.apache.jackrabbit.ocm.testmodel.collection.HashMapElement;
 import org.apache.jackrabbit.ocm.testmodel.collection.Main;
 
 /**
- * Test NTCollectionConverterImpl
- *
- * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
+ * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class HashMapTest extends TestBase
+public class ArrayListTest extends TestBase
 {
-    private final static Log log = LogFactory.getLog(HashMapTest.class);
+    private final static Log log = LogFactory.getLog(ArrayListTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public HashMapTest(String testName)  throws Exception
+    public ArrayListTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -49,7 +49,7 @@ public class HashMapTest extends TestBase
     public static Test suite()
     {
         // All methods starting with "test" will be executed in the test suite.
-        return new RepositoryLifecycleTestSetup(new TestSuite(HashMapTest.class));
+        return new RepositoryLifecycleTestSetup(new TestSuite(ArrayListTest.class));
     }
 
     
@@ -67,7 +67,7 @@ public class HashMapTest extends TestBase
         super.tearDown();
     }    
     
-    public void testHashMap()
+    public void testArrayList()
     {
         try
         {
@@ -82,18 +82,18 @@ public class HashMapTest extends TestBase
             main.setPath("/test");
             main.setText("Main text");
             
-            HashMapElement hashMapElement = new HashMapElement();
+            ArrayListElement arrayListElement = new ArrayListElement();
             Element e1 = new Element();
             e1.setId("e1");
             e1.setText("Element 1");
-            hashMapElement.addObject(e1);
+            arrayListElement.add(e1);
             
             Element e2 = new Element();
             e2.setId("e2");
             e2.setText("Element 2");
-            hashMapElement.addObject(e2);
+            arrayListElement.add(e2);
             
-            main.setHashMap(hashMapElement);
+            main.setList(arrayListElement);
             
             persistenceManager.insert(main);
             persistenceManager.save();
@@ -102,29 +102,31 @@ public class HashMapTest extends TestBase
             // Get the object
             // --------------------------------------------------------------------------------           
             main = (Main) persistenceManager.getObject( "/test");
-            assertNotNull("main.getHashMap() is null", main.getHashMap());
-            assertTrue("Incorrect text", main.getText().equals("Main text"));           
-            assertTrue("Incorrect para element", ((Element) main.getHashMap().get("e1")).getText().equals("Element 1"));
+            ArrayList arrayList = main.getList();
+            assertNotNull("main.getList is null", arrayList ); 
+            Element[] elements = (Element[]) arrayList.toArray(new Element[arrayList.size()]);
+            assertTrue("Incorrect para element", elements[0].getText().equals("Element 1"));
             
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
-            hashMapElement = new HashMapElement();
+            arrayListElement = new ArrayListElement();
             e1 = new Element();
             e1.setId("e1");
             e1.setText("Element 1");
-            hashMapElement.addObject(e1);
+            arrayListElement.add(e1);
             
             e2 = new Element();
             e2.setId("e3");
             e2.setText("Element 3");
-            hashMapElement.addObject(e2);
-
+            arrayListElement.add(e2);
+            
             Element e3 = new Element();
             e3.setId("e4");
             e3.setText("Element 4");
-            hashMapElement.addObject(e3);
-            main.setHashMap(hashMapElement);
+            arrayListElement.add(e3);
+            
+            main.setList(arrayListElement);            
             
             persistenceManager.update(main);
             persistenceManager.save();
@@ -132,9 +134,11 @@ public class HashMapTest extends TestBase
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            assertNotNull("main.getElements() is null", main.getHashMap());
-            assertTrue("Incorrect text", main.getText().equals("Main text"));           
-            assertTrue("Incorrect para element", ((Element) main.getHashMap().get("e4")).getText().equals("Element 4"));
+            main = (Main) persistenceManager.getObject( "/test");
+            arrayList = main.getList();
+            assertNotNull("main.getList() is null", arrayList ); 
+            elements = (Element[]) arrayList.toArray(new Element[arrayList.size()]);
+            assertTrue("Incorrect element", elements[2].getText().equals("Element 4"));
             
         }
         catch (Exception e)

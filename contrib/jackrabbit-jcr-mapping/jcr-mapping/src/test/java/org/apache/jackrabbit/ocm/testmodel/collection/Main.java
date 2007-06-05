@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.ocm.testmodel.hashmap;
+package org.apache.jackrabbit.ocm.testmodel.collection;
 
 
 /**
@@ -22,27 +22,44 @@ package org.apache.jackrabbit.ocm.testmodel.hashmap;
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart Christophe </a>
  * @version $Id: Exp $
  */
-public class Element
+public class Main
 {
-    private String id;
+	private String path;
     private String text;
+    private HashMapElement hashMap;
+    private ArrayListElement list;
     
-    
-    /**
-     * @return Returns the id.
+    public String getPath() {
+		return path;
+	}
+	public void setPath(String path) {
+		this.path = path;
+	}
+	/**
+     * @return Returns the elements.
      */
-    public String getId()
+    public HashMapElement getHashMap()
     {
-        return id;
+        return hashMap;
     }
     /**
-     * @param id The id to set.
+     * @param elements The elements to set.
      */
-    public void setId(String id)
+    public void setHashMap(HashMapElement hashMap)
     {
-        this.id = id;
+        this.hashMap = hashMap;
     }
-    /**
+    
+    public ArrayListElement getList() 
+    {
+		return list;
+	}
+	
+    public void setList(ArrayListElement list) 
+    {
+		this.list = list;
+	}
+	/**
      * @return Returns the text.
      */
     public String getText()
