@@ -17,11 +17,13 @@
 
 package org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl;
 
+import java.util.Calendar;
 import java.util.Date;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.ValueFormatException;
 
 import org.apache.jackrabbit.ocm.exception.IncorrectAtomicTypeException;
 import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.AtomicTypeConverter;
@@ -34,6 +36,7 @@ import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.AtomicTypeConve
  */
 public class UtilDateTypeConverterImpl implements AtomicTypeConverter
 {
+	
 	/**
 	 * 
 	 * @see org.apache.jackrabbit.ocm.persistence.atomictypeconverter.AtomicTypeConverter#getValue(java.lang.Object)
@@ -43,8 +46,10 @@ public class UtilDateTypeConverterImpl implements AtomicTypeConverter
 		if (propValue == null)
 		{
 			return null;
-		}
-		return valueFactory.createValue(((java.util.Date) propValue).getTime());		
+		}		
+		Calendar calendar =  Calendar.getInstance();
+		calendar.setTime((Date) propValue);
+		return valueFactory.createValue(calendar);		
 	}
 
 
@@ -56,8 +61,8 @@ public class UtilDateTypeConverterImpl implements AtomicTypeConverter
     {
 		try
 		{
-			long time = value.getLong();
-			return new Date(time);
+			Calendar calendar = value.getDate();
+			return calendar.getTime();
 		}
 		catch (RepositoryException e)
 		{
@@ -70,8 +75,20 @@ public class UtilDateTypeConverterImpl implements AtomicTypeConverter
 	 * 
 	 * @see org.apache.jackrabbit.ocm.persistence.atomictypeconverter.AtomicTypeConverter#getStringValue(java.lang.Object)
 	 */
-	public String getStringValue(Object object)
+	public String getXPathQueryValue(ValueFactory valueFactory, Object object)
 	{
-		return new Long(((java.util.Date) object).getTime()).toString();
+		try 
+		{
+			Calendar calendar =  Calendar.getInstance();
+			
+			calendar.setTime((Date) object);
+
+			return "xs:dateTime('" + valueFactory.createValue(calendar).getString() + "')";
+
+		} 
+		catch (RepositoryException e) 
+		{
+			throw new IncorrectAtomicTypeException("Impossible to get the sting value ", e);
+		}
 	}
 }

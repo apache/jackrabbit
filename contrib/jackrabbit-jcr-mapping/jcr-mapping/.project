@@ -1,15 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
 <projectDescription>
-  <name>graffito-jcr-mapping</name>
-  <comment>This subproject contains the JCR Mapping tools</comment>
-  <projects>
-  </projects>
+  <name>jackrabbit-ocm</name>
+  <comment>This Jackrabbit subproject is an object/JCR persistence and query service. This tools lets you to persist java objects into a JCR compliant repository - including association, inheritance, polymorphism, composition, and the Java collections framework. Furthermore, this jcr-mapping allows you to express queries in Java-based Criteria, as well as in JCR query language. It offers also features like version support and object locking.</comment>
+  <projects/>
   <buildSpec>
     <buildCommand>
       <name>org.eclipse.jdt.core.javabuilder</name>
-      <arguments>
-      </arguments>
     </buildCommand>
   </buildSpec>
   <natures>

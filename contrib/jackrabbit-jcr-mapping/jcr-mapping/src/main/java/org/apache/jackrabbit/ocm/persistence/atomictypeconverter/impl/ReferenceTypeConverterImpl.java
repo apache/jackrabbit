@@ -77,7 +77,7 @@ public class ReferenceTypeConverterImpl implements AtomicTypeConverter
 	 * 
 	 * @see org.apache.jackrabbit.ocm.persistence.atomictypeconverter.AtomicTypeConverter#getStringValue(java.lang.Object)
 	 */
-	public String getStringValue(Object object)
+	public String getXPathQueryValue(ValueFactory valueFactory, Object object)
 	{
 		return "'" + object.toString() + "'";
 	}

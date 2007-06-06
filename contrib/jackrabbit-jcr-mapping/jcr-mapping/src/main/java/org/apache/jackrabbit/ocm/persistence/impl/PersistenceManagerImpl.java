@@ -127,13 +127,22 @@ public class PersistenceManagerImpl implements PersistenceManager {
      */
     public PersistenceManagerImpl(Session session,String[] xmlMappingFiles ) 
     {
-        this.session = session;
-		this.mapper = new DigesterMapperImpl(xmlMappingFiles);
-		DefaultAtomicTypeConverterProvider converterProvider = new DefaultAtomicTypeConverterProvider();
-        Map atomicTypeConverters = converterProvider.getAtomicTypeConverters();
-		this.queryManager = new QueryManagerImpl(mapper, atomicTypeConverters);
-        this.requestObjectCache = new RequestObjectCacheImpl();        
-        this.objectConverter = new ObjectConverterImpl(mapper, converterProvider, new ProxyManagerImpl(), requestObjectCache);
+        try 
+        {
+			this.session = session;
+			this.mapper = new DigesterMapperImpl(xmlMappingFiles);
+			DefaultAtomicTypeConverterProvider converterProvider = new DefaultAtomicTypeConverterProvider();
+			Map atomicTypeConverters = converterProvider.getAtomicTypeConverters();
+			this.queryManager = new QueryManagerImpl(mapper, atomicTypeConverters, session.getValueFactory());
+			this.requestObjectCache = new RequestObjectCacheImpl();        
+			this.objectConverter = new ObjectConverterImpl(mapper, converterProvider, new ProxyManagerImpl(), requestObjectCache);
+		} 
+        catch (RepositoryException e) 
+        {
+            throw new org.apache.jackrabbit.ocm.exception.RepositoryException(
+                    "Impossible to instantiate the persistence manager", e);
+
+		}
         
     }
     

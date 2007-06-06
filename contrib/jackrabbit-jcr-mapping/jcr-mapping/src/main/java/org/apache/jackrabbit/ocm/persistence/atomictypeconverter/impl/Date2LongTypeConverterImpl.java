@@ -17,6 +17,8 @@
 
 package org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl;
 
+import java.util.Date;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
@@ -25,12 +27,12 @@ import org.apache.jackrabbit.ocm.exception.IncorrectAtomicTypeException;
 import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.AtomicTypeConverter;
 
 /**
- * Int Type Converter
+ * Util Date Converter
  * 
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
-public class IntTypeConverterImpl implements AtomicTypeConverter
+public class Date2LongTypeConverterImpl implements AtomicTypeConverter
 {
 	/**
 	 * 
@@ -42,25 +44,26 @@ public class IntTypeConverterImpl implements AtomicTypeConverter
 		{
 			return null;
 		}
-		long value = ((Integer) propValue).intValue();
-		return valueFactory.createValue(value);
+		return valueFactory.createValue(((java.util.Date) propValue).getTime());		
 	}
 
-    /**
-     * 
-     * @see org.apache.jackrabbit.ocm.persistence.atomictypeconverter.AtomicTypeConverter#getObject(javax.jcr.Value)
-     */
+
+	/**
+	 * 
+	 * @see org.apache.jackrabbit.ocm.persistence.atomictypeconverter.AtomicTypeConverter#getObject(javax.jcr.Value)
+	 */
 	public Object getObject(Value value)
     {
 		try
 		{
-			int beanPropValue = (int) value.getLong();
-			return new Integer(beanPropValue);
+			long time = value.getLong();
+			return new Date(time);
 		}
 		catch (RepositoryException e)
 		{
 			throw new IncorrectAtomicTypeException("Impossible to convert the value : " + value.toString(), e);
 		}
+
 	}
 	
 	/**
@@ -69,6 +72,6 @@ public class IntTypeConverterImpl implements AtomicTypeConverter
 	 */
 	public String getXPathQueryValue(ValueFactory valueFactory, Object object)
 	{
-		return object.toString();
+		return new Long(((java.util.Date) object).getTime()).toString();
 	}
 }

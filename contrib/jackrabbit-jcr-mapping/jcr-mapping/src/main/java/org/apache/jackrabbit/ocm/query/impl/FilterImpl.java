@@ -20,6 +20,8 @@ package org.apache.jackrabbit.ocm.query.impl;
 
 import java.util.Map;
 
+import javax.jcr.ValueFactory;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
@@ -41,6 +43,7 @@ public class FilterImpl implements Filter {
 
     private ClassDescriptor classDescriptor;
     private Map atomicTypeConverters;
+    private ValueFactory valueFactory;
 
     /**
      * Constructor
@@ -49,10 +52,11 @@ public class FilterImpl implements Filter {
      * @param atomicTypeConverters
      * @param clazz
      */
-    public FilterImpl(ClassDescriptor classDescriptor, Map atomicTypeConverters, Class clazz) {
+    public FilterImpl(ClassDescriptor classDescriptor, Map atomicTypeConverters, Class clazz, ValueFactory valueFactory) {
         this.claszz = clazz;
         this.atomicTypeConverters = atomicTypeConverters;
         this.classDescriptor = classDescriptor;
+        this.valueFactory = valueFactory;
     }
 
     /**
@@ -265,7 +269,7 @@ public class FilterImpl implements Filter {
         AtomicTypeConverter atomicTypeConverter = (AtomicTypeConverter) atomicTypeConverters.get(
                 value.getClass());
 
-        return atomicTypeConverter.getStringValue(value);
+        return atomicTypeConverter.getXPathQueryValue(valueFactory, value);
     }
 
     public String getJcrExpression() {
