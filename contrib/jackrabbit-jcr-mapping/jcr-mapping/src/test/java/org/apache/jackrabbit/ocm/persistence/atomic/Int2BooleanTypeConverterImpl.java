@@ -80,7 +80,7 @@ public class Int2BooleanTypeConverterImpl implements AtomicTypeConverter
 	 * 
 	 * @see org.apache.jackrabbit.ocm.persistence.atomictypeconverter.AtomicTypeConverter#getStringValue(java.lang.Object)
 	 */
-	public String getStringValue(Object object)
+	public String getXPathQueryValue(ValueFactory valueFactory, Object object)
 	{
 		
 		return ((Boolean) object).booleanValue() ? "1" : "0"; 

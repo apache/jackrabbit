@@ -20,6 +20,8 @@ package org.apache.jackrabbit.ocm.query.impl;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.jcr.ValueFactory;
+
 import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.FieldDescriptor;
@@ -32,16 +34,18 @@ public class QueryManagerImpl implements QueryManager {
     
 	private Mapper mapper;
     private Map atomicTypeConverters;
+    private ValueFactory valueFactory;
 
-    public QueryManagerImpl(Mapper mapper, Map atomicTypeConverters) {
+    public QueryManagerImpl(Mapper mapper, Map atomicTypeConverters, ValueFactory valueFactory) {
         this.mapper = mapper;
         this.atomicTypeConverters = atomicTypeConverters;
+        this.valueFactory = valueFactory;
     }
 
     public Filter createFilter(Class classQuery) {
         return new FilterImpl(mapper.getClassDescriptorByClass(classQuery),
                               atomicTypeConverters,
-                              classQuery);
+                              classQuery, valueFactory);
     }
 
     public Query createQuery(Filter filter) {

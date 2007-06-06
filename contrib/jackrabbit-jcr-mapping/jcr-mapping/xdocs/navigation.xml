@@ -35,7 +35,7 @@
 		
 		<menu name="Persistence Manager">			
 			<item name="Overview" href="engine-introduction.html"/>
-			<item name="Mapping Descriptor DTD" href="graffito-jcr-mapping.dtd.txt"/>
+			<item name="Mapping Descriptor DTD" href="jackrabbit-ocm.dtd.txt"/>
 			<item name="Setup" href="engine-setup.html"/>
 			<item name="Spring Integration" href="engine-spring.html"/>
 		</menu>			

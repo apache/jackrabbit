@@ -149,7 +149,14 @@ public class PersistenceManagerAtomicQueryTest extends TestBase
 			
 			result = persistenceManager.getObjects(query);			
 			assertTrue("Invalid number of objects - should be = 100 ", result.size() == 100);
+
+			filter = queryManager.createFilter(Atomic.class);			
+			filter.addGreaterThan("date", date);
+			query = queryManager.createQuery(filter);
 			
+			result = persistenceManager.getObjects(query);			
+			assertTrue("Invalid number of objects - should be = 0 ", result.size() == 0);
+
 			// Test contains method
 			filter = queryManager.createFilter(Atomic.class);			
 			filter.addContains(".", "JCR");

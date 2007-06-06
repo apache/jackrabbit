@@ -35,7 +35,8 @@ public interface AtomicTypeConverter
 {
 	/**
 	 * Convert an object into a JCR value.
-	 * 
+	 *
+     * @param valueFactory The JCR ValueFactory 
 	 * @param object The object to convert
 	 * @return the corresponding JCR value
 	 *  
@@ -53,8 +54,9 @@ public interface AtomicTypeConverter
 	/**
 	 * Get the string converted value. This is mainly used to build xpath expressions 
 	 * 
+	 * @param valueFactory The JCR ValueFactory
 	 * @param object The object value
 	 * @return The string converted value	 
 	 */
-	public String getStringValue(Object object);
+	public String getXPathQueryValue(ValueFactory valueFactory, Object object);
 }
