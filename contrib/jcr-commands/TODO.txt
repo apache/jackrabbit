@@ -2,6 +2,5 @@
 - javadocs
 - testing
 - review i18n resource file
-- replace the parser, it hardly works
 - friendly exception handling in interactive mode
 - review command syntax

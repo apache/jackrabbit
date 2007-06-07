@@ -28,7 +28,7 @@
 
 	<groupId>org.apache.jackrabbit</groupId>
 	<artifactId>jcr-commands</artifactId>
-	<version>1.3-SNAPSHOT</version>
+	<version>1.4-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>JCR commands</name>
@@ -56,9 +56,15 @@
 		<dependency>
 			<groupId>org.apache.jackrabbit</groupId>
 			<artifactId>jackrabbit-core</artifactId>
-			<version>1.3-SNAPSHOT</version>
+			<version>${pom.version}</version>
 			<scope>compile</scope>
 		</dependency>
+
+        <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+          <version>1.3.0</version>
+        </dependency>
 
 	    <dependency>
 	      <groupId>org.apache.derby</groupId>
@@ -70,7 +76,7 @@
 		<dependency>
 			<groupId>org.apache.jackrabbit</groupId>
 			<artifactId>jackrabbit-jcr-rmi</artifactId>
-			<version>1.3-SNAPSHOT</version>
+			<version>${pom.version}</version>
 			<type>jar</type>
 		</dependency>
 
@@ -155,7 +161,16 @@
           </archive>
         </configuration>
       </plugin>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>src/assemble/distribution.xml</descriptor>
+          </descriptors>
+        </configuration>
+      </plugin>	  
 			</plugins>
 		</pluginManagement>
 	</build>
+	
 </project>

@@ -9,7 +9,7 @@ to http://jakarta.apache.org/commons/chain/
 
 Building
 ------------------
-call "maven jar" and you'll find a zip file containing the command line interface
+mvn clean install assembly:assembly
 
 USING
 ------------------
