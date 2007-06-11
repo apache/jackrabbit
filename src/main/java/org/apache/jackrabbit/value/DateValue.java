@@ -62,7 +62,7 @@ public class DateValue extends BaseValue {
         if (cal != null) {
             return new DateValue(cal);
         } else {
-            throw new ValueFormatException("not a valid date format");
+            throw new ValueFormatException("not a valid date format: " + s);
         }
     }
 
