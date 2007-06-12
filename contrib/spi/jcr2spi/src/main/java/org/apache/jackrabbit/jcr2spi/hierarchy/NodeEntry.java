@@ -243,7 +243,7 @@ public interface NodeEntry extends HierarchyEntry {
 
     /**
      * Add an existing <code>PropertyEntry</code> with the given name.
-     * Please note the difference to {@link #addNewPropertyEntry(QName, QPropertyDefinition)
+     * Please note the difference to {@link #addNewPropertyEntry(QName, QPropertyDefinition)}
      * which adds a new, transient entry.
      *
      * @param propName
