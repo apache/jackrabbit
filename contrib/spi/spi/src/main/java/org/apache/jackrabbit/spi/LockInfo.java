@@ -26,7 +26,7 @@ public interface LockInfo {
      * session or <code>null</code> otherwise.
      *
      * @return lock token or <code>null</code>
-     * @see javax.jcr.lock.Lock#getLockToken();
+     * @see javax.jcr.lock.Lock#getLockToken()
      */
     public String getLockToken();
 
@@ -34,7 +34,7 @@ public interface LockInfo {
      * Returns the user ID of the user who owns this lock.
      *
      * @return user ID of the user who owns this lock.
-     * @see javax.jcr.lock.Lock#getLockOwner();
+     * @see javax.jcr.lock.Lock#getLockOwner()
      */
     public String getOwner();
 
@@ -42,7 +42,7 @@ public interface LockInfo {
      * Returns true if the Lock is deep. False otherwise.
      *
      * @return true if the Lock is deep. False otherwise.
-     * @see javax.jcr.lock.Lock#isDeep();
+     * @see javax.jcr.lock.Lock#isDeep()
      */
     public boolean isDeep();
 
@@ -50,7 +50,7 @@ public interface LockInfo {
      * Returns true if the Lock is session scoped. False otherwise.
      *
      * @return true if the Lock is session scoped. False otherwise.
-     * @see javax.jcr.lock.Lock#isSessionScoped();
+     * @see javax.jcr.lock.Lock#isSessionScoped()
      */
     public boolean isSessionScoped();
 
