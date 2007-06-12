@@ -230,6 +230,9 @@
         <otherArchive>
           http://www.mail-archive.com/users@jackrabbit.apache.org/
         </otherArchive>
+        <otherArchive>
+          http://www.nabble.com/Jackrabbit---Users-f14897.html
+        </otherArchive>
       </otherArchives>
     </mailingList>
     <mailingList>
@@ -247,6 +250,9 @@
         </otherArchive>
         <otherArchive>
           http://www.mail-archive.com/jackrabbit-dev@incubator.apache.org/
+        </otherArchive>
+        <otherArchive>
+          http://www.nabble.com/Jackrabbit---Dev-f371.html
         </otherArchive>
       </otherArchives>
     </mailingList>
@@ -476,13 +482,14 @@
       <name>Przemo Pakulski</name>
       <id>ppakulski</id>
       <organization>Cognifide</organization>
-      <organizationUrl>www.cognifide.com</organizationUrl>
+      <organizationUrl>http://www.cognifide.com/</organizationUrl>
       <roles>
         <role>Java Developer</role>
       </roles>
       <timezone>+1</timezone>
     </developer>
   </developers>
+
   <contributors>
     <contributor>
       <name>Lydia Balazs</name>
@@ -619,16 +626,18 @@
 
   <licenses>
     <license>
-      <name>The Apache Software License, Version 2.0</name>
+      <name>Apache License, Version 2.0</name>
       <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
       <distribution>repo</distribution>
     </license>
   </licenses>
+
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk</connection>
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk</developerConnection>
     <url>http://svn.apache.org/viewvc/jackrabbit/trunk</url>
   </scm>
+
   <organization>
     <name>The Apache Software Foundation</name>
     <url>http://www.apache.org/</url>
