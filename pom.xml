@@ -594,6 +594,27 @@
       </roles>
       <timezone>+1</timezone>
     </contributor>
+    <contributor>
+      <name>Paco Avila</name>
+      <email>monkiki@gmail.com</email>
+      <organization>GIT Consultors</organization>
+      <organizationUrl>http://www.git.es/</organizationUrl>
+      <timezone>+1</timezone>
+    </contributor>
+    <contributor>
+      <name>Jan Kuzniak</name>
+      <organization>Cognifide</organization>
+      <organizationUrl>http://www.cognifide.com/</organizationUrl>
+      <timezone>+1</timezone>
+    </contributor>
+    <contributor>
+      <name>Jaka Jaksic</name>
+      <timezone>+1</timezone>
+    </contributor>
+    <contributor>
+      <name>Xiaohua Lu</name>
+      <timezone>-5</timezone>
+    </contributor>
   </contributors>
 
   <licenses>
