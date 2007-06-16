@@ -68,6 +68,88 @@ public class DefaultCollectionConverterImplTest extends TestBase
     	
         super.tearDown();
     }
+
+    public void testNull()
+    {
+        try
+        {
+        	PersistenceManager persistenceManager = getPersistenceManager();
+
+            // --------------------------------------------------------------------------------
+            // Create and store an object with a null collection field
+            // --------------------------------------------------------------------------------
+            A a = new A();
+            a.setPath("/test");               
+            
+            persistenceManager.insert(a);
+            persistenceManager.save();
+            
+            // --------------------------------------------------------------------------------
+            // Get the object
+            // --------------------------------------------------------------------------------           
+            a = (A) persistenceManager.getObject( "/test");
+            assertNull("a.collection is not null", a.getCollection());
+            
+            // --------------------------------------------------------------------------------
+            // Update the object
+            // --------------------------------------------------------------------------------
+            C c1 = new C();
+            c1.setId("first");
+            c1.setName("First Element");
+            C c2 = new C();
+            c2.setId("second");
+            c2.setName("Second Element");
+            
+            C c3 = new C();
+            c3.setId("third");
+            c3.setName("Third Element");
+            
+            
+            Collection collection = new ArrayList();
+            collection.add(c1);
+            collection.add(c2);
+            collection.add(c3);
+            
+            a.setCollection(collection);
+            
+            persistenceManager.update(a);
+            persistenceManager.save();
+
+            // --------------------------------------------------------------------------------
+            // Get the object
+            // --------------------------------------------------------------------------------           
+            a = (A) persistenceManager.getObject("/test");
+            assertNotNull("a is null", a);
+            assertNotNull("a.collection is null", a.getCollection());
+            assertTrue("Incorrect collection size", a.getCollection().size() == 3);
+            assertTrue("Incorrect a.collection", ((C) a.getCollection().iterator().next()).getId().equals("first"));
+            
+            // --------------------------------------------------------------------------------
+            // Update the object
+            // --------------------------------------------------------------------------------
+            a.setCollection(null);
+            persistenceManager.update(a);
+            persistenceManager.save();
+            
+            // --------------------------------------------------------------------------------
+            // Get the object
+            // --------------------------------------------------------------------------------           
+            a = (A) persistenceManager.getObject( "/test");
+            assertNull("a.collection is not null", a.getCollection());
+            
+            // --------------------------------------------------------------------------------
+            // Export to check the content
+            // --------------------------------------------------------------------------------           
+            this.exportDocument("target/DefaultCollectionConverterExport.xml", "/test", true, false);         
+            
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            fail("Exception occurs during the unit test : " + e);
+        }
+        
+    }
     
     public void testDropElement()
     {

@@ -197,10 +197,15 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
                                                    Class collectionFieldClass) throws RepositoryException {
 	    ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass( ReflectionUtils.forName(collectionDescriptor.getElementClassName())); 
         ManageableCollection collection = ManageableCollectionUtil.getManageableCollection(collectionFieldClass);
-        Class elementClass = ReflectionUtils.forName(collectionDescriptor.getElementClassName());
-        Iterator children = this.getCollectionNodes(session, parentNode,
-                elementClassDescriptor.getJcrNodeType()).iterator();
-
+        //Class elementClass = ReflectionUtils.forName(collectionDescriptor.getElementClassName());
+        Collection nodes = this.getCollectionNodes(session, parentNode, elementClassDescriptor.getJcrNodeType());
+        
+        if (nodes == null)
+        {
+        	return null;
+        }
+        
+        Iterator children = nodes.iterator();
         while (children.hasNext()) {
             Node itemNode = (Node) children.next();
             log.debug("Collection node found : " + itemNode.getPath());
@@ -253,7 +258,14 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
 
         }
 
-        return collectionNodes;
+        if (collectionNodes.size() == 0)
+        {
+        	return null; 
+        }
+        else
+        {
+            return collectionNodes;
+        }
     }
 
     private void deleteCollectionItems(Session session, Node parentNode, String itemNodeType) 
@@ -264,7 +276,10 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
            ValueFormatException, 
            RepositoryException
     {
-        Iterator nodeIterator = this.getCollectionNodes(session, parentNode, itemNodeType).iterator();
+        Collection nodes = this.getCollectionNodes(session, parentNode, itemNodeType);
+        if (nodes == null) return;
+        	
+        Iterator nodeIterator = nodes.iterator();
         while (nodeIterator.hasNext()) {
             Node node = (Node) nodeIterator.next();
             node.remove();

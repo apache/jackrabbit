@@ -77,15 +77,28 @@ public class NTCollectionConverterImplTest extends TestBase
         try
         {
         	PersistenceManager persistenceManager = getPersistenceManager();
-
-            // --------------------------------------------------------------------------------
-            // Create and store an object graph in the repository
+            
+        	// --------------------------------------------------------------------------------
+            // Create and store an object graph in the repository with a null collection
             // --------------------------------------------------------------------------------
 
             Page page = new Page();
             page.setPath("/test");
             page.setTitle("Page Title");
             
+            persistenceManager.insert(page);
+            persistenceManager.save();
+
+            // --------------------------------------------------------------------------------
+            // Get the object
+            // --------------------------------------------------------------------------------           
+            page = (Page) persistenceManager.getObject( "/test");
+            assertNull("page.getParagraphs is not null", page.getParagraphs());
+            assertTrue("Incorrect page title", page.getTitle().equals("Page Title"));                        
+            
+            // --------------------------------------------------------------------------------
+            // Create and store an object graph in the repository
+            // --------------------------------------------------------------------------------
             ArrayList paragraphs = new ArrayList();
             
             paragraphs.add(new Paragraph("Para 1"));
@@ -93,7 +106,7 @@ public class NTCollectionConverterImplTest extends TestBase
             paragraphs.add(new Paragraph("Para 3"));
             page.setParagraphs(paragraphs);
             
-            persistenceManager.insert(page);
+            persistenceManager.update(page);
             persistenceManager.save();
             
             // --------------------------------------------------------------------------------
@@ -142,6 +155,5 @@ public class NTCollectionConverterImplTest extends TestBase
         }
         
     }
-
    
 }

@@ -45,8 +45,8 @@ import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
  * It is usefull when the node type "nt:unstructured" is applied to the collection elements. By this way, it is possible
  * to distinguish the collection elements from the other main object fields.
  *
- * If the collection element class contains an id (see the FieldDescriptor definition), this id value is used to build the collection element node.
- * Otherwise, the element node name is a simple indexed constant.
+ * If the collection element class contains an id (see the ID FieldDescriptor definition), this id value is used to build the collection element node.
+ * Otherwise, the element node name is a simple constant.
  *
  * Example - without an id attribute:
  *   /test (Main object containing the collection field )

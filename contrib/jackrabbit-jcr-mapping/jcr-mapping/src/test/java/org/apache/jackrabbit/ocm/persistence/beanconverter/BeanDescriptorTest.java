@@ -29,6 +29,7 @@ import junit.framework.TestSuite;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.TestBase;
 import org.apache.jackrabbit.ocm.persistence.PersistenceManager;
+import org.apache.jackrabbit.ocm.testmodel.A;
 import org.apache.jackrabbit.ocm.testmodel.B;
 import org.apache.jackrabbit.ocm.testmodel.D;
 import org.apache.jackrabbit.ocm.testmodel.DFull;
@@ -80,9 +81,65 @@ public class BeanDescriptorTest extends TestBase {
             getSession().getItem("/someD").remove();
             getSession().save();
         }
+        
+        if (getPersistenceManager().objectExists("/test"))
+        {
+            getPersistenceManager().remove("/test");
+            getPersistenceManager().save();
+        }           
 
     }
     
+    public void testBasic() throws Exception 
+    {
+    	
+    	try 
+    	{
+    		// ------------------------------------------------------------------------
+    		// Create a main object (a) with a null attribute (A.b)
+    		// ------------------------------------------------------------------------    		
+			A a = new A();
+			a.setPath("/test");
+			a.setA1("a1");
+			persistenceManager.insert(a);
+			persistenceManager.save();
+			
+    		// ------------------------------------------------------------------------
+    		// Retrieve 
+    		// ------------------------------------------------------------------------
+			a = (A) persistenceManager.getObject("/test");
+			assertNotNull("Object is null", a);
+			assertNull("attribute is not null", a.getB());
+			
+			B b = new B();
+			b.setB1("b1");
+			b.setB2("b2");
+			a.setB(b);
+			
+			persistenceManager.update(a);
+			persistenceManager.save();
+
+    		// ------------------------------------------------------------------------
+    		// Retrieve 
+    		// ------------------------------------------------------------------------
+			a = (A) persistenceManager.getObject("/test");
+			assertNotNull("Object is null", a);
+			assertNotNull("attribute is null", a.getB());
+			
+    		// ------------------------------------------------------------------------
+			// Remove object
+    		// ------------------------------------------------------------------------			
+			persistenceManager.remove("/test");
+			persistenceManager.save();
+		} 
+    	catch (RuntimeException e) 
+    	{
+            e.printStackTrace();
+            fail("Exception occurs during the unit test : " + e);    		
+		}
+    	
+    	
+    }
     public void testInlined() throws Exception {
         
         B expB = new B();

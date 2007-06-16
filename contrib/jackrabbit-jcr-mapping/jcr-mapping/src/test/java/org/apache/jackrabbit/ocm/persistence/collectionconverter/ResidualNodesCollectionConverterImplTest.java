@@ -75,10 +75,25 @@ public class ResidualNodesCollectionConverterImplTest extends TestBase
         	PersistenceManager persistenceManager = getPersistenceManager();
 
             // --------------------------------------------------------------------------------
-            // Create and store an object graph in the repository
+            // Create and store an object graph in the repository with null values
             // --------------------------------------------------------------------------------
 
             Residual residual = new Residual.ResidualNodes();
+            residual.setPath("/test");
+            persistenceManager.insert(residual);
+            persistenceManager.save();
+
+            // --------------------------------------------------------------------------------
+            // Get the object
+            // --------------------------------------------------------------------------------           
+            residual = (Residual) persistenceManager.getObject( "/test");
+            assertNotNull("Object is null", residual);
+            assertNull("Map is not null", residual.getElements());
+            
+            // --------------------------------------------------------------------------------
+            // Update an object graph in the repository
+            // --------------------------------------------------------------------------------
+            residual = new Residual.ResidualNodes();
             residual.setPath("/test");
             
             ManagedHashMap map = new ManagedHashMap();
@@ -88,7 +103,7 @@ public class ResidualNodesCollectionConverterImplTest extends TestBase
             map.put("value4", new Paragraph("Value4"));
             residual.setElements(map);
             
-            persistenceManager.insert(residual);
+            persistenceManager.update(residual);
             persistenceManager.save();
             
             // --------------------------------------------------------------------------------

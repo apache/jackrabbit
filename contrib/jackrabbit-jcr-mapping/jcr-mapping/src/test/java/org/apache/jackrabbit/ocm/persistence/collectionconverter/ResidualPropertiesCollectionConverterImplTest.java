@@ -77,10 +77,27 @@ public class ResidualPropertiesCollectionConverterImplTest extends TestBase
         	PersistenceManager persistenceManager = getPersistenceManager();
 
             // --------------------------------------------------------------------------------
-            // Create and store an object graph in the repository
+            // Create and store an object graph in the repository with a null hashmap
             // --------------------------------------------------------------------------------
 
             Residual residual = new Residual.ResidualProperties();
+            residual.setPath("/test");
+                        
+            persistenceManager.insert(residual);
+            persistenceManager.save();
+
+            // --------------------------------------------------------------------------------
+            // Get the object
+            // --------------------------------------------------------------------------------           
+            residual = (Residual) persistenceManager.getObject( "/test");
+            assertNotNull("Object is null", residual);
+            assertNull("Hashmap is not null", residual.getElements());
+            
+            // --------------------------------------------------------------------------------
+            // Update an object graph in the repository
+            // --------------------------------------------------------------------------------
+
+            residual = new Residual.ResidualProperties();
             residual.setPath("/test");
             
             ManagedHashMap map = new ManagedHashMap();
@@ -91,7 +108,7 @@ public class ResidualPropertiesCollectionConverterImplTest extends TestBase
             map.put("value5", Arrays.asList(new String[]{ "Value5-1", "Value5-2" }));
             residual.setElements(map);
             
-            persistenceManager.insert(residual);
+            persistenceManager.update(residual);
             persistenceManager.save();
             
             // --------------------------------------------------------------------------------
