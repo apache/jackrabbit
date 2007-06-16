@@ -73,12 +73,29 @@ public class HashMapTest extends TestBase
         {
         	PersistenceManager persistenceManager = getPersistenceManager();
         	
-
             // --------------------------------------------------------------------------------
-            // Create and store an object graph in the repository
+            // Create and store an object graph in the repository with null hashmap
             // --------------------------------------------------------------------------------
 
             Main main = new Main();
+            main.setPath("/test");
+            main.setText("Main text");
+                        
+            persistenceManager.insert(main);
+            persistenceManager.save();
+
+            // --------------------------------------------------------------------------------
+            // Get the object
+            // --------------------------------------------------------------------------------           
+            main = (Main) persistenceManager.getObject( "/test");            
+            assertTrue("Incorrect text", main.getText().equals("Main text"));           
+            assertNull("HashMap is not null", main.getHashMap());
+            
+            // --------------------------------------------------------------------------------
+            // Update an object graph in the repository
+            // --------------------------------------------------------------------------------
+
+            main = new Main();
             main.setPath("/test");
             main.setText("Main text");
             
@@ -95,7 +112,7 @@ public class HashMapTest extends TestBase
             
             main.setHashMap(hashMapElement);
             
-            persistenceManager.insert(main);
+            persistenceManager.update(main);
             persistenceManager.save();
             
             // --------------------------------------------------------------------------------

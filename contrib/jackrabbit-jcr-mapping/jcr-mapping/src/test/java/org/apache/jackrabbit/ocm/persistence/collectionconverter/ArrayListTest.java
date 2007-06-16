@@ -76,11 +76,26 @@ public class ArrayListTest extends TestBase
 
             // --------------------------------------------------------------------------------
             // Create and store an object graph in the repository
+        	// with a null value for the arraylist
             // --------------------------------------------------------------------------------
 
             Main main = new Main();
             main.setPath("/test");
             main.setText("Main text");
+            
+            persistenceManager.insert(main);
+            persistenceManager.save();
+            
+            // --------------------------------------------------------------------------------
+            // Get the object
+            // --------------------------------------------------------------------------------           
+            main = (Main) persistenceManager.getObject( "/test");
+            ArrayList arrayList = main.getList();
+            assertNull("main.getList is not null", arrayList ); 
+            
+            // --------------------------------------------------------------------------------
+            // Update the object
+            // --------------------------------------------------------------------------------
             
             ArrayListElement arrayListElement = new ArrayListElement();
             Element e1 = new Element();
@@ -94,15 +109,14 @@ public class ArrayListTest extends TestBase
             arrayListElement.add(e2);
             
             main.setList(arrayListElement);
-            
-            persistenceManager.insert(main);
+            persistenceManager.update(main);
             persistenceManager.save();
-            
+
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
             main = (Main) persistenceManager.getObject( "/test");
-            ArrayList arrayList = main.getList();
+            arrayList = main.getList();
             assertNotNull("main.getList is null", arrayList ); 
             Element[] elements = (Element[]) arrayList.toArray(new Element[arrayList.size()]);
             assertTrue("Incorrect para element", elements[0].getText().equals("Element 1"));
