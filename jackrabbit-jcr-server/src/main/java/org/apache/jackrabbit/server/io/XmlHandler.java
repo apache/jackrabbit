@@ -90,7 +90,10 @@ public class XmlHandler extends DefaultHandler {
             return false;
         }
         boolean isXmlMimeType = XML_MIMETYPE.equals(context.getMimeType());
-        return isXmlMimeType && context.hasStream() && super.canImport(context, isCollection);
+        return isXmlMimeType
+                && context.hasStream()
+                && context.getContentLength() > 0
+                && super.canImport(context, isCollection);
     }
 
     /**
