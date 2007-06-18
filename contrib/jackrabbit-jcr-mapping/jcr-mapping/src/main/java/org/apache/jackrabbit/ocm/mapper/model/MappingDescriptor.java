@@ -22,9 +22,9 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.ocm.manager.ManagerConstant;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.impl.DigesterMapperImpl;
-import org.apache.jackrabbit.ocm.persistence.PersistenceConstant;
 
 /**
  * This class match to the complete xml mapping files.
@@ -66,7 +66,7 @@ public class MappingDescriptor {
         classDescriptorsByClassName.put(classDescriptor.getClassName(), classDescriptor);
         
         if (null != classDescriptor.getJcrNodeType() && !  "".equals(classDescriptor.getJcrNodeType()) && 
-        		 ! PersistenceConstant.NT_UNSTRUCTURED.equals(classDescriptor.getJcrNodeType()))
+        		 ! ManagerConstant.NT_UNSTRUCTURED.equals(classDescriptor.getJcrNodeType()))
         	 {
              classDescriptorsByNodeType.put(classDescriptor.getJcrNodeType(), classDescriptor);	
         	 }

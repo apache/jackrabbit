@@ -38,19 +38,19 @@ public class AllTests {
     public static Test buildSuite() throws Exception {
         TestSuite suite= new TestSuite("Jackrabbit OCM Tests");
         suite.addTest(org.apache.jackrabbit.ocm.mapper.AllTests.buildSuite());     
-        suite.addTest(org.apache.jackrabbit.ocm.persistence.atomic.AllTests.buildSuite());
-        suite.addTest(org.apache.jackrabbit.ocm.persistence.auto.AllTests.buildSuite());
-        suite.addTest(org.apache.jackrabbit.ocm.persistence.basic.AllTests.buildSuite());
-        suite.addTest(org.apache.jackrabbit.ocm.persistence.beanconverter.AllTests.buildSuite());
-        suite.addTest(org.apache.jackrabbit.ocm.persistence.collectionconverter.AllTests.buildSuite());
-        suite.addTest(org.apache.jackrabbit.ocm.persistence.inheritance.AllTests.buildSuite());
-        suite.addTest(org.apache.jackrabbit.ocm.persistence.interfaces.AllTests.buildSuite());
-        suite.addTest(org.apache.jackrabbit.ocm.persistence.jcrnodetype.AllTests.buildSuite());        
-        suite.addTest(org.apache.jackrabbit.ocm.persistence.lock.AllTests.buildSuite());        
-        suite.addTest(org.apache.jackrabbit.ocm.persistence.proxy.AllTests.buildSuite());
-        suite.addTest(org.apache.jackrabbit.ocm.persistence.query.AllTests.buildSuite());
-        suite.addTest(org.apache.jackrabbit.ocm.persistence.uuid.AllTests.buildSuite());        
-        suite.addTest(org.apache.jackrabbit.ocm.persistence.version.AllTests.buildSuite());        
+        suite.addTest(org.apache.jackrabbit.ocm.manager.atomic.AllTests.buildSuite());
+        suite.addTest(org.apache.jackrabbit.ocm.manager.auto.AllTests.buildSuite());
+        suite.addTest(org.apache.jackrabbit.ocm.manager.basic.AllTests.buildSuite());
+        suite.addTest(org.apache.jackrabbit.ocm.manager.beanconverter.AllTests.buildSuite());
+        suite.addTest(org.apache.jackrabbit.ocm.manager.collectionconverter.AllTests.buildSuite());
+        suite.addTest(org.apache.jackrabbit.ocm.manager.inheritance.AllTests.buildSuite());
+        suite.addTest(org.apache.jackrabbit.ocm.manager.interfaces.AllTests.buildSuite());
+        suite.addTest(org.apache.jackrabbit.ocm.manager.jcrnodetype.AllTests.buildSuite());        
+        suite.addTest(org.apache.jackrabbit.ocm.manager.lock.AllTests.buildSuite());        
+        suite.addTest(org.apache.jackrabbit.ocm.manager.proxy.AllTests.buildSuite());
+        suite.addTest(org.apache.jackrabbit.ocm.manager.query.AllTests.buildSuite());
+        suite.addTest(org.apache.jackrabbit.ocm.manager.uuid.AllTests.buildSuite());        
+        suite.addTest(org.apache.jackrabbit.ocm.manager.version.AllTests.buildSuite());        
         suite.addTest(org.apache.jackrabbit.ocm.querymanager.AllTests.buildSuite());
         suite.addTest(org.apache.jackrabbit.ocm.repository.AllTests.buildSuite());
         

@@ -19,7 +19,7 @@ package org.apache.jackrabbit.ocm.testmodel.collection;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import org.apache.jackrabbit.ocm.persistence.collectionconverter.ManageableCollection;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
 
 /** 
  *
@@ -30,7 +30,7 @@ public class HashMapElement extends HashMap implements ManageableCollection
 {
 
     /**
-     * @see org.apache.jackrabbit.ocm.persistence.collectionconverter.ManageableCollection#addObject(java.lang.Object)
+     * @see org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection#addObject(java.lang.Object)
      */
     public void addObject(Object object)
     {
@@ -41,7 +41,7 @@ public class HashMapElement extends HashMap implements ManageableCollection
     }
 
     /**
-     * @see org.apache.jackrabbit.ocm.persistence.collectionconverter.ManageableCollection#getIterator()
+     * @see org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection#getIterator()
      */
     public Iterator getIterator()
     {
