@@ -13,7 +13,7 @@
 		<field-descriptor fieldName="path" path="true" />
 		<collection-descriptor fieldName="children" proxy="false" autoUpdate="false" 
 		                       elementClassName="org.apache.jackrabbit.ocm.testmodel.HierarchyNode" 
-		                       collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.NTCollectionConverterImpl" />
+		                       collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl" />
 
 	</class-descriptor>	
 	

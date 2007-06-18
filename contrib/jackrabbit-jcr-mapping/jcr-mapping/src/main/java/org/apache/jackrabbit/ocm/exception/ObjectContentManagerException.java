@@ -23,14 +23,14 @@ package org.apache.jackrabbit.ocm.exception;
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
-public class PersistenceException extends NestableRuntimeException {
+public class ObjectContentManagerException extends NestableRuntimeException {
     /** Use serialVersionUID for interoperability. */
     private final static long serialVersionUID = -643089296035094427L;
 
     /**
      * Not intended for usage.
      */
-    protected PersistenceException() {
+    protected ObjectContentManagerException() {
     }
     
     /**
@@ -38,7 +38,7 @@ public class PersistenceException extends NestableRuntimeException {
      *
      * @param message the message associated to the exception
      */
-    public PersistenceException(String message) {
+    public ObjectContentManagerException(String message) {
         super(message);
     }
 
@@ -47,7 +47,7 @@ public class PersistenceException extends NestableRuntimeException {
      *
      * @param nested the associated throwable object
      */
-    public PersistenceException(Throwable nested) {
+    public ObjectContentManagerException(Throwable nested) {
         super(nested);
     }
 
@@ -57,7 +57,7 @@ public class PersistenceException extends NestableRuntimeException {
      * @param message the message associated to the exception
      * @param nested the associated throwable object
      */
-    public PersistenceException(String message, Throwable nested) {
+    public ObjectContentManagerException(String message, Throwable nested) {
         super(message, nested);
     }
 }

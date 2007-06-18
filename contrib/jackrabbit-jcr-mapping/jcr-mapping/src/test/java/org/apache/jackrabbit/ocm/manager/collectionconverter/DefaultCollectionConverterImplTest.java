@@ -60,10 +60,10 @@ public class DefaultCollectionConverterImplTest extends TestBase
      */
     public void tearDown() throws Exception
     {
-        if (getPersistenceManager().objectExists("/test"))
+        if (getObjectContentManager().objectExists("/test"))
         {
-            getPersistenceManager().remove("/test");
-            getPersistenceManager().save();
+            getObjectContentManager().remove("/test");
+            getObjectContentManager().save();
         }        
     	
         super.tearDown();
@@ -73,7 +73,7 @@ public class DefaultCollectionConverterImplTest extends TestBase
     {
         try
         {
-        	ObjectContentManager persistenceManager = getPersistenceManager();
+        	ObjectContentManager ocm = getObjectContentManager();
 
             // --------------------------------------------------------------------------------
             // Create and store an object with a null collection field
@@ -81,13 +81,13 @@ public class DefaultCollectionConverterImplTest extends TestBase
             A a = new A();
             a.setPath("/test");               
             
-            persistenceManager.insert(a);
-            persistenceManager.save();
+            ocm.insert(a);
+            ocm.save();
             
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            a = (A) persistenceManager.getObject( "/test");
+            a = (A) ocm.getObject( "/test");
             assertNull("a.collection is not null", a.getCollection());
             
             // --------------------------------------------------------------------------------
@@ -112,13 +112,13 @@ public class DefaultCollectionConverterImplTest extends TestBase
             
             a.setCollection(collection);
             
-            persistenceManager.update(a);
-            persistenceManager.save();
+            ocm.update(a);
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            a = (A) persistenceManager.getObject("/test");
+            a = (A) ocm.getObject("/test");
             assertNotNull("a is null", a);
             assertNotNull("a.collection is null", a.getCollection());
             assertTrue("Incorrect collection size", a.getCollection().size() == 3);
@@ -128,13 +128,13 @@ public class DefaultCollectionConverterImplTest extends TestBase
             // Update the object
             // --------------------------------------------------------------------------------
             a.setCollection(null);
-            persistenceManager.update(a);
-            persistenceManager.save();
+            ocm.update(a);
+            ocm.save();
             
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            a = (A) persistenceManager.getObject( "/test");
+            a = (A) ocm.getObject( "/test");
             assertNull("a.collection is not null", a.getCollection());
             
             // --------------------------------------------------------------------------------
@@ -155,7 +155,7 @@ public class DefaultCollectionConverterImplTest extends TestBase
     {
         try
         {
-        	ObjectContentManager persistenceManager = getPersistenceManager();
+        	ObjectContentManager ocm = getObjectContentManager();
 
             // --------------------------------------------------------------------------------
             // Create and store an object graph in the repository
@@ -181,13 +181,13 @@ public class DefaultCollectionConverterImplTest extends TestBase
             
             a.setCollection(collection);
             
-            persistenceManager.insert(a);
-            persistenceManager.save();
+            ocm.insert(a);
+            ocm.save();
             
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            a = (A) persistenceManager.getObject( "/test");
+            a = (A) ocm.getObject( "/test");
             assertNotNull("a.collection is null", a.getCollection());
             assertEquals("Incorrect a.collection size", 3, a.getCollection().size());
             assertTrue("Incorrect a.collection", ((C) a.getCollection().iterator().next()).getId().equals("first"));
@@ -208,13 +208,13 @@ public class DefaultCollectionConverterImplTest extends TestBase
             collection.add(c2);
             a.setCollection(collection);
             
-            persistenceManager.update(a);
-            persistenceManager.save();
+            ocm.update(a);
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            a = (A) persistenceManager.getObject( "/test");
+            a = (A) ocm.getObject( "/test");
             assertNotNull("a is null", a);
             assertNotNull("a.collection is null", a.getCollection());
             assertTrue("Incorrect collection size", a.getCollection().size() == 2);
@@ -239,7 +239,7 @@ public class DefaultCollectionConverterImplTest extends TestBase
         try
         {
 
-        	ObjectContentManager persistenceManager = getPersistenceManager();
+        	ObjectContentManager ocm = getObjectContentManager();
 
             // --------------------------------------------------------------------------------
             // Create and store an object graph in the repository
@@ -265,13 +265,13 @@ public class DefaultCollectionConverterImplTest extends TestBase
             
             a.setCollection(collection);
             
-            persistenceManager.insert(a);
-            persistenceManager.save();
+            ocm.insert(a);
+            ocm.save();
             
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            a = (A) persistenceManager.getObject( "/test");
+            a = (A) ocm.getObject( "/test");
             assertNotNull("a.collection is null", a.getCollection());
             assertEquals("Incorrect a.collection size", 3, a.getCollection().size());
             assertEquals("Incorrect a.collection", "first", ((C) a.getCollection().iterator().next()).getId());
@@ -290,13 +290,13 @@ public class DefaultCollectionConverterImplTest extends TestBase
             collection.add(c4);
             a.setCollection(collection);
             
-            persistenceManager.update(a);
-            persistenceManager.save();
+            ocm.update(a);
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            a = (A) persistenceManager.getObject( "/test");
+            a = (A) ocm.getObject( "/test");
             assertNotNull("a is null", a);
             assertNotNull("a.collection is null", a.getCollection());
             assertEquals("Incorrect collection size", 4, a.getCollection().size());

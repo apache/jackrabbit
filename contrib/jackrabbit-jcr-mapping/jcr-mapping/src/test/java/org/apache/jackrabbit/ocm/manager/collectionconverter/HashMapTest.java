@@ -58,10 +58,10 @@ public class HashMapTest extends TestBase
      */
     public void tearDown() throws Exception
     {
-        if (getPersistenceManager().objectExists("/test"))
+        if (getObjectContentManager().objectExists("/test"))
         {
-            getPersistenceManager().remove("/test");
-            getPersistenceManager().save();
+            getObjectContentManager().remove("/test");
+            getObjectContentManager().save();
         }        
     	
         super.tearDown();
@@ -71,7 +71,7 @@ public class HashMapTest extends TestBase
     {
         try
         {
-        	ObjectContentManager persistenceManager = getPersistenceManager();
+        	ObjectContentManager ocm = getObjectContentManager();
         	
             // --------------------------------------------------------------------------------
             // Create and store an object graph in the repository with null hashmap
@@ -81,13 +81,13 @@ public class HashMapTest extends TestBase
             main.setPath("/test");
             main.setText("Main text");
                         
-            persistenceManager.insert(main);
-            persistenceManager.save();
+            ocm.insert(main);
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            main = (Main) persistenceManager.getObject( "/test");            
+            main = (Main) ocm.getObject( "/test");            
             assertTrue("Incorrect text", main.getText().equals("Main text"));           
             assertNull("HashMap is not null", main.getHashMap());
             
@@ -112,13 +112,13 @@ public class HashMapTest extends TestBase
             
             main.setHashMap(hashMapElement);
             
-            persistenceManager.update(main);
-            persistenceManager.save();
+            ocm.update(main);
+            ocm.save();
             
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            main = (Main) persistenceManager.getObject( "/test");
+            main = (Main) ocm.getObject( "/test");
             assertNotNull("main.getHashMap() is null", main.getHashMap());
             assertTrue("Incorrect text", main.getText().equals("Main text"));           
             assertTrue("Incorrect para element", ((Element) main.getHashMap().get("e1")).getText().equals("Element 1"));
@@ -143,8 +143,8 @@ public class HashMapTest extends TestBase
             hashMapElement.addObject(e3);
             main.setHashMap(hashMapElement);
             
-            persistenceManager.update(main);
-            persistenceManager.save();
+            ocm.update(main);
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object

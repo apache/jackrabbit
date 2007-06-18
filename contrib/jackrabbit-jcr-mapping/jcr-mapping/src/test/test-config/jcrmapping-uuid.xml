@@ -12,18 +12,18 @@
 	<class-descriptor
 		className="org.apache.jackrabbit.ocm.testmodel.uuid.B" jcrNodeType="nt:unstructured"  >
 		<field-descriptor fieldName="path" path="true" />
-		<field-descriptor fieldName="reference2A" jcrName="reference2A" converter="org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.ReferenceTypeConverterImpl" /> 
+		<field-descriptor fieldName="reference2A" jcrName="reference2A" converter="org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.ReferenceTypeConverterImpl" /> 
 		<collection-descriptor fieldName="multiReferences" jcrName="multiReferences" proxy="false" 		                      
-		                       collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.ReferenceCollectionConverterImpl" />
+		                       collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ReferenceCollectionConverterImpl" />
 		
 	</class-descriptor>
 
 	<class-descriptor
 		className="org.apache.jackrabbit.ocm.testmodel.uuid.B2" jcrNodeType="nt:unstructured"  >
 		<field-descriptor fieldName="path" path="true" />
-		<bean-descriptor fieldName="a" jcrName="a" converter="org.apache.jackrabbit.ocm.persistence.beanconverter.impl.ReferenceBeanConverterImpl" />
+		<bean-descriptor fieldName="a" jcrName="a" converter="org.apache.jackrabbit.ocm.manager.beanconverter.impl.ReferenceBeanConverterImpl" />
 		<collection-descriptor fieldName="multiReferences" jcrName="multiReferences" proxy="false" 		                      
-		                       collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.BeanReferenceCollectionConverterImpl" />
+		                       collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.BeanReferenceCollectionConverterImpl" />
 		
 	</class-descriptor>	
 			

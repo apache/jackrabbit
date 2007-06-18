@@ -34,7 +34,7 @@ public class AllTests {
     }
 
     public static Test buildSuite() {
-        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.persistence.proxy");
+        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.manager.proxy");
         //$JUnit-BEGIN$
         suite.addTestSuite(ProxyTest.class);
         

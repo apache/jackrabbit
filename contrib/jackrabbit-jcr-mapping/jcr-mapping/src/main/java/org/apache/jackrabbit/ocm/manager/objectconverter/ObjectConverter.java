@@ -19,7 +19,7 @@ package org.apache.jackrabbit.ocm.manager.objectconverter;
 import javax.jcr.Node;
 import javax.jcr.Session;
 
-import org.apache.jackrabbit.ocm.exception.PersistenceException;
+import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 
 
 /**
@@ -35,19 +35,19 @@ public interface ObjectConverter
 	 * 
 	 * @param session the JCR session  
 	 * @param object the object to insert
-	 * @throws PersistenceException when it is not possible to insert the object
+	 * @throws ObjectContentManagerException when it is not possible to insert the object
 	 * 
 	 */
-    public void insert(Session session, Object object) throws PersistenceException;
+    public void insert(Session session, Object object) throws ObjectContentManagerException;
     
 	/**
 	 * Update the object 
 	 * 
 	 * @param session the JCR session 
 	 * @param object the object to update
-	 * @throws PersistenceException when it is not possible to update the object
+	 * @throws ObjectContentManagerException when it is not possible to update the object
 	 */    
-    public void update(Session session, Object object) throws PersistenceException;
+    public void update(Session session, Object object) throws ObjectContentManagerException;
     
     /**
      * Retrieve an object from the JCR repo
@@ -57,9 +57,9 @@ public interface ObjectConverter
      * @param path the JCR path
      * @return The object found or null
      * 
-     * @throws PersistenceException when it is not possible to retrieve the object
+     * @throws ObjectContentManagerException when it is not possible to retrieve the object
      */
-    public Object getObject(Session session, String path) throws PersistenceException;
+    public Object getObject(Session session, String path) throws ObjectContentManagerException;
     
     /**
      * Retrieve an object from the JCR repo
@@ -69,9 +69,9 @@ public interface ObjectConverter
      * @param path the JCR path
      * @return The object found or null
      * 
-     * @throws PersistenceException when it is not possible to retrieve the object
+     * @throws ObjectContentManagerException when it is not possible to retrieve the object
      */
-    public Object getObject(Session session, Class clazz, String path) throws PersistenceException;
+    public Object getObject(Session session, Class clazz, String path) throws ObjectContentManagerException;
     
     
     /**
@@ -100,9 +100,9 @@ public interface ObjectConverter
 	 * @param parentNode The parent node used to store the new JCR element (object) 
 	 * @param nodeName The node name used to store the object
 	 * @param object the object to insert
-	 * @throws PersistenceException when it is not possible to insert the object
+	 * @throws ObjectContentManagerException when it is not possible to insert the object
 	 */
-    public void insert(Session session, Node parentNode, String nodeName, Object object) throws PersistenceException;
+    public void insert(Session session, Node parentNode, String nodeName, Object object) throws ObjectContentManagerException;
     
 	/**
 	 * Update the object 
@@ -111,9 +111,9 @@ public interface ObjectConverter
 	 * @param parentNode The parent node used to store the new JCR element (object) 
 	 * @param nodeName The node name used to store the object
 	 * @param object the object to update
-	 * @throws PersistenceException when it is not possible to update the object
+	 * @throws ObjectContentManagerException when it is not possible to update the object
 	 */    
-    public void update(Session session, Node parentNode, String nodeName, Object object) throws PersistenceException;
+    public void update(Session session, Node parentNode, String nodeName, Object object) throws ObjectContentManagerException;
     
    
     /**
@@ -122,8 +122,8 @@ public interface ObjectConverter
      * @param session the JCR session 
      * @param object the object for which the path has to be retrieve 
      * @return the object JCR path 
-     * @throws PersistenceException when it is not possible to retrieve the object path
+     * @throws ObjectContentManagerException when it is not possible to retrieve the object path
      */
-    public String getPath(Session session , Object object)  throws PersistenceException;
+    public String getPath(Session session , Object object)  throws ObjectContentManagerException;
 
 }

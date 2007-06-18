@@ -19,7 +19,7 @@ package org.apache.jackrabbit.ocm.manager.collectionconverter;
 import javax.jcr.Node;
 import javax.jcr.Session;
 
-import org.apache.jackrabbit.ocm.exception.PersistenceException;
+import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
 
 /**
@@ -38,11 +38,11 @@ public interface CollectionConverter
 	 * @param collectionDescriptor The collection descriptor
 	 * @param collection the collection to insert
 	 * 
-	 * @throws PersistenceException when it is not possible to insert the collection
+	 * @throws ObjectContentManagerException when it is not possible to insert the collection
 	 * 
 	 */
 	public void insertCollection(Session session, Node parentNode, 
-			                     CollectionDescriptor collectionDescriptor, ManageableCollection collection) throws PersistenceException;
+			                     CollectionDescriptor collectionDescriptor, ManageableCollection collection) throws ObjectContentManagerException;
 
 	/**
 	 * Update collection elements already present in the JCR repository
@@ -51,10 +51,10 @@ public interface CollectionConverter
 	 * @param collectionDescriptor The collection descriptor
 	 * @param collection the collection to update
 	 * 
-	 * @throws PersistenceException when it is not possible to update the collection
+	 * @throws ObjectContentManagerException when it is not possible to update the collection
 	 */
 	public void updateCollection(Session session, Node parentNode, 
-			                     CollectionDescriptor collectionDescriptor, ManageableCollection collection) throws PersistenceException;
+			                     CollectionDescriptor collectionDescriptor, ManageableCollection collection) throws ObjectContentManagerException;
 
 	/**
 	 * Get a {@link ManageableCollection} from the JCR repository 
@@ -64,10 +64,10 @@ public interface CollectionConverter
 	 * @param collectionFieldClass The collection class to used (ArrayList, Vector, ..) 
 	 * @return The collection populates with all elements found in the JCR repository
 	 * 
-	 * @throws PersistenceException when it is not possible to retrieve the collection 
+	 * @throws ObjectContentManagerException when it is not possible to retrieve the collection 
 	 */
 	public ManageableCollection getCollection(Session session, Node parentNode, 
-			                                  CollectionDescriptor collectionDescriptor, Class collectionFieldClass) throws PersistenceException;
+			                                  CollectionDescriptor collectionDescriptor, Class collectionFieldClass) throws ObjectContentManagerException;
 
 	
 	/**
@@ -81,8 +81,8 @@ public interface CollectionConverter
 	 * @return true if the collection contains elements.
 	 * 
 	 * 
-	 * @throws PersistenceException when it is not possible to retrieve the collection 
+	 * @throws ObjectContentManagerException when it is not possible to retrieve the collection 
 	 */	
 	public boolean isNull(Session session, Node parentNode, 
-                                      CollectionDescriptor collectionDescriptor, Class collectionFieldClass) throws PersistenceException;
+                                      CollectionDescriptor collectionDescriptor, Class collectionFieldClass) throws ObjectContentManagerException;
 }

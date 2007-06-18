@@ -19,20 +19,20 @@ package org.apache.jackrabbit.ocm.manager.impl;
 import javax.jcr.Node;
 import javax.jcr.Session;
 
-import org.apache.jackrabbit.ocm.exception.PersistenceException;
+import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.exception.RepositoryException;
 import org.apache.jackrabbit.ocm.mapper.model.BeanDescriptor;
 
 
 /**
-* Utility class for used in the persistence manager and in the converters
+* Utility class for used in the object content manager and in the converters
 *
 * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
 */
-public class PersistenceUtil
+public class ObjectContentManagerUtil
 {
 	
-    public static String getPath(Session session, BeanDescriptor beanDescriptor, Node parentNode) throws PersistenceException
+    public static String getPath(Session session, BeanDescriptor beanDescriptor, Node parentNode) throws ObjectContentManagerException
     {		
 		 try 
 		 {

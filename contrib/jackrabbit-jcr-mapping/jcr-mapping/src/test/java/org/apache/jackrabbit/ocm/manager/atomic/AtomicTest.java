@@ -67,7 +67,7 @@ public class AtomicTest extends TestBase
     {
         try
         {
-        	ObjectContentManager persistenceManager = getPersistenceManager();
+        	ObjectContentManager ocm = getObjectContentManager();
         	Date date = new Date();
         	Calendar calendar = Calendar.getInstance();
             // --------------------------------------------------------------------------------
@@ -97,15 +97,15 @@ public class AtomicTest extends TestBase
             a.setPathProperty("/node1/node2");
             a.setUndefinedProperty("aStringData");
             
-            persistenceManager.insert(a);
-            persistenceManager.save();
+            ocm.insert(a);
+            ocm.save();
 
              
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------
             a = null;
-            a = (Atomic) persistenceManager.getObject( "/test");
+            a = (Atomic) ocm.getObject( "/test");
             assertNotNull("a is null", a);
             assertNotNull("Boolean object is null", a.getBooleanObject());
             assertTrue("Incorrect boolean object", a.getBooleanObject().booleanValue());
@@ -144,9 +144,9 @@ public class AtomicTest extends TestBase
             {
                // update with an incorrect namespace - Should throws an exception
                a.setNamedProperty("unknown:test");               
-               persistenceManager.update(a);
+               ocm.update(a);
                fail("Exception was not triggered with an invalid namespace");
-               persistenceManager.save();
+               ocm.save();
             }
             catch (Exception e)
             {
@@ -161,9 +161,9 @@ public class AtomicTest extends TestBase
             {
                // update with an incorrect namespace - Should throws an exception
                a.setPathProperty("//node1");               
-               persistenceManager.update(a);
+               ocm.update(a);
                fail("Exception was not triggered with an invalid path");
-               persistenceManager.save();
+               ocm.save();
             }
             catch (Exception e)
             {
@@ -175,17 +175,17 @@ public class AtomicTest extends TestBase
             // Update the property "undefinedProperty" with an invalid value
             // --------------------------------------------------------------------------------            
             a = null;
-            a = (Atomic) persistenceManager.getObject( "/test");
+            a = (Atomic) ocm.getObject( "/test");
 
             a.setUndefinedProperty(new Double(1.2));
-            persistenceManager.update(a);
-            persistenceManager.save();
+            ocm.update(a);
+            ocm.save();
             
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------
             a = null;
-            a = (Atomic) persistenceManager.getObject( "/test");
+            a = (Atomic) ocm.getObject( "/test");
             assertNotNull("a is null", a);
             assertTrue("Invalid undefinedProperty value ", ((Double) a.getUndefinedProperty()).doubleValue() == 1.2);
             

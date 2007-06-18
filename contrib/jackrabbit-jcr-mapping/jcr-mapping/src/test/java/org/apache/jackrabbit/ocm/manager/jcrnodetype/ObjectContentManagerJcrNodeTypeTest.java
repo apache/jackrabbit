@@ -37,14 +37,14 @@ import org.apache.jackrabbit.ocm.testmodel.Resource;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class PersistenceManagerJcrNodeTypeTest extends TestBase {
-	private final static Log log = LogFactory.getLog(PersistenceManagerJcrNodeTypeTest.class);
+public class ObjectContentManagerJcrNodeTypeTest extends TestBase {
+	private final static Log log = LogFactory.getLog(ObjectContentManagerJcrNodeTypeTest.class);
 
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public PersistenceManagerJcrNodeTypeTest(String testName) throws Exception {
+	public ObjectContentManagerJcrNodeTypeTest(String testName) throws Exception {
 		super(testName);
 
 	}
@@ -52,7 +52,7 @@ public class PersistenceManagerJcrNodeTypeTest extends TestBase {
 	public static Test suite() {
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(new TestSuite(
-				PersistenceManagerJcrNodeTypeTest.class));
+				ObjectContentManagerJcrNodeTypeTest.class));
 	}
 
 	public void tearDown() throws Exception {
@@ -68,7 +68,7 @@ public class PersistenceManagerJcrNodeTypeTest extends TestBase {
 
 		try 
 		{
-			ObjectContentManager persistenceManager = this.getPersistenceManager();
+			ObjectContentManager ocm = this.getObjectContentManager();
 
 			//---------------------------------------------------------------------------------------------------------
 			// Insert a  folder (class mapped to jcr:folder) with one file (class mapped to jcr:file)
@@ -85,14 +85,14 @@ public class PersistenceManagerJcrNodeTypeTest extends TestBase {
             folder.setPath("/folder1");
             folder.addChild(file);
             
-            persistenceManager.insert(folder);            
-			persistenceManager.save();
+            ocm.insert(folder);            
+			ocm.save();
 			
 			
 			//---------------------------------------------------------------------------------------------------------
 			// Retrieve a document object
 			//---------------------------------------------------------------------------------------------------------						
-			folder = (Folder) persistenceManager.getObject( "/folder1");
+			folder = (Folder) ocm.getObject( "/folder1");
 			assertNotNull("folder is null", folder);
 			System.out.println("Folder creation date : " + folder.getCreationDate());
 			assertTrue("Invalid number of children", folder.getChildren().size() == 1);

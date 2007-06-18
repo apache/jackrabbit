@@ -31,21 +31,21 @@ import org.apache.jackrabbit.ocm.testmodel.PropertyTest;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class PersistenceManagerJcrPropertyTest extends TestBase {
-	private final static Log log = LogFactory.getLog(PersistenceManagerJcrPropertyTest.class);
+public class ObjectContentManagerJcrPropertyTest extends TestBase {
+	private final static Log log = LogFactory.getLog(ObjectContentManagerJcrPropertyTest.class);
 
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public PersistenceManagerJcrPropertyTest(String testName) throws Exception {
+	public ObjectContentManagerJcrPropertyTest(String testName) throws Exception {
 		super(testName);
 
 	}
 
 	public static Test suite() {
 		// All methods starting with "test" will be executed in the test suite.
-		return new RepositoryLifecycleTestSetup(new TestSuite(PersistenceManagerJcrPropertyTest.class));
+		return new RepositoryLifecycleTestSetup(new TestSuite(ObjectContentManagerJcrPropertyTest.class));
 	}
 
 	public void tearDown() throws Exception {
@@ -61,7 +61,7 @@ public class PersistenceManagerJcrPropertyTest extends TestBase {
 
 		try 
 		{
-			ObjectContentManager persistenceManager = this.getPersistenceManager();
+			ObjectContentManager ocm = this.getObjectContentManager();
 			//---------------------------------------------------------------------------------------------------------
 			// Insert without the mandatory field
 			//---------------------------------------------------------------------------------------------------------			
@@ -73,13 +73,13 @@ public class PersistenceManagerJcrPropertyTest extends TestBase {
             
             try 
             {
-                 persistenceManager.insert(propertyTest);
+                 ocm.insert(propertyTest);
                  fail("Incorrect insert operation - the mandatory fields have no value");
             }
             catch(Exception e)
             {
                // Normal behaviour 	
-            	persistenceManager.refresh(false);
+            	ocm.refresh(false);
             }
             
 			//---------------------------------------------------------------------------------------------------------
@@ -87,13 +87,13 @@ public class PersistenceManagerJcrPropertyTest extends TestBase {
 			//---------------------------------------------------------------------------------------------------------			
             propertyTest.setMandatoryProp("mandatoryValue");
             propertyTest.setMandatoryWithConstaintsProp("xx");
-            persistenceManager.insert(propertyTest);
-            persistenceManager.save();
+            ocm.insert(propertyTest);
+            ocm.save();
             
 			//---------------------------------------------------------------------------------------------------------
 			// Retrieve
 			//---------------------------------------------------------------------------------------------------------			
-            propertyTest = (PropertyTest) persistenceManager.getObject("/test");
+            propertyTest = (PropertyTest) ocm.getObject("/test");
             assertTrue("Invalid required property", propertyTest.getRequiredProp().equals("requiredPropValue"));
             assertTrue("Invalid required property with constraints", propertyTest.getRequiredWithConstraintsProp().equals("abc"));            
             assertTrue("Invalid autocreated property", propertyTest.getAutoCreatedProp().equals("aaa")); 
@@ -103,12 +103,12 @@ public class PersistenceManagerJcrPropertyTest extends TestBase {
             //---------------------------------------------------------------------------------------------------------
 			// update the property requiredWithConstraintsProp with bad value
 			//---------------------------------------------------------------------------------------------------------			
-            propertyTest = (PropertyTest) persistenceManager.getObject("/test");
+            propertyTest = (PropertyTest) ocm.getObject("/test");
             propertyTest.setRequiredWithConstraintsProp("invalid value");
             try 
             {
-            	persistenceManager.update(propertyTest);
-            	persistenceManager.save();
+            	ocm.update(propertyTest);
+            	ocm.save();
             	fail("Invalid value was accepted for requiredWithConstraintsProp");
             }
             catch(Exception e)
@@ -119,12 +119,12 @@ public class PersistenceManagerJcrPropertyTest extends TestBase {
             //---------------------------------------------------------------------------------------------------------
 			// update the property AutoCreatedWithConstraintsProp with bad value
 			//---------------------------------------------------------------------------------------------------------			
-            propertyTest = (PropertyTest) persistenceManager.getObject("/test");
+            propertyTest = (PropertyTest) ocm.getObject("/test");
             propertyTest.setAutoCreatedWithConstraintsProp("invalid value");
             try 
             {
-            	persistenceManager.update(propertyTest);
-            	persistenceManager.save();
+            	ocm.update(propertyTest);
+            	ocm.save();
             	fail("Invalid value was accepted for autoCreatedWithConstraintsProp ");
             }
             catch(Exception e)
@@ -136,12 +136,12 @@ public class PersistenceManagerJcrPropertyTest extends TestBase {
             //---------------------------------------------------------------------------------------------------------
 			// update the property mandatoryWithConstaintsProp with bad value
 			//---------------------------------------------------------------------------------------------------------			
-            propertyTest = (PropertyTest) persistenceManager.getObject("/test");
+            propertyTest = (PropertyTest) ocm.getObject("/test");
             propertyTest.setMandatoryWithConstaintsProp("yy");
             try 
             {
-            	persistenceManager.update(propertyTest);
-            	persistenceManager.save();
+            	ocm.update(propertyTest);
+            	ocm.save();
             	fail("Invalid value was accepted for mandatoryWithConstaintsProp");
             }
             catch(Exception e)

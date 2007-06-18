@@ -82,10 +82,10 @@ public class BeanDescriptorTest extends TestBase {
             getSession().save();
         }
         
-        if (getPersistenceManager().objectExists("/test"))
+        if (getObjectContentManager().objectExists("/test"))
         {
-            getPersistenceManager().remove("/test");
-            getPersistenceManager().save();
+            getObjectContentManager().remove("/test");
+            getObjectContentManager().save();
         }           
 
     }
@@ -101,13 +101,13 @@ public class BeanDescriptorTest extends TestBase {
 			A a = new A();
 			a.setPath("/test");
 			a.setA1("a1");
-			persistenceManager.insert(a);
-			persistenceManager.save();
+			ocm.insert(a);
+			ocm.save();
 			
     		// ------------------------------------------------------------------------
     		// Retrieve 
     		// ------------------------------------------------------------------------
-			a = (A) persistenceManager.getObject("/test");
+			a = (A) ocm.getObject("/test");
 			assertNotNull("Object is null", a);
 			assertNull("attribute is not null", a.getB());
 			
@@ -116,21 +116,21 @@ public class BeanDescriptorTest extends TestBase {
 			b.setB2("b2");
 			a.setB(b);
 			
-			persistenceManager.update(a);
-			persistenceManager.save();
+			ocm.update(a);
+			ocm.save();
 
     		// ------------------------------------------------------------------------
     		// Retrieve 
     		// ------------------------------------------------------------------------
-			a = (A) persistenceManager.getObject("/test");
+			a = (A) ocm.getObject("/test");
 			assertNotNull("Object is null", a);
 			assertNotNull("attribute is null", a.getB());
 			
     		// ------------------------------------------------------------------------
 			// Remove object
     		// ------------------------------------------------------------------------			
-			persistenceManager.remove("/test");
-			persistenceManager.save();
+			ocm.remove("/test");
+			ocm.save();
 		} 
     	catch (RuntimeException e) 
     	{
@@ -150,16 +150,16 @@ public class BeanDescriptorTest extends TestBase {
         expD.setD1("d1value");
         expD.setB1(expB);
         
-       persistenceManager.insert( expD);
-       persistenceManager.save();
+       ocm.insert( expD);
+       ocm.save();
         
-        D actD = (D) persistenceManager.getObject( "/someD");
+        D actD = (D) ocm.getObject( "/someD");
         
         assertEquals(expD.getD1(), actD.getD1());
         assertEquals(expB.getB1(), actD.getB1().getB1());
         assertEquals(expB.getB2(), actD.getB1().getB2());
         
-        DFull actDFull = (DFull) persistenceManager.getObject( DFull.class,  "/someD");
+        DFull actDFull = (DFull) ocm.getObject( DFull.class,  "/someD");
         
         assertEquals(expD.getD1(), actDFull.getD1());
         assertEquals(expB.getB1(), actDFull.getB1());
@@ -167,16 +167,16 @@ public class BeanDescriptorTest extends TestBase {
         
         expB.setB1("updatedvalue1");
         
-        persistenceManager.update( expD);
+        ocm.update( expD);
         getSession().save();
         
-        actD = (D) persistenceManager.getObject( "/someD");
+        actD = (D) ocm.getObject( "/someD");
         
         assertEquals(expD.getD1(), actD.getD1());
         assertEquals(expB.getB1(), actD.getB1().getB1());
         assertEquals(expB.getB2(), actD.getB1().getB2());
         
-        actDFull = (DFull) persistenceManager.getObject( DFull.class,  "/someD");
+        actDFull = (DFull) ocm.getObject( DFull.class,  "/someD");
         
         assertEquals(expD.getD1(), actDFull.getD1());
         assertEquals(expB.getB1(), actDFull.getB1());
@@ -184,15 +184,15 @@ public class BeanDescriptorTest extends TestBase {
         
             
         expD.setB1(null);
-        persistenceManager.update( expD);
+        ocm.update( expD);
         getSession().save();
         
-        actD = (D) persistenceManager.getObject(  "/someD");
+        actD = (D) ocm.getObject(  "/someD");
         
         assertEquals(expD.getD1(), actD.getD1());
         assertNull("b1 was not  removed", actD.getB1());
         
-        actDFull = (DFull) persistenceManager.getObject( DFull.class,  "/someD");
+        actDFull = (DFull) ocm.getObject( DFull.class,  "/someD");
         assertEquals(expD.getD1(), actDFull.getD1());
         assertNull("b1 was not  removed", actDFull.getB1());
         assertNull("b2 wan not remove", actDFull.getB2());
@@ -212,28 +212,28 @@ public class BeanDescriptorTest extends TestBase {
         expE.setB1(expB);
         
         
-        persistenceManager.insert( expE);
-        persistenceManager.save();
+        ocm.insert( expE);
+        ocm.save();
        
-        E actE = (E) persistenceManager.getObject( "/someD");
+        E actE = (E) ocm.getObject( "/someD");
        
         assertEquals(expE.getD1(), actE.getD1());
         
         expE.setD1("updatedvalueD1");
         expB.setB1("updatedvalue1");
         
-        persistenceManager.update( expE);
-        persistenceManager.save();
+        ocm.update( expE);
+        ocm.save();
                
-        actE = (E) persistenceManager.getObject(  "/someD");
+        actE = (E) ocm.getObject(  "/someD");
         
         assertEquals(expE.getD1(), actE.getD1());
                         
         expE.setB1(null);
-        persistenceManager.update( expE);
-        persistenceManager.save();
+        ocm.update( expE);
+        ocm.save();
         
-        actE = (E) persistenceManager.getObject(  "/someD");
+        actE = (E) ocm.getObject(  "/someD");
         
         assertEquals(expE.getD1(), actE.getD1());        
         
@@ -253,7 +253,7 @@ public class BeanDescriptorTest extends TestBase {
     {
         try
         {
-        	ObjectContentManager persistenceManager = getPersistenceManager();
+        	ObjectContentManager ocm = getObjectContentManager();
 
             // --------------------------------------------------------------------------------
             // Create and store an object graph in the repository
@@ -270,19 +270,19 @@ public class BeanDescriptorTest extends TestBase {
             paragraphs.add(new Paragraph("Para 3"));
             page.setParagraphs(paragraphs);
             
-            persistenceManager.insert(page);
-            persistenceManager.save();
+            ocm.insert(page);
+            ocm.save();
             
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            page = (Page) persistenceManager.getObject("/test");
+            page = (Page) ocm.getObject("/test");
             paragraphs = page.getParagraphs();
             for (Iterator iter = paragraphs.iterator(); iter.hasNext();) {
 				Paragraph paragraph = (Paragraph) iter.next();
 				System.out.println("Paragraph path : " + paragraph.getPath());				
 			}            
-            Paragraph p1 = (Paragraph) persistenceManager.getObject("/test/collection-element[2]");
+            Paragraph p1 = (Paragraph) ocm.getObject("/test/collection-element[2]");
             Page paraPage = p1.getPage();
             assertNotNull("Parent page is null", paraPage);
             assertTrue("Invalid parent page", paraPage.getPath().equals("/test"));
@@ -290,8 +290,8 @@ public class BeanDescriptorTest extends TestBase {
             // --------------------------------------------------------------------------------
             // Remove the object
             // --------------------------------------------------------------------------------           
-            persistenceManager.remove("/test");
-            persistenceManager.save();
+            ocm.remove("/test");
+            ocm.save();
             
         }
         catch (Exception e)

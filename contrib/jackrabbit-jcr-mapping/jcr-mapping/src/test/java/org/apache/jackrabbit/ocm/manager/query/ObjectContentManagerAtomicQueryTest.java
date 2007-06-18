@@ -40,16 +40,16 @@ import org.apache.jackrabbit.ocm.testmodel.Atomic;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class PersistenceManagerAtomicQueryTest extends TestBase
+public class ObjectContentManagerAtomicQueryTest extends TestBase
 {
-	private final static Log log = LogFactory.getLog(PersistenceManagerAtomicQueryTest.class);
+	private final static Log log = LogFactory.getLog(ObjectContentManagerAtomicQueryTest.class);
 	private Date date = new Date();
 	
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public PersistenceManagerAtomicQueryTest(String testName) throws Exception
+	public ObjectContentManagerAtomicQueryTest(String testName) throws Exception
 	{
 		super(testName);
 		
@@ -58,7 +58,7 @@ public class PersistenceManagerAtomicQueryTest extends TestBase
 	public static Test suite()
 	{
 		// All methods starting with "test" will be executed in the test suite.
-		return new RepositoryLifecycleTestSetup(new TestSuite(PersistenceManagerAtomicQueryTest.class));
+		return new RepositoryLifecycleTestSetup(new TestSuite(ObjectContentManagerAtomicQueryTest.class));
 	}
 	
     
@@ -77,7 +77,7 @@ public class PersistenceManagerAtomicQueryTest extends TestBase
 		{
 			
 			this.importData(date);
-			ObjectContentManager persistenceManager = this.getPersistenceManager();
+			ObjectContentManager ocm = this.getObjectContentManager();
 			
 			// Test Boolean value 
 			QueryManager queryManager = this.getQueryManager();
@@ -86,7 +86,7 @@ public class PersistenceManagerAtomicQueryTest extends TestBase
 			Query query = queryManager.createQuery(filter);
 			
 			long start = System.currentTimeMillis();
-			Collection result = persistenceManager.getObjects(query);
+			Collection result = ocm.getObjects(query);
 			System.out.println("getObjects  : " + (System.currentTimeMillis() - start));
 			
 			assertTrue("Invalid number of objects - should be = 50", result.size() == 50);
@@ -96,7 +96,7 @@ public class PersistenceManagerAtomicQueryTest extends TestBase
 			query = queryManager.createQuery(filter);
 
 			start = System.currentTimeMillis();
-			result = persistenceManager.getObjects(query);
+			result = ocm.getObjects(query);
 			System.out.println("getObjects 2 : " + (System.currentTimeMillis() - start));
 			assertTrue("Invalid number of objects - should be = 0", result.size() == 0);
 			
@@ -106,14 +106,14 @@ public class PersistenceManagerAtomicQueryTest extends TestBase
 			filter.addBetween("integerObject", new Integer(0), new Integer(500));
 			query = queryManager.createQuery(filter);
 			
-			result = persistenceManager.getObjects(query);			
+			result = ocm.getObjects(query);			
 			assertTrue("Invalid number of objects - should be = 5", result.size() == 5);
 			
 			filter = queryManager.createFilter(Atomic.class);
 			filter.addLessOrEqualThan("intPrimitive", new Integer(236));
 			query = queryManager.createQuery(filter);
 			
-			result = persistenceManager.getObjects(query);			
+			result = ocm.getObjects(query);			
 			assertTrue("Invalid number of objects - should be = 36", result.size() == 36);
 
 			
@@ -124,7 +124,7 @@ public class PersistenceManagerAtomicQueryTest extends TestBase
 			filter.addLessThan("calendar", calendar);
 			query = queryManager.createQuery(filter);
 			
-			result = persistenceManager.getObjects(query);			
+			result = ocm.getObjects(query);			
 			assertTrue("Invalid number of objects - should be = 100 ", result.size() == 100);
 
 			filter = queryManager.createFilter(Atomic.class);
@@ -133,28 +133,28 @@ public class PersistenceManagerAtomicQueryTest extends TestBase
 			filter.addLessThan("calendar", calendar);
 			query = queryManager.createQuery(filter);
 			
-			result = persistenceManager.getObjects(query);			
+			result = ocm.getObjects(query);			
 			assertTrue("Invalid number of objects - should be = 0 ", result.size() == 0);
 			
 			filter = queryManager.createFilter(Atomic.class);			
 			filter.addEqualTo("date", date);
 			query = queryManager.createQuery(filter);
 			
-			result = persistenceManager.getObjects(query);			
+			result = ocm.getObjects(query);			
 			assertTrue("Invalid number of objects - should be = 100 ", result.size() == 100);
 
 			filter = queryManager.createFilter(Atomic.class);			
 			filter.addBetween("date", date, new Date());
 			query = queryManager.createQuery(filter);
 			
-			result = persistenceManager.getObjects(query);			
+			result = ocm.getObjects(query);			
 			assertTrue("Invalid number of objects - should be = 100 ", result.size() == 100);
 
 			filter = queryManager.createFilter(Atomic.class);			
 			filter.addGreaterThan("date", date);
 			query = queryManager.createQuery(filter);
 			
-			result = persistenceManager.getObjects(query);			
+			result = ocm.getObjects(query);			
 			assertTrue("Invalid number of objects - should be = 0 ", result.size() == 0);
 
 			// Test contains method
@@ -162,21 +162,21 @@ public class PersistenceManagerAtomicQueryTest extends TestBase
 			filter.addContains(".", "JCR");
 			query = queryManager.createQuery(filter);
 			
-			result = persistenceManager.getObjects(query);			
+			result = ocm.getObjects(query);			
 			assertTrue("Invalid number of objects - should be = 50 ", result.size() == 50);
 			
 			filter = queryManager.createFilter(Atomic.class);			
 			filter.addContains("byteArray", "ocm");
 			query = queryManager.createQuery(filter);
 			
-			result = persistenceManager.getObjects(query);			
+			result = ocm.getObjects(query);			
 			assertTrue("Invalid number of objects - should be = 50 ", result.size() == 50);
 			
 			filter = queryManager.createFilter(Atomic.class);			
 			filter.addContains("byteArray", "String");
 			query = queryManager.createQuery(filter);
 			
-			result = persistenceManager.getObjects(query);			
+			result = ocm.getObjects(query);			
 			assertTrue("Invalid number of objects - should be = 0 ", result.size() == 0);
 
 
@@ -195,7 +195,7 @@ public class PersistenceManagerAtomicQueryTest extends TestBase
 		try
 		{
 
-			ObjectContentManager persistenceManager = getPersistenceManager();
+			ObjectContentManager ocm = getObjectContentManager();
 			
 			for (int i = 1; i <= 100; i++)
 			{
@@ -224,11 +224,11 @@ public class PersistenceManagerAtomicQueryTest extends TestBase
 					 a.setByteArray("This is small object stored in the ocm repository".getBytes());
 					 a.setInputStream(new ByteArrayInputStream("Another Stream".getBytes()));
 				}
-				persistenceManager.insert(a);
+				ocm.insert(a);
 				
 				
 			}
-			persistenceManager.save();
+			ocm.save();
 
 		}
 		catch (Exception e)

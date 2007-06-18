@@ -29,7 +29,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.ValueFormatException;
 
-import org.apache.jackrabbit.ocm.exception.PersistenceException;
+import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollectionUtil;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.AbstractCollectionConverterImpl;
@@ -66,7 +66,7 @@ public class ResidualNodesCollectionConverterImpl extends
      */
     protected void doInsertCollection(Session session, Node parentNode,
         CollectionDescriptor collectionDescriptor,
-        ManageableCollection collection) /* throws PersistenceException */ {
+        ManageableCollection collection) {
 
         if (!(collection instanceof Map)) { 
             return;
@@ -163,7 +163,7 @@ public class ResidualNodesCollectionConverterImpl extends
 
             return collection;
         } catch (ValueFormatException vfe) {
-            throw new PersistenceException("Cannot get the collection field : "
+            throw new ObjectContentManagerException("Cannot get the collection field : "
                 + collectionDescriptor.getFieldName() + "for class "
                 + collectionDescriptor.getClassDescriptor().getClassName(), vfe);
         }

@@ -34,19 +34,19 @@ import org.apache.jackrabbit.ocm.testmodel.C;
 import org.apache.jackrabbit.ocm.testmodel.Lockable;
 
 /**
- * Test Persistence Manager lock feature
+ * Test object content Manager lock feature
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class PersistenceManagerLockTest extends TestBase
+public class ObjectContentManagerLockTest extends TestBase
 {
-    private final static Log log = LogFactory.getLog(PersistenceManagerLockTest.class);
+    private final static Log log = LogFactory.getLog(ObjectContentManagerLockTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public PersistenceManagerLockTest(String testName)  throws Exception
+    public ObjectContentManagerLockTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -55,7 +55,7 @@ public class PersistenceManagerLockTest extends TestBase
     {
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(
-                new TestSuite(PersistenceManagerLockTest.class));
+                new TestSuite(ObjectContentManagerLockTest.class));
     }
 
 
@@ -64,10 +64,10 @@ public class PersistenceManagerLockTest extends TestBase
      */
     public void tearDown() throws Exception
     {
-    	if (getPersistenceManager().objectExists("/test"))
+    	if (getObjectContentManager().objectExists("/test"))
     	{
-    	   getPersistenceManager().remove("/test");
-    	   getPersistenceManager().save();
+    	   getObjectContentManager().remove("/test");
+    	   getObjectContentManager().save();
     	}
         super.tearDown();
     }
@@ -76,7 +76,7 @@ public class PersistenceManagerLockTest extends TestBase
     {
         try
         {
-        	ObjectContentManager persistenceManager = getPersistenceManager();
+        	ObjectContentManager ocm = getObjectContentManager();
 
 
             // --------------------------------------------------------------------------------
@@ -110,59 +110,59 @@ public class PersistenceManagerLockTest extends TestBase
             
             a.setCollection(collection);
             
-            persistenceManager.insert(a);
-            persistenceManager.save();
+            ocm.insert(a);
+            ocm.save();
             
 
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            a = (A) persistenceManager.getObject( "/test");
+            a = (A) ocm.getObject( "/test");
             assertNotNull("a is null", a);
             
             // --------------------------------------------------------------------------------
             // Check if the object is locked
             // --------------------------------------------------------------------------------
-            assertFalse("the object is locked", persistenceManager.isLocked("/test"));
+            assertFalse("the object is locked", ocm.isLocked("/test"));
             
             // --------------------------------------------------------------------------------
             // Lock the object
             // --------------------------------------------------------------------------------           
             
-            Lock lock = persistenceManager.lock("/test", true, false);
+            Lock lock = ocm.lock("/test", true, false);
             assertTrue("the Lock owner is not correct", lock.getLockOwner().equals("superuser"));
             
             // --------------------------------------------------------------------------------
             // Check if the object is locked
             // --------------------------------------------------------------------------------
-            assertTrue("the object is not locked", persistenceManager.isLocked("/test"));
+            assertTrue("the object is not locked", ocm.isLocked("/test"));
             
             // --------------------------------------------------------------------------------
             // Unlock the object
             // --------------------------------------------------------------------------------           
-            persistenceManager.unlock("/test", lock.getLockToken());
+            ocm.unlock("/test", lock.getLockToken());
 
             // --------------------------------------------------------------------------------
             // Check if the object is locked
             // --------------------------------------------------------------------------------
-            assertFalse("the object is locked", persistenceManager.isLocked("/test"));
+            assertFalse("the object is locked", ocm.isLocked("/test"));
 
             // --------------------------------------------------------------------------------
             // Lock & update 
             // --------------------------------------------------------------------------------
-            lock = persistenceManager.lock("/test", true, false);
-            a = (A) persistenceManager.getObject("/test");
+            lock = ocm.lock("/test", true, false);
+            a = (A) ocm.getObject("/test");
             a.setA1("new a1 Value");
-            persistenceManager.update(a);
-            persistenceManager.save();
-            persistenceManager.unlock("/test", lock.getLockToken());
+            ocm.update(a);
+            ocm.save();
+            ocm.unlock("/test", lock.getLockToken());
             
             
             // --------------------------------------------------------------------------------
             // Remove the object
             // --------------------------------------------------------------------------------           
-            persistenceManager.remove(a);
-            persistenceManager.save();
+            ocm.remove(a);
+            ocm.save();
             
         }
         catch (Exception e)
@@ -181,7 +181,7 @@ public class PersistenceManagerLockTest extends TestBase
     {
         try
         {
-        	ObjectContentManager persistenceManager = getPersistenceManager();
+        	ObjectContentManager ocm = getObjectContentManager();
 
 
             // --------------------------------------------------------------------------------
@@ -191,60 +191,60 @@ public class PersistenceManagerLockTest extends TestBase
             lockable.setPath("/test");
             lockable.setA1("a1");
             lockable.setA2("a2");
-            persistenceManager.insert(lockable);
-            persistenceManager.save();
+            ocm.insert(lockable);
+            ocm.save();
             
 
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            lockable = (Lockable) persistenceManager.getObject("/test");
+            lockable = (Lockable) ocm.getObject("/test");
             assertNotNull("a is null", lockable);
             
             // --------------------------------------------------------------------------------
             // Check if the object is locked
             // --------------------------------------------------------------------------------
-            assertFalse("the object is locked", persistenceManager.isLocked("/test"));
+            assertFalse("the object is locked", ocm.isLocked("/test"));
             assertNull("Attribute lockowner is not null", lockable.getLockOwner());
             // --------------------------------------------------------------------------------
             // Lock the object
             // --------------------------------------------------------------------------------                       
-            Lock lock = persistenceManager.lock("/test", true, false);
+            Lock lock = ocm.lock("/test", true, false);
             
             // --------------------------------------------------------------------------------
             // Check if the object is locked
             // --------------------------------------------------------------------------------
-            assertTrue("the object is not locked", persistenceManager.isLocked("/test"));
+            assertTrue("the object is not locked", ocm.isLocked("/test"));
             
             // --------------------------------------------------------------------------------
             // Unlock the object
             // --------------------------------------------------------------------------------           
-            persistenceManager.unlock("/test", lock.getLockToken());
+            ocm.unlock("/test", lock.getLockToken());
 
             // --------------------------------------------------------------------------------
             // Check if the object is locked
             // --------------------------------------------------------------------------------
-            assertFalse("the object is locked", persistenceManager.isLocked("/test"));
+            assertFalse("the object is locked", ocm.isLocked("/test"));
 
 
             // --------------------------------------------------------------------------------
             // Lock & update 
             // --------------------------------------------------------------------------------
-            lock = persistenceManager.lock("/test", true, false);
-            assertTrue("the object is not locked", persistenceManager.isLocked("/test"));
-            lockable = (Lockable) persistenceManager.getObject("/test");
+            lock = ocm.lock("/test", true, false);
+            assertTrue("the object is not locked", ocm.isLocked("/test"));
+            lockable = (Lockable) ocm.getObject("/test");
             assertNotNull("Attribute lockowner is null", lockable.getLockOwner());
             lockable.setA1("new a1 Value");
-            persistenceManager.update(lockable);
-            persistenceManager.save();
-            persistenceManager.unlock("/test", lock.getLockToken());
+            ocm.update(lockable);
+            ocm.save();
+            ocm.unlock("/test", lock.getLockToken());
             
             
             // --------------------------------------------------------------------------------
             // Remove the object
             // --------------------------------------------------------------------------------           
-            persistenceManager.remove(lockable);
-            persistenceManager.save();
+            ocm.remove(lockable);
+            ocm.save();
             
         }
         catch (Exception e)

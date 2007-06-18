@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.TestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
-import org.apache.jackrabbit.ocm.manager.impl.PersistenceManagerImpl;
+import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl;
 import org.apache.jackrabbit.ocm.query.Filter;
 import org.apache.jackrabbit.ocm.query.Query;
 import org.apache.jackrabbit.ocm.query.QueryManager;
@@ -41,15 +41,15 @@ import org.apache.jackrabbit.ocm.testmodel.MultiValue;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class PersistenceManagerMultiValueQueryTest extends TestBase
+public class ObjectContentManagerMultiValueQueryTest extends TestBase
 {
-    private final static Log log = LogFactory.getLog(PersistenceManagerMultiValueQueryTest.class);
+    private final static Log log = LogFactory.getLog(ObjectContentManagerMultiValueQueryTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public PersistenceManagerMultiValueQueryTest(String testName)  throws Exception
+    public ObjectContentManagerMultiValueQueryTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -58,7 +58,7 @@ public class PersistenceManagerMultiValueQueryTest extends TestBase
     {
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(
-                new TestSuite(PersistenceManagerMultiValueQueryTest.class));
+                new TestSuite(ObjectContentManagerMultiValueQueryTest.class));
     }
 
     /**
@@ -73,12 +73,12 @@ public class PersistenceManagerMultiValueQueryTest extends TestBase
     
     public void tearDown() throws Exception
     {
-        if (getPersistenceManager().objectExists("/test"))
+        if (getObjectContentManager().objectExists("/test"))
         {
-            getPersistenceManager().remove("/test");
+            getObjectContentManager().remove("/test");
             
         }    
-        getPersistenceManager().save();
+        getObjectContentManager().save();
         super.tearDown();
     }	
     
@@ -91,16 +91,16 @@ public class PersistenceManagerMultiValueQueryTest extends TestBase
 	      Filter filter = queryManager.createFilter(MultiValue.class);    
 	      filter.addEqualTo("multiValues", "Value1");
 	      Query query = queryManager.createQuery(filter);    	      
-	      ObjectContentManager persistenceManager = this.getPersistenceManager();
-	      Collection result = persistenceManager.getObjects(query);
+	      ObjectContentManager ocm = this.getObjectContentManager();
+	      Collection result = ocm.getObjects(query);
 	      assertTrue("Invalid number of objects - should be = 3", result.size() == 3);            
           
   	      queryManager = this.getQueryManager();
 	      filter = queryManager.createFilter(MultiValue.class);    
 	      filter.addEqualTo("multiValues", "Value9");
 	      query = queryManager.createQuery(filter);    	      
-	      persistenceManager = this.getPersistenceManager();
-	      result = persistenceManager.getObjects(query);
+	      ocm = this.getObjectContentManager();
+	      result = ocm.getObjects(query);
 	      assertTrue("Invalid number of objects - should be = 1", result.size() == 1);
 	      MultiValue multiValue = (MultiValue)result.iterator().next();
 	      assertTrue("Incorrect MultiValue found ", multiValue.getName().equals("m3"));
@@ -119,11 +119,11 @@ public class PersistenceManagerMultiValueQueryTest extends TestBase
     {
         try
         {
-        	ObjectContentManager persistenceManager = getPersistenceManager();
+        	ObjectContentManager ocm = getObjectContentManager();
 
-			PersistenceManagerImpl persistenceManagerImpl = (PersistenceManagerImpl) persistenceManager;
+			ObjectContentManagerImpl ocmImpl = (ObjectContentManagerImpl) ocm;
 			
-			Session session = persistenceManagerImpl.getSession();
+			Session session = ocmImpl.getSession();
 			Node root = session.getRootNode();
 			root.addNode("test");
 
@@ -136,7 +136,7 @@ public class PersistenceManagerMultiValueQueryTest extends TestBase
             values.add("Value3");
             values.add("Value4");
             multiValue.setMultiValues(values);
-            persistenceManager.insert(multiValue);
+            ocm.insert(multiValue);
             
             multiValue = new MultiValue();
             multiValue.setPath("/test/m2");
@@ -147,7 +147,7 @@ public class PersistenceManagerMultiValueQueryTest extends TestBase
             values.add("Value6");
             values.add("Value7");            
             multiValue.setMultiValues(values);
-            persistenceManager.insert(multiValue);
+            ocm.insert(multiValue);
             
             multiValue = new MultiValue();
             multiValue.setPath("/test/m3");
@@ -159,9 +159,9 @@ public class PersistenceManagerMultiValueQueryTest extends TestBase
             values.add("Value9");
             
             multiValue.setMultiValues(values);
-            persistenceManager.insert(multiValue);
+            ocm.insert(multiValue);
                                    
-            persistenceManager.save();
+            ocm.save();
             
         }
         catch(Exception e)

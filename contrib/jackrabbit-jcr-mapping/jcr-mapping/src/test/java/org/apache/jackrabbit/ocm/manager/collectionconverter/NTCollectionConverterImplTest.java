@@ -63,10 +63,10 @@ public class NTCollectionConverterImplTest extends TestBase
      */
     public void tearDown() throws Exception
     {
-        if (getPersistenceManager().objectExists("/test"))
+        if (getObjectContentManager().objectExists("/test"))
         {
-            getPersistenceManager().remove("/test");
-            getPersistenceManager().save();
+            getObjectContentManager().remove("/test");
+            getObjectContentManager().save();
         }        
     	
         super.tearDown();
@@ -76,7 +76,7 @@ public class NTCollectionConverterImplTest extends TestBase
     {
         try
         {
-        	ObjectContentManager persistenceManager = getPersistenceManager();
+        	ObjectContentManager ocm = getObjectContentManager();
             
         	// --------------------------------------------------------------------------------
             // Create and store an object graph in the repository with a null collection
@@ -86,13 +86,13 @@ public class NTCollectionConverterImplTest extends TestBase
             page.setPath("/test");
             page.setTitle("Page Title");
             
-            persistenceManager.insert(page);
-            persistenceManager.save();
+            ocm.insert(page);
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            page = (Page) persistenceManager.getObject( "/test");
+            page = (Page) ocm.getObject( "/test");
             assertNull("page.getParagraphs is not null", page.getParagraphs());
             assertTrue("Incorrect page title", page.getTitle().equals("Page Title"));                        
             
@@ -106,13 +106,13 @@ public class NTCollectionConverterImplTest extends TestBase
             paragraphs.add(new Paragraph("Para 3"));
             page.setParagraphs(paragraphs);
             
-            persistenceManager.update(page);
-            persistenceManager.save();
+            ocm.update(page);
+            ocm.save();
             
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            page = (Page) persistenceManager.getObject( "/test");
+            page = (Page) ocm.getObject( "/test");
             assertNotNull("page.getParagraphs is null", page.getParagraphs());
             assertTrue("Incorrect page title", page.getTitle().equals("Page Title"));
             assertTrue("Incorrect page.getParagraphs size", page.getParagraphs().size() == 3);
@@ -129,14 +129,14 @@ public class NTCollectionConverterImplTest extends TestBase
             paragraphs.add(new Paragraph("Para 5"));
             page.setParagraphs(paragraphs);
             
-            persistenceManager.update(page);
-            persistenceManager.save();
+            ocm.update(page);
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
 
-            page = (Page) persistenceManager.getObject( "/test");
+            page = (Page) ocm.getObject( "/test");
             assertNotNull("page.getParagraphs is null", page.getParagraphs());
             assertTrue("Incorrect page title", page.getTitle().equals("Page Title"));
             assertTrue("Incorrect page.getParagraphs size", page.getParagraphs().size() == 4);

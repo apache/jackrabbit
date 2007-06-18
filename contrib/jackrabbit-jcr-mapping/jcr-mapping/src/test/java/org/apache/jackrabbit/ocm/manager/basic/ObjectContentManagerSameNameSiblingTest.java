@@ -35,7 +35,7 @@ import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.TestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.DefaultAtomicTypeConverterProvider;
-import org.apache.jackrabbit.ocm.manager.impl.PersistenceManagerImpl;
+import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 import org.apache.jackrabbit.ocm.manager.objectconverter.impl.ObjectConverterImpl;
 import org.apache.jackrabbit.ocm.mapper.impl.DigesterMapperImpl;
@@ -53,16 +53,16 @@ import org.apache.jackrabbit.ocm.testmodel.Paragraph;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class PersistenceManagerSameNameSiblingTest extends TestBase
+public class ObjectContentManagerSameNameSiblingTest extends TestBase
 {
-	private final static Log log = LogFactory.getLog(PersistenceManagerSameNameSiblingTest.class);
+	private final static Log log = LogFactory.getLog(ObjectContentManagerSameNameSiblingTest.class);
 	private Date date = new Date();
 	
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public PersistenceManagerSameNameSiblingTest(String testName) throws Exception
+	public ObjectContentManagerSameNameSiblingTest(String testName) throws Exception
 	{
 		super(testName);
 		
@@ -72,7 +72,7 @@ public class PersistenceManagerSameNameSiblingTest extends TestBase
 	{
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(
-                new TestSuite(PersistenceManagerSameNameSiblingTest.class));
+                new TestSuite(ObjectContentManagerSameNameSiblingTest.class));
 	}
 
 	public void tearDown() throws Exception 
@@ -88,37 +88,37 @@ public class PersistenceManagerSameNameSiblingTest extends TestBase
 		try
 		{
 			this.importData(date);
-			ObjectContentManager persistenceManager = this.getPersistenceManager();
+			ObjectContentManager ocm = this.getObjectContentManager();
 				
 			// Query all objects 
 			QueryManager queryManager = this.getQueryManager();
 			Filter filter = queryManager.createFilter(Atomic.class);	
 			filter.setScope("/");
 			Query query = queryManager.createQuery(filter);
-			Collection result = persistenceManager.getObjects(query);
+			Collection result = ocm.getObjects(query);
             assertEquals("Incorrect number of objects found", 10, result.size());
                          
             // Get objects
-            Atomic atomic = (Atomic) persistenceManager.getObject( "/test[2]");
+            Atomic atomic = (Atomic) ocm.getObject( "/test[2]");
             assertNotNull("Object /test[2] not found", atomic);
             
-            atomic = (Atomic) persistenceManager.getObject( "/test[10]");
+            atomic = (Atomic) ocm.getObject( "/test[10]");
             assertNotNull("Object /test[2] not found", atomic);            
             
             // Update the object 
             atomic.setString("Modified Test String 10");
-            persistenceManager.update(atomic);
-            persistenceManager.save();
+            ocm.update(atomic);
+            ocm.save();
 
             // Query on the attribute "string"
             queryManager = this.getQueryManager();
 			filter = queryManager.createFilter(Atomic.class);	
 			filter.addLike("string", "Modified%");			
 			query = queryManager.createQuery(filter);
-			result = persistenceManager.getObjects(query);
+			result = ocm.getObjects(query);
 			assertTrue("Incorrect number of objects found", result.size() == 1);
             
-			atomic = (Atomic) persistenceManager.getObject(query);
+			atomic = (Atomic) ocm.getObject(query);
 			assertNotNull("Object not found", atomic);
 			assertTrue("Incorrect Object", atomic.getString().equals("Modified Test String 10"));   
 			
@@ -127,10 +127,10 @@ public class PersistenceManagerSameNameSiblingTest extends TestBase
 			filter = queryManager.createFilter(Atomic.class);	
 			filter.setScope("/");
 			query = queryManager.createQuery(filter) ;           
-            persistenceManager.remove(query);
-            persistenceManager.save();
+            ocm.remove(query);
+            ocm.save();
 
-			result = persistenceManager.getObjects(query);
+			result = ocm.getObjects(query);
             assertTrue("Incorrect number of objects found", result.size() == 0);
             
             
@@ -145,30 +145,30 @@ public class PersistenceManagerSameNameSiblingTest extends TestBase
 
 	public void testUnsupportedSameNameSiblings()
 	{
-		     ObjectContentManager persistenceManager = getPersistenceManager();
+		     ObjectContentManager ocm = getObjectContentManager();
              try
              {
             	 
             	 Page page = new Page();
             	 page.setPath("/page");
             	 page.setTitle("Page Title");            	 
-            	 persistenceManager.insert(page);
-            	 persistenceManager.save();
+            	 ocm.insert(page);
+            	 ocm.save();
             	 
             	 Paragraph p1 = new Paragraph("para1");
             	 p1.setPath("/page/paragraph");
-            	 persistenceManager.insert(p1);
+            	 ocm.insert(p1);
             	 
             	 Paragraph p2 = new Paragraph("para1");
             	 p2.setPath("/page/paragraph");
-            	 persistenceManager.insert(p2);
+            	 ocm.insert(p2);
              fail();            	 
             	 
              }
              catch(Exception e)
              {
-    		            	 persistenceManager.remove("/page");
-            	        persistenceManager.save();
+    		            	 ocm.remove("/page");
+            	        ocm.save();
              }
 	}
 	
@@ -178,7 +178,7 @@ public class PersistenceManagerSameNameSiblingTest extends TestBase
 		try
 		{
 
-			ObjectContentManager persistenceManager = getPersistenceManager();
+			ObjectContentManager ocm = getObjectContentManager();
 			
 			
 			for (int i = 1; i <= 10; i++)
@@ -208,11 +208,11 @@ public class PersistenceManagerSameNameSiblingTest extends TestBase
 					 a.setByteArray("This is small object stored in the repository".getBytes());
 					 a.setInputStream(new ByteArrayInputStream("Another Stream".getBytes()));
 				}
-				persistenceManager.insert(a);
+				ocm.insert(a);
 				
 				
 			}
-			persistenceManager.save();
+			ocm.save();
 
 		}
 		catch (Exception e)
@@ -223,14 +223,14 @@ public class PersistenceManagerSameNameSiblingTest extends TestBase
 
 	}
 	
-	protected void initPersistenceManager() throws UnsupportedRepositoryOperationException, javax.jcr.RepositoryException
+	protected void initObjectContentManager() throws UnsupportedRepositoryOperationException, javax.jcr.RepositoryException
 	{
 		Repository repository = RepositoryUtil.getRepository("repositoryTest");
 		String[] files = { "./src/test/test-config/jcrmapping-sibling.xml" };
 		session = RepositoryUtil.login(repository, "superuser", "superuser");
 
 		
-		persistenceManager = new PersistenceManagerImpl(session, files);
+		ocm = new ObjectContentManagerImpl(session, files);
 		
 	}	
 	

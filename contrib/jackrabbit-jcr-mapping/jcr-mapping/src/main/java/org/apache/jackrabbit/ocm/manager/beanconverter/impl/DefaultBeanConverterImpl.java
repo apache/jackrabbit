@@ -26,7 +26,7 @@ import javax.jcr.version.VersionException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
-import org.apache.jackrabbit.ocm.exception.PersistenceException;
+import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.exception.RepositoryException;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverterProvider;
 import org.apache.jackrabbit.ocm.manager.beanconverter.BeanConverter;
@@ -52,13 +52,13 @@ public class DefaultBeanConverterImpl extends AbstractBeanConverterImpl  impleme
 	}
 
 	public void insert(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Object object, ClassDescriptor parentClassDescriptor, Object parent)
-			throws PersistenceException, RepositoryException, 	JcrMappingException 
+			throws ObjectContentManagerException, RepositoryException, 	JcrMappingException 
 	{
 		objectConverter.insert(session, parentNode, beanDescriptor.getJcrName(), object);
 	}
 
 	public void update(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Object object, ClassDescriptor parentClassDescriptor, Object parent)
-			throws PersistenceException, RepositoryException,	JcrMappingException 
+			throws ObjectContentManagerException, RepositoryException,	JcrMappingException 
 	{
 		try 
 		{
@@ -79,14 +79,14 @@ public class DefaultBeanConverterImpl extends AbstractBeanConverterImpl  impleme
 	}
 
 	public Object getObject(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Class beanClass, Object parent)
-			throws PersistenceException, RepositoryException,JcrMappingException 
+			throws ObjectContentManagerException, RepositoryException,JcrMappingException 
 	{
         return objectConverter.getObject(session, beanClass, this.getPath(session, beanDescriptor, parentNode));
 		
 	}
 
 	public void remove(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Object object, ClassDescriptor parentClassDescriptor, Object parent)
-	          throws PersistenceException,	RepositoryException, JcrMappingException 
+	          throws ObjectContentManagerException,	RepositoryException, JcrMappingException 
 	{
 		try {
 			if (parentNode.hasNode(beanDescriptor.getJcrName())) 

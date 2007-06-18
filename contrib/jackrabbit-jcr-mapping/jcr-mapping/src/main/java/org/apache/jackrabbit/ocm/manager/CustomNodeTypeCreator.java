@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.ocm.manager;
 
 import org.apache.jackrabbit.ocm.exception.CustomNodeTypeCreationException;
-import org.apache.jackrabbit.ocm.manager.impl.PersistenceManagerImpl;
+import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl;
 
 /** Interface for custom node type creator implementations.
  *
@@ -44,5 +44,5 @@ public interface CustomNodeTypeCreator {
     /** Jcr session to be injected into implementation.
      * @param jcrSession JcrSession
      */
-    void setJcrSession(PersistenceManagerImpl jcrSession);
+    void setJcrSession(ObjectContentManagerImpl jcrSession);
 }

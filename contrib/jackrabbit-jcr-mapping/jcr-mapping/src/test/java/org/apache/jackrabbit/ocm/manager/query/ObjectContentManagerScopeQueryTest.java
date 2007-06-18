@@ -32,7 +32,7 @@ import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.TestBase;
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
-import org.apache.jackrabbit.ocm.manager.impl.PersistenceManagerImpl;
+import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl;
 import org.apache.jackrabbit.ocm.query.Filter;
 import org.apache.jackrabbit.ocm.query.Query;
 import org.apache.jackrabbit.ocm.query.QueryManager;
@@ -45,15 +45,15 @@ import org.apache.jackrabbit.ocm.testmodel.Paragraph;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class PersistenceManagerScopeQueryTest extends TestBase
+public class ObjectContentManagerScopeQueryTest extends TestBase
 {
-    private final static Log log = LogFactory.getLog(PersistenceManagerScopeQueryTest.class);
+    private final static Log log = LogFactory.getLog(ObjectContentManagerScopeQueryTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public PersistenceManagerScopeQueryTest(String testName)  throws Exception
+    public ObjectContentManagerScopeQueryTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -62,7 +62,7 @@ public class PersistenceManagerScopeQueryTest extends TestBase
     {
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(
-                new TestSuite(PersistenceManagerScopeQueryTest.class));
+                new TestSuite(ObjectContentManagerScopeQueryTest.class));
     }
 
     /**
@@ -77,11 +77,11 @@ public class PersistenceManagerScopeQueryTest extends TestBase
     
     public void tearDown() throws Exception
     {
-        if (getPersistenceManager().objectExists("/test"))
+        if (getObjectContentManager().objectExists("/test"))
         {
-            getPersistenceManager().remove("/test");            
+            getObjectContentManager().remove("/test");            
         }    
-        getPersistenceManager().save();
+        getObjectContentManager().save();
         super.tearDown();
     }	
     
@@ -96,14 +96,14 @@ public class PersistenceManagerScopeQueryTest extends TestBase
     	{
     		
               	      
-    	      ObjectContentManager persistenceManager = this.getPersistenceManager();
+    	      ObjectContentManager ocm = this.getObjectContentManager();
     	      // Search on subtree (test/node1)
     	      QueryManager queryManager = this.getQueryManager();
     	      Filter filter = queryManager.createFilter(Paragraph.class);    
     	      filter.setScope("/test/node1//");
     	      Query query = queryManager.createQuery(filter);    	      
-    	      persistenceManager = this.getPersistenceManager();
-    	      Collection result = persistenceManager.getObjects(query);
+    	      ocm = this.getObjectContentManager();
+    	      Collection result = ocm.getObjects(query);
     	      assertTrue("Invalid number of objects - should be = 8", result.size() == 8);
     	      
     	      
@@ -111,8 +111,8 @@ public class PersistenceManagerScopeQueryTest extends TestBase
     	      filter = queryManager.createFilter(Paragraph.class);    
     	      filter.setScope("/test//");
     	      query = queryManager.createQuery(filter);    	      
-    	      persistenceManager = this.getPersistenceManager();
-    	      result = persistenceManager.getObjects(query);
+    	      ocm = this.getObjectContentManager();
+    	      result = ocm.getObjects(query);
     	      assertTrue("Invalid number of objects - should be = 16", result.size() == 16);
     	      
     	      // Test on children 
@@ -120,8 +120,8 @@ public class PersistenceManagerScopeQueryTest extends TestBase
     	      filter = queryManager.createFilter(Paragraph.class);    
     	      filter.setScope("/test/");
     	      query = queryManager.createQuery(filter);    	      
-    	      persistenceManager = this.getPersistenceManager();
-    	      result = persistenceManager.getObjects(query);
+    	      ocm = this.getObjectContentManager();
+    	      result = ocm.getObjects(query);
     	      assertTrue("Invalid number of objects - should be = 0", result.size() == 0);
     	      
               // Search on scope and properties
@@ -130,8 +130,8 @@ public class PersistenceManagerScopeQueryTest extends TestBase
     	      filter.setScope("/test//");
     	      filter.addEqualTo("text", "Para 1");
     	      query = queryManager.createQuery(filter);    	      
-    	      persistenceManager = this.getPersistenceManager();
-    	      result = persistenceManager.getObjects(query);
+    	      ocm = this.getObjectContentManager();
+    	      result = ocm.getObjects(query);
     	      assertTrue("Invalid number of objects - should be = 3", result.size() == 3);
 
     	      
@@ -140,16 +140,16 @@ public class PersistenceManagerScopeQueryTest extends TestBase
     	      filter.setScope("/test//");
     	      filter.addContains("text", "another");
     	      query = queryManager.createQuery(filter);    	      
-    	      persistenceManager = this.getPersistenceManager();
-    	      result = persistenceManager.getObjects(query);
+    	      ocm = this.getObjectContentManager();
+    	      result = ocm.getObjects(query);
     	      assertTrue("Invalid number of objects - should be = 4", result.size() == 4);
     	      
     	      queryManager = this.getQueryManager();
     	      filter = queryManager.createFilter(Page.class);    
     	      filter.setScope("/test/node1/");    	      
     	      query = queryManager.createQuery(filter);    	      
-    	      persistenceManager = this.getPersistenceManager();
-    	      result = persistenceManager.getObjects(query);
+    	      ocm = this.getObjectContentManager();
+    	      result = ocm.getObjects(query);
     	      assertTrue("Invalid number of objects - should be = 2", result.size() == 2);
     	      assertTrue ("Invalid object in the collection" , this.contains(result, "/test/node1/page1", Page.class));
     	      assertTrue ("Invalid object in the collection" , this.contains(result, "/test/node1/page2", Page.class));
@@ -169,11 +169,11 @@ public class PersistenceManagerScopeQueryTest extends TestBase
         
     	try
 		{
-    		ObjectContentManager persistenceManager = getPersistenceManager();
+    		ObjectContentManager ocm = getObjectContentManager();
         	
-			PersistenceManagerImpl persistenceManagerImpl = (PersistenceManagerImpl) persistenceManager;
+			ObjectContentManagerImpl ocmImpl = (ObjectContentManagerImpl) ocm;
 			
-			Session session = persistenceManagerImpl.getSession();
+			Session session = ocmImpl.getSession();
 			Node root = session.getRootNode();
 			root.addNode("test");
 			root.addNode("test/node1");
@@ -193,7 +193,7 @@ public class PersistenceManagerScopeQueryTest extends TestBase
 			paragraphs.add(new Paragraph("Another Para "));
 			page.setParagraphs(paragraphs);
 			
-			persistenceManager.insert(page);
+			ocm.insert(page);
 						
 			
 			page = new Page();
@@ -208,7 +208,7 @@ public class PersistenceManagerScopeQueryTest extends TestBase
 			paragraphs.add(new Paragraph("Another Para"));
 			page.setParagraphs(paragraphs);
 			
-			persistenceManager.insert(page);
+			ocm.insert(page);
 			
 			page = new Page();
 			page.setPath("/test/node2/page1");
@@ -222,7 +222,7 @@ public class PersistenceManagerScopeQueryTest extends TestBase
 			paragraphs.add(new Paragraph("Another Para"));
 			page.setParagraphs(paragraphs);
 			
-			persistenceManager.insert( page);
+			ocm.insert( page);
 
 			page = new Page();
 			page.setPath("/test/node2/page2");
@@ -236,8 +236,8 @@ public class PersistenceManagerScopeQueryTest extends TestBase
 			paragraphs.add(new Paragraph("Another Para"));
 			page.setParagraphs(paragraphs);
 			
-			persistenceManager.insert(page);
-			persistenceManager.save();
+			ocm.insert(page);
+			ocm.save();
 
 			
 		}

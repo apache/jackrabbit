@@ -40,14 +40,14 @@ import org.apache.jackrabbit.ocm.testmodel.inheritance.SubDescendant;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class PersistenceManagerInheritanceHierarchyTest extends TestBase {
-	private final static Log log = LogFactory.getLog(PersistenceManagerInheritanceHierarchyTest.class);
+public class ObjectContentManagerInheritanceHierarchyTest extends TestBase {
+	private final static Log log = LogFactory.getLog(ObjectContentManagerInheritanceHierarchyTest.class);
 
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public PersistenceManagerInheritanceHierarchyTest(String testName) throws Exception {
+	public ObjectContentManagerInheritanceHierarchyTest(String testName) throws Exception {
 		super(testName);
 
 	}
@@ -55,7 +55,7 @@ public class PersistenceManagerInheritanceHierarchyTest extends TestBase {
 	public static Test suite() {
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(new TestSuite(
-				PersistenceManagerInheritanceHierarchyTest.class));
+				ObjectContentManagerInheritanceHierarchyTest.class));
 	}
 
 	public void tearDown() throws Exception {
@@ -69,7 +69,7 @@ public class PersistenceManagerInheritanceHierarchyTest extends TestBase {
 	public void testRetrieveSingleton() {
 
 		try {
-			ObjectContentManager persistenceManager = this.getPersistenceManager();
+			ObjectContentManager ocm = this.getObjectContentManager();
 
 			//---------------------------------------------------------------------------------------------------------
 			// Insert a descendant object
@@ -79,14 +79,14 @@ public class PersistenceManagerInheritanceHierarchyTest extends TestBase {
 			descendant.setAncestorField("ancestorValue");
 			descendant.setIntField(200);
 			descendant.setPath("/test");
-			persistenceManager.insert(descendant);
-			persistenceManager.save();
+			ocm.insert(descendant);
+			ocm.save();
 
 			//---------------------------------------------------------------------------------------------------------
 			// Retrieve a descendant object
 			//---------------------------------------------------------------------------------------------------------						
 			descendant = null;
-			descendant = (Descendant) persistenceManager.getObject(	 "/test");
+			descendant = (Descendant) ocm.getObject(	 "/test");
 			assertEquals("Descendant path is invalid", descendant.getPath(), "/test");
 			assertEquals("Descendant ancestorField is invalid", descendant.getAncestorField(), "ancestorValue");
 			assertEquals("Descendant descendantField is invalid", descendant.getDescendantField(), "descendantValue");
@@ -97,20 +97,20 @@ public class PersistenceManagerInheritanceHierarchyTest extends TestBase {
 			//---------------------------------------------------------------------------------------------------------						
 			descendant.setAncestorField("anotherAncestorValue");
 			descendant.setIntField(123);
-			persistenceManager.update(descendant);
-			persistenceManager.save();
+			ocm.update(descendant);
+			ocm.save();
 
 			//---------------------------------------------------------------------------------------------------------
 			// Retrieve the updated descendant object
 			//---------------------------------------------------------------------------------------------------------						
 			descendant = null;
-			descendant = (Descendant) persistenceManager.getObject(	 "/test");
+			descendant = (Descendant) ocm.getObject(	 "/test");
 			assertEquals("Descendant path is invalid", descendant.getPath(), "/test");
 			assertEquals("Descendant ancestorField is invalid", descendant.getAncestorField(), "anotherAncestorValue");
 			assertEquals("Descendant descendantField is invalid", descendant	.getDescendantField(), "descendantValue");
 			assertEquals("Descendant intField is invalid", descendant.getIntField(), 123);
 
-			Ancestor ancestor = (Ancestor) persistenceManager.getObject("/test");
+			Ancestor ancestor = (Ancestor) ocm.getObject("/test");
 			assertTrue("Invalid object instance", ancestor instanceof Descendant );
 			assertEquals("Ancestor  path is invalid", ancestor.getPath(), "/test");
 			assertEquals("Ancestor ancestorField is invalid", ancestor.getAncestorField(), "anotherAncestorValue");
@@ -125,7 +125,7 @@ public class PersistenceManagerInheritanceHierarchyTest extends TestBase {
 
 	
 	public void testRetrieveCollection() {
-		ObjectContentManager persistenceManager = this.getPersistenceManager();
+		ObjectContentManager ocm = this.getObjectContentManager();
 
 		//---------------------------------------------------------------------------------------------------------	
 		// Insert  descendant objects
@@ -134,63 +134,63 @@ public class PersistenceManagerInheritanceHierarchyTest extends TestBase {
 		descendant.setDescendantField("descendantValue");
 		descendant.setAncestorField("ancestorValue");
 		descendant.setPath("/descendant1");
-		persistenceManager.insert(descendant);
+		ocm.insert(descendant);
 
 		descendant = new Descendant();
 		descendant.setDescendantField("descendantValue2");
 		descendant.setAncestorField("ancestorValue2");
 		descendant.setPath("/descendant2");
-		persistenceManager.insert(descendant);
+		ocm.insert(descendant);
 
 		SubDescendant subDescendant = new SubDescendant();
 		subDescendant.setDescendantField("descendantValue2");
 		subDescendant.setAncestorField("ancestorValue2");
 		subDescendant.setPath("/subdescendant");
 		subDescendant.setSubDescendantField("subdescendantvalue");
-		persistenceManager.insert(subDescendant);		
+		ocm.insert(subDescendant);		
 
 		 subDescendant = new SubDescendant();
 		subDescendant.setDescendantField("descendantValue3");
 		subDescendant.setAncestorField("ancestorValue2");
 		subDescendant.setPath("/subdescendant2");
 		subDescendant.setSubDescendantField("subdescendantvalue1");
-		persistenceManager.insert(subDescendant);		
+		ocm.insert(subDescendant);		
 		
 		
 		AnotherDescendant anotherDescendant = new AnotherDescendant();
 		anotherDescendant.setAnotherDescendantField("anotherDescendantValue");
 		anotherDescendant.setAncestorField("ancestorValue3");
 		anotherDescendant.setPath("/anotherdescendant1");
-		persistenceManager.insert(anotherDescendant);
+		ocm.insert(anotherDescendant);
 
 		anotherDescendant = new AnotherDescendant();
 		anotherDescendant.setAnotherDescendantField("anotherDescendantValue");
 		anotherDescendant.setAncestorField("ancestorValue4");
 		anotherDescendant.setPath("/anotherdescendant2");
-		persistenceManager.insert(anotherDescendant);
+		ocm.insert(anotherDescendant);
 
 		anotherDescendant = new AnotherDescendant();
 		anotherDescendant.setAnotherDescendantField("anotherDescendantValue2");
 		anotherDescendant.setAncestorField("ancestorValue5");
 		anotherDescendant.setPath("/anotherdescendant3");
-		persistenceManager.insert(anotherDescendant);
+		ocm.insert(anotherDescendant);
 
 		
 		Atomic a = new Atomic();
 		a.setPath("/atomic");
 		a.setBooleanPrimitive(true);
-		persistenceManager.insert(a);
+		ocm.insert(a);
 
-		persistenceManager.save();
+		ocm.save();
 
 		//---------------------------------------------------------------------------------------------------------	
 		// Retrieve Descendant class
 		//---------------------------------------------------------------------------------------------------------			
-		QueryManager queryManager = persistenceManager.getQueryManager();
+		QueryManager queryManager = ocm.getQueryManager();
 		Filter filter = queryManager.createFilter(Descendant.class);
 		Query query = queryManager.createQuery(filter);
 
-		Collection result = persistenceManager.getObjects(query);
+		Collection result = ocm.getObjects(query);
 		assertEquals("Invalid number of Descendant found", result.size(), 4);
 		assertTrue("Invalid item in the collection", this.contains(result, "/descendant1", Descendant.class));
 		assertTrue("Invalid item in the collection", this.contains(result, "/descendant2", Descendant.class));
@@ -201,12 +201,12 @@ public class PersistenceManagerInheritanceHierarchyTest extends TestBase {
 		//---------------------------------------------------------------------------------------------------------	
 		// Retrieve AnotherDescendant class
 		//---------------------------------------------------------------------------------------------------------			
-		queryManager = persistenceManager.getQueryManager();
+		queryManager = ocm.getQueryManager();
 		filter = queryManager.createFilter(AnotherDescendant.class);
 		filter.addEqualTo("anotherDescendantField", "anotherDescendantValue");
 		query = queryManager.createQuery(filter);
 
-		result = persistenceManager.getObjects(query);
+		result = ocm.getObjects(query);
 		assertEquals("Invalid number of AnotherDescendant found", result.size(),2);
 		assertTrue("Invalid item in the collection", this.contains(result, "/anotherdescendant1", AnotherDescendant.class));
 		assertTrue("Invalid item in the collection", this.contains(result, "/anotherdescendant2", AnotherDescendant.class));
@@ -214,12 +214,12 @@ public class PersistenceManagerInheritanceHierarchyTest extends TestBase {
 		//---------------------------------------------------------------------------------------------------------	
 		// Retrieve some descendants & subdescendants
 		//---------------------------------------------------------------------------------------------------------			
-		queryManager = persistenceManager.getQueryManager();
+		queryManager = ocm.getQueryManager();
 		filter = queryManager.createFilter(Descendant.class);		
 		filter.addEqualTo("descendantField","descendantValue2");
 		query = queryManager.createQuery(filter);
 
-		result = persistenceManager.getObjects(query);
+		result = ocm.getObjects(query);
 		assertEquals("Invalid ancestor object found", result.size(),2);
 		assertTrue("Invalid item in the collection", this.contains(result, "/descendant2", Descendant.class));
 		assertTrue("Invalid item in the collection", this.contains(result, "/subdescendant", SubDescendant.class));
@@ -227,11 +227,11 @@ public class PersistenceManagerInheritanceHierarchyTest extends TestBase {
 		//---------------------------------------------------------------------------------------------------------	
 		// Retrieve all class
 		//---------------------------------------------------------------------------------------------------------			
-		queryManager = persistenceManager.getQueryManager();
+		queryManager = ocm.getQueryManager();
 		filter = queryManager.createFilter(Ancestor.class);		
 		query = queryManager.createQuery(filter);
 
-		result = persistenceManager.getObjects(query);
+		result = ocm.getObjects(query);
 		assertEquals("Invalid ancestor object found", result.size(),7);
 		assertTrue("Invalid item in the collection", this.contains(result, "/descendant1", Descendant.class));
 		assertTrue("Invalid item in the collection", this.contains(result, "/descendant2", Descendant.class));

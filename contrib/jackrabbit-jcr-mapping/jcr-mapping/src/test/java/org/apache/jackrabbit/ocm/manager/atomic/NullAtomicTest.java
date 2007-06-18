@@ -67,7 +67,7 @@ public class NullAtomicTest extends TestBase
         try
         {
 
-        	ObjectContentManager persistenceManager = getPersistenceManager();
+        	ObjectContentManager ocm = getObjectContentManager();
      
             // --------------------------------------------------------------------------------
             // Create and store an object graph in the repository
@@ -85,14 +85,14 @@ public class NullAtomicTest extends TestBase
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream("Test Stream".getBytes());
             a.setInputStream(byteArrayInputStream);
             
-            persistenceManager.insert(a);
-            persistenceManager.save();
+            ocm.insert(a);
+            ocm.save();
              
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------
             a = null;
-            a = (Atomic) persistenceManager.getObject( "/test");
+            a = (Atomic) ocm.getObject( "/test");
             assertNotNull("a is null", a);
             assertNull("Boolean object is not null", a.getBooleanObject());
             

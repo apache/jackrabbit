@@ -36,7 +36,7 @@ public class CustomNodeTypeCreatorImpl implements CustomNodeTypeCreator {
     
     /** Session to the jcr repository.
      */
-    private PersistenceManagerImpl jcrSession;
+    private ObjectContentManagerImpl jcrSession;
     
     /** Creates a new instance of CustomNodeTypeCreatorImpl. */
     public CustomNodeTypeCreatorImpl()
@@ -46,7 +46,7 @@ public class CustomNodeTypeCreatorImpl implements CustomNodeTypeCreator {
     /** Creates a new instance of CustomNodeTypeCreatorImpl with a jcr session. 
      * @param jcrSession JcrSession
      */
-    public CustomNodeTypeCreatorImpl(PersistenceManagerImpl jcrSession)
+    public CustomNodeTypeCreatorImpl(ObjectContentManagerImpl jcrSession)
     {
         this.jcrSession = jcrSession;
     }
@@ -82,7 +82,7 @@ public class CustomNodeTypeCreatorImpl implements CustomNodeTypeCreator {
      * 
      * @param jcrSession JcrSession
      */
-    public void setJcrSession(PersistenceManagerImpl jcrSession)
+    public void setJcrSession(ObjectContentManagerImpl jcrSession)
     {
         this.jcrSession = jcrSession;
     }

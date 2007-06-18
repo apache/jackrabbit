@@ -34,7 +34,7 @@ import javax.jcr.version.VersionException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
-import org.apache.jackrabbit.ocm.exception.PersistenceException;
+import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.manager.ManagerConstant;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverterProvider;
@@ -86,7 +86,7 @@ public class SimpleFieldsHelper
 			{
 				if (!node.hasProperty(ManagerConstant.DISCRIMINATOR_PROPERTY_NAME)) 
 				{
-					throw new PersistenceException("Class '"
+					throw new ObjectContentManagerException("Class '"
 							+ classDescriptor.getClassName()
 							+ "' has not a discriminator property.");
 				}
@@ -121,7 +121,7 @@ public class SimpleFieldsHelper
 
 			}
 		} catch (ValueFormatException vfe) {
-			throw new PersistenceException(
+			throw new ObjectContentManagerException(
 					"Cannot retrieve properties of object " + object + " from node " + node, vfe);
 		} catch (RepositoryException re) {
 			throw new org.apache.jackrabbit.ocm.exception.RepositoryException( "Cannot retrieve properties of object " + object
@@ -174,13 +174,13 @@ public class SimpleFieldsHelper
 				storeSimpleField(object, objectNode, valueFactory, fieldDescriptor, fieldName, jcrName);
 			}
 		} catch (ValueFormatException vfe) {
-			throw new PersistenceException("Cannot persist properties of object " + object + ". Value format exception.", vfe);
+			throw new ObjectContentManagerException("Cannot persist properties of object " + object + ". Value format exception.", vfe);
 		} catch (VersionException ve) {
-			throw new PersistenceException("Cannot persist properties of object " + object + ". Versioning exception.", ve);
+			throw new ObjectContentManagerException("Cannot persist properties of object " + object + ". Versioning exception.", ve);
 		} catch (LockException le) {
-			throw new PersistenceException("Cannot persist properties of object " + object + " on locked node.", le);
+			throw new ObjectContentManagerException("Cannot persist properties of object " + object + " on locked node.", le);
 		} catch (ConstraintViolationException cve) {
-			throw new PersistenceException("Cannot persist properties of object " + object + ". Constraint violation.", cve);
+			throw new ObjectContentManagerException("Cannot persist properties of object " + object + ". Constraint violation.", cve);
 		} catch (RepositoryException re) {
 			throw new org.apache.jackrabbit.ocm.exception.RepositoryException("Cannot persist properties of object "
 					+ object, re);
@@ -259,7 +259,7 @@ public class SimpleFieldsHelper
 		for (int i = 0; i < propertyDefinitions.length; i++) {
 			PropertyDefinition definition = propertyDefinitions[i];
 			if (definition.getName().equals(fieldDescriptor.getJcrName()) && definition.isMandatory() && (value == null)) {
-				throw new PersistenceException("Class of type:" + fieldDescriptor.getClassDescriptor().getClassName()
+				throw new ObjectContentManagerException("Class of type:" + fieldDescriptor.getClassDescriptor().getClassName()
 						+ " has property: " + fieldDescriptor.getFieldName() + " declared as JCR property: "
 						+ fieldDescriptor.getJcrName() + " This property is mandatory but property in bean has value null");
 			}

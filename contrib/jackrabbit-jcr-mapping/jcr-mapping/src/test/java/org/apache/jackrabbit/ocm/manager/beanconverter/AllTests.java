@@ -34,7 +34,7 @@ public class AllTests {
     }
 
     public static Test buildSuite() {
-        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.persistence.beanconverter");
+        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.manager.beanconverter");
         //$JUnit-BEGIN$
         suite.addTestSuite(BeanDescriptorTest.class);
         //$JUnit-END$

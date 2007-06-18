@@ -33,7 +33,7 @@ import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.TestBase;
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
-import org.apache.jackrabbit.ocm.manager.impl.PersistenceManagerImpl;
+import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl;
 import org.apache.jackrabbit.ocm.query.Filter;
 import org.apache.jackrabbit.ocm.query.Query;
 import org.apache.jackrabbit.ocm.query.QueryManager;
@@ -46,15 +46,15 @@ import org.apache.jackrabbit.ocm.testmodel.Paragraph;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class PersistenceManagerIteratorQueryTest extends TestBase
+public class ObjectContentManagerIteratorQueryTest extends TestBase
 {
-    private final static Log log = LogFactory.getLog(PersistenceManagerIteratorQueryTest.class);
+    private final static Log log = LogFactory.getLog(ObjectContentManagerIteratorQueryTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public PersistenceManagerIteratorQueryTest(String testName)  throws Exception
+    public ObjectContentManagerIteratorQueryTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -63,7 +63,7 @@ public class PersistenceManagerIteratorQueryTest extends TestBase
     {
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(
-                new TestSuite(PersistenceManagerIteratorQueryTest.class));
+                new TestSuite(ObjectContentManagerIteratorQueryTest.class));
     }
 
     /**
@@ -78,12 +78,12 @@ public class PersistenceManagerIteratorQueryTest extends TestBase
     
     public void tearDown() throws Exception
     {
-        if (getPersistenceManager().objectExists("/test"))
+        if (getObjectContentManager().objectExists("/test"))
         {
-            getPersistenceManager().remove("/test");
+            getObjectContentManager().remove("/test");
             
         }    
-        getPersistenceManager().save();
+        getObjectContentManager().save();
         super.tearDown();
     }	
     
@@ -101,18 +101,18 @@ public class PersistenceManagerIteratorQueryTest extends TestBase
     	      QueryManager queryManager = this.getQueryManager();
     	      Filter filter = queryManager.createFilter(Page.class);        	      
     	      Query query = queryManager.createQuery(filter);    	      
-    	      ObjectContentManager persistenceManager = this.getPersistenceManager();
+    	      ObjectContentManager ocm = this.getObjectContentManager();
     	      
     	      long  start = System.currentTimeMillis();
-    	      Iterator iterator = persistenceManager.getObjectIterator(query);
+    	      Iterator iterator = ocm.getObjectIterator(query);
     	      System.out.println("getObject takes : " + (System.currentTimeMillis() - start));
     	          	      
     	      start = System.currentTimeMillis();
-    	      Collection result = persistenceManager.getObjects(query);
+    	      Collection result = ocm.getObjects(query);
     	      System.out.println("getObject takes : " + (System.currentTimeMillis() - start));   
     	      
     	      start = System.currentTimeMillis();
-    	      iterator = persistenceManager.getObjectIterator(query);
+    	      iterator = ocm.getObjectIterator(query);
     	      System.out.println("getObject takes : " + (System.currentTimeMillis() - start));       	      
 
     	      
@@ -131,16 +131,16 @@ public class PersistenceManagerIteratorQueryTest extends TestBase
         
     	try
 		{
-    		ObjectContentManager persistenceManager = getPersistenceManager();
+    		ObjectContentManager ocm = getObjectContentManager();
     		
-        	if (persistenceManager.objectExists("/test"))
+        	if (ocm.objectExists("/test"))
             {
-                persistenceManager.remove("/test");
+                ocm.remove("/test");
             }
         	
-			PersistenceManagerImpl persistenceManagerImpl = (PersistenceManagerImpl) persistenceManager;
+			ObjectContentManagerImpl ocmImpl = (ObjectContentManagerImpl) ocm;
 			
-			Session session = persistenceManagerImpl.getSession();
+			Session session = ocmImpl.getSession();
 			Node root = session.getRootNode();
 			root.addNode("test");
 			root.addNode("test/node1");
@@ -160,7 +160,7 @@ public class PersistenceManagerIteratorQueryTest extends TestBase
 			paragraphs.add(new Paragraph("Another Para "));
 			page.setParagraphs(paragraphs);
 			
-			persistenceManager.insert(page);
+			ocm.insert(page);
 						
 			
 			page = new Page();
@@ -175,7 +175,7 @@ public class PersistenceManagerIteratorQueryTest extends TestBase
 			paragraphs.add(new Paragraph("Another Para"));
 			page.setParagraphs(paragraphs);
 			
-			persistenceManager.insert(page);
+			ocm.insert(page);
 			
 			page = new Page();
 			page.setPath("/test/node2/page1");
@@ -189,7 +189,7 @@ public class PersistenceManagerIteratorQueryTest extends TestBase
 			paragraphs.add(new Paragraph("Another Para"));
 			page.setParagraphs(paragraphs);
 			
-			persistenceManager.insert(page);
+			ocm.insert(page);
 
 			page = new Page();
 			page.setPath("/test/node2/page2");
@@ -203,9 +203,9 @@ public class PersistenceManagerIteratorQueryTest extends TestBase
 			paragraphs.add(new Paragraph("Another Para"));
 			page.setParagraphs(paragraphs);
 			
-			persistenceManager.insert(page);
+			ocm.insert(page);
 			
-			persistenceManager.save();
+			ocm.save();
 			
 
 			

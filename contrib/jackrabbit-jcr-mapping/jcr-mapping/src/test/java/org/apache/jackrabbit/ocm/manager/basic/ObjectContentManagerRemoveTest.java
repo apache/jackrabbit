@@ -41,15 +41,15 @@ import org.apache.jackrabbit.ocm.testmodel.Atomic;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class PersistenceManagerRemoveTest extends TestBase
+public class ObjectContentManagerRemoveTest extends TestBase
 {
-	private final static Log log = LogFactory.getLog(PersistenceManagerRemoveTest.class);
+	private final static Log log = LogFactory.getLog(ObjectContentManagerRemoveTest.class);
 	private Date date = new Date();
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public PersistenceManagerRemoveTest(String testName) throws Exception
+	public ObjectContentManagerRemoveTest(String testName) throws Exception
 	{
 		super(testName);
 
@@ -59,7 +59,7 @@ public class PersistenceManagerRemoveTest extends TestBase
 	{
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(
-                new TestSuite(PersistenceManagerRemoveTest.class));
+                new TestSuite(ObjectContentManagerRemoveTest.class));
 	}
 
     /**
@@ -85,23 +85,23 @@ public class PersistenceManagerRemoveTest extends TestBase
 		try
 		{
 			
-			ObjectContentManager persistenceManager = this.getPersistenceManager();
-			persistenceManager.remove("/test5");
-			persistenceManager.save();
+			ObjectContentManager ocm = this.getObjectContentManager();
+			ocm.remove("/test5");
+			ocm.save();
 
-			assertFalse("Test5 has not been removed", persistenceManager.objectExists("/test5"));
+			assertFalse("Test5 has not been removed", ocm.objectExists("/test5"));
 
 			QueryManager queryManager = this.getQueryManager();
 			Filter filter = queryManager.createFilter(Atomic.class);
 			filter.addEqualTo("booleanObject" , new Boolean(false));
 			Query query = queryManager.createQuery(filter);
-			persistenceManager.remove(query);
-			persistenceManager.save();
+			ocm.remove(query);
+			ocm.save();
 
 			filter = queryManager.createFilter(Atomic.class);
 			filter.setScope("//");
 			query = queryManager.createQuery(filter);			
-			Collection result = persistenceManager.getObjects(query);
+			Collection result = ocm.getObjects(query);
 			assertEquals("Invalid number of objects", 5, result.size());
 
 		}
@@ -118,7 +118,7 @@ public class PersistenceManagerRemoveTest extends TestBase
 		try
 		{
 
-			ObjectContentManager persistenceManager = getPersistenceManager();
+			ObjectContentManager ocm = getObjectContentManager();
 
 			for (int i = 1; i <= 10; i++)
 			{
@@ -147,10 +147,10 @@ public class PersistenceManagerRemoveTest extends TestBase
 					a.setByteArray("This is small object stored in the repository".getBytes());
 					a.setInputStream(new ByteArrayInputStream("Another Stream".getBytes()));
 				}
-				persistenceManager.insert(a);
+				ocm.insert(a);
 
 			}
-			persistenceManager.save();
+			ocm.save();
 
 		}
 		catch (Exception e)

@@ -17,7 +17,7 @@
 	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.crossreference.B"  jcrNodeType="nt:unstructured" >
 		<field-descriptor fieldName="b1" jcrName="b1"  />		
         <field-descriptor fieldName="b2" jcrName="b2"  />
-        <bean-descriptor fieldName="a" jcrName="a" proxy="false" converter="org.apache.jackrabbit.ocm.persistence.beanconverter.impl.ReferenceBeanConverterImpl" />
+        <bean-descriptor fieldName="a" jcrName="a" proxy="false" converter="org.apache.jackrabbit.ocm.manager.beanconverter.impl.ReferenceBeanConverterImpl" />
 	</class-descriptor>
 
 </jackrabbit-ocm>

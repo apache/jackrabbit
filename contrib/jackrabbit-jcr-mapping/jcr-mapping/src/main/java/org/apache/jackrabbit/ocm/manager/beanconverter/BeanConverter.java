@@ -21,7 +21,7 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
-import org.apache.jackrabbit.ocm.exception.PersistenceException;
+import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.exception.RepositoryException;
 import org.apache.jackrabbit.ocm.manager.beanconverter.impl.ParentBeanConverterImpl;
 import org.apache.jackrabbit.ocm.mapper.model.BeanDescriptor;
@@ -46,15 +46,15 @@ public interface BeanConverter {
      * @param parentClassDescriptor The Class Descriptor associated to the parent object 
      * @param parent the object which will contain the bean to convert 
      * 
-     * @throws PersistenceException thrown in case the insert fails; marks a failure due to logic of
+     * @throws ObjectContentManagerException thrown in case the insert fails; marks a failure due to logic of
      *  the insert (parent node cannot be accessed, the insert fails, etc.)
      * @throws RepositoryException thrown in case the underlying repository has thrown a
      *  <code>javax.jcr.RepositoryException</code> that is not possible to be handled or
-     *  wrapped in PersistenceException; marks a repository failure
+     *  wrapped in ObjectContentManagerException; marks a repository failure
      * @throws JcrMappingException throws in case the mapping of the bean is not correct
      */
     void insert(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Object bean, ClassDescriptor parentClassDescriptor, Object parent)
-    throws PersistenceException, RepositoryException, JcrMappingException;
+    throws ObjectContentManagerException, RepositoryException, JcrMappingException;
 
     /**
      * Update repository from bean values.
@@ -67,15 +67,15 @@ public interface BeanConverter {
      * @param parentClassDescriptor The Class Descriptor associated to the parent object
      * @param parent the object which will contain the bean to convert 
      * 
-     * @throws PersistenceException thrown in case the update fails; marks a failure due to logic
+     * @throws ObjectContentManagerException thrown in case the update fails; marks a failure due to logic
      *  of update (parent node cannot be accessed, the update fails, etc.)
      * @throws RepositoryException thrown in case the underlying repository has thrown a
      *  <code>javax.jcr.RepositoryException</code> that is not possible to be handled or
-     *  wrapped in PersistenceException; marks a repository failure
+     *  wrapped in ObjectContentManagerException; marks a repository failure
      * @throws JcrMappingException throws in case the mapping of the bean is not correct
      */
     void update(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Object bean, ClassDescriptor parentClassDescriptor, Object parent)
-    throws PersistenceException, RepositoryException, JcrMappingException;
+    throws ObjectContentManagerException, RepositoryException, JcrMappingException;
     
     /**
      * Retrieve a bean from the repository.
@@ -87,15 +87,15 @@ public interface BeanConverter {
      * @param beanClass The bean Class
      * @param parent The parent which contain the bean to retrieve
      * 
-     * @throws PersistenceException thrown in case the bean cannot be retrieved or initialized; 
+     * @throws ObjectContentManagerException thrown in case the bean cannot be retrieved or initialized; 
      *  marks a failure due to logic of retrieval
      * @throws RepositoryException thrown in case the underlying repository has thrown a
      *  <code>javax.jcr.RepositoryException</code> that is not possible to be handled or
-     *  wrapped in PersistenceException; marks a repository failure
+     *  wrapped in ObjectContentManagerException; marks a repository failure
      * @throws JcrMappingException throws in case the mapping of the bean is not correct
      */
     Object getObject(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Class beanClass, Object parent) 
-    throws PersistenceException, RepositoryException, JcrMappingException;
+    throws ObjectContentManagerException, RepositoryException, JcrMappingException;
 
 
     /**
@@ -109,15 +109,15 @@ public interface BeanConverter {
      * @param parentClassDescriptor The Class Descriptor associated to the parent object 
      * @param parent the object which contains the bean to convert 
      * 
-     * @throws PersistenceException thrown in case the bean cannot be removed; 
+     * @throws ObjectContentManagerException thrown in case the bean cannot be removed; 
      *  marks a failure due to logic of removal
      * @throws RepositoryException thrown in case the underlying repository has thrown a
      *  <code>javax.jcr.RepositoryException</code> that is not possible to be handled or
-     *  wrapped in PersistenceException; marks a repository failure
+     *  wrapped in ObjectContentManagerException; marks a repository failure
      * @throws JcrMappingException throws in case the mapping of the bean is not correct
      */
     void remove(Session session, Node parentNode,  BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Object bean, ClassDescriptor parentClassDescriptor, Object parent)
-    throws PersistenceException, RepositoryException, JcrMappingException;
+    throws ObjectContentManagerException, RepositoryException, JcrMappingException;
     
     /**
      * Get the bean path. 
@@ -133,11 +133,11 @@ public interface BeanConverter {
      * 
      * @throws RepositoryException thrown in case the underlying repository has thrown a
      *  <code>javax.jcr.RepositoryException</code> that is not possible to be handled or
-     *  wrapped in PersistenceException; marks a repository failure
+     *  wrapped in ObjectContentManagerException; marks a repository failure
      * 
      */
     String getPath(Session session, BeanDescriptor beanDescriptor, Node parentNode)
-    throws PersistenceException;
+    throws ObjectContentManagerException;
     
 
 }

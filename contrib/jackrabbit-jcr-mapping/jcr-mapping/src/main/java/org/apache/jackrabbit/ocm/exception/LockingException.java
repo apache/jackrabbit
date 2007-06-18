@@ -21,5 +21,5 @@ package org.apache.jackrabbit.ocm.exception;
  * 
  * @author markoc
  */
-abstract public class LockingException extends PersistenceException {
+abstract public class LockingException extends ObjectContentManagerException {
 }

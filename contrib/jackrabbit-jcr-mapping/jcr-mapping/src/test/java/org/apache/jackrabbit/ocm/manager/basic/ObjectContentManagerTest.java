@@ -37,15 +37,15 @@ import org.apache.jackrabbit.ocm.testmodel.Discriminator;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class PersistenceManagerTest extends TestBase
+public class ObjectContentManagerTest extends TestBase
 {
-    private final static Log log = LogFactory.getLog(PersistenceManagerTest.class);
+    private final static Log log = LogFactory.getLog(ObjectContentManagerTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public PersistenceManagerTest(String testName)  throws Exception
+    public ObjectContentManagerTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -54,7 +54,7 @@ public class PersistenceManagerTest extends TestBase
     {
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(
-                new TestSuite(PersistenceManagerTest.class));
+                new TestSuite(ObjectContentManagerTest.class));
     }
 
 
@@ -63,10 +63,10 @@ public class PersistenceManagerTest extends TestBase
      */
     public void tearDown() throws Exception
     {
-    	if (getPersistenceManager().objectExists("/test"))
+    	if (getObjectContentManager().objectExists("/test"))
     	{
-    	   getPersistenceManager().remove("/test");
-    	   getPersistenceManager().save();
+    	   getObjectContentManager().remove("/test");
+    	   getObjectContentManager().save();
     	}
         super.tearDown();
     }
@@ -75,7 +75,7 @@ public class PersistenceManagerTest extends TestBase
     {
         try
         {
-        	ObjectContentManager persistenceManager = getPersistenceManager();
+        	ObjectContentManager ocm = getObjectContentManager();
 
 
             // --------------------------------------------------------------------------------
@@ -109,14 +109,14 @@ public class PersistenceManagerTest extends TestBase
             
             a.setCollection(collection);
             
-            persistenceManager.insert(a);
-            persistenceManager.save();
+            ocm.insert(a);
+            ocm.save();
             
 
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            a = (A) persistenceManager.getObject( "/test");
+            a = (A) ocm.getObject( "/test");
             assertNotNull("a is null", a);
             assertTrue("Incorrect a1", a.getA1().equals("a1"));
             assertNotNull("a.b is null", a.getB());
@@ -134,13 +134,13 @@ public class PersistenceManagerTest extends TestBase
             a.setB(newB);
             
             
-            persistenceManager.update(a);
-            persistenceManager.save();
+            ocm.update(a);
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            a = (A) persistenceManager.getObject("/test");
+            a = (A) ocm.getObject("/test");
             assertNotNull("a is null", a);
             assertTrue("Incorrect a1", a.getA1().equals("new value"));
             assertNotNull("a.b is null", a.getB());
@@ -165,7 +165,7 @@ public class PersistenceManagerTest extends TestBase
     {
     	 try
          {
-         	ObjectContentManager persistenceManager = getPersistenceManager();
+         	ObjectContentManager ocm = getObjectContentManager();
 
 
              // --------------------------------------------------------------------------------         	
@@ -174,14 +174,14 @@ public class PersistenceManagerTest extends TestBase
          	Discriminator discriminatorObject = new Discriminator();
          	discriminatorObject.setPath("/test");
          	discriminatorObject.setContent("This is my content");
-             persistenceManager.insert(discriminatorObject);             
-             persistenceManager.save();
+             ocm.insert(discriminatorObject);             
+             ocm.save();
              
 
              // --------------------------------------------------------------------------------
              // Get the object
              // --------------------------------------------------------------------------------           
-             discriminatorObject = (Discriminator) persistenceManager.getObject( "/test");
+             discriminatorObject = (Discriminator) ocm.getObject( "/test");
              assertNotNull("discriminator object  is null", discriminatorObject );
              assertTrue("Incorrect content", discriminatorObject.getContent().equals("This is my content"));
              
@@ -190,13 +190,13 @@ public class PersistenceManagerTest extends TestBase
              // --------------------------------------------------------------------------------
              discriminatorObject.setContent("new content");             
              
-             persistenceManager.update(discriminatorObject);
-             persistenceManager.save();
+             ocm.update(discriminatorObject);
+             ocm.save();
 
              // --------------------------------------------------------------------------------
              // Get the object
              // --------------------------------------------------------------------------------           
-             discriminatorObject = (Discriminator) persistenceManager.getObject( "/test");
+             discriminatorObject = (Discriminator) ocm.getObject( "/test");
              assertNotNull("discriminator object  is null", discriminatorObject );
              assertTrue("Incorrect content", discriminatorObject.getContent().equals("new content"));
              
@@ -212,9 +212,9 @@ public class PersistenceManagerTest extends TestBase
     
     public void testIsPersistent()
     {    
-    	ObjectContentManager persistenceManager = getPersistenceManager();
-    	assertTrue("Class A is not persistent ", persistenceManager.isPersistent(A.class));
-    	assertFalse("Class String is  persistent - hum ? ", persistenceManager.isPersistent(String.class));
+    	ObjectContentManager ocm = getObjectContentManager();
+    	assertTrue("Class A is not persistent ", ocm.isPersistent(A.class));
+    	assertFalse("Class String is  persistent - hum ? ", ocm.isPersistent(String.class));
     }
     
 

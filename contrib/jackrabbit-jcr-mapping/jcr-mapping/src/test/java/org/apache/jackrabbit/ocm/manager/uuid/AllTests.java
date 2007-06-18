@@ -34,9 +34,9 @@ public class AllTests {
     }
 
     public static Test buildSuite() {
-        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.jcr.persistence.uuid");
+        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.jcr.manager.uuid");
         //$JUnit-BEGIN$
-        suite.addTestSuite(PersistenceManagerUuidTest.class);
+        suite.addTestSuite(ObjectContentManagerUuidTest.class);
         
         //$JUnit-END$
 

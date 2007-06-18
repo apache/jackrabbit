@@ -20,7 +20,7 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
-import org.apache.jackrabbit.ocm.exception.PersistenceException;
+import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.exception.RepositoryException;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverterProvider;
 import org.apache.jackrabbit.ocm.manager.beanconverter.BeanConverter;
@@ -48,25 +48,25 @@ public class InlineBeanConverterImpl extends AbstractBeanConverterImpl  implemen
 	}
 
 	public void insert(Session session, Node parentNode,  BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Object object, ClassDescriptor parentClassDescriptor, Object parent)
-			throws PersistenceException, RepositoryException, 	JcrMappingException {
+			throws ObjectContentManagerException, RepositoryException, 	JcrMappingException {
 		
 		simpleFieldsHelper.storeSimpleFields(session, object, beanClassDescriptor, parentNode);
 	}
 
 	public void update(Session session, Node parentNode,  BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Object object, ClassDescriptor parentClassDescriptor, Object parent)
-			throws PersistenceException, RepositoryException, JcrMappingException {
+			throws ObjectContentManagerException, RepositoryException, JcrMappingException {
 		simpleFieldsHelper.storeSimpleFields(session, object, beanClassDescriptor, parentNode);
 	}
 
 	public Object getObject(Session session, Node parentNode,  BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Class beanClass, Object bean)
-			throws PersistenceException, RepositoryException,JcrMappingException {
+			throws ObjectContentManagerException, RepositoryException,JcrMappingException {
 		
 		return simpleFieldsHelper.retrieveSimpleFields(session, beanClassDescriptor, parentNode, bean);
  
 	}
 
 	public void remove(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Object object, ClassDescriptor parentClassDescriptor, Object parent)
-	          throws PersistenceException,	RepositoryException, JcrMappingException {
+	          throws ObjectContentManagerException,	RepositoryException, JcrMappingException {
 				
 		simpleFieldsHelper.storeSimpleFields(session, object, beanClassDescriptor, parentNode);
 	}

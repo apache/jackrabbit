@@ -7,7 +7,7 @@
 		<field-descriptor fieldName="d1" jcrName="d1" jcrType="String" jcrAutoCreated="false" jcrMandatory="false"
         jcrOnParentVersion="IGNORE" jcrProtected="false" jcrMultiple="false" />
 		
-		<bean-descriptor fieldName="b1" jcrName="b1" converter="org.apache.jackrabbit.ocm.persistence.beanconverter.impl.InlineBeanConverterImpl" />
+		<bean-descriptor fieldName="b1" jcrName="b1" converter="org.apache.jackrabbit.ocm.manager.beanconverter.impl.InlineBeanConverterImpl" />
 
 	</class-descriptor>
 	
@@ -24,7 +24,7 @@
 		
 		<bean-descriptor  fieldName="b1" 
 						  jcrName="b1"
-						  converter="org.apache.jackrabbit.ocm.persistence.beanconverter.FakeBeanConverter" />
+						  converter="org.apache.jackrabbit.ocm.manager.beanconverter.FakeBeanConverter" />
 
 	</class-descriptor>
 	

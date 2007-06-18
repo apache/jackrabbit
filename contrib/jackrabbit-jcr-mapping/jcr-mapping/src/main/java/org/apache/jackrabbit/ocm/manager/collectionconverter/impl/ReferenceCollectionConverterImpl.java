@@ -34,7 +34,7 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 
-import org.apache.jackrabbit.ocm.exception.PersistenceException;
+import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollectionUtil;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
@@ -119,7 +119,7 @@ public class ReferenceCollectionConverterImpl extends AbstractCollectionConverte
             return collection;
         }
         catch(ValueFormatException vfe) {
-          throw new PersistenceException("Cannot get the collection field : "
+          throw new ObjectContentManagerException("Cannot get the collection field : "
                   + collectionDescriptor.getFieldName()
                   + "for class " + collectionDescriptor.getClassDescriptor().getClassName(),
                   vfe);
@@ -160,7 +160,7 @@ public class ReferenceCollectionConverterImpl extends AbstractCollectionConverte
             parentNode.setProperty(jcrName, values);
         }
         catch(ValueFormatException vfe) {
-            throw new PersistenceException("Cannot insert collection field : " 
+            throw new ObjectContentManagerException("Cannot insert collection field : " 
                     + collectionDescriptor.getFieldName()
                     + " of class "
                     + collectionDescriptor.getClassDescriptor().getClassName(), vfe);

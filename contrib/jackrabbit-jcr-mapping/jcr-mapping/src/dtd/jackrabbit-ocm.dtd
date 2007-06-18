@@ -136,7 +136,7 @@
     * elementClassName : contains a fully qualified class name.	This class is the Object type of the persistent collection elements.
     * collectionClassName : contains a fully qualified class name. This class must be the Java type of the Collection attribute. 	
                             This attribute must only specified if the attribute type is not a java.util.Collection (or subclass). 
-                            The declared class must implement ManageableCollection to let the persistence engine handles this type of collection.
+                            The declared class must implement ManageableCollection to let the ocm engine handles this type of collection.
     * collectionConverter : The class name converter. This is the collection mapping strategy to used. 
                             If this attribute is not specify, the default collection mapping strategy is used (DefaultCollectionConverterImpl)                            
     * jcrNodeType: defines the child node type, optional

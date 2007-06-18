@@ -44,14 +44,14 @@ import org.apache.jackrabbit.ocm.testmodel.interfaces.Folder;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class PersistenceManagerInterfaceConcreteClassTest extends TestBase {
-	private final static Log log = LogFactory.getLog(PersistenceManagerInterfaceConcreteClassTest.class);
+public class ObjectContentManagerInterfaceConcreteClassTest extends TestBase {
+	private final static Log log = LogFactory.getLog(ObjectContentManagerInterfaceConcreteClassTest.class);
 
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public PersistenceManagerInterfaceConcreteClassTest(String testName) throws Exception {
+	public ObjectContentManagerInterfaceConcreteClassTest(String testName) throws Exception {
 		super(testName);
 
 	}
@@ -59,7 +59,7 @@ public class PersistenceManagerInterfaceConcreteClassTest extends TestBase {
 	public static Test suite() {
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(new TestSuite(
-				PersistenceManagerInterfaceConcreteClassTest.class));
+				ObjectContentManagerInterfaceConcreteClassTest.class));
 	}
 
 	public void tearDown() throws Exception {
@@ -73,7 +73,7 @@ public class PersistenceManagerInterfaceConcreteClassTest extends TestBase {
 	public void testRetrieveSingleton() {
 
 		try {
-			ObjectContentManager persistenceManager = this.getPersistenceManager();
+			ObjectContentManager ocm = this.getObjectContentManager();
 
 			//---------------------------------------------------------------------------------------------------------
 			// Insert 
@@ -88,13 +88,13 @@ public class PersistenceManagerInterfaceConcreteClassTest extends TestBase {
             documentImpl.setDocumentStream(documentStream);
             Document document = documentImpl;
             
-            persistenceManager.insert(document);
-			persistenceManager.save();
+            ocm.insert(document);
+			ocm.save();
 
 			//---------------------------------------------------------------------------------------------------------
 			// Retrieve 
 			//---------------------------------------------------------------------------------------------------------						
-			document = (Document) persistenceManager.getObject( "/document1");
+			document = (Document) ocm.getObject( "/document1");
 			assertTrue("Invalid implementation for Document", document instanceof DocumentImpl);
 			assertEquals("Document path is invalid", document.getPath(), "/document1");
 			assertEquals("Content type  is invalid", document.getContentType(), "plain/text");
@@ -105,13 +105,13 @@ public class PersistenceManagerInterfaceConcreteClassTest extends TestBase {
 			// Update  a document
 			//---------------------------------------------------------------------------------------------------------						
 			document.setName("anotherName");
-			persistenceManager.update(document);
-			persistenceManager.save();
+			ocm.update(document);
+			ocm.save();
 			
              //	---------------------------------------------------------------------------------------------------------
 			// Retrieve the updated descendant object
 			//---------------------------------------------------------------------------------------------------------						
-			document = (Document) persistenceManager.getObject( "/document1");
+			document = (Document) ocm.getObject( "/document1");
 			assertTrue("Invalid implementation for Document", document instanceof DocumentImpl);
 			assertEquals("document name is incorrect", document.getName(), "anotherName");
 			assertEquals("Document path is invalid", document.getPath(), "/document1");
@@ -119,7 +119,7 @@ public class PersistenceManagerInterfaceConcreteClassTest extends TestBase {
 			assertNotNull("document stream is null", document.getDocumentStream());
 			assertTrue("Invalid document stream", document.getDocumentStream().getEncoding().equals("utf-8"));
 
-			CmsObject cmsObject = (CmsObject) persistenceManager.getObject( "/document1");
+			CmsObject cmsObject = (CmsObject) ocm.getObject( "/document1");
 			assertEquals("cmsObject name is incorrect", cmsObject.getName(), "anotherName");
 			assertEquals("cmsObject path is invalid", cmsObject.getPath(), "/document1");			
 			
@@ -132,7 +132,7 @@ public class PersistenceManagerInterfaceConcreteClassTest extends TestBase {
 	
 	
 	public void testRetrieveCollection() {
-	ObjectContentManager persistenceManager = this.getPersistenceManager();
+	ObjectContentManager ocm = this.getObjectContentManager();
 
 	//---------------------------------------------------------------------------------------------------------
 	// Insert cmsobjects
@@ -145,7 +145,7 @@ public class PersistenceManagerInterfaceConcreteClassTest extends TestBase {
     documentStream.setEncoding("utf-8");
     documentStream.setContent("Test Content".getBytes());
     document.setDocumentStream(documentStream);        
-    persistenceManager.insert(document);
+    ocm.insert(document);
     
     document = new DocumentImpl();
     document.setPath("/document2");        
@@ -155,7 +155,7 @@ public class PersistenceManagerInterfaceConcreteClassTest extends TestBase {
     documentStream.setEncoding("utf-8");
     documentStream.setContent("Test Content".getBytes());
     document.setDocumentStream(documentStream);       
-    persistenceManager.insert(document);
+    ocm.insert(document);
 
     document = new DocumentImpl();
     document.setPath("/document3");        
@@ -165,12 +165,12 @@ public class PersistenceManagerInterfaceConcreteClassTest extends TestBase {
     documentStream.setEncoding("utf-8");
     documentStream.setContent("Test Content 3".getBytes());
     document.setDocumentStream(documentStream);       
-    persistenceManager.insert(document);
+    ocm.insert(document);
     
     FolderImpl folder = new FolderImpl();
     folder.setPath("/folder1");
     folder.setName("folder1");
-    persistenceManager.insert(folder);
+    ocm.insert(folder);
 
 
     document = new DocumentImpl();        
@@ -189,24 +189,24 @@ public class PersistenceManagerInterfaceConcreteClassTest extends TestBase {
     folder.setName("folder2");        
     folder.addChild(document);
     folder.addChild(subFolder);
-    persistenceManager.insert(folder);               		
+    ocm.insert(folder);               		
 
     
 	Atomic a = new Atomic();
 	a.setPath("/atomic");
 	a.setBooleanPrimitive(true);
-	persistenceManager.insert(a);
+	ocm.insert(a);
 
-	persistenceManager.save();
+	ocm.save();
 
 	//---------------------------------------------------------------------------------------------------------	
 	// Retrieve Folders found on the root level
 	//---------------------------------------------------------------------------------------------------------			
-	QueryManager queryManager = persistenceManager.getQueryManager();
+	QueryManager queryManager = ocm.getQueryManager();
 	Filter filter = queryManager.createFilter(Folder.class);
 	Query query = queryManager.createQuery(filter);
 	filter.setScope("/");
-	Collection result = persistenceManager.getObjects(query);
+	Collection result = ocm.getObjects(query);
 	assertEquals("Invalid number of folders found", result.size(), 2);
 	assertTrue("Invalid item in the collection", this.contains(result, "/folder1",FolderImpl.class));
 	assertTrue("Invalid item in the collection", this.contains(result, "/folder2", FolderImpl.class));		
@@ -215,13 +215,13 @@ public class PersistenceManagerInterfaceConcreteClassTest extends TestBase {
 	//---------------------------------------------------------------------------------------------------------	
 	// Retrieve Documents 
 	//---------------------------------------------------------------------------------------------------------			
-	queryManager = persistenceManager.getQueryManager();
+	queryManager = ocm.getQueryManager();
 	filter = queryManager.createFilter(Document.class);
 	
 	filter.addLike("name", "document name%");
 	query = queryManager.createQuery(filter);
 
-	result = persistenceManager.getObjects(query);
+	result = ocm.getObjects(query);
 	assertEquals("Invalid number of documents  found", result.size(),2);
 	assertTrue("Invalid item in the collection", this.contains(result, "/document1", DocumentImpl.class));
 	assertTrue("Invalid item in the collection", this.contains(result, "/document2", DocumentImpl.class));
@@ -230,21 +230,21 @@ public class PersistenceManagerInterfaceConcreteClassTest extends TestBase {
 	//---------------------------------------------------------------------------------------------------------	
 	// Retrieve folder2 
 	//---------------------------------------------------------------------------------------------------------	
-	Folder folder2 = (Folder) persistenceManager.getObject( "/folder2");
+	Folder folder2 = (Folder) ocm.getObject( "/folder2");
 	assertNotNull("folder 2 is null", folder2);
 	assertEquals("Invalid number of cms object  found in folder2 children", folder2.getChildren().size() ,2);
 	assertTrue("Invalid item in the collection", this.contains(folder2.getChildren(), "/folder2/document4", DocumentImpl.class));
 	assertTrue("Invalid item in the collection", this.contains(folder2.getChildren(), "/folder2/subfolder", FolderImpl.class));
 	
 	
-	CmsObject cmsObject = (CmsObject) persistenceManager.getObject( "/folder2");
+	CmsObject cmsObject = (CmsObject) ocm.getObject( "/folder2");
 	assertNotNull("folder 2 is null", cmsObject);
 	assertTrue("Invalid instance for folder 2",  cmsObject instanceof FolderImpl);
 	assertEquals("Invalid number of documents  found in folder2 children",  folder2.getChildren().size(),2);
 	assertTrue("Invalid item in the collection", this.contains(folder2.getChildren(), "/folder2/document4", DocumentImpl.class));
 	assertTrue("Invalid item in the collection", this.contains(folder2.getChildren(), "/folder2/subfolder", FolderImpl.class));
 	
-	Folder childFolder = (Folder) persistenceManager.getObject( "/folder2/subfolder");
+	Folder childFolder = (Folder) ocm.getObject( "/folder2/subfolder");
 	Folder parenFolder  = childFolder.getParentFolder();
 	assertNotNull("parent folder  is null", parenFolder);
 	assertTrue("Invalid instance for parent folder",  parenFolder instanceof FolderImpl);
@@ -255,12 +255,12 @@ public class PersistenceManagerInterfaceConcreteClassTest extends TestBase {
 	//---------------------------------------------------------------------------------------------------------	
 	// Retrieve Contents (ancestor of Documents) 
 	//---------------------------------------------------------------------------------------------------------			
-	queryManager = persistenceManager.getQueryManager();
+	queryManager = ocm.getQueryManager();
 	filter = queryManager.createFilter(Content.class);
 	filter.addLike("name", "document name%");
 	query = queryManager.createQuery(filter);
 
-	result = persistenceManager.getObjects(query);
+	result = ocm.getObjects(query);
 	assertEquals("Invalid number of documents  found", result.size(),2);
 	assertTrue("Invalid item in the collection", this.contains(result, "/document1", DocumentImpl.class));
 	assertTrue("Invalid item in the collection", this.contains(result, "/document2", DocumentImpl.class));
@@ -269,12 +269,12 @@ public class PersistenceManagerInterfaceConcreteClassTest extends TestBase {
 	//---------------------------------------------------------------------------------------------------------	
 	// Retrieve all cmsobjects found on the root level
 	//---------------------------------------------------------------------------------------------------------					
-	queryManager = persistenceManager.getQueryManager();
+	queryManager = ocm.getQueryManager();
 	filter = queryManager.createFilter(CmsObject.class);
 	filter.setScope("/");
 	query = queryManager.createQuery(filter);
 
-	result = persistenceManager.getObjects(query);
+	result = ocm.getObjects(query);
 	assertEquals("Invalid ancestor object found", result.size(),5);
 	assertTrue("Invalid item in the collection", this.contains(result, "/document1", DocumentImpl.class));
 	assertTrue("Invalid item in the collection", this.contains(result, "/document2", DocumentImpl.class));	
@@ -286,11 +286,11 @@ public class PersistenceManagerInterfaceConcreteClassTest extends TestBase {
 	//---------------------------------------------------------------------------------------------------------	
 	// Retrieve all cmsobjects found anywhere
 	//---------------------------------------------------------------------------------------------------------					
-	queryManager = persistenceManager.getQueryManager();
+	queryManager = ocm.getQueryManager();
 	filter = queryManager.createFilter(CmsObject.class);		
 	query = queryManager.createQuery(filter);
 
-	result = persistenceManager.getObjects(query);
+	result = ocm.getObjects(query);
 	assertEquals("Invalid ancestor object found", result.size(),7);
 	assertTrue("Invalid item in the collection", this.contains(result, "/document1", DocumentImpl.class));
 	assertTrue("Invalid item in the collection", this.contains(result, "/document2", DocumentImpl.class));	
@@ -304,7 +304,7 @@ public class PersistenceManagerInterfaceConcreteClassTest extends TestBase {
  
 
 public void testBeanCollection() {
-	ObjectContentManager persistenceManager = this.getPersistenceManager();
+	ObjectContentManager ocm = this.getObjectContentManager();
 
 	//---------------------------------------------------------------------------------------------------------
 	// Insert cmsobjects
@@ -331,14 +331,14 @@ public void testBeanCollection() {
          	    	 
      }
      log.debug("Save the folder and its 200 children");   
-     persistenceManager.insert(folder);
-     persistenceManager.save();
+     ocm.insert(folder);
+     ocm.save();
      log.debug("End - Save the folder and its 200 children");
 
 	//---------------------------------------------------------------------------------------------------------	
 	// Retrieve Folder
 	//---------------------------------------------------------------------------------------------------------			
-	folder  = (Folder) persistenceManager.getObject("/mainfolder");
+	folder  = (Folder) ocm.getObject("/mainfolder");
 	assertNotNull("Folder is null",folder);		
 	Collection children = folder.getChildren();
 	assertEquals("Invalid number of children", children.size(), 200);

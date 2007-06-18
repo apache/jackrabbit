@@ -34,9 +34,9 @@ public class AllTests {
     }
 
     public static Test buildSuite() {
-        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.persistence.auto");
+        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.manager.auto");
         //$JUnit-BEGIN$
-        suite.addTestSuite(PersistenceManagerAutoTest.class);
+        suite.addTestSuite(ObjectContentManagerAutoTest.class);
 
         //$JUnit-END$
 

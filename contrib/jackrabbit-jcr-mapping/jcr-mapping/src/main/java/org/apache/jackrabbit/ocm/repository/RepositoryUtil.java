@@ -28,7 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.core.jndi.RegistryHelper;
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
-import org.apache.jackrabbit.ocm.exception.PersistenceException;
+import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.exception.RepositoryException;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.util.Text;
@@ -185,9 +185,9 @@ public class RepositoryUtil
      * @param path The path from wich the parent path has to be returned
      * @return The parent path
      * 
-     * @throws PersistenceException when the path is invalid
+     * @throws ObjectContentManagerException when the path is invalid
      */
-    public static String getParentPath(String path) throws PersistenceException
+    public static String getParentPath(String path) throws ObjectContentManagerException
     {
         String parentPath = "";
         
@@ -221,9 +221,9 @@ public class RepositoryUtil
      * @param path  The path from which the node name has to be retrieved
      * @return The node name
      * 
-     * @throws PersistenceException when the path is invalid
+     * @throws ObjectContentManagerException when the path is invalid
      */
-    public static String getNodeName(String path)  throws PersistenceException
+    public static String getNodeName(String path)  throws ObjectContentManagerException
     {
         
         String[] pathElements = path.split(PATH_SEPARATOR);

@@ -34,10 +34,10 @@ public class AllTests {
     }
 
     public static Test buildSuite() {
-        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.persistence.interfaces");
+        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.manager.interfaces");
         //$JUnit-BEGIN$
-        suite.addTestSuite(PersistenceManagerInterfaceConcreteClassTest.class);
-        suite.addTestSuite(PersistenceManagerInterfaceHierarchyTest.class);        
+        suite.addTestSuite(ObjectContentManagerInterfaceConcreteClassTest.class);
+        suite.addTestSuite(ObjectContentManagerInterfaceHierarchyTest.class);        
         //$JUnit-END$
 
         return suite;

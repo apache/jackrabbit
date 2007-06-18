@@ -29,28 +29,28 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.TestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
-import org.apache.jackrabbit.ocm.manager.impl.PersistenceManagerImpl;
+import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl;
 import org.apache.jackrabbit.ocm.repository.RepositoryUtil;
 import org.apache.jackrabbit.ocm.testmodel.crossreference.A;
 import org.apache.jackrabbit.ocm.testmodel.crossreference.B;
 
 
 /**
- * Basic test for PersistenceManager
+ * Basic test for ObjectContentManager
  * Test when objects are cross referenced 
  * eg. object 'a' contains a reference to an object 'b' and object 'b' contains a reference to 'a'.
  *
  * @author <a href="mailto:christophe.lombart@gmail.com>Christophe Lombart</a>
  */
-public class PersistenceManagerAvoidRecursiveLoopTest extends TestBase
+public class ObjectContentManagerAvoidRecursiveLoopTest extends TestBase
 {
-    private final static Log log = LogFactory.getLog(PersistenceManagerAvoidRecursiveLoopTest.class);
+    private final static Log log = LogFactory.getLog(ObjectContentManagerAvoidRecursiveLoopTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public PersistenceManagerAvoidRecursiveLoopTest(String testName)  throws Exception
+    public ObjectContentManagerAvoidRecursiveLoopTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -59,7 +59,7 @@ public class PersistenceManagerAvoidRecursiveLoopTest extends TestBase
     {
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(
-                new TestSuite(PersistenceManagerAvoidRecursiveLoopTest.class));
+                new TestSuite(ObjectContentManagerAvoidRecursiveLoopTest.class));
     }
 
 
@@ -68,10 +68,10 @@ public class PersistenceManagerAvoidRecursiveLoopTest extends TestBase
      */
     public void tearDown() throws Exception
     {
-    	if (getPersistenceManager().objectExists("/test"))
+    	if (getObjectContentManager().objectExists("/test"))
     	{
-    	   getPersistenceManager().remove("/test");
-    	   getPersistenceManager().save();
+    	   getObjectContentManager().remove("/test");
+    	   getObjectContentManager().save();
     	}
         super.tearDown();
     }
@@ -80,7 +80,7 @@ public class PersistenceManagerAvoidRecursiveLoopTest extends TestBase
     {
         try
         {
-        	ObjectContentManager persistenceManager = getPersistenceManager();
+        	ObjectContentManager ocm = getObjectContentManager();
             // --------------------------------------------------------------------------------
             // Create and store an object graph in the repository
             // --------------------------------------------------------------------------------
@@ -89,13 +89,13 @@ public class PersistenceManagerAvoidRecursiveLoopTest extends TestBase
             a.setA1("a1");
             a.setA2("a2");
             
-            persistenceManager.insert(a);
-            persistenceManager.save();
+            ocm.insert(a);
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            a = (A) persistenceManager.getObject( "/test");
+            a = (A) ocm.getObject( "/test");
             assertNotNull("a is null", a);
             
             B b = new B();
@@ -117,14 +117,14 @@ public class PersistenceManagerAvoidRecursiveLoopTest extends TestBase
             b2.setA(a);
             a.addB(b2);
 
-            persistenceManager.update(a);
-            persistenceManager.save();
+            ocm.update(a);
+            ocm.save();
             
 
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            a = (A) persistenceManager.getObject( "/test");
+            a = (A) ocm.getObject( "/test");
             assertNotNull("a is null", a);
             assertTrue("Duplicate instance a", a == a.getB().getA());
             
@@ -144,13 +144,13 @@ public class PersistenceManagerAvoidRecursiveLoopTest extends TestBase
     }
 
 	
-	protected void initPersistenceManager() throws UnsupportedRepositoryOperationException, javax.jcr.RepositoryException
+	protected void initObjectContentManager() throws UnsupportedRepositoryOperationException, javax.jcr.RepositoryException
 	{
 		Repository repository = RepositoryUtil.getRepository("repositoryTest");
 		String[] files = { "./src/test/test-config/jcrmapping-avoidrecursiveloop.xml" };
 		session = RepositoryUtil.login(repository, "superuser", "superuser");
        
-		persistenceManager = new PersistenceManagerImpl(session, files);
+		ocm = new ObjectContentManagerImpl(session, files);
 		
 	}	
 

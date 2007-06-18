@@ -8,7 +8,7 @@
 		<field-descriptor fieldName="title" jcrName="ocm:title" />
 		<collection-descriptor fieldName="paragraphs" proxy="false" 
 		                       elementClassName="org.apache.jackrabbit.ocm.testmodel.Paragraph" 
-		                       collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.NTCollectionConverterImpl" />
+		                       collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl" />
 	</class-descriptor>
 
 	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Paragraph" jcrNodeType="ocm:paragraph" discriminator="false" >

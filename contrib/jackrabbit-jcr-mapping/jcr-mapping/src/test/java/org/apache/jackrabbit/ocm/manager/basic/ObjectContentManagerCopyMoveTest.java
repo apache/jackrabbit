@@ -28,7 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.TestBase;
-import org.apache.jackrabbit.ocm.exception.PersistenceException;
+import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.testmodel.A;
 import org.apache.jackrabbit.ocm.testmodel.Atomic;
 import org.apache.jackrabbit.ocm.testmodel.B;
@@ -40,15 +40,15 @@ import org.apache.jackrabbit.ocm.testmodel.C;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class PersistenceManagerCopyMoveTest extends TestBase
+public class ObjectContentManagerCopyMoveTest extends TestBase
 {
-	private final static Log log = LogFactory.getLog(PersistenceManagerCopyMoveTest.class);
+	private final static Log log = LogFactory.getLog(ObjectContentManagerCopyMoveTest.class);
 	
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public PersistenceManagerCopyMoveTest(String testName) throws Exception
+	public ObjectContentManagerCopyMoveTest(String testName) throws Exception
 	{
 		super(testName);
 
@@ -58,7 +58,7 @@ public class PersistenceManagerCopyMoveTest extends TestBase
 	{
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(
-                new TestSuite(PersistenceManagerCopyMoveTest.class));
+                new TestSuite(ObjectContentManagerCopyMoveTest.class));
 	}
 
     /**
@@ -112,18 +112,18 @@ public class PersistenceManagerCopyMoveTest extends TestBase
         
         a.setCollection(collection);
         
-        persistenceManager.insert(a);
-        persistenceManager.save();
+        ocm.insert(a);
+        ocm.save();
 		
         // --------------------------------------------------------------------------------
         // Copy the object 
         // --------------------------------------------------------------------------------
-        persistenceManager.copy("/test", "/test2");      
+        ocm.copy("/test", "/test2");      
         
         // --------------------------------------------------------------------------------
         // Get the object 
         // --------------------------------------------------------------------------------
-        a = (A) persistenceManager.getObject("/test2");
+        a = (A) ocm.getObject("/test2");
         assertNotNull("a is null", a);
         assertTrue("Invalid field a1", a.getA1().equals("a1"));
         assertTrue("Invalid field b.b1", a.getB().getB1().equals("b1"));
@@ -136,18 +136,18 @@ public class PersistenceManagerCopyMoveTest extends TestBase
        
         try 
         {
-			persistenceManager.copy("/incorrectpath", "/test2");			
+			ocm.copy("/incorrectpath", "/test2");			
 			fail("the copy method accepts an incorrect source path");
-		} catch (PersistenceException e) 
+		} catch (ObjectContentManagerException e) 
 		{
 			// Nothing to do  - Expected behaviour
 		}       
 
         try 
         {
-			persistenceManager.copy("/test", "incorrectpath");			
+			ocm.copy("/test", "incorrectpath");			
 			fail("the copy method accepts an incorrect destination path");
-		} catch (PersistenceException e) 
+		} catch (ObjectContentManagerException e) 
 		{
 			// Nothing to do  - Expected behaviour
 		}
@@ -155,9 +155,9 @@ public class PersistenceManagerCopyMoveTest extends TestBase
         // --------------------------------------------------------------------------------
         // Remove objects 
         // --------------------------------------------------------------------------------
-        persistenceManager.remove("/test");
-        persistenceManager.remove("/test2");
-        persistenceManager.save();
+        ocm.remove("/test");
+        ocm.remove("/test2");
+        ocm.save();
         
 	}
 
@@ -172,40 +172,40 @@ public class PersistenceManagerCopyMoveTest extends TestBase
         	Atomic atomic =  new Atomic();
         	atomic.setPath("/source");
         	atomic.setString("test atomic");
-        	persistenceManager.insert(atomic);
-        	persistenceManager.save();
+        	ocm.insert(atomic);
+        	ocm.save();
 			
 			// --------------------------------------------------------------------------------
 			// Copy the object 
 			// --------------------------------------------------------------------------------
-        	persistenceManager.move("/source", "/result");
+        	ocm.move("/source", "/result");
 
 			// --------------------------------------------------------------------------------
 			// Get the object 
 			// --------------------------------------------------------------------------------
-			atomic = (Atomic) persistenceManager.getObject("/result");
+			atomic = (Atomic) ocm.getObject("/result");
 			assertNotNull("atomic is null", atomic);
 			assertTrue("Invalid field a1", atomic.getString().equals("test atomic"));			        
 
-			assertFalse("Object with path /source still exists", persistenceManager.objectExists("/source"));
+			assertFalse("Object with path /source still exists", ocm.objectExists("/source"));
 
 			// --------------------------------------------------------------------------------
 			// Check exceptions 
 			// --------------------------------------------------------------------------------      
 			try 
 			{
-				persistenceManager.move("/incorrectpath", "/test2");			
+				ocm.move("/incorrectpath", "/test2");			
 				fail("the copy method accepts an incorrect source path");
-			} catch (PersistenceException e) 
+			} catch (ObjectContentManagerException e) 
 			{
 				// Nothing to do  - Expected behaviour
 			}       
 
 			try 
 			{
-				persistenceManager.move("/test", "incorrectpath");			
+				ocm.move("/test", "incorrectpath");			
 				fail("the copy method accepts an incorrect destination path");
-			} catch (PersistenceException e) 
+			} catch (ObjectContentManagerException e) 
 			{
 				// Nothing to do  - Expected behaviour
 			}
@@ -213,8 +213,8 @@ public class PersistenceManagerCopyMoveTest extends TestBase
 			// --------------------------------------------------------------------------------
 			// Remove objects 
 			// --------------------------------------------------------------------------------
-			persistenceManager.remove("/result");
-			persistenceManager.save();
+			ocm.remove("/result");
+			ocm.save();
 		} 
         catch (Exception e) 
 		{
@@ -260,30 +260,29 @@ public class PersistenceManagerCopyMoveTest extends TestBase
 			
 			a.setCollection(collection);
 			
-			persistenceManager.insert(a);
-        	persistenceManager.save();
+			ocm.insert(a);
+        	ocm.save();
 			
 			// --------------------------------------------------------------------------------
 			// Copy the object 
-			// --------------------------------------------------------------------------------
-			//persistenceManager
-        	persistenceManager.move("/source", "/result");            
+			// --------------------------------------------------------------------------------			
+        	ocm.move("/source", "/result");            
         	// --------------------------------------------------------------------------------
 			// Get the object 
 			// --------------------------------------------------------------------------------
-			a = (A) persistenceManager.getObject("/result");
+			a = (A) ocm.getObject("/result");
 			assertNotNull("a is null", a);
 			assertTrue("Invalid field a1", a.getA1().equals("a1"));
 			assertTrue("Invalid field b.b1", a.getB().getB1().equals("b1"));
 			assertTrue("Invalid number of items in field collection", a.getCollection().size() == 3);
 			        
-			assertFalse("Object with path /source still exists", persistenceManager.objectExists("/source"));
+			assertFalse("Object with path /source still exists", ocm.objectExists("/source"));
 			
 			// --------------------------------------------------------------------------------
 			// Remove objects 
 			// --------------------------------------------------------------------------------
-			persistenceManager.remove("/result");
-			persistenceManager.save();
+			ocm.remove("/result");
+			ocm.save();
 		} 
         catch (Exception e) 
 		{

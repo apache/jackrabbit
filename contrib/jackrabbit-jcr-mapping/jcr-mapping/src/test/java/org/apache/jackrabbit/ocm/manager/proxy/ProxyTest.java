@@ -63,7 +63,7 @@ public class ProxyTest extends TestBase {
 	public void testBeanProxy() {
 
 		try {
-			ObjectContentManager persistenceManager = this.getPersistenceManager();
+			ObjectContentManager ocm = this.getObjectContentManager();
 
 			Detail detail = new Detail();
 			detail.setField("FieldValue");			
@@ -76,14 +76,14 @@ public class ProxyTest extends TestBase {
 			main.setDetail(detail);
 			main.setProxyDetail(proxyDetail);
 							
-            persistenceManager.insert(main);
-			persistenceManager.save();
+            ocm.insert(main);
+			ocm.save();
 			
 			
 			//---------------------------------------------------------------------------------------------------------
 			// Retrieve the main object
 			//---------------------------------------------------------------------------------------------------------						
-			main = (Main) persistenceManager.getObject( "/test");
+			main = (Main) ocm.getObject( "/test");
 			assertNotNull("detail is null", main.getDetail());
 			assertTrue("Invalid detail bean", main.getDetail().getField().equals("FieldValue"));
 
@@ -108,14 +108,14 @@ public class ProxyTest extends TestBase {
 			main.setDetail(detail);
 			main.setProxyDetail(proxyDetail);
 			
-			persistenceManager.update(main);
-			persistenceManager.save();
+			ocm.update(main);
+			ocm.save();
 
 			//---------------------------------------------------------------------------------------------------------
 			// Retrieve the main object
 			//---------------------------------------------------------------------------------------------------------						
 
-			main = (Main) persistenceManager.getObject( "/test");
+			main = (Main) ocm.getObject( "/test");
 			assertNotNull("detail is null", main.getDetail());
 			assertTrue("Invalid detail bean", main.getDetail().getField().equals("AnotherFieldValue"));
 
@@ -138,7 +138,7 @@ public class ProxyTest extends TestBase {
 	public void testCollectionProxy() {
 
 		try {
-			ObjectContentManager persistenceManager = this.getPersistenceManager();
+			ObjectContentManager ocm = this.getObjectContentManager();
 
 			ArrayList  details= new ArrayList();
 			for(int i=1; i<=100;i++)
@@ -151,14 +151,14 @@ public class ProxyTest extends TestBase {
 			Main main = new Main();
 			main.setProxyCollection(details);
 			main.setPath("/test");							
-            persistenceManager.insert(main);
-			persistenceManager.save();
+            ocm.insert(main);
+			ocm.save();
 			
 			
 			//---------------------------------------------------------------------------------------------------------
 			// Retrieve the main object
 			//---------------------------------------------------------------------------------------------------------						
-			main = (Main) persistenceManager.getObject( "/test");
+			main = (Main) ocm.getObject( "/test");
 			assertNotNull("main is null", main);
 
             Collection result = main.getProxyCollection();
@@ -173,13 +173,13 @@ public class ProxyTest extends TestBase {
 			detail.setField("newFieldValue");			
 			result.add(detail);
 			main.setProxyCollection(result);
-			persistenceManager.update(main);
-			persistenceManager.save();
+			ocm.update(main);
+			ocm.save();
 
 			//---------------------------------------------------------------------------------------------------------
 			// Retrieve the main object
 			//---------------------------------------------------------------------------------------------------------						
-			main = (Main) persistenceManager.getObject("/test");
+			main = (Main) ocm.getObject("/test");
 			assertNotNull("main  is null", main);
             assertEquals("Invalide size",main.getProxyCollection().size(), 101);
             assertNull("nullcollectionproxy  is not null", main.getNullProxyCollection());
