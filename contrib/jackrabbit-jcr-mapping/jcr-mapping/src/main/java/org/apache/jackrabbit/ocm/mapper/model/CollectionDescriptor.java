@@ -156,7 +156,7 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
     
     /**
      * Set the collection class name. 
-     * This collection class has to implement {@link org.apache.jackrabbit.ocm.persistence.collectionconverter.ManageableCollection}
+     * This collection class has to implement {@link org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection}
      * @param collectionClassName The collection class name to set
      */
     public void setCollectionClassName(String collectionClassName)

@@ -22,10 +22,10 @@ import java.util.Map;
 
 import javax.jcr.ValueFactory;
 
+import org.apache.jackrabbit.ocm.manager.ManagerConstant;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.FieldDescriptor;
-import org.apache.jackrabbit.ocm.persistence.PersistenceConstant;
 import org.apache.jackrabbit.ocm.query.Filter;
 import org.apache.jackrabbit.ocm.query.Query;
 import org.apache.jackrabbit.ocm.query.QueryManager;
@@ -94,7 +94,7 @@ public class QueryManagerImpl implements QueryManager {
     private Filter buildDiscriminatorFilter(Query query, ClassDescriptor classDescriptor) {
         Filter discriminatorFilter = this.createFilter(query.getFilter().getFilterClass());
         if (!classDescriptor.isAbstract() && (! classDescriptor.isInterface()) ) {        
-            discriminatorFilter.addJCRExpression("@" + PersistenceConstant.DISCRIMINATOR_PROPERTY_NAME + "='" +    classDescriptor.getClassName() + "'");
+            discriminatorFilter.addJCRExpression("@" + ManagerConstant.DISCRIMINATOR_PROPERTY_NAME + "='" +    classDescriptor.getClassName() + "'");
         }
 
         if (classDescriptor.hasDescendants()) {
@@ -119,7 +119,7 @@ public class QueryManagerImpl implements QueryManager {
         String jcrNodeType = classDescriptor.getJcrNodeType();
         if (jcrNodeType == null || jcrNodeType.equals(""))
         	{
-           return PersistenceConstant.NT_UNSTRUCTURED;	
+           return ManagerConstant.NT_UNSTRUCTURED;	
         	}
         else
         {

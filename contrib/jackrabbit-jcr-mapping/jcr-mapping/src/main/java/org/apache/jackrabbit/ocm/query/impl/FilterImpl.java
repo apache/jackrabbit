@@ -24,8 +24,8 @@ import javax.jcr.ValueFactory;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
-import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.AtomicTypeConverter;
 import org.apache.jackrabbit.ocm.query.Filter;
 
 /**

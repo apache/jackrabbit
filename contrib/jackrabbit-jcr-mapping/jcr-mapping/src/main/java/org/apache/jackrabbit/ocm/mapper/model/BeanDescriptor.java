@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.ocm.mapper.model;
 
 
-import org.apache.jackrabbit.ocm.persistence.beanconverter.BeanConverter;
-import org.apache.jackrabbit.ocm.persistence.objectconverter.impl.ObjectConverterImpl;
+import org.apache.jackrabbit.ocm.manager.beanconverter.BeanConverter;
+import org.apache.jackrabbit.ocm.manager.objectconverter.impl.ObjectConverterImpl;
 import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
 
 /**

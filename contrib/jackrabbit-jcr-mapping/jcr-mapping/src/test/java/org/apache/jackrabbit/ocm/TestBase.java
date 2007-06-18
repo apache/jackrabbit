@@ -50,25 +50,25 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
+import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
+import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverterProvider;
+import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.BinaryTypeConverterImpl;
+import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.BooleanTypeConverterImpl;
+import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.ByteArrayTypeConverterImpl;
+import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.CalendarTypeConverterImpl;
+import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.DefaultAtomicTypeConverterProvider;
+import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.DoubleTypeConverterImpl;
+import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.IntTypeConverterImpl;
+import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.LongTypeConverterImpl;
+import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.StringTypeConverterImpl;
+import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.TimestampTypeConverterImpl;
+import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.UtilDateTypeConverterImpl;
+import org.apache.jackrabbit.ocm.manager.impl.PersistenceManagerImpl;
+import org.apache.jackrabbit.ocm.manager.inheritance.PersistenceManagerInheritanceHierarchyTest;
+import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
+import org.apache.jackrabbit.ocm.manager.objectconverter.impl.ObjectConverterImpl;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.impl.DigesterMapperImpl;
-import org.apache.jackrabbit.ocm.persistence.PersistenceManager;
-import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.AtomicTypeConverterProvider;
-import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.BinaryTypeConverterImpl;
-import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.BooleanTypeConverterImpl;
-import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.ByteArrayTypeConverterImpl;
-import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.CalendarTypeConverterImpl;
-import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.DefaultAtomicTypeConverterProvider;
-import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.DoubleTypeConverterImpl;
-import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.IntTypeConverterImpl;
-import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.LongTypeConverterImpl;
-import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.StringTypeConverterImpl;
-import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.TimestampTypeConverterImpl;
-import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.UtilDateTypeConverterImpl;
-import org.apache.jackrabbit.ocm.persistence.impl.PersistenceManagerImpl;
-import org.apache.jackrabbit.ocm.persistence.inheritance.PersistenceManagerInheritanceHierarchyTest;
-import org.apache.jackrabbit.ocm.persistence.objectconverter.ObjectConverter;
-import org.apache.jackrabbit.ocm.persistence.objectconverter.impl.ObjectConverterImpl;
 import org.apache.jackrabbit.ocm.query.QueryManager;
 import org.apache.jackrabbit.ocm.query.impl.QueryManagerImpl;
 import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
@@ -91,7 +91,7 @@ public abstract class TestBase extends TestCase
 	
 	protected Session session;
 
-	protected PersistenceManager persistenceManager;
+	protected ObjectContentManager persistenceManager;
 
 	protected Mapper mapper;
     
@@ -146,7 +146,7 @@ public abstract class TestBase extends TestCase
 	 * 
 	 * @return jcrSession
 	 */
-	public PersistenceManager getPersistenceManager()
+	public ObjectContentManager getPersistenceManager()
 	{
 		try
 		{
@@ -211,7 +211,7 @@ public abstract class TestBase extends TestCase
 	 * @param persistenceManager
 	 *            The persistence manager
 	 */
-	public void setPersistenceManager(PersistenceManager persistenceManager)
+	public void setPersistenceManager(ObjectContentManager persistenceManager)
 	{
 		this.persistenceManager = persistenceManager;
 	}
