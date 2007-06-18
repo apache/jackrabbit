@@ -41,14 +41,14 @@ import org.apache.jackrabbit.ocm.testmodel.interfaces.Interface;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class PersistenceManagerInterfaceHierarchyTest extends TestBase {
-	private final static Log log = LogFactory.getLog(PersistenceManagerInterfaceHierarchyTest.class);
+public class ObjectContentManagerInterfaceHierarchyTest extends TestBase {
+	private final static Log log = LogFactory.getLog(ObjectContentManagerInterfaceHierarchyTest.class);
 
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public PersistenceManagerInterfaceHierarchyTest(String testName) throws Exception {
+	public ObjectContentManagerInterfaceHierarchyTest(String testName) throws Exception {
 		super(testName);
 
 	}
@@ -56,7 +56,7 @@ public class PersistenceManagerInterfaceHierarchyTest extends TestBase {
 	public static Test suite() {
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(new TestSuite(
-				PersistenceManagerInterfaceHierarchyTest.class));
+				ObjectContentManagerInterfaceHierarchyTest.class));
 	}
 
 	public void tearDown() throws Exception {
@@ -70,7 +70,7 @@ public class PersistenceManagerInterfaceHierarchyTest extends TestBase {
 	public void testRetrieveSingleton() {
 
 		try {
-			ObjectContentManager persistenceManager = this.getPersistenceManager();
+			ObjectContentManager ocm = this.getObjectContentManager();
 
 			//---------------------------------------------------------------------------------------------------------
 			// Insert 
@@ -79,14 +79,14 @@ public class PersistenceManagerInterfaceHierarchyTest extends TestBase {
 			anotherDescendant.setAnotherDescendantField("anotherDescendantValue");
 			anotherDescendant.setAncestorField("ancestorValue");
 			anotherDescendant.setPath("/test");
-			persistenceManager.insert(anotherDescendant);
+			ocm.insert(anotherDescendant);
 
-			persistenceManager.save();
+			ocm.save();
 
 			//---------------------------------------------------------------------------------------------------------
 			// Retrieve 
 			//---------------------------------------------------------------------------------------------------------						
-			Interface result =  (Interface) persistenceManager.getObject("/test");
+			Interface result =  (Interface) ocm.getObject("/test");
 			assertNotNull("Object is null", result);
 			anotherDescendant = (AnotherDescendant) result; 
 			
@@ -104,7 +104,7 @@ public class PersistenceManagerInterfaceHierarchyTest extends TestBase {
 	
 	public void testRetrieveCollection() {
 		
-		ObjectContentManager persistenceManager = this.getPersistenceManager();
+		ObjectContentManager ocm = this.getObjectContentManager();
 
 		//---------------------------------------------------------------------------------------------------------	
 		// Insert  descendant objects
@@ -113,63 +113,63 @@ public class PersistenceManagerInterfaceHierarchyTest extends TestBase {
 		descendant.setDescendantField("descendantValue");
 		descendant.setAncestorField("ancestorValue");
 		descendant.setPath("/descendant1");
-		persistenceManager.insert(descendant);
+		ocm.insert(descendant);
 
 		descendant = new Descendant();
 		descendant.setDescendantField("descendantValue2");
 		descendant.setAncestorField("ancestorValue2");
 		descendant.setPath("/descendant2");
-		persistenceManager.insert(descendant);
+		ocm.insert(descendant);
 
 		SubDescendant subDescendant = new SubDescendant();
 		subDescendant.setDescendantField("descendantValue2");
 		subDescendant.setAncestorField("ancestorValue2");
 		subDescendant.setPath("/subdescendant");
 		subDescendant.setSubDescendantField("subdescendantvalue");
-		persistenceManager.insert(subDescendant);		
+		ocm.insert(subDescendant);		
 
 		 subDescendant = new SubDescendant();
 		subDescendant.setDescendantField("descendantValue3");
 		subDescendant.setAncestorField("ancestorValue2");
 		subDescendant.setPath("/subdescendant2");
 		subDescendant.setSubDescendantField("subdescendantvalue1");
-		persistenceManager.insert(subDescendant);		
+		ocm.insert(subDescendant);		
 		
 		
 		AnotherDescendant anotherDescendant = new AnotherDescendant();
 		anotherDescendant.setAnotherDescendantField("anotherDescendantValue");
 		anotherDescendant.setAncestorField("ancestorValue3");
 		anotherDescendant.setPath("/anotherdescendant1");
-		persistenceManager.insert(anotherDescendant);
+		ocm.insert(anotherDescendant);
 
 		anotherDescendant = new AnotherDescendant();
 		anotherDescendant.setAnotherDescendantField("anotherDescendantValue");
 		anotherDescendant.setAncestorField("ancestorValue4");
 		anotherDescendant.setPath("/anotherdescendant2");
-		persistenceManager.insert(anotherDescendant);
+		ocm.insert(anotherDescendant);
 
 		anotherDescendant = new AnotherDescendant();
 		anotherDescendant.setAnotherDescendantField("anotherDescendantValue2");
 		anotherDescendant.setAncestorField("ancestorValue5");
 		anotherDescendant.setPath("/anotherdescendant3");
-		persistenceManager.insert(anotherDescendant);
+		ocm.insert(anotherDescendant);
 
 		
 		Atomic a = new Atomic();
 		a.setPath("/atomic");
 		a.setBooleanPrimitive(true);
-		persistenceManager.insert(a);
+		ocm.insert(a);
 
-		persistenceManager.save();
+		ocm.save();
 
 		//---------------------------------------------------------------------------------------------------------	
 		// Retrieve Descendant class (implements  Interface.class)
 		//---------------------------------------------------------------------------------------------------------			
-		QueryManager queryManager = persistenceManager.getQueryManager();
+		QueryManager queryManager = ocm.getQueryManager();
 		Filter filter = queryManager.createFilter(Interface.class);
 		Query query = queryManager.createQuery(filter);
 
-		Collection result = persistenceManager.getObjects(query);
+		Collection result = ocm.getObjects(query);
 		assertEquals("Invalid number of  interface  found", result.size(),3);
 		assertTrue("Invalid item in the collection", this.contains(result, "/anotherdescendant1", AnotherDescendant.class));
 		assertTrue("Invalid item in the collection", this.contains(result, "/anotherdescendant2", AnotherDescendant.class));
@@ -179,11 +179,11 @@ public class PersistenceManagerInterfaceHierarchyTest extends TestBase {
 		//---------------------------------------------------------------------------------------------------------	
 		// Retrieve Descendant class and its children (implements  AnotherInterface.class)
 		//---------------------------------------------------------------------------------------------------------			
-	    queryManager = persistenceManager.getQueryManager();
+	    queryManager = ocm.getQueryManager();
 		filter = queryManager.createFilter(AnotherInterface.class);
 		query = queryManager.createQuery(filter);
 
-		result = persistenceManager.getObjects(query);
+		result = ocm.getObjects(query);
 		assertEquals("Invalid number of  interface  found", result.size(),4);
 		assertTrue("Invalid item in the collection", this.contains(result, "/descendant1", Descendant.class));
 		assertTrue("Invalid item in the collection", this.contains(result, "/descendant2", Descendant.class));

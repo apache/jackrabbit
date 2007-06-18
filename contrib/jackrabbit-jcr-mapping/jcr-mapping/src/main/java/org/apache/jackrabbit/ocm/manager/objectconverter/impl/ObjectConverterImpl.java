@@ -31,7 +31,7 @@ import javax.jcr.nodetype.NodeTypeManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
-import org.apache.jackrabbit.ocm.exception.PersistenceException;
+import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.manager.ManagerConstant;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverterProvider;
 import org.apache.jackrabbit.ocm.manager.beanconverter.BeanConverter;
@@ -41,7 +41,7 @@ import org.apache.jackrabbit.ocm.manager.collectionconverter.CollectionConverter
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollectionUtil;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.DefaultCollectionConverterImpl;
-import org.apache.jackrabbit.ocm.manager.impl.PersistenceUtil;
+import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerUtil;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ProxyManager;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
@@ -60,7 +60,7 @@ import org.apache.jackrabbit.ocm.repository.RepositoryUtil;
  */
 public class ObjectConverterImpl implements ObjectConverter {
 
-	private static final String DEFAULT_BEAN_CONVERTER = "org.apache.jackrabbit.ocm.persistence.beanconverter.impl.DefaultBeanConverterImpl";
+	private static final String DEFAULT_BEAN_CONVERTER = "org.apache.jackrabbit.ocm.manager.beanconverter.impl.DefaultBeanConverterImpl";
 
 	private final static Log log = LogFactory.getLog(ObjectConverterImpl.class);
 
@@ -146,7 +146,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 			this.insert(session, parentNode, nodeName, object);
 
 		} catch (PathNotFoundException pnfe) {
-			throw new PersistenceException("Impossible to insert the object at '" + path + "'", pnfe);
+			throw new ObjectContentManagerException("Impossible to insert the object at '" + path + "'", pnfe);
 		} catch (RepositoryException re) {
 			throw new org.apache.jackrabbit.ocm.exception.RepositoryException("Impossible to insert the object at '" + path
 					+ "'", re);
@@ -173,7 +173,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 		} catch (NoSuchNodeTypeException nsnte) {
 			throw new JcrMappingException("Unknown node type " + jcrNodeType + " for mapped class " + object.getClass(), nsnte);
 		} catch (RepositoryException re) {
-			throw new PersistenceException("Cannot create new node of type " + jcrNodeType + " from mapped class "
+			throw new ObjectContentManagerException("Cannot create new node of type " + jcrNodeType + " from mapped class "
 					+ object.getClass(), re);
 		}
 
@@ -212,7 +212,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 		} catch (NoSuchNodeTypeException nsnte) {
 			throw new JcrMappingException("Unknown mixin type " + mixinTypeName + " for mapped class " + object.getClass(), nsnte);
 		} catch (RepositoryException re) {
-			throw new PersistenceException("Cannot create new node of type " + jcrNodeType + " from mapped class "
+			throw new ObjectContentManagerException("Cannot create new node of type " + jcrNodeType + " from mapped class "
 					+ object.getClass(), re);
 		}
 
@@ -233,7 +233,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 			Node parentNode = (Node) session.getItem(parentPath);
 			this.update(session, parentNode, nodeName, object);
 		} catch (PathNotFoundException pnfe) {
-			throw new PersistenceException("Impossible to update the object at '" + path + "'", pnfe);
+			throw new ObjectContentManagerException("Impossible to update the object at '" + path + "'", pnfe);
 		} catch (RepositoryException re) {
 			throw new org.apache.jackrabbit.ocm.exception.RepositoryException("Impossible to update the object at '" + path
 					+ "'", re);
@@ -258,7 +258,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 			updateBeanFields(session, object, classDescriptor, objectNode);
 			updateCollectionFields(session, object, classDescriptor, objectNode);
 		} catch (PathNotFoundException pnfe) {
-			throw new PersistenceException("Impossible to update the object: " + nodeName + " at node : " + parentNode, pnfe);
+			throw new ObjectContentManagerException("Impossible to update the object: " + nodeName + " at node : " + parentNode, pnfe);
 		} catch (RepositoryException re) {
 			throw new org.apache.jackrabbit.ocm.exception.RepositoryException("Impossible to update the object: "
 					+ nodeName + " at node : " + parentNode, re);
@@ -310,11 +310,10 @@ public class ObjectConverterImpl implements ObjectConverter {
 			retrieveCollectionFields(session, classDescriptor, node, object, false);
 			
 			return object;
-//		} catch (ClassNotFoundException clnf) {
-//			throw new PersistenceException("Impossible to instantiate the object at " + path, clnf);
+		
 		} catch (PathNotFoundException pnfe) {
 			// HINT should never get here
-			throw new PersistenceException("Impossible to get the object at " + path, pnfe);
+			throw new ObjectContentManagerException("Impossible to get the object at " + path, pnfe);
 		} catch (RepositoryException re) {
 			throw new org.apache.jackrabbit.ocm.exception.RepositoryException("Impossible to get the object at " + path, re);
 		}
@@ -350,7 +349,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 			Object object = null;
 			if (classDescriptor.usesNodeTypePerHierarchyStrategy()) {
 				if (!node.hasProperty(ManagerConstant.DISCRIMINATOR_PROPERTY_NAME)) {
-					throw new PersistenceException("Cannot fetch object of type '" + clazz.getName()
+					throw new ObjectContentManagerException("Cannot fetch object of type '" + clazz.getName()
 							+ "' using NODETYPE_PER_HIERARCHY. Discriminator property is not present.");
 				}
 
@@ -378,11 +377,9 @@ public class ObjectConverterImpl implements ObjectConverter {
 			retrieveCollectionFields(session, classDescriptor, node, object, false);
 			
 			return object;
-//		} catch (ClassNotFoundException clnf) {
-//			throw new PersistenceException("Impossible to instantiate the object at " + path, clnf);
 		} catch (PathNotFoundException pnfe) {
 			// HINT should never get here
-			throw new PersistenceException("Impossible to get the object at " + path, pnfe);
+			throw new ObjectContentManagerException("Impossible to get the object at " + path, pnfe);
 		} catch (RepositoryException re) {
 			throw new org.apache.jackrabbit.ocm.exception.RepositoryException("Impossible to get the object at " + path, re);
 		}
@@ -400,7 +397,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 			
 		} catch (PathNotFoundException pnfe) {
 
-			throw new PersistenceException("Impossible to get the object at " + path, pnfe);
+			throw new ObjectContentManagerException("Impossible to get the object at " + path, pnfe);
 		} catch (RepositoryException re) {
 			throw new org.apache.jackrabbit.ocm.exception.RepositoryException("Impossible to get the object at " + path, re);
 		}
@@ -429,14 +426,14 @@ public class ObjectConverterImpl implements ObjectConverter {
 				}
 				else
 				{
-					throw new PersistenceException("Impossible to retrieve the mapped attribute. The attribute '" + 
+					throw new ObjectContentManagerException("Impossible to retrieve the mapped attribute. The attribute '" + 
 							                                                         attributeName + "'  is not a bean or a collection for the class : " + classDescriptor.getClassName());
 				}
 			}
 			
 		} catch (PathNotFoundException pnfe) {
 
-			throw new PersistenceException("Impossible to get the object at " + path, pnfe);
+			throw new ObjectContentManagerException("Impossible to get the object at " + path, pnfe);
 		} catch (RepositoryException re) {
 			throw new org.apache.jackrabbit.ocm.exception.RepositoryException("Impossible to get the object at " + path, re);
 		}
@@ -494,7 +491,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 	 *            <tt>node</tt> is a version node, <tt>false</tt> if no
 	 *            check against version node should be performed
 	 * 
-	 * @throws PersistenceException
+	 * @throws ObjectContentManagerException
 	 *             thrown if node types are incompatible
 	 * @throws org.apache.jackrabbit.ocm.exception.RepositoryException
 	 *             thrown if an error occured in the underlying repository
@@ -514,7 +511,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 			}
 
 			if (!compatible) {
-				throw new PersistenceException("Cannot map object of type '" + classDescriptor.getClassName() + "'. Node type '"
+				throw new ObjectContentManagerException("Cannot map object of type '" + classDescriptor.getClassName() + "'. Node type '"
 						+ node.getPrimaryNodeType().getName() + "' does not match descriptor node type '"
 						+ classDescriptor.getJcrNodeType() + "'");
 			}
@@ -596,7 +593,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 		
 
 		String beanName = beanDescriptor.getFieldName();
-		String beanPath = PersistenceUtil.getPath(session, beanDescriptor, node);
+		String beanPath = ObjectContentManagerUtil.getPath(session, beanDescriptor, node);
 	    
 		Object bean = null;
 		if (requestObjectCache.isCached(beanPath))

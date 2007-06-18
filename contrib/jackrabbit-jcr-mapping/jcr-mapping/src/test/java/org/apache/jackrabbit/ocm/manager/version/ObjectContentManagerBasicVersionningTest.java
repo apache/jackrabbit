@@ -21,16 +21,16 @@ import org.apache.jackrabbit.ocm.version.VersionIterator;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class PersistenceManagerBasicVersionningTest extends TestBase
+public class ObjectContentManagerBasicVersionningTest extends TestBase
 {
-	private final static Log log = LogFactory.getLog(PersistenceManagerBasicVersionningTest.class);
+	private final static Log log = LogFactory.getLog(ObjectContentManagerBasicVersionningTest.class);
 	private Date date = new Date();
 	
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public PersistenceManagerBasicVersionningTest(String testName) throws Exception
+	public ObjectContentManagerBasicVersionningTest(String testName) throws Exception
 	{
 		super(testName);
 		
@@ -40,21 +40,21 @@ public class PersistenceManagerBasicVersionningTest extends TestBase
 	{
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(
-                new TestSuite(PersistenceManagerBasicVersionningTest.class));
+                new TestSuite(ObjectContentManagerBasicVersionningTest.class));
 	}
 
     public void tearDown() throws Exception
     {
-    	ObjectContentManager persistenceManager = getPersistenceManager();
-	    persistenceManager.remove("/page");
-    	persistenceManager.save();
+    	ObjectContentManager ocm = getObjectContentManager();
+	    ocm.remove("/page");
+    	ocm.save();
        
         super.tearDown();
     }	
 
 	public void testSimpleVersion()
 	{
-		     ObjectContentManager persistenceManager = getPersistenceManager();
+		     ObjectContentManager ocm = getObjectContentManager();
              try
              {
             	 
@@ -63,23 +63,23 @@ public class PersistenceManagerBasicVersionningTest extends TestBase
             	 page.setTitle("Page Title");            	 
             	 page.addParagraph(new Paragraph("para1"));
             	 page.addParagraph(new Paragraph("para2"));
-            	 persistenceManager.insert(page);
-            	 persistenceManager.save();
+            	 ocm.insert(page);
+            	 ocm.save();
             	 
                  
             	 page.addParagraph(new Paragraph("para3"));
-            	 persistenceManager.checkout("/page");
-            	 persistenceManager.update(page);
-            	 persistenceManager.save();
-            	 persistenceManager.checkin("/page");
+            	 ocm.checkout("/page");
+            	 ocm.update(page);
+            	 ocm.save();
+            	 ocm.checkin("/page");
             	 
             	 page.addParagraph(new Paragraph("para4"));
-            	 persistenceManager.checkout("/page");
-            	 persistenceManager.update(page);
-            	 persistenceManager.save();
-            	 persistenceManager.checkin("/page");            	 
+            	 ocm.checkout("/page");
+            	 ocm.update(page);
+            	 ocm.save();
+            	 ocm.checkin("/page");            	 
 
-            	 VersionIterator versionIterator = persistenceManager.getAllVersions("/page");
+            	 VersionIterator versionIterator = ocm.getAllVersions("/page");
             	 assertNotNull("VersionIterator is null", versionIterator);
             	 assertTrue("Invalid number of versions found", versionIterator.getSize() == 3);
             	 
@@ -90,21 +90,21 @@ public class PersistenceManagerBasicVersionningTest extends TestBase
             		 
             	 }
             	 
-            	 Version baseVersion = persistenceManager.getBaseVersion("/page");
+            	 Version baseVersion = ocm.getBaseVersion("/page");
             	 System.out.println("Base version : " + baseVersion.getName());
 
-            	 Version rootVersion = persistenceManager.getRootVersion("/page");
+            	 Version rootVersion = ocm.getRootVersion("/page");
             	 System.out.println("Root version : " + rootVersion.getName());
             	 //this.exportDocument("/home/christophe/export.xml", "/jcr:system/jcr:versionStorage", true, false);
             	             	
                  //Get the latest version 
-            	 page = (Page) persistenceManager.getObject( "/page");
+            	 page = (Page) ocm.getObject( "/page");
             	 assertNotNull("Last version is nulll", page);
             	 assertTrue("Invalid number of paragraph found in the last  version", page.getParagraphs().size() == 4);
 
             	 
             	 //Get the object matching to the first version 
-                 Page  page1 = (Page) persistenceManager.getObject( "/page", "1.0");
+                 Page  page1 = (Page) ocm.getObject( "/page", "1.0");
             	 assertNotNull("version 1.0 object is null", page1);
             	 assertTrue("Invalid number of paragraph found in the root version", page1.getParagraphs().size() == 3);
 
@@ -120,7 +120,7 @@ public class PersistenceManagerBasicVersionningTest extends TestBase
 	
 	public void testVersionLabels()
 	{
-		     ObjectContentManager persistenceManager = getPersistenceManager();
+		     ObjectContentManager ocm = getObjectContentManager();
              try
              {
             	 
@@ -129,26 +129,26 @@ public class PersistenceManagerBasicVersionningTest extends TestBase
             	 page.setTitle("Page Title");            	 
             	 page.addParagraph(new Paragraph("para1"));
             	 page.addParagraph(new Paragraph("para2"));
-            	 persistenceManager.insert(page);
-            	 persistenceManager.save();
+            	 ocm.insert(page);
+            	 ocm.save();
             	 
                  
             	 page.addParagraph(new Paragraph("para3"));
-            	 persistenceManager.checkout("/page");
-            	 persistenceManager.update(page);
-            	 persistenceManager.save();
-            	 persistenceManager.checkin("/page", new String[] {"A", "B"});
+            	 ocm.checkout("/page");
+            	 ocm.update(page);
+            	 ocm.save();
+            	 ocm.checkin("/page", new String[] {"A", "B"});
             	 
             	 page.addParagraph(new Paragraph("para4"));
-            	 persistenceManager.checkout("/page");
-            	 persistenceManager.update(page);
-            	 persistenceManager.save();
-            	 persistenceManager.checkin("/page", new String[] {"C", "D"});         	 
+            	 ocm.checkout("/page");
+            	 ocm.update(page);
+            	 ocm.save();
+            	 ocm.checkin("/page", new String[] {"C", "D"});         	 
 
-            	 String[] allLabels = persistenceManager.getAllVersionLabels("/page");
+            	 String[] allLabels = ocm.getAllVersionLabels("/page");
             	 assertTrue("Incorrect number of labels", allLabels.length == 4);
 
-            	 String[] versionLabels = persistenceManager.getVersionLabels("/page", "1.1");
+            	 String[] versionLabels = ocm.getVersionLabels("/page", "1.1");
             	 assertTrue("Incorrect number of labels", versionLabels.length == 2);
             	 assertTrue("Incorrect label", versionLabels[0].equals("C") || versionLabels[0].equals("D"));
             	 assertTrue("Incorrect label", versionLabels[1].equals("C") || versionLabels[0].equals("D"));

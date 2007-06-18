@@ -17,10 +17,10 @@
 		<field-descriptor fieldName="doublePrimitive" jcrName="doublePrimitive" />
 		<field-descriptor fieldName="inputStream" jcrName="inputStream" />
 		<field-descriptor fieldName="timestamp" jcrName="timestamp" />
-		<field-descriptor fieldName="int2boolean" jcrName="int2boolean" converter="org.apache.jackrabbit.ocm.persistence.atomic.Int2BooleanTypeConverterImpl" />
-		<field-descriptor fieldName="namedProperty" jcrName="namedProperty" converter="org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.NameTypeConverterImpl" />
-		<field-descriptor fieldName="pathProperty" jcrName="pathProperty" converter="org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.PathTypeConverterImpl" />
-		<field-descriptor fieldName="undefinedProperty" jcrName="undefinedProperty" converter="org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.UndefinedTypeConverterImpl" />
+		<field-descriptor fieldName="int2boolean" jcrName="int2boolean" converter="org.apache.jackrabbit.ocm.manager.atomic.Int2BooleanTypeConverterImpl" />
+		<field-descriptor fieldName="namedProperty" jcrName="namedProperty" converter="org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.NameTypeConverterImpl" />
+		<field-descriptor fieldName="pathProperty" jcrName="pathProperty" converter="org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.PathTypeConverterImpl" />
+		<field-descriptor fieldName="undefinedProperty" jcrName="undefinedProperty" converter="org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.UndefinedTypeConverterImpl" />
 	</class-descriptor>
 
     <class-descriptor
@@ -29,11 +29,11 @@
 		<field-descriptor fieldName="name" jcrName="name" />
 		<collection-descriptor fieldName="multiValues" jcrName="multiValue" proxy="false" 
 		                       elementClassName="java.lang.String" 
-		                       collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.MultiValueCollectionConverterImpl" />
+		                       collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.MultiValueCollectionConverterImpl" />
 
 		<collection-descriptor fieldName="nullMultiValues" jcrName="nullMultiValue" proxy="false" 
 		                       elementClassName="java.lang.String" 
-		                       collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.MultiValueCollectionConverterImpl" />
+		                       collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.MultiValueCollectionConverterImpl" />
 		                       
 
 	</class-descriptor> 

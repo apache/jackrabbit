@@ -63,10 +63,10 @@ public class MultiValueCollectionConverterImplTest extends TestBase
      */
     public void tearDown() throws Exception
     {
-        if (getPersistenceManager().objectExists("/test"))
+        if (getObjectContentManager().objectExists("/test"))
         {
-            getPersistenceManager().remove("/test");
-            getPersistenceManager().save();
+            getObjectContentManager().remove("/test");
+            getObjectContentManager().save();
         }        
     	
         super.tearDown();
@@ -76,7 +76,7 @@ public class MultiValueCollectionConverterImplTest extends TestBase
     {
         try
         {
-        	ObjectContentManager persistenceManager = getPersistenceManager();
+        	ObjectContentManager ocm = getObjectContentManager();
 
             // --------------------------------------------------------------------------------
             // Create and store an object graph in the repository
@@ -92,13 +92,13 @@ public class MultiValueCollectionConverterImplTest extends TestBase
             values.add("Value4");
             multiValue.setMultiValues(values);
             
-            persistenceManager.insert(multiValue);
-            persistenceManager.save();
+            ocm.insert(multiValue);
+            ocm.save();
             
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            multiValue = (MultiValue) persistenceManager.getObject( "/test");
+            multiValue = (MultiValue) ocm.getObject( "/test");
             assertNotNull("Object is null", multiValue);
             assertNull("nullMultiValues field is not null", multiValue.getNullMultiValues());
             assertTrue("Incorrect number of values", multiValue.getMultiValues().size() == 4);            
@@ -115,14 +115,14 @@ public class MultiValueCollectionConverterImplTest extends TestBase
             values.add("Value5");
             multiValue.setMultiValues(values);
             
-            persistenceManager.update(multiValue);
-            persistenceManager.save();
+            ocm.update(multiValue);
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
 
-            multiValue = (MultiValue) persistenceManager.getObject( "/test");
+            multiValue = (MultiValue) ocm.getObject( "/test");
             assertNotNull("Object is null", multiValue);
             assertNull("nullMultiValues field is not null", multiValue.getNullMultiValues());
             assertTrue("Incorrect number of values", multiValue.getMultiValues().size() == 5);            

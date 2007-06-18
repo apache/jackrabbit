@@ -63,8 +63,8 @@ import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.LongTypeConver
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.StringTypeConverterImpl;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.TimestampTypeConverterImpl;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.UtilDateTypeConverterImpl;
-import org.apache.jackrabbit.ocm.manager.impl.PersistenceManagerImpl;
-import org.apache.jackrabbit.ocm.manager.inheritance.PersistenceManagerInheritanceHierarchyTest;
+import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl;
+import org.apache.jackrabbit.ocm.manager.inheritance.ObjectContentManagerInheritanceHierarchyTest;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 import org.apache.jackrabbit.ocm.manager.objectconverter.impl.ObjectConverterImpl;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
@@ -91,7 +91,7 @@ public abstract class TestBase extends TestCase
 	
 	protected Session session;
 
-	protected ObjectContentManager persistenceManager;
+	protected ObjectContentManager ocm;
 
 	protected Mapper mapper;
     
@@ -121,7 +121,7 @@ public abstract class TestBase extends TestCase
 			super.setUp();
 	        
 	        if (!isInit) {
-	            initPersistenceManager();
+	            initObjectContentManager();
 	            registerNodeTypes(getSession());
 	            isInit = true;
 	        }
@@ -142,20 +142,20 @@ public abstract class TestBase extends TestCase
 	}
 
 	/**
-	 * Getter for property persistenceManager.
+	 * Getter for property ocm.
 	 * 
 	 * @return jcrSession
 	 */
-	public ObjectContentManager getPersistenceManager()
+	public ObjectContentManager getObjectContentManager()
 	{
 		try
 		{
-			if (persistenceManager == null)
+			if (ocm == null)
 			{
-				initPersistenceManager();
+				initObjectContentManager();
                 registerNodeTypes(getSession());
 			}
-			return persistenceManager;
+			return ocm;
 		}
 		catch (Exception e)
 		{
@@ -190,7 +190,7 @@ public abstract class TestBase extends TestCase
         }
     }
     
-	protected void initPersistenceManager() throws UnsupportedRepositoryOperationException, javax.jcr.RepositoryException
+	protected void initObjectContentManager() throws UnsupportedRepositoryOperationException, javax.jcr.RepositoryException
 	{
 		Repository repository = RepositoryUtil.getRepository("repositoryTest");
 		String[] files = { "./src/test/test-config/jcrmapping.xml", 
@@ -201,19 +201,19 @@ public abstract class TestBase extends TestCase
                            "./src/test/test-config/jcrmapping-jcrnodetypes.xml", 
                            "./src/test/test-config/jcrmapping-uuid.xml"};
 		session = RepositoryUtil.login(repository, "superuser", "superuser");
-		persistenceManager = new PersistenceManagerImpl(session, files);
+		ocm = new ObjectContentManagerImpl(session, files);
 		
 	}
 
 	/**
 	 * Setter for property jcrSession.
 	 * 
-	 * @param persistenceManager
-	 *            The persistence manager
+	 * @param ocm
+	 *            The object content manager
 	 */
-	public void setPersistenceManager(ObjectContentManager persistenceManager)
+	public void setObjectContentManager(ObjectContentManager ocm)
 	{
-		this.persistenceManager = persistenceManager;
+		this.ocm = ocm;
 	}
 
 	public void exportDocument(String filePath, String nodePath, boolean skipBinary, boolean noRecurse)
@@ -257,7 +257,7 @@ public abstract class TestBase extends TestCase
 
 	public QueryManager getQueryManager()
 	{
-		return persistenceManager.getQueryManager();
+		return ocm.getQueryManager();
 	}
 	
     protected boolean contains(Collection result, String path, Class objectClass)

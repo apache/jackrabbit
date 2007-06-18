@@ -58,10 +58,10 @@ public class ArrayListTest extends TestBase
      */
     public void tearDown() throws Exception
     {
-        if (getPersistenceManager().objectExists("/test"))
+        if (getObjectContentManager().objectExists("/test"))
         {
-            getPersistenceManager().remove("/test");
-            getPersistenceManager().save();
+            getObjectContentManager().remove("/test");
+            getObjectContentManager().save();
         }        
     	
         super.tearDown();
@@ -71,7 +71,7 @@ public class ArrayListTest extends TestBase
     {
         try
         {
-        	ObjectContentManager persistenceManager = getPersistenceManager();
+        	ObjectContentManager ocm = getObjectContentManager();
         	
 
             // --------------------------------------------------------------------------------
@@ -83,13 +83,13 @@ public class ArrayListTest extends TestBase
             main.setPath("/test");
             main.setText("Main text");
             
-            persistenceManager.insert(main);
-            persistenceManager.save();
+            ocm.insert(main);
+            ocm.save();
             
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            main = (Main) persistenceManager.getObject( "/test");
+            main = (Main) ocm.getObject( "/test");
             ArrayList arrayList = main.getList();
             assertNull("main.getList is not null", arrayList ); 
             
@@ -109,13 +109,13 @@ public class ArrayListTest extends TestBase
             arrayListElement.add(e2);
             
             main.setList(arrayListElement);
-            persistenceManager.update(main);
-            persistenceManager.save();
+            ocm.update(main);
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            main = (Main) persistenceManager.getObject( "/test");
+            main = (Main) ocm.getObject( "/test");
             arrayList = main.getList();
             assertNotNull("main.getList is null", arrayList ); 
             Element[] elements = (Element[]) arrayList.toArray(new Element[arrayList.size()]);
@@ -142,13 +142,13 @@ public class ArrayListTest extends TestBase
             
             main.setList(arrayListElement);            
             
-            persistenceManager.update(main);
-            persistenceManager.save();
+            ocm.update(main);
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            main = (Main) persistenceManager.getObject( "/test");
+            main = (Main) ocm.getObject( "/test");
             arrayList = main.getList();
             assertNotNull("main.getList() is null", arrayList ); 
             elements = (Element[]) arrayList.toArray(new Element[arrayList.size()]);

@@ -34,9 +34,9 @@ public class AllTests {
     }
 
     public static Test buildSuite() {
-        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.persistence.version");
+        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.manager.version");
         //$JUnit-BEGIN$
-        suite.addTestSuite(PersistenceManagerBasicVersionningTest.class);
+        suite.addTestSuite(ObjectContentManagerBasicVersionningTest.class);
        
         
         //$JUnit-END$

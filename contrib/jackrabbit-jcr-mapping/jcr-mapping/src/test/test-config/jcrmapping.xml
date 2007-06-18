@@ -72,13 +72,13 @@
 		<field-descriptor fieldName="title" jcrName="ocm:title" />
 		<collection-descriptor fieldName="paragraphs" proxy="false" 
 		                       elementClassName="org.apache.jackrabbit.ocm.testmodel.Paragraph" 
-		                       collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.NTCollectionConverterImpl" />
+		                       collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl" />
 	</class-descriptor>
 
 	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Paragraph" jcrNodeType="ocm:paragraph" discriminator="false" >
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="text" jcrName="ocm:text"/>
-    	<bean-descriptor fieldName="page" jcrName="page" proxy="true" converter="org.apache.jackrabbit.ocm.persistence.beanconverter.impl.ParentBeanConverterImpl" />		
+    	<bean-descriptor fieldName="page" jcrName="page" proxy="true" converter="org.apache.jackrabbit.ocm.manager.beanconverter.impl.ParentBeanConverterImpl" />		
 	</class-descriptor>
 
 
@@ -114,8 +114,8 @@
         <collection-descriptor fieldName="elements" proxy="false" 
                                jcrName="value*"
                                elementClassName="java.lang.String"
-                               collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.ResidualPropertiesCollectionConverterImpl" 
-                               collectionClassName="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.ManagedHashMap" />
+                               collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ResidualPropertiesCollectionConverterImpl" 
+                               collectionClassName="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManagedHashMap" />
                                
     </class-descriptor>
 
@@ -124,8 +124,8 @@
         <collection-descriptor fieldName="elements" proxy="false" 
                                jcrName="value*"
                                elementClassName="java.lang.Object"
-                               collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.ResidualNodesCollectionConverterImpl" 
-                               collectionClassName="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.ManagedHashMap" />
+                               collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ResidualNodesCollectionConverterImpl" 
+                               collectionClassName="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManagedHashMap" />
                                
     </class-descriptor>
 </jackrabbit-ocm>

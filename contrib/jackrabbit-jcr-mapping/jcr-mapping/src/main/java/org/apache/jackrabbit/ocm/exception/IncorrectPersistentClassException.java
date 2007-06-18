@@ -19,7 +19,7 @@ package org.apache.jackrabbit.ocm.exception;
 
 
 /**
- * Occurs when the persistence manager try to manage an object which is not based on a persistent class.
+ * Occurs when the ocm try to manage an object which is not based on a persistent class.
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */

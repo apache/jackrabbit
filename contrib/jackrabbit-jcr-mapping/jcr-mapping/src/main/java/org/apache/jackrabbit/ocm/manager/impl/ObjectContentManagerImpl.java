@@ -44,7 +44,7 @@ import org.apache.jackrabbit.ocm.exception.IllegalUnlockException;
 import org.apache.jackrabbit.ocm.exception.IncorrectPersistentClassException;
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
 import org.apache.jackrabbit.ocm.exception.LockedException;
-import org.apache.jackrabbit.ocm.exception.PersistenceException;
+import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.exception.VersionException;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.DefaultAtomicTypeConverterProvider;
@@ -71,11 +71,11 @@ import org.apache.jackrabbit.ocm.lock.Lock;
  * @author Martin Koci
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
-public class PersistenceManagerImpl implements ObjectContentManager {
+public class ObjectContentManagerImpl implements ObjectContentManager {
     /**
      * Logger.
      */
-    private final static Log log = LogFactory.getLog(PersistenceManagerImpl.class);
+    private final static Log log = LogFactory.getLog(ObjectContentManagerImpl.class);
 
     /**
      * JCR session.
@@ -100,7 +100,7 @@ public class PersistenceManagerImpl implements ObjectContentManager {
     protected ObjectCache requestObjectCache; 
 
     /**
-     * Creates a new <code>PersistenceManager</code> that uses the passed in
+     * Creates a new <code>ObjectContentManager</code> that uses the passed in
      * <code>Mapper</code>, <code>QueryManager</code> and a default 
      * <code>ObjectConverter</code>
      *
@@ -108,7 +108,7 @@ public class PersistenceManagerImpl implements ObjectContentManager {
      * @param queryManager the query manager to used
      * @param session The JCR session
      */
-    public PersistenceManagerImpl(Mapper mapper,
+    public ObjectContentManagerImpl(Mapper mapper,
                                   QueryManager queryManager,
                                   Session session) {
         this.mapper = mapper;
@@ -120,12 +120,12 @@ public class PersistenceManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * Creates a new <code>PersistenceManager</code> based on a JCR session and some xml mapping files. 
+     * Creates a new <code>ObjectContentManager</code> based on a JCR session and some xml mapping files. 
      *
      * @param session The JCR session
      * @param xmlMappingFiles the JCR mapping files used mainly to create the <code>Mapper</code> component
      */
-    public PersistenceManagerImpl(Session session,String[] xmlMappingFiles ) 
+    public ObjectContentManagerImpl(Session session,String[] xmlMappingFiles ) 
     {
         try 
         {
@@ -140,7 +140,7 @@ public class PersistenceManagerImpl implements ObjectContentManager {
         catch (RepositoryException e) 
         {
             throw new org.apache.jackrabbit.ocm.exception.RepositoryException(
-                    "Impossible to instantiate the persistence manager", e);
+                    "Impossible to instantiate the object content manager", e);
 
 		}
         
@@ -155,7 +155,7 @@ public class PersistenceManagerImpl implements ObjectContentManager {
      * @param queryManager the query manager to used
      * @param session The JCR session
      */
-    public PersistenceManagerImpl(Mapper mapper,
+    public ObjectContentManagerImpl(Mapper mapper,
                                   ObjectConverter converter,
                                   QueryManager queryManager,
                                   ObjectCache requestObjectCache,
@@ -168,7 +168,7 @@ public class PersistenceManagerImpl implements ObjectContentManager {
     }
     
     /**
-     * Sets the <code>Mapper</code> used by this persistence manager.
+     * Sets the <code>Mapper</code> used by this object content manager.
      * 
      * @param mapper mapping solver
      */
@@ -177,7 +177,7 @@ public class PersistenceManagerImpl implements ObjectContentManager {
     }
     
     /**
-     * Sets the <code>ObjectConverter</code> that is used internally by this persistence manager.
+     * Sets the <code>ObjectConverter</code> that is used internally by this object content manager.
      * 
      * @param objectConverter the internal <code>ObjectConverter</code>
      */
@@ -186,7 +186,7 @@ public class PersistenceManagerImpl implements ObjectContentManager {
     }
     
     /**
-     * Sets the <code>QueryManager</code> used by the persistence manager.
+     * Sets the <code>QueryManager</code> used by the object content manager.
      * 
      * @param queryManager a <code>QueryManager</code>
      */
@@ -205,7 +205,7 @@ public class PersistenceManagerImpl implements ObjectContentManager {
      * @throws org.apache.jackrabbit.ocm.exception.RepositoryException if the underlying repository
      *  has thrown a javax.jcr.RepositoryException
      * @throws JcrMappingException if the mapping for the class is not correct
-     * @throws PersistenceException if the object cannot be retrieved from the path
+     * @throws ObjectContentManagerException if the object cannot be retrieved from the path
      */
     public Object getObject( String path) {
         try {
@@ -230,7 +230,7 @@ public class PersistenceManagerImpl implements ObjectContentManager {
      * @throws org.apache.jackrabbit.ocm.exception.RepositoryException if the underlying repository
      *  has thrown a javax.jcr.RepositoryException
      * @throws JcrMappingException if the mapping for the class is not correct
-     * @throws PersistenceException if the object cannot be retrieved from the path
+     * @throws ObjectContentManagerException if the object cannot be retrieved from the path
      */
     public Object getObjectByUuid( String uuid) {
         
@@ -280,7 +280,7 @@ public class PersistenceManagerImpl implements ObjectContentManager {
      * @throws org.apache.jackrabbit.ocm.exception.RepositoryException if the underlying repository
      *  has thrown a javax.jcr.RepositoryException
      * @throws JcrMappingException if the mapping for the class is not correct
-     * @throws PersistenceException if the object cannot be retrieved from the path
+     * @throws ObjectContentManagerException if the object cannot be retrieved from the path
      */
     public Object getObject(Class objectClass, String path) {
         try {
@@ -351,12 +351,12 @@ public class PersistenceManagerImpl implements ObjectContentManager {
                 Item item = session.getItem(path);
                 if (item.isNode()) {
                     if (!((Node) item).getDefinition().allowsSameNameSiblings()) {
-                        throw new PersistenceException("Path already exists and it is not supporting the same name sibling : "
+                        throw new ObjectContentManagerException("Path already exists and it is not supporting the same name sibling : "
                                                        + path);
                     }
                 } 
                 else {
-                    throw new PersistenceException("Path already exists and it is a property : "
+                    throw new ObjectContentManagerException("Path already exists and it is a property : "
                                                    + path);
                 }
 
@@ -377,7 +377,7 @@ public class PersistenceManagerImpl implements ObjectContentManager {
         String path = objectConverter.getPath(session, object);
         try {
             if (!session.itemExists(path)) {
-                throw new PersistenceException("Path is not existing : " + path);
+                throw new ObjectContentManagerException("Path is not existing : " + path);
             } 
             else {
                 checkIfNodeLocked(path);
@@ -397,7 +397,7 @@ public class PersistenceManagerImpl implements ObjectContentManager {
     public void remove(String path) {
         try {
             if (!session.itemExists(path)) {
-                throw new PersistenceException("Path does not exist : " + path);
+                throw new ObjectContentManagerException("Path does not exist : " + path);
             } 
             else {
                 checkIfNodeLocked(path);
@@ -454,7 +454,7 @@ public class PersistenceManagerImpl implements ObjectContentManager {
                     node.remove();
                 }
                 catch(javax.jcr.RepositoryException re) {
-                    throw new PersistenceException("Cannot remove node at path " 
+                    throw new ObjectContentManagerException("Cannot remove node at path " 
                             + node.getPath() + " returned from query "
                             + jcrExpression,
                             re);
@@ -517,7 +517,7 @@ public class PersistenceManagerImpl implements ObjectContentManager {
             NodeIterator nodeIterator = queryResult.getNodes();
 
             if (nodeIterator.getSize() > 1) {
-                throw new PersistenceException("Impossible to get the object - the query returns more than one object");
+                throw new ObjectContentManagerException("Impossible to get the object - the query returns more than one object");
             }
 
             Object object = null;
@@ -627,13 +627,13 @@ public class PersistenceManagerImpl implements ObjectContentManager {
             }
         } 
         catch(ClassCastException cce) {
-            throw new PersistenceException("Cannot retrieve an object from a property path " + path);
+            throw new ObjectContentManagerException("Cannot retrieve an object from a property path " + path);
         }
         catch(PathNotFoundException pnfe) {
-            throw new PersistenceException("Cannot retrieve an object at path " + path, pnfe);
+            throw new ObjectContentManagerException("Cannot retrieve an object at path " + path, pnfe);
         }
         catch(InvalidItemStateException iise) {
-            throw new PersistenceException("Cannot checking modified object at path " + path, iise);
+            throw new ObjectContentManagerException("Cannot checking modified object at path " + path, iise);
         }
         catch(javax.jcr.version.VersionException ve) {
             throw new VersionException("Impossible to checkin the object " + path, ve);
@@ -666,10 +666,10 @@ public class PersistenceManagerImpl implements ObjectContentManager {
             node.checkout();
         }         
         catch(ClassCastException cce) {
-            throw new PersistenceException("Cannot retrieve an object from a property path " + path);
+            throw new ObjectContentManagerException("Cannot retrieve an object from a property path " + path);
         }
         catch(PathNotFoundException pnfe) {
-            throw new PersistenceException("Cannot retrieve an object at path " + path, pnfe);
+            throw new ObjectContentManagerException("Cannot retrieve an object at path " + path, pnfe);
         }
         catch(UnsupportedRepositoryOperationException uroe) {
             throw new VersionException("Cannot checkout unversionable node at path " + path, uroe);
@@ -699,10 +699,10 @@ public class PersistenceManagerImpl implements ObjectContentManager {
             history.addVersionLabel(versionName, versionLabel, false);
         } 
         catch(ClassCastException cce) {
-            throw new PersistenceException("Cannot retrieve an object from a property path " + path);
+            throw new ObjectContentManagerException("Cannot retrieve an object from a property path " + path);
         }
         catch(PathNotFoundException pnfe) {
-            throw new PersistenceException("Cannot retrieve an object at path " + path, pnfe);
+            throw new ObjectContentManagerException("Cannot retrieve an object at path " + path, pnfe);
         }
         catch(javax.jcr.version.VersionException ve) {
             throw new VersionException("Impossible to add a new version label to  " + path
@@ -735,10 +735,10 @@ public class PersistenceManagerImpl implements ObjectContentManager {
             return new Version(history.getVersion(versionName));
         }
         catch(ClassCastException cce) {
-            throw new PersistenceException("Cannot retrieve an object from a property path " + path);
+            throw new ObjectContentManagerException("Cannot retrieve an object from a property path " + path);
         }
         catch(PathNotFoundException pnfe) {
-            throw new PersistenceException("Cannot retrieve an object at path " + path, pnfe);
+            throw new ObjectContentManagerException("Cannot retrieve an object at path " + path, pnfe);
         }
         catch(javax.jcr.version.VersionException ve) {
             throw new VersionException("The version name " + versionName + "does not exist", ve);
@@ -768,10 +768,10 @@ public class PersistenceManagerImpl implements ObjectContentManager {
             return history.getVersionLabels(version);
         } 
         catch(ClassCastException cce) {
-            throw new PersistenceException("Cannot retrieve an object from a property path " + path);
+            throw new ObjectContentManagerException("Cannot retrieve an object from a property path " + path);
         }
         catch(PathNotFoundException pnfe) {
-            throw new PersistenceException("Cannot retrieve an object at path " + path, pnfe);
+            throw new ObjectContentManagerException("Cannot retrieve an object at path " + path, pnfe);
         }
         catch(javax.jcr.version.VersionException ve) {
             throw new VersionException("Impossible to get the version labels : " + path
@@ -801,10 +801,10 @@ public class PersistenceManagerImpl implements ObjectContentManager {
             return history.getVersionLabels();
         } 
         catch(ClassCastException cce) {
-            throw new PersistenceException("Cannot retrieve an object from a property path " + path);
+            throw new ObjectContentManagerException("Cannot retrieve an object from a property path " + path);
         }
         catch(PathNotFoundException pnfe) {
-            throw new PersistenceException("Cannot retrieve an object at path " + path, pnfe);
+            throw new ObjectContentManagerException("Cannot retrieve an object at path " + path, pnfe);
         }
         catch(UnsupportedRepositoryOperationException uroe) {
             throw new VersionException("Impossible to retrieve version history for path " + path, uroe);
@@ -831,10 +831,10 @@ public class PersistenceManagerImpl implements ObjectContentManager {
             return new VersionIterator(history.getAllVersions());
         } 
         catch(ClassCastException cce) {
-            throw new PersistenceException("Cannot retrieve an object from a property path " + path);
+            throw new ObjectContentManagerException("Cannot retrieve an object from a property path " + path);
         }
         catch(PathNotFoundException pnfe) {
-            throw new PersistenceException("Cannot retrieve an object at path " + path, pnfe);
+            throw new ObjectContentManagerException("Cannot retrieve an object at path " + path, pnfe);
         }
         catch(UnsupportedRepositoryOperationException uroe) {
             throw new VersionException("Impossible to retrieve version history for path " + path, uroe);
@@ -860,10 +860,10 @@ public class PersistenceManagerImpl implements ObjectContentManager {
             return new Version(history.getRootVersion());
         } 
         catch(ClassCastException cce) {
-            throw new PersistenceException("Cannot retrieve an object from a property path " + path);
+            throw new ObjectContentManagerException("Cannot retrieve an object from a property path " + path);
         }
         catch(PathNotFoundException pnfe) {
-            throw new PersistenceException("Cannot retrieve an object at path " + path, pnfe);
+            throw new ObjectContentManagerException("Cannot retrieve an object at path " + path, pnfe);
         }
         catch(UnsupportedRepositoryOperationException uroe) {
             throw new VersionException("Impossible to get the root version  for the object " + path,
@@ -888,10 +888,10 @@ public class PersistenceManagerImpl implements ObjectContentManager {
             return new Version(node.getBaseVersion());
         } 
         catch(ClassCastException cce) {
-            throw new PersistenceException("Cannot retrieve an object from a property path " + path);
+            throw new ObjectContentManagerException("Cannot retrieve an object from a property path " + path);
         }
         catch(PathNotFoundException pnfe) {
-            throw new PersistenceException("Cannot retrieve an object at path " + path, pnfe);
+            throw new ObjectContentManagerException("Cannot retrieve an object at path " + path, pnfe);
         }
         catch(UnsupportedRepositoryOperationException uroe) {
             throw new VersionException("Impossible to get the base version for the object " + path,
@@ -1038,11 +1038,11 @@ public class PersistenceManagerImpl implements ObjectContentManager {
 
     protected Node getNode(final String absPath) throws PathNotFoundException, RepositoryException {
         if (!getSession().itemExists(absPath)) {
-            throw new PersistenceException("No object stored on path: " + absPath);
+            throw new ObjectContentManagerException("No object stored on path: " + absPath);
         }
         Item item = getSession().getItem(absPath);
         if (!item.isNode()) {
-            throw new PersistenceException("No object stored on path: " + absPath
+            throw new ObjectContentManagerException("No object stored on path: " + absPath
                                            + " on absPath is item (leaf)");
         }
 
@@ -1069,11 +1069,11 @@ public class PersistenceManagerImpl implements ObjectContentManager {
                     "Cannot persist current session changes. Attempt to overwrite checked-in node", ve);
         }
         catch(LockException le) {
-            throw new PersistenceException(
+            throw new ObjectContentManagerException(
                     "Cannot persist current session changes. Violation of a lock detected", le);
         }
         catch(javax.jcr.RepositoryException e) {
-            throw new PersistenceException(
+            throw new ObjectContentManagerException(
                     "Cannot persist current session changes.", e);
         }
     }
@@ -1095,11 +1095,11 @@ public class PersistenceManagerImpl implements ObjectContentManager {
                     "Cannot persist current session changes. Attempt to overwrite checked-in node", ve);
         }
         catch(LockException le) {
-            throw new PersistenceException(
+            throw new ObjectContentManagerException(
                     "Cannot persist current session changes. Violation of a lock detected", le);
         }
         catch(RepositoryException e) {
-            throw new PersistenceException(
+            throw new ObjectContentManagerException(
                     "Cannot persist current session changes.", e);
         }
     }
@@ -1117,7 +1117,7 @@ public class PersistenceManagerImpl implements ObjectContentManager {
 		    session.refresh(keepChanges);
 		}
         catch(RepositoryException e) {
-            throw new PersistenceException("Cannot refresh current session ", e);
+            throw new ObjectContentManagerException("Cannot refresh current session ", e);
         }
 	}
     
@@ -1132,7 +1132,7 @@ public class PersistenceManagerImpl implements ObjectContentManager {
         	workspace.move(srcPath,destPath);
             
         }catch(javax.jcr.nodetype.ConstraintViolationException cve){
-            throw new PersistenceException(
+            throw new ObjectContentManagerException(
                     "Cannot move the object from " + srcPath + " to " + destPath + "." + " Violation of a nodetype or attempt to move under a property detected", cve);
             
         }catch(javax.jcr.version.VersionException ve){
@@ -1140,23 +1140,23 @@ public class PersistenceManagerImpl implements ObjectContentManager {
                     "Cannot move the object from " + srcPath + " to " + destPath + "." + " Parent node of source or destination is versionable and checked in ", ve);
             
         }catch(javax.jcr.AccessDeniedException ade){
-            throw new PersistenceException(
+            throw new ObjectContentManagerException(
                     "Cannot move the object from " + srcPath + " to " + destPath + "." + " Session does not have access permissions", ade);
             
         }catch(javax.jcr.PathNotFoundException pnf){
-            throw new PersistenceException(
+            throw new ObjectContentManagerException(
                     "Cannot move the object from " + srcPath + " to " + destPath + "." + " Node at source or destination does not exist ", pnf);
             
         }catch(javax.jcr.ItemExistsException ie){
-            throw new PersistenceException(
+            throw new ObjectContentManagerException(
                     "Cannot move the object from " + srcPath + " to " + destPath + "." + " It might already exist at destination path.", ie);
             
         }catch(javax.jcr.lock.LockException le){
-            throw new PersistenceException(
+            throw new ObjectContentManagerException(
                     "Cannot move the object from " + srcPath + " to " + destPath + "." + "Violation of a lock detected", le);
             
         }catch(javax.jcr.RepositoryException re){
-            throw new PersistenceException(
+            throw new ObjectContentManagerException(
                     "Cannot move the object from " + srcPath + " to " + destPath + "." , re);
         }   
     }
@@ -1171,7 +1171,7 @@ public class PersistenceManagerImpl implements ObjectContentManager {
             workspace.copy(srcPath,destPath);
             
         }catch(javax.jcr.nodetype.ConstraintViolationException cve){
-            throw new PersistenceException(
+            throw new ObjectContentManagerException(
                     "Cannot copy the object from " + srcPath + " to " + destPath + "." + "Violation of a nodetype or attempt to copy under property detected ", cve);
             
         }catch(javax.jcr.version.VersionException ve){
@@ -1179,23 +1179,23 @@ public class PersistenceManagerImpl implements ObjectContentManager {
                     "Cannot copy the object from " + srcPath + " to " + destPath + "." + "Parent node of source or destination is versionable and checked in ", ve);
             
         }catch(javax.jcr.AccessDeniedException ade){
-            throw new PersistenceException(
+            throw new ObjectContentManagerException(
                     "Cannot copy the object from " + srcPath + " to " + destPath + "." + " Session does not have access permissions", ade);
             
         }catch(javax.jcr.PathNotFoundException pnf){
-            throw new PersistenceException(
+            throw new ObjectContentManagerException(
                     "Cannot copy the object from " + srcPath + " to " + destPath + "." + "Node at source or destination does not exist ", pnf);
             
         }catch(javax.jcr.ItemExistsException ie){
-            throw new PersistenceException(
+            throw new ObjectContentManagerException(
                     "Cannot copy the object from " + srcPath + " to " + destPath + "." + "It might already exist at destination path.", ie);
             
         }catch(javax.jcr.lock.LockException le){
-            throw new PersistenceException(
+            throw new ObjectContentManagerException(
                     "Cannot copy the object from " + srcPath + " to " + destPath + "." + "Violation of a lock detected", le);
             
         }catch(javax.jcr.RepositoryException re){
-            throw new PersistenceException(
+            throw new ObjectContentManagerException(
                     "Cannot copy the node from " + srcPath + " to " + destPath + "." , re);
         }
     }    

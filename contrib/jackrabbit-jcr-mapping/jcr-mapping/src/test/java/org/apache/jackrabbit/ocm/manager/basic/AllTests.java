@@ -34,13 +34,13 @@ public class AllTests {
     }
 
     public static Test buildSuite() {
-        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.persistence.basic");
+        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.manager.basic");
         //$JUnit-BEGIN$
-        suite.addTestSuite(PersistenceManagerAvoidRecursiveLoopTest.class);
-        suite.addTestSuite(PersistenceManagerCopyMoveTest.class);
-        suite.addTestSuite(PersistenceManagerRemoveTest.class);
-        suite.addTestSuite(PersistenceManagerSameNameSiblingTest.class);
-        suite.addTestSuite(PersistenceManagerTest.class);        
+        suite.addTestSuite(ObjectContentManagerAvoidRecursiveLoopTest.class);
+        suite.addTestSuite(ObjectContentManagerCopyMoveTest.class);
+        suite.addTestSuite(ObjectContentManagerRemoveTest.class);
+        suite.addTestSuite(ObjectContentManagerSameNameSiblingTest.class);
+        suite.addTestSuite(ObjectContentManagerTest.class);        
         //$JUnit-END$
 
         return suite;

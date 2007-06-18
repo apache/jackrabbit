@@ -59,10 +59,10 @@ public class ResidualNodesCollectionConverterImplTest extends TestBase
      */
     public void tearDown() throws Exception
     {
-        if (getPersistenceManager().objectExists("/test"))
+        if (getObjectContentManager().objectExists("/test"))
         {
-            getPersistenceManager().remove("/test");
-            getPersistenceManager().save();
+            getObjectContentManager().remove("/test");
+            getObjectContentManager().save();
         }        
     	
         super.tearDown();
@@ -72,7 +72,7 @@ public class ResidualNodesCollectionConverterImplTest extends TestBase
     {
         try
         {
-        	ObjectContentManager persistenceManager = getPersistenceManager();
+        	ObjectContentManager ocm = getObjectContentManager();
 
             // --------------------------------------------------------------------------------
             // Create and store an object graph in the repository with null values
@@ -80,13 +80,13 @@ public class ResidualNodesCollectionConverterImplTest extends TestBase
 
             Residual residual = new Residual.ResidualNodes();
             residual.setPath("/test");
-            persistenceManager.insert(residual);
-            persistenceManager.save();
+            ocm.insert(residual);
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            residual = (Residual) persistenceManager.getObject( "/test");
+            residual = (Residual) ocm.getObject( "/test");
             assertNotNull("Object is null", residual);
             assertNull("Map is not null", residual.getElements());
             
@@ -103,13 +103,13 @@ public class ResidualNodesCollectionConverterImplTest extends TestBase
             map.put("value4", new Paragraph("Value4"));
             residual.setElements(map);
             
-            persistenceManager.update(residual);
-            persistenceManager.save();
+            ocm.update(residual);
+            ocm.save();
             
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            residual = (Residual) persistenceManager.getObject( "/test");
+            residual = (Residual) ocm.getObject( "/test");
             assertNotNull("Object is null", residual);
             assertTrue("Incorrect number of values", residual.getElements().size() == 4);            
             assertTrue("Incorrect collection element type", (residual.getElements().get("value2") instanceof Paragraph));
@@ -126,14 +126,14 @@ public class ResidualNodesCollectionConverterImplTest extends TestBase
             map.put("value15", new Paragraph("Value15"));
             residual.setElements(map);
             
-            persistenceManager.update(residual);
-            persistenceManager.save();
+            ocm.update(residual);
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
 
-            residual = (Residual) persistenceManager.getObject( "/test");
+            residual = (Residual) ocm.getObject( "/test");
             assertNotNull("Object is null", residual);
             assertTrue("Incorrect number of values", residual.getElements().size() == 5);
             assertNull("Unexpected collection element", residual.getElements().get("value2"));

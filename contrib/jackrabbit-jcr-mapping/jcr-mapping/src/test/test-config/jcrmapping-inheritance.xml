@@ -62,7 +62,7 @@
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="name" jcrName="ocm:name"  id="true" />
 		<bean-descriptor  fieldName="parentFolder"  					 
-						  converter="org.apache.jackrabbit.ocm.persistence.beanconverter.impl.ParentBeanConverterImpl" />
+						  converter="org.apache.jackrabbit.ocm.manager.beanconverter.impl.ParentBeanConverterImpl" />
 
 	</class-descriptor>     
 
@@ -71,7 +71,7 @@
 		<implement-descriptor interfaceName="org.apache.jackrabbit.ocm.testmodel.interfaces.Folder" />	  		                                    
 		<collection-descriptor fieldName="children" proxy="true" autoUpdate="false" 
 		                       elementClassName="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.CmsObjectImpl" 
-		                       collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.NTCollectionConverterImpl" />
+		                       collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl" />
 	</class-descriptor >	
 
 	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.ContentImpl" jcrNodeType="ocm:contentimpl" abstract="true"

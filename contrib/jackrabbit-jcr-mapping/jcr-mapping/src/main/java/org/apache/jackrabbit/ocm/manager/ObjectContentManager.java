@@ -25,14 +25,14 @@ import javax.jcr.version.VersionException;
 import org.apache.jackrabbit.ocm.exception.IllegalUnlockException;
 import org.apache.jackrabbit.ocm.exception.LockedException;
 import org.apache.jackrabbit.ocm.lock.Lock;
-import org.apache.jackrabbit.ocm.exception.PersistenceException;
+import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.query.Query;
 import org.apache.jackrabbit.ocm.query.QueryManager;
 import org.apache.jackrabbit.ocm.version.Version;
 import org.apache.jackrabbit.ocm.version.VersionIterator;
 
 /**
- * The persistence manager encapsulates a JCR session. 
+ * The object content manager encapsulates a JCR session. 
  * This is the main component used to manage objects into the JCR repository.
  * 
  * @author Sandro Boehme 
@@ -46,13 +46,13 @@ public interface ObjectContentManager
      * Check if an object exists
      * @param path the object path 
      * @return true if the item exists
-     * @throws PersistenceException when it is not possible to check if the item exist
+     * @throws ObjectContentManagerException when it is not possible to check if the item exist
      */
-    public boolean objectExists(String path) throws PersistenceException;
+    public boolean objectExists(String path) throws ObjectContentManagerException;
 
     
     /**
-     * Can this persistence manager insert, update, delete, ... that type?
+     * Can this object content manager insert, update, delete, ... that type?
      * 
      * @param clazz class for question
      * @return <code>true</code> if the class is persistence
@@ -64,35 +64,35 @@ public interface ObjectContentManager
      * Insert an object into the JCR repository
      * 
      * @param object the object to add    
-     * @throws PersistenceException when it is not possible to insert the object 
+     * @throws ObjectContentManagerException when it is not possible to insert the object 
      */
-    public void insert(Object object) throws PersistenceException;
+    public void insert(Object object) throws ObjectContentManagerException;
 
     /**
      * Update an object 
      *
      * @param object the object to update 
-     * @throws PersistenceException when it is not possible to update the object
+     * @throws ObjectContentManagerException when it is not possible to update the object
      */
-    public void update(Object object) throws PersistenceException;
+    public void update(Object object) throws ObjectContentManagerException;
 
     /**
      * Get an object from the JCR repository 
      * @param path the object path
      * @return the object found or null
      * 
-     * @throws PersistenceException when it is not possible to retrieve the object 
+     * @throws ObjectContentManagerException when it is not possible to retrieve the object 
      */
-    public Object getObject( String path) throws PersistenceException;
+    public Object getObject( String path) throws ObjectContentManagerException;
 
     /**
      * Get an object from the JCR repository 
      * @param the object uuid
      * @return the object found or null
      * 
-     * @throws PersistenceException when it is not possible to retrieve the object 
+     * @throws ObjectContentManagerException when it is not possible to retrieve the object 
      */
-    public Object getObjectByUuid( String uuid) throws PersistenceException;
+    public Object getObjectByUuid( String uuid) throws ObjectContentManagerException;
 
     /**
      * Get an object from the JCR repository 
@@ -100,9 +100,9 @@ public interface ObjectContentManager
      * @param versionNumber The desired object version number
      * @return the object found or null
      * 
-     * @throws PersistenceException when it is not possible to retrieve the object 
+     * @throws ObjectContentManagerException when it is not possible to retrieve the object 
      */
-    public Object getObject(String path, String versionNumber) throws PersistenceException;
+    public Object getObject(String path, String versionNumber) throws ObjectContentManagerException;
     
     /**
      * Get an object from the JCR repository 
@@ -110,9 +110,9 @@ public interface ObjectContentManager
      * @param path the object path
      * @return the object found or null
      * 
-     * @throws PersistenceException when it is not possible to retrieve the object 
+     * @throws ObjectContentManagerException when it is not possible to retrieve the object 
      */
-    public Object getObject(Class objectClass, String path) throws PersistenceException;
+    public Object getObject(Class objectClass, String path) throws ObjectContentManagerException;
 
     /**
      * Get an object from the JCR repository 
@@ -121,9 +121,9 @@ public interface ObjectContentManager
      * @param versionNumber The desired object version number
      * @return the object found or null
      * 
-     * @throws PersistenceException when it is not possible to retrieve the object 
+     * @throws ObjectContentManagerException when it is not possible to retrieve the object 
      */
-     public Object getObject(Class objectClass, String path, String versionNumber) throws PersistenceException;
+     public Object getObject(Class objectClass, String path, String versionNumber) throws ObjectContentManagerException;
     
     
     /**
@@ -146,47 +146,47 @@ public interface ObjectContentManager
     /**
      * Remove an object from a JCR repository
      * @param path the object path
-     * @throws PersistenceException when it is not possible to remove the object 
+     * @throws ObjectContentManagerException when it is not possible to remove the object 
      * 
      */
-    public void remove(String path) throws PersistenceException;
+    public void remove(String path) throws ObjectContentManagerException;
     
     
     /**
      * Remove an object from a JCR repository
      * @param object the object to remove
-     * @throws PersistenceException when it is not possible to remove the object 
+     * @throws ObjectContentManagerException when it is not possible to remove the object 
      * 
      */
-    public void remove(Object object) throws PersistenceException;
+    public void remove(Object object) throws ObjectContentManagerException;
     
     /**
      * Remove all objects matching to a query
      * @param query The query used to find the objects to remove
-     * @throws PersistenceException when it is not possible to remove all objects 
+     * @throws ObjectContentManagerException when it is not possible to remove all objects 
      * 
      */
-    public void remove(Query query) throws PersistenceException;
+    public void remove(Query query) throws ObjectContentManagerException;
 
     
     /**
      * Retrieve an object matching to a query     
      * @param query The Query object used to seach the object
      * @return The object found or null
-     * @throws PersistenceException when it is not possible to retrieve the object 
+     * @throws ObjectContentManagerException when it is not possible to retrieve the object 
      * 
      */
-    public Object getObject(Query query) throws PersistenceException;
+    public Object getObject(Query query) throws ObjectContentManagerException;
 
     
     /**
      * Retrieve some objects matching to a query     
      * @param query The query used to seach the objects
      * @return a collection of objects found
-     * @throws PersistenceException when it is not possible to retrieve the objects 
+     * @throws ObjectContentManagerException when it is not possible to retrieve the objects 
      * 
      */
-    public Collection getObjects(Query query) throws PersistenceException;
+    public Collection getObjects(Query query) throws ObjectContentManagerException;
     
     
     /**
@@ -194,9 +194,9 @@ public interface ObjectContentManager
      *  
      * @param query The query used to seach the objects
      * @return an iterator of objects found
-     * @throws PersistenceException when it is not possible to retrieve the objects 
+     * @throws ObjectContentManagerException when it is not possible to retrieve the objects 
      */
-    public Iterator getObjectIterator (Query query) throws PersistenceException;
+    public Iterator getObjectIterator (Query query) throws ObjectContentManagerException;
      
     
     /**
@@ -287,17 +287,17 @@ public interface ObjectContentManager
     
 
     /**
-     * Save all modifications made by the persistence manager
+     * Save all modifications made by the object content manager
      *
-     * @throws PersistenceException when it is not possible to save all pending operation into the JCR repo 
+     * @throws ObjectContentManagerException when it is not possible to save all pending operation into the JCR repo 
      */
-    public void save() throws PersistenceException;  
+    public void save() throws ObjectContentManagerException;  
     
     /**
      * Close the session    
-     * @throws PersistenceException when it is not possible to logout
+     * @throws ObjectContentManagerException when it is not possible to logout
      */
-    public void logout() throws PersistenceException;
+    public void logout() throws ObjectContentManagerException;
     
     /**
      * Lock object saved on {@param path }.
@@ -355,9 +355,9 @@ public interface ObjectContentManager
      * @param srcPath path of the object to move
      * @param destPath destination path
      * 
-     * @throws PersistenceException
+     * @throws ObjectContentManagerException
      */
-    public void move(String srcPath, String destPath) throws PersistenceException;
+    public void move(String srcPath, String destPath) throws ObjectContentManagerException;
     
     /**
      * Copy an object 
@@ -365,9 +365,9 @@ public interface ObjectContentManager
      * @param srcPath path of the object to copy
      * @param destPath destination path
      * 
-     * @throws PersistenceException
+     * @throws ObjectContentManagerException
      */
-    public void copy(String srcPath, String destPath) throws PersistenceException; 
+    public void copy(String srcPath, String destPath) throws ObjectContentManagerException; 
         
     /**
      * This method returns the JCR session. The JCR session could be used to make some JCR specific calls.

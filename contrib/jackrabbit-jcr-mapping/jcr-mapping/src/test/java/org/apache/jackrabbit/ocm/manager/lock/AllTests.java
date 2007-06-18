@@ -34,9 +34,9 @@ public class AllTests {
     }
 
     public static Test buildSuite() {
-        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.persistence.basic");
+        TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.manager.basic");
         //$JUnit-BEGIN$
-        suite.addTestSuite(PersistenceManagerLockTest.class);
+        suite.addTestSuite(ObjectContentManagerLockTest.class);
         //$JUnit-END$
 
         return suite;

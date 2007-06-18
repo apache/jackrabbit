@@ -20,11 +20,11 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
-import org.apache.jackrabbit.ocm.exception.PersistenceException;
+import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.exception.RepositoryException;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverterProvider;
 import org.apache.jackrabbit.ocm.manager.beanconverter.BeanConverter;
-import org.apache.jackrabbit.ocm.manager.impl.PersistenceUtil;
+import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerUtil;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.BeanDescriptor;
@@ -55,20 +55,20 @@ public abstract class AbstractBeanConverterImpl implements BeanConverter {
 	 * 
 	 */
     public String getPath(Session session, BeanDescriptor beanDescriptor, Node parentNode)
-           throws PersistenceException
+           throws ObjectContentManagerException
     {		
-		 return PersistenceUtil.getPath(session, beanDescriptor, parentNode);
+		 return ObjectContentManagerUtil.getPath(session, beanDescriptor, parentNode);
 	}
 
 	public abstract void insert(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Object object, ClassDescriptor parentClassDescriptor, Object parent)
-			throws PersistenceException, RepositoryException, 	JcrMappingException;
+			throws ObjectContentManagerException, RepositoryException, 	JcrMappingException;
 
 	public abstract  void update(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Object object, ClassDescriptor parentClassDescriptor, Object parent)
-			throws PersistenceException, RepositoryException,	JcrMappingException;
+			throws ObjectContentManagerException, RepositoryException,	JcrMappingException;
 	
 	public abstract Object getObject(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Class beanClass, Object parent)
-			throws PersistenceException, RepositoryException,JcrMappingException ;
+			throws ObjectContentManagerException, RepositoryException,JcrMappingException ;
 
 	public abstract void remove(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor,  Object object, ClassDescriptor parentClassDescriptor, Object parent)
-	          throws PersistenceException,	RepositoryException, JcrMappingException ;
+	          throws ObjectContentManagerException,	RepositoryException, JcrMappingException ;
 }

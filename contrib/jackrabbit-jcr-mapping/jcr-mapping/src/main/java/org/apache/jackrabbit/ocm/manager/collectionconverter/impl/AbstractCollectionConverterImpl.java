@@ -28,7 +28,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
-import org.apache.jackrabbit.ocm.exception.PersistenceException;
+import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.CollectionConverter;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
@@ -79,19 +79,19 @@ public abstract class AbstractCollectionConverterImpl implements CollectionConve
 		try {
 			doInsertCollection(session, parentNode, collectionDescriptor, collection);
 		} catch (ItemExistsException iee) {
-			throw new PersistenceException("Cannot insert collection field : " + collectionDescriptor.getFieldName()
+			throw new ObjectContentManagerException("Cannot insert collection field : " + collectionDescriptor.getFieldName()
 					+ " of class " + collectionDescriptor.getClassDescriptor().getClassName() + ". An item already exists.", iee);
 		} catch (PathNotFoundException pnfe) {
-			throw new PersistenceException("Cannot insert collection field : " + collectionDescriptor.getFieldName()
+			throw new ObjectContentManagerException("Cannot insert collection field : " + collectionDescriptor.getFieldName()
 					+ " of class " + collectionDescriptor.getClassDescriptor().getClassName(), pnfe);
 		} catch (VersionException ve) {
-			throw new PersistenceException("Cannot insert collection field : " + collectionDescriptor.getFieldName()
+			throw new ObjectContentManagerException("Cannot insert collection field : " + collectionDescriptor.getFieldName()
 					+ " of class " + collectionDescriptor.getClassDescriptor().getClassName(), ve);
 		} catch (ConstraintViolationException cve) {
-			throw new PersistenceException("Cannot insert collection field : " + collectionDescriptor.getFieldName()
+			throw new ObjectContentManagerException("Cannot insert collection field : " + collectionDescriptor.getFieldName()
 					+ " of class " + collectionDescriptor.getClassDescriptor().getClassName() + ". Constraint violation.", cve);
 		} catch (LockException le) {
-			throw new PersistenceException("Cannot insert collection field : " + collectionDescriptor.getFieldName()
+			throw new ObjectContentManagerException("Cannot insert collection field : " + collectionDescriptor.getFieldName()
 					+ " of class " + collectionDescriptor.getClassDescriptor().getClassName() + " on locked parent.", le);
 		} catch (RepositoryException re) {
 			throw new org.apache.jackrabbit.ocm.exception.RepositoryException("Cannot insert collection field : "
@@ -110,13 +110,13 @@ public abstract class AbstractCollectionConverterImpl implements CollectionConve
 
 				doUpdateCollection(session, parentNode, collectionDescriptor, collection);
 		} catch (VersionException ve) {
-			throw new PersistenceException("Cannot insert collection field : " + collectionDescriptor.getFieldName()
+			throw new ObjectContentManagerException("Cannot insert collection field : " + collectionDescriptor.getFieldName()
 					+ " of class " + collectionDescriptor.getClassDescriptor().getClassName(), ve);
 		} catch (LockException le) {
-			throw new PersistenceException("Cannot insert collection field : " + collectionDescriptor.getFieldName()
+			throw new ObjectContentManagerException("Cannot insert collection field : " + collectionDescriptor.getFieldName()
 					+ " of class " + collectionDescriptor.getClassDescriptor().getClassName() + " on locked node", le);
 		} catch (ConstraintViolationException cve) {
-			throw new PersistenceException("Cannot insert collection field : " + collectionDescriptor.getFieldName()
+			throw new ObjectContentManagerException("Cannot insert collection field : " + collectionDescriptor.getFieldName()
 					+ " of class " + collectionDescriptor.getClassDescriptor().getClassName() + " Constraint violation.", cve);
 		} catch (RepositoryException re) {
 			throw new org.apache.jackrabbit.ocm.exception.RepositoryException("Cannot insert collection field : "

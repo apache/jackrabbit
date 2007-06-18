@@ -40,15 +40,15 @@ import org.apache.jackrabbit.ocm.testmodel.Paragraph;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class PersistenceManagerSimpleQueryTest extends TestBase
+public class ObjectContentManagerSimpleQueryTest extends TestBase
 {
-    private final static Log log = LogFactory.getLog(PersistenceManagerSimpleQueryTest.class);
+    private final static Log log = LogFactory.getLog(ObjectContentManagerSimpleQueryTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public PersistenceManagerSimpleQueryTest(String testName)  throws Exception
+    public ObjectContentManagerSimpleQueryTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -57,7 +57,7 @@ public class PersistenceManagerSimpleQueryTest extends TestBase
     {
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(
-                new TestSuite(PersistenceManagerSimpleQueryTest.class));
+                new TestSuite(ObjectContentManagerSimpleQueryTest.class));
     }
 
     /**
@@ -74,8 +74,8 @@ public class PersistenceManagerSimpleQueryTest extends TestBase
      */
     public void tearDown() throws Exception
     {
-    	getPersistenceManager().remove("/test");
-    	getPersistenceManager().save();
+    	getObjectContentManager().remove("/test");
+    	getObjectContentManager().save();
     	
         super.tearDown();
     }
@@ -98,8 +98,8 @@ public class PersistenceManagerSimpleQueryTest extends TestBase
     	      
     	      Query query = queryManager.createQuery(filter);
     	      
-    	      ObjectContentManager persistenceManager = this.getPersistenceManager();
-    	      Paragraph paragraph = (Paragraph) persistenceManager.getObject(query);
+    	      ObjectContentManager ocm = this.getObjectContentManager();
+    	      Paragraph paragraph = (Paragraph) ocm.getObject(query);
     	      assertNotNull("Object is null", paragraph);    	      
     	      assertTrue("Invalid paragraph found" , paragraph.getText().equals("Para 1"));
             
@@ -130,8 +130,8 @@ public class PersistenceManagerSimpleQueryTest extends TestBase
     	      
     	      Query query = queryManager.createQuery(filter);
     	      
-    	      ObjectContentManager persistenceManager = this.getPersistenceManager();
-    	      Collection result = persistenceManager.getObjects(query);
+    	      ObjectContentManager ocm = this.getObjectContentManager();
+    	      Collection result = ocm.getObjects(query);
     	      assertEquals("Invalid number of objects - should be = 1", 1, result.size());
     	      Paragraph paragraph = (Paragraph) result.iterator().next();
     	      assertTrue("Invalid paragraph found" , paragraph.getText().equals("Para 1"));
@@ -162,8 +162,8 @@ public class PersistenceManagerSimpleQueryTest extends TestBase
     	      
     	      Query query = queryManager.createQuery(filter);
     	      
-    	      ObjectContentManager persistenceManager = this.getPersistenceManager();
-    	      Collection result = persistenceManager.getObjects(query);
+    	      ObjectContentManager ocm = this.getObjectContentManager();
+    	      Collection result = ocm.getObjects(query);
     	      assertEquals("Invalid number of objects - should be = 3", 3, result.size());
 
     	      Paragraph[] paragraphs = (Paragraph[]) result.toArray(new Paragraph[result.size()]);
@@ -205,8 +205,8 @@ public class PersistenceManagerSimpleQueryTest extends TestBase
     	      
     	      Query query = queryManager.createQuery(filter1);
     	      
-    	      ObjectContentManager persistenceManager = this.getPersistenceManager();
-    	      Collection result = persistenceManager.getObjects(query);
+    	      ObjectContentManager ocm = this.getObjectContentManager();
+    	      Collection result = ocm.getObjects(query);
     	      assertEquals("Invalid number of objects - should be = 2", 2, result.size());
     	      
     	      Paragraph[] paragraphs = (Paragraph[]) result.toArray(new Paragraph[result.size()]);
@@ -237,8 +237,8 @@ public class PersistenceManagerSimpleQueryTest extends TestBase
     	      Query query = queryManager.createQuery(filter);
     	      query.addOrderByDescending("text");
     	      
-    	      ObjectContentManager persistenceManager = this.getPersistenceManager();
-    	      Collection result = persistenceManager.getObjects(query);
+    	      ObjectContentManager ocm = this.getObjectContentManager();
+    	      Collection result = ocm.getObjects(query);
     	      assertEquals("Invalid number of objects - should be = 3", 3, result.size());
 
     	      Paragraph[] paragraphs = (Paragraph[]) result.toArray(new Paragraph[result.size()]);
@@ -258,7 +258,7 @@ public class PersistenceManagerSimpleQueryTest extends TestBase
     
     private void importData() throws JcrMappingException 
     {
-    	ObjectContentManager persistenceManager = getPersistenceManager();
+    	ObjectContentManager ocm = getObjectContentManager();
 
         Page page = new Page();
         page.setPath("/test");
@@ -272,8 +272,8 @@ public class PersistenceManagerSimpleQueryTest extends TestBase
         paragraphs.add(new Paragraph("Another Para "));
         page.setParagraphs(paragraphs);
         
-        persistenceManager.insert(page);  
-        persistenceManager.save();
+        ocm.insert(page);  
+        ocm.save();
                 
 
     }

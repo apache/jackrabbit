@@ -24,7 +24,7 @@
 			* proxy="true" => use lazy laoding for this attribute b when retrieving A
 		-->
 		<bean-descriptor fieldName="b" jcrName="b" proxy="false"
-			converter="org.apache.jackrabbit.ocm.persistence.beanconverter.impl.InlineBeanConverterImpl"
+			converter="org.apache.jackrabbit.ocm.manager.beanconverter.impl.InlineBeanConverterImpl"
 			jcrNodeType="nt:unstructured" jcrAutoCreated="false"
 			jcrMandatory="false" jcrOnParentVersion="IGNORE" jcrProtected="false"
 			jcrSameNameSiblings="false" />
@@ -79,12 +79,12 @@
 		<field-descriptor fieldName="text" jcrName="text" />
 		<collection-descriptor fieldName="hashMap" proxy="false"
 			elementClassName="org.apache.jackrabbit.ocm.testmodel.collection.Element"
-			collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.NTCollectionConverterImpl"
+			collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl"
 			collectionClassName="org.apache.jackrabbit.ocm.testmodel.collection.HashMapElement" />
 
 		<collection-descriptor fieldName="list" proxy="false"
 			elementClassName="org.apache.jackrabbit.ocm.testmodel.collection.Element"
-			collectionConverter="org.apache.jackrabbit.ocm.persistence.collectionconverter.impl.NTCollectionConverterImpl"
+			collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl"
 			collectionClassName="org.apache.jackrabbit.ocm.testmodel.collection.ArrayListElement" />
 
 	</class-descriptor>

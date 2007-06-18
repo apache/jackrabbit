@@ -29,7 +29,7 @@ import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
 
-import org.apache.jackrabbit.ocm.exception.PersistenceException;
+import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollectionUtil;
@@ -88,7 +88,7 @@ public class MultiValueCollectionConverterImpl extends AbstractCollectionConvert
             parentNode.setProperty(jcrName, values);
         }
         catch(ValueFormatException vfe) {
-            throw new PersistenceException("Cannot insert collection field : " 
+            throw new ObjectContentManagerException("Cannot insert collection field : " 
                     + collectionDescriptor.getFieldName()
                     + " of class "
                     + collectionDescriptor.getClassDescriptor().getClassName(), vfe);
@@ -156,7 +156,7 @@ public class MultiValueCollectionConverterImpl extends AbstractCollectionConvert
             return collection;
         }
         catch(ValueFormatException vfe) {
-          throw new PersistenceException("Cannot get the collection field : "
+          throw new ObjectContentManagerException("Cannot get the collection field : "
                   + collectionDescriptor.getFieldName()
                   + "for class " + collectionDescriptor.getClassDescriptor().getClassName(),
                   vfe);

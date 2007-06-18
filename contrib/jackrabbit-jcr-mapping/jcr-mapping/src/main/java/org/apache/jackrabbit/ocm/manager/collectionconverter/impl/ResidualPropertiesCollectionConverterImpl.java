@@ -30,7 +30,7 @@ import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
 
-import org.apache.jackrabbit.ocm.exception.PersistenceException;
+import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollectionUtil;
@@ -132,7 +132,7 @@ public class ResidualPropertiesCollectionConverterImpl extends
 
             return collection;
         } catch (ValueFormatException vfe) {
-            throw new PersistenceException("Cannot get the collection field : "
+            throw new ObjectContentManagerException("Cannot get the collection field : "
                 + collectionDescriptor.getFieldName() + "for class "
                 + collectionDescriptor.getClassDescriptor().getClassName(), vfe);
         }
@@ -205,7 +205,7 @@ public class ResidualPropertiesCollectionConverterImpl extends
                 }
             }
         } catch (ValueFormatException vfe) {
-            throw new PersistenceException("Cannot insert collection field : "
+            throw new ObjectContentManagerException("Cannot insert collection field : "
                 + collectionDescriptor.getFieldName() + " of class "
                 + collectionDescriptor.getClassDescriptor().getClassName(), vfe);
         }
@@ -213,7 +213,7 @@ public class ResidualPropertiesCollectionConverterImpl extends
     
     /**
      * Returns the AtomicTypeConverter for the element class of the described
-     * collection. If no such converter can be found a PersistenceException
+     * collection. If no such converter can be found a ObjectContentManagerException
      * is thrown.
      * 
      * @param collectionDescriptor The descriptor of the collection for whose
@@ -221,7 +221,7 @@ public class ResidualPropertiesCollectionConverterImpl extends
      *      
      * @return The AtomicTypeConverter for the elements of the collection
      * 
-     * @throws PersistenceException if no such type converter is registered
+     * @throws ObjectContentManagerException if no such type converter is registered
      */
     private AtomicTypeConverter getAtomicTypeConverter(CollectionDescriptor collectionDescriptor) {
         String elementClassName = collectionDescriptor.getElementClassName();
@@ -231,7 +231,7 @@ public class ResidualPropertiesCollectionConverterImpl extends
             return atc;
         }
         
-        throw new PersistenceException(
+        throw new ObjectContentManagerException(
             "Cannot get AtomicTypeConverter for element class "
                 + elementClassName + " of class "
                 + collectionDescriptor.getClassDescriptor().getClassName());

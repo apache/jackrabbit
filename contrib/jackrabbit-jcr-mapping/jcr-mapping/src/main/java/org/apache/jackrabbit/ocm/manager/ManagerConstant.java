@@ -20,7 +20,7 @@ package org.apache.jackrabbit.ocm.manager;
 
 /**
  *  
- * General Persistence Constants use in several classes
+ * General Object Content Manager Constants use in several classes
  * 
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  * 
