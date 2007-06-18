@@ -289,21 +289,28 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
             String ntName = (isCollection) ? getCollectionNodeType() : getNodeType();
             parentNode = parentNode.addNode(name, ntName);
         }
-        Node contentNode;
+        Node contentNode = null;
         if (isCollection) {
             contentNode = parentNode;
         } else {
             if (parentNode.hasNode(JcrConstants.JCR_CONTENT)) {
                 contentNode = parentNode.getNode(JcrConstants.JCR_CONTENT);
-                // remove all entries in the jcr:content since replacing content
-                // includes properties (DefaultHandler) and nodes (e.g. ZipHandler)
-                if (contentNode.hasNodes()) {
-                    NodeIterator it = contentNode.getNodes();
-                    while (it.hasNext()) {
-                        it.nextNode().remove();
+                // check if nodetype is compatible (might be update of an existing file)
+                if (contentNode.isNodeType(getContentNodeType())) {
+                    // remove all entries in the jcr:content since replacing content
+                    // includes properties (DefaultHandler) and nodes (e.g. ZipHandler)
+                    if (contentNode.hasNodes()) {
+                        NodeIterator it = contentNode.getNodes();
+                        while (it.hasNext()) {
+                            it.nextNode().remove();
+                        }
                     }
+                } else {
+                    contentNode.remove();
+                    contentNode = null;
                 }
-            } else {
+            }
+            if (contentNode == null) {
                 contentNode = parentNode.addNode(JcrConstants.JCR_CONTENT, getContentNodeType());
             }
         }
