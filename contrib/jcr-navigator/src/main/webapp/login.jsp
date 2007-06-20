@@ -28,10 +28,7 @@
 	<tr>
 		<td height="350" width="50%">
 		<h4>Welcome</h4>
-		<ul>
-			<li>user: jackrabbit</li>
-			<li>password: jackrabbit</li>
-		</ul>
+		
 		</td>
 		<td>
 		<div id="roundMe">

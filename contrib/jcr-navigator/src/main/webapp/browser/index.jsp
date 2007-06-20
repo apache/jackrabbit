@@ -9,7 +9,7 @@
 	//djConfig.debugAtAllCosts = true;
 </script>
 
-<script type="text/javascript" src="<c:url value="/dojo/dojo.js"/>"></script>
+<script type="text/javascript" src="/dojo/dojo.js"></script>
 <script type="text/javascript" src="<c:url value="/browser/custom.js"/>"></script>
 
 <script language="JavaScript" type="text/javascript">
@@ -24,7 +24,7 @@
 	dojo.require("dojo.widget.TreeNodeV3");
 	dojo.require("dojo.widget.TreeBasicControllerV3");
 	dojo.require("dojo.widget.TreeLoadingControllerV3");
-	dojo.require("dojo.widget.TreeEmphaseOnSelect");	
+	dojo.require("dojo.widget.TreeEmphasizeOnSelect");	
 	dojo.require("dojo.widget.TreeSelectorV3");	
 	dojo.require("dojo.widget.TreeDeselectOnDblselect");	
 	dojo.require("dojo.widget.TreeContextMenuV3");
@@ -108,7 +108,7 @@
 <div dojoType="TreeLoadingControllerV3" widgetId="treeController" RpcUrl="tree.jsp"></div>
 <div dojoType="TreeSelectorV3" widgetId="selector"></div>	
 <div dojoType="TreeDeselectOnDblselect" selector="selector"></div>
-<div dojoType="TreeEmphaseOnSelect" selector="selector"></div>
+<div dojoType="TreeEmphasizeOnSelect" selector="selector"></div>
 <div dojoType="TreeContextMenuV3" toggle="explode" contextMenuForWindow="false" widgetId="treeContextMenu">
 	<div dojoType="TreeMenuItemV3" widgetId="treeContextMenuAddNode" caption="Add node" onClick="showDialog('node/addnode');"></div>
 	<div dojoType="TreeMenuItemV3" widgetId="treeContextMenuRemove" caption="Remove" onClick="showDialog('node/remove');" iconSrc="<c:url value="/images/x.gif"/>"></div>

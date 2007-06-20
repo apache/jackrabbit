@@ -34,7 +34,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Filter stores the jcr session in http session. It also synchronizes
+ * Filter stores the jcr session in http session. It also synchronizes the
+ * access to a jcr session.
  */
 public class JcrLoginFilter implements Filter {
 

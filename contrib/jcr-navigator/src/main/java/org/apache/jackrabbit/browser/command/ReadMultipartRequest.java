@@ -35,13 +35,12 @@ public class ReadMultipartRequest implements Command {
 	/** max upload size */
 	private String maxSize = "3000000";
 
-	@SuppressWarnings("unchecked")
 	public boolean execute(Context ctx) throws Exception {
 		// Configure file upload
 		JcrServletWebContext servletCtx = (JcrServletWebContext) ctx;
 		FileItemFactory itemFactory = new DiskFileItemFactory();
 		ServletFileUpload fileUpload = new ServletFileUpload(itemFactory);
-		fileUpload.setSizeMax(Integer.valueOf(this.maxSize));
+		fileUpload.setSizeMax(Long.valueOf(this.maxSize).longValue());
 
 		// parse request
 		List items = fileUpload.parseRequest(servletCtx.getRequest());
@@ -66,7 +65,8 @@ public class ReadMultipartRequest implements Command {
 	}
 
 	/**
-	 * @param maxSize the maxSize to set
+	 * @param maxSize
+	 *            the maxSize to set
 	 */
 	public void setMaxSize(String maxSize) {
 		this.maxSize = maxSize;
