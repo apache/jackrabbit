@@ -43,11 +43,8 @@ import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.PathFormat;
-import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.uuid.UUID;
@@ -2931,12 +2928,10 @@ public class NodeImpl extends ItemImpl implements Node {
         checkLock();
 
         Version v = session.getVersionManager().checkin(this);
-        Property prop = internalSetProperty(QName.JCR_ISCHECKEDOUT, InternalValue.create(false));
-        prop.save();
-        prop = internalSetProperty(QName.JCR_BASEVERSION, InternalValue.create(new UUID(v.getUUID())));
-        prop.save();
-        prop = internalSetProperty(QName.JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
-        prop.save();
+        internalSetProperty(QName.JCR_ISCHECKEDOUT, InternalValue.create(false));
+        internalSetProperty(QName.JCR_BASEVERSION, InternalValue.create(new UUID(v.getUUID())));
+        internalSetProperty(QName.JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
+        save();
         return v;
     }
 
