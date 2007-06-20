@@ -319,10 +319,11 @@ public class MultiIndex {
                 executeAndLog(new Commit(getTransactionId()));
                 reindexing = false;
             }
-        } catch (ItemStateException e) {
-            throw new IOException("Error indexing root node: " + e.getMessage());
-        } catch (RepositoryException e) {
-            throw new IOException("Error indexing root node: " + e.getMessage());
+        } catch (Exception e) {
+            String msg = "Error reindexing workspace";
+            IOException ex = new IOException(msg);
+            ex.initCause(e);
+            throw ex;
         }
 
         lastFlushTime = System.currentTimeMillis();
