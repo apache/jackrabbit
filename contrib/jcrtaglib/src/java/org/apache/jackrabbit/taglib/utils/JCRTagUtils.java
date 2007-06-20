@@ -138,11 +138,6 @@ public class JCRTagUtils
         } else if (o instanceof Item)
         {
             item = (Item) o;
-            if (!item.getSession().equals(session))
-            {
-                throw new JspException(
-                        "The referenced node belongs to another session.");
-            }
         } else
         {
             String msg = "The node attribute evaluation "

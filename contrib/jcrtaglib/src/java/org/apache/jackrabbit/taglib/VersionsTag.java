@@ -34,7 +34,6 @@ public class VersionsTag extends NodesTag {
 	/** tag name */
 	public static String TAG_NAME = "versions";
 
-	@Override
 	protected void prepare() throws JspTagException {
 		try {
 			Node node = super.getNode();
