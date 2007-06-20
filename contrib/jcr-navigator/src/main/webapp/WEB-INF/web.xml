@@ -67,6 +67,86 @@
 
         <load-on-startup>1</load-on-startup>
     </servlet>
+
+    <!-- ====================================================================== -->
+    <!-- R E P O S I T O R Y   S T A R T U P  S E R V L E T                     -->
+    <!-- ====================================================================== -->
+    <servlet>
+        <servlet-name>RepositoryStartup</servlet-name>
+        <description>
+            Repository servlet that starts the repository and registers it to JNDI ans RMI.
+            If you already have the repository registered in this appservers JNDI context,
+            or if its accessible via RMI, you do not need to use this servlet.
+        </description>
+        <servlet-class>org.apache.jackrabbit.j2ee.RepositoryStartupServlet</servlet-class>
+
+        <init-param>
+            <param-name>repository-config</param-name>
+            <param-value>/WEB-INF/repository.xml</param-value>
+            <description>the repository config location</description>
+        </init-param>
+
+        <init-param>
+            <param-name>repository-home</param-name>
+            <param-value>jackrabbit/repository</param-value>
+            <description>the repository home</description>
+        </init-param>
+
+        <init-param>
+            <param-name>repository-name</param-name>
+            <param-value>jackrabbit.repository</param-value>
+            <description>Repository Name under which the repository is registered via JNDI/RMI</description>
+        </init-param>
+
+        <!--
+            the following 3 parameters deal with registering the repository to
+            a RMI registry. if all parameters are omitted, the repository will
+            not be registered.
+        -->
+        <init-param>
+            <param-name>rmi-port</param-name>
+            <param-value>0</param-value>
+            <description>
+                The RMI port for registering the repository in the RMI Registry.
+                If equals 0, the default port is used.
+            </description>
+        </init-param>
+        <init-param>
+            <param-name>rmi-host</param-name>
+            <param-value>localhost</param-value>
+            <description>
+                The RMI host for registering the repository in the RMI Registry.
+                If equals "" or missing, the default host is used.
+            </description>
+        </init-param>
+        <init-param>
+            <param-name>rmi-uri</param-name>
+            <param-value></param-value>
+            <description>
+                The RMI uri for registering the repository in the RMI Registry.
+                If missing, the uri is composed using the other rmi parameters
+                and will have the format: //{rmi-host}:{rmi-port}/{repository-name}
+            </description>
+        </init-param>
+
+        <!--
+            JNDI environment variables for creating the initial context
+            (all init parameters starting with java.naming.* will be added to the initial context environment).
+        -->
+        <init-param>
+            <param-name>java.naming.provider.url</param-name>
+            <param-value>http://www.apache.org/jackrabbit</param-value>
+        </init-param>
+        <!--
+        <init-param>
+            <param-name>java.naming.factory.initial</param-name>
+            <param-value>org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory</param-value>
+        </init-param>
+        -->
+        
+        <load-on-startup>2</load-on-startup>
+    </servlet>
+        
 	<!-- ====================================================================== -->
 	<!-- R E P O S I T O R Y   S E R V L E T                                    -->
 	<!-- ====================================================================== -->
@@ -82,103 +162,14 @@
 		</servlet-class>
 		<init-param>
 			<param-name>repository-name</param-name>
-			<param-value>java:comp/env/jcr/repository</param-value>
+			<param-value>jackrabbit.repository</param-value>
 			<description>
 				Repository Name that is used to retrieve it via JNDI
 			</description>
 		</init-param>
-		<!-- init-param>
-			<param-name>java.naming.provider.url</param-name>
-			<param-value>http://www.apache.org/jackrabbit</param-value>
-		</init-param>
-		<init-param>
-			<param-name>java.naming.factory.initial</param-name>
-			<param-value>
-				org.apache.jackrabbit.core.jndi.BindableRepositoryFactory
-			</param-value>
-		</init-param -->
 		<load-on-startup>3</load-on-startup>
 	</servlet>
-	<!-- ====================================================================== -->
-	<!-- W E B D A V  S E R V L E T                                              -->
-	<!-- ====================================================================== -->
-	<servlet>
-		<servlet-name>Webdav</servlet-name>
-		<description>
-			The webdav servlet that connects HTTP request to the
-			repository.
-		</description>
-		<servlet-class>
-			org.apache.jackrabbit.j2ee.SimpleWebdavServlet
-		</servlet-class>
-		<init-param>
-			<param-name>resource-path-prefix</param-name>
-			<param-value>/repository</param-value>
-			<description>
-				defines the prefix for spooling resources out of the
-				repository.
-			</description>
-		</init-param>
-		<!--
-			Optional parameter to define the value of the 'WWW-Authenticate' header
-		-->
-		<!--
-			<init-param>
-			<param-name>authenticate-header</param-name>
-			<param-value>Basic realm="Jackrabbit Webdav Server"</param-value>
-			<description>
-			Defines the value of the 'WWW-Authenticate' header.
-			</description>
-			</init-param>
-		-->
-		<!--
-			Parameter used to configure behaviour of webdav resources such as:
-			- destinction between collections and non-collections
-			- resource filtering
-		-->
-		<init-param>
-			<param-name>resource-config</param-name>
-			<param-value>/WEB-INF/config.xml</param-value>
-			<description>
-				Defines various dav-resource configuration parameters.
-			</description>
-		</init-param>
-		<load-on-startup>4</load-on-startup>
-	</servlet>
-	<!-- ====================================================================== -->
-	<!-- W E B D A V  S E R V E R  S E R V L E T                                  -->
-	<!-- ====================================================================== -->
-	<servlet>
-		<servlet-name>JCRWebdavServer</servlet-name>
-		<description>
-			The webdav servlet that connects HTTP request to the
-			repository.
-		</description>
-		<servlet-class>
-			org.apache.jackrabbit.j2ee.JCRWebdavServerServlet
-		</servlet-class>
-		<!--
-			Optional parameter to define the value of the 'WWW-Authenticate' header
-		-->
-		<!--
-			<init-param>
-			<param-name>authenticate-header</param-name>
-			<param-value>Basic realm="Jackrabbit Webdav Server"</param-value>
-			<description>
-			Defines the value of the 'WWW-Authenticate' header.
-			</description>
-			</init-param>
-		-->
-		<init-param>
-			<param-name>resource-path-prefix</param-name>
-			<param-value>/server</param-value>
-			<description>
-				defines the prefix for spooling resources out of the
-				repository.
-			</description>
-		</init-param>
-		<load-on-startup>5</load-on-startup>
-	</servlet>
+
 	<!-- ====================================================================== -->
 	<!-- C O M M A N D S  S E R V L E T                                         -->
 	<!-- ====================================================================== -->
@@ -190,11 +181,12 @@
 		</servlet-class>
 		<init-param>
 			<param-name>jndi.properties</param-name>
-			<param-value></param-value>
+			<param-value>
+			</param-value>
 		</init-param>
 		<init-param>
 			<param-name>jndi.address</param-name>
-			<param-value>java:comp/env/jcr/repository</param-value>
+			<param-value>jackrabbit.repository</param-value>
 		</init-param>
 		<init-param>
 			<param-name>catalog</param-name>
@@ -233,14 +225,6 @@
 	<!-- S E R V L E T   M A P P I N G                                          -->
 	<!-- ====================================================================== -->
 	<servlet-mapping>
-		<servlet-name>Webdav</servlet-name>
-		<url-pattern>/repository/*</url-pattern>
-	</servlet-mapping>
-	<servlet-mapping>
-		<servlet-name>JCRWebdavServer</servlet-name>
-		<url-pattern>/server/*</url-pattern>
-	</servlet-mapping>
-	<servlet-mapping>
 		<servlet-name>JCR commands</servlet-name>
 		<url-pattern>/command/*</url-pattern>
 	</servlet-mapping>
@@ -273,12 +257,14 @@
 	</env-entry>
 	<env-entry>
 		<env-entry-name>jcr/jndi/properties</env-entry-name>
-		<env-entry-value></env-entry-value>
+		<env-entry-value>
+			i=i
+		</env-entry-value>
 		<env-entry-type>java.lang.String</env-entry-type>
 	</env-entry>
 	<env-entry>
 		<env-entry-name>jcr/jndi/address</env-entry-name>
-		<env-entry-value>java:comp/env/jcr/repository</env-entry-value>
+		<env-entry-value>jackrabbit.repository</env-entry-value>
 		<env-entry-type>java.lang.String</env-entry-type>
 	</env-entry>
 	<!--  Traverser -->
