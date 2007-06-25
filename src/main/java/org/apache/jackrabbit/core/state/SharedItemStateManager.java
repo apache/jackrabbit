@@ -1230,7 +1230,7 @@ public class SharedItemStateManager
                     InternalValue[] vals = prop.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         NodeReferencesId refsId = new NodeReferencesId(
-                                (UUID) vals[i].internalValue());
+                                vals[i].getUUID());
                         if (virtualProvider != null
                                 && virtualProvider.hasNodeReferences(refsId)) {
                             continue;
@@ -1260,7 +1260,7 @@ public class SharedItemStateManager
                     InternalValue[] vals = oldProp.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         NodeReferencesId refsId = new NodeReferencesId(
-                                (UUID) vals[i].internalValue());
+                                vals[i].getUUID());
                         if (virtualProvider != null
                                 && virtualProvider.hasNodeReferences(refsId)) {
                             continue;
@@ -1284,7 +1284,7 @@ public class SharedItemStateManager
                     InternalValue[] vals = newProp.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         NodeReferencesId refsId = new NodeReferencesId(
-                                (UUID) vals[i].internalValue());
+                                vals[i].getUUID());
                         if (virtualProvider != null
                                 && virtualProvider.hasNodeReferences(refsId)) {
                             continue;
@@ -1311,7 +1311,7 @@ public class SharedItemStateManager
                     InternalValue[] vals = prop.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         NodeReferencesId refsId = new NodeReferencesId(
-                                (UUID) vals[i].internalValue());
+                                vals[i].getUUID());
                         if (virtualProvider != null
                                 && virtualProvider.hasNodeReferences(refsId)) {
                             continue;

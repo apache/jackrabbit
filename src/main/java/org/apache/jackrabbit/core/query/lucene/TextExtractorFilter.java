@@ -100,7 +100,7 @@ public class TextExtractorFilter implements TextFilter {
                     type = types[0];
                 }
 
-                BLOBFileValue blob = (BLOBFileValue) values[0].internalValue();
+                BLOBFileValue blob = values[0].getBLOBFileValue();
                 Reader reader =
                     extractor.extractText(blob.getStream(), type, encoding);
 

@@ -76,7 +76,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
         // init internal values
         InternalValue[] values = node.getPropertyValues(QName.JCR_CREATED);
         if (values != null) {
-            created = (Calendar) values[0].internalValue();
+            created = values[0].getDate();
         }
         isRoot = name.equals(QName.JCR_ROOTVERSION);
     }
@@ -135,7 +135,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
             if (values != null) {
                 InternalVersion[] versions = new InternalVersion[values.length];
                 for (int i = 0; i < values.length; i++) {
-                    NodeId vId = new NodeId((UUID) values[i].internalValue());
+                    NodeId vId = new NodeId(values[i].getUUID());
                     versions[i] = versionHistory.getVersion(vId);
                 }
                 return versions;
@@ -155,7 +155,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
         if (values != null) {
             InternalVersion[] versions = new InternalVersion[values.length];
             for (int i = 0; i < values.length; i++) {
-                NodeId vId = new NodeId((UUID) values[i].internalValue());
+                NodeId vId = new NodeId(values[i].getUUID());
                 versions[i] = versionHistory.getVersion(vId);
             }
             return versions;
@@ -390,7 +390,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
         InternalValue[] values = node.getPropertyValues(QName.JCR_PREDECESSORS);
         if (values != null) {
             for (int i = 0; i < values.length; i++) {
-                NodeId vId = new NodeId((UUID) values[i].internalValue());
+                NodeId vId = new NodeId(values[i].getUUID());
                 InternalVersionImpl v = (InternalVersionImpl) versionHistory.getVersion(vId);
                 v.internalAddSuccessor(this, false);
             }

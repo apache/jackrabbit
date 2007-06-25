@@ -145,7 +145,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
                 PropertyState pState = labels[i];
                 if (pState.getType() == PropertyType.REFERENCE) {
                     QName name = pState.getName();
-                    UUID ref = (UUID) pState.getValues()[0].internalValue();
+                    UUID ref = pState.getValues()[0].getUUID();
                     InternalVersionImpl v = (InternalVersionImpl) getVersion(new NodeId(ref));
                     if (v != null) {
                         labelCache.put(name, v);

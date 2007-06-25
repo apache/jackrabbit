@@ -58,8 +58,7 @@ class InternalFrozenVHImpl extends InternalFreezeImpl
      * {@inheritDoc}
      */
     public NodeId getVersionHistoryId() {
-        return new NodeId((UUID)
-                node.getPropertyValue(QName.JCR_CHILDVERSIONHISTORY).internalValue());
+        return new NodeId(node.getPropertyValue(QName.JCR_CHILDVERSIONHISTORY).getUUID());
     }
 
     /**
@@ -78,8 +77,7 @@ class InternalFrozenVHImpl extends InternalFreezeImpl
      * {@inheritDoc}
      */
     public NodeId getBaseVersionId() {
-        return new NodeId((UUID)
-                node.getPropertyValue(QName.JCR_BASEVERSION).internalValue());
+        return new NodeId(node.getPropertyValue(QName.JCR_BASEVERSION).getUUID());
     }
 
     /**
