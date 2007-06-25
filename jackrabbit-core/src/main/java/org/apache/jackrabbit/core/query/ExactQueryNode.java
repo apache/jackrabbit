@@ -93,4 +93,11 @@ public class ExactQueryNode extends QueryNode {
         }
         return false;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean needsSystemTree() {
+        return false;
+    }
 }

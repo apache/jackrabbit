@@ -209,4 +209,12 @@ public class TextsearchQueryNode extends QueryNode {
         }
         return false;
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public boolean needsSystemTree() {
+        return false;
+    }
+
 }
