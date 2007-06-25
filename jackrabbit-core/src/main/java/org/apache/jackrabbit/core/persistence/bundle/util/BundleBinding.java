@@ -549,7 +549,7 @@ public class BundleBinding extends ItemStateBinding {
                 case PropertyType.BINARY:
                     // special handling required for binary value:
                     // spool binary value to file in blob store
-                    BLOBFileValue blobVal = (BLOBFileValue) val.internalValue();
+                    BLOBFileValue blobVal = val.getBLOBFileValue();
                     long size = blobVal.getLength();
                     if (size < 0) {
                         log.warn("Blob has negative size. Potential loss of data. " +
@@ -633,19 +633,19 @@ public class BundleBinding extends ItemStateBinding {
                     }
                     break;
                 case PropertyType.DOUBLE:
-                    out.writeDouble(((Double) val.internalValue()).doubleValue());
+                    out.writeDouble(val.getDouble());
                     break;
                 case PropertyType.LONG:
-                    out.writeLong(((Long) val.internalValue()).longValue());
+                    out.writeLong(val.getLong());
                     break;
                 case PropertyType.BOOLEAN:
-                    out.writeBoolean(((Boolean) val.internalValue()).booleanValue());
+                    out.writeBoolean(val.getBoolean());
                     break;
                 case PropertyType.NAME:
-                    writeQName(out, (QName) val.internalValue());
+                    writeQName(out, val.getQName());
                     break;
                 case PropertyType.REFERENCE:
-                    writeUUID(out, (UUID) val.internalValue());
+                    writeUUID(out, val.getUUID());
                     break;
                 default:
                     // because writeUTF(String) has a size limit of 64k,

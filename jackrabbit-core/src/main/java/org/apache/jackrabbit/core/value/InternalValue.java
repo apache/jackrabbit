@@ -324,11 +324,57 @@ public class InternalValue {
     }
 
     /**
+     * @deprecated
      * @return the internal object
      */
     public Object internalValue() {
         return val;
     }
+    
+    public BLOBFileValue getBLOBFileValue() {
+        assert val != null && type == PropertyType.BINARY;
+        return (BLOBFileValue) val;
+    }
+    
+    public UUID getUUID() {
+        assert val != null && type == PropertyType.REFERENCE;
+        return (UUID) val;
+    }
+    
+    public boolean getBoolean() {
+        assert val != null && type == PropertyType.BOOLEAN;
+        return ((Boolean) val).booleanValue();
+    }    
+
+    public QName getQName() {
+        assert val != null && type == PropertyType.NAME;
+        return (QName) val;
+    }
+    
+    public Path getPath() {
+        assert val != null && type == PropertyType.PATH;
+        return (Path) val;
+    }
+    
+    public long getLong() {
+        assert val != null && type == PropertyType.LONG;
+        return ((Long) val).longValue();
+    }
+    
+    public double getDouble() {
+        assert val != null && type == PropertyType.DOUBLE;
+        return ((Double) val).doubleValue();
+    }
+    
+    public Calendar getDate() {
+        assert val != null && type == PropertyType.DATE;
+        return (Calendar) val;
+    }
+    
+    public String getString() {
+        assert val != null && type == PropertyType.STRING;
+        return (String) val;
+    }    
 
     /**
      * @return the type

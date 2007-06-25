@@ -330,7 +330,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                 if (prop.getType() == PropertyType.REFERENCE) {
                     InternalValue[] vals = prop.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
-                        UUID uuid = (UUID) vals[i].internalValue();
+                        UUID uuid = vals[i].getUUID();
                         NodeReferencesId refsId = new NodeReferencesId(uuid);
                         addVirtualReference(prop.getPropertyId(), refsId);
                     }
@@ -346,7 +346,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                 if (oldProp.getType() == PropertyType.REFERENCE) {
                     InternalValue[] vals = oldProp.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
-                        UUID uuid = (UUID) vals[i].internalValue();
+                        UUID uuid = vals[i].getUUID();
                         NodeReferencesId refsId = new NodeReferencesId(uuid);
                         removeVirtualReference(oldProp.getPropertyId(), refsId);
                     }
@@ -354,7 +354,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                 if (newProp.getType() == PropertyType.REFERENCE) {
                     InternalValue[] vals = newProp.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
-                        UUID uuid = (UUID) vals[i].internalValue();
+                        UUID uuid = vals[i].getUUID();
                         NodeReferencesId refsId = new NodeReferencesId(uuid);
                         addVirtualReference(newProp.getPropertyId(), refsId);
                     }
@@ -368,7 +368,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                 if (prop.getType() == PropertyType.REFERENCE) {
                     InternalValue[] vals = prop.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
-                        UUID uuid = (UUID) vals[i].internalValue();
+                        UUID uuid = vals[i].getUUID();
                         NodeReferencesId refsId = new NodeReferencesId(uuid);
                         removeVirtualReference(prop.getPropertyId(), refsId);
                     }

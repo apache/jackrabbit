@@ -31,6 +31,7 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.document.Document;
@@ -248,51 +249,50 @@ public class NodeIndexer {
         } catch (NoPrefixDeclaredException e) {
             // will never happen
         }
-        Object internalValue = value.internalValue();
         switch (value.getType()) {
             case PropertyType.BINARY:
                 if (isIndexed(name)) {
-                    addBinaryValue(doc, fieldName, internalValue);
+                    addBinaryValue(doc, fieldName, value.getBLOBFileValue());
                 }
                 break;
             case PropertyType.BOOLEAN:
                 if (isIndexed(name)) {
-                    addBooleanValue(doc, fieldName, internalValue);
+                    addBooleanValue(doc, fieldName, Boolean.valueOf(value.getBoolean()));
                 }
                 break;
             case PropertyType.DATE:
                 if (isIndexed(name)) {
-                    addCalendarValue(doc, fieldName, internalValue);
+                    addCalendarValue(doc, fieldName, value.getDate());
                 }
                 break;
             case PropertyType.DOUBLE:
                 if (isIndexed(name)) {
-                    addDoubleValue(doc, fieldName, internalValue);
+                    addDoubleValue(doc, fieldName, new Double(value.getDouble()));
                 }
                 break;
             case PropertyType.LONG:
                 if (isIndexed(name)) {
-                    addLongValue(doc, fieldName, internalValue);
+                    addLongValue(doc, fieldName, new Long(value.getLong()));
                 }
                 break;
             case PropertyType.REFERENCE:
                 if (isIndexed(name)) {
-                    addReferenceValue(doc, fieldName, internalValue);
+                    addReferenceValue(doc, fieldName, value.getUUID());
                 }
                 break;
             case PropertyType.PATH:
                 if (isIndexed(name)) {
-                    addPathValue(doc, fieldName, internalValue);
+                    addPathValue(doc, fieldName, value.getPath());
                 }
                 break;
             case PropertyType.STRING:
                 if (isIndexed(name)) {
                     // never fulltext index jcr:uuid String
                     if (name.equals(QName.JCR_UUID)) {
-                        addStringValue(doc, fieldName, internalValue,
+                        addStringValue(doc, fieldName, value.getString(),
                                 false, false, DEFAULT_BOOST);
                     } else {
-                        addStringValue(doc, fieldName, internalValue,
+                        addStringValue(doc, fieldName, value.getString(),
                                 true, isIncludedInNodeIndex(name),
                                 getPropertyBoost(name));
                     }
@@ -304,7 +304,7 @@ public class NodeIndexer {
                 if (isIndexed(name) ||
                         name.equals(QName.JCR_PRIMARYTYPE) ||
                         name.equals(QName.JCR_MIXINTYPES)) {
-                    addNameValue(doc, fieldName, internalValue);
+                    addNameValue(doc, fieldName, value.getQName());
                 }
                 break;
             default:
@@ -336,13 +336,13 @@ public class NodeIndexer {
 
             InternalValue typeValue = getValue(QName.JCR_MIMETYPE);
             if (typeValue != null) {
-                String type = typeValue.internalValue().toString();
+                String type = typeValue.getString();
 
                 // jcr:encoding is not mandatory
                 String encoding = null;
                 InternalValue encodingValue = getValue(QName.JCR_ENCODING);
                 if (encodingValue != null) {
-                    encoding = encodingValue.internalValue().toString();
+                    encoding = encodingValue.getString();
                 }
 
                 InputStream stream =
@@ -408,7 +408,8 @@ public class NodeIndexer {
      * @param internalValue The value for the field to add to the document.
      */
     protected void addCalendarValue(Document doc, String fieldName, Object internalValue) {
-        long millis = ((Calendar) internalValue).getTimeInMillis();
+        Calendar value = (Calendar) internalValue;
+        long millis = value.getTimeInMillis();
         doc.add(new Field(FieldNames.PROPERTIES,
                 FieldNames.createNamedValue(fieldName, DateField.timeToString(millis)),
                 Field.Store.NO,
@@ -462,7 +463,8 @@ public class NodeIndexer {
      * @param internalValue The value for the field to add to the document.
      */
     protected void addReferenceValue(Document doc, String fieldName, Object internalValue) {
-        String uuid = internalValue.toString();
+        UUID value = (UUID) internalValue;
+        String uuid = value.toString();
         doc.add(new Field(FieldNames.PROPERTIES,
                 FieldNames.createNamedValue(fieldName, uuid),
                 Field.Store.YES, // store
@@ -543,9 +545,9 @@ public class NodeIndexer {
     protected void addStringValue(Document doc, String fieldName,
                                   Object internalValue, boolean tokenized,
                                   boolean includeInNodeIndex, float boost) {
-        String stringValue = String.valueOf(internalValue);
 
         // simple String
+        String stringValue = (String) internalValue;
         doc.add(new Field(FieldNames.PROPERTIES,
                 FieldNames.createNamedValue(fieldName, stringValue),
                 Field.Store.NO,
@@ -585,7 +587,7 @@ public class NodeIndexer {
      */
     protected void addNameValue(Document doc, String fieldName, Object internalValue) {
         QName qualiName = (QName) internalValue;
-        String normValue = internalValue.toString();
+        String normValue = qualiName.toString();
         try {
             normValue = mappings.getPrefix(qualiName.getNamespaceURI())
                     + ":" + qualiName.getLocalName();

@@ -667,7 +667,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                             if (type == PropertyType.BINARY) {
                                 // special handling required for binary value:
                                 // put binary value in BLOB store
-                                BLOBFileValue blobVal = (BLOBFileValue) val.internalValue();
+                                BLOBFileValue blobVal = val.getBLOBFileValue();
                                 InputStream in = blobVal.getStream();
                                 String blobId = blobStore.createId(state.getPropertyId(), i);
                                 try {
@@ -760,7 +760,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 InternalValue val = values[i];
                 if (val != null) {
                     if (val.getType() == PropertyType.BINARY) {
-                        BLOBFileValue blobVal = (BLOBFileValue) val.internalValue();
+                        BLOBFileValue blobVal = val.getBLOBFileValue();
                         // delete blob file and prune empty parent folders
                         blobVal.delete(true);
                     }

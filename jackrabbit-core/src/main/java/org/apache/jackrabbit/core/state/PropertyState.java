@@ -263,7 +263,7 @@ public class PropertyState extends ItemState {
                 try {
                     if (type == PropertyType.BINARY) {
                         // special handling required for binary value
-                        BLOBFileValue blob = (BLOBFileValue) val.internalValue();
+                        BLOBFileValue blob = val.getBLOBFileValue();
                         InputStream in = blob.getStream();
                         out.writeLong(blob.getLength());
                         byte[] buf = new byte[0x2000];

@@ -21,11 +21,8 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.PathFormat;
-import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.BooleanValue;
 import org.apache.jackrabbit.value.DateValue;
@@ -163,6 +160,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @see javax.jcr.Property#getLengths()
      */
     protected long getLength(InternalValue value) throws RepositoryException {
+        // TODO maybe move method to InternalValue
         switch (value.getType()) {
             case PropertyType.STRING:
             case PropertyType.LONG:
@@ -170,15 +168,15 @@ public class PropertyImpl extends ItemImpl implements Property {
                 return value.toString().length();
 
             case PropertyType.NAME:
-                QName name = (QName) value.internalValue();
+                QName name = value.getQName();
                 return session.getJCRName(name).length();
 
             case PropertyType.PATH:
-                Path path = (Path) value.internalValue();
+                Path path = value.getPath();
                 return session.getJCRPath(path).length();
 
             case PropertyType.BINARY:
-                BLOBFileValue blob = (BLOBFileValue) value.internalValue();
+                BLOBFileValue blob = value.getBLOBFileValue();
                 return blob.getLength();
 
             default:
@@ -276,7 +274,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                 if (old != null && old.getType() == PropertyType.BINARY) {
                     // make sure temporarily allocated data is discarded
                     // before overwriting it
-                    ((BLOBFileValue) old.internalValue()).discard();
+                    old.getBLOBFileValue().discard();
                 }
             }
         }
@@ -541,7 +539,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         InternalValue val = state.getValues()[0];
         int type = val.getType();
         if (type == PropertyType.LONG) {
-            return ((Long) val.internalValue()).longValue();
+            return val.getLong();
         }
         // not a LONG value, delegate conversion to Value object
         return val.toJCRValue(session.getNamespaceResolver()).getLong();
@@ -565,7 +563,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         InternalValue val = state.getValues()[0];
         int type = val.getType();
         if (type == PropertyType.DOUBLE) {
-            return ((Double) val.internalValue()).doubleValue();
+            return val.getDouble();
         }
         // not a DOUBLE value, delegate conversion to Value object
         return val.toJCRValue(session.getNamespaceResolver()).getDouble();
@@ -589,7 +587,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         InternalValue val = state.getValues()[0];
         int type = val.getType();
         if (type == PropertyType.DATE) {
-            return (Calendar) val.internalValue();
+            return val.getDate();
         }
         // not a DATE value, delegate conversion to Value object
         return val.toJCRValue(session.getNamespaceResolver()).getDate();
@@ -613,7 +611,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         InternalValue val = state.getValues()[0];
         int type = val.getType();
         if (type == PropertyType.BOOLEAN) {
-            return ((Boolean) val.internalValue()).booleanValue();
+            return val.getBoolean();
         }
         // not a BOOLEAN value, delegate conversion to Value object
         return val.toJCRValue(session.getNamespaceResolver()).getBoolean();
@@ -636,7 +634,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         InternalValue val = state.getValues()[0];
         if (val.getType() == PropertyType.REFERENCE) {
             // reference, i.e. target UUID
-            UUID targetUUID = (UUID) val.internalValue();
+            UUID targetUUID = val.getUUID();
             return (Node) itemMgr.getItem(new NodeId(targetUUID));
         } else {
             throw new ValueFormatException("property must be of type REFERENCE");
