@@ -41,7 +41,7 @@ method="POST" onsubmit="return false;">
 <script language="JavaScript" type="text/javascript">
 var targetController = dojo.widget.createWidget("TreeLoadingControllerV3");
 var targetSelector = dojo.widget.createWidget("TreeSelectorV3",{widgetId: "targetSelector"});
-var treeEmphaseOnSelect = dojo.widget.createWidget("TreeEmphaseOnSelect",{selector:targetSelector.widgetId});
+var treeEmphaseOnSelect = dojo.widget.createWidget("TreeEmphasizeOnSelect",{selector:targetSelector.widgetId});
 targetController.RpcUrl="tree.jsp?prefix=target";
 var treeNodes = [{title: "Root", widgetId: "target/", isFolder: true}] ;
 var targetTree = dojo.widget.createWidget("TreeV3", {listeners: [targetSelector.widgetId, targetController.widgetId]},dojo.byId("targetTreeDiv"));
