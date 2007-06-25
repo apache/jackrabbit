@@ -26,6 +26,13 @@
   <!-- ====================================================================== -->
   <!-- P R O J E C T  D E S C R I P T I O N                                   -->
   <!-- ====================================================================== -->
+
+  <parent>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>4</version>
+  </parent>
+
   <groupId>org.apache.jackrabbit</groupId>
   <artifactId>jackrabbit</artifactId>
   <name>Apache Jackrabbit</name>
@@ -624,24 +631,11 @@
     </contributor>
   </contributors>
 
-  <licenses>
-    <license>
-      <name>Apache License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk</connection>
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk</developerConnection>
     <url>http://svn.apache.org/viewvc/jackrabbit/trunk</url>
   </scm>
-
-  <organization>
-    <name>The Apache Software Foundation</name>
-    <url>http://www.apache.org/</url>
-  </organization>
 
   <dependencyManagement>
     <dependencies>
@@ -796,18 +790,5 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-
-  <distributionManagement>
-    <repository>
-      <id>apache.releases</id>
-      <name>Apache Repository for PMC approved releases</name>
-      <url>scp://people.apache.org/www/people.apache.org/repo/m2-ibiblio-rsync-repository/</url>
-    </repository>
-    <snapshotRepository>
-      <id>apache.snapshots</id>
-      <name>Apache Development Repository</name>
-      <url>scp://people.apache.org/www/people.apache.org/repo/m2-snapshot-repository</url>
-    </snapshotRepository>
-  </distributionManagement>
 
 </project>
