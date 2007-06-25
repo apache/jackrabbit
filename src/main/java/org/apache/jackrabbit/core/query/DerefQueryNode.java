@@ -83,4 +83,14 @@ public class DerefQueryNode extends LocationStepQueryNode {
         }
         return false;
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public boolean needsSystemTree() {
+        // Always return true since we don't know if the referenced nodes path
+        // is a child of /jcr:system
+        return true;
+    }
+
 }

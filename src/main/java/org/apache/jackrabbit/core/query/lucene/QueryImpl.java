@@ -241,4 +241,15 @@ public class QueryImpl implements ExecutableQuery {
 
         return (QName[]) selectProps.toArray(new QName[selectProps.size()]);
     }
+    
+    /**
+     * Returns <code>true</code> if this query node needs items under
+     * /jcr:system to be queried.
+     * 
+     * @return <code>true</code> if this query node needs content under
+     *         /jcr:system to be queried; <code>false</code> otherwise.
+     */
+    protected boolean needsSystemTree() {
+        return this.root.needsSystemTree();
+    }
 }

@@ -125,4 +125,13 @@ public abstract class QueryNode {
      *   <code>this</code>; <code>false</code> otherwise.
      */
     public abstract boolean equals(Object obj);
+    
+    /**
+     * Returns <code>true</code> if this query node needs items under
+     * /jcr:system to be queried.
+     * 
+     * @return <code>true</code> if this query node needs content under
+     *         /jcr:system to be queried; <code>false</code> otherwise.
+     */
+    public abstract boolean needsSystemTree();
 }

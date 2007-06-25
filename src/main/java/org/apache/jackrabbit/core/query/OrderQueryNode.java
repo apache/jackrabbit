@@ -188,4 +188,12 @@ public class OrderQueryNode extends QueryNode {
             return false;
         }
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public boolean needsSystemTree() {
+        return false;
+    }
+
 }

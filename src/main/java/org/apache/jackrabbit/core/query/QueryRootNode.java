@@ -133,4 +133,12 @@ public class QueryRootNode extends QueryNode {
         }
         return false;
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public boolean needsSystemTree() {
+        return (locationNode != null && locationNode.needsSystemTree()) || (orderNode != null && orderNode.needsSystemTree());
+    }
+
 }
