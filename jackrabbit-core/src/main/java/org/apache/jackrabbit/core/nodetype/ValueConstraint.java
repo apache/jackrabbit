@@ -158,14 +158,6 @@ class BooleanConstraint extends ValueConstraint {
         }
     }
 
-    void check(Boolean bool) throws ConstraintViolationException {
-        if (bool == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '"
-                    + definition + "'");
-        }
-        check(bool.booleanValue());
-    }
-
     void check(boolean bool) throws ConstraintViolationException {
         if (bool != reqBool) {
             throw new ConstraintViolationException("'" + bool
@@ -180,7 +172,7 @@ class BooleanConstraint extends ValueConstraint {
         }
         switch (value.getType()) {
             case PropertyType.BOOLEAN:
-                check((Boolean) value.internalValue());
+                check(value.getBoolean());
                 return;
 
             default:
@@ -307,22 +299,6 @@ class NumericConstraint extends ValueConstraint {
         }
     }
 
-    void check(Double number) throws ConstraintViolationException {
-        if (number == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '"
-                    + definition + "'");
-        }
-        check(number.doubleValue());
-    }
-
-    void check(Long number) throws ConstraintViolationException {
-        if (number == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '"
-                    + definition + "'");
-        }
-        check(number.doubleValue());
-    }
-
     void check(double number) throws ConstraintViolationException {
         if (lowerLimit != null) {
             if (lowerInclusive) {
@@ -363,15 +339,15 @@ class NumericConstraint extends ValueConstraint {
         }
         switch (value.getType()) {
             case PropertyType.LONG:
-                check((Long) value.internalValue());
+                check(value.getLong());
                 return;
 
             case PropertyType.DOUBLE:
-                check((Double) value.internalValue());
+                check(value.getDouble());
                 return;
 
             case PropertyType.BINARY:
-                BLOBFileValue blob = (BLOBFileValue) value.internalValue();
+                BLOBFileValue blob = value.getBLOBFileValue();
                 long length = blob.getLength();
                 if (length != -1) {
                     check(length);
@@ -504,7 +480,7 @@ class DateConstraint extends ValueConstraint {
         }
         switch (value.getType()) {
             case PropertyType.DATE:
-                check((Calendar) value.internalValue());
+                check(value.getDate());
                 return;
 
             default:
@@ -566,7 +542,7 @@ class PathConstraint extends ValueConstraint {
         }
         switch (value.getType()) {
             case PropertyType.PATH:
-                Path p = (Path) value.internalValue();
+                Path p = value.getPath();
                 // normalize paths before comparing them
                 Path p0, p1;
                 try {
@@ -645,7 +621,7 @@ class NameConstraint extends ValueConstraint {
         }
         switch (value.getType()) {
             case PropertyType.NAME:
-                QName n = (QName) value.internalValue();
+                QName n = value.getQName();
                 if (!name.equals(n)) {
                     throw new ConstraintViolationException(n
                             + " does not satisfy the constraint '"

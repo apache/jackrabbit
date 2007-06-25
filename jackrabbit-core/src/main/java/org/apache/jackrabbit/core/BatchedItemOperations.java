@@ -331,7 +331,7 @@ public class BatchedItemOperations extends ItemValidator {
             InternalValue[] newVals = new InternalValue[values.length];
             for (int i = 0; i < values.length; i++) {
                 InternalValue val = values[i];
-                UUID original = (UUID) val.internalValue();
+                UUID original = val.getUUID();
                 UUID adjusted = refTracker.getMappedUUID(original);
                 if (adjusted != null) {
                     newVals[i] = InternalValue.create(adjusted);
@@ -1314,7 +1314,7 @@ public class BatchedItemOperations extends ItemValidator {
             log.debug(msg);
             throw new RepositoryException(msg, ise);
         }
-        boolean checkedOut = ((Boolean) propState.getValues()[0].internalValue()).booleanValue();
+        boolean checkedOut = propState.getValues()[0].getBoolean();
         if (!checkedOut) {
             throw new VersionException(safeGetJCRPath(nodePath) + " is checked-in");
         }

@@ -109,10 +109,10 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
             PropertyState prop = props[i];
             if (prop.getName().equals(QName.JCR_FROZENUUID)) {
                 // special property
-                frozenUUID = UUID.fromString(node.getPropertyValue(QName.JCR_FROZENUUID).internalValue().toString());
+                frozenUUID = UUID.fromString(node.getPropertyValue(QName.JCR_FROZENUUID).getString());
             } else if (prop.getName().equals(QName.JCR_FROZENPRIMARYTYPE)) {
                 // special property
-                frozenPrimaryType = (QName) node.getPropertyValue(QName.JCR_FROZENPRIMARYTYPE).internalValue();
+                frozenPrimaryType = node.getPropertyValue(QName.JCR_FROZENPRIMARYTYPE).getQName();
             } else if (prop.getName().equals(QName.JCR_FROZENMIXINTYPES)) {
                 // special property
                 InternalValue[] values = node.getPropertyValues(QName.JCR_FROZENMIXINTYPES);
@@ -121,7 +121,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
                 } else {
                     frozenMixinTypes = new QName[values.length];
                     for (int j = 0; j < values.length; j++) {
-                        frozenMixinTypes[j] = (QName) values[j].internalValue();
+                        frozenMixinTypes[j] = values[j].getQName();
                     }
                 }
             } else if (prop.getName().equals(QName.JCR_PRIMARYTYPE)) {

@@ -510,7 +510,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
                 InternalValue val = values[i];
                 if (val != null) {
                     if (val.getType() == PropertyType.BINARY) {
-                        BLOBFileValue blobVal = (BLOBFileValue) val.internalValue();
+                        BLOBFileValue blobVal = val.getBLOBFileValue();
                         // delete internal resource representation of BLOB value
                         blobVal.delete(true);
                         // also remove from BLOBStore

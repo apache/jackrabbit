@@ -489,7 +489,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
                 InternalValue val = values[i];
                 if (val != null) {
                     if (val.getType() == PropertyType.BINARY) {
-                        BLOBFileValue blobVal = (BLOBFileValue) val.internalValue();
+                        BLOBFileValue blobVal = val.getBLOBFileValue();
                         // delete blob file and prune empty parent folders
                         blobVal.delete(true);
                     }

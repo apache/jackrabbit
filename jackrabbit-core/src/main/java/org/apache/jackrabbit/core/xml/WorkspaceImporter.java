@@ -588,7 +588,7 @@ public class WorkspaceImporter implements Importer {
                 InternalValue[] newVals = new InternalValue[values.length];
                 for (int i = 0; i < values.length; i++) {
                     InternalValue val = values[i];
-                    UUID original = (UUID) val.internalValue();
+                    UUID original = val.getUUID();
                     UUID adjusted = refTracker.getMappedUUID(original);
                     if (adjusted != null) {
                         newVals[i] = InternalValue.create(adjusted);

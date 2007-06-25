@@ -29,7 +29,6 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
@@ -683,9 +682,7 @@ public class NodePropBundle {
             if (type == PropertyType.BINARY) {
                 // destroy binary property values
                 for (int i=0; i<values.length; i++) {
-                    if (values[i].internalValue() instanceof BLOBFileValue) {
-                        ((BLOBFileValue) values[i].internalValue()).delete(true);
-                    }
+                    values[i].getBLOBFileValue().delete(true);
                 }
             }
         }

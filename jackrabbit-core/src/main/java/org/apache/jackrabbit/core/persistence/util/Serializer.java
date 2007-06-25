@@ -193,7 +193,7 @@ public final class Serializer {
             if (state.getType() == PropertyType.BINARY) {
                 // special handling required for binary value:
                 // put binary value in BLOB store
-                BLOBFileValue blobVal = (BLOBFileValue) val.internalValue();
+                BLOBFileValue blobVal = val.getBLOBFileValue();
                 InputStream in = blobVal.getStream();
                 String blobId = blobStore.createId(state.getPropertyId(), i);
                 try {

@@ -108,15 +108,15 @@ public class TextFilterExtractor implements TextExtractor {
                 return new FilterReader((Reader) fulltext) {
                     public void close() throws IOException {
                         super.close();
-                        ((BLOBFileValue) value.internalValue()).discard();
+                        value.getBLOBFileValue().discard();
                     }
                 };
             } else {
-                ((BLOBFileValue) value.internalValue()).discard();
+                value.getBLOBFileValue().discard();
                 return new StringReader("");
             }
         } catch (RepositoryException e) {
-            ((BLOBFileValue) value.internalValue()).discard();
+            value.getBLOBFileValue().discard();
             return new StringReader("");
         }
     }
