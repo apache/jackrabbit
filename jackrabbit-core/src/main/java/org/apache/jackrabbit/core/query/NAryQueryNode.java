@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.query;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -146,4 +147,20 @@ public abstract class NAryQueryNode extends QueryNode {
         }
         return false;
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public boolean needsSystemTree() {
+        if (operands == null) {
+            return false;
+        }
+        for (Iterator iter = operands.iterator(); iter.hasNext();) {
+            QueryNode queryNode = (QueryNode) iter.next();
+            if (queryNode.needsSystemTree())
+                return true;
+        }
+        return false;
+    }
+    
 }

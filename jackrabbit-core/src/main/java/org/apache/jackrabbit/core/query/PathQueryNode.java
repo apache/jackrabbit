@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.query;
 
+import org.apache.jackrabbit.name.QName;
+
 /**
  * Implements a query node that defines a path restriction.
  */
@@ -109,5 +111,46 @@ public class PathQueryNode extends NAryQueryNode {
             return super.equals(obj) && absolute == other.absolute;
         }
         return false;
+    }
+    
+    
+    /**
+     * {@inheritDoc}
+     */
+    public boolean needsSystemTree() {
+        
+        LocationStepQueryNode[] pathSteps = getPathSteps();
+        if (pathSteps == null || pathSteps.length == 0) {
+            return true;
+        }
+
+        QName firstPathStepName = pathSteps[0].getNameTest();
+        // If the first location step has a null name test we need to include
+        // the system tree ("*")
+        if (firstPathStepName == null)
+            return true;
+        
+        // Calculate the first workspace relative location step
+        LocationStepQueryNode firstWorkspaceRelativeStep = pathSteps[0];
+        if (firstPathStepName.equals(QName.ROOT)) {
+            // path starts with "/jcr:root"
+            if (pathSteps.length > 1) {
+                firstWorkspaceRelativeStep = pathSteps[1];
+            }
+        }
+        
+        // First path step starts with "//"
+        if (firstWorkspaceRelativeStep.getIncludeDescendants())
+            return true;
+
+        // If the first workspace relative location step is jcr:system we need 
+        // to include the system tree
+        QName firstWorkspaceRelativeName = firstWorkspaceRelativeStep.getNameTest();
+        if (firstWorkspaceRelativeName == null
+                || firstWorkspaceRelativeName.equals(QName.JCR_SYSTEM)) {
+            return true;
+        }
+        
+        return super.needsSystemTree();
     }
 }

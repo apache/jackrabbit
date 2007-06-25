@@ -519,7 +519,7 @@ public class SearchIndex extends AbstractQueryHandler {
         checkOpen();
         SortField[] sortFields = createSortFields(orderProps, orderSpecs);
 
-        IndexReader reader = getIndexReader();
+        IndexReader reader = getIndexReader(queryImpl.needsSystemTree());
         IndexSearcher searcher = new IndexSearcher(reader);
         Hits hits;
         if (sortFields.length > 0) {
@@ -611,9 +611,26 @@ public class SearchIndex extends AbstractQueryHandler {
      * @throws IOException the index reader cannot be obtained.
      */
     public IndexReader getIndexReader() throws IOException {
+        return getIndexReader(true);
+    }
+
+    /**
+     * Returns an index reader for this search index. The caller of this method
+     * is responsible for closing the index reader when he is finished using
+     * it.
+     *
+     * @param includeSystemIndex if <code>true</code> the index reader will
+     *                           cover the complete workspace. If
+     *                           <code>false</code> the returned index reader
+     *                           will not contains any nodes under /jcr:system.
+     * @return an index reader for this search index.
+     * @throws IOException the index reader cannot be obtained.
+     */
+    protected IndexReader getIndexReader(boolean includeSystemIndex)
+            throws IOException {
         QueryHandler parentHandler = getContext().getParentHandler();
         IndexReader parentReader = null;
-        if (parentHandler instanceof SearchIndex) {
+        if (parentHandler instanceof SearchIndex && includeSystemIndex) {
             parentReader = ((SearchIndex) parentHandler).index.getIndexReader();
         }
 
