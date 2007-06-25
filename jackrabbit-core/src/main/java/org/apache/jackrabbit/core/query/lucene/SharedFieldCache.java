@@ -20,7 +20,6 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.search.FieldCache;
 import org.apache.lucene.search.SortComparator;
 
 import java.io.IOException;
@@ -37,6 +36,30 @@ import java.util.ArrayList;
  * over the terms to iterate, that's why we use our own implementation.
  */
 class SharedFieldCache {
+
+    /**
+     * Expert: Stores term text values and document ordering data.
+     */
+    public static class StringIndex {
+
+        /**
+         * All the term values, in natural order.
+         */
+        public final String[] lookup;
+
+        /**
+         * Terms indexed by document id.
+         */
+        public final String[] terms;
+
+        /**
+         * Creates one of these objects
+         */
+        public StringIndex(String[] terms, String[] lookup) {
+            this.terms = terms;
+            this.lookup = lookup;
+        }
+    }
 
     /**
      * Reference to the single instance of <code>SharedFieldCache</code>.
@@ -72,16 +95,21 @@ class SharedFieldCache {
      *         information.
      * @throws IOException if an error occurs while reading from the index.
      */
-    public FieldCache.StringIndex getStringIndex(IndexReader reader,
+    public SharedFieldCache.StringIndex getStringIndex(IndexReader reader,
                                                  String field,
                                                  String prefix,
                                                  SortComparator comparator,
                                                  boolean includeLookup)
             throws IOException {
+        
+        if (reader instanceof ReadOnlyIndexReader) {
+            reader = ((ReadOnlyIndexReader) reader).getBase();
+        }
+        
         field = field.intern();
-        FieldCache.StringIndex ret = lookup(reader, field, prefix, comparator);
+        SharedFieldCache.StringIndex ret = lookup(reader, field, prefix, comparator);
         if (ret == null) {
-            final int[] retArray = new int[reader.maxDoc()];
+            final String[] retArray = new String[reader.maxDoc()];
             List mterms = null;
             if (includeLookup) {
                 mterms = new ArrayList();
@@ -95,7 +123,6 @@ class SharedFieldCache {
                 if (includeLookup) {
                     mterms.add(null); // for documents with term number 0
                 }
-                int t = 1;  // current term number
 
                 try {
                     if (termEnum.term() == null) {
@@ -114,10 +141,8 @@ class SharedFieldCache {
 
                         termDocs.seek(termEnum);
                         while (termDocs.next()) {
-                            retArray[termDocs.doc()] = t;
+                            retArray[termDocs.doc()] = term.text().substring(prefix.length());
                         }
-
-                        t++;
                     } while (termEnum.next());
                 } finally {
                     termDocs.close();
@@ -128,7 +153,7 @@ class SharedFieldCache {
             if (includeLookup) {
                 lookup = (String[]) mterms.toArray(new String[mterms.size()]);
             }
-            FieldCache.StringIndex value = new FieldCache.StringIndex(retArray, lookup);
+            SharedFieldCache.StringIndex value = new SharedFieldCache.StringIndex(retArray, lookup);
             store(reader, field, prefix, comparator, value);
             return value;
         }
@@ -138,7 +163,7 @@ class SharedFieldCache {
     /**
      * See if a <code>StringIndex</code> object is in the cache.
      */
-    FieldCache.StringIndex lookup(IndexReader reader, String field,
+    SharedFieldCache.StringIndex lookup(IndexReader reader, String field,
                                   String prefix, SortComparator comparer) {
         Key key = new Key(field, prefix, comparer);
         synchronized (this) {
@@ -146,7 +171,7 @@ class SharedFieldCache {
             if (readerCache == null) {
                 return null;
             }
-            return (FieldCache.StringIndex) readerCache.get(key);
+            return (SharedFieldCache.StringIndex) readerCache.get(key);
         }
     }
 
@@ -154,7 +179,7 @@ class SharedFieldCache {
      * Put a <code>StringIndex</code> <code>value</code> to cache.
      */
     Object store(IndexReader reader, String field, String prefix,
-                 SortComparator comparer, FieldCache.StringIndex value) {
+                 SortComparator comparer, SharedFieldCache.StringIndex value) {
         Key key = new Key(field, prefix, comparer);
         synchronized (this) {
             HashMap readerCache = (HashMap) cache.get(reader);

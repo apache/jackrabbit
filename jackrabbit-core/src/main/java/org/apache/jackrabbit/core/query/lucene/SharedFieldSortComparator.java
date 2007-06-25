@@ -16,14 +16,16 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.jackrabbit.core.query.lucene.SharedFieldCache.StringIndex;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.FieldCache;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.ScoreDocComparator;
 import org.apache.lucene.search.SortComparator;
 import org.apache.lucene.search.SortField;
-
-import java.io.IOException;
 
 /**
  * Implements a <code>SortComparator</code> which knows how to sort on a lucene
@@ -86,40 +88,57 @@ public class SharedFieldSortComparator extends SortComparator {
      * @param reader the index reader.
      * @param propertyName the name of the property to sort.
      * @return a <code>ScoreDocComparator</code> for the
+     * @throws IOException 
      * @throws IOException
      */
-    public ScoreDocComparator newComparator(final IndexReader reader, String propertyName)
-            throws IOException {
-        // get the StringIndex for propertyName
-        final FieldCache.StringIndex index
-                = SharedFieldCache.INSTANCE.getStringIndex(reader, field,
-                        FieldNames.createNamedValue(propertyName, ""),
-                        SharedFieldSortComparator.this,
-                        createComparatorValues);
+    public ScoreDocComparator newComparator(final IndexReader reader, final String propertyName) throws IOException {
+
+        final List readers = new ArrayList();
+        getIndexReaders(readers, reader);
+
+        final SharedFieldCache.StringIndex[] indexes = new SharedFieldCache.StringIndex[readers.size()];
+
+        int maxDoc = 0;
+        final int[] starts = new int[readers.size() + 1];
+
+        for (int i = 0; i < readers.size(); i++) {
+            IndexReader r = (IndexReader) readers.get(i);
+            starts[i] = maxDoc;
+            maxDoc += r.maxDoc();
+            indexes[i] = SharedFieldCache.INSTANCE.getStringIndex(r, field,
+                    FieldNames.createNamedValue(propertyName, ""),
+                    SharedFieldSortComparator.this, createComparatorValues);
+        }
+        starts[readers.size()] = maxDoc; 
 
         return new ScoreDocComparator() {
+
             public final int compare(final ScoreDoc i, final ScoreDoc j) {
-                final int fi = index.order[i.doc];
-                final int fj = index.order[j.doc];
-                if (fi < fj) {
-                    return -1;
-                } else if (fi > fj) {
-                    return 1;
-                } else {
-                    return 0;
-                }
+                int idx1 = readerIndex(i.doc);
+                int idx2 = readerIndex(j.doc);             	
+
+                String iTerm = indexes[idx1].terms[i.doc - starts[idx1]];
+                String jTerm = indexes[idx2].terms[j.doc - starts[idx2]];
+
+                if (iTerm == jTerm) return 0;
+                if (iTerm == null) return -1;
+                if (jTerm == null) return 1;
+
+                return iTerm.compareTo(jTerm);
             }
 
             /**
-             * Returns an empty if no lookup table is available otherwise
-             * the index term for the score doc <code>i</code>.
-             *
-             * @param i the score doc.
+             * Returns an empty if no lookup table is available otherwise the
+             * index term for the score doc <code>i</code>.
+             * 
+             * @param i
+             *            the score doc.
              * @return the sort value if available.
              */
             public Comparable sortValue(final ScoreDoc i) {
-                if (index.lookup != null) {
-                    return index.lookup[index.order[i.doc]];
+                if (createComparatorValues) {
+                    StringIndex index = indexes[readerIndex(i.doc)];
+                    return index.terms[i.doc];
                 } else {
                     // return dummy value
                     return "";
@@ -129,6 +148,34 @@ public class SharedFieldSortComparator extends SortComparator {
             public int sortType() {
                 return SortField.CUSTOM;
             }
+
+            /**
+             * Returns the reader index for document <code>n</code>.
+             *
+             * @param n document number.
+             * @return the reader index.
+             */
+            private int readerIndex(int n) {
+                int lo = 0;
+                int hi = readers.size() - 1;
+
+                while (hi >= lo) {
+                    int mid = (lo + hi) >> 1;
+                    int midValue = starts[mid];
+                    if (n < midValue) {
+                        hi = mid - 1;
+                    } else if (n > midValue) {
+                        lo = mid + 1;
+                    } else {
+                        while (mid + 1 < readers.size() && starts[mid + 1] == midValue) {
+                            mid++;
+                        }
+                        return mid;
+                    }
+                }
+                return hi;
+            }             
+
         };
     }
 
@@ -137,5 +184,24 @@ public class SharedFieldSortComparator extends SortComparator {
      */
     protected Comparable getComparable(String termtext) {
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Checks if <code>reader</code> is of type {@link MultiIndexReader} and if
+     * that's the case calls this method recursively for each reader within the
+     * multi index reader; otherwise the reader is simply added to the list.
+     *
+     * @param readers the list of index readers.
+     * @param reader  the reader to check.
+     */
+    private void getIndexReaders(List readers, IndexReader reader) {
+        if (reader instanceof MultiIndexReader) {
+            IndexReader[] r = ((MultiIndexReader) reader).getIndexReaders();
+            for (int i = 0; i < r.length; i++) {
+                getIndexReaders(readers, r[i]);
+            }
+        } else {
+            readers.add(reader);
+        }
     }
 }
