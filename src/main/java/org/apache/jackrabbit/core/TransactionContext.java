@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.util.Timer;
 
 import javax.transaction.xa.XAException;
 import javax.transaction.Status;
@@ -27,17 +28,22 @@ import java.util.Map;
 /**
  * Represents the transaction on behalf of the component that wants to
  * explictely demarcate transcation boundaries. After having been prepared,
- * starts a thread that rolls back the transaction if some time passes without
+ * schedules a task that rolls back the transaction if some time passes without
  * any further action. This will guarantee that global objects locked by one
  * of the resources' {@link InternalXAResource#prepare} method, are eventually
  * unlocked.
  */
-public class TransactionContext implements Runnable {
+public class TransactionContext extends Timer.Task {
 
     /**
      * Logger instance.
      */
     private static final Logger log = LoggerFactory.getLogger(TransactionContext.class);
+
+    /**
+     * Create a global timer for all transaction contexts.
+     */
+    private static final Timer TIMER = new Timer(true);
 
     /**
      * Transactional resources.
@@ -140,8 +146,8 @@ public class TransactionContext implements Runnable {
             throw e;
         }
 
-        // start rollback thread in case the commit is never issued
-        new Thread(this, "RollbackThread").start();
+        // start rollback task in case the commit is never issued
+        TIMER.schedule(this, timeout * 1000, Integer.MAX_VALUE);
     }
 
     /**
@@ -178,6 +184,9 @@ public class TransactionContext implements Runnable {
         afterOperation();
         status = Status.STATUS_COMMITTED;
 
+        // cancel the rollback task
+        cancel();
+
         if (txe != null) {
             XAException e = new XAException(XAException.XA_RBOTHER);
             e.initCause(txe);
@@ -210,25 +219,19 @@ public class TransactionContext implements Runnable {
         afterOperation();
         status = Status.STATUS_ROLLEDBACK;
 
+        // cancel the rollback task
+        cancel();
+
         if (errors != 0) {
             throw new XAException(XAException.XA_RBOTHER);
         }
     }
 
     /**
-     * {@inheritDoc}
-     * <p/>
-     * Waits for the amount of time specified as transaction timeout. After
-     * this time has elapsed, rolls back the transaction if still prepared
-     * and marks the transaction rolled back.
+     * Rolls back the transaction if still prepared and marks the transaction
+     * rolled back.
      */
     public void run() {
-        try {
-            Thread.sleep(timeout * 1000);
-        } catch (InterruptedException e) {
-            /* ignore */
-        }
-
         synchronized (this) {
             if (status == Status.STATUS_PREPARED) {
                 try {
@@ -238,6 +241,8 @@ public class TransactionContext implements Runnable {
                 }
                 log.warn("Transaction rolled back because timeout expired.");
             }
+            // cancel the rollback task
+            cancel();
         }
     }
 
