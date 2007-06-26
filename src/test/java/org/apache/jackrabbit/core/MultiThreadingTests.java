@@ -16,25 +16,29 @@
  */
 package org.apache.jackrabbit.core;
 
-import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import junit.framework.Test;
 
 /**
- * Test suite that includes all testcases for the Core module.
+ * <code>MultiThreadingTests</code> is a test suite that includes all
+ * multi-threading related tests.
  */
-public class TestAll extends TestCase {
+public class MultiThreadingTests extends TestCase {
 
-    /**
-     * @return a <code>Test</code> suite that executes all tests inside this
-     *         package, except the multi-threading related ones.
-     */
     public static Test suite() {
-        TestSuite suite = new TestSuite("Core tests");
+        TestSuite suite = new TestSuite("Multi-threading tests");
 
-        suite.addTestSuite(NamespaceRegistryImplTest.class);
-        suite.addTestSuite(TransientRepositoryTest.class);
-        suite.addTestSuite(XATest.class);
+        suite.addTestSuite(ConcurrencyTest.class);
+        suite.addTestSuite(ConcurrentLoginTest.class);
+        suite.addTestSuite(ConcurrentNodeModificationTest.class);
+        suite.addTestSuite(ConcurrentReadWriteTest.class);
+        suite.addTestSuite(ConcurrentSaveTest.class);
+        suite.addTestSuite(ConcurrentVersioningTest.class);
+        suite.addTestSuite(ConcurrentVersioningWithTransactionsTest.class);
+        suite.addTestSuite(ConcurrentCheckinMixedTransactionTest.class);
+        suite.addTestSuite(LockTest.class);
+        suite.addTestSuite(ReadVersionsWhileModified.class);
 
         return suite;
     }
