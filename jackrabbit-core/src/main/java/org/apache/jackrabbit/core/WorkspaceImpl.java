@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.VersionSelector;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.Importer;
+import org.apache.jackrabbit.core.xml.SAXParserProvider;
 import org.apache.jackrabbit.core.xml.WorkspaceImporter;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.Path;
@@ -59,8 +60,6 @@ import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -725,13 +724,7 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
         ImportHandler handler =
                 (ImportHandler) getImportContentHandler(parentAbsPath, uuidBehavior);
         try {
-            SAXParserFactory factory = SAXParserFactory.newInstance();
-            factory.setNamespaceAware(true);
-            factory.setFeature(
-                    "http://xml.org/sax/features/namespace-prefixes", false);
-
-            SAXParser parser = factory.newSAXParser();
-            parser.parse(new InputSource(in), handler);
+            SAXParserProvider.getParser().parse(new InputSource(in), handler);
         } catch (SAXException se) {
             // check for wrapped repository exception
             Exception e = se.getException();
