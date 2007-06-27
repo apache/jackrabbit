@@ -16,40 +16,20 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.commons.collections.IteratorUtils;
-import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.core.config.AccessManagerConfig;
-import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.security.AMContext;
-import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.security.AuthContext;
-import org.apache.jackrabbit.core.security.SecurityConstants;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.SessionItemStateManager;
-import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.state.LocalItemStateManager;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
-import org.apache.jackrabbit.core.version.VersionManager;
-import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
-import org.apache.jackrabbit.core.xml.ImportHandler;
-import org.apache.jackrabbit.core.xml.SessionImporter;
-import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
-import org.apache.jackrabbit.core.util.Dumpable;
-import org.apache.jackrabbit.core.lock.LockManager;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NamePathResolver;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.uuid.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.security.AccessControlException;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -74,33 +54,51 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.observation.EventListener;
-import javax.jcr.observation.EventListenerIterator;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.version.VersionException;
 import javax.security.auth.Subject;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.security.AccessControlException;
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.jackrabbit.core.config.AccessManagerConfig;
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.lock.LockManager;
+import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.core.security.AMContext;
+import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.security.AuthContext;
+import org.apache.jackrabbit.core.security.SecurityConstants;
+import org.apache.jackrabbit.core.state.LocalItemStateManager;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.SessionItemStateManager;
+import org.apache.jackrabbit.core.state.SharedItemStateManager;
+import org.apache.jackrabbit.core.util.Dumpable;
+import org.apache.jackrabbit.core.version.VersionManager;
+import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
+import org.apache.jackrabbit.core.xml.ImportHandler;
+import org.apache.jackrabbit.core.xml.SAXParserProvider;
+import org.apache.jackrabbit.core.xml.SessionImporter;
+import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
+import org.apache.jackrabbit.name.NameException;
+import org.apache.jackrabbit.name.NamePathResolver;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 /**
  * A <code>SessionImpl</code> ...
@@ -1107,13 +1105,7 @@ public class SessionImpl implements Session, NamePathResolver, Dumpable {
         ImportHandler handler = (ImportHandler)
                 getImportContentHandler(parentAbsPath, uuidBehavior);
         try {
-            SAXParserFactory factory = SAXParserFactory.newInstance();
-            factory.setNamespaceAware(true);
-            factory.setFeature(
-                    "http://xml.org/sax/features/namespace-prefixes", false);
-
-            SAXParser parser = factory.newSAXParser();
-            parser.parse(new InputSource(in), handler);
+            SAXParserProvider.getParser().parse(new InputSource(in), handler);
         } catch (SAXException se) {
             // check for wrapped repository exception
             Exception e = se.getException();
