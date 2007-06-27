@@ -109,7 +109,7 @@ public interface ItemStateFactory {
     public Iterator getChildNodeInfos(NodeId nodeId) throws ItemNotFoundException, RepositoryException;
 
     /**
-     * Returns the NodeReferences for the NodeState with the given ID.
+     * Returns the NodeReferences for the given NodeState.
      *
      * @param nodeState
      * @return NodeReferences
