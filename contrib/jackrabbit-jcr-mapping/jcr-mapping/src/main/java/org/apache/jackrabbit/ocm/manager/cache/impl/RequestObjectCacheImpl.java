@@ -24,7 +24,7 @@ import org.apache.jackrabbit.ocm.manager.cache.ObjectCache;
 /**
 *
 * This is a simple cache implementation that can be used per retrieve requests.
-* This avoids to load duplicated object instantiate.
+* This avoids to load duplicated object instance.
 * 
 * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
 * 
