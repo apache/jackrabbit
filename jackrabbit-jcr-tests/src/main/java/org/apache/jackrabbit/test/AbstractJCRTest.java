@@ -19,6 +19,7 @@ package org.apache.jackrabbit.test;
 import junit.framework.TestResult;
 
 import javax.jcr.Node;
+import javax.jcr.PropertyType;
 import javax.jcr.Session;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -30,6 +31,7 @@ import javax.jcr.Value;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.PropertyDefinition;
 
 import java.util.StringTokenizer;
 import java.util.Random;
@@ -540,7 +542,37 @@ public abstract class AbstractJCRTest extends JUnitTest {
             throw new NotExecutableException("This repository does not seem to support multiple workspaces.");
         }
     }
-    
+
+
+    private boolean canSetProperty(NodeType nodeType, String propertyName, int propertyType) {
+        PropertyDefinition propDefs[] = nodeType.getPropertyDefinitions();
+
+        for (int i = 0; i < propDefs.length; i++) {
+            if (propDefs[i].getName().equals(propertyName) || propDefs[i].getName().equals("*")) {
+                if (propDefs[i].getRequiredType() == propertyType || propDefs[i].getRequiredType() == PropertyType.UNDEFINED) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private boolean canSetProperty(Node node, String propertyName, int propertyType) throws RepositoryException {
+
+        if (canSetProperty(node.getPrimaryNodeType(), propertyName, propertyType)) {
+            return true;
+        }
+        else {
+            NodeType mixins[] = node.getMixinNodeTypes();
+            boolean canSetIt = false;
+            for (int i = 0; i < mixins.length && !canSetIt; i++) {
+                canSetIt |= canSetProperty(mixins[i], propertyName, propertyType);
+            }
+            return canSetIt;
+        }
+    }
+
     /**
      * Checks that the repository can set the property to the required type, otherwise aborts with
      * {@link NotExecutableException}.
@@ -548,21 +580,12 @@ public abstract class AbstractJCRTest extends JUnitTest {
      * type is not supported
      */
     protected void ensureCanSetProperty(Node node, String propertyName, Value value) throws NotExecutableException, RepositoryException {
-        
-        boolean canSetIt = node.getPrimaryNodeType().canSetProperty(propertyName, value);
-        if (! canSetIt) {
-            // check mixins
-            NodeType mixins[] = node.getMixinNodeTypes();
-            for (int i = 0; i < mixins.length && !canSetIt; i++) {
-                canSetIt |= mixins[i].canSetProperty(propertyName, value);
-            }
-        }
-      
-        if (! canSetIt) {
+
+        if (! canSetProperty(node, propertyName, value.getType())) {
             throw new NotExecutableException("configured property name " + propertyName + " can not be set on node " + node.getPath());
         }
     }
-    
+
     /**
      * Checks that the repository can set the property to the required type, otherwise aborts with
      * {@link NotExecutableException}.
@@ -571,16 +594,9 @@ public abstract class AbstractJCRTest extends JUnitTest {
      */
     protected void ensureCanSetProperty(Node node, String propertyName, Value[] values) throws NotExecutableException, RepositoryException {
       
-        boolean canSetIt = node.getPrimaryNodeType().canSetProperty(propertyName, values);
-        if (! canSetIt) {
-            // check mixins
-            NodeType mixins[] = node.getMixinNodeTypes();
-            for (int i = 0; i < mixins.length && !canSetIt; i++) {
-                canSetIt |= mixins[i].canSetProperty(propertyName, values);
-            }
-        }
-      
-        if (! canSetIt) {
+        int propertyType = values.length == 0 ? PropertyType.UNDEFINED : values[0].getType();
+        
+        if (! canSetProperty(node, propertyName, propertyType)) {
             throw new NotExecutableException("configured property name " + propertyName + " can not be set on node " + node.getPath());
         }
     }
