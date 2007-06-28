@@ -98,7 +98,13 @@ public class RepositoryUtilTest extends TestCase
             Session session = RepositoryUtil.login(repository, "superuser", "superuser");
             Node root = session.getRootNode();
             assertNotNull("Root node is null", root);
+            
+            Session session2 = RepositoryUtil.login(repository, "superuser", "superuser");
+            root = session2.getRootNode();
+            assertNotNull("Root node is null", root);
+            
             session.logout();
+            session2.logout();
         }
         catch (Exception e)
         {

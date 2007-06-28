@@ -151,7 +151,7 @@ public class RepositoryUtil
         try
         {
             Session session = repository.login(new SimpleCredentials(user, password.toCharArray()), null);
-            setupSession(session);
+            
            
             return session; 
         }
@@ -240,10 +240,12 @@ public class RepositoryUtil
      * Until now, we check only if the namespace prefix exist in the repository
      * 
      */
-    private static void setupSession(Session session) throws RepositoryException
+    public static void setupSession(Session session) throws RepositoryException
     {
          try
          {
+        	log.info("Setup Jcr session setup ...");
+        	
             String[] jcrNamespaces = session.getWorkspace().getNamespaceRegistry().getPrefixes();
             boolean createNamespace = true;
             for (int i = 0; i < jcrNamespaces.length; i++)
@@ -263,14 +265,14 @@ public class RepositoryUtil
             
             if (session.getRootNode() != null)
             {
-                log.info("Jcr repository setup successfull.");
+                log.info("Jcr session setup successfull.");
             }
             
 
         }
         catch (Exception e)
         {
-            log.error("Error while setting up the jcr repository.", e);
+            log.error("Error while setting up the jcr session.", e);
             throw new RepositoryException(e.getMessage());
         }
     }
