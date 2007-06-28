@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.ocm.manager.impl;
 
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -59,6 +60,7 @@ import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 import org.apache.jackrabbit.ocm.query.Query;
 import org.apache.jackrabbit.ocm.query.QueryManager;
 import org.apache.jackrabbit.ocm.query.impl.QueryManagerImpl;
+import org.apache.jackrabbit.ocm.repository.RepositoryUtil;
 import org.apache.jackrabbit.ocm.version.Version;
 import org.apache.jackrabbit.ocm.version.VersionIterator;
 import org.apache.jackrabbit.ocm.lock.Lock;
@@ -116,6 +118,8 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
         this.requestObjectCache = new RequestObjectCacheImpl();        
         this.objectConverter = new ObjectConverterImpl(mapper, new DefaultAtomicTypeConverterProvider(), new ProxyManagerImpl(), requestObjectCache);
         this.queryManager = queryManager;
+        
+        RepositoryUtil.setupSession(session);
 
     }
 
@@ -136,6 +140,8 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
 			this.queryManager = new QueryManagerImpl(mapper, atomicTypeConverters, session.getValueFactory());
 			this.requestObjectCache = new RequestObjectCacheImpl();        
 			this.objectConverter = new ObjectConverterImpl(mapper, converterProvider, new ProxyManagerImpl(), requestObjectCache);
+			
+			RepositoryUtil.setupSession(session);
 		} 
         catch (RepositoryException e) 
         {
@@ -146,6 +152,34 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
         
     }
     
+    /**
+     * Creates a new <code>ObjectContentManager</code> based on a JCR session and some xml mapping files. 
+     *
+     * @param session The JCR session
+     * @param xmlMappingFiles the JCR mapping files used mainly to create the <code>Mapper</code> component
+     */
+    public ObjectContentManagerImpl(Session session,InputStream[] xmlMappingFiles ) 
+    {
+        try 
+        {
+			this.session = session;
+			this.mapper = new DigesterMapperImpl(xmlMappingFiles);
+			DefaultAtomicTypeConverterProvider converterProvider = new DefaultAtomicTypeConverterProvider();
+			Map atomicTypeConverters = converterProvider.getAtomicTypeConverters();
+			this.queryManager = new QueryManagerImpl(mapper, atomicTypeConverters, session.getValueFactory());
+			this.requestObjectCache = new RequestObjectCacheImpl();        
+			this.objectConverter = new ObjectConverterImpl(mapper, converterProvider, new ProxyManagerImpl(), requestObjectCache);
+			
+			RepositoryUtil.setupSession(session);
+		} 
+        catch (RepositoryException e) 
+        {
+            throw new org.apache.jackrabbit.ocm.exception.RepositoryException(
+                    "Impossible to instantiate the object content manager", e);
+
+		}
+        
+    }
     
     /**
      * Full constructor.
@@ -165,6 +199,8 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
         this.objectConverter = converter;
         this.queryManager = queryManager;
         this.requestObjectCache = requestObjectCache;
+        
+        RepositoryUtil.setupSession(session);
     }
     
     /**
