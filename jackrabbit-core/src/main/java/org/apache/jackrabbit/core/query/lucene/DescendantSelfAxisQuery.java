@@ -26,7 +26,10 @@ import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Weight;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -334,15 +337,21 @@ class DescendantSelfAxisQuery extends Query {
             // check if doc is a descendant of one of the context nodes
             int parentDoc = hResolver.getParent(doc);
 
+            List ancestorDocs = new ArrayList();
+            ancestorDocs.add(new Integer(parentDoc));
+
             // traverse
             while (parentDoc != -1 && !contextHits.get(parentDoc)) {
                 parentDoc = hResolver.getParent(parentDoc);
+                ancestorDocs.add(new Integer(parentDoc));
             }
 
             if (parentDoc != -1) {
                 // since current parentDoc is a descendant of one of the context
-                // docs we can promote parentDoc to the context hits
-                contextHits.set(parentDoc);
+                // docs we can promote all ancestorDocs to the context hits
+                for (Iterator iter = ancestorDocs.iterator(); iter.hasNext();) {
+                    contextHits.set(((Integer) iter.next()).intValue());
+                }
                 return true;
             }
             return false;
