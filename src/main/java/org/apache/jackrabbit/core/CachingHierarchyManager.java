@@ -487,6 +487,24 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             if (idCache.get(id) != null) {
                 return;
             }
+
+            /**
+             * Do not cache paths to elements if the parent is transient, since
+             * children may be reordered multiple times (see JCR-993). If a
+             * child's position is cached at some intermediate stage but the
+             * total reordering effectively leaves the child at its initial
+             * position, the child's bad position is hardly detectable.
+             */
+            try {
+                NodeId parentId = state.getParentId();
+                if (parentId != null && provider.getItemState(parentId).isTransient()) {
+                    return;
+                }
+            } catch (ItemStateException e) {
+                String msg = "Unable to retrieve parent state of: " + id;
+                log.warn(msg, e);
+            }
+
             if (idCache.size() >= upperLimit) {
                 /**
                  * Remove least recently used item. Scans the LRU list from head to tail
