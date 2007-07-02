@@ -674,9 +674,13 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         DataInputStream din = null;
         try {
             if (getStorageModel() == SM_BINARY_KEYS) {
-                stmt = con.prepareStatement("select NODE_ID, BUNDLE_DATA from BUNDLE");
+                stmt = con.prepareStatement(
+                        "select NODE_ID, BUNDLE_DATA from "
+                        + schemaObjectPrefix + "BUNDLE");
             } else {
-                stmt = con.prepareStatement("select NODE_ID_HI, NODE_ID_LO, BUNDLE_DATA from BUNDLE");
+                stmt = con.prepareStatement(
+                        "select NODE_ID_HI, NODE_ID_LO, BUNDLE_DATA from "
+                        + schemaObjectPrefix + "BUNDLE");
             }
             stmt.execute();
             rs = stmt.getResultSet();
