@@ -330,7 +330,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             }
             QueryParser parser = new QueryParser(fieldname, analyzer);
             parser.setOperator(QueryParser.DEFAULT_OPERATOR_AND);
-            // replace unescaped ' with " and escaped ' with just '
+            // replace escaped ' with just '
             StringBuffer query = new StringBuffer();
             String textsearch = node.getQuery();
             // the default lucene query parser recognizes 'AND' and 'NOT' as
@@ -348,11 +348,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     }
                 } else if (textsearch.charAt(i) == '\'') {
                     if (escaped) {
-                        query.append('\'');
                         escaped = false;
-                    } else {
-                        query.append('\"');
                     }
+                    query.append(textsearch.charAt(i));
                 } else {
                     if (escaped) {
                         query.append('\\');

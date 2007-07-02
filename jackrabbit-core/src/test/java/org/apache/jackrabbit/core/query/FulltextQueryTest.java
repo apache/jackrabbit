@@ -88,7 +88,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         String sql = "SELECT * FROM nt:unstructured"
                 + " WHERE \"jcr:path\" LIKE '" + testRoot + "/%"
-                + "' AND CONTAINS(., 'text ''fox jumps''')";
+                + "' AND CONTAINS(., 'text \"fox jumps\"')";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
