@@ -26,9 +26,12 @@
   <!-- ====================================================================== -->
   <!-- P R O J E C T  D E S C R I P T I O N                                   -->
   <!-- ====================================================================== -->
+  <parent>
+    <groupId>org.apache.jackrabbit</groupId>
+    <artifactId>jackrabbit</artifactId>
+    <version>1.4-SNAPSHOT</version>
+  </parent>
   <artifactId>jackrabbit-ocm</artifactId>
-  <groupId>org.apache.jackrabbit</groupId>
-  <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>Jackrabbit Object Content Mapping</name>
   <description>This Jackrabbit subproject is an object/JCR persistence and query service. This tools lets you to persist java objects into a JCR compliant repository - including association, inheritance, polymorphism, composition, and the Java collections framework. Furthermore, this jcr-mapping allows you to express queries in Java-based Criteria, as well as in JCR query language. It offers also features like version support and object locking.</description>
