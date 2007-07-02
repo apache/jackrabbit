@@ -140,4 +140,16 @@
     </dependency>    
   </dependencies>
 
+  <scm>
+    <connection>
+      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/contrib/jackrabbit-jcr-mapping/jcr-mapping
+    </connection>
+    <developerConnection>
+      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/contrib/jackrabbit-jcr-mapping/jcr-mapping
+    </developerConnection>
+    <url>
+      http://svn.apache.org/viewvc/jackrabbit/trunk/contrib/jackrabbit-jcr-mapping/jcr-mapping
+    </url>
+  </scm>
+
 </project>
