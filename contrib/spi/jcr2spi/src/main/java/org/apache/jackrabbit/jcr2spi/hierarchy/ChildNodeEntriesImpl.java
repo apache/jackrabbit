@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
 import java.lang.ref.WeakReference;
+import java.lang.ref.Reference;
 
 /**
  * <code>ChildNodeEntriesImpl</code> implements a memory sensitive implementation
@@ -511,7 +512,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             }
 
             protected Object getValue() {
-                WeakReference val = (WeakReference) super.getValue();
+                Reference val = (Reference) super.getValue();
                 // if the nodeEntry has been g-collected in the mean time
                 // create a new NodeEntry in order to avoid returning null.
                 NodeEntry ne = (val == null) ?  null : (NodeEntry) val.get();
