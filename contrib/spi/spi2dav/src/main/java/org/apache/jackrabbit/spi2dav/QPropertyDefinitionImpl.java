@@ -25,6 +25,7 @@ import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.value.ValueFormat;
+import org.apache.jackrabbit.value.ValueFactoryImplEx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,7 +101,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
                 QValue qValue;
                 if (requiredType == PropertyType.BINARY) {
                     // TODO: improve
-                    Value v = ValueFactoryImpl.getInstance().createValue(jcrVal, requiredType);
+                    Value v = ValueFactoryImplEx.getInstance().createValue(jcrVal, requiredType);
                     qValue = ValueFormat.getQValue(v, nsResolver, qValueFactory);
                 } else {
                     qValue = ValueFormat.getQValue(jcrVal, requiredType, nsResolver, qValueFactory);
