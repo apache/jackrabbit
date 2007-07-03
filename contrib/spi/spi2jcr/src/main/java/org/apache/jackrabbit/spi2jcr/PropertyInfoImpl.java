@@ -69,6 +69,7 @@ class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
                             QValueFactory qValueFactory) throws RepositoryException {
         super(property, idFactory, nsResolver);
         this.propertyId = idFactory.createPropertyId(property, nsResolver);
+        // TODO: build QValues upon (first) usage only.
         this.type = property.getType();
         this.isMultiValued = property.getDefinition().isMultiple();
         if (isMultiValued) {
@@ -109,8 +110,13 @@ class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
      * {@inheritDoc}
      */
     public QValue[] getValues() {
-        QValue[] vals = new QValue[values.length];
-        System.arraycopy(values, 0, vals, 0, values.length);
-        return vals;
+        return values;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean denotesNode() {
+        return false;
     }
 }
