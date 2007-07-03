@@ -20,12 +20,14 @@ import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.IdIterator;
+import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.io.Serializable;
 
 /**
  * <code>NodeInfoImpl</code> implements a serializable <code>NodeInfo</code>
@@ -64,6 +66,39 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     private final List propertyIds;
 
     /**
+     * Creates a new serializable <code>NodeInfo</code> for the given
+     * <code>NodeInfo</code>.
+     *
+     * @param nodeInfo
+     */
+    public static NodeInfo createSerializableNodeInfo(NodeInfo nodeInfo, final SerializableIdFactory idFactory) {
+        if (nodeInfo instanceof Serializable) {
+            return nodeInfo;
+        } else {
+            PropertyId[] refs = nodeInfo.getReferences();
+            PropertyId[] serRefs = new PropertyId[refs.length];
+            for (int i = 0; i < serRefs.length; i++) {
+                serRefs[i] = idFactory.createSerializablePropertyId(refs[i]);
+            }
+            NodeId parentId = null;
+            if (nodeInfo.getParentId() != null) {
+                parentId = idFactory.createSerializableNodeId(nodeInfo.getParentId());
+            }
+            return new NodeInfoImpl(parentId, nodeInfo.getQName(),
+                    nodeInfo.getPath(),
+                    idFactory.createSerializableNodeId(nodeInfo.getId()),
+                    nodeInfo.getIndex(), nodeInfo.getNodetype(),
+                    nodeInfo.getMixins(), serRefs,
+                    new IteratorHelper(nodeInfo.getPropertyIds()) {
+                        public ItemId nextId() {
+                            return idFactory.createSerializablePropertyId(
+                                    (PropertyId) super.nextId());
+                        }
+                    });
+        }
+    }
+
+    /**
      * Creates a new serializable node info for the given <code>node</code>
      * info.
      *
@@ -77,9 +112,9 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
      * @param references      the references to this node.
      * @param propertyIds     the properties of this node.
      */
-    public NodeInfoImpl(NodeId parentId, QName name, Path path, NodeId id,
-                        int index, QName primaryTypeName, QName[] mixinNames,
-                        PropertyId[] references, IdIterator propertyIds) {
+    private NodeInfoImpl(NodeId parentId, QName name, Path path, NodeId id,
+                         int index, QName primaryTypeName, QName[] mixinNames,
+                         PropertyId[] references, IdIterator propertyIds) {
         super(parentId, name, path, true);
         this.id = id;
         this.index = index;

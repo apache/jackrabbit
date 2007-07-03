@@ -23,6 +23,8 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 
+import java.io.Serializable;
+
 /**
  * <code>PropertyInfoImpl</code> implements a serializable
  * <code>PropertyInfo</code> based on another property info.
@@ -51,7 +53,24 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
 
     /**
      * Creates a new serializable property info for the given
-     * <code>property</code>.
+     * <code>PropertyInfo</code>.
+     *
+     * @param propertyInfo
+     */
+    public static PropertyInfo createSerializablePropertyInfo(PropertyInfo propertyInfo, SerializableIdFactory idFactory) {
+        if (propertyInfo instanceof Serializable) {
+            return propertyInfo;
+        } else {
+            return new PropertyInfoImpl(idFactory.createSerializableNodeId(propertyInfo.getParentId()),
+                propertyInfo.getQName(), propertyInfo.getPath(),
+                idFactory.createSerializablePropertyId(propertyInfo.getId()),
+                propertyInfo.getType(), propertyInfo.isMultiValued(),
+                propertyInfo.getValues());
+        }
+    }
+
+    /**
+     * Creates a new serializable property info for the given parameters.
      *
      * @param parentId      the parent id.
      * @param name          the name of this property.
@@ -61,7 +80,7 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
      * @param isMultiValued whether this property is multi-valued.
      * @param values        the values.
      */
-    public PropertyInfoImpl(NodeId parentId, QName name, Path path,
+    private PropertyInfoImpl(NodeId parentId, QName name, Path path,
                             PropertyId id, int type, boolean isMultiValued,
                             QValue[] values) {
         super(parentId, name, path, false);
