@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collections;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -37,6 +38,7 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.SimpleCredentials;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.query.InvalidQueryException;
@@ -243,6 +245,14 @@ public class XMLRepositoryService implements RepositoryService {
             return new XMLNodeInfo((XMLNodeId) id);
         } catch (ClassCastException e) {
             throw new RepositoryException("Invalid node identifier: " + id);
+        }
+    }
+
+    public Iterator getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException {
+        try {
+            return Collections.singletonList(new XMLNodeInfo((XMLNodeId) nodeId)).iterator();
+        } catch (ClassCastException e) {
+            throw new RepositoryException("Invalid node identifier: " + nodeId);
         }
     }
 
