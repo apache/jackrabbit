@@ -22,6 +22,7 @@ import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
@@ -56,11 +57,11 @@ class EventSubscription implements EventListener {
 
     private final List eventBundles = new ArrayList();
 
-    private final IdFactoryImpl idFactory;
+    private final IdFactory idFactory;
 
     private final NamespaceResolver nsResolver;
 
-    EventSubscription(IdFactoryImpl idFactory, NamespaceResolver nsResolver) {
+    EventSubscription(IdFactory idFactory, NamespaceResolver nsResolver) {
         this.idFactory = idFactory;
         this.nsResolver = nsResolver;
     }
