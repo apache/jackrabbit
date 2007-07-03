@@ -28,24 +28,24 @@ Introduction
 ===============================================================================
 
 This contribution within the Jackrabbit project contains a Service Provider
-Interface (SPI) and an example implementation:
+Interface (SPI) and example implementations:
 
-- JCR2SPI : implementation of the JSR170 API covering the transient layer
-            
-- SPI2DAV : SPI implementation on top of WebDAV currently connecting to
-            a Jackrabbit Jcr-Server.
-            
+- SPI2JCR : implements the SPI on top of JCR (e.g. Jackrabbit)
+- SPI2DAV : SPI implementation on top of WebDAV connecting to a Jackrabbit Jcr-Server.
+
+- SPI-RMI : rmi layer
+
+In addition the contrib contains
+
+- JCR2SPI : implementation of the JSR170 API covering the transient layer.
+
+
 This means that the current environment contains the following layers
 
+  JCR -> SPI -> JCR
   JCR -> SPI -> WebDAV -> JCR
-           
-In a next step the JCR layer at the end of the chain will be replaced
-by another SPI implementation, avoiding the extra costs caused by 
-having JCR (including transient space and Session management) again:
 
-  JCR -> SPI -> SPI-Implementation
-  
- 
+
 
 Aim of the SPI
 ===============================================================================
@@ -95,17 +95,4 @@ NOTE: Jackrabbit is built using Maven2.
 -> installs all required jar files.
 
 > cd ../contrib/spi
-> maven
-
-
-
-Limitations
-===============================================================================
-
-The SPI contribution is still under development and not yet tested.
-This applies to the API as well as to the implementations.
-  
-
-
-
-
+> mvn install
