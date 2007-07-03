@@ -123,7 +123,6 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
      * @return
      */
     private boolean itemExists(ItemState itemState) {
-        itemState.checkIsSessionState();
         try {
             // check sanity of session
             session.checkIsAlive();
@@ -168,7 +167,6 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
      */
     private Item getItem(ItemState itemState) throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         session.checkIsAlive();
-        itemState.checkIsSessionState();
         if (!itemState.isValid()) {
             throw new ItemNotFoundException();
         }

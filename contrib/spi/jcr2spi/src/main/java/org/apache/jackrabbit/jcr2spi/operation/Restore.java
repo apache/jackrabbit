@@ -80,8 +80,8 @@ public class Restore extends AbstractOperation {
         }
         entry.invalidate(true);
     }
-    //----------------------------------------< Access Operation Parameters >---
 
+    //----------------------------------------< Access Operation Parameters >---
     /**
      * Returns id of state or the closest existing state of the restore target or
      * <code>null</code> in case of a {@link javax.jcr.Workspace#restore(Version[], boolean)}
@@ -89,7 +89,7 @@ public class Restore extends AbstractOperation {
      * @return
      */
     public NodeId getNodeId() {
-        return (nodeState == null) ? null : nodeState.getNodeId();
+        return (nodeState == null) ? null : nodeState.getNodeEntry().getWorkspaceId();
     }
 
     /**
@@ -106,7 +106,7 @@ public class Restore extends AbstractOperation {
     public NodeId[] getVersionIds() {
         NodeId[] versionIds = new NodeId[versionStates.length];
         for (int i = 0; i < versionStates.length; i++) {
-            versionIds[i] = versionStates[i].getNodeId();
+            versionIds[i] = versionStates[i].getNodeEntry().getWorkspaceId();
         }
         return versionIds;
     }

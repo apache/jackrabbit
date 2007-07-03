@@ -69,7 +69,7 @@ public class Merge extends AbstractOperation {
      */
     public void persisted() {
         try {
-            mgr.getVersionHistoryNodeState(nodeState).invalidate(true);
+            mgr.getVersionHistoryEntry(nodeState).invalidate(true);
         } catch (RepositoryException e) {
             log.warn("Error while retrieving VersionHistory state:", e.getMessage());
         }
@@ -78,7 +78,7 @@ public class Merge extends AbstractOperation {
 
     //----------------------------------------< Access Operation Parameters >---
     public NodeId getNodeId() {
-        return nodeState.getNodeId();
+        return nodeState.getNodeEntry().getWorkspaceId();
     }
 
     public String getSourceWorkspaceName() {

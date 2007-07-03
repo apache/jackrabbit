@@ -41,8 +41,10 @@ import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.value.QValueFactoryImpl;
 import org.apache.jackrabbit.value.ValueFormat;
+import org.apache.jackrabbit.JcrConstants;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Credentials;
@@ -67,6 +69,8 @@ import javax.jcr.NamespaceRegistry;
 import javax.jcr.Workspace;
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Value;
+import javax.jcr.ItemVisitor;
+import javax.jcr.util.TraversingItemVisitor;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.observation.EventListener;
 import javax.jcr.query.InvalidQueryException;
@@ -108,6 +112,12 @@ public class RepositoryServiceImpl implements RepositoryService {
     private final Repository repository;
 
     /**
+     * The configuration map used to determine the maximal depth of child
+     * items to be accessed upon a call to {@link getNodeInfo(SessionInfo, NodeId)}.
+     */
+    private final BatchReadConfig batchReadConfig;
+
+    /**
      * The id factory.
      */
     private final IdFactoryImpl idFactory = (IdFactoryImpl) IdFactoryImpl.getInstance();
@@ -128,9 +138,12 @@ public class RepositoryServiceImpl implements RepositoryService {
      * <code>repository</code>.
      *
      * @param repository a JCR repository instance.
+     * @param batchReadConfig
+     * {@link #getNodeInfo(SessionInfo, NodeId)}.
      */
-    public RepositoryServiceImpl(Repository repository) {
+    public RepositoryServiceImpl(Repository repository, BatchReadConfig batchReadConfig) {
         this.repository = repository;
+        this.batchReadConfig = batchReadConfig;
         this.supportsObservation = "true".equals(repository.getDescriptor(Repository.OPTION_OBSERVATION_SUPPORTED));
     }
 
@@ -296,8 +309,47 @@ public class RepositoryServiceImpl implements RepositoryService {
     public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId)
             throws ItemNotFoundException, RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        return new NodeInfoImpl(getNode(nodeId, sInfo),
-                idFactory, sInfo.getNamespaceResolver());
+        Node node = getNode(nodeId, sInfo);
+        NodeInfo info = new NodeInfoImpl(node, idFactory, sInfo.getNamespaceResolver());
+        return info;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Iterator getItemInfos(SessionInfo sessionInfo, NodeId nodeId)
+            throws ItemNotFoundException, RepositoryException {
+        final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        Node node = getNode(nodeId, sInfo);
+        QName ntName = null;
+        try {
+            ntName = NameFormat.parse(node.getProperty(JcrConstants.JCR_PRIMARYTYPE).getString(), sInfo.getNamespaceResolver());
+        } catch (NameException e) {
+            // ignore. should never occur
+        }
+        int depth = batchReadConfig.getDepth(ntName);
+        if (depth == BatchReadConfig.DEPTH_DEFAULT) {
+            NodeInfo info = new NodeInfoImpl(node, idFactory, sInfo.getNamespaceResolver());
+            return Collections.singletonList(info).iterator();
+        } else {
+            final List itemInfos = new ArrayList();
+            ItemVisitor visitor = new TraversingItemVisitor(false, depth) {
+                protected void entering(Property property, int i) throws RepositoryException {
+                    itemInfos.add(new PropertyInfoImpl(property, idFactory, sInfo.getNamespaceResolver(), getQValueFactory()));
+                }
+                protected void entering(Node node, int i) throws RepositoryException {
+                    itemInfos.add(new NodeInfoImpl(node, idFactory, sInfo.getNamespaceResolver()));
+                }
+                protected void leaving(Property property, int i) {
+                    // nothing to do
+                }
+                protected void leaving(Node node, int i) {
+                    // nothing to do
+                }
+            };
+            visitor.visit(node);
+            return itemInfos.iterator();
+        }
     }
 
     /**

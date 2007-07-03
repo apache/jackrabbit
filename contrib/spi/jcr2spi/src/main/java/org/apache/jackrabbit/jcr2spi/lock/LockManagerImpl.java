@@ -89,7 +89,6 @@ public class LockManagerImpl implements LockManager, SessionListener {
      * @see LockManager#lock(NodeState,boolean,boolean)
      */
     public Lock lock(NodeState nodeState, boolean isDeep, boolean isSessionScoped) throws LockException, RepositoryException {
-        nodeState.checkIsSessionState();
         // retrieve node first
         Node lhNode;
         // NOTE: Node must be retrieved from the given NodeState and not from
@@ -156,8 +155,6 @@ public class LockManagerImpl implements LockManager, SessionListener {
      * @param nodeState
      */
     public boolean isLocked(NodeState nodeState) throws RepositoryException {
-        nodeState.checkIsSessionState();
-
         LockImpl l = getLockImpl(nodeState, false);
         return l != null;
     }
@@ -167,8 +164,6 @@ public class LockManagerImpl implements LockManager, SessionListener {
      * @param nodeState
      */
     public void checkLock(NodeState nodeState) throws LockException, RepositoryException {
-        nodeState.checkIsSessionState();
-
         // shortcut: new status indicates that a new state was already added
         // thus, the parent state is not locked by foreign lock.
         if (nodeState.getStatus() == Status.NEW) {
@@ -366,7 +361,6 @@ public class LockManagerImpl implements LockManager, SessionListener {
      * @throws RepositoryException
      */
     private LockImpl getLockImpl(NodeState nodeState, boolean lazyLockDiscovery) throws RepositoryException {
-        nodeState.checkIsSessionState();
         NodeState nState = nodeState;
         // access first non-NEW state
         while (nState.getStatus() == Status.NEW) {
@@ -478,8 +472,6 @@ public class LockManagerImpl implements LockManager, SessionListener {
         private boolean isLive = true;
 
         private LockState(NodeState lockHoldingState, LockInfo lockInfo) {
-            lockHoldingState.checkIsSessionState();
-
             this.lockHoldingState = lockHoldingState;
             this.lockInfo = lockInfo;
         }
@@ -519,7 +511,8 @@ public class LockManagerImpl implements LockManager, SessionListener {
          * @throws RepositoryException
          */
         private void reloadLockInfo() throws LockException, RepositoryException {
-            lockInfo = wspManager.getLockInfo(lockHoldingState.getNodeId());
+            NodeId nId = lockHoldingState.getNodeEntry().getWorkspaceId();
+            lockInfo = wspManager.getLockInfo(nId);
         }
 
         /**

@@ -524,7 +524,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         // identified by the resulting id.
         // the server must be able to deal with paths and with proper ids anyway.
         // TODO: 'createNodeId' is basically wrong since isGranted is unspecific for any item.
-        ItemId id = getIdFactory().createNodeId(parentState.getNodeId(), relPath);
+        ItemId id = getIdFactory().createNodeId((NodeId) parentState.getWorkspaceId(), relPath);
         return service.isGranted(sessionInfo, id, actions);
     }
 
@@ -536,8 +536,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         if (itemState.getStatus() == Status.NEW) {
             return true;
         }
-        ItemState wspState = itemState.getWorkspaceState();
-        return service.isGranted(sessionInfo, wspState.getId(), actions);
+        return service.isGranted(sessionInfo, itemState.getWorkspaceId(), actions);
     }
 
     /**
@@ -548,8 +547,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         if (itemState.getStatus() == Status.NEW) {
             return true;
         }
-        ItemState wspState = itemState.getWorkspaceState();
-        return service.isGranted(sessionInfo, wspState.getId(), AccessManager.READ);
+        return service.isGranted(sessionInfo, itemState.getWorkspaceId(), AccessManager.READ);
     }
 
     /**
@@ -560,8 +558,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         if (itemState.getStatus() == Status.NEW) {
             return true;
         }
-        ItemState wspState = itemState.getWorkspaceState();
-        return service.isGranted(sessionInfo, wspState.getId(), AccessManager.REMOVE);
+        return service.isGranted(sessionInfo, itemState.getWorkspaceId(), AccessManager.REMOVE);
     }
 
     /**
@@ -936,7 +933,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         public void visit(RemoveVersion operation) throws VersionException, AccessDeniedException, ReferentialIntegrityException, RepositoryException {
             NodeId versionId = (NodeId) operation.getRemoveId();
             NodeState vhState = operation.getParentState();
-            service.removeVersion(sessionInfo, vhState.getNodeId(), versionId);
+            service.removeVersion(sessionInfo, (NodeId) vhState.getWorkspaceId(), versionId);
         }
 
         /**

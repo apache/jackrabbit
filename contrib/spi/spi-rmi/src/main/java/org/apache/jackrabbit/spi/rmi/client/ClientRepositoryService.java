@@ -25,7 +25,6 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.LockInfo;
@@ -35,6 +34,7 @@ import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.QNodeTypeDefinitionIterator;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteRepositoryService;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteSessionInfo;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteIterator;
@@ -259,6 +259,19 @@ public class ClientRepositoryService implements RepositoryService {
             throws ItemNotFoundException, RepositoryException {
         try {
             return remoteService.getNodeInfo(getRemoteSessionInfo(sessionInfo), nodeId);
+        } catch (RemoteException e) {
+            throw new RemoteRepositoryException(e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Iterator getItemInfos(SessionInfo sessionInfo, NodeId nodeId)
+            throws ItemNotFoundException, RepositoryException {
+        try {
+            RemoteIterator it = remoteService.getItemInfos(getRemoteSessionInfo(sessionInfo), nodeId);
+            return new ClientIterator(it);
         } catch (RemoteException e) {
             throw new RemoteRepositoryException(e);
         }

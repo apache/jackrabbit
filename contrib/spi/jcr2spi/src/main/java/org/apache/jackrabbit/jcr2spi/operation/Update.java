@@ -62,7 +62,7 @@ public class Update extends AbstractOperation {
 
     //----------------------------------------< Access Operation Parameters >---
     public NodeId getNodeId() {
-        return nodeState.getNodeId();
+        return nodeState.getNodeEntry().getWorkspaceId();
     }
 
     public String getSourceWorkspaceName() {

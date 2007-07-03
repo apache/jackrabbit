@@ -57,14 +57,12 @@ public class VersionManagerImpl implements VersionManager {
     }
 
     public void checkin(NodeState nodeState) throws RepositoryException {
-        NodeState wspState = getWorkspaceState(nodeState);
-        Operation ci = Checkin.create(wspState, this);
+        Operation ci = Checkin.create(nodeState, this);
         workspaceManager.execute(ci);
     }
 
     public void checkout(NodeState nodeState) throws RepositoryException {
-        NodeState wspState = getWorkspaceState(nodeState);
-        Operation co = Checkout.create(wspState, this);
+        Operation co = Checkout.create(nodeState, this);
         workspaceManager.execute(co);
     }
 
@@ -114,55 +112,41 @@ public class VersionManagerImpl implements VersionManager {
     }
 
     public void removeVersion(NodeState versionHistoryState, NodeState versionState) throws RepositoryException {
-        NodeState wspVersionState = getWorkspaceState(versionState);
-        Operation op = RemoveVersion.create(wspVersionState, getWorkspaceState(versionHistoryState), this);
+        Operation op = RemoveVersion.create(versionState, versionHistoryState, this);
         workspaceManager.execute(op);
     }
 
     public void addVersionLabel(NodeState versionHistoryState, NodeState versionState, QName qLabel, boolean moveLabel) throws RepositoryException {
-        NodeState wspVHState = getWorkspaceState(versionHistoryState);
-        NodeState wspVState = getWorkspaceState(versionState);
-        Operation op = AddLabel.create(wspVHState, wspVState, qLabel, moveLabel);
+        Operation op = AddLabel.create(versionHistoryState, versionState, qLabel, moveLabel);
         workspaceManager.execute(op);
     }
 
     public void removeVersionLabel(NodeState versionHistoryState, NodeState versionState, QName qLabel) throws RepositoryException {
-        NodeState wspVHState = getWorkspaceState(versionHistoryState);
-        NodeState wspVState = getWorkspaceState(versionState);
-        Operation op = RemoveLabel.create(wspVHState, wspVState, qLabel);
+        Operation op = RemoveLabel.create(versionHistoryState, versionState, qLabel);
         workspaceManager.execute(op);
     }
 
     public void restore(NodeState nodeState, Path relativePath, NodeState versionState, boolean removeExisting) throws RepositoryException {
-        NodeState wspState = getWorkspaceState(nodeState);
-        NodeState wspVState = getWorkspaceState(versionState);
-        Operation op = Restore.create(wspState, relativePath, wspVState, removeExisting);
+        Operation op = Restore.create(nodeState, relativePath, versionState, removeExisting);
         workspaceManager.execute(op);
     }
 
     public void restore(NodeState[] versionStates, boolean removeExisting) throws RepositoryException {
-        NodeState[] wspStates = new NodeState[versionStates.length];
-        for (int i = 0; i < versionStates.length; i++) {
-            wspStates[i] = getWorkspaceState(versionStates[i]);
-        }
-
-        Operation op = Restore.create(wspStates, removeExisting);
+        Operation op = Restore.create(versionStates, removeExisting);
         workspaceManager.execute(op);
     }
 
     public IdIterator merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws RepositoryException {
-        NodeState wspState = getWorkspaceState(nodeState);
-        Merge op = Merge.create(wspState, workspaceName, bestEffort, this);
+        Merge op = Merge.create(nodeState, workspaceName, bestEffort, this);
         workspaceManager.execute(op);
         return op.getFailedIds();
     }
 
     public void resolveMergeConflict(NodeState nodeState, NodeState versionState,
                                      boolean done) throws RepositoryException {
-        NodeState wspState = getWorkspaceState(nodeState);
-        NodeId vId = getWorkspaceState(versionState).getNodeId();
+        NodeId vId = versionState.getNodeId();
 
-        PropertyState mergeFailedState = wspState.getPropertyState(QName.JCR_MERGEFAILED);
+        PropertyState mergeFailedState = nodeState.getPropertyState(QName.JCR_MERGEFAILED);
         QValue[] vs = mergeFailedState.getValues();
 
         NodeId[] mergeFailedIds = new NodeId[vs.length - 1];
@@ -176,7 +160,7 @@ public class VersionManagerImpl implements VersionManager {
             // part of 'jcr:mergefailed' any more
         }
 
-        PropertyState predecessorState = wspState.getPropertyState(QName.JCR_PREDECESSORS);
+        PropertyState predecessorState = nodeState.getPropertyState(QName.JCR_PREDECESSORS);
         vs = predecessorState.getValues();
 
         int noOfPredecessors = (done) ? vs.length + 1 : vs.length;
@@ -190,11 +174,11 @@ public class VersionManagerImpl implements VersionManager {
         if (done) {
             predecessorIds[i] = vId;
         }
-        Operation op = ResolveMergeConflict.create(wspState, mergeFailedIds, predecessorIds, done);
+        Operation op = ResolveMergeConflict.create(nodeState, mergeFailedIds, predecessorIds, done);
         workspaceManager.execute(op);
     }
 
-    public NodeEntry getVersionableNodeState(NodeState versionState) throws RepositoryException {
+    public NodeEntry getVersionableNodeEntry(NodeState versionState) throws RepositoryException {
         NodeState ns = versionState.getChildNodeState(QName.JCR_FROZENNODE, Path.INDEX_DEFAULT);
         PropertyState ps = ns.getPropertyState(QName.JCR_FROZENUUID);
         String uniqueID = ps.getValue().toString();
@@ -203,23 +187,10 @@ public class VersionManagerImpl implements VersionManager {
         return (NodeEntry) workspaceManager.getHierarchyManager().getHierarchyEntry(versionableId);
     }
 
-    public NodeEntry getVersionHistoryNodeState(NodeState versionableState) throws RepositoryException {
+    public NodeEntry getVersionHistoryEntry(NodeState versionableState) throws RepositoryException {
         PropertyState ps = versionableState.getPropertyState(QName.JCR_VERSIONHISTORY);
         String uniqueID = ps.getValue().getString();
         NodeId vhId = workspaceManager.getIdFactory().createNodeId(uniqueID);
         return (NodeEntry) workspaceManager.getHierarchyManager().getHierarchyEntry(vhId);
-    }
-
-    //------------------------------------------------------------< private >---
-    /**
-     * If the given <code>NodeState</code> has an overlayed state, the overlayed
-     * (workspace) state will be returned. Otherwise the given state is returned.
-     *
-     * @param nodeState
-     * @return The overlayed state or the given state, if this one does not have
-     * an overlayed state.
-     */
-    private NodeState getWorkspaceState(NodeState nodeState) {
-        return (NodeState) nodeState.getWorkspaceState();
     }
 }

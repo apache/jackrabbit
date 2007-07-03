@@ -67,7 +67,6 @@ public class StateUtility {
     }
 
     public static boolean isMovedState(NodeState state) {
-        state.checkIsSessionState();
         if (state.isRoot()) {
             // the root state cannot be moved
             return false;

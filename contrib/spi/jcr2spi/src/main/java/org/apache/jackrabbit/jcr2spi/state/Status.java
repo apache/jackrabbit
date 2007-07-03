@@ -150,75 +150,98 @@ public final class Status {
      *
      * @param oldStatus
      * @param newStatus
-     * @param isWorkspaceState
      * @return true if a status change from <code>oldStatus</code> to
      * <code>newStatus</code> is allowed or if the two status are the same.
      */
-    public static boolean isValidStatusChange(int oldStatus, int newStatus,
-                                              boolean isWorkspaceState) {
+    public static boolean isValidStatusChange(int oldStatus, int newStatus) {
         if (oldStatus == newStatus) {
             return true;
         }
         boolean isValid = false;
-        if (isWorkspaceState) {
-            switch (newStatus) {
-                case INVALIDATED:
-                    isValid = (oldStatus == EXISTING);
-                    break;
-                case EXISTING:
-                    isValid = (oldStatus == MODIFIED);
-                    break;
-                case MODIFIED:
-                    // temporary state when workspace state is updated or refreshed
-                    isValid = (oldStatus == EXISTING || oldStatus == INVALIDATED);
-                    break;
-                case REMOVED:
-                    // existing or invalidated workspace state is externally removed
-                    isValid = (oldStatus == EXISTING || oldStatus == INVALIDATED);
-                    break;
-                // default: no other status possible : -> false
-            }
-        } else {
-            // valid status changes for session-states
-            switch (newStatus) {
-                case INVALIDATED:
-                    isValid = (oldStatus == EXISTING); // invalidate
-                    break;
-                case EXISTING:
-                    switch (oldStatus) {
-                        case INVALIDATED: /* refresh */
-                        case NEW: /* save */
-                        case EXISTING_MODIFIED: /* save, revert */
-                        case EXISTING_REMOVED:  /* revert */
-                        case STALE_MODIFIED:    /* revert */
-                        case MODIFIED:
-                            isValid = true;
-                            break;
-                            /* REMOVED, STALE_DESTROYED -> false */
-                    }
-                    break;
-                case EXISTING_MODIFIED:
-                    isValid = (oldStatus == EXISTING);
-                    break;
-                case EXISTING_REMOVED:
-                    isValid = (oldStatus == EXISTING || oldStatus == EXISTING_MODIFIED);
-                    break;
-                case STALE_MODIFIED:
-                case STALE_DESTROYED:
-                    isValid = (oldStatus == EXISTING_MODIFIED);
-                    break;
-                case REMOVED:
-                    isValid = (oldStatus == NEW || oldStatus == INVALIDATED ||
-                               oldStatus == EXISTING || oldStatus == EXISTING_REMOVED );
-                    break;
-                case MODIFIED:
-                    isValid = (oldStatus == EXISTING || oldStatus == INVALIDATED);
-                    break;
+        // valid status changes for session-states
+        switch (newStatus) {
+            case INVALIDATED:
+                isValid = (oldStatus == EXISTING); // invalidate
+                break;
+            case EXISTING:
+                switch (oldStatus) {
+                    case INVALIDATED: /* refresh */
+                    case NEW: /* save */
+                    case EXISTING_MODIFIED: /* save, revert */
+                    case EXISTING_REMOVED:  /* revert */
+                    case STALE_MODIFIED:    /* revert */
+                    case MODIFIED:
+                        isValid = true;
+                        break;
+                        /* REMOVED, STALE_DESTROYED -> false */
+                }
+                break;
+            case EXISTING_MODIFIED:
+                isValid = (oldStatus == EXISTING);
+                break;
+            case EXISTING_REMOVED:
+                isValid = (oldStatus == EXISTING || oldStatus == EXISTING_MODIFIED);
+                break;
+            case STALE_MODIFIED:
+            case STALE_DESTROYED:
+                isValid = (oldStatus == EXISTING_MODIFIED);
+                break;
+            case REMOVED:
+                // external removal always possible -> getNewStatus(int, int)
+                isValid = true;
+                break;
+            case MODIFIED:
+                // except for NEW states an external modification is always valid
+                if (oldStatus != NEW) {
+                    isValid = true;
+                }
+                break;
                 /* default:
                     NEW cannot change state to NEW -> false */
-            }
         }
         return isValid;
+    }
+
+    /**
+     * Returns the given <code>newStatusHint</code> unless the new status
+     * collides with a pending modification or removal which results in a
+     * stale item state.
+     *
+     * @param oldStatus
+     * @param newStatusHint
+     * @return new status that takes transient modification/removal into account.
+     */
+    public static int getNewStatus(int oldStatus, int newStatusHint) {
+        int newStatus;
+        switch (newStatusHint) {
+            case Status.MODIFIED:
+                // underlying state has been modified by external changes
+                if (oldStatus == Status.EXISTING || oldStatus == Status.INVALIDATED) {
+                    // temporarily set the state to MODIFIED in order to inform listeners.
+                    newStatus = Status.MODIFIED;
+                } else if (oldStatus == Status.EXISTING_MODIFIED) {
+                    // TODO: try to merge changes
+                    newStatus = Status.STALE_MODIFIED;
+                } else {
+                    // old status is EXISTING_REMOVED (or any other) => ignore.
+                    // a NEW state may never be marked modified.
+                    newStatus = oldStatus;
+                }
+                break;
+            case Status.REMOVED:
+                if (oldStatus == Status.EXISTING_MODIFIED) {
+                    newStatus = Status.STALE_DESTROYED;
+                } else {
+                    // applies both to NEW or to any other status
+                    newStatus = newStatusHint;
+                }
+                break;
+            default:
+                newStatus = newStatusHint;
+                break;
+
+        }
+        return newStatus;
     }
 
     /**

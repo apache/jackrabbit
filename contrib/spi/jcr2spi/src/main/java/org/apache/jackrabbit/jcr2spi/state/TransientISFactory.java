@@ -54,7 +54,7 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
     public NodeState createNewNodeState(NodeEntry entry, QName nodetypeName,
                                         QNodeDefinition definition) {
 
-        NodeState nodeState = new NodeState(entry, nodetypeName, QName.EMPTY_ARRAY, definition, Status.NEW, false, this, defProvider);
+        NodeState nodeState = new NodeState(entry, nodetypeName, QName.EMPTY_ARRAY, this, definition, defProvider);
 
         // notify listeners that a node state has been created
         notifyCreated(nodeState);
@@ -67,7 +67,7 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
      * @see TransientItemStateFactory#createNewPropertyState(PropertyEntry, QPropertyDefinition)
      */
     public PropertyState createNewPropertyState(PropertyEntry entry, QPropertyDefinition definition) {
-        PropertyState propState = new PropertyState(entry, definition.isMultiple(), definition, Status.NEW, false, this, defProvider);
+        PropertyState propState = new PropertyState(entry, this, definition, defProvider);
 
         // notify listeners that a property state has been created
         notifyCreated(propState);
@@ -81,9 +81,10 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
      * @see ItemStateFactory#createRootState(NodeEntry)
      */
     public NodeState createRootState(NodeEntry entry) throws ItemNotFoundException, RepositoryException {
-        // retrieve state to overlay
-        NodeState overlayedState = workspaceStateFactory.createRootState(entry);
-        return buildNodeState(overlayedState, Status.EXISTING);
+        NodeState state = workspaceStateFactory.createRootState(entry);
+        notifyCreated(state);
+
+        return state;
     }
 
     /**
@@ -92,9 +93,10 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
      */
     public NodeState createNodeState(NodeId nodeId, NodeEntry entry)
             throws ItemNotFoundException, RepositoryException {
-        // retrieve state to overlay
-        NodeState overlayedState = workspaceStateFactory.createNodeState(nodeId, entry);
-        return buildNodeState(overlayedState, getInitialStatus(entry.getParent()));
+        NodeState state = workspaceStateFactory.createNodeState(nodeId, entry);
+        notifyCreated(state);
+
+        return state;
     }
 
     /**
@@ -103,8 +105,10 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
      */
     public NodeState createDeepNodeState(NodeId nodeId, NodeEntry anyParent)
             throws ItemNotFoundException, RepositoryException {
-        NodeState overlayedState = workspaceStateFactory.createDeepNodeState(nodeId, anyParent);
-        return buildNodeState(overlayedState, getInitialStatus(anyParent));
+        NodeState state = workspaceStateFactory.createDeepNodeState(nodeId, anyParent);
+        notifyCreated(state);
+
+        return state;
     }
 
     /**
@@ -114,17 +118,22 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
     public PropertyState createPropertyState(PropertyId propertyId,
                                              PropertyEntry entry)
             throws ItemNotFoundException, RepositoryException {
-        // retrieve state to overlay
-        PropertyState overlayedState = workspaceStateFactory.createPropertyState(propertyId, entry);
-        return buildPropertyState(overlayedState, getInitialStatus(entry.getParent()));
+
+        PropertyState state = workspaceStateFactory.createPropertyState(propertyId, entry);
+        notifyCreated(state);
+
+        return state;
+
     }
 
     /**
      * @see ItemStateFactory#createDeepPropertyState(PropertyId, NodeEntry)
      */
     public PropertyState createDeepPropertyState(PropertyId propertyId, NodeEntry anyParent) throws ItemNotFoundException, RepositoryException {
-        PropertyState overlayedState = workspaceStateFactory.createDeepPropertyState(propertyId, anyParent);
-        return buildPropertyState(overlayedState, getInitialStatus(anyParent));
+        PropertyState state = workspaceStateFactory.createDeepPropertyState(propertyId, anyParent);
+        notifyCreated(state);
+
+        return state;
     }
 
     /**
@@ -143,53 +152,6 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
         if (nodeState.getStatus() == Status.NEW) {
             return EmptyNodeReferences.getInstance();
         }
-
-        NodeState workspaceState = (NodeState) nodeState.getWorkspaceState();
-        return workspaceStateFactory.getNodeReferences(workspaceState);
-    }
-
-    //------------------------------------------------------------< private >---
-    /**
-     *
-     * @param overlayed
-     * @return
-     */
-    private NodeState buildNodeState(NodeState overlayed, int initialStatus) {
-        NodeState nodeState = new NodeState(overlayed, initialStatus, this);
-
-        notifyCreated(nodeState);
-        return nodeState;
-    }
-
-
-    /**
-     *
-     * @param overlayed
-     * @return
-     */
-    private PropertyState buildPropertyState(PropertyState overlayed, int initialStatus) {
-        PropertyState propState = new PropertyState(overlayed, initialStatus, this);
-
-        notifyCreated(propState);
-        return propState;
-    }
-
-    /**
-     *
-     * @param parent
-     * @return
-     */
-    private static int getInitialStatus(NodeEntry parent) {
-        int status = Status.EXISTING;
-        // walk up hiearchy and check if any of the parents is transiently
-        // removed, in which case the status must be set to EXISTING_REMOVED.
-        while (parent != null) {
-            if (parent.getStatus() == Status.EXISTING_REMOVED) {
-                status = Status.EXISTING_REMOVED;
-                break;
-            }
-            parent = parent.getParent();
-        }
-        return status;
+        return workspaceStateFactory.getNodeReferences(nodeState);
     }
 }

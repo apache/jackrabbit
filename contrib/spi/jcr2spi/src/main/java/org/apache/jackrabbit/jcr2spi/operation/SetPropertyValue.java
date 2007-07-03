@@ -44,7 +44,7 @@ public class SetPropertyValue extends AbstractOperation {
     private SetPropertyValue(PropertyState propertyState, int valueType, QValue[] values) {
         this.propertyState = propertyState;
 
-        propertyId = propertyState.getPropertyId();
+        propertyId = (PropertyId) propertyState.getId();
         this.valueType = valueType;
         this.values = values;
 

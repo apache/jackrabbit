@@ -424,7 +424,12 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         }
     }
 
-    private void refreshEntry(NodeEntry entry) throws RepositoryException {
+    /**
+     * 
+     * @param entry
+     * @throws RepositoryException
+     */
+    private static void refreshEntry(NodeEntry entry) throws RepositoryException {
         // TODO: check again.. is this correct? or should NodeEntry be altered
         entry.getNodeState();
     }

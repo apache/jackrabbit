@@ -885,7 +885,7 @@ public class NodeImpl extends ItemImpl implements Node {
             return;
         }
 
-        Operation op = Update.create((NodeState) getNodeState().getWorkspaceState(), srcWorkspaceName);
+        Operation op = Update.create(getNodeState(), srcWorkspaceName);
         ((WorkspaceImpl)session.getWorkspace()).getUpdatableItemStateManager().execute(op);
     }
 

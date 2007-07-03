@@ -81,11 +81,11 @@ public class DefaultVersionManager implements VersionManager {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
 
-    public NodeEntry getVersionableNodeState(NodeState versionState) {
+    public NodeEntry getVersionableNodeEntry(NodeState versionState) {
         throw new UnsupportedOperationException();
     }
 
-    public NodeEntry getVersionHistoryNodeState(NodeState versionableState) {
+    public NodeEntry getVersionHistoryEntry(NodeState versionableState) {
         throw new UnsupportedOperationException();
     }
 }
