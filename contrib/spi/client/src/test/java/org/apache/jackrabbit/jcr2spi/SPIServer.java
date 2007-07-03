@@ -20,6 +20,7 @@ import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteRepositoryService;
 import org.apache.jackrabbit.spi.rmi.server.ServerRepositoryService;
 import org.apache.jackrabbit.spi2jcr.RepositoryServiceImpl;
+import org.apache.jackrabbit.spi2jcr.BatchReadConfig;
 import org.apache.log4j.PropertyConfigurator;
 
 import java.rmi.registry.LocateRegistry;
@@ -54,7 +55,8 @@ public class SPIServer {
         repo = org.apache.jackrabbit.core.RepositoryImpl.create(config);
         System.out.println("Jackrabbit started");
         // wrap with spi2jcr
-        RepositoryService repoService = new RepositoryServiceImpl(repo);
+        // TODO: make BatchReadConfig configurable
+        RepositoryService repoService = new RepositoryServiceImpl(repo, new BatchReadConfig());
         System.out.println("Wrapped with SPI2JCR");
         // create spi server
         remoteService = new ServerRepositoryService(repoService);

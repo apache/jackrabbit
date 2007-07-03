@@ -18,14 +18,12 @@ package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.jackrabbit.test.RepositoryStubException;
 import org.apache.jackrabbit.spi2jcr.RepositoryServiceImpl;
-import org.apache.jackrabbit.spi2jcr.ValueFactoryImpl;
+import org.apache.jackrabbit.spi2jcr.BatchReadConfig;
 import org.apache.jackrabbit.spi.RepositoryService;
-import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
+import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
-import javax.jcr.ValueFactory;
 import java.util.Properties;
 
 /**
@@ -56,25 +54,11 @@ public class JCR2SPI2JCRRepositoryStub extends DefaultRepositoryStub {
      */
     public Repository getRepository() throws RepositoryStubException {
         if (repo == null) {
-            Repository jackrabbitRepo = super.getRepository();
-            final RepositoryService repoService = new RepositoryServiceImpl(jackrabbitRepo);
+            final RepositoryService service = getRepositoryService();
             try {
-                repo = RepositoryImpl.create(new RepositoryConfig() {
+                repo = RepositoryImpl.create(new AbstractRepositoryConfig() {
                     public RepositoryService getRepositoryService() {
-                        return repoService;
-                    }
-
-                    public ValueFactory getValueFactory() {
-                        return ValueFactoryImpl.getInstance();
-                    }
-
-                    public String getDefaultWorkspaceName() {
-                        // not needed for SPI2JCR
-                        return null;
-                    }
-
-                    public CacheBehaviour getCacheBehaviour() {
-                        return CacheBehaviour.INVALIDATE;
+                        return service;
                     }
                 });
             } catch (RepositoryException e) {
@@ -84,5 +68,21 @@ public class JCR2SPI2JCRRepositoryStub extends DefaultRepositoryStub {
             }
         }
         return repo;
+    }
+
+    /**
+     *
+     * @return
+     * @throws RepositoryStubException
+     */
+    public RepositoryService getRepositoryService() throws RepositoryStubException {
+        Repository jackrabbitRepo = super.getRepository();
+
+        // TODO: make configurable
+        BatchReadConfig brconfig = new BatchReadConfig();
+        brconfig.setDepth(QName.NT_FILE, BatchReadConfig.DEPTH_INFINITE);
+        brconfig.setDepth(QName.NT_RESOURCE, BatchReadConfig.DEPTH_INFINITE);
+
+        return new RepositoryServiceImpl(jackrabbitRepo, brconfig);
     }
 }

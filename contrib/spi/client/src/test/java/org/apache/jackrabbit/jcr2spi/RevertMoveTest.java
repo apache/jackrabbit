@@ -52,4 +52,20 @@ public class RevertMoveTest extends AbstractMoveTest {
             // ok: works as expected. scope of 'refresh' is not complete
         }
     }
+
+    /**
+     * Test if reverting all transient changes moves a moved node back to its
+     * original position.
+     *
+     * @throws RepositoryException
+     */
+    public void testRevertMoveOperation() throws RepositoryException {
+        String srcPath = moveNode.getPath();
+        doMove(srcPath, destinationPath);
+
+        testRootNode.getSession().refresh(false);
+        assertFalse("Reverting the move operation must remove the node at destination path.", testRootNode.getSession().itemExists(destinationPath));
+        assertTrue("Reverting the move operation must re-add the node at its original position.", testRootNode.getSession().itemExists(srcPath));
+        assertTrue("Reverting the move operation must re-add the node at its original position.", srcPath.equals(moveNode.getPath()));
+    }
 }
