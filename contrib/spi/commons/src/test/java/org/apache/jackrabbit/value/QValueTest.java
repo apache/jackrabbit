@@ -175,7 +175,7 @@ public class QValueTest extends TestCase {
     }
 
     //-------------------------------------------------------------< BINARY >---
-    public void testNullBinaryValue() throws IOException {
+    public void testNullBinaryValue() throws IOException, RepositoryException {
         try {
             factory.create((byte[]) null);
             fail();

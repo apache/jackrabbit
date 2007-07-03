@@ -24,6 +24,8 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Calendar;
 
+import javax.jcr.RepositoryException;
+
 /**
  * <code>QValueFactory</code>...
  */
@@ -61,11 +63,15 @@ public interface QValueFactory {
     public QValue create(byte[] value);
 
     /**
-     * @param value
-     * @return
-     * @throws IOException
+     * Creates a QValue that contains the given binary stream.
+     * The given stream is consumed and closed by this method.
+     *
+     * @param value binary stream
+     * @return binary value
+     * @throws RepositoryException if the value could not be created
+     * @throws IOException if the stream can not be consumed
      */
-    public QValue create(InputStream value) throws IOException;
+    public QValue create(InputStream value) throws RepositoryException, IOException;
 
     /**
      * @param value
