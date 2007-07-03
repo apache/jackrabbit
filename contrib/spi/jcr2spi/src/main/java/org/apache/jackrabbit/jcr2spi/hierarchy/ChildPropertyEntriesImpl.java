@@ -98,7 +98,7 @@ public class ChildPropertyEntriesImpl implements ChildPropertyEntries {
      * @see ChildPropertyEntries#add(PropertyEntry)
      */
     public void add(PropertyEntry propertyEntry) {
-        WeakReference ref = new WeakReference(propertyEntry);
+        Reference ref = new WeakReference(propertyEntry);
         properties.put(propertyEntry.getQName(), ref);
     }
 
@@ -115,10 +115,9 @@ public class ChildPropertyEntriesImpl implements ChildPropertyEntries {
     }
 
     /**
-     * @see ChildPropertyEntries#remove(QName) 
+     * @see ChildPropertyEntries#remove(QName)
      */
     public boolean remove(QName propertyName) {
-        WeakReference ref = (WeakReference) properties.remove(propertyName);
-        return ref != null;
+        return properties.remove(propertyName) != null;
     }
 }
