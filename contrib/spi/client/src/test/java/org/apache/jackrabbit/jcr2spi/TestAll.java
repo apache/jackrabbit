@@ -55,6 +55,7 @@ public class TestAll extends TestCase {
         // refresh
         suite.addTestSuite(RefreshFalseTest.class);
         suite.addTestSuite(RefreshTrueTest.class);
+        suite.addTestSuite(RefreshMovedTest.class);
 
         // remove
         suite.addTestSuite(RemoveNodeTest.class);

@@ -18,12 +18,11 @@ package org.apache.jackrabbit.jcr2spi;
 import org.apache.jackrabbit.test.RepositoryStub;
 import org.apache.jackrabbit.test.RepositoryStubException;
 import org.apache.jackrabbit.spi2dav.RepositoryServiceImpl;
-import org.apache.jackrabbit.spi2dav.IdFactoryImpl;
-import org.apache.jackrabbit.spi2dav.ValueFactoryImpl;
+import org.apache.jackrabbit.identifier.IdFactoryImpl;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.value.ValueFactoryImplEx;
 import org.apache.log4j.PropertyConfigurator;
 
 import javax.jcr.Repository;
@@ -68,10 +67,10 @@ public class JCR2SPIRepositoryStub extends RepositoryStub {
                 String url = environment.getProperty(PROP_REPOSITORY_URL);
 
                 final IdFactory idFactory = IdFactoryImpl.getInstance();
-                final ValueFactory vFactory = ValueFactoryImpl.getInstance();
+                final ValueFactory vFactory = ValueFactoryImplEx.getInstance();
                 final RepositoryServiceImpl webdavRepoService = new RepositoryServiceImpl(url, idFactory, vFactory);
 
-                RepositoryConfig config = new RepositoryConfig() {
+                RepositoryConfig config = new AbstractRepositoryConfig() {
                     public RepositoryService getRepositoryService() {
                         return webdavRepoService;
                     }
@@ -83,10 +82,6 @@ public class JCR2SPIRepositoryStub extends RepositoryStub {
                     public String getDefaultWorkspaceName() {
                         String name = environment.getProperty(PROP_WORKSPACE_NAME);
                         return name;
-                    }
-
-                    public CacheBehaviour getCacheBehaviour() {
-                        return CacheBehaviour.INVALIDATE;
                     }
                 };
 

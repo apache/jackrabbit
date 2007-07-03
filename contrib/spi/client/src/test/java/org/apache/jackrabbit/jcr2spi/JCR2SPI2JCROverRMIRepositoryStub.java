@@ -17,18 +17,13 @@
 package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.jackrabbit.test.RepositoryStubException;
-import org.apache.jackrabbit.spi2jcr.RepositoryServiceImpl;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.rmi.server.ServerRepositoryService;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteRepositoryService;
 import org.apache.jackrabbit.spi.rmi.client.ClientRepositoryService;
-import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
-import javax.jcr.ValueFactory;
 import java.util.Properties;
 import java.rmi.RemoteException;
 
@@ -37,7 +32,7 @@ import java.rmi.RemoteException;
  * initializes a Jackrabbit repository and wraps it with a SPI2JCR layer,
  * a SPI-RMI layer and a JCR2SPI layer.
  */
-public class JCR2SPI2JCROverRMIRepositoryStub extends DefaultRepositoryStub {
+public class JCR2SPI2JCROverRMIRepositoryStub extends JCR2SPI2JCRRepositoryStub {
 
     /**
      * The Jackrabbit repository.
@@ -60,28 +55,14 @@ public class JCR2SPI2JCROverRMIRepositoryStub extends DefaultRepositoryStub {
      */
     public Repository getRepository() throws RepositoryStubException {
         if (repo == null) {
-            Repository jackrabbitRepo = super.getRepository();
-            RepositoryService spi2jcrRepoService = new RepositoryServiceImpl(jackrabbitRepo);
+            RepositoryService spi2jcrRepoService = super.getRepositoryService();
             try {
                 RemoteRepositoryService remoteRepoService = new ServerRepositoryService(spi2jcrRepoService);
                 final RepositoryService localRepoService = new ClientRepositoryService(remoteRepoService);
 
-                repo = RepositoryImpl.create(new RepositoryConfig() {
+                repo = RepositoryImpl.create(new AbstractRepositoryConfig() {
                     public RepositoryService getRepositoryService() {
                         return localRepoService;
-                    }
-
-                    public ValueFactory getValueFactory() {
-                        return ValueFactoryImpl.getInstance();
-                    }
-
-                    public String getDefaultWorkspaceName() {
-                        // not needed for SPI2JCR
-                        return null;
-                    }
-
-                    public CacheBehaviour getCacheBehaviour() {
-                        return CacheBehaviour.INVALIDATE;
                     }
                 });
             } catch (RepositoryException e) {

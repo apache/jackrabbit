@@ -18,15 +18,12 @@ package org.apache.jackrabbit.jcr2spi;
 import org.apache.jackrabbit.test.RepositoryStub;
 import org.apache.jackrabbit.test.RepositoryStubException;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.rmi.client.ClientRepositoryService;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteRepositoryService;
-import org.apache.jackrabbit.spi.rmi.common.ValueFactoryImpl;
 import org.apache.log4j.PropertyConfigurator;
 
 import javax.jcr.Repository;
-import javax.jcr.ValueFactory;
 import java.util.Properties;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -67,21 +64,9 @@ public class JCR2SPIOverRMIRepositoryStub extends RepositoryStub {
                 RemoteRepositoryService remoteService = (RemoteRepositoryService) reg.lookup(repName);
                 final RepositoryService rmiService = new ClientRepositoryService(remoteService);
 
-                RepositoryConfig config = new RepositoryConfig() {
+                RepositoryConfig config = new AbstractRepositoryConfig() {
                     public RepositoryService getRepositoryService() {
                         return rmiService;
-                    }
-
-                    public ValueFactory getValueFactory() {
-                        return ValueFactoryImpl.getInstance();
-                    }
-
-                    public String getDefaultWorkspaceName() {
-                        return null;
-                    }
-
-                    public CacheBehaviour getCacheBehaviour() {
-                        return CacheBehaviour.INVALIDATE;
                     }
                 };
 
