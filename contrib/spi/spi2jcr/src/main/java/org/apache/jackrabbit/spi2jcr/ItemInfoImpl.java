@@ -35,12 +35,7 @@ import javax.jcr.Node;
  * <code>ItemInfoImpl</code> is a base class for <code>ItemInfo</code>
  * implementations.
  */
-class ItemInfoImpl implements ItemInfo {
-
-    /**
-     * The underlying JCR item.
-     */
-    private final Item item;
+abstract class ItemInfoImpl implements ItemInfo {
 
     /**
      * The parent node id of this item or <code>null</code> if this item
@@ -71,7 +66,6 @@ class ItemInfoImpl implements ItemInfo {
                         IdFactoryImpl idFactory,
                         NamespaceResolver nsResolver)
             throws RepositoryException {
-        this.item = item;
         try {
             if (item.getName().equals("")) {
                 this.name = QName.ROOT;
@@ -117,13 +111,6 @@ class ItemInfoImpl implements ItemInfo {
      */
     public QName getQName() {
         return name;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean denotesNode() {
-        return item.isNode();
     }
 
     /**

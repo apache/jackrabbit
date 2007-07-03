@@ -149,4 +149,11 @@ class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     public IdIterator getPropertyIds() {
         return new IteratorHelper(propertyIds);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean denotesNode() {
+        return true;
+    }
 }
