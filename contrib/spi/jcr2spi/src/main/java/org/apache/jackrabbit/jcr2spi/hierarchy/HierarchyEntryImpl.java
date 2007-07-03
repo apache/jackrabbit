@@ -93,7 +93,10 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
         if (state == null) {
             try {
                 state = doResolve();
-                target = new WeakReference(state);
+                // only set 'target' if not already by upon resolution
+                if (!isAvailable()) {
+                    setItemState(state);
+                }
             } catch (ItemNotFoundException e) {
                 remove();
                 throw e;
@@ -130,42 +133,21 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
      * @return
      */
     ItemState internalGetItemState() {
+        ItemState state = null;
         if (target != null) {
-            ItemState state = (ItemState) target.get();
-            if (state != null) {
-                return state;
-            }
+            state = (ItemState) target.get();
         }
-        return null;
+        return state;
     }
 
     /**
-     * Set the target of this HierarchyEntry to the given new ItemState.
      *
-     * @throws IllegalStateException if this entry has already been resolved.
-     * @throws IllegalArgumentException if the given state is <code>null</code>
-     * or has another Status than {@link Status#NEW} or in case of class mismatch.
+     * @param entry
      */
-    void internalSetItemState(ItemState newItemState) {
-        if (target != null || newItemState == null) {
-            throw new IllegalStateException();
-        }
-
-        if ((denotesNode() && newItemState.isNode()) || (!denotesNode() && !newItemState.isNode())) {
-            target = new WeakReference(newItemState);
-        } else {
-            throw new IllegalArgumentException();
-        }
-    }
-
     static void removeEntry(HierarchyEntryImpl entry) {
         ItemState state = entry.internalGetItemState();
         if (state != null) {
-            if (state.getStatus() == Status.NEW) {
-                state.setStatus(Status.REMOVED);
-            } else {
-                state.getWorkspaceState().setStatus(Status.REMOVED);
-            }
+            state.setStatus(Status.REMOVED);
         }
     }
     //-----------------------------------------------------< HierarchyEntry >---
@@ -219,11 +201,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
      * @see HierarchyEntry#isAvailable()
      */
     public boolean isAvailable() {
-        ItemState state = null;
-        if (target != null) {
-            state = (ItemState) target.get();
-        }
-        return state != null;
+        return internalGetItemState() != null;
     }
 
     /**
@@ -233,6 +211,20 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     public ItemState getItemState() throws ItemNotFoundException, RepositoryException {
         ItemState state = resolve();
         return state;
+    }
+
+    /**
+     * {@inheritDoc}<br>
+     * @see HierarchyEntry#setItemState(ItemState)
+     */
+    public synchronized void setItemState(ItemState state) {
+        if (state == null || (denotesNode() && !state.isNode()) || (!denotesNode() && state.isNode())) {
+            throw new IllegalArgumentException();
+        }
+        if (isAvailable()) {
+            throw new IllegalStateException("HierarchyEntry has already been resolved.");
+        }
+        target = new WeakReference(state);
     }
 
     /**
@@ -265,12 +257,12 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
             case Status.EXISTING_MODIFIED:
             case Status.STALE_MODIFIED:
                 // revert state from overlayed
-                state.merge(state.getWorkspaceState(), false);
+                state.revert();
                 state.setStatus(Status.EXISTING);
                 break;
             case Status.EXISTING_REMOVED:
                 // revert state from overlayed
-                state.merge(state.getWorkspaceState(), false);
+                state.revert();
                 state.setStatus(Status.EXISTING);
                 if (!denotesNode()) {
                     parent.revertPropertyRemoval((PropertyEntry) this);
@@ -306,21 +298,11 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
         updated. otherwise the state gets updated and might be marked 'Stale'
         if transient changes are present and the workspace-state is modified.
         */
-        // TODO: check again if 'reconnect' is not possible for transiently-modified state
+        // TODO: check again if 'reload' is not possible for transiently-modified state
         if (!keepChanges || state.getStatus() == Status.EXISTING
             || state.getStatus() == Status.INVALIDATED) {
             // reload the workspace state from the persistent layer
-            try {
-                state.reconnect(keepChanges);
-            } catch (ItemNotFoundException e) {
-                // remove hierarchyEntry (including all children and set
-                // state-status to REMOVED (or STALE_DESTROYED)
-                remove();
-            } catch (RepositoryException e) {
-                // TODO: rather throw? remove from parent?
-                log.warn("Exception while reloading item state: " + e);
-                log.debug("Stacktrace: ", e);
-            }
+            state.reload(keepChanges);
         }
     }
 
@@ -334,8 +316,6 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
             // nothing to do -> correct status must be set upon resolution.
             return;
         }
-
-        state.checkIsSessionState();
         // if during recursive removal an invalidated entry is found, reload
         // it in order to determine the current status.
         if (state.getStatus() == Status.INVALIDATED) {

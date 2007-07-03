@@ -216,7 +216,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
         revertTransientChanges();
 
-        // now make sure the underlying state is reverted to the original state
+        // now make sure the attached state is reverted to the original state
         super.revert();
     }
 
@@ -529,6 +529,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @see NodeEntry#getNodeEntry(QName, int, boolean)
      */
     public NodeEntry getNodeEntry(QName nodeName, int index, boolean loadIfNotFound) throws RepositoryException {
+        // TODO: avoid loading the child-infos if childNodeEntries == null
         List entries = childNodeEntries().get(nodeName);
         NodeEntry cne = null;
         if (entries.size() >= index) {
@@ -600,7 +601,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                                      QName primaryNodeType, QNodeDefinition definition) throws RepositoryException {
         NodeEntry entry = internalAddNodeEntry(nodeName, uniqueID, Path.INDEX_UNDEFINED, childNodeEntries());
         NodeState state = factory.getItemStateFactory().createNewNodeState(entry, primaryNodeType, definition);
-        ((NodeEntryImpl) entry).internalSetItemState(state);
+        if (!entry.isAvailable()) {
+            entry.setItemState(state);
+        }
         return state;
     }
 
@@ -778,7 +781,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         properties.add(entry);
 
         PropertyState state = factory.getItemStateFactory().createNewPropertyState(entry, definition);
-        ((PropertyEntryImpl) entry).internalSetItemState(state);
+        if (!entry.isAvailable()) {
+            entry.setItemState(state);
+        }
 
         return state;
     }
@@ -1113,14 +1118,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         if (child == null) {
             child = childNodeAttic.get(childName, index);
             if (child == null && childNodeEntries != null) {
-                List namedChildren = childNodeEntries.get(childName);
-                for (Iterator it = namedChildren.iterator(); it.hasNext(); ) {
-                    NodeEntryImpl c = (NodeEntryImpl) it.next();
-                    if (c.matches(childName, index)) {
-                        child = c;
-                        break;
-                    }
-                }
+                child = childNodeEntries.get(childName, index);
             }
         }
         return child;

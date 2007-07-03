@@ -203,11 +203,8 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
             if (session.getWorkspace().getName().equals(otherWspName)) {
                 // in addition they must provide the same id irrespective of
                 // any transient modifications.
-                ItemState wspState = state.getWorkspaceState();
-                ItemState otherWspState = other.state.getWorkspaceState();
-
-                if (wspState != null && otherWspState != null) {
-                    return wspState.getId().equals(otherWspState.getId());
+                if (state.getStatus() != Status.NEW && other.state.getStatus() != Status.NEW ) {
+                    return state.getWorkspaceId().equals(other.state.getWorkspaceId());
                 }
                 /* else:
                 - if both wsp-states are null, the items are both transiently

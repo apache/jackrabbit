@@ -75,7 +75,7 @@ public class ResolveMergeConflict extends AbstractOperation {
     }
     //----------------------------------------< Access Operation Parameters >---
     public NodeId getNodeId() {
-        return nodeState.getNodeId();
+        return nodeState.getNodeEntry().getWorkspaceId();
     }
 
     public NodeId[] getMergeFailedIds() {

@@ -176,12 +176,12 @@ public interface VersionManager {
      * @param versionState
      * @return
      */
-    public NodeEntry getVersionableNodeState(NodeState versionState) throws RepositoryException;
+    public NodeEntry getVersionableNodeEntry(NodeState versionState) throws RepositoryException;
 
     /**
      *
      * @param versionableState
      * @return
      */
-    public NodeEntry getVersionHistoryNodeState(NodeState versionableState) throws RepositoryException;
+    public NodeEntry getVersionHistoryEntry(NodeState versionableState) throws RepositoryException;
 }

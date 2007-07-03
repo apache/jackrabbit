@@ -65,7 +65,7 @@ public class Checkin extends AbstractOperation {
      */
     public void persisted() {
         try {
-            mgr.getVersionHistoryNodeState(nodeState).invalidate(true);
+            mgr.getVersionHistoryEntry(nodeState).invalidate(true);
         } catch (RepositoryException e) {
             log.warn("Internal error", e);
         }
@@ -82,7 +82,7 @@ public class Checkin extends AbstractOperation {
      * @return The nodeState to be checked in.
      */
     public NodeId getNodeId() {
-        return nodeState.getNodeId();
+        return nodeState.getNodeEntry().getWorkspaceId();
     }
 
     //------------------------------------------------------------< Factory >---

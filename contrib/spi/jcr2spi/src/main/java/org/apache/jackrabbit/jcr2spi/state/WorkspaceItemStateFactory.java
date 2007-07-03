@@ -71,8 +71,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @see ItemStateFactory#createRootState(NodeEntry)
      */
     public NodeState createRootState(NodeEntry entry) throws ItemNotFoundException, RepositoryException {
-        NodeInfo info = service.getNodeInfo(sessionInfo, service.getRootId(sessionInfo));
-        return createNodeState(info, entry);
+        return createNodeState(service.getRootId(sessionInfo), entry);
     }
 
     /**
@@ -84,47 +83,41 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      */
     public NodeState createNodeState(NodeId nodeId, NodeEntry entry)
             throws ItemNotFoundException, RepositoryException {
+        // build new node state from server information
         try {
-            NodeInfo info = service.getNodeInfo(sessionInfo, nodeId);
-            return createNodeState(info, entry);
+            NodeState nodeState;
+            if (entry.getStatus() == Status.INVALIDATED) {
+                // simple reload -> don't use batch-read
+                NodeInfo nInfo = service.getNodeInfo(sessionInfo, nodeId);
+                nodeState = createItemStates(nodeId, Collections.singletonList(nInfo).iterator(), entry, false);
+            } else {
+                Iterator infos = service.getItemInfos(sessionInfo, nodeId);
+                nodeState = createItemStates(nodeId, infos, entry, false);
+            }
+            if (nodeState == null) {
+                throw new ItemNotFoundException("HierarchyEntry does not belong to any existing ItemInfo.");
+            }
+            return nodeState;
         } catch (PathNotFoundException e) {
             throw new ItemNotFoundException(e.getMessage(), e);
-        }
-    }
-
-    public NodeState createDeepNodeState(NodeId nodeId, NodeEntry anyParent) throws ItemNotFoundException, RepositoryException {
-        try {
-            NodeInfo info = service.getNodeInfo(sessionInfo, nodeId);
-            // node for nodeId exists -> build missing entries in hierarchy
-            // Note, that the path contained in NodeId does not reveal which
-            // entries are missing -> calculate relative path.
-            Path anyParentPath = anyParent.getPath();
-            Path relPath = anyParentPath.computeRelativePath(info.getPath());
-            Path.PathElement[] missingElems = relPath.getElements();
-
-            NodeEntry entry = anyParent;
-            for (int i = 0; i < missingElems.length; i++) {
-                QName name = missingElems[i].getName();
-                int index = missingElems[i].getNormalizedIndex();
-                if (entry.hasNodeEntry(name, index)) {
-                    entry = entry.getNodeEntry(name, index);
-                } else {
-                    entry = entry.addNodeEntry(name, null, index);
-                }
-            }
-            if (entry == anyParent) {
-                throw new RepositoryException("Internal error while getting deep itemState");
-            }
-            return createNodeState(info, entry);
-        } catch (PathNotFoundException e) {
-            throw new ItemNotFoundException(e.getMessage(), e);
-        } catch (MalformedPathException e) {
-            throw new RepositoryException(e.getMessage(), e);
         }
     }
 
     /**
-     * Creates the property with information retrieved from the
+     * @inheritDoc
+     * @see ItemStateFactory#createDeepNodeState(NodeId,NodeEntry)
+     */
+    public NodeState createDeepNodeState(NodeId nodeId, NodeEntry anyParent) throws ItemNotFoundException, RepositoryException {
+        try {
+            Iterator infos = service.getItemInfos(sessionInfo, nodeId);
+            return createItemStates(nodeId, infos, anyParent, true);
+        } catch (PathNotFoundException e) {
+            throw new ItemNotFoundException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Creates the PropertyState with information retrieved from the
      * <code>RepositoryService</code>.
      *
      * @inheritDoc
@@ -135,45 +128,23 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             throws ItemNotFoundException, RepositoryException {
         try {
             PropertyInfo info = service.getPropertyInfo(sessionInfo, propertyId);
+            assertMatchingPath(info, entry);
             return createPropertyState(info, entry);
         } catch (PathNotFoundException e) {
             throw new ItemNotFoundException(e.getMessage());
         }
     }
 
+    /**
+     * @inheritDoc
+     * @see ItemStateFactory#createDeepPropertyState(PropertyId,NodeEntry)
+     */
     public PropertyState createDeepPropertyState(PropertyId propertyId, NodeEntry anyParent) throws ItemNotFoundException, RepositoryException {
         try {
             PropertyInfo info = service.getPropertyInfo(sessionInfo, propertyId);
-            // prop for propertyId exists -> build missing entries in hierarchy
-            // Note, that the path contained in PropertyId does not reveal which
-            // entries are missing -> calculate relative path.
-            Path anyParentPath = anyParent.getPath();
-            Path relPath = anyParentPath.computeRelativePath(info.getPath());
-            Path.PathElement[] missingElems = relPath.getElements();
-            NodeEntry entry = anyParent;
-            int i = 0;
-            // NodeEntries except for the very last 'missingElem'
-            while (i < missingElems.length - 1) {
-                QName name = missingElems[i].getName();
-                int index = missingElems[i].getNormalizedIndex();
-                if (entry.hasNodeEntry(name, index)) {
-                    entry = entry.getNodeEntry(name, index);
-                } else {
-                    entry = entry.addNodeEntry(name, null, index);
-                }
-                i++;
-            }
-            // create PropertyEntry for the last element if not existing yet
-            QName propName = missingElems[i].getName();
-            PropertyEntry propEntry = entry.getPropertyEntry(propName);
-            if (propEntry == null) {
-                propEntry = entry.addPropertyEntry(propName);
-            }
-            return createPropertyState(info, propEntry);
+            return createDeepPropertyState(info, anyParent);
         } catch (PathNotFoundException e) {
             throw new ItemNotFoundException(e.getMessage());
-        } catch (MalformedPathException e) {
-            throw new RepositoryException(e.getMessage());
         }
     }
 
@@ -193,9 +164,9 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @param nodeState
      */
     public NodeReferences getNodeReferences(NodeState nodeState) {
-        nodeState.checkIsWorkspaceState();
+        NodeEntry entry = nodeState.getNodeEntry();
         // shortcut
-        if (nodeState.getUniqueID() == null || !nodeState.hasPropertyName(QName.JCR_UUID)) {
+        if (entry.getUniqueID() == null || !entry.hasPropertyEntry(QName.JCR_UUID)) {
             // for sure not referenceable
             return EmptyNodeReferences.getInstance();
         }
@@ -203,15 +174,67 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         // nodestate has a unique ID and is potentially mix:referenceable
         // => try to retrieve references
         try {
-            NodeInfo info = service.getNodeInfo(sessionInfo, nodeState.getNodeId());
-            return new NodeReferencesImpl(info.getReferences());
+            NodeInfo nInfo = service.getNodeInfo(sessionInfo, entry.getWorkspaceId());
+            return new NodeReferencesImpl(nInfo.getReferences());
         } catch (RepositoryException e) {
-            log.debug("No references for NodeState " + nodeState);
-            return EmptyNodeReferences.getInstance();
+            // ignore
         }
+        // exception or no matching entry found.
+        log.debug("Unable to determine references for NodeState " + nodeState);
+        return EmptyNodeReferences.getInstance();
     }
 
     //------------------------------------------------------------< private >---
+    /**
+     *
+     * @param nodeId
+     * @param itemInfos
+     * @param entry
+     * @return
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
+     */
+    private synchronized NodeState createItemStates(NodeId nodeId,
+                                                    Iterator itemInfos,
+                                                    NodeEntry entry,
+                                                    boolean isDeep)
+            throws ItemNotFoundException, RepositoryException {
+        NodeState nodeState;
+        // first entry in the iterator is the originally requested Node.
+        if (itemInfos.hasNext()) {
+            NodeInfo first = (NodeInfo) itemInfos.next();
+            if (isDeep) {
+                // for a deep state, the hierarchy entry does not correspond to
+                // the given NodeEntry -> retrieve NodeState before executing
+                // validation check.
+                nodeState = createDeepNodeState(first, entry);
+                assertMatchingPath(first, nodeState.getNodeEntry());
+            } else {
+                // 'isDeep' == false -> the given NodeEntry must match to the
+                // first ItemInfo retrieved from the iterator.
+                assertMatchingPath(first, entry);
+                nodeState = createNodeState(first, entry);
+            }
+        } else {
+            // empty iterator
+            throw new ItemNotFoundException("Node with id " + nodeId + " could not be found.");
+        }
+
+        // deal with all additional ItemInfos that may be present.
+        NodeEntry parentEntry = nodeState.getNodeEntry();
+        if (parentEntry.getStatus() != Status.INVALIDATED) {
+            while (itemInfos.hasNext()) {
+                ItemInfo info = (ItemInfo) itemInfos.next();
+                if (info.denotesNode()) {
+                    createDeepNodeState((NodeInfo) info, parentEntry);
+                } else {
+                    createDeepPropertyState((PropertyInfo) info, parentEntry);
+                }
+            }
+        }
+        return nodeState;
+    }
+
     /**
      * Creates the node with information retrieved from <code>info</code>.
      *
@@ -222,8 +245,6 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @throws RepositoryException
      */
     private NodeState createNodeState(NodeInfo info, NodeEntry entry) throws ItemNotFoundException, RepositoryException {
-        assertMatchingPath(info, entry);
-
         // make sure the entry has the correct ItemId
         // this make not be the case, if the hierachy has not been completely
         // resolved yet -> if uniqueID is present, set it on this entry or on
@@ -242,7 +263,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         QNodeDefinition definition = definitionProvider.getQNodeDefinition(entry, info);
 
         // now build the nodestate itself
-        NodeState state = new NodeState(entry, info.getNodetype(), info.getMixins(), definition, Status.EXISTING, true, this, definitionProvider);
+        NodeState state = new NodeState(entry, info, this, definition, definitionProvider);
 
         // update NodeEntry from the information present in the NodeInfo (prop entries)
         List propNames = new ArrayList();
@@ -272,10 +293,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    private PropertyState createPropertyState(PropertyInfo info, PropertyEntry entry)
-            throws ItemNotFoundException, RepositoryException {
-        assertMatchingPath(info, entry);
-
+    private PropertyState createPropertyState(PropertyInfo info, PropertyEntry entry) {
         // make sure uuid part of id is correct
         String uniqueID = info.getId().getUniqueID();
         if (uniqueID != null) {
@@ -287,14 +305,105 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         QPropertyDefinition definition = definitionProvider.getQPropertyDefinition(entry, info);
 
         // build the PropertyState
-        PropertyState state = new PropertyState(entry, info.isMultiValued(), definition, Status.EXISTING, true, this, definitionProvider);
-        state.init(info.getType(), info.getValues());
+        PropertyState state = new PropertyState(entry, info, this, definition, definitionProvider);
 
-        //state.addListener(cache);
-        //cache.created(state);
         notifyCreated(state);
-
         return state;
+    }
+
+    /**
+     *
+     * @param info
+     * @param anyParent
+     * @return
+     * @throws RepositoryException
+     */
+    private NodeState createDeepNodeState(NodeInfo info, NodeEntry anyParent) throws RepositoryException {
+        try {
+            // node for nodeId exists -> build missing entries in hierarchy
+            // Note, that the path contained in NodeId does not reveal which
+            // entries are missing -> calculate relative path.
+            Path anyParentPath = anyParent.getPath();
+            Path relPath = anyParentPath.computeRelativePath(info.getPath());
+            Path.PathElement[] missingElems = relPath.getElements();
+
+            NodeEntry entry = anyParent;
+            for (int i = 0; i < missingElems.length; i++) {
+                QName name = missingElems[i].getName();
+                int index = missingElems[i].getNormalizedIndex();
+                entry = createIntermediateNodeEntry(entry, name, index);
+            }
+            if (entry == anyParent) {
+                throw new RepositoryException("Internal error while getting deep itemState");
+            }
+            return createNodeState(info, entry);
+        } catch (PathNotFoundException e) {
+            throw new ItemNotFoundException(e.getMessage(), e);
+        } catch (MalformedPathException e) {
+            throw new RepositoryException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     *
+     * @param info
+     * @param anyParent
+     * @return
+     * @throws RepositoryException
+     */
+    private PropertyState createDeepPropertyState(PropertyInfo info, NodeEntry anyParent) throws RepositoryException {
+        try {
+            // prop for propertyId exists -> build missing entries in hierarchy
+            // Note, that the path contained in PropertyId does not reveal which
+            // entries are missing -> calculate relative path.
+            Path anyParentPath = anyParent.getPath();
+            Path relPath = anyParentPath.computeRelativePath(info.getPath());
+            Path.PathElement[] missingElems = relPath.getElements();
+            NodeEntry entry = anyParent;
+            int i = 0;
+            // NodeEntries except for the very last 'missingElem'
+            while (i < missingElems.length - 1) {
+                QName name = missingElems[i].getName();
+                int index = missingElems[i].getNormalizedIndex();
+                entry = createIntermediateNodeEntry(entry, name, index);
+                i++;
+            }
+            // create PropertyEntry for the last element if not existing yet
+            QName propName = missingElems[i].getName();
+            PropertyEntry propEntry = entry.getPropertyEntry(propName);
+            if (propEntry == null) {
+                propEntry = entry.addPropertyEntry(propName);
+            }
+            return createPropertyState(info, propEntry);
+        } catch (PathNotFoundException e) {
+            throw new ItemNotFoundException(e.getMessage());
+        } catch (MalformedPathException e) {
+            throw new RepositoryException(e.getMessage());
+        }
+    }
+
+    /**
+     *
+     * @param parentEntry
+     * @param name
+     * @param index
+     * @return
+     * @throws RepositoryException
+     */
+    private static NodeEntry createIntermediateNodeEntry(NodeEntry parentEntry, QName name, int index) throws RepositoryException {
+        /*
+        HierarchyEntry entry = parentEntry.lookupDeepEntry(Path.create(name, index));
+        if (entry == null || !entry.denotesNode()) {
+            entry = parentEntry.addNodeEntry(name, null, index);
+        }
+        */
+        NodeEntry entry;
+        if (parentEntry.hasNodeEntry(name, index)) {
+            entry = parentEntry.getNodeEntry(name, index);
+        } else {
+            entry = parentEntry.addNodeEntry(name, null, index);
+        }
+        return entry;
     }
 
     /**
@@ -309,11 +418,19 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      */
     private static void assertMatchingPath(ItemInfo info, HierarchyEntry entry)
             throws ItemNotFoundException, RepositoryException {
-        if (!info.getPath().equals(entry.getWorkspacePath())) {
+        Path infoPath = info.getPath();
+        if (!infoPath.equals(entry.getWorkspacePath())) {
+            // TODO: handle external move of nodes (parents) identified by uniqueID
             throw new ItemNotFoundException("HierarchyEntry does not belong the given ItemInfo.");
         }
     }
 
+    /**
+     *
+     * @param entry
+     * @param degree
+     * @return
+     */
     private static NodeEntry getAncestor(HierarchyEntry entry, int degree) {
         NodeEntry parent = entry.getParent();
         degree--;
@@ -326,6 +443,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         }
         return parent;
     }
+
     //-----------------------------------------------------< NodeReferences >---
     /**
      * <code>NodeReferences</code> represents the references (i.e. properties of

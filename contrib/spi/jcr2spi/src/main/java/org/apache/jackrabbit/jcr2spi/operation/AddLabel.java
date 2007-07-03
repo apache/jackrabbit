@@ -88,11 +88,11 @@ public class AddLabel extends AbstractOperation {
     }
     //----------------------------------------< Access Operation Parameters >---
     public NodeId getVersionHistoryId() {
-        return versionHistoryState.getNodeId();
+        return versionHistoryState.getNodeEntry().getWorkspaceId();
     }
 
     public NodeId getVersionId() {
-        return versionState.getNodeId();
+        return versionState.getNodeEntry().getWorkspaceId();
     }
 
     public QName getLabel() {

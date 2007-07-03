@@ -103,6 +103,14 @@ public interface HierarchyEntry {
     public ItemState getItemState() throws ItemNotFoundException, RepositoryException;
 
     /**
+     * Set the ItemState this hierarchyEntry will be resolved to.
+     *
+     * @param state
+     * @throws IllegalStateException If the entry has already been resolved.
+     */
+    public void setItemState(ItemState state) throws IllegalStateException;
+
+    /**
      * Invalidates the underlying <code>ItemState</code> if available. If the
      * <code>recursive</code> flag is true, the hierarchy is traverses and
      * {@link #invalidate(boolean)} is called on all child entries.<br>

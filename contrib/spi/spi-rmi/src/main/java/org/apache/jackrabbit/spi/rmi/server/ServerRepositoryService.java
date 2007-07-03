@@ -52,6 +52,7 @@ import org.apache.jackrabbit.spi.QNodeTypeDefinitionIterator;
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.Event;
+import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 
@@ -215,7 +216,7 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
     public NodeId getRootId(RemoteSessionInfo sessionInfo)
             throws RepositoryException, RemoteException {
         try {
-            return createSerializableNodeId(
+            return idFactory.createSerializableNodeId(
                     service.getRootId(getSessionInfo(sessionInfo)));
         } catch (RepositoryException e) {
             throw getRepositoryException(e);
@@ -279,29 +280,36 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
             throws RepositoryException, RemoteException {
         try {
             NodeInfo nInfo = service.getNodeInfo(getSessionInfo(sessionInfo), nodeId);
-            if (nInfo instanceof Serializable) {
-                return nInfo;
+            return NodeInfoImpl.createSerializableNodeInfo(nInfo, idFactory);
+        } catch (RepositoryException e) {
+            throw getRepositoryException(e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public RemoteIterator getItemInfos(RemoteSessionInfo sessionInfo, NodeId nodeId)
+            throws RepositoryException, RemoteException {
+        try {
+            Iterator it = service.getItemInfos(getSessionInfo(sessionInfo), nodeId);
+            if (it instanceof RemoteIterator) {
+                return (RemoteIterator) it;
             } else {
-                PropertyId[] refs = nInfo.getReferences();
-                PropertyId[] serRefs = new PropertyId[refs.length];
-                for (int i = 0; i < serRefs.length; i++) {
-                    serRefs[i] = createSerializablePropertyId(refs[i]);
+                List serializables = new ArrayList();
+                while (it.hasNext()) {
+                    ItemInfo info = (ItemInfo) it.next();
+                    if (info instanceof Serializable) {
+                        serializables.add(info);
+                    } else {
+                        if (info.denotesNode()) {
+                            serializables.add(NodeInfoImpl.createSerializableNodeInfo((NodeInfo) info, idFactory));
+                        } else {
+                            serializables.add(PropertyInfoImpl.createSerializablePropertyInfo((PropertyInfo) info, idFactory));
+                        }
+                    }
                 }
-                NodeId parentId = null;
-                if (nInfo.getParentId() != null) {
-                    parentId = createSerializableNodeId(nInfo.getParentId());
-                }
-                return new NodeInfoImpl(parentId, nInfo.getQName(),
-                        nInfo.getPath(),
-                        createSerializableNodeId(nInfo.getId()),
-                        nInfo.getIndex(), nInfo.getNodetype(),
-                        nInfo.getMixins(), serRefs,
-                        new IteratorHelper(nInfo.getPropertyIds()) {
-                            public ItemId nextId() {
-                                return createSerializablePropertyId(
-                                        (PropertyId) super.nextId());
-                            }
-                        });
+                return new ServerIterator(serializables.iterator(), DEFAULT_BUFFER_SIZE);
             }
         } catch (RepositoryException e) {
             throw getRepositoryException(e);
@@ -314,8 +322,7 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
     public RemoteIterator getChildInfos(RemoteSessionInfo sessionInfo,
                                   NodeId parentId) throws RepositoryException, RemoteException {
         try {
-            Iterator childInfos = service.getChildInfos(
-                    getSessionInfo(sessionInfo), parentId);
+            Iterator childInfos = service.getChildInfos(getSessionInfo(sessionInfo), parentId);
             return new ServerIterator(new IteratorHelper(childInfos) {
                 public Object next() {
                     ChildInfo cInfo = (ChildInfo) super.next();
@@ -339,14 +346,8 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
                                         PropertyId propertyId)
             throws RepositoryException, RemoteException {
         try {
-            PropertyInfo propInfo = service.getPropertyInfo(
-                    getSessionInfo(sessionInfo), propertyId);
-            return new PropertyInfoImpl(
-                    createSerializableNodeId(propInfo.getParentId()),
-                    propInfo.getQName(), propInfo.getPath(),
-                    createSerializablePropertyId(propInfo.getId()),
-                    propInfo.getType(), propInfo.isMultiValued(),
-                    propInfo.getValues());
+            PropertyInfo propInfo = service.getPropertyInfo(getSessionInfo(sessionInfo), propertyId);
+            return PropertyInfoImpl.createSerializablePropertyInfo(propInfo, idFactory);
         } catch (RepositoryException e) {
             throw getRepositoryException(e);
         }
@@ -477,7 +478,7 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
                 return new LockInfoImpl(lockInfo.getLockToken(),
                         lockInfo.getOwner(), lockInfo.isDeep(),
                         lockInfo.isSessionScoped(),
-                        createSerializableNodeId(lockInfo.getNodeId()));
+                        idFactory.createSerializableNodeId(lockInfo.getNodeId()));
             }
         } catch (RepositoryException e) {
             throw getRepositoryException(e);
@@ -500,7 +501,7 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
                 return new LockInfoImpl(lockInfo.getLockToken(),
                         lockInfo.getOwner(), lockInfo.isDeep(),
                         lockInfo.isSessionScoped(),
-                        createSerializableNodeId(lockInfo.getNodeId()));
+                        idFactory.createSerializableNodeId(lockInfo.getNodeId()));
             }
         } catch (RepositoryException e) {
             throw getRepositoryException(e);
@@ -744,13 +745,13 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
                     Event e = it.nextEvent();
                     ItemId id;
                     if (e.getItemId().denotesNode()) {
-                        id = createSerializableNodeId((NodeId) e.getItemId());
+                        id = idFactory.createSerializableNodeId((NodeId) e.getItemId());
                     } else {
-                        id = createSerializablePropertyId((PropertyId) e.getItemId());
+                        id = idFactory.createSerializablePropertyId((PropertyId) e.getItemId());
                     }
                     Event serEvent = new EventImpl(e.getType(),
                             e.getQPath(), id,
-                            createSerializableNodeId(e.getParentId()),
+                            idFactory.createSerializableNodeId(e.getParentId()),
                             e.getPrimaryNodeTypeName(),
                             e.getMixinTypeNames(), e.getUserID());
                     events.add(serEvent);
@@ -884,40 +885,6 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
         } else {
             throw new RepositoryException("Unknown RemoteSessionInfo: " +
                     ((RemoteObject) sInfo).getRef());
-        }
-    }
-
-    /**
-     * Checks if the passed <code>nodeId</code> is serializable and if it is not
-     * creates a serializable version for the given <code>nodeId</code>.
-     *
-     * @param nodeId the node id to check.
-     * @return a serializable version of <code>nodeId</code> or the passed
-     *         nodeId itself it is already serializable.
-     */
-    private NodeId createSerializableNodeId(NodeId nodeId) {
-        if (nodeId instanceof Serializable) {
-            return nodeId;
-        } else {
-            return idFactory.createNodeId(nodeId.getUniqueID(), nodeId.getPath());
-        }
-    }
-
-    /**
-     * Checks if the passed <code>propId</code> is serializable and if it is not
-     * creates a serializable version for the given <code>propId</code>.
-     *
-     * @param propId the property id to check.
-     * @return a serializable version of <code>propId</code> or the passed
-     *         propId itself it is already serializable.
-     */
-    private PropertyId createSerializablePropertyId(PropertyId propId) {
-        if (propId instanceof Serializable) {
-            return propId;
-        } else {
-            return idFactory.createPropertyId(
-                    createSerializableNodeId(propId.getParentId()),
-                    propId.getQName());
         }
     }
 

@@ -21,6 +21,7 @@ import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
+import org.apache.jackrabbit.spi.ItemId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +43,7 @@ public class RemoveVersion extends Remove {
     protected RemoveVersion(ItemState removeState, NodeState parent, VersionManager mgr) {
         super(removeState, parent);
         try {
-            versionableEntry = mgr.getVersionableNodeState((NodeState) removeState);
+            versionableEntry = mgr.getVersionableNodeEntry((NodeState) removeState);
         } catch (RepositoryException e) {
             log.warn("Internal error", e);
         }
@@ -76,6 +77,11 @@ public class RemoveVersion extends Remove {
         // invalidate the versionhistory entry and all its children
         // in order to the the v-graph recalculated
         removeState.getHierarchyEntry().getParent().invalidate(true);
+    }
+
+    //----------------------------------------< Access Operation Parameters >---
+    public ItemId getRemoveId() {
+        return removeState.getWorkspaceId();
     }
 
     //------------------------------------------------------------< Factory >---

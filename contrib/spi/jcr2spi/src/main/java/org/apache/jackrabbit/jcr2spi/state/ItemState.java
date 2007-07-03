@@ -38,19 +38,12 @@ import java.util.Collections;
 /**
  * <code>ItemState</code> represents the state of an <code>Item</code>.
  */
-public abstract class ItemState implements ItemStateLifeCycleListener {
+public abstract class ItemState {
 
     /**
      * Logger instance
      */
     private static Logger log = LoggerFactory.getLogger(ItemState.class);
-
-    /**
-     * Flag used to distinguish workspace states from session states. The latter
-     * will be able to handle the various methods related to transient
-     * modifications.
-     */
-    private final boolean isWorkspaceState;
 
     /**
      * the internal status of this item state
@@ -76,51 +69,33 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
     final ItemDefinitionProvider definitionProvider;
 
     /**
-     * the backing persistent item state (may be null)
-     */
-    transient ItemState overlayedState;
-
-    /**
-     * Constructs a new unconnected item state
+     * Constructs an item state
      *
-     * @param initialStatus
-     * @param isWorkspaceState
+     * @param entry
+     * @param isf
+     * @param definitionProvider
      */
-    protected ItemState(int initialStatus, boolean isWorkspaceState,
-                        HierarchyEntry entry, ItemStateFactory isf,
+    protected ItemState(HierarchyEntry entry, ItemStateFactory isf,
                         ItemDefinitionProvider definitionProvider) {
-        switch (initialStatus) {
-            case Status.EXISTING:
-            case Status.NEW:
-                status = initialStatus;
-                break;
-            default:
-                String msg = "illegal status: " + initialStatus;
-                log.debug(msg);
-                throw new IllegalArgumentException(msg);
-        }
-        if (entry == null) {
-            throw new IllegalArgumentException("Cannot build ItemState from 'null' HierarchyEntry");
-        }
-        this.hierarchyEntry = entry;
-        this.isf = isf;
-        this.definitionProvider = definitionProvider;
-        this.isWorkspaceState = isWorkspaceState;
-
-        overlayedState = null;
+        this(getInitialStatus(entry.getParent()), entry, isf, definitionProvider);
     }
 
     /**
-     * Constructs a new item state that is initially connected to an overlayed
-     * state.
+     * Constructs an item state
      *
-     * @param overlayedState
-     * @param initialStatus
+     * @param entry
+     * @param isf
+     * @param definitionProvider
      */
-    protected ItemState(ItemState overlayedState, int initialStatus, ItemStateFactory isf) {
+    protected ItemState(int initialStatus, HierarchyEntry entry,
+                        ItemStateFactory isf,
+                        ItemDefinitionProvider definitionProvider) {
+        if (entry == null) {
+            throw new IllegalArgumentException("Cannot build ItemState from 'null' HierarchyEntry");
+        }
         switch (initialStatus) {
             case Status.EXISTING:
-            case Status.EXISTING_MODIFIED:
+            case Status.NEW:
             case Status.EXISTING_REMOVED:
                 status = initialStatus;
                 break;
@@ -129,14 +104,32 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
                 log.debug(msg);
                 throw new IllegalArgumentException(msg);
         }
-        if (overlayedState.getHierarchyEntry() == null) {
-            throw new IllegalArgumentException("Cannot build ItemState from 'null' HierarchyEntry");
-        }
-        this.hierarchyEntry = overlayedState.getHierarchyEntry();
+        this.hierarchyEntry = entry;
         this.isf = isf;
-        this.isWorkspaceState = false;
-        this.definitionProvider = overlayedState.definitionProvider;
-        connect(overlayedState);
+        this.definitionProvider = definitionProvider;
+
+        if (!entry.isAvailable()) {
+            entry.setItemState(this);
+        }
+    }
+
+    /**
+     *
+     * @param parent
+     * @return
+     */
+    private static int getInitialStatus(NodeEntry parent) {
+        int status = Status.EXISTING;
+        // walk up hiearchy and check if any of the parents is transiently
+        // removed, in which case the status must be set to EXISTING_REMOVED.
+        while (parent != null) {
+            if (parent.getStatus() == Status.EXISTING_REMOVED) {
+                status = Status.EXISTING_REMOVED;
+                break;
+            }
+            parent = parent.getParent();
+        }
+        return status;
     }
 
     //----------------------------------------------------------< ItemState >---
@@ -193,6 +186,15 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
 
     /**
      * Utility method:
+     * Returns the identifier of this item state. Shortcut for calling 'getWorkspaceId'
+     * on the NodeEntry or PropertyEntry respectively.
+     *
+     * @return the identifier of this item state..
+     */
+    public abstract ItemId getWorkspaceId();
+
+    /**
+     * Utility method:
      * Returns the qualified path of this item state. Shortcut for calling
      * 'getPath' on the {@link ItemState#getHierarchyEntry() hierarchy entry}.
      *
@@ -239,8 +241,8 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
         if (Status.isTerminal(oldStatus)) {
             throw new IllegalStateException("State is already in terminal status " + Status.getName(oldStatus));
         }
-        if (Status.isValidStatusChange(oldStatus, newStatus, isWorkspaceState)) {
-            status = newStatus;
+        if (Status.isValidStatusChange(oldStatus, newStatus)) {
+            status = Status.getNewStatus(oldStatus, newStatus);
         } else {
             throw new IllegalArgumentException("Invalid new status " + Status.getName(newStatus) + " for state with status " + Status.getName(oldStatus));
         }
@@ -257,9 +259,8 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
         }
         if (status == Status.MODIFIED) {
             /*
-            change back tmp MODIFIED status, that is used as marker only to
-            force the overlaying state to synchronize as well as to inform
-            other listeners about changes.
+            change back tmp MODIFIED status, that is used as marker only
+            inform listeners about (external) changes.
             */
             status = Status.EXISTING;
         }
@@ -275,7 +276,15 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      * @param keepChanges
      * @return true if this state has been modified
      */
-     public abstract boolean merge(ItemState another, boolean keepChanges);
+    public abstract boolean merge(ItemState another, boolean keepChanges);
+
+    /**
+     * Revert all transient modifications made to this ItemState.
+     *
+     * @return true if this state has been modified i.e. if there was anything
+     * to revert.
+     */
+    public abstract boolean revert();
 
     /**
      * Add an <code>ItemStateLifeCycleListener</code>
@@ -308,102 +317,6 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
         return Collections.unmodifiableCollection(listeners).iterator();
     }
 
-    //-----------------------------------------< ItemStateLifeCycleListener >---
-    /**
-     *
-     * @param overlayed
-     * @param previousStatus
-     */
-    public void statusChanged(ItemState overlayed, int previousStatus) {
-        checkIsSessionState();
-        overlayed.checkIsWorkspaceState();
-
-        // the given state is the overlayed state this state (session) is listening to.
-        if (overlayed == overlayedState) {
-            switch (overlayed.getStatus()) {
-                case Status.MODIFIED:
-                    // underlying state has been modified by external changes
-                    if (status == Status.EXISTING || status == Status.INVALIDATED) {
-                        // temporarily set the state to MODIFIED in order to inform listeners.
-                        setStatus(Status.MODIFIED);
-                    } else if (status == Status.EXISTING_MODIFIED) {
-                        // TODO: try to merge changes
-                        setStatus(Status.STALE_MODIFIED);
-                    }
-                    // else: this status is EXISTING_REMOVED => ignore.
-                    // no other status is possible.
-                    break;
-                case Status.REMOVED:
-                    if (status == Status.EXISTING_MODIFIED) {
-                        setStatus(Status.STALE_DESTROYED);
-                    } else {
-                        setStatus(Status.REMOVED);
-                    }
-                    break;
-                case Status.INVALIDATED:
-                    // invalidate this session state if it is EXISTING.
-                    if (status == Status.EXISTING) {
-                        setStatus(Status.INVALIDATED);
-                    }
-                    break;
-                default:
-                    // Should never occur, since 'setStatus(int)' already validates
-                    log.error("Workspace state cannot have its state changed to " + overlayed.getStatus());
-                    break;
-            }
-        }
-    }
-
-    //--------------------------------------------------------< State types >---
-    /**
-     * @return true if this state is a workspace state.
-     */
-    public boolean isWorkspaceState() {
-        return isWorkspaceState;
-    }
-
-    /**
-     * Returns <i>this</i>, if {@link #isWorkspaceState()} returns <code>true</code>.
-     * Otherwise this method returns the workspace state backing <i>this</i>
-     * 'session' state or <code>null</code> if this state is new.
-     *
-     * @return the workspace state or <code>null</code> if this state is new.
-     */
-    public ItemState getWorkspaceState() {
-        if (isWorkspaceState) {
-            return this;
-        } else {
-            return overlayedState;
-        }
-    }
-
-    /**
-     * @throws IllegalStateException if this state is a 'session' state.
-     */
-    public void checkIsWorkspaceState() {
-        if (!isWorkspaceState) {
-            throw new IllegalStateException("State " + this + " is not a 'workspace' state.");
-        }
-    }
-
-    /**
-     * @throws IllegalStateException if this state is a 'workspace' state.
-     */
-    public void checkIsSessionState() {
-        if (isWorkspaceState) {
-            throw new IllegalStateException("State " + this + " is not a 'session' state.");
-        }
-    }
-
-    /**
-     * @return true, if this state is overlaying a workspace state.
-     */
-    public boolean hasOverlayedState() {
-        return overlayedState != null;
-    }
-
-    //----------------------------------------------------< Session - State >---
-
     /**
      * Used on the target state of a save call AFTER the changelog has been
      * successfully submitted to the SPI..
@@ -414,74 +327,49 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
     abstract void persisted(ChangeLog changeLog) throws IllegalStateException;
 
     /**
-     * Connect this state to some underlying overlayed state.
-     */
-    private void connect(ItemState overlayedState) {
-        checkIsSessionState();
-        overlayedState.checkIsWorkspaceState();
-
-        if (this.overlayedState == null) {
-            setOverLayedState(overlayedState);
-        } else if (this.overlayedState != overlayedState) {
-            throw new IllegalStateException("Item state already connected to another underlying state: " + this);
-        } // attempt to connect state to its ol-state again -> nothing to do.
-    }
-
-    /**
-     * Replaces the overlayedState with a new instance retrieved from the
-     * persistent layer thus forcing a reload of this ItemState or in case
-     * of a NEW state, retrieves the overlayed state after the state has been
-     * persisted and connects the NEW state. Note, that in the latter case,
-     * the parent must already be connected to its overlayed state.
+     * Retrieved a fresh ItemState from the persistent layer and merge its
+     * data with this state in order to reload it. In case of a NEW state retrieving
+     * the state from the persistent layer is only possible if the state has
+     * been persisted.
      *
      * @param keepChanges
-     * @throws ItemNotFoundException
-     * @throws RepositoryException
      */
-    public void reconnect(boolean keepChanges) throws ItemNotFoundException, RepositoryException {
-        checkIsSessionState();
-        // Need to use the workspace-ISF in order not to create a session-state.
-        ItemStateFactory wspIsf;
-        if (overlayedState != null) {
-            wspIsf = overlayedState.isf;
-        } else {
-            wspIsf = getParent().overlayedState.isf;
+    public void reload(boolean keepChanges) {
+        ItemId id = getWorkspaceId();
+        ItemState tmp;
+        try {
+            if (isNode()) {
+                tmp = isf.createNodeState((NodeId) id, (NodeEntry) getHierarchyEntry());
+            } else {
+                tmp = isf.createPropertyState((PropertyId) id, (PropertyEntry) getHierarchyEntry());
+            }
+        } catch (ItemNotFoundException e) {
+            // TODO: deal with moved items separately
+            // remove hierarchyEntry (including all children and set
+            // state-status to REMOVED (or STALE_DESTROYED)
+            log.debug("Item '" + id + "' cannot be found on the persistent layer -> remove.");
+            getHierarchyEntry().remove();
+            return;
+        } catch (RepositoryException e) {
+            // TODO: rather throw? remove from parent?
+            log.warn("Exception while reloading item state: " + e);
+            log.debug("Stacktrace: ", e);
+            return;
         }
-        ItemId id = (overlayedState == null) ? getId() : overlayedState.getId();
-        ItemState overlayed;
-        if (isNode()) {
-            overlayed = wspIsf.createNodeState((NodeId) id, (NodeEntry) getHierarchyEntry());
-        } else {
-            overlayed = wspIsf.createPropertyState((PropertyId) id, (PropertyEntry) getHierarchyEntry());
-        }
-        setOverLayedState(overlayed);
-        boolean modified = merge(overlayed, keepChanges);
+
+        boolean modified = merge(tmp, keepChanges);
         if (status == Status.NEW || status == Status.INVALIDATED) {
             setStatus(Status.EXISTING);
         } else if (modified) {
-            // start notification by marking ol-state modified.
-            overlayed.setStatus(Status.MODIFIED);
+            // start notification by marking this state modified.
+            setStatus(Status.MODIFIED);
         }
-    }
-
-    /**
-     *
-     * @param overlayedState
-     */
-    private void setOverLayedState(ItemState overlayedState) {
-        if (this.overlayedState != null) {
-           this.overlayedState.removeListener(this);
-        }
-        this.overlayedState = overlayedState;
-        this.overlayedState.addListener(this);
     }
 
     /**
      * Marks this item state as modified.
      */
     void markModified() {
-        checkIsSessionState();
-
         switch (status) {
             case Status.EXISTING:
                 setStatus(Status.EXISTING_MODIFIED);

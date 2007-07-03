@@ -61,7 +61,7 @@ public class Checkout extends AbstractOperation {
      */
     public void persisted() {
         try {
-            mgr.getVersionHistoryNodeState(nodeState).invalidate(true);
+            mgr.getVersionHistoryEntry(nodeState).invalidate(true);
         } catch (RepositoryException e) {
             log.warn("Internal error", e);
         }
@@ -81,7 +81,7 @@ public class Checkout extends AbstractOperation {
      * @return
      */
     public NodeId getNodeId() {
-        return nodeState.getNodeId();
+        return nodeState.getNodeEntry().getWorkspaceId();
     }
 
     //------------------------------------------------------------< Factory >---

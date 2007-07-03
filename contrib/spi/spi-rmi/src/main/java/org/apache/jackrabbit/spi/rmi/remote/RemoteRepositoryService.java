@@ -21,13 +21,13 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 
@@ -192,6 +192,16 @@ public interface RemoteRepositoryService extends Remote {
      * @see org.apache.jackrabbit.spi.RepositoryService#getNodeInfo(org.apache.jackrabbit.spi.SessionInfo, org.apache.jackrabbit.spi.NodeId)
      */
     public NodeInfo getNodeInfo(RemoteSessionInfo sessionInfo, NodeId nodeId)
+            throws RepositoryException, RemoteException;
+
+    /**
+     * @param sessionInfo
+     * @param nodeId
+     * @return
+     * @throws RemoteException if an error occurs.
+     * @see org.apache.jackrabbit.spi.RepositoryService#getNodeInfo(org.apache.jackrabbit.spi.SessionInfo, org.apache.jackrabbit.spi.NodeId)
+     */
+    public RemoteIterator getItemInfos(RemoteSessionInfo sessionInfo, NodeId nodeId)
             throws RepositoryException, RemoteException;
 
     /**

@@ -16,21 +16,20 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import javax.jcr.PropertyType;
-import javax.jcr.ValueFormatException;
-import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.ConstraintViolationException;
-
-import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.jcr2spi.nodetype.ValueConstraint;
-import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
+import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
+import org.apache.jackrabbit.jcr2spi.nodetype.ValueConstraint;
+import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.PropertyInfo;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.ValueFormatException;
+import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.Iterator;
 
 /**
@@ -46,76 +45,57 @@ public class PropertyState extends ItemState {
     private QPropertyDefinition definition;
 
     /**
-     * The internal value(s)
-     */
-    private QValue[] values;
-
-    /**
-     * The type of this property state
-     */
-    private int type;
-
-    /**
      * True if this Property is multiValued
      */
     private final boolean multiValued;
 
     /**
-     * Constructs a new property state that is initially connected to an
-     * overlayed state.
      *
-     * @param overlayedState
-     * @param initialStatus
      */
-    protected PropertyState(PropertyState overlayedState, int initialStatus,
-                            ItemStateFactory isf) {
-        super(overlayedState, initialStatus, isf);
-
-        this.definition = overlayedState.definition;
-        this.multiValued = overlayedState.multiValued;
-
-        init(overlayedState.getType(), overlayedState.getValues());
-    }
+    private TransientData transientData;
 
     /**
-     * Create a new <code>PropertyState</code>
+     *
+     */
+    private PropertyInfo pInfo;
+
+    /**
+     * Create a NEW PropertyState
      *
      * @param entry
-     * @param initialStatus
-     * @param isWorkspaceState
+     * @param isf
+     * @param definition
+     * @param definitionProvider
      */
-    protected PropertyState(PropertyEntry entry, boolean multiValued, QPropertyDefinition definition,
-                            int initialStatus, boolean isWorkspaceState,
-                            ItemStateFactory isf, ItemDefinitionProvider definitionProvider) {
-        super(initialStatus, isWorkspaceState, entry, isf, definitionProvider);
-
+    protected PropertyState(PropertyEntry entry, ItemStateFactory isf,
+                            QPropertyDefinition definition,
+                            ItemDefinitionProvider definitionProvider) {
+        super(Status.NEW, entry, isf, definitionProvider);
+        this.multiValued = definition.isMultiple();
         this.definition = definition;
-        this.multiValued = multiValued;
-        init(PropertyType.UNDEFINED, QValue.EMPTY_ARRAY);
+        this.transientData = null; // TODO: maybe type/values should be passed to constructor
+        this.pInfo = null;
     }
 
     /**
+     * Create an EXISTING PropertyState
      *
-     * @param type
-     * @param values
+     * @param entry
+     * @param pInfo
+     * @param isf
+     * @param definition
+     * @param definitionProvider
      */
-    void init(int type, QValue[] values) {
-        // free old values as necessary
-        QValue[] oldValues = this.values;
-        if (oldValues != null) {
-            for (int i = 0; i < oldValues.length; i++) {
-                QValue old = oldValues[i];
-                if (old != null) {
-                    // make sure temporarily allocated data is discarded
-                    // before overwriting it (see QValue#discard())
-                    old.discard();
-                }
-            }
-        }
-        this.type = type;
-        this.values = (values == null) ? QValue.EMPTY_ARRAY : values;
+    protected PropertyState(PropertyEntry entry, PropertyInfo pInfo,
+                            ItemStateFactory isf,
+                            QPropertyDefinition definition,
+                            ItemDefinitionProvider definitionProvider) {
+        super(entry, isf, definitionProvider);
+        this.multiValued = pInfo.isMultiValued();
+        this.definition = definition;
+        this.transientData = null;
+        this.pInfo = pInfo;
     }
-
 
     //----------------------------------------------------------< ItemState >---
     /**
@@ -133,7 +113,15 @@ public class PropertyState extends ItemState {
      * @see ItemState#getId()
      */
     public ItemId getId() {
-        return getPropertyId();
+        return ((PropertyEntry) getHierarchyEntry()).getId();
+    }
+
+    /**
+     * {@inheritDoc}
+     * @see ItemState#getWorkspaceId()
+     */
+    public ItemId getWorkspaceId() {
+        return ((PropertyEntry) getHierarchyEntry()).getWorkspaceId();
     }
 
     /**
@@ -151,32 +139,54 @@ public class PropertyState extends ItemState {
         if (another.isNode()) {
             throw new IllegalArgumentException("Attempt to merge property state with node state.");
         }
-        if (keepChanges || !diff(this, (PropertyState) another)) {
-            // nothing to do.
-            return false;
+        boolean modified = diff(this, (PropertyState) another);
+        this.pInfo = ((PropertyState) another).pInfo;
+        if (!keepChanges && transientData != null) {
+            modified = true;
+            transientData.discardValues();
+            transientData = null;
         }
+        return modified;
+    }
 
-        synchronized (another) {
-            PropertyState pState = (PropertyState) another;
-            init(pState.type, pState.values);
+    /**
+     * @see ItemState#revert()
+     * @return true if
+     */
+    public boolean revert() {
+        if (getStatus() == Status.NEW) {
+            throw new IllegalStateException("Cannot call revert on a NEW property state.");
         }
-        return true;
+        if (transientData == null) {
+            return false;
+        } else {
+            transientData.discardValues();
+            transientData = null;
+            return true;
+        }
+    }
+
+
+    /**
+     * {@inheritDoc}
+     * @see ItemState#persisted(ChangeLog)
+     */
+    void persisted(ChangeLog changeLog)
+        throws IllegalStateException {
+        for (Iterator it = changeLog.modifiedStates(); it.hasNext();) {
+            ItemState modState = (ItemState) it.next();
+            if (modState == this) {
+                /*
+                NOTE: Property can only be the changelog target, if it was
+                existing and has been modified. removal, add and implicit modification
+                of protected properties must be persisted by save on parent.
+                */
+                setStatus(Status.EXISTING);
+            }
+        }
     }
 
     //------------------------------------------------------< PropertyState >---
-    /**
-     * Returns the identifier of this property.
-     *
-     * @return the id of this property.
-     */
-    public PropertyId getPropertyId() {
-        if (isWorkspaceState()) {
-            return getPropertyEntry().getWorkspaceId();
-        } else {
-            return getPropertyEntry().getId();
-        }
-    }
-
     /**
      * Returns the type of the property value(s).
      *
@@ -187,7 +197,7 @@ public class PropertyState extends ItemState {
      * type if the latter is {@link PropertyType#UNDEFINED}.
      */
     public int getType() {
-        return type;
+        return (transientData == null) ? pInfo.getType() : transientData.type;
     }
 
     /**
@@ -219,7 +229,8 @@ public class PropertyState extends ItemState {
      * @return the value(s) of this property.
      */
     public QValue[] getValues() {
-        return values;
+        // if transientData are null the pInfo MUST be present (ev. add check)
+        return (transientData == null) ? pInfo.getValues() : transientData.values;
     }
 
     /**
@@ -232,33 +243,11 @@ public class PropertyState extends ItemState {
         if (isMultiValued()) {
             throw new ValueFormatException("'getValue' may not be called on a multi-valued state.");
         }
+        QValue[] values = getValues();
         if (values == null || values.length == 0) {
             return null;
         } else {
             return values[0];
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     * @see ItemState#persisted(ChangeLog)
-     */
-    void persisted(ChangeLog changeLog)
-        throws IllegalStateException {
-        checkIsSessionState();
-        for (Iterator it = changeLog.modifiedStates(); it.hasNext();) {
-            ItemState modState = (ItemState) it.next();
-            if (modState == this) {
-                /*
-                NOTE: overlayedState must be existing, otherwise save was not
-                possible on prop. Similarly a property can only be the changelog
-                target, if it was modified. removal, add and implicit modification
-                of protected properties must be persisted by save on parent.
-                */
-                // push changes to overlayed state and reset status
-                ((PropertyState) overlayedState).init(getType(), getValues());
-                setStatus(Status.EXISTING);
-            }
         }
     }
     
@@ -268,24 +257,15 @@ public class PropertyState extends ItemState {
      * @param values the new values
      */
     void setValues(QValue[] values, int type) throws RepositoryException {
-        checkIsSessionState();
-        // make sure the arguements are consistent and do not violate the
-        // given property definition.
-        validate(values, type, getDefinition());
-        init(type, values);
-
+        if (transientData == null) {
+            transientData = new TransientData(type, values);
+        } else {
+            transientData.setValues(type, values);
+        }
         markModified();
     }
 
     //------------------------------------------------------------< private >---
-    /**
-     *
-     * @return
-     */
-    private PropertyEntry getPropertyEntry() {
-        return (PropertyEntry) getHierarchyEntry();
-    }
-
     /**
      * Checks whether the given property parameters are consistent and satisfy
      * the constraints specified by the given definition. The following
@@ -350,5 +330,42 @@ public class PropertyState extends ItemState {
         }
         // no difference
         return false;
+    }
+
+    //--------------------------------------------------------< inner class >---
+    /**
+     * Inner class storing transient property values an their type.
+     */
+    private class TransientData {
+
+        private int type;
+        private QValue[] values;
+
+        private TransientData(int type, QValue[] values) throws RepositoryException {
+            setValues(type, values);
+        }
+
+        private void setValues(int type, QValue[] values) throws RepositoryException {
+            // make sure the arguements are consistent and do not violate the
+            // given property definition.
+            validate(values, type, getDefinition());
+            // free old values if existing
+            discardValues();
+
+            this.type = type;
+            this.values = (values == null) ? QValue.EMPTY_ARRAY : values;
+        }
+
+        private void discardValues() {
+            if (values != null) {
+                for (int i = 0; i < values.length; i++) {
+                    if (values[i] != null) {
+                        // make sure temporarily allocated data is discarded
+                        // before overwriting it (see QValue#discard())
+                        values[i].discard();
+                    }
+                }
+            }
+        }
     }
 }
