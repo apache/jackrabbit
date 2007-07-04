@@ -52,49 +52,49 @@ public class LockTest extends AbstractJCRTest {
         testRootNode.save();
 
         // lock node and get lock token
-        Lock lock = n.lock(false, true);
-
-        // assert: session must get a non-null lock token
-        assertNotNull("session must get a non-null lock token",
-                lock.getLockToken());
-
-        // assert: session must hold lock token
-        assertTrue("session must hold lock token",
-                containsLockToken(superuser, lock.getLockToken()));
-
-        // remove lock token
+        Lock lock = n.lock(false, false);
         String lockToken = lock.getLockToken();
-        superuser.removeLockToken(lockToken);
-
-        // assert: session must get a null lock token
-        assertNull("session must get a null lock token",
-                lock.getLockToken());
-
-        // assert: session must still hold lock token
-        assertFalse("session must not hold lock token",
-                containsLockToken(superuser, lockToken));
-
-        // assert: session unable to modify node
         try {
+            // assert: session must get a non-null lock token
+            assertNotNull("session must get a non-null lock token", lockToken);
+
+            // assert: session must hold lock token
+            assertTrue("session must hold lock token", containsLockToken(superuser, lockToken));
+
+            // remove lock token
+            superuser.removeLockToken(lockToken);
+            // assert: session must get a null lock token
+            assertNull("session must get a null lock token", lock.getLockToken());
+
+            // assert: session must still hold lock token
+            assertFalse("session must not hold lock token",
+                    containsLockToken(superuser, lockToken));
+
+            // assert: session unable to modify node
+            try {
+                n.addNode(nodeName2, testNodeType);
+                fail("session unable to modify node");
+            } catch (LockException e) {
+                // expected
+            }
+
+            // add lock token
+            superuser.addLockToken(lockToken);
+
+            // assert: session must get a non-null lock token
+            assertNotNull("session must get a non-null lock token",
+                    lock.getLockToken());
+
+            // assert: session must hold lock token
+            assertTrue("session must hold lock token",
+                    containsLockToken(superuser, lock.getLockToken()));
+
+            // assert: session able to modify node
             n.addNode(nodeName2, testNodeType);
-            fail("session unable to modify node");
-        } catch (LockException e) {
-            // expected
+        } finally {
+            // make sure lock token is added even if test fail
+            superuser.addLockToken(lockToken);
         }
-
-        // add lock token
-        superuser.addLockToken(lockToken);
-
-        // assert: session must get a non-null lock token
-        assertNotNull("session must get a non-null lock token",
-                lock.getLockToken());
-
-        // assert: session must hold lock token
-        assertTrue("session must hold lock token",
-                containsLockToken(superuser, lock.getLockToken()));
-
-        // assert: session able to modify node
-        n.addNode(nodeName2, testNodeType);
     }
 
     /**
@@ -415,7 +415,7 @@ public class LockTest extends AbstractJCRTest {
             Node n2 = (Node) otherSuperuser.getItem(n1.getPath());
 
             // lock node
-            Lock lock = n2.lock(false, true);
+            Lock lock = n2.lock(false, false);
 
             // assert: user must get non-null token
             assertNotNull("user must get non-null token", lock.getLockToken());
@@ -434,6 +434,8 @@ public class LockTest extends AbstractJCRTest {
         } finally {
             // log out
             otherSuperuser.logout();
+            // unlock again
+            n1.unlock();
         }
     }
 
@@ -704,4 +706,5 @@ public class LockTest extends AbstractJCRTest {
         return false;
     }
 }
+
 
