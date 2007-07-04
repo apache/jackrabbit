@@ -202,7 +202,9 @@ class TreeComparator extends AbstractJCRTest {
                 log.println("Cannot create node with mixin node type: " + e);
                 // if saving failed for a node, then remove it again (or else the next save will fail on it)
                 try {
-                    n.remove();
+                    if (n != null) {
+                        n.remove();
+                    }
                 } catch (RepositoryException e1) {
                     log.println("Could not remove node: " + e);
                 }

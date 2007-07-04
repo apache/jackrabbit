@@ -23,6 +23,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 /**
@@ -90,13 +91,15 @@ public class NodeUUIDTest extends AbstractJCRTest {
 
     /**
      * Moves a referencable node using {@link javax.jcr.Session#move(String,
-            * String)} with one session and saves afterward changes made with a second
+     * String)} with one session and saves afterward changes made with a second
      * session to the moved node using {@link Node#save()}.<br/> <br/>
      * Procedure: <ul> <li>Creates node 1 and node 2 with session 1</li>
      * <li>Gets reference to node 1 using session 2</li> <li>Session 1 moves
      * node 1 under node 2, saves changes</li> <li>Session 2 modifes node 1,
-     * saves</li> </ul> This should work since the modified node is identified
-     * by its UUID, not by position in repository. <br><br>Prerequisites: <ul>
+     * saves</li> </ul> This should work (since the modified node is identified
+     * by its UUID, not by position in repository) or throw an
+     * <code>InvalidItemStateException</code> if 'move' is reported to the second
+     * session as a sequence of remove and add events. <br><br>Prerequisites: <ul>
      * <li><code>javax.jcr.tck.NodeUUIDTest.nodetype2</code> must have the mixin
      * type <code>mix:referenceable</code> assigned.</li>
      * <li><code>javax.jcr.tck.NodeUUIDTest.testSaveMovedRefNode.propertyname1</code>
@@ -129,11 +132,15 @@ public class NodeUUIDTest extends AbstractJCRTest {
             superuser.save();
 
             // modify some prop of the moved node with session 2
-            refTargetNodeSession2.setProperty(propertyName1, "test");
+            try {
+                refTargetNodeSession2.setProperty(propertyName1, "test");
 
-            // save it
-            refTargetNodeSession2.save();
-            // ok, works as expected
+                // save it
+                refTargetNodeSession2.save();
+                // ok, works as expected
+            } catch (InvalidItemStateException e) {
+                // ok as well.
+            }
         } finally {
             testSession.logout();
         }
