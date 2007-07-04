@@ -38,6 +38,7 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.commons.collections.map.ReferenceMap;
@@ -235,6 +236,11 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     private final List exceptions = new ArrayList();
 
     /**
+     * Temporary relative path
+     */
+    private Path.PathBuilder tmpRelPath;
+
+    /**
      * Creates a new <code>XPathQueryBuilder</code> instance.
      *
      * @param statement the XPath statement.
@@ -361,6 +367,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                         RelationQueryNode isNull
                                 = new RelationQueryNode(queryNode,
                                         RelationQueryNode.OPERATION_NULL);
+                        applyRelativePath(isNull);
                         node.childrenAccept(this, isNull);
                         NotQueryNode notNode = (NotQueryNode) queryNode;
                         NAryQueryNode parent = (NAryQueryNode) notNode.getParent();
@@ -368,9 +375,10 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                         parent.addOperand(isNull);
                     } else {
                         // not null expression
-                        RelationQueryNode notNull
-                                = new RelationQueryNode(queryNode,
+                        RelationQueryNode notNull =
+                                new RelationQueryNode(queryNode,
                                         RelationQueryNode.OPERATION_NOT_NULL);
+                        applyRelativePath(notNull);
                         node.childrenAccept(this, notNull);
                         ((NAryQueryNode) queryNode).addOperand(notNull);
                     }
@@ -380,6 +388,15 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     } else if (queryNode.getType() == QueryNode.TYPE_TEXTSEARCH
                             || queryNode.getType() == QueryNode.TYPE_RELATION) {
                         node.childrenAccept(this, queryNode);
+                    } else {
+                        // step within a predicate
+                        RelationQueryNode tmp = new RelationQueryNode(
+                                null, RelationQueryNode.OPERATION_NOT_NULL);
+                        node.childrenAccept(this, tmp);
+                        if (tmpRelPath == null) {
+                            tmpRelPath = new Path.PathBuilder();
+                        }
+                        tmpRelPath.addLast(tmp.getRelativePath().getNameElement());
                     }
                 }
                 break;
@@ -508,6 +525,26 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     }
 
     //----------------------< internal >----------------------------------------
+
+    /**
+     * Applies {@link #tmpRelPath} to <code>node</code> and reset the path to
+     * <code>null</code>.
+     *
+     * @param node a relation query node.
+     */
+    private void applyRelativePath(RelationQueryNode node) {
+        if (tmpRelPath != null) {
+            try {
+                Path relPath = tmpRelPath.getPath();
+                for (int i = 0; i < relPath.getLength(); i++) {
+                    node.addPathElement(relPath.getElement(i));
+                }
+            } catch (MalformedPathException e) {
+                // should never happen
+            }
+            tmpRelPath = null;
+        }
+    }
 
     /**
      * Creates a <code>LocationStepQueryNode</code> at the current position
