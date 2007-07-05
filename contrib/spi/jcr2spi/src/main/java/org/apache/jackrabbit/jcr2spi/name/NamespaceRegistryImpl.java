@@ -304,7 +304,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
                 uri = storage.getURI(prefix);
                 prefixToURI.put(prefix, uri);
             } catch (RepositoryException ex) {
-                log.warn("Internal error while loading registered namespaces.");
+                log.debug("Internal error while loading registered namespaces.");
             }
         }
 
@@ -327,7 +327,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
                 prefix = storage.getPrefix(uri);
                 uriToPrefix.put(uri, prefix);
             } catch (RepositoryException ex) {
-                log.warn("Internal error while loading registered namespaces.");
+                log.debug("Internal error while loading registered namespaces.");
             }
         }
 

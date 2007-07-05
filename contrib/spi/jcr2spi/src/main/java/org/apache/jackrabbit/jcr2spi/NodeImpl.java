@@ -1468,7 +1468,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
         NodeTypeImpl primaryType = ntMgr.getNodeType(primaryTypeName);
         if (primaryType.isNodeType(mixinName)) {
-            log.error(mixin.getName() + ": already contained in primary node type");
+            log.debug(mixin.getName() + ": already contained in primary node type");
             return false;
         }
 
@@ -1479,7 +1479,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // check if adding new mixin conflicts with existing nodetypes
         if (entExisting.includesNodeType(mixinName)) {
-            log.error(mixin.getName() + ": already contained in mixin types");
+            log.debug(mixin.getName() + ": already contained in mixin types");
             return false;
         }
 
