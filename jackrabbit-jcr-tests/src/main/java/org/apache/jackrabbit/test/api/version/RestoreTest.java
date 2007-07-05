@@ -301,48 +301,25 @@ public class RestoreTest extends AbstractVersionTest {
     }
 
     /**
-     * Test the restore of the OPV=Version child nodes.
+     * Test the restore of a versionable node using a label.
      * @throws RepositoryException
      */
     public void testRestoreLabel() throws RepositoryException {
-        // V1.0 of versionableNode has no child
-        Node child1 = versionableNode.addNode(nodeName4);
-        if (!child1.isNodeType(mixVersionable)) {
-            child1.addMixin(mixVersionable);
-        }
-        versionableNode.save();
-        // create v1.0 of child
-        Version v1Child = child1.checkin();
-
-        // V1 of versionable node has child1
+        // V1 of versionable node
         Version v1 = versionableNode.checkin();
         String v1Name = v1.getName();
 
-        // mark V1 with label test and foo
+        // mark V1 with label test1
         versionableNode.getVersionHistory().addVersionLabel(v1Name, "test", true);
-        versionableNode.getVersionHistory().addVersionLabel(v1Name, "foo", true);
 
-        // create V1.1 of child
-        child1.checkout();
-        Version v11Child = child1.checkin();
-        child1.getVersionHistory().addVersionLabel(v11Child.getName(), "foo", true);
+        // create a new version
+        versionableNode.checkout();
+        Version v2 = versionableNode.checkin();
 
-        // restore 1.0 of versionable node --> no child
-        versionableNode.restore(version, true);
-        assertFalse("Node.restore('1.0') must remove child node.", versionableNode.hasNode(nodeName4));
-
-        // restore V1 via label. since child has no label, initial version should
-        // be restored
+        // restore V1 via label.
         versionableNode.restoreByLabel("test", true);
-        assertTrue("Node.restore('test') must restore child node.", versionableNode.hasNode(nodeName4));
-        child1 = versionableNode.getNode(nodeName4);
-        assertEquals("Node.restore('test') must restore child node version 1.0.", v1Child.getName(), child1.getBaseVersion().getName());
-
-        // restore V1 via label 'foo'. since child has foo, 1.1 version should
-        // be restored
-        versionableNode.restoreByLabel("foo", true);
-        child1 = versionableNode.getNode(nodeName4);
-        assertEquals("Node.restore('foo') must restore child node version 1.1.", v11Child.getName(), child1.getBaseVersion().getName());
+        assertEquals("Node.restore('test') not correctly restored",
+                v1Name, versionableNode.getBaseVersion().getName());
     }
 
     /**
