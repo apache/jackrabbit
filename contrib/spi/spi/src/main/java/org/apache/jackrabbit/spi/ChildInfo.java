@@ -23,9 +23,21 @@ import org.apache.jackrabbit.name.QName;
  */
 public interface ChildInfo {
 
+    /**
+     *
+     * @return
+     */
     public QName getName();
 
+    /**
+     *
+     * @return
+     */
     public String getUniqueID();
 
+    /**
+     * 
+     * @return
+     */
     public int getIndex();
 }

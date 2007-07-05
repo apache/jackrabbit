@@ -72,16 +72,13 @@ import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.QNodeTypeDefinitionIterator;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
-import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.Event;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -390,10 +387,10 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @throws RepositoryException
      */
     private NodeTypeRegistry createNodeTypeRegistry(QNodeDefinition rootNodeDef, NamespaceRegistry nsRegistry, Map descriptors) throws RepositoryException {
-        QNodeTypeDefinitionIterator it = service.getNodeTypeDefinitions(sessionInfo);
+        Iterator it = service.getNodeTypeDefinitions(sessionInfo);
         List ntDefs = new ArrayList();
         while (it.hasNext()) {
-            ntDefs.add(it.nextDefinition());
+            ntDefs.add(it.next());
         }
         NodeTypeStorage ntst = new NodeTypeStorage() {
             public void registerNodeTypes(QNodeTypeDefinition[] nodeTypeDefs) throws NoSuchNodeTypeException, RepositoryException {
@@ -622,8 +619,8 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             for (int i = 0; i < eventBundles.length; i++) {
                 log.debug("BundleId: {}", eventBundles[i].getBundleId());
                 log.debug("IsLocal:  {}", Boolean.valueOf(eventBundles[i].isLocal()));
-                for (EventIterator it = eventBundles[i].getEvents(); it.hasNext(); ) {
-                    Event e = it.nextEvent();
+                for (Iterator it = eventBundles[i].getEvents(); it.hasNext(); ) {
+                    Event e = (Event) it.next();
                     String type;
                     switch (e.getType()) {
                         case Event.NODE_ADDED:
@@ -866,7 +863,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
          */
         public void visit(Merge operation) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
             NodeId nId = operation.getNodeId();
-            IdIterator failed = service.merge(sessionInfo, nId, operation.getSourceWorkspaceName(), operation.bestEffort());
+            Iterator failed = service.merge(sessionInfo, nId, operation.getSourceWorkspaceName(), operation.bestEffort());
             operation.setFailedIds(failed);
         }
 

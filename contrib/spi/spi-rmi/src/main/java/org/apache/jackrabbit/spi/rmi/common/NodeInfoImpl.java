@@ -19,7 +19,6 @@ package org.apache.jackrabbit.spi.rmi.common;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
@@ -27,6 +26,7 @@ import org.apache.jackrabbit.name.Path;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.io.Serializable;
 
 /**
@@ -92,7 +92,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
                     new IteratorHelper(nodeInfo.getPropertyIds()) {
                         public ItemId nextId() {
                             return idFactory.createSerializablePropertyId(
-                                    (PropertyId) super.nextId());
+                                    (PropertyId) super.next());
                         }
                     });
         }
@@ -114,7 +114,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
      */
     private NodeInfoImpl(NodeId parentId, QName name, Path path, NodeId id,
                          int index, QName primaryTypeName, QName[] mixinNames,
-                         PropertyId[] references, IdIterator propertyIds) {
+                         PropertyId[] references, Iterator propertyIds) {
         super(parentId, name, path, true);
         this.id = id;
         this.index = index;
@@ -123,7 +123,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
         this.references = Arrays.asList(references);
         this.propertyIds = new ArrayList();
         while (propertyIds.hasNext()) {
-            this.propertyIds.add(propertyIds.nextId());
+            this.propertyIds.add(propertyIds.next());
         }
     }
 
@@ -169,7 +169,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     /**
      * {@inheritDoc}
      */
-    public IdIterator getPropertyIds() {
-        return new IteratorHelper(propertyIds);
+    public Iterator getPropertyIds() {
+        return propertyIds.iterator();
     }
 }

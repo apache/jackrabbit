@@ -21,13 +21,13 @@ import java.util.NoSuchElementException;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
+import javax.jcr.RangeIterator;
 
 import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.QueryResultRow;
-import org.apache.jackrabbit.spi.QueryResultRowIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +47,7 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
     private final HierarchyManager hierarchyMgr;
 
     /** The QueryResultRows */
-    private final QueryResultRowIterator rows;
+    private final RangeIterator rows;
 
     /** Current position of this node iterator */
     private int pos = -1;
@@ -212,7 +212,7 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
         
         while (next == null && rows.hasNext()) {
             try {
-                QueryResultRow row = rows.nextQueryResultRow();
+                QueryResultRow row = (QueryResultRow) rows.next();
                 nextId = row.getNodeId();
                 Item tmp = itemMgr.getItem(hierarchyMgr.getHierarchyEntry(nextId));
 

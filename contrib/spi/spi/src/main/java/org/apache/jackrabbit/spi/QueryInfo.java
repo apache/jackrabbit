@@ -18,20 +18,22 @@ package org.apache.jackrabbit.spi;
 
 import org.apache.jackrabbit.name.QName;
 
+import javax.jcr.RangeIterator;
+
 /**
  * QueryInfo...
  */
 public interface QueryInfo {
 
     /**
-     * @return an iterator over the {@link QueryResultRow}s
+     * @return an iterator over the {@link QueryResultRow}s.
      * @see javax.jcr.query.QueryResult#getRows()
      */
-    public QueryResultRowIterator getRows();
+    public RangeIterator getRows();
 
     /**
      * @return an array of QName representing the column names of the query
-     *         result.
+     * result.
      * @see javax.jcr.query.QueryResult#getColumnNames()
      */
     public QName[] getColumnNames();

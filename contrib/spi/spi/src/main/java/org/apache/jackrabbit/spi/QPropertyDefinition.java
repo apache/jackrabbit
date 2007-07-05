@@ -28,6 +28,9 @@ import javax.jcr.nodetype.PropertyDefinition;
  */
 public interface QPropertyDefinition extends QItemDefinition {
 
+    /**
+     * Empty array of <code>QPropertyDefinition</code>.
+     */
     public static final QPropertyDefinition[] EMPTY_ARRAY = new QPropertyDefinition[0];
 
     /**

@@ -16,15 +16,6 @@
  */
 package org.apache.jackrabbit.spi.rmi.common;
 
-import org.apache.jackrabbit.spi.IdIterator;
-import org.apache.jackrabbit.spi.QNodeTypeDefinitionIterator;
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.Event;
-import org.apache.jackrabbit.spi.EventIterator;
-import org.apache.jackrabbit.spi.QueryResultRow;
-import org.apache.jackrabbit.spi.QueryResultRowIterator;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.ArrayList;
@@ -33,8 +24,7 @@ import java.util.ArrayList;
  * <code>org.apache.jackrabbit.spi.rmi.common.IteratorHelper</code>...
  * TODO: move to spi-commons
  */
-public class IteratorHelper extends org.apache.jackrabbit.util.IteratorHelper
-    implements IdIterator, QueryResultRowIterator, QNodeTypeDefinitionIterator, EventIterator {
+public class IteratorHelper extends org.apache.jackrabbit.util.IteratorHelper {
 
     public static final IteratorHelper EMPTY = new IteratorHelper(new ArrayList(0));
 
@@ -44,33 +34,5 @@ public class IteratorHelper extends org.apache.jackrabbit.util.IteratorHelper
 
     public IteratorHelper(Iterator iter) {
         super(iter);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public ItemId nextId() {
-        return (ItemId) next();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public QNodeTypeDefinition nextDefinition() {
-        return (QNodeTypeDefinition) next();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public QueryResultRow nextQueryResultRow() {
-        return (QueryResultRow)super.next();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Event nextEvent() {
-        return (Event) next();
     }
 }

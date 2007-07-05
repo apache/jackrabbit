@@ -20,7 +20,6 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.apache.jackrabbit.spi.IdIterator;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
@@ -33,6 +32,7 @@ import javax.jcr.MergeException;
 import javax.jcr.lock.LockException;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.Version;
+import java.util.Iterator;
 
 /**
  * <code>VersionManager</code>...
@@ -144,9 +144,8 @@ public interface VersionManager {
      * @param nodeState
      * @param workspaceName
      * @param bestEffort
-     * @return A Collection of <code>ItemId</code> containing the ids of those
-     * <code>Node</code>s that failed to be merged and need manual resolution
-     * by the user of the API.
+     * @return An Iterator over <code>NodeId</code>s of all <code>Node</code>s
+     * that failed to be merged and need manual resolution by the user of the API.
      * @throws NoSuchWorkspaceException
      * @throws AccessDeniedException
      * @throws MergeException
@@ -154,9 +153,9 @@ public interface VersionManager {
      * @throws InvalidItemStateException
      * @throws RepositoryException
      * @see #resolveMergeConflict(NodeState,NodeState,boolean)
-     * @see javax.jcr.Node#merge(String, boolean) 
+     * @see javax.jcr.Node#merge(String, boolean)
      */
-    public IdIterator merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
+    public Iterator merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
 
     /**
      * @param nodeState

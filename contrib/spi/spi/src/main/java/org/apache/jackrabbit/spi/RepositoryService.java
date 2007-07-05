@@ -80,6 +80,8 @@ public interface RepositoryService {
      * <code>credentials</code>.
      *
      * @param credentials the credentials of the user.
+     * @param workspaceName the name of the workspace the <code>SessionInfo</code>
+     * should be built for.
      * @return a <code>SessionInfo</code> if authentication was successful.
      * @throws LoginException           if authentication of the user fails.
      * @throws NoSuchWorkspaceException if the specified <code>workspaceName</code>
@@ -94,6 +96,8 @@ public interface RepositoryService {
      * will be used by other methods on the <code>RepositoryService</code>.
      *
      * @param sessionInfo for another workspace
+     * @param workspaceName the name of the workspace the new <code>SessionInfo</code>
+     * should be built for.
      * @return a <code>SessionInfo</code> if authentication was successful.
      * @throws LoginException           if authentication of the user fails.
      * @throws NoSuchWorkspaceException if the specified <code>workspaceName</code>
@@ -110,7 +114,9 @@ public interface RepositoryService {
      * @param sessionInfo
      * @param credentials
      * @return a <code>SessionInfo</code> if impersonate was successful.
-     * @see Session#impersonate(Credentials)
+     * @throws LoginException
+     * @throws RepositoryException
+     * @see javax.jcr.Session#impersonate(javax.jcr.Credentials)
      */
     public SessionInfo impersonate(SessionInfo sessionInfo, Credentials credentials) throws LoginException, RepositoryException;
 
@@ -119,6 +125,7 @@ public interface RepositoryService {
      * will not be used any more.
      *
      * @param sessionInfo
+     * @throws RepositoryException
      */
     public void dispose(SessionInfo sessionInfo) throws RepositoryException;
 
@@ -265,6 +272,7 @@ public interface RepositoryService {
      * @param itemId
      * @param sessionInfo
      * @return
+     * @throws RepositoryException
      */
     public Batch createBatch(ItemId itemId, SessionInfo sessionInfo) throws RepositoryException;
 
@@ -508,8 +516,8 @@ public interface RepositoryService {
      * @param nodeId
      * @param srcWorkspaceName
      * @param bestEffort
-     * @return an <code>IdIterator</code> over all nodes that received a merge
-     * result of "fail" in the course of this operation.
+     * @return an <code>Iterator</code> over the {@link NodeId}s of all nodes that
+     * received a merge result of "fail" in the course of this operation.
      * @throws javax.jcr.NoSuchWorkspaceException
      * @throws javax.jcr.AccessDeniedException
      * @throws javax.jcr.MergeException
@@ -518,7 +526,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Node#merge(String, boolean)
      */
-    public IdIterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
+    public Iterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
 
     /**
      * @param sessionInfo
@@ -540,6 +548,7 @@ public interface RepositoryService {
 
     /**
      * @param sessionInfo
+     * @param versionHistoryId
      * @param versionId
      * @param label
      * @param moveLabel
@@ -551,6 +560,7 @@ public interface RepositoryService {
 
     /**
      * @param sessionInfo
+     * @param versionHistoryId
      * @param versionId
      * @param label
      * @throws javax.jcr.version.VersionException
@@ -748,7 +758,7 @@ public interface RepositoryService {
      * Retrieve the <code>QNodeTypeDefinition</code>s of all registered nodetypes.
      *
      * @param sessionInfo
-     * @return
+     * @return Iterator of {@link QNodeTypeDefinition}s.
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Workspace#getNodeTypeManager()
      * @see javax.jcr.nodetype.NodeTypeManager#getAllNodeTypes()
@@ -756,5 +766,5 @@ public interface RepositoryService {
      * @see javax.jcr.nodetype.NodeTypeManager#getPrimaryNodeTypes()
      * @see javax.jcr.nodetype.NodeTypeManager#getNodeType(String)
      */
-    public QNodeTypeDefinitionIterator getNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException;
+    public Iterator getNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException;
 }

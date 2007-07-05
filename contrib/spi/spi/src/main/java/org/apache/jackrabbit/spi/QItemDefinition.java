@@ -29,6 +29,9 @@ import javax.jcr.nodetype.ItemDefinition;
  */
 public interface QItemDefinition {
 
+    /**
+     * Empty array of <code>QItemDefinition</code>.
+     */
     public static final QItemDefinition[] EMPTY_ARRAY = new QItemDefinition[0];
 
     /**

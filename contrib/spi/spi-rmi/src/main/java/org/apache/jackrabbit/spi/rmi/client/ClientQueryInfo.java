@@ -17,10 +17,10 @@
 package org.apache.jackrabbit.spi.rmi.client;
 
 import org.apache.jackrabbit.spi.QueryInfo;
-import org.apache.jackrabbit.spi.QueryResultRowIterator;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteQueryInfo;
 import org.apache.jackrabbit.name.QName;
 
+import javax.jcr.RangeIterator;
 import java.rmi.RemoteException;
 
 /**
@@ -46,7 +46,7 @@ class ClientQueryInfo implements QueryInfo {
     /**
      * {@inheritDoc}
      */
-    public QueryResultRowIterator getRows() {
+    public RangeIterator getRows() {
         try {
             return new ClientIterator(queryInfo.getRows());
         } catch (RemoteException e) {

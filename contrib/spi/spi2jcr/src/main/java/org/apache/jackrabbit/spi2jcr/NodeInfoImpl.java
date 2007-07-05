@@ -19,7 +19,6 @@ package org.apache.jackrabbit.spi2jcr;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
@@ -31,6 +30,7 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.nodetype.NodeType;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * <code>NodeInfoImpl</code> implements a <code>NodeInfo</code> on top of a JCR
@@ -146,8 +146,8 @@ class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     /**
      * {@inheritDoc}
      */
-    public IdIterator getPropertyIds() {
-        return new IteratorHelper(propertyIds);
+    public Iterator getPropertyIds() {
+        return propertyIds.iterator();
     }
 
     /**

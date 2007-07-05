@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.spi;
 
+import java.util.Iterator;
+
 /**
  * An <code>EventBundle</code> is similar to the
  * {@link javax.jcr.observation.EventIterator} interface. Other than the
@@ -27,9 +29,9 @@ public interface EventBundle {
     /**
      * Returns the events of this bundle.
      *
-     * @return the events of this bundle.
+     * @return the {@link Event events} of this bundle.
      */
-    public EventIterator getEvents();
+    public Iterator getEvents();
 
     /**
      * Returns the identifier for this <code>EventBundle</code>.

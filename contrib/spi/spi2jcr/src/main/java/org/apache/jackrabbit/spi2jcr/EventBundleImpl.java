@@ -17,9 +17,10 @@
 package org.apache.jackrabbit.spi2jcr;
 
 import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.spi.EventIterator;
+import org.apache.jackrabbit.util.IteratorHelper;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * <code>EventBundleImpl</code> implements a {@link EventBundle}.
@@ -57,7 +58,7 @@ class EventBundleImpl implements EventBundle {
     /**
      * {@inheritDoc}
      */
-    public EventIterator getEvents() {
+    public Iterator getEvents() {
         return new IteratorHelper(events);
     }
 

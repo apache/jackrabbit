@@ -27,7 +27,8 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.apache.jackrabbit.spi.IdIterator;
+
+import java.util.Iterator;
 
 /**
  * <code>DefaultVersionManager</code>...
@@ -73,7 +74,7 @@ public class DefaultVersionManager implements VersionManager {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
 
-    public IdIterator merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws RepositoryException {
+    public Iterator merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
 

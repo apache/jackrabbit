@@ -28,11 +28,9 @@ import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.LockInfo;
-import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.spi.QNodeTypeDefinitionIterator;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteRepositoryService;
@@ -41,7 +39,6 @@ import org.apache.jackrabbit.spi.rmi.remote.RemoteIterator;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteQueryInfo;
 import org.apache.jackrabbit.spi.rmi.common.SerializableIdFactory;
 import org.apache.jackrabbit.spi.rmi.common.SerializableInputStream;
-import org.apache.jackrabbit.spi.rmi.common.IteratorHelper;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.value.QValueFactoryImpl;
@@ -533,7 +530,7 @@ public class ClientRepositoryService implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public IdIterator merge(SessionInfo sessionInfo,
+    public Iterator merge(SessionInfo sessionInfo,
                             NodeId nodeId,
                             String srcWorkspaceName,
                             boolean bestEffort)
@@ -748,12 +745,12 @@ public class ClientRepositoryService implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public QNodeTypeDefinitionIterator getNodeTypeDefinitions(
+    public Iterator getNodeTypeDefinitions(
             SessionInfo sessionInfo) throws RepositoryException {
         try {
             QNodeTypeDefinition[] ntDefs = remoteService.getNodeTypeDefinitions(
                     getRemoteSessionInfo(sessionInfo));
-            return new IteratorHelper(Arrays.asList(ntDefs));
+            return Arrays.asList(ntDefs).iterator();
         } catch (RemoteException e) {
             throw new RemoteRepositoryException(e);
         }

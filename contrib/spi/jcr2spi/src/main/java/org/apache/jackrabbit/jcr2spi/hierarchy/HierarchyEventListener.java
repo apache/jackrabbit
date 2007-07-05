@@ -24,7 +24,6 @@ import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.Path;
 
@@ -179,8 +178,8 @@ public class HierarchyEventListener implements InternalEventListener {
 
     private static Collection getEventCollection(EventBundle eventBundle) {
         List evs = new ArrayList();
-        for (EventIterator it = eventBundle.getEvents(); it.hasNext();) {
-           evs.add(it.nextEvent());
+        for (Iterator it = eventBundle.getEvents(); it.hasNext();) {
+           evs.add(it.next());
         }
         return evs;
     }

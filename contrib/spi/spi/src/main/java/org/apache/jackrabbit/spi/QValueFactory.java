@@ -33,6 +33,7 @@ public interface QValueFactory {
 
     /**
      * @param value
+     * @param type
      * @return
      */
     public QValue create(String value, int type);

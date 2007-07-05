@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
-import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +29,7 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import java.util.Iterator;
 
 /**
  * <code>Merge</code>...
@@ -43,7 +43,7 @@ public class Merge extends AbstractOperation {
     private final boolean bestEffort;
     private final VersionManager mgr;
 
-    private IdIterator failedIds = null;
+    private Iterator failedIds = null;
 
     private Merge(NodeState nodeState, String srcWorkspaceName, boolean bestEffort, VersionManager mgr) {
         this.nodeState = nodeState;
@@ -89,7 +89,7 @@ public class Merge extends AbstractOperation {
         return bestEffort;
     }
 
-    public void setFailedIds(IdIterator failedIds) {
+    public void setFailedIds(Iterator failedIds) {
         if (failedIds == null) {
             throw new IllegalArgumentException("IdIterator must not be null.");
         }
@@ -99,7 +99,7 @@ public class Merge extends AbstractOperation {
         this.failedIds = failedIds;
     }
 
-    public IdIterator getFailedIds() {
+    public Iterator getFailedIds() {
         if (failedIds == null) {
             throw new IllegalStateException("Merge operation has not been executed yet.");
         }

@@ -23,7 +23,13 @@ import org.apache.jackrabbit.name.QName;
  */
 public interface PropertyId extends ItemId {
 
+    /**
+     * @return The {@link NodeId parentId} of this <code>PropertyId</code>.
+     */
     public NodeId getParentId();
 
+    /**
+     * @return The name of the property that is identified by this <code>PropertyId</code>.
+     */
     public QName getQName();
 }

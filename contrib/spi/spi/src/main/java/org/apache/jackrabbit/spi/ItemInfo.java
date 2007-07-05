@@ -25,17 +25,17 @@ import org.apache.jackrabbit.name.Path;
 public interface ItemInfo {
 
     /**
-     * @return the id of the parent item info
+     * @return the id of the parent item info.
      */
     public NodeId getParentId();
 
     /**
-     * @return Return the qualified representation of the item name
+     * @return Return the qualified representation of the item name.
      */
     public QName getQName();
 
     /**
-     * @return Return true if this ItemInfo denotes a node, false otherwise
+     * @return Return true if this ItemInfo denotes a node, false otherwise.
      */
     public boolean denotesNode();
 
