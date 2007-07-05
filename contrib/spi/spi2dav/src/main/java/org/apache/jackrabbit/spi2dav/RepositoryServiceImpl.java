@@ -114,7 +114,6 @@ import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QueryInfo;
-import org.apache.jackrabbit.spi.QNodeTypeDefinitionIterator;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
@@ -125,7 +124,6 @@ import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.ChildInfo;
@@ -1321,7 +1319,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#merge(SessionInfo, NodeId, String, boolean)
      */
-    public IdIterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
+    public Iterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
         try {
             String wspHref = uriResolver.getWorkspaceUri(srcWorkspaceName);
             Element mElem = MergeInfo.createMergeElement(new String[] {wspHref}, bestEffort, false, domFactory);
@@ -1329,8 +1327,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             MergeMethod method = new MergeMethod(getItemUri(nodeId, sessionInfo), mInfo);
             execute(method, sessionInfo);
-            // TODO: need to evaluate response and return merge failed node ids
-            return new IteratorHelper(Collections.EMPTY_LIST);
+
+            MultiStatusResponse[] resps = method.getResponseBodyAsMultiStatus().getResponses();
+            List failedIds = new ArrayList(resps.length);
+            for (int i = 0; i < resps.length; i++) {
+                String href = resps[i].getHref();
+                failedIds.add(uriResolver.getNodeId(href, sessionInfo));
+            }
+            return failedIds.iterator();
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1800,7 +1804,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#getNodeTypeDefinitions(SessionInfo)
      */
-    public QNodeTypeDefinitionIterator getNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
+    public Iterator getNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
         ReportInfo info = new ReportInfo(NodeTypesReport.NODETYPES_REPORT, DEPTH_0);
         info.setContentElement(DomUtil.createElement(domFactory, NodeTypeConstants.XML_REPORT_ALLNODETYPES, NodeTypeConstants.NAMESPACE));
 
@@ -1826,7 +1830,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     nodeTypeDefinitions.put(def.getQName(), def);
                 }
             }
-            return new IteratorHelper(ntDefs);
+            return ntDefs.iterator();
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {

@@ -22,10 +22,6 @@ import java.util.NoSuchElementException;
 import javax.jcr.RangeIterator;
 
 import org.apache.jackrabbit.spi.rmi.remote.RemoteIterator;
-import org.apache.jackrabbit.spi.IdIterator;
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.QueryResultRowIterator;
-import org.apache.jackrabbit.spi.QueryResultRow;
 
 /**
  * A buffering local adapter for the {@link RemoteIterator}
@@ -33,7 +29,7 @@ import org.apache.jackrabbit.spi.QueryResultRow;
  * using the JCR {@link RangeIterator} interface. The element arrays
  * returned by the remote iterator are buffered locally.
  */
-class ClientIterator implements RangeIterator, IdIterator, QueryResultRowIterator {
+class ClientIterator implements RangeIterator {
 
     /** The adapted remote iterator. */
     private final RemoteIterator remote;
@@ -202,23 +198,5 @@ class ClientIterator implements RangeIterator, IdIterator, QueryResultRowIterato
      */
     public void remove() throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
-    }
-
-    //------------------------------< IdIterator >------------------------------
-
-    /**
-     * @return returns the next <code>ItemId</code> in this iterator.
-     */
-    public ItemId nextId() {
-        return (ItemId) next();
-    }
-
-    //-----------------------< QueryResultRowIterator >-------------------------
-
-    /**
-     * @return returns the next <code>QueryResultRow</code> in this iterator.
-     */
-    public QueryResultRow nextQueryResultRow() {
-        return (QueryResultRow) next();
     }
 }

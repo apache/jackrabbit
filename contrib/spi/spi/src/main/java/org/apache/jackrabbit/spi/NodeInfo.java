@@ -18,6 +18,8 @@ package org.apache.jackrabbit.spi;
 
 import org.apache.jackrabbit.name.QName;
 
+import java.util.Iterator;
+
 /**
  * <code>NodeInfo</code>...
  */
@@ -31,33 +33,33 @@ public interface NodeInfo extends ItemInfo {
     public NodeId getId();
 
     /**
-     * Index of the node
+     * Index of the node.
      * 
-     * @return
+     * @return the index.
      */
     public int getIndex();
 
     /**
-     * @return QName representing the name of the primary nodetype
+     * @return QName representing the name of the primary nodetype.
      */
     public QName getNodetype();
 
     /**
-     * @return array of QName representing the names of mixin nodetypes.
+     * @return Array of QName representing the names of mixin nodetypes.
      */
     public QName[] getMixins();
 
     /**
-     * @return ids of the properties that are referencing the node based on this
-     * info object or an empty array if the node is not referenceable or no references
-     * exist.
+     * @return {@link PropertyId Id}s of the properties that are referencing the
+     * node based on this info object or an empty array if the node is not
+     * referenceable or no references exist.
      * @see PropertyInfo#getId()
      */
     public PropertyId[] getReferences();
 
     /**
-     * @return ids of children properties
+     * @return {@link PropertyId Id}s of children properties
      * @see PropertyInfo#getId()
      */
-    public IdIterator getPropertyIds();
+    public Iterator getPropertyIds();
 }

@@ -18,7 +18,6 @@ package org.apache.jackrabbit.spi2jcr;
 
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
-import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
@@ -34,6 +33,7 @@ import org.slf4j.Logger;
 import javax.jcr.observation.EventListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Iterator;
 
 /**
  * <code>EventSubscription</code> listens for JCR events and creates SPI event
@@ -106,8 +106,8 @@ class EventSubscription implements EventListener {
         // apply filters to bundles
         for (int i = 0; i < bundles.length; i++) {
             List filteredEvents = new ArrayList();
-            for (EventIterator it = bundles[i].getEvents(); it.hasNext(); ) {
-                Event e = it.nextEvent();
+            for (Iterator it = bundles[i].getEvents(); it.hasNext(); ) {
+                Event e = (Event) it.next();
                 // TODO: this is actually not correct. if filters are empty no event should go out
                 if (filters == null || filters.length == 0) {
                     filteredEvents.add(e);

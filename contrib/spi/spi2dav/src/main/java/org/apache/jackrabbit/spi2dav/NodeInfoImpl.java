@@ -27,7 +27,6 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.spi.NodeInfo;
-import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.slf4j.LoggerFactory;
@@ -153,8 +152,8 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
         return (PropertyId[]) references.toArray(new PropertyId[references.size()]);
     }
 
-    public IdIterator getPropertyIds() {
-        return new IteratorHelper(propertyIds);
+    public Iterator getPropertyIds() {
+        return propertyIds.iterator();
     }
 
     //--------------------------------------------------------------------------

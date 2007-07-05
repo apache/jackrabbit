@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.NodeInfo;
-import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
@@ -267,8 +266,8 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
 
         // update NodeEntry from the information present in the NodeInfo (prop entries)
         List propNames = new ArrayList();
-        for (IdIterator it = info.getPropertyIds(); it.hasNext(); ) {
-            PropertyId pId = (PropertyId) it.nextId();
+        for (Iterator it = info.getPropertyIds(); it.hasNext(); ) {
+            PropertyId pId = (PropertyId) it.next();
             QName propertyName = pId.getQName();
             propNames.add(propertyName);
         }

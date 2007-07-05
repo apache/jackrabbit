@@ -29,11 +29,9 @@ import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.LockInfo;
-import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.spi.QNodeTypeDefinitionIterator;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
@@ -45,6 +43,7 @@ import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.value.QValueFactoryImpl;
 import org.apache.jackrabbit.value.ValueFormat;
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.util.IteratorHelper;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Credentials;
@@ -698,13 +697,13 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public IdIterator merge(final SessionInfo sessionInfo,
-                            final NodeId nodeId,
-                            final String srcWorkspaceName,
-                            final boolean bestEffort)
+    public Iterator merge(final SessionInfo sessionInfo,
+                          final NodeId nodeId,
+                          final String srcWorkspaceName,
+                          final boolean bestEffort)
             throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
         final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        return (IdIterator) executeWithLocalEvents(new Callable() {
+        return (Iterator) executeWithLocalEvents(new Callable() {
             public Object run() throws RepositoryException {
                 Node n = getNode(nodeId, sInfo);
                 NodeIterator it = n.merge(srcWorkspaceName, bestEffort);
@@ -713,7 +712,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                     ids.add(idFactory.createNodeId(it.nextNode(),
                             sInfo.getNamespaceResolver()));
                 }
-                return new IteratorHelper(ids);
+                return ids.iterator();
             }
         }, sInfo);
     }
@@ -961,8 +960,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public QNodeTypeDefinitionIterator getNodeTypeDefinitions(
-            SessionInfo sessionInfo) throws RepositoryException {
+    public Iterator getNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         NodeTypeManager ntMgr = sInfo.getSession().getWorkspace().getNodeTypeManager();
         List nodeTypes = new ArrayList();
@@ -971,7 +969,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             nodeTypes.add(new QNodeTypeDefinitionImpl(nt,
                     sInfo.getNamespaceResolver(), getQValueFactory()));
         }
-        return new IteratorHelper(nodeTypes);
+        return nodeTypes.iterator();
     }
 
     //----------------------------< internal >----------------------------------

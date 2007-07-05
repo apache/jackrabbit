@@ -39,9 +39,10 @@ import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QValue;
+
+import java.util.Iterator;
 
 /**
  * <code>VersionManagerImpl</code>...
@@ -136,7 +137,7 @@ public class VersionManagerImpl implements VersionManager {
         workspaceManager.execute(op);
     }
 
-    public IdIterator merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws RepositoryException {
+    public Iterator merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws RepositoryException {
         Merge op = Merge.create(nodeState, workspaceName, bestEffort, this);
         workspaceManager.execute(op);
         return op.getFailedIds();

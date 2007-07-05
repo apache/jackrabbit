@@ -29,6 +29,9 @@ import javax.jcr.nodetype.NodeDefinition;
  */
 public interface QNodeDefinition extends QItemDefinition {
 
+    /**
+     * Empty array of <code>QNodeDefinition</code>.
+     */
     public static final QNodeDefinition[] EMPTY_ARRAY = new QNodeDefinition[0];
 
     /**

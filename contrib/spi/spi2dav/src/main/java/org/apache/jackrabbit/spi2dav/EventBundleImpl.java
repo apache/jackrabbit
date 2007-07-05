@@ -17,10 +17,11 @@
 package org.apache.jackrabbit.spi2dav;
 
 import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.Collections;
 
 /**
  * <code>EventBundleImpl</code> implements a bundle of events. The individual
@@ -51,11 +52,11 @@ class EventBundleImpl implements EventBundle, ObservationConstants {
     /**
      * @inheritDoc
      */
-    public EventIterator getEvents() {
+    public Iterator getEvents() {
         if (events == null || events.isEmpty()) {
-            return IteratorHelper.EMPTY;
+            return Collections.EMPTY_LIST.iterator();
         } else {
-            return new EventIteratorImpl(events);
+            return events.iterator();
         }
     }
 

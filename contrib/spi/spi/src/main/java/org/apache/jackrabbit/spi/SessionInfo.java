@@ -26,14 +26,34 @@ package org.apache.jackrabbit.spi;
  */
 public interface SessionInfo {
 
+    /**
+     * 
+     * @return
+     */
     public String getUserID();
 
+    /**
+     *
+     * @return
+     */
     public String getWorkspaceName();
 
+    /**
+     *
+     * @return
+     */
     public String[] getLockTokens();
 
+    /**
+     *
+     * @param lockToken
+     */
     public void addLockToken(String lockToken);
 
+    /**
+     *
+     * @param lockToken
+     */
     public void removeLockToken(String lockToken);
 
     /**

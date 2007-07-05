@@ -24,11 +24,34 @@ import org.apache.jackrabbit.name.Path;
  */
 public interface IdFactory {
 
+    /**
+     *
+     * @param parentId
+     * @param propertyName
+     * @return
+     */
     public PropertyId createPropertyId(NodeId parentId, QName propertyName);
 
+    /**
+     *
+     * @param parentId
+     * @param path
+     * @return
+     */
     public NodeId createNodeId(NodeId parentId, Path path);
 
+    /**
+     *
+     * @param uniqueID
+     * @param path
+     * @return
+     */
     public NodeId createNodeId(String uniqueID, Path path);
 
+    /**
+     * 
+     * @param uniqueID
+     * @return
+     */
     public NodeId createNodeId(String uniqueID);
 }

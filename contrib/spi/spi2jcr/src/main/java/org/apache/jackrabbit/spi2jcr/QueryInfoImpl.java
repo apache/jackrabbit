@@ -17,12 +17,12 @@
 package org.apache.jackrabbit.spi2jcr;
 
 import org.apache.jackrabbit.spi.QueryInfo;
-import org.apache.jackrabbit.spi.QueryResultRowIterator;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.NameException;
+import org.apache.jackrabbit.util.IteratorHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +30,7 @@ import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import javax.jcr.query.Row;
 import javax.jcr.RepositoryException;
+import javax.jcr.RangeIterator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -114,7 +115,7 @@ class QueryInfoImpl implements QueryInfo {
     /**
      * {@inheritDoc}
      */
-    public QueryResultRowIterator getRows() {
+    public RangeIterator getRows() {
         final String[] columnJcrNames;
         final RowIterator rows;
         try {

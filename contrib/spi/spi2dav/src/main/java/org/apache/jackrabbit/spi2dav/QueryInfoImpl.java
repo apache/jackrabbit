@@ -23,6 +23,7 @@ import java.util.Map;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFactory;
 import javax.jcr.Value;
+import javax.jcr.RangeIterator;
 
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NameFormat;
@@ -30,7 +31,6 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QueryInfo;
-import org.apache.jackrabbit.spi.QueryResultRowIterator;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.QueryResultRow;
@@ -113,8 +113,8 @@ public class QueryInfoImpl implements QueryInfo {
     /**
      * @see QueryInfo#getRows()
      */
-    public QueryResultRowIterator getRows() {
-        return new QueryResultRowIteratorImpl();
+    public RangeIterator getRows() {
+        return new QueryResultRowIterator();
     }
 
     /**
@@ -124,16 +124,21 @@ public class QueryInfoImpl implements QueryInfo {
         return columnNames;
     }
 
-    private class QueryResultRowIteratorImpl implements QueryResultRowIterator {
+    //--------------------------------------------------------< inner class >---
+    /**
+     * Inner class implementing the <code>RangeIterator</code> for the query
+     * result rows. 
+     */
+    private class QueryResultRowIterator implements RangeIterator {
 
         private final Iterator keyIterator;
         private long pos = 0;
 
-        private QueryResultRowIteratorImpl() {
+        private QueryResultRowIterator() {
             keyIterator = results.keySet().iterator();
         }
 
-        public QueryResultRow nextQueryResultRow() {
+        private QueryResultRow nextQueryResultRow() {
             final NodeId nId = (NodeId) keyIterator.next();
             final QValue[] qValues = (QValue[]) results.get(nId);
             pos++;
@@ -171,28 +176,48 @@ public class QueryInfoImpl implements QueryInfo {
             };
         }
 
+        //--------------------------------------------------< RangeIterator >---
+        /**
+         * @see RangeIterator#skip(long)
+         */
         public void skip(long skipNum) {
             while (skipNum-- > 0) {
                 nextQueryResultRow();
             }
         }
 
+        /**
+         * @see RangeIterator#getSize()
+         */
         public long getSize() {
             return results.size();
         }
 
+        /**
+         * @see RangeIterator#getPosition()
+         */
         public long getPosition() {
             return pos;
         }
 
+        //-------------------------------------------------------< Iterator >---
+        /**
+         * @see Iterator#remove()
+         */
         public void remove() {
             throw new UnsupportedOperationException("Remove not implemented");
         }
 
+        /**
+         * @see Iterator#hasNext()
+         */
         public boolean hasNext() {
             return keyIterator.hasNext();
         }
 
+        /**
+         * @see Iterator#next()
+         */
         public Object next() {
             return nextQueryResultRow();
         }

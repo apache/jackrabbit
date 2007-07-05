@@ -46,7 +46,7 @@ public interface QValue {
      * <li>{@link PropertyType#STRING}</li>
      * </ul>
      *
-     * @return
+     * @return the <code>PropertyType</code> of this <code>QValue</code> object.
      */
     public int getType();
 
@@ -57,19 +57,26 @@ public interface QValue {
      * of a property such as retrieved by calling {@link Property#getLength()}
      * and {@link Property#getLengths()}.
      *
-     * @return length of the internal value.
+     * @return length of this <code>QValue</code> object.
+     * @throws RepositoryException
      */
     public long getLength() throws RepositoryException;
 
     /**
+     * Returns a <code>String</code> representation of this <code>QValue</code>
+     * object.
      *
-     * @return
+     * @return A <code>String</code> representation of this <code>QValue</code>
+     * object.
+     * @throws RepositoryException
      */
     public String getString() throws RepositoryException;
 
     /**
+     * Returns a <code>InputStream</code> representation of this <code>QValue</code>
+     * object.
      *
-     * @return
+     * @return A stream representation of this value.
      * @throws RepositoryException
      */
     public InputStream getStream() throws RepositoryException;

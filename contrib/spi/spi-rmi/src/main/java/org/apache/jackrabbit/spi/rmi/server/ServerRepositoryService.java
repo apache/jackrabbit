@@ -46,11 +46,8 @@ import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.QueryInfo;
-import org.apache.jackrabbit.spi.QNodeTypeDefinitionIterator;
 import org.apache.jackrabbit.spi.ChildInfo;
-import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.name.QName;
@@ -606,8 +603,7 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
                                 String srcWorkspaceName,
                                 boolean bestEffort) throws RepositoryException, RemoteException {
         try {
-            IdIterator it = service.merge(getSessionInfo(sessionInfo),
-                    nodeId, srcWorkspaceName, bestEffort);
+            Iterator it = service.merge(getSessionInfo(sessionInfo), nodeId, srcWorkspaceName, bestEffort);
             return new ServerIterator(it, DEFAULT_BUFFER_SIZE);
         } catch (RepositoryException e) {
             throw getRepositoryException(e);
@@ -741,8 +737,8 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
             EventBundle[] serBundles = new EventBundle[bundles.length];
             for (int i = 0; i < bundles.length; i++) {
                 List events = new ArrayList();
-                for (EventIterator it = bundles[i].getEvents(); it.hasNext(); ) {
-                    Event e = it.nextEvent();
+                for (Iterator it = bundles[i].getEvents(); it.hasNext(); ) {
+                    Event e = (Event) it.next();
                     ItemId id;
                     if (e.getItemId().denotesNode()) {
                         id = idFactory.createSerializableNodeId((NodeId) e.getItemId());
@@ -836,10 +832,10 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
      */
     public QNodeTypeDefinition[] getNodeTypeDefinitions(RemoteSessionInfo sessionInfo)
             throws RepositoryException, RemoteException {
-        QNodeTypeDefinitionIterator it = service.getNodeTypeDefinitions(getSessionInfo(sessionInfo));
+        Iterator it = service.getNodeTypeDefinitions(getSessionInfo(sessionInfo));
         List nts = new ArrayList();
         while (it.hasNext()) {
-            QNodeTypeDefinition nt = it.nextDefinition();
+            QNodeTypeDefinition nt = (QNodeTypeDefinition) it.next();
             if (nt instanceof Serializable) {
                 nts.add(nt);
             } else {

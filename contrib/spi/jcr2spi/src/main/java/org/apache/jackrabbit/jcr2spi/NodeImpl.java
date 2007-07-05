@@ -49,7 +49,6 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.QValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,6 +86,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Arrays;
+import java.util.Iterator;
 
 /**
  * <code>NodeImpl</code>...
@@ -903,12 +903,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure the workspace exists and is accessible for this session.
         session.checkAccessibleWorkspace(srcWorkspace);
 
-        IdIterator failedIds = session.getVersionManager().merge(getNodeState(), srcWorkspace, bestEffort);
-        if (failedIds.getSize() == 0) {
-            return IteratorHelper.EMPTY;
-        } else {
-            return new LazyItemIterator(itemMgr, session.getHierarchyManager(), failedIds);
-        }
+        Iterator failedIds = session.getVersionManager().merge(getNodeState(), srcWorkspace, bestEffort);
+        return new LazyItemIterator(itemMgr, session.getHierarchyManager(), failedIds);
     }
 
     /**

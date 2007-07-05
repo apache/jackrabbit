@@ -17,10 +17,10 @@
 package org.apache.jackrabbit.spi.rmi.common;
 
 import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.spi.EventIterator;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * <code>EventBundleImpl</code> implements a serializable {@link EventBundle}.
@@ -58,8 +58,8 @@ public class EventBundleImpl implements EventBundle, Serializable {
     /**
      * {@inheritDoc}
      */
-    public EventIterator getEvents() {
-        return new IteratorHelper(events);
+    public Iterator getEvents() {
+        return events.iterator();
     }
 
     /**
