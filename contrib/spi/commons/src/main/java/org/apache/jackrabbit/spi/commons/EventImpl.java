@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi2jcr;
+package org.apache.jackrabbit.spi.commons;
 
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.ItemId;
@@ -27,9 +27,8 @@ import java.io.Serializable;
 /**
  * <code>EventImpl</code> implements a serializable SPI
  * {@link org.apache.jackrabbit.spi.Event}.
- * TODO: copied from spi-rmi, move to spi-commons?
  */
-class EventImpl implements Event, Serializable {
+public class EventImpl implements Event, Serializable {
 
     /**
      * The SPI event type.

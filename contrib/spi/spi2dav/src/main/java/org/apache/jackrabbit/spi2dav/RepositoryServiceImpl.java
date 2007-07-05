@@ -130,6 +130,9 @@ import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.NodeInfo;
+import org.apache.jackrabbit.spi.commons.EventFilterImpl;
+import org.apache.jackrabbit.spi.commons.EventBundleImpl;
+import org.apache.jackrabbit.spi.commons.ChildInfoImpl;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.ValueFormat;
@@ -949,7 +952,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                         int index = getIndex(childProps);
                         String uuid = getUniqueID(childProps);
 
-                        ChildInfo childInfo = new ChildInfoImpl(qName, index, uuid);
+                        ChildInfo childInfo = new ChildInfoImpl(qName, uuid, index);
                         childEntries.add(childInfo);
                     } // else: property -> ignore
                 } // else: ignore the response related to the parent
@@ -1589,7 +1592,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     if (value != null) {
                         isLocal = value.equals(sessionInfo.getLastBatchId());
                     }
-                    bundles.add(new EventBundleImpl(buildEventList(bundleElement, sessionInfo), isLocal));
+                    bundles.add(new EventBundleImpl(
+                            buildEventList(bundleElement, sessionInfo),
+                            isLocal,
+                            null)); // TODO: bundle id is missing
                 }
                 events = (EventBundle[]) bundles.toArray(new EventBundle[bundles.size()]);
             }

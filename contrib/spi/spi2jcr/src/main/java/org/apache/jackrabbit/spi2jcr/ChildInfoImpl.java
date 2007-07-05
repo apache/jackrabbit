@@ -16,11 +16,10 @@
  */
 package org.apache.jackrabbit.spi2jcr;
 
-import org.apache.jackrabbit.spi.ChildInfo;
-import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.NameException;
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.UnknownPrefixException;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -30,66 +29,40 @@ import javax.jcr.UnsupportedRepositoryOperationException;
  * <code>ChildInfoImpl</code> implements a <code>ChildInfo</code> and provides
  * information about a child node.
  */
-class ChildInfoImpl implements ChildInfo {
-
-    /**
-     * The name of this child info.
-     */
-    private final QName name;
-
-    /**
-     * The unique id for this child info or <code>null</code> if it does not
-     * have a unique id.
-     */
-    private final String uniqueId;
-
-    /**
-     * 1-based index of this child info.
-     */
-    private final int index;
+class ChildInfoImpl extends org.apache.jackrabbit.spi.commons.ChildInfoImpl {
 
     /**
      * Creates a new <code>ChildInfoImpl</code> for <code>node</code>.
      *
      * @param node       the JCR node.
      * @param nsResolver the namespace resolver in use.
-     * @throws RepositoryException if an error occurs while reading from
-     *                             <code>node</code>.
+     * @throws RepositoryException    if an error occurs while reading from
+     *                                <code>node</code>.
+     * @throws IllegalNameException   if the <code>node</code> name is illegal.
+     * @throws UnknownPrefixException if the name of the <code>node</code>
+     *                                contains a prefix not known to
+     *                                <code>nsResolver</code>.
      */
-    public ChildInfoImpl(Node node, NamespaceResolver nsResolver) throws RepositoryException {
-        try {
-            this.name = NameFormat.parse(node.getName(), nsResolver);
-        } catch (NameException e) {
-            throw new RepositoryException(e.getMessage(), e);
-        }
+    public ChildInfoImpl(Node node, NamespaceResolver nsResolver)
+            throws RepositoryException, IllegalNameException, UnknownPrefixException {
+        super(NameFormat.parse(node.getName(), nsResolver),
+                getUniqueId(node), node.getIndex());
+    }
+
+    /**
+     * @param node the JCR node.
+     * @return the unique id for the <code>node</code> or <code>null</code> if
+     *         the node does not have a unique id.
+     * @throws RepositoryException if an error occurs while reading the unique
+     *                             id.
+     */
+    private static String getUniqueId(Node node) throws RepositoryException {
         String uuid = null;
         try {
             uuid = node.getUUID();
         } catch (UnsupportedRepositoryOperationException e) {
             // not referenceable
         }
-        this.uniqueId = uuid;
-        this.index = node.getIndex();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public QName getName() {
-        return name;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String getUniqueID() {
-        return uniqueId;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public int getIndex() {
-        return index;
+        return uuid;
     }
 }

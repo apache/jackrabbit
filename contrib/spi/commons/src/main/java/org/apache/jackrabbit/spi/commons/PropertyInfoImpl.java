@@ -14,12 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi.rmi.common;
+package org.apache.jackrabbit.spi.commons;
 
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 
@@ -57,15 +58,19 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
      *
      * @param propertyInfo
      */
-    public static PropertyInfo createSerializablePropertyInfo(PropertyInfo propertyInfo, SerializableIdFactory idFactory) {
+    public static PropertyInfo createSerializablePropertyInfo(
+            PropertyInfo propertyInfo, IdFactory idFactory) {
         if (propertyInfo instanceof Serializable) {
             return propertyInfo;
         } else {
-            return new PropertyInfoImpl(idFactory.createSerializableNodeId(propertyInfo.getParentId()),
-                propertyInfo.getQName(), propertyInfo.getPath(),
-                idFactory.createSerializablePropertyId(propertyInfo.getId()),
-                propertyInfo.getType(), propertyInfo.isMultiValued(),
-                propertyInfo.getValues());
+            NodeId parentId = propertyInfo.getParentId();
+            parentId = idFactory.createNodeId(
+                    parentId.getUniqueID(), parentId.getPath());
+            PropertyId propId = idFactory.createPropertyId(
+                    parentId, propertyInfo.getId().getQName());
+            return new PropertyInfoImpl(parentId, propertyInfo.getQName(),
+                    propertyInfo.getPath(), propId, propertyInfo.getType(),
+                    propertyInfo.isMultiValued(), propertyInfo.getValues());
         }
     }
 
@@ -80,7 +85,7 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
      * @param isMultiValued whether this property is multi-valued.
      * @param values        the values.
      */
-    private PropertyInfoImpl(NodeId parentId, QName name, Path path,
+    public PropertyInfoImpl(NodeId parentId, QName name, Path path,
                             PropertyId id, int type, boolean isMultiValued,
                             QValue[] values) {
         super(parentId, name, path, false);

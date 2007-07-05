@@ -14,26 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi2jcr;
+package org.apache.jackrabbit.spi.commons;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.ItemDefinition;
+import java.io.Serializable;
 
 /**
  * This abstract class implements the <code>QItemDefinition</code>
  * interface and additionally provides setter methods for the
  * various item definition attributes.
- * TODO: mostly copied from spi2dav, move common parts to spi-commons.
  */
-abstract class QItemDefinitionImpl implements QItemDefinition {
+public abstract class QItemDefinitionImpl implements QItemDefinition, Serializable {
 
     /**
      * The special wildcard name used as the name of residual item definitions.
@@ -73,27 +68,27 @@ abstract class QItemDefinitionImpl implements QItemDefinition {
     /**
      * HashCode of this object
      */
-    protected int hashCode = 0;
+    protected transient int hashCode = 0;
 
     /**
+     * Creates a new <code>QItemDefinitionImpl</code>.
      *
-     * @param itemDef
-     * @param nsResolver
-     * @throws RepositoryException
+     * @param name              the name of the child item.
+     * @param declaringNodeType the delaring node type
+     * @param isAutoCreated     if this item is auto created.
+     * @param isMandatory       if this is a mandatory item.
+     * @param onParentVersion   the on parent version behaviour.
+     * @param isProtected       if this item is protected.
      */
-    QItemDefinitionImpl(ItemDefinition itemDef,
-                        NamespaceResolver nsResolver)
-        throws RepositoryException {
-        try {
-            this.autoCreated = itemDef.isAutoCreated();
-            this.declaringNodeType = NameFormat.parse(itemDef.getDeclaringNodeType().getName(), nsResolver);
-            this.mandatory = itemDef.isMandatory();
-            this.name = itemDef.getName().equals(ANY_NAME.getLocalName()) ? ANY_NAME : NameFormat.parse(itemDef.getName(), nsResolver);
-            this.onParentVersion = itemDef.getOnParentVersion();
-            this.writeProtected = itemDef.isProtected();
-        } catch (NameException e) {
-            throw new RepositoryException(e.getMessage());
-        }
+    QItemDefinitionImpl(QName name, QName declaringNodeType,
+                        boolean isAutoCreated, boolean isMandatory,
+                        int onParentVersion, boolean isProtected) {
+        this.name = name;
+        this.declaringNodeType = declaringNodeType;
+        this.autoCreated = isAutoCreated;
+        this.mandatory = isMandatory;
+        this.onParentVersion = onParentVersion;
+        this.writeProtected = isProtected;
     }
 
     //--------------------------------------------------------------< QItemDefinition >

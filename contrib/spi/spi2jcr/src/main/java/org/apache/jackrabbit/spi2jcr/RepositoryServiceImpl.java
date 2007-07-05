@@ -33,6 +33,7 @@ import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.commons.EventFilterImpl;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
@@ -43,7 +44,6 @@ import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.value.QValueFactoryImpl;
 import org.apache.jackrabbit.value.ValueFormat;
 import org.apache.jackrabbit.JcrConstants;
-import org.apache.jackrabbit.util.IteratorHelper;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Credentials;
@@ -76,6 +76,7 @@ import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.Query;
 import javax.jcr.lock.LockException;
+import javax.jcr.lock.Lock;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.Version;
@@ -112,7 +113,7 @@ public class RepositoryServiceImpl implements RepositoryService {
 
     /**
      * The configuration map used to determine the maximal depth of child
-     * items to be accessed upon a call to {@link getNodeInfo(SessionInfo, NodeId)}.
+     * items to be accessed upon a call to {@link #getNodeInfo(SessionInfo, NodeId)}.
      */
     private final BatchReadConfig batchReadConfig;
 
@@ -265,8 +266,12 @@ public class RepositoryServiceImpl implements RepositoryService {
                                              NodeId nodeId)
             throws RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        return new QNodeDefinitionImpl(getNode(nodeId, sInfo).getDefinition(),
-                sInfo.getNamespaceResolver());
+        try {
+            return new QNodeDefinitionImpl(getNode(nodeId, sInfo).getDefinition(),
+                    sInfo.getNamespaceResolver());
+        } catch (NameException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     /**
@@ -276,10 +281,14 @@ public class RepositoryServiceImpl implements RepositoryService {
                                                      PropertyId propertyId)
             throws RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        return new QPropertyDefinitionImpl(
-                getProperty(propertyId, sInfo).getDefinition(),
-                sInfo.getNamespaceResolver(),
-                getQValueFactory());
+        try {
+            return new QPropertyDefinitionImpl(
+                    getProperty(propertyId, sInfo).getDefinition(),
+                    sInfo.getNamespaceResolver(),
+                    getQValueFactory());
+        } catch (NameException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     /**
@@ -309,8 +318,11 @@ public class RepositoryServiceImpl implements RepositoryService {
             throws ItemNotFoundException, RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         Node node = getNode(nodeId, sInfo);
-        NodeInfo info = new NodeInfoImpl(node, idFactory, sInfo.getNamespaceResolver());
-        return info;
+        try {
+            return new NodeInfoImpl(node, idFactory, sInfo.getNamespaceResolver());
+        } catch (NameException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     /**
@@ -328,16 +340,29 @@ public class RepositoryServiceImpl implements RepositoryService {
         }
         int depth = batchReadConfig.getDepth(ntName);
         if (depth == BatchReadConfig.DEPTH_DEFAULT) {
-            NodeInfo info = new NodeInfoImpl(node, idFactory, sInfo.getNamespaceResolver());
+            NodeInfo info;
+            try {
+                info = new NodeInfoImpl(node, idFactory, sInfo.getNamespaceResolver());
+            } catch (NameException e) {
+                throw new RepositoryException(e);
+            }
             return Collections.singletonList(info).iterator();
         } else {
             final List itemInfos = new ArrayList();
             ItemVisitor visitor = new TraversingItemVisitor(false, depth) {
                 protected void entering(Property property, int i) throws RepositoryException {
-                    itemInfos.add(new PropertyInfoImpl(property, idFactory, sInfo.getNamespaceResolver(), getQValueFactory()));
+                    try {
+                        itemInfos.add(new PropertyInfoImpl(property, idFactory, sInfo.getNamespaceResolver(), getQValueFactory()));
+                    } catch (NameException e) {
+                        throw new RepositoryException(e);
+                    }
                 }
                 protected void entering(Node node, int i) throws RepositoryException {
-                    itemInfos.add(new NodeInfoImpl(node, idFactory, sInfo.getNamespaceResolver()));
+                    try {
+                        itemInfos.add(new NodeInfoImpl(node, idFactory, sInfo.getNamespaceResolver()));
+                    } catch (NameException e) {
+                        throw new RepositoryException(e);
+                    }
                 }
                 protected void leaving(Property property, int i) {
                     // nothing to do
@@ -359,11 +384,15 @@ public class RepositoryServiceImpl implements RepositoryService {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         NodeIterator children = getNode(parentId, sInfo).getNodes();
         List childInfos = new ArrayList();
-        while (children.hasNext()) {
-            childInfos.add(new ChildInfoImpl(children.nextNode(),
-                    sInfo.getNamespaceResolver()));
+        try {
+            while (children.hasNext()) {
+                childInfos.add(new ChildInfoImpl(children.nextNode(),
+                        sInfo.getNamespaceResolver()));
+            }
+        } catch (NameException e) {
+            throw new RepositoryException(e);
         }
-        return new IteratorHelper(childInfos);
+        return childInfos.iterator();
     }
 
     /**
@@ -373,8 +402,12 @@ public class RepositoryServiceImpl implements RepositoryService {
                                         PropertyId propertyId)
             throws ItemNotFoundException, RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        return new PropertyInfoImpl(getProperty(propertyId, sInfo), idFactory,
-                sInfo.getNamespaceResolver(), getQValueFactory());
+        try {
+            return new PropertyInfoImpl(getProperty(propertyId, sInfo), idFactory,
+                    sInfo.getNamespaceResolver(), getQValueFactory());
+        } catch (NameException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     /**
@@ -524,7 +557,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     public LockInfo getLockInfo(SessionInfo sessionInfo, NodeId nodeId)
             throws LockException, RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        return new LockInfoImpl(getNode(nodeId, sInfo), idFactory,
+        return new LockInfoImpl(getNode(nodeId, sInfo).getLock(), idFactory,
                 sInfo.getNamespaceResolver());
     }
 
@@ -540,8 +573,8 @@ public class RepositoryServiceImpl implements RepositoryService {
         return (LockInfo) executeWithLocalEvents(new Callable() {
             public Object run() throws RepositoryException {
                 Node n = getNode(nodeId, sInfo);
-                n.lock(deep, sessionScoped);
-                return new LockInfoImpl(n, idFactory, sInfo.getNamespaceResolver());
+                Lock lock = n.lock(deep, sessionScoped);
+                return new LockInfoImpl(lock, idFactory, sInfo.getNamespaceResolver());
             }
         }, sInfo);
     }
@@ -964,10 +997,14 @@ public class RepositoryServiceImpl implements RepositoryService {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         NodeTypeManager ntMgr = sInfo.getSession().getWorkspace().getNodeTypeManager();
         List nodeTypes = new ArrayList();
-        for (NodeTypeIterator it = ntMgr.getAllNodeTypes(); it.hasNext(); ) {
-            NodeType nt = it.nextNodeType();
-            nodeTypes.add(new QNodeTypeDefinitionImpl(nt,
-                    sInfo.getNamespaceResolver(), getQValueFactory()));
+        try {
+            for (NodeTypeIterator it = ntMgr.getAllNodeTypes(); it.hasNext(); ) {
+                NodeType nt = it.nextNodeType();
+                nodeTypes.add(new QNodeTypeDefinitionImpl(nt,
+                        sInfo.getNamespaceResolver(), getQValueFactory()));
+            }
+        } catch (NameException e) {
+            throw new RepositoryException(e);
         }
         return nodeTypes.iterator();
     }

@@ -37,11 +37,11 @@ import org.apache.jackrabbit.spi.rmi.remote.RemoteRepositoryService;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteSessionInfo;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteIterator;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteQueryInfo;
-import org.apache.jackrabbit.spi.rmi.common.SerializableIdFactory;
 import org.apache.jackrabbit.spi.rmi.common.SerializableInputStream;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.value.QValueFactoryImpl;
+import org.apache.jackrabbit.identifier.IdFactoryImpl;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Credentials;
@@ -84,7 +84,7 @@ public class ClientRepositoryService implements RepositoryService {
     /**
      * The id factory.
      */
-    private final SerializableIdFactory idFactory = SerializableIdFactory.getInstance();
+    private final IdFactory idFactory = IdFactoryImpl.getInstance();
 
     /**
      * The QValue factory.

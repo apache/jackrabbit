@@ -14,18 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi.rmi.common;
+package org.apache.jackrabbit.spi.commons;
 
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.util.IteratorHelper;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.io.Serializable;
 
@@ -71,28 +71,39 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
      *
      * @param nodeInfo
      */
-    public static NodeInfo createSerializableNodeInfo(NodeInfo nodeInfo, final SerializableIdFactory idFactory) {
+    public static NodeInfo createSerializableNodeInfo(
+            NodeInfo nodeInfo, final IdFactory idFactory) {
         if (nodeInfo instanceof Serializable) {
             return nodeInfo;
         } else {
             PropertyId[] refs = nodeInfo.getReferences();
-            PropertyId[] serRefs = new PropertyId[refs.length];
-            for (int i = 0; i < serRefs.length; i++) {
-                serRefs[i] = idFactory.createSerializablePropertyId(refs[i]);
+            List serRefs = new ArrayList();
+            for (int i = 0; i < refs.length; i++) {
+                NodeId parentId = refs[i].getParentId();
+                parentId = idFactory.createNodeId(
+                        parentId.getUniqueID(), parentId.getPath());
+                serRefs.add(idFactory.createPropertyId(parentId, refs[i].getQName()));
             }
             NodeId parentId = null;
             if (nodeInfo.getParentId() != null) {
-                parentId = idFactory.createSerializableNodeId(nodeInfo.getParentId());
+                parentId = nodeInfo.getParentId();
+                parentId = idFactory.createNodeId(
+                        parentId.getUniqueID(), parentId.getPath());
             }
+            NodeId nodeId = nodeInfo.getId();
+            nodeId = idFactory.createNodeId(nodeId.getUniqueID(), nodeId.getPath());
             return new NodeInfoImpl(parentId, nodeInfo.getQName(),
-                    nodeInfo.getPath(),
-                    idFactory.createSerializableNodeId(nodeInfo.getId()),
+                    nodeInfo.getPath(), nodeId,
                     nodeInfo.getIndex(), nodeInfo.getNodetype(),
-                    nodeInfo.getMixins(), serRefs,
+                    nodeInfo.getMixins(), serRefs.iterator(),
                     new IteratorHelper(nodeInfo.getPropertyIds()) {
-                        public ItemId nextId() {
-                            return idFactory.createSerializablePropertyId(
-                                    (PropertyId) super.next());
+                        public Object next() {
+                            PropertyId propId = (PropertyId) super.next();
+                            NodeId parentId = propId.getParentId();
+                            idFactory.createNodeId(
+                                    parentId.getUniqueID(), parentId.getPath());
+                            return idFactory.createPropertyId(
+                                    parentId, propId.getQName());
                         }
                     });
         }
@@ -112,15 +123,18 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
      * @param references      the references to this node.
      * @param propertyIds     the properties of this node.
      */
-    private NodeInfoImpl(NodeId parentId, QName name, Path path, NodeId id,
+    public NodeInfoImpl(NodeId parentId, QName name, Path path, NodeId id,
                          int index, QName primaryTypeName, QName[] mixinNames,
-                         PropertyId[] references, Iterator propertyIds) {
+                         Iterator references, Iterator propertyIds) {
         super(parentId, name, path, true);
         this.id = id;
         this.index = index;
         this.primaryTypeName = primaryTypeName;
         this.mixinNames = mixinNames;
-        this.references = Arrays.asList(references);
+        this.references = new ArrayList();
+        while (references.hasNext()) {
+            this.references.add(references.next());
+        }
         this.propertyIds = new ArrayList();
         while (propertyIds.hasNext()) {
             this.propertyIds.add(propertyIds.next());
