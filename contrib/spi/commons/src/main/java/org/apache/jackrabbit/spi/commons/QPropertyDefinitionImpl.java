@@ -14,19 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi.rmi.common;
+package org.apache.jackrabbit.spi.commons;
 
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.name.QName;
 
 import java.util.Arrays;
 
 /**
  * <code>QPropertyDefinitionImpl</code> implements a qualified property
- * definition based on a JCR {@link javax.jcr.nodetype.PropertyDefinition}.
- * TODO: mostly copied from spi2dav, move common parts to spi-commons.
+ * definition.
  */
-public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPropertyDefinition {
+public class QPropertyDefinitionImpl
+        extends QItemDefinitionImpl
+        implements QPropertyDefinition {
 
     /**
      * The required type.
@@ -49,17 +51,50 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
     private final boolean multiple;
 
     /**
-     * Creates a new serializable qualified property definition based on
-     * <code>propDef</code>.
+     * Copy constructor.
      *
-     * @param propDef the qualified property definition.
+     * @param propDef some other property definition.
      */
     public QPropertyDefinitionImpl(QPropertyDefinition propDef) {
-        super(propDef);
-        this.defaultValues = propDef.getDefaultValues();
-        this.multiple = propDef.isMultiple();
-        this.requiredType = propDef.getRequiredType();
-        this.valueConstraints = propDef.getValueConstraints();
+        this(propDef.getQName(), propDef.getDeclaringNodeType(),
+                propDef.isAutoCreated(), propDef.isMandatory(),
+                propDef.getOnParentVersion(), propDef.isProtected(),
+                propDef.getDefaultValues(), propDef.isMultiple(),
+                propDef.getRequiredType(), propDef.getValueConstraints());
+    }
+
+    /**
+     * Creates a new serializable qualified property definition.
+     *
+     * @param name              the name of the child item.
+     * @param declaringNodeType the delaring node type
+     * @param isAutoCreated     if this item is auto created.
+     * @param isMandatory       if this is a mandatory item.
+     * @param onParentVersion   the on parent version behaviour.
+     * @param isProtected       if this item is protected.
+     * @param defaultValues     the default values or <code>null</code> if there
+     *                          are none.
+     * @param isMultiple        if this property is multi-valued.
+     * @param requiredType      the required type for this property.
+     * @param valueConstraints  the value constraints for this property. If none
+     *                          exist an empty array must be passed.
+     * @throws NullPointerException if <code>valueConstraints</code> is
+     *                              <code>null</code>.
+     */
+    public QPropertyDefinitionImpl(QName name, QName declaringNodeType,
+                                   boolean isAutoCreated, boolean isMandatory,
+                                   int onParentVersion, boolean isProtected,
+                                   QValue[] defaultValues, boolean isMultiple,
+                                   int requiredType, String[] valueConstraints) {
+        super(name, declaringNodeType, isAutoCreated, isMandatory,
+                onParentVersion, isProtected);
+        if (valueConstraints == null) {
+            throw new NullPointerException("valueConstraints");
+        }
+        this.defaultValues = defaultValues;
+        this.multiple = isMultiple;
+        this.requiredType = requiredType;
+        this.valueConstraints = valueConstraints;
     }
 
     //------------------------------------------------< QPropertyDefinition >---

@@ -16,157 +16,63 @@
  */
 package org.apache.jackrabbit.spi2jcr;
 
-import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.NameException;
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.UnknownPrefixException;
 
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.RepositoryException;
-import java.util.Arrays;
-import java.util.TreeSet;
 
 /**
  * <code>QNodeDefinitionImpl</code> implements a <code>QNodeDefinition</code>.
- * TODO: mostly copied from spi2dav, move common parts to spi-commons.
  */
-class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDefinition {
-
-    /**
-     * The name of the default primary type.
-     */
-    private final QName defaultPrimaryType;
-
-    /**
-     * The names of the required primary types.
-     */
-    private final QName[] requiredPrimaryTypes;
-
-    /**
-     * The 'allowsSameNameSiblings' flag.
-     */
-    private final boolean allowsSameNameSiblings;
+class QNodeDefinitionImpl
+        extends org.apache.jackrabbit.spi.commons.QNodeDefinitionImpl {
 
     /**
      * Creates a new qualified node definition based on a JCR NodeDefinition.
      *
      * @param nodeDef    the node definition.
      * @param nsResolver the namespace resolver in use.
-     * @throws RepositoryException if an error occurs while reading from
-     *                             <code>nodeDef</code>.
+     * @throws IllegalNameException   if <code>nodeDef</code> contains an
+     *                                illegal name.
+     * @throws UnknownPrefixException if <code>nodeDef</code> contains a name
+     *                                with an namespace prefix that is unknown
+     *                                to <code>nsResolver</code>.
      */
     QNodeDefinitionImpl(NodeDefinition nodeDef,
-                        NamespaceResolver nsResolver) throws RepositoryException {
-        super(nodeDef, nsResolver);
-        try {
-            this.allowsSameNameSiblings = nodeDef.allowsSameNameSiblings();
-            NodeType defPrimaryType = nodeDef.getDefaultPrimaryType();
-            if (defPrimaryType == null) {
-                this.defaultPrimaryType = null;
-            } else {
-                this.defaultPrimaryType = NameFormat.parse(nodeDef.getDefaultPrimaryType().getName(), nsResolver);
-            }
-            NodeType[] reqPrimaryTypes = nodeDef.getRequiredPrimaryTypes();
-            this.requiredPrimaryTypes = new QName[reqPrimaryTypes.length];
-            for (int i = 0; i < reqPrimaryTypes.length; i++) {
-                QName ntName = NameFormat.parse(reqPrimaryTypes[i].getName(), nsResolver);
-                this.requiredPrimaryTypes[i] = ntName;
-            }
-        } catch (NameException e) {
-            throw new RepositoryException(e.getMessage());
-        }
-    }
-
-    //-------------------------------------------------------< QNodeDefinition >
-    /**
-     * {@inheritDoc}
-     */
-    public QName getDefaultPrimaryType() {
-        return defaultPrimaryType;
+                        NamespaceResolver nsResolver)
+            throws IllegalNameException, UnknownPrefixException {
+        super(nodeDef.getName().equals(ANY_NAME.getLocalName()) ? ANY_NAME : NameFormat.parse(nodeDef.getName(), nsResolver),
+                nodeDef.getDeclaringNodeType() != null ? NameFormat.parse(nodeDef.getDeclaringNodeType().getName(), nsResolver) : null,
+                nodeDef.isAutoCreated(), nodeDef.isMandatory(),
+                nodeDef.getOnParentVersion(), nodeDef.isProtected(),
+                nodeDef.getDefaultPrimaryType() != null ? NameFormat.parse(nodeDef.getDefaultPrimaryType().getName(), nsResolver) : null,
+                getNodeTypeNames(nodeDef.getRequiredPrimaryTypes(), nsResolver),
+                nodeDef.allowsSameNameSiblings());
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public QName[] getRequiredPrimaryTypes() {
-        return requiredPrimaryTypes;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean allowsSameNameSiblings() {
-        return allowsSameNameSiblings;
-    }
-
-    /**
-     * {@inheritDoc}
+     * Returns the qualified names of the passed node types using the namespace
+     * resolver to parse the names.
      *
-     * @return always <code>true</code>
+     * @param nt         the node types
+     * @param nsResolver the namespace resolver.
+     * @return the qualified names of the node types.
+     * @throws IllegalNameException   if a node type returns an illegal name.
+     * @throws UnknownPrefixException if the nameo of a node type contains a
+     *                                prefix that is not known to <code>nsResolver</code>.
      */
-    public boolean definesNode() {
-        return true;
-    }
-
-    //-------------------------------------------< java.lang.Object overrides >
-    /**
-     * Compares two node definitions for equality. Returns <code>true</code>
-     * if the given object is a node defintion and has the same attributes
-     * as this node definition.
-     *
-     * @param obj the object to compare this node definition with
-     * @return <code>true</code> if the object is equal to this node definition,
-     *         <code>false</code> otherwise
-     * @see Object#equals(Object)
-     */
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+    private static QName[] getNodeTypeNames(NodeType[] nt,
+                                     NamespaceResolver nsResolver)
+            throws IllegalNameException, UnknownPrefixException {
+        QName[] names = new QName[nt.length];
+        for (int i = 0; i < nt.length; i++) {
+            QName ntName = NameFormat.parse(nt[i].getName(), nsResolver);
+            names[i] = ntName;
         }
-        if (obj instanceof QNodeDefinition) {
-            QNodeDefinition other = (QNodeDefinition) obj;
-            return super.equals(obj)
-                    && Arrays.equals(requiredPrimaryTypes, other.getRequiredPrimaryTypes())
-                    && (defaultPrimaryType == null
-                            ? other.getDefaultPrimaryType() == null
-                            : defaultPrimaryType.equals(other.getDefaultPrimaryType()))
-                    && allowsSameNameSiblings == other.allowsSameNameSiblings();
-        }
-        return false;
-    }
-
-    /**
-     * Overwrites {@link QItemDefinitionImpl#hashCode()}.
-     *
-     * @return
-     */
-    public int hashCode() {
-        if (hashCode == 0) {
-            // build hashCode (format: <declaringNodeType>/<name>/<requiredPrimaryTypes>)
-            StringBuffer sb = new StringBuffer();
-
-            if (getDeclaringNodeType() != null) {
-                sb.append(getDeclaringNodeType().toString());
-                sb.append('/');
-            }
-            if (definesResidual()) {
-                sb.append('*');
-            } else {
-                sb.append(getQName().toString());
-            }
-            sb.append('/');
-            // set of required node type names, sorted in ascending order
-            TreeSet set = new TreeSet();
-            QName[] names = getRequiredPrimaryTypes();
-            for (int i = 0; i < names.length; i++) {
-                set.add(names[i]);
-            }
-            sb.append(set.toString());
-
-            hashCode = sb.toString().hashCode();
-        }
-        return hashCode;
+        return names;
     }
 }

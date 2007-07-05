@@ -14,63 +14,63 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi2dav;
+package org.apache.jackrabbit.spi.commons;
 
 import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Collections;
 
 /**
- * <code>EventBundleImpl</code> implements a bundle of events. The individual
- * events can be retrieved when calling {@link #getEvents()}.
+ * <code>EventBundleImpl</code> implements a serializable {@link EventBundle}.
  */
-class EventBundleImpl implements EventBundle, ObservationConstants {
+public class EventBundleImpl implements EventBundle, Serializable {
 
-    static final EventBundle EMPTY = new EventBundleImpl();
-
-    private final Collection events;
+    /**
+     * Indicates if this bundle was created due to a local change.
+     */
     private final boolean isLocal;
 
-    private EventBundleImpl() {
-        events = null;
-        isLocal = false;
-    }
     /**
-     * Creates a new event bundle.
-     *
-     * @param events
-     * @param isLocal
+     * The bundle id.
      */
-    EventBundleImpl(Collection events, boolean isLocal) {
+    private final String bundleId;
+
+    /**
+     * The events in this bundle.
+     */
+    private final Collection events;
+
+    /**
+     * Creates a new event bundle with <code>events</code>.
+     *
+     * @param events   the events for this bundle.
+     * @param isLocal  if this events were created due to a local change.
+     * @param bundleId the bundle id.
+     */
+    public EventBundleImpl(Collection events, boolean isLocal, String bundleId) {
         this.events = events;
         this.isLocal = isLocal;
+        this.bundleId = bundleId;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public Iterator getEvents() {
-        if (events == null || events.isEmpty()) {
-            return Collections.EMPTY_LIST.iterator();
-        } else {
-            return events.iterator();
-        }
+        return events.iterator();
     }
 
     /**
-     * @inheritDoc
-     * <p/>
-     * TODO implement
+     * {@inheritDoc}
      */
     public String getBundleId() {
-        return null;
+        return bundleId;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public boolean isLocal() {
         return isLocal;

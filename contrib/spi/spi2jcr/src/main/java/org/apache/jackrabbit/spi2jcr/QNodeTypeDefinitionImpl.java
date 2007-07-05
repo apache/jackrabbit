@@ -16,70 +16,26 @@
  */
 package org.apache.jackrabbit.spi2jcr;
 
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.NameException;
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.UnknownPrefixException;
 
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.RepositoryException;
-import javax.jcr.PropertyType;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Collections;
 
 /**
  * <code>QNodeTypeDefinitionImpl</code> implements a qualified node type
  * definition based on a JCR {@link NodeType}.
  */
-class QNodeTypeDefinitionImpl implements QNodeTypeDefinition {
-
-    /**
-     * The name of the node definition.
-     */
-    private final QName name;
-
-    /**
-     * The names of the declared super types of this node type definition.
-     */
-    private final QName[] supertypes;
-
-    /**
-     * Indicates whether this is a mixin node type definition.
-     */
-    private final boolean isMixin;
-
-    /**
-     * Indicates whether this node type definition has orderable child nodes.
-     */
-    private final boolean hasOrderableChildNodes;
-
-    /**
-     * The name of the primary item or <code>null</code> if none is defined.
-     */
-    private final QName primaryItemName;
-
-    /**
-     * The list of property definitions.
-     */
-    private final QPropertyDefinition[] propertyDefs;
-
-    /**
-     * The list of child node definitions.
-     */
-    private final QNodeDefinition[] childNodeDefs;
-
-    /**
-     * Unmodifiable collection of dependent node type <code>QName</code>s.
-     * @see #getDependencies()
-     */
-    private Collection dependencies;
+class QNodeTypeDefinitionImpl
+        extends org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl {
 
     /**
      * Creates a new qualified node type definition based on a JCR
@@ -88,141 +44,93 @@ class QNodeTypeDefinitionImpl implements QNodeTypeDefinition {
      * @param nt            the JCR node type.
      * @param nsResolver    the namespace resolver in use.
      * @param qValueFactory the QValue factory.
-     * @throws RepositoryException if an error occurs while reading from
-     *                             <code>nt</code>.
+     * @throws RepositoryException    if an error occurs while reading from
+     *                                <code>nt</code>.
+     * @throws IllegalNameException   if <code>nt</code> contains an illegal
+     *                                name.
+     * @throws UnknownPrefixException if <code>nt</code> contains a name with an
+     *                                namespace prefix that is unknown to
+     *                                <code>nsResolver</code>.
      */
     public QNodeTypeDefinitionImpl(NodeType nt,
                                    NamespaceResolver nsResolver,
                                    QValueFactory qValueFactory)
-            throws RepositoryException {
-        try {
-            this.name = NameFormat.parse(nt.getName(), nsResolver);
-            NodeType[] superNts = nt.getDeclaredSupertypes();
-            this.supertypes = new QName[superNts.length];
-            for (int i = 0; i < superNts.length; i++) {
-                supertypes[i] = NameFormat.parse(superNts[i].getName(), nsResolver);
-            }
-            this.isMixin = nt.isMixin();
-            this.hasOrderableChildNodes = nt.hasOrderableChildNodes();
-            String primaryItemJcrName = nt.getPrimaryItemName();
-            if (primaryItemJcrName == null) {
-                this.primaryItemName = null;
-            } else {
-                this.primaryItemName = NameFormat.parse(primaryItemJcrName, nsResolver);
-            }
-        } catch (NameException e) {
-            throw new RepositoryException(e.getMessage(), e);
+            throws RepositoryException, IllegalNameException, UnknownPrefixException {
+        super(NameFormat.parse(nt.getName(), nsResolver),
+                getNodeTypeNames(nt.getDeclaredSupertypes(), nsResolver),
+                nt.isMixin(), nt.hasOrderableChildNodes(),
+                nt.getPrimaryItemName() != null ? NameFormat.parse(nt.getPrimaryItemName(), nsResolver) : null,
+                getQPropertyDefinitions(nt.getDeclaredPropertyDefinitions(), nsResolver, qValueFactory),
+                getQNodeDefinitions(nt.getDeclaredChildNodeDefinitions(), nsResolver));
+    }
+
+    /**
+     * Returns the qualified names of the passed node types using the namespace
+     * resolver to parse the names.
+     *
+     * @param nt         the node types
+     * @param nsResolver the namespace resolver.
+     * @return the qualified names of the node types.
+     * @throws IllegalNameException   if a node type returns an illegal name.
+     * @throws UnknownPrefixException if the nameo of a node type contains a
+     *                                prefix that is not known to <code>nsResolver</code>.
+     */
+    private static QName[] getNodeTypeNames(NodeType[] nt,
+                                     NamespaceResolver nsResolver)
+            throws IllegalNameException, UnknownPrefixException {
+        QName[] names = new QName[nt.length];
+        for (int i = 0; i < nt.length; i++) {
+            QName ntName = NameFormat.parse(nt[i].getName(), nsResolver);
+            names[i] = ntName;
         }
-        PropertyDefinition[] propDefs = nt.getDeclaredPropertyDefinitions();
-        this.propertyDefs = new QPropertyDefinition[propDefs.length];
+        return names;
+    }
+
+    /**
+     * Returns qualified property definitions for JCR property definitions.
+     *
+     * @param propDefs   the JCR property definitions.
+     * @param nsResolver the namespace resolver.
+     * @param factory    the value factory.
+     * @return qualified property definitions.
+     * @throws RepositoryException    if an error occurs while converting the
+     *                                definitions.
+     * @throws IllegalNameException   if a property definition contains an
+     *                                illegal name.
+     * @throws UnknownPrefixException if the name of a property definition
+     *                                contains a namespace prefix that is now
+     *                                known to <code>nsResolver</code>.
+     */
+    private static QPropertyDefinition[] getQPropertyDefinitions(
+            PropertyDefinition[] propDefs,
+            NamespaceResolver nsResolver,
+            QValueFactory factory) throws RepositoryException, IllegalNameException, UnknownPrefixException {
+        QPropertyDefinition[] propertyDefs = new QPropertyDefinition[propDefs.length];
         for (int i = 0; i < propDefs.length; i++) {
-            this.propertyDefs[i] = new QPropertyDefinitionImpl(
-                    propDefs[i], nsResolver, qValueFactory);
+            propertyDefs[i] = new QPropertyDefinitionImpl(propDefs[i], nsResolver, factory);
         }
-        NodeDefinition[] nodeDefs = nt.getDeclaredChildNodeDefinitions();
-        this.childNodeDefs = new QNodeDefinition[nodeDefs.length];
+        return propertyDefs;
+    }
+    
+    /**
+     * Returns qualified node definitions for JCR node definitions.
+     *
+     * @param nodeDefs   the JCR node definitions.
+     * @param nsResolver the namespace resolver.
+     * @return qualified node definitions.
+     * @throws IllegalNameException   if the node definition contains an illegal
+     *                                name.
+     * @throws UnknownPrefixException if the name of a node definition contains
+     *                                a namespace prefix that is now known to
+     *                                <code>nsResolver</code>.
+     */
+    private static QNodeDefinition[] getQNodeDefinitions(
+            NodeDefinition[] nodeDefs,
+            NamespaceResolver nsResolver) throws IllegalNameException, UnknownPrefixException {
+        QNodeDefinition[] childNodeDefs = new QNodeDefinition[nodeDefs.length];
         for (int i = 0; i < nodeDefs.length; i++) {
-            this.childNodeDefs[i] = new QNodeDefinitionImpl(nodeDefs[i], nsResolver);
+            childNodeDefs[i] = new QNodeDefinitionImpl(nodeDefs[i], nsResolver);
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public QName getQName() {
-        return name;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public QName[] getSupertypes() {
-        QName[] sTypes = new QName[supertypes.length];
-        System.arraycopy(supertypes, 0, sTypes, 0, supertypes.length);
-        return sTypes;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isMixin() {
-        return isMixin;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean hasOrderableChildNodes() {
-        return hasOrderableChildNodes;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public QName getPrimaryItemName() {
-        return primaryItemName;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public QPropertyDefinition[] getPropertyDefs() {
-        QPropertyDefinition[] pDefs = new QPropertyDefinition[propertyDefs.length];
-        System.arraycopy(propertyDefs, 0, pDefs, 0, propertyDefs.length);
-        return pDefs;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public QNodeDefinition[] getChildNodeDefs() {
-        QNodeDefinition[] cnDefs = new QNodeDefinition[childNodeDefs.length];
-        System.arraycopy(childNodeDefs, 0, cnDefs, 0, childNodeDefs.length);
-        return cnDefs;
-    }
-
-    /**
-     * TODO: generalize (this method is copied from spi2dav)
-     */
-    public Collection getDependencies() {
-        if (dependencies == null) {
-            Collection deps = new HashSet();
-            // supertypes
-            for (int i = 0; i < supertypes.length; i++) {
-                deps.add(supertypes[i]);
-            }
-            // child node definitions
-            for (int i = 0; i < childNodeDefs.length; i++) {
-                // default primary type
-                QName ntName = childNodeDefs[i].getDefaultPrimaryType();
-                if (ntName != null && !name.equals(ntName)) {
-                    deps.add(ntName);
-                }
-                // required primary type
-                QName[] ntNames = childNodeDefs[i].getRequiredPrimaryTypes();
-                for (int j = 0; j < ntNames.length; j++) {
-                    if (ntNames[j] != null && !name.equals(ntNames[j])) {
-                        deps.add(ntNames[j]);
-                    }
-                }
-            }
-            // property definitions
-            for (int i = 0; i < propertyDefs.length; i++) {
-                // REFERENCE value constraints
-                if (propertyDefs[i].getRequiredType() == PropertyType.REFERENCE) {
-                    String[] ca = propertyDefs[i].getValueConstraints();
-                    if (ca != null) {
-                        for (int j = 0; j < ca.length; j++) {
-                            QName ntName = QName.valueOf(ca[j]);
-                            if (!name.equals(ntName)) {
-                                deps.add(ntName);
-                            }
-                        }
-                    }
-                }
-            }
-            dependencies = Collections.unmodifiableCollection(deps);
-        }
-        return dependencies;
+        return childNodeDefs;
     }
 }

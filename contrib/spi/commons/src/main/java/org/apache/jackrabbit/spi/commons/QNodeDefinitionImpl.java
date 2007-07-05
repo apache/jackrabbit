@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi.rmi.common;
+package org.apache.jackrabbit.spi.commons;
 
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.name.QName;
@@ -24,9 +24,10 @@ import java.util.TreeSet;
 
 /**
  * <code>QNodeDefinitionImpl</code> implements a <code>QNodeDefinition</code>.
- * TODO: mostly copied from spi2dav, move common parts to spi-commons.
  */
-public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDefinition {
+public class QNodeDefinitionImpl
+        extends QItemDefinitionImpl
+        implements QNodeDefinition {
 
     /**
      * The name of the default primary type.
@@ -44,16 +45,39 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
     private final boolean allowsSameNameSiblings;
 
     /**
-     * Creates a new serializable qualified node definition based on another
-     * qualified node definition.
+     * Copy constructor.
      *
-     * @param qNodeDefinition the qualified node definition.
+     * @param nodeDef some other node definition.
      */
-    public QNodeDefinitionImpl(QNodeDefinition qNodeDefinition) {
-        super(qNodeDefinition);
-        this.allowsSameNameSiblings = qNodeDefinition.allowsSameNameSiblings();
-        this.defaultPrimaryType = qNodeDefinition.getDefaultPrimaryType();
-        this.requiredPrimaryTypes = qNodeDefinition.getRequiredPrimaryTypes();
+    public QNodeDefinitionImpl(QNodeDefinition nodeDef) {
+        this(nodeDef.getQName(), nodeDef.getDeclaringNodeType(),
+                nodeDef.isAutoCreated(), nodeDef.isMandatory(),
+                nodeDef.getOnParentVersion(), nodeDef.isProtected(),
+                nodeDef.getDefaultPrimaryType(),
+                nodeDef.getRequiredPrimaryTypes(),
+                nodeDef.allowsSameNameSiblings());
+    }
+
+    /**
+     * Creates a new qualified node definition based on a JCR NodeDefinition.
+     *
+     * @param name              the name of the child item.
+     * @param declaringNodeType the delaring node type
+     * @param isAutoCreated     if this item is auto created.
+     * @param isMandatory       if this is a mandatory item.
+     * @param onParentVersion   the on parent version behaviour.
+     * @param isProtected       if this item is protected.
+     */
+    public QNodeDefinitionImpl(QName name, QName declaringNodeType,
+                        boolean isAutoCreated, boolean isMandatory,
+                        int onParentVersion, boolean isProtected,
+                        QName defaultPrimaryType, QName[] requiredPrimaryTypes,
+                        boolean allowsSameNameSiblings) {
+        super(name, declaringNodeType, isAutoCreated, isMandatory,
+                onParentVersion, isProtected);
+        this.defaultPrimaryType = defaultPrimaryType;
+        this.requiredPrimaryTypes = requiredPrimaryTypes;
+        this.allowsSameNameSiblings = allowsSameNameSiblings;
     }
 
     //-------------------------------------------------------< QNodeDefinition >

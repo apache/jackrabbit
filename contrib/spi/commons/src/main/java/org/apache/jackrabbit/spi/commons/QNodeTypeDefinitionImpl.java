@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi.rmi.common;
+package org.apache.jackrabbit.spi.commons;
 
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
@@ -170,7 +170,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
     }
 
     /**
-     * TODO: generalize (this method is copied from spi2dav)
+     * {@inheritDoc}
      */
     public Collection getDependencies() {
         if (dependencies == null) {

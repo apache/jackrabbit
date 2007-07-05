@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.spi2jcr;
 
-import org.apache.jackrabbit.spi.NodeInfo;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.NameException;
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.name.MalformedPathException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
@@ -36,37 +36,7 @@ import java.util.Iterator;
  * <code>NodeInfoImpl</code> implements a <code>NodeInfo</code> on top of a JCR
  * repository.
  */
-class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
-
-    /**
-     * The node id of the underlying node.
-     */
-    private final NodeId id;
-
-    /**
-     * 1-based index of the underlying node.
-     */
-    private final int index;
-
-    /**
-     * The name of the primary node type.
-     */
-    private final QName primaryTypeName;
-
-    /**
-     * The names of assigned mixins.
-     */
-    private final QName[] mixinNames;
-
-    /**
-     * The list of {@link PropertyId}s that reference this node info.
-     */
-    private final List references;
-
-    /**
-     * The list of {@link PropertyId}s of this node info.
-     */
-    private final List propertyIds;
+class NodeInfoImpl extends org.apache.jackrabbit.spi.commons.NodeInfoImpl {
 
     /**
      * Creates a new node info for the given <code>node</code>.
@@ -80,80 +50,57 @@ class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     public NodeInfoImpl(Node node,
                         IdFactoryImpl idFactory,
                         NamespaceResolver nsResolver)
-            throws RepositoryException {
-        super(node, idFactory, nsResolver);
-        try {
-            this.id = idFactory.createNodeId(node, nsResolver);
-            this.index = node.getIndex();
-            this.primaryTypeName = NameFormat.parse(node.getPrimaryNodeType().getName(), nsResolver);
-            NodeType[] mixins = node.getMixinNodeTypes();
-            this.mixinNames = new QName[mixins.length];
-            for (int i = 0; i < mixins.length; i++) {
-                mixinNames[i] = NameFormat.parse(mixins[i].getName(), nsResolver);
-            }
-            this.references = new ArrayList();
-            for (PropertyIterator it = node.getReferences(); it.hasNext(); ) {
-                references.add(idFactory.createPropertyId(it.nextProperty(), nsResolver));
-            }
-            this.propertyIds = new ArrayList();
-            for (PropertyIterator it = node.getProperties(); it.hasNext(); ) {
-                propertyIds.add(idFactory.createPropertyId(it.nextProperty(), nsResolver));
-            }
-        } catch (NameException e) {
-            throw new RepositoryException(e.getMessage(), e);
+            throws RepositoryException, IllegalNameException, UnknownPrefixException, MalformedPathException {
+        super(node.getName().length() == 0 ? null : idFactory.createNodeId(node.getParent(), nsResolver),
+                node.getName().length() == 0 ? QName.ROOT : NameFormat.parse(node.getName(), nsResolver),
+                PathFormat.parse(node.getPath(), nsResolver),
+                idFactory.createNodeId(node, nsResolver), node.getIndex(),
+                NameFormat.parse(node.getPrimaryNodeType().getName(), nsResolver),
+                getNodeTypeNames(node.getMixinNodeTypes(), nsResolver),
+                getPropertyIds(node.getReferences(), nsResolver, idFactory),
+                getPropertyIds(node.getProperties(), nsResolver, idFactory));
+    }
+
+    /**
+     * Returns the qualified names of the passed node types using the namespace
+     * resolver to parse the names.
+     *
+     * @param nt         the node types
+     * @param nsResolver the namespace resolver.
+     * @return the qualified names of the node types.
+     * @throws IllegalNameException   if a node type returns an illegal name.
+     * @throws UnknownPrefixException if the nameo of a node type contains a
+     *                                prefix that is not known to <code>nsResolver</code>.
+     */
+    private static QName[] getNodeTypeNames(NodeType[] nt,
+                                     NamespaceResolver nsResolver)
+            throws IllegalNameException, UnknownPrefixException {
+        QName[] names = new QName[nt.length];
+        for (int i = 0; i < nt.length; i++) {
+            QName ntName = NameFormat.parse(nt[i].getName(), nsResolver);
+            names[i] = ntName;
         }
-    }
-
-    //-------------------------------< NodeInfo >-------------------------------
-
-    /**
-     * {@inheritDoc}
-     */
-    public NodeId getId() {
-        return id;
+        return names;
     }
 
     /**
-     * {@inheritDoc}
+     * Returns property ids for the passed JCR properties.
+     *
+     * @param props      the JCR properties.
+     * @param nsResolver the namespace resolver.
+     * @param idFactory  the id factory.
+     * @return the property ids for the passed JCR properties.
+     * @throws RepositoryException if an error occurs while reading from the
+     *                             properties.
      */
-    public int getIndex() {
-        return index;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public QName getNodetype() {
-        return primaryTypeName;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public QName[] getMixins() {
-        QName[] ret = new QName[mixinNames.length];
-        System.arraycopy(mixinNames, 0, ret, 0, mixinNames.length);
-        return ret;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public PropertyId[] getReferences() {
-        return (PropertyId[]) references.toArray(new PropertyId[references.size()]);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Iterator getPropertyIds() {
-        return propertyIds.iterator();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean denotesNode() {
-        return true;
+    private static Iterator getPropertyIds(PropertyIterator props,
+                                              NamespaceResolver nsResolver,
+                                              IdFactoryImpl idFactory)
+            throws RepositoryException {
+        List references = new ArrayList();
+        while (props.hasNext()) {
+            references.add(idFactory.createPropertyId(props.nextProperty(), nsResolver));
+        }
+        return references.iterator();
     }
 }

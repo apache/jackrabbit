@@ -21,18 +21,6 @@ import org.apache.jackrabbit.spi.rmi.remote.RemoteSessionInfo;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteBatch;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteQueryInfo;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteIterator;
-import org.apache.jackrabbit.spi.rmi.common.SerializableIdFactory;
-import org.apache.jackrabbit.spi.rmi.common.QNodeDefinitionImpl;
-import org.apache.jackrabbit.spi.rmi.common.QPropertyDefinitionImpl;
-import org.apache.jackrabbit.spi.rmi.common.NodeInfoImpl;
-import org.apache.jackrabbit.spi.rmi.common.PropertyInfoImpl;
-import org.apache.jackrabbit.spi.rmi.common.LockInfoImpl;
-import org.apache.jackrabbit.spi.rmi.common.QNodeTypeDefinitionImpl;
-import org.apache.jackrabbit.spi.rmi.common.ChildInfoImpl;
-import org.apache.jackrabbit.spi.rmi.common.IteratorHelper;
-import org.apache.jackrabbit.spi.rmi.common.EventImpl;
-import org.apache.jackrabbit.spi.rmi.common.EventBundleImpl;
-import org.apache.jackrabbit.spi.rmi.common.EventFilterImpl;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
@@ -48,10 +36,23 @@ import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.ChildInfo;
-import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.ItemInfo;
+import org.apache.jackrabbit.spi.Event;
+import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.commons.EventFilterImpl;
+import org.apache.jackrabbit.spi.commons.QPropertyDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.QNodeDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.EventImpl;
+import org.apache.jackrabbit.spi.commons.EventBundleImpl;
+import org.apache.jackrabbit.spi.commons.ChildInfoImpl;
+import org.apache.jackrabbit.spi.commons.NodeInfoImpl;
+import org.apache.jackrabbit.spi.commons.PropertyInfoImpl;
+import org.apache.jackrabbit.spi.commons.LockInfoImpl;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.identifier.IdFactoryImpl;
+import org.apache.jackrabbit.util.IteratorHelper;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
@@ -89,7 +90,7 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
     /**
      * The id factory.
      */
-    private final SerializableIdFactory idFactory = SerializableIdFactory.getInstance();
+    private final IdFactory idFactory = IdFactoryImpl.getInstance();
 
     /**
      * Maps remote stubs to {@link ServerSessionInfo}s.
@@ -213,8 +214,8 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
     public NodeId getRootId(RemoteSessionInfo sessionInfo)
             throws RepositoryException, RemoteException {
         try {
-            return idFactory.createSerializableNodeId(
-                    service.getRootId(getSessionInfo(sessionInfo)));
+            NodeId id = service.getRootId(getSessionInfo(sessionInfo));
+            return idFactory.createNodeId(id.getUniqueID(), id.getPath());
         } catch (RepositoryException e) {
             throw getRepositoryException(e);
         }
@@ -472,10 +473,11 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
             if (lockInfo instanceof Serializable) {
                 return lockInfo;
             } else {
+                NodeId id = lockInfo.getNodeId();
                 return new LockInfoImpl(lockInfo.getLockToken(),
                         lockInfo.getOwner(), lockInfo.isDeep(),
                         lockInfo.isSessionScoped(),
-                        idFactory.createSerializableNodeId(lockInfo.getNodeId()));
+                        idFactory.createNodeId(id.getUniqueID(), id.getPath()));
             }
         } catch (RepositoryException e) {
             throw getRepositoryException(e);
@@ -495,10 +497,11 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
             if (lockInfo instanceof Serializable) {
                 return lockInfo;
             } else {
+                NodeId id = lockInfo.getNodeId();
                 return new LockInfoImpl(lockInfo.getLockToken(),
                         lockInfo.getOwner(), lockInfo.isDeep(),
                         lockInfo.isSessionScoped(),
-                        idFactory.createSerializableNodeId(lockInfo.getNodeId()));
+                        idFactory.createNodeId(id.getUniqueID(), id.getPath()));
             }
         } catch (RepositoryException e) {
             throw getRepositoryException(e);
@@ -740,14 +743,19 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
                 for (Iterator it = bundles[i].getEvents(); it.hasNext(); ) {
                     Event e = (Event) it.next();
                     ItemId id;
+                    // make sure node ids are serializable
+                    NodeId parentId = e.getParentId();
+                    parentId = idFactory.createNodeId(
+                            parentId.getUniqueID(), parentId.getPath());
                     if (e.getItemId().denotesNode()) {
-                        id = idFactory.createSerializableNodeId((NodeId) e.getItemId());
+                        NodeId nodeId = (NodeId) e.getItemId();
+                        id = idFactory.createNodeId(nodeId.getUniqueID(), nodeId.getPath());
                     } else {
-                        id = idFactory.createSerializablePropertyId((PropertyId) e.getItemId());
+                        PropertyId propId = (PropertyId) e.getItemId();
+                        id = idFactory.createPropertyId(parentId, propId.getQName());
                     }
                     Event serEvent = new EventImpl(e.getType(),
-                            e.getQPath(), id,
-                            idFactory.createSerializableNodeId(e.getParentId()),
+                            e.getQPath(), id, parentId,
                             e.getPrimaryNodeTypeName(),
                             e.getMixinTypeNames(), e.getUserID());
                     events.add(serEvent);

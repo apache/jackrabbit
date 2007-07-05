@@ -14,15 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi2jcr;
+package org.apache.jackrabbit.spi.commons;
 
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.MalformedPathException;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 
 import javax.jcr.PathNotFoundException;
 import java.util.Set;
@@ -32,16 +30,10 @@ import java.util.Collections;
 import java.io.Serializable;
 
 /**
- * <code>EventFilterImpl</code> is the spi2dav implementation of an
+ * <code>EventFilterImpl</code> is the simple bean style implementation of an
  * {@link EventFilter}.
- * TODO: copied from spi2dav, move to spi-commons?
  */
-class EventFilterImpl implements EventFilter, Serializable {
-
-    /**
-     * The logger instance for this class.
-     */
-    private static final Logger log = LoggerFactory.getLogger(EventFilterImpl.class);
+public class EventFilterImpl implements EventFilter, Serializable {
 
     private final int eventTypes;
 
@@ -66,7 +58,7 @@ class EventFilterImpl implements EventFilter, Serializable {
      *                      filter allows.
      * @param noLocal       whether this filter accepts local events or not.
      */
-    EventFilterImpl(int eventTypes,
+    public EventFilterImpl(int eventTypes,
                     Path absPath,
                     boolean isDeep,
                     String[] uuids,
@@ -140,12 +132,8 @@ class EventFilterImpl implements EventFilter, Serializable {
             return match;
         } catch (MalformedPathException e) {
             // should never get here
-            log.warn("malformed path: " + e);
-            log.debug("Exception: ", e);
         } catch (PathNotFoundException e) {
             // should never get here
-            log.warn("invalid property path: " + e);
-            log.debug("Exception: ", e);
         }
         // if we get here an exception occurred while checking for the path
         return false;

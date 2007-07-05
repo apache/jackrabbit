@@ -22,6 +22,8 @@ import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.commons.EventImpl;
+import org.apache.jackrabbit.spi.commons.EventBundleImpl;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
