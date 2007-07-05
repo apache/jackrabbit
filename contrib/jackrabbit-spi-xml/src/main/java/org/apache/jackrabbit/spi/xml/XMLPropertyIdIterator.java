@@ -17,12 +17,12 @@
 package org.apache.jackrabbit.spi.xml;
 
 import java.util.NoSuchElementException;
+import java.util.Iterator;
 
-import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.ItemId;
 import org.w3c.dom.NamedNodeMap;
 
-public class XMLPropertyIdIterator implements IdIterator {
+public class XMLPropertyIdIterator implements Iterator {
 
     private final ItemId primary;
 
@@ -36,9 +36,24 @@ public class XMLPropertyIdIterator implements IdIterator {
         this.index = -1;
     }
 
-    //----------------------------------------------------------< IdIterator >
+    private long getPosition() {
+        return index + 1;
+    }
 
-    public ItemId nextId() {
+    private long getSize() {
+        if (nodes != null) {
+            return nodes.getLength() + 1;
+        } else {
+            return 1;
+        }
+    }
+
+    //--------------------------------------------------------------< Iterator >
+    public boolean hasNext() {
+        return getPosition() < getSize();
+    }
+
+    public Object next() {
         if (hasNext()) {
             if (++index == 0) {
                 return primary;
@@ -50,34 +65,7 @@ public class XMLPropertyIdIterator implements IdIterator {
         }
     }
 
-    public long getPosition() {
-        return index + 1;
-    }
-
-    public long getSize() {
-        if (nodes != null) {
-            return nodes.getLength() + 1;
-        } else {
-            return 1;
-        }
-    }
-
-    public void skip(long n) {
-        while (n-- > 0) {
-            next();
-        }
-    }
-
-    public boolean hasNext() {
-        return getPosition() < getSize();
-    }
-
-    public Object next() {
-        return nextId();
-    }
-
     public void remove() {
         throw new UnsupportedOperationException();
     }
-
 }
