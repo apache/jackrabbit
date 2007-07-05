@@ -24,7 +24,6 @@ import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.ChildInfo;
-import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.w3c.dom.NamedNodeMap;
@@ -48,7 +47,7 @@ public class XMLNodeId implements NodeId, PropertyId, ChildInfo {
         }
     }
 
-    public IdIterator getPropertyIds() {
+    public Iterator getPropertyIds() {
         return new XMLPropertyIdIterator(
                 new XMLPrimaryTypeId(this), node.getAttributes());
     }

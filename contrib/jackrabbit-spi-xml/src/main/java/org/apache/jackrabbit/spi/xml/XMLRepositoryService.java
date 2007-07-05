@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.Collections;
+import java.util.Arrays;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -51,7 +52,6 @@ import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.NodeId;
@@ -60,13 +60,11 @@ import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.QNodeTypeDefinitionIterator;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
-import org.apache.jackrabbit.spi.xml.nodetype.XMLQNodeTypeDefinitionIterator;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -226,9 +224,9 @@ public class XMLRepositoryService implements RepositoryService {
         return null;
     }
 
-    public QNodeTypeDefinitionIterator getNodeTypeDefinitions(
+    public Iterator getNodeTypeDefinitions(
             SessionInfo session) {
-        return new XMLQNodeTypeDefinitionIterator(types);
+        return Arrays.asList(types).iterator();
     }
 
     public NodeId getRootId(SessionInfo session) {
@@ -475,7 +473,7 @@ public class XMLRepositoryService implements RepositoryService {
     /* (non-Javadoc)
      * @see org.apache.jackrabbit.spi.RepositoryService#merge(org.apache.jackrabbit.spi.SessionInfo, org.apache.jackrabbit.spi.NodeId, java.lang.String, boolean)
      */
-    public IdIterator merge(SessionInfo sessionInfo, NodeId nodeId,
+    public Iterator merge(SessionInfo sessionInfo, NodeId nodeId,
             String srcWorkspaceName, boolean bestEffort)
             throws NoSuchWorkspaceException, AccessDeniedException,
             MergeException, LockException, InvalidItemStateException,

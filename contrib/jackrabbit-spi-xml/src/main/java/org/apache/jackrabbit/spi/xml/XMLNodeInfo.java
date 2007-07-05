@@ -17,10 +17,11 @@
 package org.apache.jackrabbit.spi.xml;
 
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.PropertyId;
+
+import java.util.Iterator;
 
 public class XMLNodeInfo extends XMLItemInfo implements NodeInfo {
 
@@ -46,7 +47,7 @@ public class XMLNodeInfo extends XMLItemInfo implements NodeInfo {
         return QName.NT_UNSTRUCTURED;
     }
 
-    public IdIterator getPropertyIds() {
+    public Iterator getPropertyIds() {
         return id.getPropertyIds();
     }
 
