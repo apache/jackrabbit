@@ -22,20 +22,14 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 import javax.jcr.PropertyType;
-import java.util.Calendar;
-import java.io.InputStream;
 
 /**
- * <code>ValueFactoryImplEx</code>...
+ * <code>ValueFactoryImplEx</code> extends the implementation from the
+ * jcr-commons module and allows a less restricted UUID format.
  */
-public class ValueFactoryImplEx implements ValueFactory {
+public class ValueFactoryImplEx extends ValueFactoryImpl {
 
     private static final ValueFactory INSTANCE = new ValueFactoryImplEx();
-
-    /**
-     * Delegatee for all calls except for REFERENCE values.
-     */
-    private final ValueFactory commonsFactory = ValueFactoryImpl.getInstance();
 
     /**
      * Constructs a <code>ValueFactory</code> object.
@@ -51,10 +45,6 @@ public class ValueFactoryImplEx implements ValueFactory {
         return new ReferenceValue(value);
     }
 
-    public Value createValue(String string) {
-        return commonsFactory.createValue(string);
-    }
-
     public Value createValue(String value, int type) throws ValueFormatException {
         Value val;
         switch (type) {
@@ -62,29 +52,9 @@ public class ValueFactoryImplEx implements ValueFactory {
                 val = ReferenceValue.valueOf(value);
                 break;
             default:
-                val = commonsFactory.createValue(value, type);
+                val = super.createValue(value, type);
         }
         return val;
-    }
-
-    public Value createValue(long l) {
-        return commonsFactory.createValue(l);
-    }
-
-    public Value createValue(double v) {
-        return commonsFactory.createValue(v);
-    }
-
-    public Value createValue(boolean b) {
-        return commonsFactory.createValue(b);
-    }
-
-    public Value createValue(Calendar calendar) {
-        return commonsFactory.createValue(calendar);
-    }
-
-    public Value createValue(InputStream inputStream) {
-        return commonsFactory.createValue(inputStream);
     }
 
     /**
