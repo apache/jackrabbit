@@ -37,7 +37,7 @@ public class ValueFactoryImpl implements ValueFactory {
     /**
      * Constructs a <code>ValueFactory</code> object.
      */
-    private ValueFactoryImpl() {
+    protected ValueFactoryImpl() {
     }
 
     //--------------------------------------------------------------------------
