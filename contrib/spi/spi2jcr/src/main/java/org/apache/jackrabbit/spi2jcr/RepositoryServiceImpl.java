@@ -904,8 +904,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         // make sure there is an event subscription for this session info
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         if (!subscriptions.containsKey(sInfo)) {
-            EventSubscription subscr = new EventSubscription(
-                    idFactory, sInfo.getNamespaceResolver());
+            EventSubscription subscr = new EventSubscription(idFactory, sInfo);
             ObservationManager obsMgr = sInfo.getSession().getWorkspace().getObservationManager();
             obsMgr.addEventListener(subscr, EventSubscription.ALL_EVENTS,
                     "/", true, null, null, true);
