@@ -306,12 +306,7 @@ public class ClientRepositoryService implements RepositoryService {
      */
     public Batch createBatch(ItemId itemId, SessionInfo sessionInfo)
             throws RepositoryException {
-        try {
-            return new ClientBatch(remoteService.createBatch(
-                    itemId, getRemoteSessionInfo(sessionInfo)));
-        } catch (RemoteException e) {
-            throw new RemoteRepositoryException(e);
-        }
+        return new ClientBatch(itemId, getRemoteSessionInfo(sessionInfo));
     }
 
     /**
@@ -320,7 +315,9 @@ public class ClientRepositoryService implements RepositoryService {
     public void submit(Batch batch) throws PathNotFoundException, ItemNotFoundException, NoSuchNodeTypeException, ValueFormatException, VersionException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
         if (batch instanceof ClientBatch) {
             try {
-                remoteService.submit(((ClientBatch) batch).getRemoteBatch());
+                ClientBatch clientBatch = (ClientBatch) batch;
+                remoteService.submit(clientBatch.getRemoteSessionInfo(),
+                        clientBatch.getSerializableBatch());
             } catch (RemoteException e) {
                 throw new RemoteRepositoryException(e);
             }

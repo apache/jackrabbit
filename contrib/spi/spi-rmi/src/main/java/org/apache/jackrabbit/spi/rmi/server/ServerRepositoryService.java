@@ -18,7 +18,6 @@ package org.apache.jackrabbit.spi.rmi.server;
 
 import org.apache.jackrabbit.spi.rmi.remote.RemoteRepositoryService;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteSessionInfo;
-import org.apache.jackrabbit.spi.rmi.remote.RemoteBatch;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteQueryInfo;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteIterator;
 import org.apache.jackrabbit.spi.ItemId;
@@ -39,6 +38,7 @@ import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.commons.EventFilterImpl;
 import org.apache.jackrabbit.spi.commons.QPropertyDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.QNodeDefinitionImpl;
@@ -49,6 +49,7 @@ import org.apache.jackrabbit.spi.commons.ChildInfoImpl;
 import org.apache.jackrabbit.spi.commons.NodeInfoImpl;
 import org.apache.jackrabbit.spi.commons.PropertyInfoImpl;
 import org.apache.jackrabbit.spi.commons.LockInfoImpl;
+import org.apache.jackrabbit.spi.commons.SerializableBatch;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.identifier.IdFactoryImpl;
@@ -96,11 +97,6 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
      * Maps remote stubs to {@link ServerSessionInfo}s.
      */
     private final Map activeSessionInfos = Collections.synchronizedMap(new HashMap());
-
-    /**
-     * Maps remote stubs to {@link ServerBatch}es.
-     */
-    private final Map activeBatches = Collections.synchronizedMap(new HashMap());
 
     /**
      * Creates a new server repository service.
@@ -176,8 +172,8 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
     public void dispose(RemoteSessionInfo sessionInfo)
             throws RepositoryException, RemoteException {
         try {
-            activeSessionInfos.remove(RemoteObject.toStub(sessionInfo));
             service.dispose(getSessionInfo(sessionInfo));
+            activeSessionInfos.remove(RemoteObject.toStub(sessionInfo));
         } catch (RepositoryException e) {
             throw getRepositoryException(e);
         }
@@ -354,34 +350,15 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
     /**
      * {@inheritDoc}
      */
-    public RemoteBatch createBatch(ItemId itemId,
-                                   RemoteSessionInfo sessionInfo)
+    public void submit(RemoteSessionInfo sessionInfo, SerializableBatch batch)
             throws RepositoryException, RemoteException {
         try {
-            ServerBatch sBatch = new ServerBatch(
-                    service.createBatch(itemId, getSessionInfo(sessionInfo)));
-            activeBatches.put(RemoteObject.toStub(sBatch), sBatch);
-            return sBatch;
+            Batch local = service.createBatch(
+                    batch.getSaveTarget(), getSessionInfo(sessionInfo));
+            batch.replay(local);
+            service.submit(local);
         } catch (RepositoryException e) {
             throw getRepositoryException(e);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void submit(RemoteBatch batch) throws RepositoryException, RemoteException {
-        ServerBatch sBatch = (ServerBatch) activeBatches.remove(
-                RemoteObject.toStub(batch));
-        if (sBatch != null) {
-            try {
-                service.submit(sBatch.getBatch());
-            } catch (RepositoryException e) {
-                throw getRepositoryException(e);
-            }
-        } else {
-            throw new RepositoryException("Unknown RemoteBatch: " +
-                    ((RemoteObject) batch).getRef());
         }
     }
 
