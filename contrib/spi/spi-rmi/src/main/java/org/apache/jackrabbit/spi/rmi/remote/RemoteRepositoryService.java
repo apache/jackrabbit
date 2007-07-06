@@ -28,6 +28,7 @@ import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.NodeInfo;
+import org.apache.jackrabbit.spi.commons.SerializableBatch;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 
@@ -90,7 +91,7 @@ public interface RemoteRepositoryService extends Remote {
      * @return a <code>RemoteSessionInfo</code> if impersonate was
      *         successful.
      * @throws RemoteException if an error occurs.
-     * @see RepositoryService#impersonate(SessionInfo, Credentials)
+     * @see org.apache.jackrabbit.spi.RepositoryService#impersonate(SessionInfo, Credentials)
      */
     public RemoteSessionInfo impersonate(RemoteSessionInfo sessionInfo,
                                          Credentials credentials)
@@ -230,29 +231,17 @@ public interface RemoteRepositoryService extends Remote {
             throws RepositoryException, RemoteException;
 
     /**
-     * Indicates the start of a set of operations that cause modifications
-     * on the underlaying persistence layer. All modification called on the
-     * Batch must be executed at once or non must be executed.
-     *
-     * @param itemId
-     * @param sessionInfo
-     * @return
-     * @throws RemoteException if an error occurs.
-     * @see org.apache.jackrabbit.spi.RepositoryService#createBatch(org.apache.jackrabbit.spi.ItemId, org.apache.jackrabbit.spi.SessionInfo)
-     */
-    public RemoteBatch createBatch(ItemId itemId,
-                                   RemoteSessionInfo sessionInfo)
-            throws RepositoryException, RemoteException;
-
-    /**
      * Submits a batch.
      *
-     * @param batch the remote batch
+     * @param sessionInfo
+     * @param batch the batch
      * @throws RepositoryException
      * @throws RemoteException if an error occurs.
      * @see org.apache.jackrabbit.spi.RepositoryService#submit(org.apache.jackrabbit.spi.Batch)
      */
-    public void submit(RemoteBatch batch) throws RepositoryException, RemoteException;
+    public void submit(RemoteSessionInfo sessionInfo,
+                       SerializableBatch batch)
+            throws RepositoryException, RemoteException;
 
     /**
      *

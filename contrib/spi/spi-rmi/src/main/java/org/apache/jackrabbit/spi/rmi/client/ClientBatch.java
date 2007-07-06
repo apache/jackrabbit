@@ -21,40 +21,43 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.rmi.remote.RemoteBatch;
+import org.apache.jackrabbit.spi.commons.SerializableBatch;
+import org.apache.jackrabbit.spi.rmi.remote.RemoteSessionInfo;
 import org.apache.jackrabbit.name.QName;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.ValueFormatException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.AccessDeniedException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.lock.LockException;
-import javax.jcr.version.VersionException;
-import java.rmi.RemoteException;
-
 /**
- * <code>ClientBatch</code> implements a SPI {@link Batch} which wraps a remote
- * batch.
+ * <code>ClientBatch</code> implements a SPI {@link Batch} which wraps a
+ * serializable batch.
  */
 class ClientBatch implements Batch {
 
     /**
-     * The remote batch.
+     * The remote session info.
      */
-    private final RemoteBatch remoteBatch;
+    private final RemoteSessionInfo remoteSession;
 
-    ClientBatch(RemoteBatch remoteBatch) {
-        this.remoteBatch = remoteBatch;
+    /**
+     * The underlying serializable batch.
+     */
+    private final SerializableBatch batch;
+
+    ClientBatch(ItemId itemId, RemoteSessionInfo remoteSession) {
+        this.remoteSession = remoteSession;
+        this.batch = new SerializableBatch(itemId);
     }
 
     /**
      * @return the wrapped remote batch.
      */
-    RemoteBatch getRemoteBatch() {
-        return remoteBatch;
+    public SerializableBatch getSerializableBatch() {
+        return batch;
+    }
+
+    /**
+     * @return the remote session info associated with this batch.
+     */
+    public RemoteSessionInfo getRemoteSessionInfo() {
+        return remoteSession;
     }
 
     /**
@@ -63,24 +66,15 @@ class ClientBatch implements Batch {
     public void addNode(NodeId parentId,
                         QName nodeName,
                         QName nodetypeName,
-                        String uuid) throws RepositoryException {
-        try {
-            remoteBatch.addNode(parentId, nodeName, nodetypeName, uuid);
-        } catch (RemoteException e) {
-            throw new RemoteRepositoryException(e);
-        }
+                        String uuid) {
+        batch.addNode(parentId, nodeName, nodetypeName, uuid);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void addProperty(NodeId parentId, QName propertyName, QValue value)
-            throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
-        try {
-            remoteBatch.addProperty(parentId, propertyName, value);
-        } catch (RemoteException e) {
-            throw new RemoteRepositoryException(e);
-        }
+    public void addProperty(NodeId parentId, QName propertyName, QValue value) {
+        batch.addProperty(parentId, propertyName, value);
     }
 
     /**
@@ -88,47 +82,29 @@ class ClientBatch implements Batch {
      */
     public void addProperty(NodeId parentId,
                             QName propertyName,
-                            QValue[] values) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
-        try {
-            remoteBatch.addProperty(parentId, propertyName, values);
-        } catch (RemoteException e) {
-            throw new RemoteRepositoryException(e);
-        }
+                            QValue[] values) {
+        batch.addProperty(parentId, propertyName, values);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void setValue(PropertyId propertyId, QValue value)
-            throws RepositoryException {
-        try {
-            remoteBatch.setValue(propertyId, value);
-        } catch (RemoteException e) {
-            throw new RemoteRepositoryException(e);
-        }
+    public void setValue(PropertyId propertyId, QValue value) {
+        batch.setValue(propertyId, value);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void setValue(PropertyId propertyId, QValue[] values)
-            throws RepositoryException {
-        try {
-            remoteBatch.setValue(propertyId, values);
-        } catch (RemoteException e) {
-            throw new RemoteRepositoryException(e);
-        }
+    public void setValue(PropertyId propertyId, QValue[] values) {
+        batch.setValue(propertyId, values);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void remove(ItemId itemId) throws RepositoryException {
-        try {
-            remoteBatch.remove(itemId);
-        } catch (RemoteException e) {
-            throw new RemoteRepositoryException(e);
-        }
+    public void remove(ItemId itemId) {
+        batch.remove(itemId);
     }
 
     /**
@@ -136,24 +112,15 @@ class ClientBatch implements Batch {
      */
     public void reorderNodes(NodeId parentId,
                              NodeId srcNodeId,
-                             NodeId beforeNodeId) throws RepositoryException {
-        try {
-            remoteBatch.reorderNodes(parentId, srcNodeId, beforeNodeId);
-        } catch (RemoteException e) {
-            throw new RemoteRepositoryException(e);
-        }
+                             NodeId beforeNodeId) {
+        batch.reorderNodes(parentId, srcNodeId, beforeNodeId);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void setMixins(NodeId nodeId, QName[] mixinNodeTypeIds)
-            throws RepositoryException {
-        try {
-            remoteBatch.setMixins(nodeId, mixinNodeTypeIds);
-        } catch (RemoteException e) {
-            throw new RemoteRepositoryException(e);
-        }
+    public void setMixins(NodeId nodeId, QName[] mixinNodeTypeIds) {
+        batch.setMixins(nodeId, mixinNodeTypeIds);
     }
 
     /**
@@ -161,11 +128,7 @@ class ClientBatch implements Batch {
      */
     public void move(NodeId srcNodeId,
                      NodeId destParentNodeId,
-                     QName destName) throws RepositoryException {
-        try {
-            remoteBatch.move(srcNodeId, destParentNodeId, destName);
-        } catch (RemoteException e) {
-            throw new RemoteRepositoryException(e);
-        }
+                     QName destName) {
+        batch.move(srcNodeId, destParentNodeId, destName);
     }
 }
