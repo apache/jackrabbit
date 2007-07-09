@@ -386,7 +386,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @throws RepositoryException
      */
     private NodeTypeRegistry createNodeTypeRegistry(QNodeDefinition rootNodeDef, NamespaceRegistry nsRegistry, Map descriptors) throws RepositoryException {
-        Iterator it = service.getNodeTypeDefinitions(sessionInfo);
+        Iterator it = service.getQNodeTypeDefinitions(sessionInfo);
         List ntDefs = new ArrayList();
         while (it.hasNext()) {
             ntDefs.add(it.next());

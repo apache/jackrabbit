@@ -23,6 +23,7 @@ import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.NodeInfo;
@@ -980,7 +981,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public Iterator getNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
+    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         NodeTypeManager ntMgr = sInfo.getSession().getWorkspace().getNodeTypeManager();
         List nodeTypes = new ArrayList();
@@ -994,6 +995,14 @@ public class RepositoryServiceImpl implements RepositoryService {
             throw new RepositoryException(e);
         }
         return nodeTypes.iterator();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public QNodeTypeDefinition getQNodeTypeDefinition(SessionInfo sessionInfo, QName nodetypeName) throws RepositoryException {
+        // TODO: implement me
+        throw new RuntimeException("implementation for getQNodeTypeDefinition missing");
     }
 
     //----------------------------< internal >----------------------------------

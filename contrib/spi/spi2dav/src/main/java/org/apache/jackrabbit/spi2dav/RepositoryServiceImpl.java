@@ -1479,7 +1479,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             resolvedTypeNames = new HashSet();
             // make sure node type definitions are available
             if (nodeTypeDefinitions.size() == 0) {
-                getNodeTypeDefinitions(sessionInfo);
+                getQNodeTypeDefinitions(sessionInfo);
             }
             synchronized (nodeTypeDefinitions) {
                 for (int i = 0; i < nodeTypeNames.length; i++) {
@@ -1808,9 +1808,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * @see RepositoryService#getNodeTypeDefinitions(SessionInfo)
+     * @see RepositoryService#getQNodeTypeDefinitions(SessionInfo)
      */
-    public Iterator getNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
+    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
         ReportInfo info = new ReportInfo(NodeTypesReport.NODETYPES_REPORT, DEPTH_0);
         info.setContentElement(DomUtil.createElement(domFactory, NodeTypeConstants.XML_REPORT_ALLNODETYPES, NodeTypeConstants.NAMESPACE));
 
@@ -1846,6 +1846,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 method.releaseConnection();
             }
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public QNodeTypeDefinition getQNodeTypeDefinition(SessionInfo sessionInfo, QName nodetypeName) throws RepositoryException {
+        // TODO: implement me
+        throw new RuntimeException("implementation for getQNodeTypeDefinition missing");
     }
 
     /**

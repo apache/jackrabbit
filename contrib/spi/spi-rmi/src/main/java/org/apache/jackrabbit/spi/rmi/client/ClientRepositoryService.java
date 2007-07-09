@@ -742,7 +742,7 @@ public class ClientRepositoryService implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public Iterator getNodeTypeDefinitions(
+    public Iterator getQNodeTypeDefinitions(
             SessionInfo sessionInfo) throws RepositoryException {
         try {
             QNodeTypeDefinition[] ntDefs = remoteService.getNodeTypeDefinitions(
@@ -751,6 +751,14 @@ public class ClientRepositoryService implements RepositoryService {
         } catch (RemoteException e) {
             throw new RemoteRepositoryException(e);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public QNodeTypeDefinition getQNodeTypeDefinition(SessionInfo sessionInfo, QName nodetypeName) throws RepositoryException {
+        // TODO: implement me
+        throw new RuntimeException("implementation for getQNodeTypeDefinition missing");
     }
 
     //------------------------------< internal >--------------------------------

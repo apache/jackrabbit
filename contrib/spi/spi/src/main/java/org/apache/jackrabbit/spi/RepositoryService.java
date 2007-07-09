@@ -766,5 +766,20 @@ public interface RepositoryService {
      * @see javax.jcr.nodetype.NodeTypeManager#getPrimaryNodeTypes()
      * @see javax.jcr.nodetype.NodeTypeManager#getNodeType(String)
      */
-    public Iterator getNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException;
+    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException;
+
+    /**
+     * Retrieve a specific <code>QNodeTypeDefinition</code>.
+     *
+     * @param sessionInfo
+     * @param nodetypeName name of node type to retrieve
+     * @return {@link QNodeTypeDefinition}
+     * @throws javax.jcr.RepositoryException
+     * @see javax.jcr.Workspace#getNodeTypeManager()
+     * @see javax.jcr.nodetype.NodeTypeManager#getAllNodeTypes()
+     * @see javax.jcr.nodetype.NodeTypeManager#getMixinNodeTypes()
+     * @see javax.jcr.nodetype.NodeTypeManager#getPrimaryNodeTypes()
+     * @see javax.jcr.nodetype.NodeTypeManager#getNodeType(String)
+     */
+    public QNodeTypeDefinition getQNodeTypeDefinition(SessionInfo sessionInfo, QName nodetypeName) throws RepositoryException;
 }

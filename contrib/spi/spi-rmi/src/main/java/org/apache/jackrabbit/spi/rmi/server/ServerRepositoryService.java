@@ -822,7 +822,7 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
      */
     public QNodeTypeDefinition[] getNodeTypeDefinitions(RemoteSessionInfo sessionInfo)
             throws RepositoryException, RemoteException {
-        Iterator it = service.getNodeTypeDefinitions(getSessionInfo(sessionInfo));
+        Iterator it = service.getQNodeTypeDefinitions(getSessionInfo(sessionInfo));
         List nts = new ArrayList();
         while (it.hasNext()) {
             QNodeTypeDefinition nt = (QNodeTypeDefinition) it.next();
