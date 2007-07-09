@@ -741,7 +741,7 @@ public interface RepositoryService {
     public void registerNamespace(SessionInfo sessionInfo, String prefix, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException;
 
     /**
-     * Unregister the namesspace indentified by the given prefix
+     * Unregister the namespace identified by the given prefix
      *
      * @param sessionInfo
      * @param uri
