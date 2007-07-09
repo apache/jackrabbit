@@ -710,7 +710,12 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
                                    EventFilter[] filters)
             throws RepositoryException, InterruptedException, RemoteException {
         try {
-            SessionInfo sInfo = getSessionInfo(sessionInfo);
+            SessionInfo sInfo;
+            try {
+                sInfo = getSessionInfo(sessionInfo);
+            } catch (RepositoryException e) {
+                throw new InterruptedException();
+            }
             // create local event filter instances
             filters = createLocalEventFilters(sInfo, filters);
             EventBundle[] bundles = service.getEvents(sInfo, timeout, filters);

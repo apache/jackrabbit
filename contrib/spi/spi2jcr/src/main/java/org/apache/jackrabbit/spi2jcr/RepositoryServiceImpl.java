@@ -209,8 +209,10 @@ public class RepositoryServiceImpl implements RepositoryService {
      * {@inheritDoc}
      */
     public void dispose(SessionInfo sessionInfo) throws RepositoryException {
-        subscriptions.remove(sessionInfo);
-        getSessionInfoImpl(sessionInfo).getSession().logout();
+        synchronized (sessionInfo) {
+            subscriptions.remove(sessionInfo);
+            getSessionInfoImpl(sessionInfo).getSession().logout();
+        }
     }
 
     /**
@@ -902,14 +904,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                                          boolean noLocal)
             throws UnsupportedRepositoryOperationException, RepositoryException {
         // make sure there is an event subscription for this session info
-        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        if (!subscriptions.containsKey(sInfo)) {
-            EventSubscription subscr = new EventSubscription(idFactory, sInfo);
-            ObservationManager obsMgr = sInfo.getSession().getWorkspace().getObservationManager();
-            obsMgr.addEventListener(subscr, EventSubscription.ALL_EVENTS,
-                    "/", true, null, null, true);
-            subscriptions.put(sInfo, subscr);
-        }
+        getSubscription(sessionInfo);
 
         Set ntNames = null;
         if (nodeTypeName != null) {
@@ -925,14 +920,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                                    long timeout,
                                    EventFilter[] filters)
             throws RepositoryException, UnsupportedRepositoryOperationException, InterruptedException {
-        EventSubscription subscr = (EventSubscription) subscriptions.get(sessionInfo);
-        if (subscr != null) {
-            return subscr.getEventBundles(filters, timeout);
-        } else {
-            // sleep for at most one second, then return
-            Thread.sleep(Math.min(timeout, 1000));
-            return new EventBundle[0];
-        }
+        return getSubscription(sessionInfo).getEventBundles(filters, timeout);
     }
 
     /**
@@ -1009,6 +997,25 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     //----------------------------< internal >----------------------------------
+
+    private EventSubscription getSubscription(SessionInfo sessionInfo)
+            throws RepositoryException {
+        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        EventSubscription subscr;
+        synchronized (sInfo) {
+            subscr = (EventSubscription) subscriptions.get(sInfo);
+            if (subscr == null) {
+                subscr = new EventSubscription(idFactory, sInfo);
+                if (sInfo.getSession().isLive()) {
+                    ObservationManager obsMgr = sInfo.getSession().getWorkspace().getObservationManager();
+                    obsMgr.addEventListener(subscr, EventSubscription.ALL_EVENTS,
+                            "/", true, null, null, true);
+                }
+                subscriptions.put(sInfo, subscr);
+            }
+        }
+        return subscr;
+    }
 
     private final class BatchImpl implements Batch {
 
