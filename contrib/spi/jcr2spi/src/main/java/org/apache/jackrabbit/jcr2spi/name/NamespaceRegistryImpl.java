@@ -64,6 +64,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         RESERVED_PREFIXES.add(QName.NS_NT_PREFIX);
         RESERVED_PREFIXES.add(QName.NS_MIX_PREFIX);
         RESERVED_PREFIXES.add(QName.NS_SV_PREFIX);
+        RESERVED_PREFIXES.add(QName.NS_EMPTY_PREFIX);
         // reserved namespace URI's
         RESERVED_URIS.add(QName.NS_XML_URI);
         RESERVED_URIS.add(QName.NS_XMLNS_URI);
@@ -73,6 +74,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         RESERVED_URIS.add(QName.NS_NT_URI);
         RESERVED_URIS.add(QName.NS_MIX_URI);
         RESERVED_URIS.add(QName.NS_SV_URI);
+        RESERVED_URIS.add(QName.NS_DEFAULT_URI);
         // reserved and predefined namespaces
         RESERVED_NAMESPACES.put(QName.NS_XML_PREFIX, QName.NS_XML_URI);
         RESERVED_NAMESPACES.put(QName.NS_XMLNS_PREFIX, QName.NS_XMLNS_URI);
@@ -81,6 +83,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         RESERVED_NAMESPACES.put(QName.NS_NT_PREFIX, QName.NS_NT_URI);
         RESERVED_NAMESPACES.put(QName.NS_MIX_PREFIX, QName.NS_MIX_URI);
         RESERVED_NAMESPACES.put(QName.NS_SV_PREFIX, QName.NS_SV_URI);
+        RESERVED_NAMESPACES.put(QName.NS_EMPTY_PREFIX, QName.NS_DEFAULT_URI);
     }
 
     private final HashMap prefixToURI = new HashMap();
