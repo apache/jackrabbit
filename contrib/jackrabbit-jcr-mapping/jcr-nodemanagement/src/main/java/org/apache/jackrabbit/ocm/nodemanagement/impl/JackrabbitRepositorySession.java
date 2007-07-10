@@ -48,6 +48,8 @@ public class JackrabbitRepositorySession implements RepositorySession
         Repository repository =
                 RepositoryUtil.getRepository(configuration.getRepositoryName());
         
-        return RepositoryUtil.login(repository, username, password);
+        Session session =  RepositoryUtil.login(repository, username, password);
+        RepositoryUtil.setupSession(session);
+        return session; 
     }
 }

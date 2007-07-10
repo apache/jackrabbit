@@ -355,7 +355,8 @@ public class NodeTypeManagerImpl implements NodeTypeManager
         node.setAutoCreated(field.isJcrAutoCreated());
         node.setMandatory(field.isJcrMandatory());
         node.setAllowsSameNameSiblings(field.isJcrSameNameSiblings());
-
+        node.setDefaultPrimaryType( getNamespaceHelper().getQName( field.getDefaultPrimaryType() ) );
+        
         if (field.getJcrOnParentVersion() != null
             && field.getJcrOnParentVersion().length() > 0) {
             node.setOnParentVersion(OnParentVersionAction.valueFromName(field.getJcrOnParentVersion()));

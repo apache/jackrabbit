@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.ocm.nodemanagement.exception;
 
+import java.io.PrintStream;
+import java.io.PrintWriter;
+
 /** Base exception for all JCR Node Type Management exceptions.
  *
  * @author <a href="mailto:okiessler@apache.org">Oliver Kiessler</a>
@@ -64,5 +67,31 @@ public class BaseNodeManagementException extends Exception
     public void setWrappedException(Exception object)
     {
         this.wrappedException = object;
+    }
+
+    public void printStackTrace( PrintStream ps )
+    {
+        if ( getWrappedException() == null || getWrappedException() == this )
+        {
+            super.printStackTrace( ps );
+        }
+        else
+        {
+            ps.println( this );
+            getWrappedException().printStackTrace( ps );
+        }
+    }
+
+    public void printStackTrace( PrintWriter pw )
+    {
+        if ( getWrappedException() == null || getWrappedException() == this )
+        {
+            super.printStackTrace( pw );
+        }
+        else
+        {
+            pw.println( this );
+            getWrappedException().printStackTrace( pw );
+        }
     }
 }

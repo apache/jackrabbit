@@ -106,7 +106,7 @@ public class NodeTypeManagerImplTest extends TestBase {
         field1.setJcrType("String");
         field1.setJcrAutoCreated(true);
         field1.setJcrMandatory(true);
-        field1.setJcrMultiple(true);
+        field1.setJcrMultiple(true);        
         classDescriptor.addFieldDescriptor(field1);
 
         FieldDescriptor field2 = new FieldDescriptor();
