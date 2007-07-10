@@ -58,4 +58,10 @@ public interface ChildNodeDefDescriptor {
      * @return Whether the child node definition allows for same name sibblings.
      */
     boolean isJcrSameNameSiblings();
+
+    /**
+     * @return Whether the default not type to use when create new instances of this child
+     */
+    String getDefaultPrimaryType();
+
 }
