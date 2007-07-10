@@ -23,6 +23,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
 import javax.jcr.Property;
 import java.io.InputStream;
+import java.util.Calendar;
 
 /**
  * <code>QValue</code>...
@@ -88,6 +89,14 @@ public interface QValue {
      * @throws RepositoryException if an error occurs.
      */
     public QName getQName() throws RepositoryException;
+
+    /**
+     * Returns a <code>Calendar</code> representation of this value.
+     *
+     * @return A <code>Calendar</code> representation of this value.
+     * @throws RepositoryException if an error occurs.
+     */
+    public Calendar getCalendar() throws RepositoryException;
 
     /**
      * Returns a <code>Path</code> representation of this value.
