@@ -1001,8 +1001,15 @@ public class RepositoryServiceImpl implements RepositoryService {
      * {@inheritDoc}
      */
     public QNodeTypeDefinition getQNodeTypeDefinition(SessionInfo sessionInfo, QName nodetypeName) throws RepositoryException {
-        // TODO: implement me
-        throw new RuntimeException("implementation for getQNodeTypeDefinition missing");
+        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        NodeTypeManager ntMgr = sInfo.getSession().getWorkspace().getNodeTypeManager();
+        try {
+            String ntName = NameFormat.format(nodetypeName, sInfo.getNamespaceResolver());
+            NodeType nt = ntMgr.getNodeType(ntName);
+            return new QNodeTypeDefinitionImpl(nt, sInfo.getNamespaceResolver(), getQValueFactory());
+        } catch (NameException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     //----------------------------< internal >----------------------------------

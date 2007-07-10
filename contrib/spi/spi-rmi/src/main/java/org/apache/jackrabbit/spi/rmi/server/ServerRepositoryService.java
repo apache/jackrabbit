@@ -820,7 +820,7 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
     /**
      * {@inheritDoc}
      */
-    public QNodeTypeDefinition[] getNodeTypeDefinitions(RemoteSessionInfo sessionInfo)
+    public QNodeTypeDefinition[] getQNodeTypeDefinitions(RemoteSessionInfo sessionInfo)
             throws RepositoryException, RemoteException {
         Iterator it = service.getQNodeTypeDefinitions(getSessionInfo(sessionInfo));
         List nts = new ArrayList();
@@ -835,6 +835,18 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
         return (QNodeTypeDefinition[]) nts.toArray(new QNodeTypeDefinition[nts.size()]);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public QNodeTypeDefinition getQNodeTypeDefinition(RemoteSessionInfo sessionInfo, QName ntName)
+            throws RepositoryException, RemoteException {
+        QNodeTypeDefinition ntDef = service.getQNodeTypeDefinition(getSessionInfo(sessionInfo), ntName);
+        if (ntDef instanceof Serializable) {
+            return ntDef;
+        } else {
+            return new QNodeTypeDefinitionImpl(ntDef);
+        }
+    }
     //---------------------------< internal >-----------------------------------
 
     /**
