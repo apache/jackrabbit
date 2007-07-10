@@ -154,7 +154,7 @@ public class ValueFormat {
                 break;
             case PropertyType.PATH:
                 try {
-                    Path qPath = Path.valueOf(qualifiedValue.getString());
+                    Path qPath = qualifiedValue.getPath();
                     jcrValue = factory.createValue(PathFormat.format(qPath, nsResolver), propertyType);
                 } catch (NoPrefixDeclaredException npde) {
                     // should never get here...
@@ -163,7 +163,7 @@ public class ValueFormat {
                 break;
             case PropertyType.NAME:
                 try {
-                    QName qName = QName.valueOf(qualifiedValue.getString());
+                    QName qName = qualifiedValue.getQName();
                     jcrValue = factory.createValue(NameFormat.format(qName, nsResolver), propertyType);
                 } catch (NoPrefixDeclaredException npde) {
                     // should never get here...

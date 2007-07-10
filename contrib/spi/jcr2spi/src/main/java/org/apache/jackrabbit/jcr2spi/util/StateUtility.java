@@ -52,7 +52,7 @@ public class StateUtility {
             QName[] newMixins = new QName[values.length];
             for (int i = 0; i < values.length; i++) {
                 try {
-                    newMixins[i] = QName.valueOf(values[i].getString());
+                    newMixins[i] = values[i].getQName();
                 } catch (RepositoryException e) {
                     // ignore: should never occur.
                 }
