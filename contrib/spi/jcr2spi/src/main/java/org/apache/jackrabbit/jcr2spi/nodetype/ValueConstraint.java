@@ -692,7 +692,7 @@ class PathConstraint extends ValueConstraint {
         }
         switch (value.getType()) {
             case PropertyType.PATH:
-                Path p = Path.valueOf(value.getString());
+                Path p = value.getPath();
                 // normalize paths before comparing them
                 Path p0, p1;
                 try {
@@ -801,7 +801,7 @@ class NameConstraint extends ValueConstraint {
         }
         switch (value.getType()) {
             case PropertyType.NAME:
-                QName n = QName.valueOf(value.getString());
+                QName n = value.getQName();
                 if (!name.equals(n)) {
                     throw new ConstraintViolationException(n
                             + " does not satisfy the constraint '"
