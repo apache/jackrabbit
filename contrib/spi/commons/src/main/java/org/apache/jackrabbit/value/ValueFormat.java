@@ -58,6 +58,8 @@ public class ValueFormat {
             } catch (IOException e) {
                 throw new RepositoryException(e);
             }
+        } else if (jcrValue.getType() == PropertyType.DATE) {
+            return factory.create(jcrValue.getDate());
         } else {
             return getQValue(jcrValue.getString(), jcrValue.getType(), nsResolver, factory);
         }
@@ -146,7 +148,6 @@ public class ValueFormat {
         switch (propertyType) {
             case PropertyType.STRING:
             case PropertyType.BOOLEAN:
-            case PropertyType.DATE:
             case PropertyType.DOUBLE:
             case PropertyType.LONG:
             case PropertyType.REFERENCE:
@@ -172,6 +173,9 @@ public class ValueFormat {
                 break;
             case PropertyType.BINARY:
                 jcrValue = factory.createValue(qualifiedValue.getStream());
+                break;
+            case PropertyType.DATE:
+                jcrValue = factory.createValue(qualifiedValue.getCalendar());
                 break;
             default:
                 throw new RepositoryException("illegal internal value type");

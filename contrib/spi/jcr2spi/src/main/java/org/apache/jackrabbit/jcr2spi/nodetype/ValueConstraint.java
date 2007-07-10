@@ -605,7 +605,7 @@ class DateConstraint extends ValueConstraint {
         }
         switch (value.getType()) {
             case PropertyType.DATE:
-                check(ISO8601.parse(value.getString()));
+                check(value.getCalendar());
                 return;
 
             default:

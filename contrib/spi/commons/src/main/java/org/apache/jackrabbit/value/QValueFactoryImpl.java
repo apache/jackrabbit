@@ -94,7 +94,8 @@ public final class QValueFactoryImpl implements QValueFactory {
         if (value == null) {
             throw new IllegalArgumentException("Cannot create QValue from null value.");
         }
-        return new QValueImpl(value);
+        // Calendar is not constant, must create a clone
+        return new QValueImpl((Calendar) value.clone());
     }
 
     /**
@@ -181,7 +182,7 @@ public final class QValueFactoryImpl implements QValueFactory {
         }
 
         private QValueImpl(Calendar value) {
-            val = ISO8601.format(value);
+            val = value;
             type = PropertyType.DATE;
         }
 
@@ -219,7 +220,11 @@ public final class QValueFactoryImpl implements QValueFactory {
          * @see QValue#getString()
          */
         public String getString() throws RepositoryException {
-            return val.toString();
+            if (type == PropertyType.DATE) {
+                return ISO8601.format((Calendar) val);
+            } else {
+                return val.toString();
+            }
         }
 
         /**
@@ -249,7 +254,11 @@ public final class QValueFactoryImpl implements QValueFactory {
          * @see QValue#getCalendar()
          */
         public Calendar getCalendar() throws RepositoryException {
-            throw new RuntimeException("implementation missing");
+            if (type == PropertyType.DATE) {
+                return (Calendar) ((Calendar) val).clone();
+            } else {
+                return ISO8601.parse(getString());
+            }
         }
 
         /**
