@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.ocm.mapper.model;
 
+
 /**
  * 
  * CollectionDescriptor is used by the mapper to read general information on a collection field
@@ -43,7 +44,8 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
      private boolean jcrProtected;
      private boolean jcrSameNameSiblings;     
      private boolean jcrMultiple;
-     
+     private String defaultPrimaryType;
+
      private ClassDescriptor classDescriptor;
     
     /**
@@ -330,4 +332,12 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
 		
 		return "Collection Descriptor : " +  this.getFieldName();
 	}    
+
+    public String getDefaultPrimaryType() {
+        return defaultPrimaryType;
+    }
+
+    public void setDefaultPrimaryType(String defaultPrimaryType) {
+        this.defaultPrimaryType = defaultPrimaryType;
+    }
 }

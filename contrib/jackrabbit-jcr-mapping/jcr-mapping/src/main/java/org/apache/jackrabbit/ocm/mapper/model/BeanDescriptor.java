@@ -16,10 +16,7 @@
  */
 package org.apache.jackrabbit.ocm.mapper.model;
 
-
 import org.apache.jackrabbit.ocm.manager.beanconverter.BeanConverter;
-import org.apache.jackrabbit.ocm.manager.objectconverter.impl.ObjectConverterImpl;
-import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
 
 /**
  * BeanDescriptor is used by the mapper to read general information on a bean field
@@ -46,6 +43,7 @@ public class BeanDescriptor implements ChildNodeDefDescriptor, PropertyDefDescri
     private boolean jcrProtected;
     private boolean jcrSameNameSiblings;
     private boolean jcrMultiple;
+    private String defaultPrimaryType;
 
     /**
      * @return Returns the fieldName.
@@ -285,4 +283,12 @@ public class BeanDescriptor implements ChildNodeDefDescriptor, PropertyDefDescri
 		
 		return "Bean Descriptor : " +  this.fieldName;
 	}    
+
+    public String getDefaultPrimaryType() {
+        return defaultPrimaryType;
+    }
+
+    public void setDefaultPrimaryType(String defaultPrimaryType) {
+        this.defaultPrimaryType = defaultPrimaryType;
+    }
 }
