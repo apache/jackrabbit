@@ -246,6 +246,13 @@ public final class QValueFactoryImpl implements QValueFactory {
         }
 
         /**
+         * @see QValue#getCalendar()
+         */
+        public Calendar getCalendar() throws RepositoryException {
+            throw new RuntimeException("implementation missing");
+        }
+
+        /**
          * @see QValue#getPath()
          */
         public Path getPath() throws RepositoryException {
@@ -534,6 +541,13 @@ public final class QValueFactoryImpl implements QValueFactory {
          */
         public QName getQName() throws RepositoryException {
             throw new UnsupportedOperationException();
+        }
+
+        /**
+         * @see QValue#getCalendar()
+         */
+        public Calendar getCalendar() throws RepositoryException {
+           throw new UnsupportedOperationException();
         }
 
         /**
