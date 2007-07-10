@@ -78,6 +78,12 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
     private Map readOnlySubscriptions;
 
     /**
+     * Indicates if this observation manager is registered as an internal event
+     * listener on the workspace manager.
+     */
+    private boolean isRegistered = false;
+
+    /**
      * Creates a new observation manager for <code>session</code>.
      * @param wspManager the WorkspaceManager.
      * @param nsResolver NamespaceResolver to be used by this observation manager
@@ -88,7 +94,6 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
         this.wspManager = wspManager;
         this.nsResolver = nsResolver;
         this.ntRegistry = ntRegistry;
-        this.wspManager.addEventListener(this);
     }
 
     /**
@@ -101,6 +106,10 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
                                  String[] uuids,
                                  String[] nodeTypeNames,
                                  boolean noLocal) throws RepositoryException {
+        if (!isRegistered) {
+            wspManager.addEventListener(this);
+            isRegistered = true;
+        }
         Path path;
         try {
             path = PathFormat.parse(absPath, nsResolver).getCanonicalPath();
