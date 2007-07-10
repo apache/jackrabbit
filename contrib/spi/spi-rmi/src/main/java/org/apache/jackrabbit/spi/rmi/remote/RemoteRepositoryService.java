@@ -669,8 +669,19 @@ public interface RemoteRepositoryService extends Remote {
      * @return
      * @throws javax.jcr.RepositoryException
      * @throws RemoteException if an error occurs.
-     * @see org.apache.jackrabbit.spi.RepositoryService#getNodeTypeDefinitions(org.apache.jackrabbit.spi.SessionInfo)
+     * @see org.apache.jackrabbit.spi.RepositoryService#getQNodeTypeDefinitions(org.apache.jackrabbit.spi.SessionInfo)
      */
-    public QNodeTypeDefinition[] getNodeTypeDefinitions(RemoteSessionInfo sessionInfo)
+    public QNodeTypeDefinition[] getQNodeTypeDefinitions(RemoteSessionInfo sessionInfo)
             throws RepositoryException, RemoteException;
+
+    /**
+     * Retrieve the <code>QNodeTypeDefinition</code> for the given node type name.
+     *
+     * @param sessionInfo
+     * @return
+     * @throws javax.jcr.RepositoryException
+     * @throws RemoteException if an error occurs.
+     * @see org.apache.jackrabbit.spi.RepositoryService#getQNodeTypeDefinition(org.apache.jackrabbit.spi.SessionInfo, QName)
+     */
+    public QNodeTypeDefinition getQNodeTypeDefinition(RemoteSessionInfo sessionInfo, QName ntName) throws RepositoryException, RemoteException;
 }

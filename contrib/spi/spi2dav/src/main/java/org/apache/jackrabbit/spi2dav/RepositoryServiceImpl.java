@@ -1852,8 +1852,40 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * {@inheritDoc}
      */
     public QNodeTypeDefinition getQNodeTypeDefinition(SessionInfo sessionInfo, QName nodetypeName) throws RepositoryException {
-        // TODO: implement me
-        throw new RuntimeException("implementation for getQNodeTypeDefinition missing");
+        ReportMethod method = null;
+        try {
+            NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
+
+            ReportInfo info = new ReportInfo(NodeTypesReport.NODETYPES_REPORT, DEPTH_0);
+            Element el = DomUtil.createElement(domFactory, NodeTypeConstants.XML_NODETYPE, NodeTypeConstants.NAMESPACE);
+            String jcrName = NameFormat.format(nodetypeName, resolver);
+            DomUtil.addChildElement(el, NodeTypeConstants.XML_NODETYPENAME, NodeTypeConstants.NAMESPACE, jcrName);
+            info.setContentElement(el);
+
+            String workspaceUri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
+            method = new ReportMethod(workspaceUri, info);
+            getClient(sessionInfo).executeMethod(method);
+            method.checkSuccess();
+
+            Document reportDoc = method.getResponseBodyAsDocument();
+            Element ntDefEl = DomUtil.getChildElement(reportDoc.getDocumentElement(), NodeTypeConstants.NODETYPE_ELEMENT, null);
+            QNodeTypeDefinition def = new QNodeTypeDefinitionImpl(ntDefEl, resolver, getQValueFactory());
+            // refresh node type definitions map
+            synchronized (nodeTypeDefinitions) {
+                nodeTypeDefinitions.put(def.getQName(), def);
+            }
+            return def;
+        } catch (IOException e) {
+            throw new RepositoryException(e);
+        } catch (DavException e) {
+            throw ExceptionConverter.generate(e);
+        } catch (NoPrefixDeclaredException e) {
+            throw new RepositoryException(e);
+        } finally {
+            if (method != null) {
+                method.releaseConnection();
+            }
+        }
     }
 
     /**
