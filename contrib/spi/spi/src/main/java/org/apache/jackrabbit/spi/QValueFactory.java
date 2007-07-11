@@ -27,56 +27,74 @@ import java.util.Calendar;
 import javax.jcr.RepositoryException;
 
 /**
- * <code>QValueFactory</code>...
+ * <code>QValueFactory</code> defines methods to create <code>QValue</code>
+ * instances.
  */
 public interface QValueFactory {
 
     /**
-     * @param value
-     * @param type
-     * @return
+     * Create a new <code>QValue</code> using the given String representation
+     * of the value and its {@link javax.jcr.PropertyType type}.
+     *
+     * @param value String representation of the new <code>QValue</code>. Note,
+     * that the given String must never be <code>null</code>.
+     * @param type A valid {@link javax.jcr.PropertyType type}.
+     * @return a new <code>QValue</code>.
+     * @see QValue#getType()
      */
     public QValue create(String value, int type);
 
     /**
-     * @param value
-     * @return
+     * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#DATE}.
+     *
+     * @param value A non-null <code>Calendar</code> object acting as value
+     * of the new <code>QValue</code>.
+     * @return a new <code>QValue</code>.
      */
     public QValue create(Calendar value);
 
     /**
-     * @param value
-     * @return
+     * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#NAME}.
+     *
+     * @param value A non-null <code>QName</code>.
+     * @return a new <code>QValue</code>.
      */
     public QValue create(QName value);
 
     /**
-     * @param value
-     * @return
+     * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#PATH}.
+     *
+     * @param value A non-null <code>Path</code>.
+     * @return a new <code>QValue</code>.
      */
     public QValue create(Path value);
 
 
     /**
+     * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#BINARY}.
+     *
      * @param value
-     * @return
+     * @return a new <code>QValue</code>.
      */
     public QValue create(byte[] value);
 
     /**
      * Creates a QValue that contains the given binary stream.
-     * The given stream is consumed and closed by this method.
+     * The given stream is consumed and closed by this method. The type of the
+     * resulting QValue will be {@link javax.jcr.PropertyType#BINARY}.
      *
      * @param value binary stream
-     * @return binary value
+     * @return a new binary <code>QValue</code>.
      * @throws RepositoryException if the value could not be created
      * @throws IOException if the stream can not be consumed
      */
     public QValue create(InputStream value) throws RepositoryException, IOException;
 
     /**
+     * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#BINARY}.
+     *
      * @param value
-     * @return
+     * @return a new binarly <code>QValue</code>.
      * @throws IOException
      */
     public QValue create(File value) throws IOException;
