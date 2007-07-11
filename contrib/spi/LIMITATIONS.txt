@@ -3,6 +3,11 @@ Apache Jackrabbit SPI - Limitations
 ===============================================================================
 
 --------------------------------------------------------------------------------
+ spi
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
  jcr2spi
 --------------------------------------------------------------------------------
 
@@ -10,7 +15,10 @@ Apache Jackrabbit SPI - Limitations
   another Session that had accessed the namespace before.
   We decided that we will in first step not implement any cache-invalidation.
 
-
+- Session.addLockToken will always succeed.
+  JSR170 defines that a token can be present with one session only.
+  However, the SPI does not allow to find out about another session holding 
+  the lock nor does the SPI impl. know, which Session instance holds the token.
 
 
 --------------------------------------------------------------------------------
