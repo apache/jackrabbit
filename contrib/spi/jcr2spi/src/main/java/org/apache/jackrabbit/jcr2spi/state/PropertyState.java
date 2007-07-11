@@ -83,16 +83,13 @@ public class PropertyState extends ItemState {
      * @param entry
      * @param pInfo
      * @param isf
-     * @param definition
      * @param definitionProvider
      */
     protected PropertyState(PropertyEntry entry, PropertyInfo pInfo,
                             ItemStateFactory isf,
-                            QPropertyDefinition definition,
                             ItemDefinitionProvider definitionProvider) {
         super(entry, isf, definitionProvider);
         this.multiValued = pInfo.isMultiValued();
-        this.definition = definition;
         this.transientData = null;
         this.pInfo = pInfo;
     }
