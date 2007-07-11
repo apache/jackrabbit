@@ -32,7 +32,6 @@ import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 
@@ -613,14 +612,14 @@ public class RepositoryServiceLogger implements RepositoryService {
         }, "getQNodeTypeDefinitions(SessionInfo)", new Object[]{});
     }
 
-    public QNodeTypeDefinition getQNodeTypeDefinition(
-            final SessionInfo sessionInfo,final QName name)
+    public Iterator getQNodeTypeDefinitions(
+            final SessionInfo sessionInfo,final QName[] ntNames)
             throws RepositoryException {
-        return (QNodeTypeDefinition) execute(new Callable() {
+        return (Iterator) execute(new Callable() {
             public Object call() throws RepositoryException {
-                return service.getQNodeTypeDefinition(sessionInfo, name);
+                return service.getQNodeTypeDefinitions(sessionInfo, ntNames);
             }
-        }, "getQNodeTypeDefinition(SessionInfo,QName)", new Object[]{name});
+        }, "getQNodeTypeDefinition(SessionInfo,QName)", new Object[]{ntNames});
     }
 
     private Object execute(Callable callable, String methodName, Object[] args)

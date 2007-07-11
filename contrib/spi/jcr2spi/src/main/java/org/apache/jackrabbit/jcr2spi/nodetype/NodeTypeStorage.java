@@ -21,11 +21,32 @@ import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.RepositoryException;
+import java.util.Iterator;
 
 /**
  * <code>NodeTypeStorage</code>...
  */
 public interface NodeTypeStorage {
+
+    /**
+     * Returns an Iterator over all node type definitions registered.
+     *
+     * @return
+     * @throws RepositoryException
+     */
+    public Iterator getAllDefinitions() throws RepositoryException;
+
+    /**
+     * Returns the <code>QNodeTypeDefinition</code>s for the given node type
+     * names. The implementation is free to return additional definitions e.g.
+     * dependencies.
+     *
+     * @param nodeTypeNames
+     * @return
+     * @throws NoSuchNodeTypeException
+     * @throws RepositoryException
+     */
+    public Iterator getDefinitions(QName[] nodeTypeNames) throws NoSuchNodeTypeException, RepositoryException;
 
     public void registerNodeTypes(QNodeTypeDefinition[] nodeTypeDefs) throws NoSuchNodeTypeException, RepositoryException;
 

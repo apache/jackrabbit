@@ -820,35 +820,23 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
     /**
      * {@inheritDoc}
      */
-    public QNodeTypeDefinition[] getQNodeTypeDefinitions(RemoteSessionInfo sessionInfo)
+    public RemoteIterator getQNodeTypeDefinitions(RemoteSessionInfo sessionInfo)
             throws RepositoryException, RemoteException {
         Iterator it = service.getQNodeTypeDefinitions(getSessionInfo(sessionInfo));
-        List nts = new ArrayList();
-        while (it.hasNext()) {
-            QNodeTypeDefinition nt = (QNodeTypeDefinition) it.next();
-            if (nt instanceof Serializable) {
-                nts.add(nt);
-            } else {
-                nts.add(new QNodeTypeDefinitionImpl(nt));
-            }
-        }
-        return (QNodeTypeDefinition[]) nts.toArray(new QNodeTypeDefinition[nts.size()]);
+        return getQNodeTypeDefinitionIterator(it);
     }
 
     /**
      * {@inheritDoc}
      */
-    public QNodeTypeDefinition getQNodeTypeDefinition(RemoteSessionInfo sessionInfo, QName ntName)
+    public RemoteIterator getQNodeTypeDefinitions(RemoteSessionInfo sessionInfo,
+                                                 QName[] ntNames)
             throws RepositoryException, RemoteException {
-        QNodeTypeDefinition ntDef = service.getQNodeTypeDefinition(getSessionInfo(sessionInfo), ntName);
-        if (ntDef instanceof Serializable) {
-            return ntDef;
-        } else {
-            return new QNodeTypeDefinitionImpl(ntDef);
-        }
+        Iterator it = service.getQNodeTypeDefinitions(getSessionInfo(sessionInfo), ntNames);
+        return getQNodeTypeDefinitionIterator(it);
     }
-    //---------------------------< internal >-----------------------------------
 
+    //---------------------------< internal >-----------------------------------
     /**
      * Creates a server session info for the given <code>sessionInfo</code>.
      *
@@ -920,5 +908,24 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
             }
         }
         return filters;
+    }
+
+    /**
+     *
+     * @param it
+     * @return
+     * @throws RemoteException
+     */
+    private RemoteIterator getQNodeTypeDefinitionIterator(Iterator it) throws RemoteException {
+        List nts = new ArrayList();
+        while (it.hasNext()) {
+            QNodeTypeDefinition nt = (QNodeTypeDefinition) it.next();
+            if (nt instanceof Serializable) {
+                nts.add(nt);
+            } else {
+                nts.add(new QNodeTypeDefinitionImpl(nt));
+            }
+        }
+        return new ServerIterator(nts.iterator(), DEFAULT_BUFFER_SIZE);
     }
 }

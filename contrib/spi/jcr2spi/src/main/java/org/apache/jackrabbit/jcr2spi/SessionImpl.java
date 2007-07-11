@@ -138,7 +138,7 @@ public class SessionImpl implements Session, ManagerProvider {
         nsMappings = new LocalNamespaceMappings(workspace.getNamespaceRegistryImpl());
 
         // build nodetype manager
-        ntManager = new NodeTypeManagerImpl(workspace.getNodeTypeRegistry(), this, getJcrValueFactory(), getQValueFactory());
+        ntManager = new NodeTypeManagerImpl(workspace.getNodeTypeRegistry(), this, getJcrValueFactory());
         validator = new ItemStateValidator(this);
 
         itemStateManager = createSessionItemStateManager(workspace.getUpdatableItemStateManager(), workspace.getItemStateFactory());
