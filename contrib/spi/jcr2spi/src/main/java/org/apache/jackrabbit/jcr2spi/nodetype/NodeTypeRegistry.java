@@ -67,7 +67,7 @@ public interface NodeTypeRegistry {
      *
      * @return the names of all registered node types.
      */
-    public QName[] getRegisteredNodeTypes();
+    public QName[] getRegisteredNodeTypes() throws RepositoryException;
 
     /**
      * Validates the <code>NodeTypeDef</code> and returns

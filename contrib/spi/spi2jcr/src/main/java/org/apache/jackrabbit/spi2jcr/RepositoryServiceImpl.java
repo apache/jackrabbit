@@ -23,7 +23,6 @@ import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.NodeInfo;
@@ -1000,16 +999,26 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public QNodeTypeDefinition getQNodeTypeDefinition(SessionInfo sessionInfo, QName nodetypeName) throws RepositoryException {
+    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, QName[] nodetypeNames) throws RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         NodeTypeManager ntMgr = sInfo.getSession().getWorkspace().getNodeTypeManager();
-        try {
-            String ntName = NameFormat.format(nodetypeName, sInfo.getNamespaceResolver());
-            NodeType nt = ntMgr.getNodeType(ntName);
-            return new QNodeTypeDefinitionImpl(nt, sInfo.getNamespaceResolver(), getQValueFactory());
-        } catch (NameException e) {
-            throw new RepositoryException(e);
+        List defs = new ArrayList();
+        for (int i = 0; i < nodetypeNames.length; i++) {
+            try {
+                String ntName = NameFormat.format(nodetypeNames[i], sInfo.getNamespaceResolver());
+                NodeType nt = ntMgr.getNodeType(ntName);
+                defs.add(new QNodeTypeDefinitionImpl(nt, sInfo.getNamespaceResolver(), getQValueFactory()));
+
+                // in addition pack all supertypes into the return value
+                NodeType[] supertypes = nt.getSupertypes();
+                for (int st = 0; st < supertypes.length; st++) {
+                    defs.add(new QNodeTypeDefinitionImpl(supertypes[i], sInfo.getNamespaceResolver(), getQValueFactory()));
+                }
+            } catch (NameException e) {
+                throw new RepositoryException(e);
+            }
         }
+        return defs.iterator();
     }
 
     //----------------------------< internal >----------------------------------

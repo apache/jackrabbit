@@ -769,10 +769,15 @@ public interface RepositoryService {
     public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException;
 
     /**
-     * Retrieve a specific <code>QNodeTypeDefinition</code>.
+     * Retrieve <code>QNodeTypeDefinition</code>s for the given names. The
+     * implementation is free to return additional definitions which will (probably)
+     * be needed by the caller due to node type inheritance. The caller must be
+     * able to deal with any kind of additional <code>QNodeTypeDefinition</code>s
+     * present in the <code>Iterator</code> irrespective whether they have been
+     * loaded before or not.
      *
      * @param sessionInfo
-     * @param nodetypeName name of node type to retrieve
+     * @param nodetypeNames names of node types to retrieve
      * @return {@link QNodeTypeDefinition}
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Workspace#getNodeTypeManager()
@@ -781,5 +786,5 @@ public interface RepositoryService {
      * @see javax.jcr.nodetype.NodeTypeManager#getPrimaryNodeTypes()
      * @see javax.jcr.nodetype.NodeTypeManager#getNodeType(String)
      */
-    public QNodeTypeDefinition getQNodeTypeDefinition(SessionInfo sessionInfo, QName nodetypeName) throws RepositoryException;
+    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, QName[] nodetypeNames) throws RepositoryException;
 }

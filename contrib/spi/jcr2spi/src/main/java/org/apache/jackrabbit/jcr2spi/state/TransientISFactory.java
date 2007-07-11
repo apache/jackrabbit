@@ -34,16 +34,20 @@ import java.util.Iterator;
 /**
  * <code>TransientISFactory</code>...
  */
-public final class TransientISFactory extends AbstractItemStateFactory implements TransientItemStateFactory  {
+public final class TransientISFactory extends AbstractItemStateFactory implements TransientItemStateFactory, ItemStateCreationListener  {
 
     private static Logger log = LoggerFactory.getLogger(TransientISFactory.class);
 
     private final ItemStateFactory workspaceStateFactory;
     private final ItemDefinitionProvider defProvider;
 
-    public TransientISFactory(ItemStateFactory workspaceStateFactory, ItemDefinitionProvider defProvider) {
+    public TransientISFactory(AbstractItemStateFactory workspaceStateFactory, ItemDefinitionProvider defProvider) {
         this.workspaceStateFactory = workspaceStateFactory;
         this.defProvider = defProvider;
+        // start listening to 'creations' on the workspaceStateFactory (and
+        // consequently skip an extra notification if the has been built by the
+        // workspaceStateFactory.
+        workspaceStateFactory.addCreationListener(this);
     }
 
     //------------------------------------------< TransientItemStateFactory >---
@@ -82,8 +86,6 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
      */
     public NodeState createRootState(NodeEntry entry) throws ItemNotFoundException, RepositoryException {
         NodeState state = workspaceStateFactory.createRootState(entry);
-        notifyCreated(state);
-
         return state;
     }
 
@@ -94,8 +96,6 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
     public NodeState createNodeState(NodeId nodeId, NodeEntry entry)
             throws ItemNotFoundException, RepositoryException {
         NodeState state = workspaceStateFactory.createNodeState(nodeId, entry);
-        notifyCreated(state);
-
         return state;
     }
 
@@ -106,8 +106,6 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
     public NodeState createDeepNodeState(NodeId nodeId, NodeEntry anyParent)
             throws ItemNotFoundException, RepositoryException {
         NodeState state = workspaceStateFactory.createDeepNodeState(nodeId, anyParent);
-        notifyCreated(state);
-
         return state;
     }
 
@@ -118,10 +116,7 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
     public PropertyState createPropertyState(PropertyId propertyId,
                                              PropertyEntry entry)
             throws ItemNotFoundException, RepositoryException {
-
         PropertyState state = workspaceStateFactory.createPropertyState(propertyId, entry);
-        notifyCreated(state);
-
         return state;
 
     }
@@ -131,8 +126,6 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
      */
     public PropertyState createDeepPropertyState(PropertyId propertyId, NodeEntry anyParent) throws ItemNotFoundException, RepositoryException {
         PropertyState state = workspaceStateFactory.createDeepPropertyState(propertyId, anyParent);
-        notifyCreated(state);
-
         return state;
     }
 
@@ -153,5 +146,21 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
             return EmptyNodeReferences.getInstance();
         }
         return workspaceStateFactory.getNodeReferences(nodeState);
+    }
+
+    //------------------------------------------< ItemStateCreationListener >---
+    /**
+     * @see ItemStateCreationListener#created(ItemState)
+     */
+    public void created(ItemState state) {
+        log.debug("ItemState created by WorkspaceItemStateFactory");
+        notifyCreated(state);
+    }
+
+    /**
+     * @see ItemStateCreationListener#statusChanged(ItemState, int)
+     */
+    public void statusChanged(ItemState state, int previousStatus) {
+        // ignore
     }
 }

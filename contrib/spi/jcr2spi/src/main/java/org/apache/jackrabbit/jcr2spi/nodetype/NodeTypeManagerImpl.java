@@ -29,7 +29,6 @@ import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.QValueFactory;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -77,11 +76,6 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
     private final ValueFactory valueFactory;
 
     /**
-     * The QValueFactory used to convert JCR values to qualified ones.
-     */
-    private final QValueFactory qValueFactory;
-
-    /**
      * A cache for <code>NodeType</code> instances created by this
      * <code>NodeTypeManager</code>
      */
@@ -106,12 +100,11 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
      * @param nsResolver namespace resolver
      */
     public NodeTypeManagerImpl(NodeTypeRegistry ntReg, ManagerProvider mgrProvider,
-                               ValueFactory valueFactory, QValueFactory qValueFactory) {
+                               ValueFactory valueFactory) {
         this.mgrProvider = mgrProvider;
         this.ntReg = ntReg;
         this.ntReg.addListener(this);
         this.valueFactory = valueFactory;
-        this.qValueFactory = qValueFactory;
 
         // setup caches with soft references to node type
         ntCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);

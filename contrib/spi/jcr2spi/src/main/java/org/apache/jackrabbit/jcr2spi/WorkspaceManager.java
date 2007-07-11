@@ -160,7 +160,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         Map repositoryDescriptors = service.getRepositoryDescriptors();
         nsRegistry = createNamespaceRegistry(repositoryDescriptors);
         QNodeDefinition rootNodeDef = service.getNodeDefinition(sessionInfo, service.getRootId(sessionInfo));
-        ntRegistry = createNodeTypeRegistry(rootNodeDef, nsRegistry, repositoryDescriptors);
+        ntRegistry = createNodeTypeRegistry(rootNodeDef, nsRegistry);
         changeFeed = createChangeFeed(pollTimeout);
         definitionProvider = createDefinitionProvider(rootNodeDef, getEffectiveNodeTypeProvider());
 
@@ -346,7 +346,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @return
      */
     private TransientItemStateFactory createItemStateFactory() {
-        ItemStateFactory isf = new WorkspaceItemStateFactory(service, sessionInfo, getItemDefinitionProvider());
+        WorkspaceItemStateFactory isf = new WorkspaceItemStateFactory(service, sessionInfo, getItemDefinitionProvider());
         TransientItemStateFactory tisf = new TransientISFactory(isf, getItemDefinitionProvider());
         return tisf;
     }
@@ -385,13 +385,14 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @return
      * @throws RepositoryException
      */
-    private NodeTypeRegistry createNodeTypeRegistry(QNodeDefinition rootNodeDef, NamespaceRegistry nsRegistry, Map descriptors) throws RepositoryException {
-        Iterator it = service.getQNodeTypeDefinitions(sessionInfo);
-        List ntDefs = new ArrayList();
-        while (it.hasNext()) {
-            ntDefs.add(it.next());
-        }
+    private NodeTypeRegistry createNodeTypeRegistry(QNodeDefinition rootNodeDef, NamespaceRegistry nsRegistry) {
         NodeTypeStorage ntst = new NodeTypeStorage() {
+            public Iterator getAllDefinitions() throws RepositoryException {
+                return service.getQNodeTypeDefinitions(sessionInfo);
+            }
+            public Iterator getDefinitions(QName[] nodeTypeNames) throws NoSuchNodeTypeException, RepositoryException {
+                return service.getQNodeTypeDefinitions(sessionInfo, nodeTypeNames);
+            }
             public void registerNodeTypes(QNodeTypeDefinition[] nodeTypeDefs) throws NoSuchNodeTypeException, RepositoryException {
                 throw new UnsupportedOperationException("NodeType registration not yet defined by the SPI");
             }
@@ -402,7 +403,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                 throw new UnsupportedOperationException("NodeType registration not yet defined by the SPI");
             }
         };
-        return NodeTypeRegistryImpl.create(ntDefs, ntst, rootNodeDef, nsRegistry);
+        return NodeTypeRegistryImpl.create(ntst, rootNodeDef, nsRegistry);
     }
 
     /**

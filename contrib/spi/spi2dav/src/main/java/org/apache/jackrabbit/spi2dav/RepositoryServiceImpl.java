@@ -1822,21 +1822,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             method.checkSuccess();
 
             Document reportDoc = method.getResponseBodyAsDocument();
-            ElementIterator it = DomUtil.getChildren(reportDoc.getDocumentElement(), NodeTypeConstants.NODETYPE_ELEMENT, null);
-            List ntDefs = new ArrayList();
-            NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
-            while (it.hasNext()) {
-                ntDefs.add(new QNodeTypeDefinitionImpl(it.nextElement(), resolver, getQValueFactory()));
-            }
-            // refresh node type definitions map
-            synchronized (nodeTypeDefinitions) {
-                nodeTypeDefinitions.clear();
-                for (Iterator defIt = ntDefs.iterator(); defIt.hasNext(); ) {
-                    QNodeTypeDefinition def = (QNodeTypeDefinition) defIt.next();
-                    nodeTypeDefinitions.put(def.getQName(), def);
-                }
-            }
-            return ntDefs.iterator();
+            return retrieveQNodeTypeDefinitions(sessionInfo, reportDoc);
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1851,16 +1837,18 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * {@inheritDoc}
      */
-    public QNodeTypeDefinition getQNodeTypeDefinition(SessionInfo sessionInfo, QName nodetypeName) throws RepositoryException {
+    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, QName[] nodetypeNames) throws RepositoryException {
         ReportMethod method = null;
         try {
             NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
 
             ReportInfo info = new ReportInfo(NodeTypesReport.NODETYPES_REPORT, DEPTH_0);
-            Element el = DomUtil.createElement(domFactory, NodeTypeConstants.XML_NODETYPE, NodeTypeConstants.NAMESPACE);
-            String jcrName = NameFormat.format(nodetypeName, resolver);
-            DomUtil.addChildElement(el, NodeTypeConstants.XML_NODETYPENAME, NodeTypeConstants.NAMESPACE, jcrName);
-            info.setContentElement(el);
+            for (int i = 0; i < nodetypeNames.length; i++) {
+                Element el = DomUtil.createElement(domFactory, NodeTypeConstants.XML_NODETYPE, NodeTypeConstants.NAMESPACE);
+                String jcrName = NameFormat.format(nodetypeNames[i], resolver);
+                DomUtil.addChildElement(el, NodeTypeConstants.XML_NODETYPENAME, NodeTypeConstants.NAMESPACE, jcrName);
+                info.setContentElement(el);
+            }
 
             String workspaceUri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
             method = new ReportMethod(workspaceUri, info);
@@ -1868,13 +1856,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             method.checkSuccess();
 
             Document reportDoc = method.getResponseBodyAsDocument();
-            Element ntDefEl = DomUtil.getChildElement(reportDoc.getDocumentElement(), NodeTypeConstants.NODETYPE_ELEMENT, null);
-            QNodeTypeDefinition def = new QNodeTypeDefinitionImpl(ntDefEl, resolver, getQValueFactory());
-            // refresh node type definitions map
-            synchronized (nodeTypeDefinitions) {
-                nodeTypeDefinitions.put(def.getQName(), def);
-            }
-            return def;
+            return retrieveQNodeTypeDefinitions(sessionInfo, reportDoc);
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1886,6 +1868,31 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 method.releaseConnection();
             }
         }
+    }
+
+    /**
+     * 
+     * @param sessionInfo
+     * @param reportDoc
+     * @return
+     * @throws RepositoryException
+     */
+    private Iterator retrieveQNodeTypeDefinitions(SessionInfo sessionInfo, Document reportDoc) throws RepositoryException {
+        ElementIterator it = DomUtil.getChildren(reportDoc.getDocumentElement(), NodeTypeConstants.NODETYPE_ELEMENT, null);
+            List ntDefs = new ArrayList();
+            NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
+            while (it.hasNext()) {
+                ntDefs.add(new QNodeTypeDefinitionImpl(it.nextElement(), resolver, getQValueFactory()));
+            }
+            // refresh node type definitions map
+            synchronized (nodeTypeDefinitions) {
+                nodeTypeDefinitions.clear();
+                for (Iterator defIt = ntDefs.iterator(); defIt.hasNext(); ) {
+                    QNodeTypeDefinition def = (QNodeTypeDefinition) defIt.next();
+                    nodeTypeDefinitions.put(def.getQName(), def);
+                }
+            }
+            return ntDefs.iterator();
     }
 
     /**

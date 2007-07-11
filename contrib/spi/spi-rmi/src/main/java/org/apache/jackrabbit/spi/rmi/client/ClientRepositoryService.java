@@ -742,12 +742,10 @@ public class ClientRepositoryService implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public Iterator getQNodeTypeDefinitions(
-            SessionInfo sessionInfo) throws RepositoryException {
+    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
         try {
-            QNodeTypeDefinition[] ntDefs = remoteService.getQNodeTypeDefinitions(
-                    getRemoteSessionInfo(sessionInfo));
-            return Arrays.asList(ntDefs).iterator();
+            RemoteIterator it = remoteService.getQNodeTypeDefinitions(getRemoteSessionInfo(sessionInfo));
+            return new ClientIterator(it);
         } catch (RemoteException e) {
             throw new RemoteRepositoryException(e);
         }
@@ -756,16 +754,22 @@ public class ClientRepositoryService implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public QNodeTypeDefinition getQNodeTypeDefinition(SessionInfo sessionInfo, QName nodetypeName) throws RepositoryException {
+    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, QName[] nodetypeNames) throws RepositoryException {
         try {
-            return remoteService.getQNodeTypeDefinition(getRemoteSessionInfo(sessionInfo), nodetypeName);
+            RemoteIterator it = remoteService.getQNodeTypeDefinitions(getRemoteSessionInfo(sessionInfo), nodetypeNames);
+            return new ClientIterator(it);
         } catch (RemoteException e) {
             throw new RemoteRepositoryException(e);
         }
     }
 
     //------------------------------< internal >--------------------------------
-
+    /**
+     *
+     * @param sessionInfo
+     * @return
+     * @throws RepositoryException
+     */
     private RemoteSessionInfo getRemoteSessionInfo(SessionInfo sessionInfo)
             throws RepositoryException {
         if (sessionInfo instanceof ClientSessionInfo) {

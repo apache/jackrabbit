@@ -38,7 +38,6 @@ import javax.jcr.version.OnParentVersionAction;
 import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -57,10 +56,8 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
     private final EffectiveNodeTypeCache entCache;
 
     // map of node type names and node type definitions
-    private final ConcurrentReaderHashMap registeredNTDefs;
-
-    // definition of the root node
-    private final QNodeDefinition rootNodeDef;
+    //private final ConcurrentReaderHashMap registeredNTDefs;
+    private final NodeTypeDefinitionMap registeredNTDefs;
 
     // set of property definitions
     private final Set propDefs;
@@ -90,9 +87,8 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
      * @return <code>NodeTypeRegistry</codes> object
      * @throws RepositoryException
      */
-    public static NodeTypeRegistryImpl create(Collection nodeTypeDefs, NodeTypeStorage storage, QNodeDefinition rootNodeDef, NamespaceRegistry nsRegistry)
-            throws RepositoryException {
-        NodeTypeRegistryImpl ntRegistry = new NodeTypeRegistryImpl(nodeTypeDefs, storage, rootNodeDef, nsRegistry);
+    public static NodeTypeRegistryImpl create(NodeTypeStorage storage, QNodeDefinition rootNodeDef, NamespaceRegistry nsRegistry) {
+        NodeTypeRegistryImpl ntRegistry = new NodeTypeRegistryImpl(storage, rootNodeDef, nsRegistry);
         return ntRegistry;
     }
 
@@ -103,34 +99,20 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
      * @param nsRegistry
      * @throws RepositoryException
      */
-    private NodeTypeRegistryImpl(Collection nodeTypeDefs, NodeTypeStorage storage, QNodeDefinition rootNodeDef, NamespaceRegistry nsRegistry)
-            throws RepositoryException {
+    private NodeTypeRegistryImpl(NodeTypeStorage storage, QNodeDefinition rootNodeDef, NamespaceRegistry nsRegistry) {
         this.storage = storage;
         this.validator = new DefinitionValidator(this, nsRegistry);
 
         entCache = new BitsetENTCacheImpl();
-        registeredNTDefs = new ConcurrentReaderHashMap();
+        //registeredNTDefs = new ConcurrentReaderHashMap();
+        registeredNTDefs = new NodeTypeDefinitionMap();
 
         propDefs = new HashSet();
         nodeDefs = new HashSet();
 
         // setup definition of root node
-        this.rootNodeDef = rootNodeDef;
         synchronized (nodeDefs) {
             nodeDefs.add(rootNodeDef);
-        }
-
-        try {
-            // validate & register the definitions
-            /* Note: since the client reads all nodetypes from the server, it is
-             * not able to distinguish between built-in and custom-defined
-             * nodetypes (compared to Jackrabbit-core) */
-            Map defMap = validator.validateNodeTypeDefs(nodeTypeDefs, new HashMap(registeredNTDefs));
-            internalRegister(defMap);
-        } catch (InvalidNodeTypeDefException intde) {
-            String error = "Unexpected error: Found invalid node type definition.";
-            log.debug(error);
-            throw new RepositoryException(error, intde);
         }
     }
 
@@ -154,8 +136,9 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
     /**
      * @see NodeTypeRegistry#getRegisteredNodeTypes()
      */
-    public QName[] getRegisteredNodeTypes() {
-        return (QName[]) registeredNTDefs.keySet().toArray(new QName[registeredNTDefs.size()]);
+    public QName[] getRegisteredNodeTypes() throws RepositoryException {
+        Set qNames = registeredNTDefs.keySet();
+        return (QName[]) qNames.toArray(new QName[registeredNTDefs.size()]);
     }
 
 
@@ -222,18 +205,14 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
         // do some preliminary checks
         for (Iterator iter = nodeTypeNames.iterator(); iter.hasNext();) {
             QName ntName = (QName) iter.next();
-            if (!registeredNTDefs.containsKey(ntName)) {
-                throw new NoSuchNodeTypeException(ntName.toString());
-            }
-
-            // check for node types other than those to be unregistered
-            // that depend on the given node types
-            Set dependents = getDependentNodeTypes(ntName);
+            
+            // Best effort check for node types other than those to be
+            // unregistered that depend on the given node types
+            Set dependents = registeredNTDefs.getDependentNodeTypes(ntName);
             dependents.removeAll(nodeTypeNames);
             if (dependents.size() > 0) {
                 StringBuffer msg = new StringBuffer();
-                msg.append(ntName
-                        + " can not be removed because the following node types depend on it: ");
+                msg.append(ntName).append(" can not be removed because the following node types depend on it: ");
                 for (Iterator depIter = dependents.iterator(); depIter.hasNext();) {
                     msg.append(depIter.next());
                     msg.append(" ");
@@ -290,7 +269,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
         throws NoSuchNodeTypeException {
         QNodeTypeDefinition def = (QNodeTypeDefinition) registeredNTDefs.get(nodeTypeName);
         if (def == null) {
-            throw new NoSuchNodeTypeException(nodeTypeName.toString());
+            throw new NoSuchNodeTypeException("Nodetype " + nodeTypeName + " doesn't exist");
         }
         return def;
     }
@@ -539,9 +518,13 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
     }
 
     private void internalRegister(QNodeTypeDefinition ntd, EffectiveNodeTypeImpl ent) {
-
-        // store new effective node type instance
-        entCache.put(ent);
+        // store new effective node type instance if present. otherwise it
+        // will be created on demand.
+        if (ent != null) {
+            entCache.put(ent);
+        } else {
+            log.debug("Effective node type for " + ntd + " not yet built.");
+        }
         // register nt-definition
         registeredNTDefs.put(ntd.getQName(), ntd);
 
@@ -561,21 +544,22 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
     }
 
     private void internalUnregister(QName name) {
-        QNodeTypeDefinition ntd = (QNodeTypeDefinition) registeredNTDefs.get(name);
-        registeredNTDefs.remove(name);
+        QNodeTypeDefinition ntd = (QNodeTypeDefinition) registeredNTDefs.remove(name);
         entCache.invalidate(name);
 
-        // remove property & child node definitions
-        QPropertyDefinition[] pda = ntd.getPropertyDefs();
-        synchronized (propDefs) {
-            for (int i = 0; i < pda.length; i++) {
-                propDefs.remove(pda[i]);
+        if (ntd != null) {
+            // remove property & child node definitions
+            QPropertyDefinition[] pda = ntd.getPropertyDefs();
+            synchronized (propDefs) {
+                for (int i = 0; i < pda.length; i++) {
+                    propDefs.remove(pda[i]);
+                }
             }
-        }
-        synchronized (nodeDefs) {
-            QNodeDefinition[] nda = ntd.getChildNodeDefs();
-            for (int i = 0; i < nda.length; i++) {
-                nodeDefs.remove(nda[i]);
+            synchronized (nodeDefs) {
+                QNodeDefinition[] nda = ntd.getChildNodeDefs();
+                for (int i = 0; i < nda.length; i++) {
+                    nodeDefs.remove(nda[i]);
+                }
             }
         }
     }
@@ -587,32 +571,6 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
         }
     }
 
-   /**
-     * Returns the names of those registered node types that have
-     * dependencies on the given node type.
-     *
-     * @param nodeTypeName node type name
-     * @return a set of node type <code>QName</code>s
-     * @throws NoSuchNodeTypeException
-     */
-    private Set getDependentNodeTypes(QName nodeTypeName)
-            throws NoSuchNodeTypeException {
-        if (!registeredNTDefs.containsKey(nodeTypeName)) {
-            throw new NoSuchNodeTypeException(nodeTypeName.toString());
-        }
-
-        // get names of those node types that have dependencies on the given nt
-        HashSet names = new HashSet();
-        Iterator iter = registeredNTDefs.values().iterator();
-        while (iter.hasNext()) {
-            QNodeTypeDefinition ntd = (QNodeTypeDefinition) iter.next();
-            if (ntd.getDependencies().contains(nodeTypeName)) {
-                names.add(ntd.getQName());
-            }
-        }
-        return names;
-    }
-
     //-----------------------------------------------------------< Dumpable >---
     /**
      * {@inheritDoc}
@@ -620,87 +578,223 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
     public void dump(PrintStream ps) {
         ps.println("NodeTypeRegistry (" + this + ")");
         ps.println();
-        ps.println("Registered NodeTypes:");
+        ps.println("Known NodeTypes:");
         ps.println();
-        Iterator iter = registeredNTDefs.values().iterator();
-        while (iter.hasNext()) {
-            QNodeTypeDefinition ntd = (QNodeTypeDefinition) iter.next();
-            ps.println(ntd.getQName());
-            QName[] supertypes = ntd.getSupertypes();
-            ps.println("\tSupertypes");
-            for (int i = 0; i < supertypes.length; i++) {
-                ps.println("\t\t" + supertypes[i]);
-            }
-            ps.println("\tMixin\t" + ntd.isMixin());
-            ps.println("\tOrderableChildNodes\t" + ntd.hasOrderableChildNodes());
-            ps.println("\tPrimaryItemName\t" + (ntd.getPrimaryItemName() == null ? "<null>" : ntd.getPrimaryItemName().toString()));
-            QPropertyDefinition[] pd = ntd.getPropertyDefs();
-            for (int i = 0; i < pd.length; i++) {
-                ps.print("\tPropertyDefinition");
-                ps.println(" (declared in " + pd[i].getDeclaringNodeType() + ") ");
-                ps.println("\t\tName\t\t" + (pd[i].definesResidual() ? "*" : pd[i].getQName().toString()));
-                String type = pd[i].getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(pd[i].getRequiredType());
-                ps.println("\t\tRequiredType\t" + type);
-                String[] vca = pd[i].getValueConstraints();
-                StringBuffer constraints = new StringBuffer();
-                if (vca == null) {
-                    constraints.append("<null>");
-                } else {
-                    for (int n = 0; n < vca.length; n++) {
-                        if (constraints.length() > 0) {
-                            constraints.append(", ");
-                        }
-                        constraints.append(vca[n]);
-                    }
-                }
-                ps.println("\t\tValueConstraints\t" + constraints.toString());
-                QValue[] defVals = pd[i].getDefaultValues();
-                StringBuffer defaultValues = new StringBuffer();
-                if (defVals == null) {
-                    defaultValues.append("<null>");
-                } else {
-                    for (int n = 0; n < defVals.length; n++) {
-                        if (defaultValues.length() > 0) {
-                            defaultValues.append(", ");
-                        }
-                        try {
-                            defaultValues.append(defVals[n].getString());
-                        } catch (RepositoryException e) {
-                            defaultValues.append(defVals[n].toString());
-                        }
-                    }
-                }
-                ps.println("\t\tDefaultValue\t" + defaultValues.toString());
-                ps.println("\t\tAutoCreated\t" + pd[i].isAutoCreated());
-                ps.println("\t\tMandatory\t" + pd[i].isMandatory());
-                ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(pd[i].getOnParentVersion()));
-                ps.println("\t\tProtected\t" + pd[i].isProtected());
-                ps.println("\t\tMultiple\t" + pd[i].isMultiple());
-            }
-            QNodeDefinition[] nd = ntd.getChildNodeDefs();
-            for (int i = 0; i < nd.length; i++) {
-                ps.print("\tNodeDefinition");
-                ps.println(" (declared in " + nd[i].getDeclaringNodeType() + ") ");
-                ps.println("\t\tName\t\t" + (nd[i].definesResidual() ? "*" : nd[i].getQName().toString()));
-                QName[] reqPrimaryTypes = nd[i].getRequiredPrimaryTypes();
-                if (reqPrimaryTypes != null && reqPrimaryTypes.length > 0) {
-                    for (int n = 0; n < reqPrimaryTypes.length; n++) {
-                        ps.print("\t\tRequiredPrimaryType\t" + reqPrimaryTypes[n]);
-                    }
-                }
-                QName defPrimaryType = nd[i].getDefaultPrimaryType();
-                if (defPrimaryType != null) {
-                    ps.print("\n\t\tDefaultPrimaryType\t" + defPrimaryType);
-                }
-                ps.println("\n\t\tAutoCreated\t" + nd[i].isAutoCreated());
-                ps.println("\t\tMandatory\t" + nd[i].isMandatory());
-                ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(nd[i].getOnParentVersion()));
-                ps.println("\t\tProtected\t" + nd[i].isProtected());
-                ps.println("\t\tAllowsSameNameSiblings\t" + nd[i].allowsSameNameSiblings());
-            }
-        }
+        registeredNTDefs.dump(ps);
         ps.println();
 
         entCache.dump(ps);
+    }
+
+    //--------------------------------------------------------< inner class >---
+    /**
+     * Inner class representing the map of <code>QNodeTypeDefinition</code>s
+     * that have been loaded yet.
+     */
+    private class NodeTypeDefinitionMap implements Map, Dumpable {
+
+        // map of node type names and node type definitions
+        private final ConcurrentReaderHashMap nodetypeDefinitions = new ConcurrentReaderHashMap();
+
+        /**
+         * Returns the names of those registered node types that have
+         * dependencies on the given node type.<p/>
+         * Note, that the returned Set may not be complete with respect
+         * to all node types registered within the repository. Instead it
+         * will only contain those node type definitions that are known so far.
+         *
+         * @param nodeTypeName node type name
+         * @return a set of node type <code>QName</code>s
+         * @throws NoSuchNodeTypeException
+         */
+        private Set getDependentNodeTypes(QName nodeTypeName) throws NoSuchNodeTypeException {
+            if (!nodetypeDefinitions.containsKey(nodeTypeName)) {
+                throw new NoSuchNodeTypeException(nodeTypeName.toString());
+            }
+            // get names of those node types that have dependencies on the
+            // node type with the given nodeTypeName.
+            HashSet names = new HashSet();
+            Iterator iter = nodetypeDefinitions.values().iterator();
+            while (iter.hasNext()) {
+                QNodeTypeDefinition ntd = (QNodeTypeDefinition) iter.next();
+                if (ntd.getDependencies().contains(nodeTypeName)) {
+                    names.add(ntd.getQName());
+                }
+            }
+            return names;
+        }
+
+        private void updateInternalMap(Iterator definitions) {
+            // since definition were retrieved from the storage, valiation
+            // can be omitted -> register without building effective-nodetype.
+            // TODO: check if correct
+            while (definitions.hasNext()) {
+                internalRegister((QNodeTypeDefinition) definitions.next(), null);
+            }
+        }
+
+        //------------------------------------------------------------< Map >---
+        public int size() {
+            return nodetypeDefinitions.size();
+        }
+
+        public void clear() {
+            throw new UnsupportedOperationException("Implementation missing");
+        }
+
+        public boolean isEmpty() {
+            return nodetypeDefinitions.isEmpty();
+        }
+
+        public boolean containsKey(Object key) {
+            if (!(key instanceof QName)) {
+                return false;
+            }
+            return get(key) != null;
+        }
+
+        public boolean containsValue(Object value) {
+            if (!(value instanceof QNodeTypeDefinition)) {
+                return false;
+            }
+            return get(((QNodeTypeDefinition)value).getQName()) != null;
+        }
+
+        public Set keySet() {
+            // to be aware of all (recently) registered nodetypes retrieve
+            // complete set from the storage again and add missing / replace
+            // existing definitions.
+            try {
+                Iterator it = storage.getAllDefinitions();
+                updateInternalMap(it);
+            } catch (RepositoryException e) {
+                log.error(e.getMessage());
+            }
+            return nodetypeDefinitions.keySet();
+        }
+
+        public Collection values() {
+            // make sure all node type definitions have been loaded.
+            keySet();
+            // and retrieve the collection containing all definitions.
+            return nodetypeDefinitions.values();
+        }
+
+        public Object put(Object key, Object value) {
+            return nodetypeDefinitions.put(key, value);
+        }
+
+        public void putAll(Map t) {
+            throw new UnsupportedOperationException("Implementation missing");
+        }
+
+        public Set entrySet() {
+            // make sure all node type definitions have been loaded.
+            keySet();
+            return nodetypeDefinitions.entrySet();
+        }
+
+        public Object get(Object key) {
+            if (!(key instanceof QName)) {
+                throw new IllegalArgumentException();
+            }
+            QNodeTypeDefinition def = (QNodeTypeDefinition) nodetypeDefinitions.get(key);
+            if (def == null) {
+                try {
+                    // node type does either not exist or hasn't been loaded yet
+                    Iterator it = storage.getDefinitions(new QName[] {(QName) key});
+                    updateInternalMap(it);
+                } catch (RepositoryException e) {
+                    log.debug(e.getMessage());
+                }
+            }
+            def = (QNodeTypeDefinition) nodetypeDefinitions.get(key);
+            return def;
+        }
+
+        public Object remove(Object key) {
+            return (QNodeTypeDefinition) nodetypeDefinitions.remove(key);
+        }
+
+        //-------------------------------------------------------< Dumpable >---
+        public void dump(PrintStream ps) {
+            Iterator iter = nodetypeDefinitions.values().iterator();
+            while (iter.hasNext()) {
+                QNodeTypeDefinition ntd = (QNodeTypeDefinition) iter.next();
+                ps.println(ntd.getQName());
+                QName[] supertypes = ntd.getSupertypes();
+                ps.println("\tSupertypes");
+                for (int i = 0; i < supertypes.length; i++) {
+                    ps.println("\t\t" + supertypes[i]);
+                }
+                ps.println("\tMixin\t" + ntd.isMixin());
+                ps.println("\tOrderableChildNodes\t" + ntd.hasOrderableChildNodes());
+                ps.println("\tPrimaryItemName\t" + (ntd.getPrimaryItemName() == null ? "<null>" : ntd.getPrimaryItemName().toString()));
+                QPropertyDefinition[] pd = ntd.getPropertyDefs();
+                for (int i = 0; i < pd.length; i++) {
+                    ps.print("\tPropertyDefinition");
+                    ps.println(" (declared in " + pd[i].getDeclaringNodeType() + ") ");
+                    ps.println("\t\tName\t\t" + (pd[i].definesResidual() ? "*" : pd[i].getQName().toString()));
+                    String type = pd[i].getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(pd[i].getRequiredType());
+                    ps.println("\t\tRequiredType\t" + type);                  
+                    String[] vca = pd[i].getValueConstraints();
+                    StringBuffer constraints = new StringBuffer();
+                    if (vca == null) {
+                        constraints.append("<null>");
+                    } else {
+                        for (int n = 0; n < vca.length; n++) {
+                            if (constraints.length() > 0) {
+                                constraints.append(", ");
+                            }
+                            constraints.append(vca[n]);
+                        }
+                    }
+                    ps.println("\t\tValueConstraints\t" + constraints.toString());
+                    QValue[] defVals = pd[i].getDefaultValues();
+                    StringBuffer defaultValues = new StringBuffer();
+                    if (defVals == null) {
+                        defaultValues.append("<null>");
+                    } else {
+                        for (int n = 0; n < defVals.length; n++) {
+                            if (defaultValues.length() > 0) {
+                                defaultValues.append(", ");
+                            }
+                            try {
+                                defaultValues.append(defVals[n].getString());
+                            } catch (RepositoryException e) {
+                                defaultValues.append(defVals[n].toString());
+                            }
+                        }
+                    }
+                    ps.println("\t\tDefaultValue\t" + defaultValues.toString());
+                    ps.println("\t\tAutoCreated\t" + pd[i].isAutoCreated());
+                    ps.println("\t\tMandatory\t" + pd[i].isMandatory());
+                    ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(pd[i].getOnParentVersion()));
+                    ps.println("\t\tProtected\t" + pd[i].isProtected());
+                    ps.println("\t\tMultiple\t" + pd[i].isMultiple());
+                }
+                QNodeDefinition[] nd = ntd.getChildNodeDefs();
+                for (int i = 0; i < nd.length; i++) {
+                    ps.print("\tNodeDefinition");
+                    ps.println(" (declared in " + nd[i].getDeclaringNodeType() + ") ");
+                    ps.println("\t\tName\t\t" + (nd[i].definesResidual() ? "*" : nd[i].getQName().toString()));
+                    QName[] reqPrimaryTypes = nd[i].getRequiredPrimaryTypes();
+                    if (reqPrimaryTypes != null && reqPrimaryTypes.length > 0) {
+                        for (int n = 0; n < reqPrimaryTypes.length; n++) {
+                            ps.print("\t\tRequiredPrimaryType\t" + reqPrimaryTypes[n]);
+                        }
+                    }
+                    QName defPrimaryType = nd[i].getDefaultPrimaryType();
+                    if (defPrimaryType != null) {
+                        ps.print("\n\t\tDefaultPrimaryType\t" + defPrimaryType);
+                    }
+                    ps.println("\n\t\tAutoCreated\t" + nd[i].isAutoCreated());
+                    ps.println("\t\tMandatory\t" + nd[i].isMandatory());
+                    ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(nd[i].getOnParentVersion()));
+                    ps.println("\t\tProtected\t" + nd[i].isProtected());
+                    ps.println("\t\tAllowsSameNameSiblings\t" + nd[i].allowsSameNameSiblings());
+                }
+            }
+        }
     }
 }

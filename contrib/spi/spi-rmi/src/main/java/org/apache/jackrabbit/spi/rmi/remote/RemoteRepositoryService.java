@@ -25,7 +25,6 @@ import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.commons.SerializableBatch;
@@ -671,11 +670,11 @@ public interface RemoteRepositoryService extends Remote {
      * @throws RemoteException if an error occurs.
      * @see org.apache.jackrabbit.spi.RepositoryService#getQNodeTypeDefinitions(org.apache.jackrabbit.spi.SessionInfo)
      */
-    public QNodeTypeDefinition[] getQNodeTypeDefinitions(RemoteSessionInfo sessionInfo)
+    public RemoteIterator getQNodeTypeDefinitions(RemoteSessionInfo sessionInfo)
             throws RepositoryException, RemoteException;
 
     /**
-     * Retrieve the <code>QNodeTypeDefinition</code> for the given node type name.
+     * Retrieve the <code>QNodeTypeDefinition</code>s for the given node type names.
      *
      * @param sessionInfo
      * @return
@@ -683,5 +682,5 @@ public interface RemoteRepositoryService extends Remote {
      * @throws RemoteException if an error occurs.
      * @see org.apache.jackrabbit.spi.RepositoryService#getQNodeTypeDefinition(org.apache.jackrabbit.spi.SessionInfo, QName)
      */
-    public QNodeTypeDefinition getQNodeTypeDefinition(RemoteSessionInfo sessionInfo, QName ntName) throws RepositoryException, RemoteException;
+    public RemoteIterator getQNodeTypeDefinitions(RemoteSessionInfo sessionInfo, QName[] ntNames) throws RepositoryException, RemoteException;
 }
