@@ -32,9 +32,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import java.util.List;
-import java.util.Collections;
-import java.util.ArrayList;
 
 /**
  * <code>ItemDefinitionManagerImpl</code>...
@@ -43,16 +40,14 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
 
     private static Logger log = LoggerFactory.getLogger(ItemDefinitionProviderImpl.class);
 
-    private final QNodeDefinition rootNodeDefintion;
     private final EffectiveNodeTypeProvider entProvider;
     private final RepositoryService service;
     private final SessionInfo sessionInfo;
+    private QNodeDefinition rootNodeDefinition;
 
-    public ItemDefinitionProviderImpl(QNodeDefinition rootNodeDefintion, 
-                                      EffectiveNodeTypeProvider entProvider,
+    public ItemDefinitionProviderImpl(EffectiveNodeTypeProvider entProvider,
                                       RepositoryService service,
                                       SessionInfo sessionInfo) {
-        this.rootNodeDefintion = rootNodeDefintion;
         this.entProvider = entProvider;
         this.service = service;
         this.sessionInfo = sessionInfo;
@@ -61,14 +56,21 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
     /**
      * @inheritDoc
      */
-    public QNodeDefinition getRootNodeDefinition() {
-        return rootNodeDefintion;
+    public QNodeDefinition getRootNodeDefinition() throws RepositoryException {
+        if (rootNodeDefinition == null) {
+            rootNodeDefinition = service.getNodeDefinition(
+                    sessionInfo, service.getRootId(sessionInfo));
+        }
+        return rootNodeDefinition;
     }
 
     /**
      * @inheritDoc
      */
     public QNodeDefinition getQNodeDefinition(NodeState nodeState) throws RepositoryException {
+        if (nodeState.getHierarchyEntry().getParent() == null) {
+            return getRootNodeDefinition();
+        }
         QNodeDefinition definition;
         try {
             /*
@@ -235,42 +237,6 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
         throw new ConstraintViolationException("no matching child node definition found for " + name);
     }
 
-    /**
-     * Returns all applicable property definitions for a property with the
-     * specified name, type and multiValued characteristics.
-     *
-     * @param ent
-     * @param name
-     * @param type
-     * @param multiValued
-     * @return
-     * @throws ConstraintViolationException
-     */
-    private static QPropertyDefinition[] getQPropertyDefinitions(EffectiveNodeType ent,
-                                                                 QName name, int type,
-                                                                 boolean multiValued)
-            throws ConstraintViolationException {
-        QPropertyDefinition named[] = ent.getNamedQPropertyDefinitions(name);
-        QPropertyDefinition unnamed[] = ent.getUnnamedQPropertyDefinitions();
-        QPropertyDefinition all[] = new QPropertyDefinition[named.length + unnamed.length];
-        for (int i = 0; i < all.length; i++) {
-            if (i < named.length) {
-                all[i] = named[i];
-            }
-            else {
-                all[i] = unnamed[i - named.length];
-            }
-        }
-
-        QPropertyDefinition result[] = getMatchingPropDefs(all, type, multiValued);
-        if (result.length == 0) {
-            throw new ConstraintViolationException("no matching property definition found for " + name);
-        }
-        else {
-            return result;
-        }
-    }
-
    /**
      *
      * @param ent
@@ -400,34 +366,5 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
             }
         }
         return match;
-    }
-
-    private static QPropertyDefinition[] getMatchingPropDefs(QPropertyDefinition[] defs, int type, boolean multiValued) {
-        List result = Collections.EMPTY_LIST;
-
-        for (int i = 0; i < defs.length; i++) {
-            QItemDefinition qDef = defs[i];
-            if (!qDef.definesNode()) {
-                QPropertyDefinition pd = (QPropertyDefinition)qDef;
-                int reqType = pd.getRequiredType();
-                // match type
-                if (reqType == PropertyType.UNDEFINED || type == PropertyType.UNDEFINED || reqType == type) {
-                    // match multiValued flag
-                    if (multiValued == pd.isMultiple()) {
-                        // found match
-                        if (result.isEmpty()) {
-                            result = Collections.singletonList(pd);
-                        }
-                        else {
-                            if (result.size() == 1) {
-                                result = new ArrayList(result);
-                            }
-                            result.add(pd);
-                        }
-                    }
-                }
-            }
-        }
-        return (QPropertyDefinition[])result.toArray(QPropertyDefinition.EMPTY_ARRAY);
     }
 }

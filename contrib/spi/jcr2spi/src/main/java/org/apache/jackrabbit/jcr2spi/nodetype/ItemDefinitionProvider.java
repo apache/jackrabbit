@@ -31,7 +31,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
  */
 public interface ItemDefinitionProvider {
 
-    public QNodeDefinition getRootNodeDefinition();
+    public QNodeDefinition getRootNodeDefinition() throws RepositoryException;
 
     public QNodeDefinition getQNodeDefinition(NodeState nodeState) throws RepositoryException;
 

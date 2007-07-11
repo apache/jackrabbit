@@ -96,10 +96,12 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
     /**
      * Creates a new <code>NodeTypeManagerImpl</code> instance.
      *
-     * @param ntReg      node type registry
-     * @param nsResolver namespace resolver
+     * @param ntReg        node type registry
+     * @param mgrProvider  the manager provider
+     * @param valueFactory the JCR value factory
      */
-    public NodeTypeManagerImpl(NodeTypeRegistry ntReg, ManagerProvider mgrProvider,
+    public NodeTypeManagerImpl(NodeTypeRegistry ntReg,
+                               ManagerProvider mgrProvider,
                                ValueFactory valueFactory) {
         this.mgrProvider = mgrProvider;
         this.ntReg = ntReg;
@@ -110,19 +112,10 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
         ntCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
         pdCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
         ndCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
-
-        // setup root definition and update cache
-        QNodeDefinition rootDef = defProvider().getRootNodeDefinition();
-        NodeDefinition rootNodeDefinition = new NodeDefinitionImpl(rootDef, this, nsResolver());
-        ndCache.put(rootDef, rootNodeDefinition);
     }
 
     private NamespaceResolver nsResolver() {
         return mgrProvider.getNamespaceResolver();
-    }
-
-    private ItemDefinitionProvider defProvider() {
-        return mgrProvider.getItemDefinitionProvider();
     }
 
     private EffectiveNodeTypeProvider entProvider() {
