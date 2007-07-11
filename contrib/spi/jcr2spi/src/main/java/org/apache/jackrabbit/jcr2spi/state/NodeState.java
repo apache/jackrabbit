@@ -86,16 +86,13 @@ public class NodeState extends ItemState {
      * @param entry
      * @param nInfo
      * @param isf
-     * @param definition
      * @param definitionProvider
      */
     protected NodeState(NodeEntry entry, NodeInfo nInfo, ItemStateFactory isf,
-                        QNodeDefinition definition,
                         ItemDefinitionProvider definitionProvider) {
         super(entry, isf, definitionProvider);
         this.nodeTypeName = nInfo.getNodetype();
         setMixinTypeNames(nInfo.getMixins());
-        this.definition = definition;
     }
 
     //----------------------------------------------------------< ItemState >---

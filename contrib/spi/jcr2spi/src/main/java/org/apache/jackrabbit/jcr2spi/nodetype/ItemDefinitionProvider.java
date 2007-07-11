@@ -18,10 +18,6 @@ package org.apache.jackrabbit.jcr2spi.nodetype;
 
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.NodeInfo;
-import org.apache.jackrabbit.spi.PropertyInfo;
-import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.name.QName;
@@ -36,8 +32,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
 public interface ItemDefinitionProvider {
 
     public QNodeDefinition getRootNodeDefinition();
-
-    public QNodeDefinition getQNodeDefinition(NodeEntry nodeEntry, NodeInfo nodeInfo);
 
     public QNodeDefinition getQNodeDefinition(NodeState nodeState) throws RepositoryException;
 
@@ -70,8 +64,6 @@ public interface ItemDefinitionProvider {
      */
     public QNodeDefinition getQNodeDefinition(EffectiveNodeType ent, QName name, QName nodeTypeName)
             throws NoSuchNodeTypeException, ConstraintViolationException;
-
-    public QPropertyDefinition getQPropertyDefinition(PropertyEntry propertyEntry, PropertyInfo propInfo);
 
     public QPropertyDefinition getQPropertyDefinition(PropertyState propertyState) throws RepositoryException;
 

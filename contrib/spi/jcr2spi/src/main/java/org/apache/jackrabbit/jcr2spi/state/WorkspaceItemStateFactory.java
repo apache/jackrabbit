@@ -24,8 +24,6 @@ import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
-import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
@@ -258,11 +256,8 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             parent.setUniqueID(uniqueID);
         }
 
-        // retrieve definition
-        QNodeDefinition definition = definitionProvider.getQNodeDefinition(entry, info);
-
         // now build the nodestate itself
-        NodeState state = new NodeState(entry, info, this, definition, definitionProvider);
+        NodeState state = new NodeState(entry, info, this, definitionProvider);
 
         // update NodeEntry from the information present in the NodeInfo (prop entries)
         List propNames = new ArrayList();
@@ -289,8 +284,6 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      *               <code>PropertyState</code>.
      * @param entry
      * @return the new <code>PropertyState</code>.
-     * @throws ItemNotFoundException
-     * @throws RepositoryException
      */
     private PropertyState createPropertyState(PropertyInfo info, PropertyEntry entry) {
         // make sure uuid part of id is correct
@@ -301,10 +294,8 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             parent.setUniqueID(uniqueID);
         }
 
-        QPropertyDefinition definition = definitionProvider.getQPropertyDefinition(entry, info);
-
         // build the PropertyState
-        PropertyState state = new PropertyState(entry, info, this, definition, definitionProvider);
+        PropertyState state = new PropertyState(entry, info, this, definitionProvider);
 
         notifyCreated(state);
         return state;

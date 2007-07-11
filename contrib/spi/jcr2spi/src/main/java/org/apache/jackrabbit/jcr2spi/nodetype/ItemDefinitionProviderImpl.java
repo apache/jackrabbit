@@ -20,16 +20,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.NodeInfo;
-import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.QItemDefinition;
-import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
-import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.RepositoryException;
@@ -67,30 +63,6 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
      */
     public QNodeDefinition getRootNodeDefinition() {
         return rootNodeDefintion;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public QNodeDefinition getQNodeDefinition(NodeEntry nodeEntry, NodeInfo nodeInfo) {
-        QNodeDefinition definition = null;
-        NodeEntry parent = nodeEntry.getParent();
-        if (parent == null) {
-            // special case for root state
-            definition = getRootNodeDefinition();
-        } else if (parent.isAvailable() && parent.getStatus() == Status.EXISTING) {
-            // try to retrieve definition if the parent is available
-            try {
-                NodeState parentState = parent.getNodeState();
-                EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentState);
-                EffectiveNodeType entTarget = getEffectiveNodeType(nodeInfo.getNodetype());
-                definition = getQNodeDefinition(ent, entTarget, nodeInfo.getQName());
-            } catch (RepositoryException e) {
-                // should not get here
-                log.warn("Internal error", e.getMessage());
-            }
-        }
-        return definition;
     }
 
     /**
@@ -136,33 +108,6 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
     public QNodeDefinition getQNodeDefinition(EffectiveNodeType ent, QName name, QName nodeTypeName) throws NoSuchNodeTypeException, ConstraintViolationException {
         EffectiveNodeType entTarget = getEffectiveNodeType(nodeTypeName);
         return getQNodeDefinition(ent, entTarget, name);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public QPropertyDefinition getQPropertyDefinition(PropertyEntry propertyEntry, PropertyInfo propInfo) {
-        QPropertyDefinition definition = null;
-        NodeEntry parent = propertyEntry.getParent();
-        if (parent.isAvailable() && parent.getStatus() == Status.EXISTING) {
-            try {
-                NodeState parentState = parent.getNodeState();
-                EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentState.getNodeTypeNames());
-                QPropertyDefinition defs[] = getQPropertyDefinitions(ent, propInfo.getQName(), propInfo.getType(), propInfo.isMultiValued());
-                if (defs.length == 1) {
-                    definition = defs[0];
-                } else {
-                    definition = service.getPropertyDefinition(sessionInfo, propertyEntry.getId());
-                }
-            } catch (RepositoryException e) {
-                // should not get here
-                log.warn("Internal error", e.getMessage());
-            } catch (NodeTypeConflictException e) {
-                // should not get here
-                log.warn("Internal error", e.getMessage());
-            }
-        }
-        return definition;
     }
 
     /**
@@ -234,10 +179,9 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
     /**
      *
      * @param ent
+     * @param entTarget
      * @param name
-     * @param nodeTypeName
      * @return
-     * @throws NoSuchNodeTypeException
      * @throws ConstraintViolationException
      */
     static QNodeDefinition getQNodeDefinition(EffectiveNodeType ent,
