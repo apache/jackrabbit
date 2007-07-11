@@ -779,6 +779,8 @@ public interface RepositoryService {
      * @param sessionInfo
      * @param nodetypeNames names of node types to retrieve
      * @return {@link QNodeTypeDefinition}
+     * @throws javax.jcr.nodetype.NoSuchNodeTypeException if for any of the given
+     * names no <code>QNodeTypeDefinition</code> exists.
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Workspace#getNodeTypeManager()
      * @see javax.jcr.nodetype.NodeTypeManager#getAllNodeTypes()
