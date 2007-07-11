@@ -6,6 +6,11 @@ Apache Jackrabbit SPI - Limitations
  jcr2spi
 --------------------------------------------------------------------------------
 
+- Reregistering an existing namespace to a new prefix will not be visible to
+  another Session that had accessed the namespace before.
+  We decided that we will in first step not implement any cache-invalidation.
+
+
 
 
 --------------------------------------------------------------------------------
