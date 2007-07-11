@@ -17,11 +17,6 @@
 package org.apache.jackrabbit.spi;
 
 /**
- * TODO: implement as bean and instanticate on client?
- * TODO: use credentials instead of UserID?
- * TODO: add name/value parameter facility
- * TODO: server returns set of name/value pairs which should be set by the client?
- *
  * <code>SessionInfo</code>...
  */
 public interface SessionInfo {
