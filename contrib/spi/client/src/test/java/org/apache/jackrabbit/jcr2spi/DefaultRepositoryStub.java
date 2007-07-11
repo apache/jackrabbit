@@ -21,6 +21,7 @@ import org.apache.jackrabbit.test.RepositoryStubException;
 import org.apache.jackrabbit.core.jndi.RegistryHelper;
 
 import javax.jcr.Repository;
+import javax.jcr.Session;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import java.util.Properties;
@@ -109,6 +110,14 @@ public class DefaultRepositoryStub extends RepositoryStub {
                 RegistryHelper.registerRepository(ctx, repName, repConfig, repHome, true);
 
                 repository = (Repository) ctx.lookup(repName);
+
+                // setup repository
+                Session s = repository.login(getSuperuserCredentials());
+                try {
+                    RepositorySetup.run(s);
+                } finally {
+                    s.logout();
+                }
             } catch (Exception e) {
                 throw new RepositoryStubException(e.toString());
             }
