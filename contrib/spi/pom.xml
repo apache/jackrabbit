@@ -41,6 +41,10 @@
     <module>spi2dav</module>
     <module>spi-rmi</module>
     <module>client</module>
+    <!--
+      Disabled because spi-logger requires Java 1.5
+    <module>spi-logger</module>
+    -->
   </modules>
   <!--
   <modules>
@@ -199,6 +203,11 @@
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-spi-rmi</artifactId>
+        <version>${version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.jackrabbit</groupId>
+        <artifactId>jackrabbit-spi-logger</artifactId>
         <version>${version}</version>
       </dependency>
       <dependency>
