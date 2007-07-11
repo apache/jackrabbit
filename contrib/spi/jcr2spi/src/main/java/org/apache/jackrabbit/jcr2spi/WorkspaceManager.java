@@ -93,7 +93,6 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.ItemExistsException;
-import javax.jcr.Repository;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.MergeException;
 import javax.jcr.Session;
@@ -152,17 +151,17 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     private final Set listeners = new HashSet();
 
     public WorkspaceManager(RepositoryService service, SessionInfo sessionInfo,
-                            CacheBehaviour cacheBehaviour, int pollTimeout)
+                            CacheBehaviour cacheBehaviour, int pollTimeout,
+                            boolean enableObservation)
         throws RepositoryException {
         this.service = service;
         this.sessionInfo = sessionInfo;
         this.cacheBehaviour = cacheBehaviour;
 
-        Map repositoryDescriptors = service.getRepositoryDescriptors();
         nsRegistry = createNamespaceRegistry(NamespaceCache.getInstance(service));
         QNodeDefinition rootNodeDef = service.getNodeDefinition(sessionInfo, service.getRootId(sessionInfo));
         ntRegistry = createNodeTypeRegistry(rootNodeDef, nsRegistry);
-        changeFeed = createChangeFeed(pollTimeout);
+        changeFeed = createChangeFeed(pollTimeout, enableObservation);
         definitionProvider = createDefinitionProvider(rootNodeDef, getEffectiveNodeTypeProvider());
 
         TransientItemStateFactory stateFactory = createItemStateFactory();
@@ -421,22 +420,17 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * RepositoryService.
      *
      * @param pollTimeout the polling timeout in milliseconds.
+     * @param enableObservation if observation should be enabled.
      * @return the background polling thread or <code>null</code> if the underlying
      *         <code>RepositoryService</code> does not support observation.
      */
-    private Thread createChangeFeed(int pollTimeout) {
+    private Thread createChangeFeed(int pollTimeout, boolean enableObservation) {
         Thread t = null;
-        try {
-            String desc = (String) service.getRepositoryDescriptors().get(
-                    Repository.OPTION_OBSERVATION_SUPPORTED);
-            if ("true".equals(desc)) {
-                t = new Thread(new ChangePolling(pollTimeout));
-                t.setName("Change Polling");
-                t.setDaemon(true);
-                t.start();
-            }
-        } catch (RepositoryException e) {
-            log.warn("Unable to get repository descriptors: " + e);
+        if (enableObservation) {
+            t = new Thread(new ChangePolling(pollTimeout));
+            t.setName("Change Polling");
+            t.setDaemon(true);
+            t.start();
         }
         return t;
     }

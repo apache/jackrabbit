@@ -88,7 +88,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     /**
      * The Session that created this <code>Workspace</code> object.
      */
-    private final SessionImpl session;
+    protected final SessionImpl session;
 
     /**
      * WorkspaceManager acting as ItemStateManager on the workspace level
@@ -107,7 +107,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         wspManager = createManager(
                 config.getRepositoryService(),
                 sessionInfo,
-                session.getCacheBehaviour(), 
+                session.getCacheBehaviour(),
                 3 * 1000); // 3 seconds poll timeout
     }
 
@@ -462,7 +462,8 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
                                              SessionInfo sessionInfo,
                                              CacheBehaviour cacheBehaviour,
                                              int pollTimeout) throws RepositoryException {
-        return new WorkspaceManager(service, sessionInfo, cacheBehaviour, pollTimeout);
+        return new WorkspaceManager(service, sessionInfo, cacheBehaviour,
+                pollTimeout, session.isSupportedOption(Repository.OPTION_OBSERVATION_SUPPORTED));
     }
 
     /**
