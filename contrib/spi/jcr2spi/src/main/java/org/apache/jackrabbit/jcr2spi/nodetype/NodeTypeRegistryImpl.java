@@ -82,24 +82,22 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
     /**
      * Create a new <code>NodeTypeRegistry</codes>
      *
-     * @param nodeTypeDefs
+     * @param storage
      * @param nsRegistry
      * @return <code>NodeTypeRegistry</codes> object
-     * @throws RepositoryException
      */
-    public static NodeTypeRegistryImpl create(NodeTypeStorage storage, QNodeDefinition rootNodeDef, NamespaceRegistry nsRegistry) {
-        NodeTypeRegistryImpl ntRegistry = new NodeTypeRegistryImpl(storage, rootNodeDef, nsRegistry);
+    public static NodeTypeRegistryImpl create(NodeTypeStorage storage, NamespaceRegistry nsRegistry) {
+        NodeTypeRegistryImpl ntRegistry = new NodeTypeRegistryImpl(storage, nsRegistry);
         return ntRegistry;
     }
 
     /**
      * Private constructor
      *
-     * @param nodeTypeDefs
+     * @param storage
      * @param nsRegistry
-     * @throws RepositoryException
      */
-    private NodeTypeRegistryImpl(NodeTypeStorage storage, QNodeDefinition rootNodeDef, NamespaceRegistry nsRegistry) {
+    private NodeTypeRegistryImpl(NodeTypeStorage storage, NamespaceRegistry nsRegistry) {
         this.storage = storage;
         this.validator = new DefinitionValidator(this, nsRegistry);
 
@@ -109,11 +107,6 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
 
         propDefs = new HashSet();
         nodeDefs = new HashSet();
-
-        // setup definition of root node
-        synchronized (nodeDefs) {
-            nodeDefs.add(rootNodeDef);
-        }
     }
 
     //---------------------------------------------------< NodeTypeRegistry >---

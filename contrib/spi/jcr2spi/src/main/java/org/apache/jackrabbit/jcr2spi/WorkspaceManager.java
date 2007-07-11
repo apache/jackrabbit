@@ -72,7 +72,6 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.QueryInfo;
-import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.Batch;
@@ -159,10 +158,9 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         this.cacheBehaviour = cacheBehaviour;
 
         nsRegistry = createNamespaceRegistry(NamespaceCache.getInstance(service));
-        QNodeDefinition rootNodeDef = service.getNodeDefinition(sessionInfo, service.getRootId(sessionInfo));
-        ntRegistry = createNodeTypeRegistry(rootNodeDef, nsRegistry);
+        ntRegistry = createNodeTypeRegistry(nsRegistry);
         changeFeed = createChangeFeed(pollTimeout, enableObservation);
-        definitionProvider = createDefinitionProvider(rootNodeDef, getEffectiveNodeTypeProvider());
+        definitionProvider = createDefinitionProvider(getEffectiveNodeTypeProvider());
 
         TransientItemStateFactory stateFactory = createItemStateFactory();
         this.isf = stateFactory;
@@ -380,11 +378,9 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     /**
      *
      * @param nsRegistry
-     * @param descriptors
      * @return
-     * @throws RepositoryException
      */
-    private NodeTypeRegistry createNodeTypeRegistry(QNodeDefinition rootNodeDef, NamespaceRegistry nsRegistry) {
+    private NodeTypeRegistry createNodeTypeRegistry(NamespaceRegistry nsRegistry) {
         NodeTypeStorage ntst = new NodeTypeStorage() {
             public Iterator getAllDefinitions() throws RepositoryException {
                 return service.getQNodeTypeDefinitions(sessionInfo);
@@ -402,17 +398,16 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                 throw new UnsupportedOperationException("NodeType registration not yet defined by the SPI");
             }
         };
-        return NodeTypeRegistryImpl.create(ntst, rootNodeDef, nsRegistry);
+        return NodeTypeRegistryImpl.create(ntst, nsRegistry);
     }
 
     /**
      *
-     * @param rootDefinition
      * @param entProvider
      * @return
      */
-    private ItemDefinitionProvider createDefinitionProvider(QNodeDefinition rootDefinition, EffectiveNodeTypeProvider entProvider) {
-        return new ItemDefinitionProviderImpl(rootDefinition, entProvider, service, sessionInfo);
+    private ItemDefinitionProvider createDefinitionProvider(EffectiveNodeTypeProvider entProvider) {
+        return new ItemDefinitionProviderImpl(entProvider, service, sessionInfo);
     }
 
     /**
