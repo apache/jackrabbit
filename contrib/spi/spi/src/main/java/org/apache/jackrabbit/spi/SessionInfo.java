@@ -17,37 +17,66 @@
 package org.apache.jackrabbit.spi;
 
 /**
- * <code>SessionInfo</code>...
+ * <code>SessionInfo</code> is created upon
+ * {@link RepositoryService#obtain(javax.jcr.Credentials, String)} or
+ * {@link RepositoryService#obtain(SessionInfo, String)} and will be used for
+ * any call on the RepositoryService that requires user and workspace
+ * identification.<p/>
+ *
+ * In addition the SessionInfo acts as primary container for
+ * lock tokens. They will assert that a given SessionInfo is able to execute
+ * operations on the RepositoryService that are affected by existing locks.<p/>
+ *
+ * Finally the SessionInfo holds an identifier of the last {@link EventBundle}
+ * that has been retrieved by this <code>SessionInfo</code>. This allows the
+ * <code>SessionInfo</code> to indicate the latest known modification to
+ * the RepositoryService upon retrieval of subsequent {@link EventBundle}s.
  */
 public interface SessionInfo {
 
     /**
-     * 
-     * @return
+     * Returns the user id.
+     *
+     * @return The user identification.
+     * @see RepositoryService#obtain(javax.jcr.Credentials, String)
      */
     public String getUserID();
 
     /**
+     * Returns the workspace name.
      *
-     * @return
+     * @return The name of the {@link javax.jcr.Workspace workspace} this
+     * SessionInfo has been built for.
+     * @see RepositoryService#obtain(javax.jcr.Credentials, String)
+     * @see javax.jcr.Workspace#getName()
      */
     public String getWorkspaceName();
 
     /**
+     * Returns the lock tokens present on this <code>SessionInfo</code>.
      *
-     * @return
+     * @return lock tokens present on this <code>SessionInfo</code>.
      */
     public String[] getLockTokens();
 
     /**
+     * Add the given lock token to this <code>SessionInfo</code>. The token will
+     * enable the SessionInfo to operate on Items that are affected by the
+     * lock identified by the given token.
      *
-     * @param lockToken
+     * @param lockToken to be added.
      */
     public void addLockToken(String lockToken);
 
     /**
+     * Removes the given lock token from this <code>SessionInfo</code>.
+     * This must happen if the associated Session successfully removes the Lock
+     * from a Node or if the token is removed from the Session itself by calling
+     * {@link javax.jcr.Session#removeLockToken(String)}. Consequently all
+     * <code>RepositoryService</code> operations affected by a lock will fail
+     * with LockException provided the lock hasn't been released.
      *
-     * @param lockToken
+     * @param lockToken to be removed.
      */
     public void removeLockToken(String lockToken);
 
