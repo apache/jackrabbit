@@ -20,38 +20,49 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 
 /**
- * <code>IdFactory</code>...
+ * <code>IdFactory</code> defines methods to construct new <code>ItemId</code>s.
  */
 public interface IdFactory {
 
     /**
+     * Creates a new <code>PropertyId</code> from the given parent id and
+     * qualified property name.
      *
      * @param parentId
      * @param propertyName
-     * @return
+     * @return a new <code>PropertyId</code>.
      */
     public PropertyId createPropertyId(NodeId parentId, QName propertyName);
 
     /**
+     * Creates a new <code>NodeId</code> from the given parent id and
+     * the given <code>Path</code> object.
      *
      * @param parentId
      * @param path
-     * @return
+     * @return a new <code>NodeId</code>.
      */
     public NodeId createNodeId(NodeId parentId, Path path);
 
     /**
+     * Creates a new <code>NodeId</code> from the given unique id (which identifies
+     * an ancestor <code>Node</code>) and the given <code>Path</code> object.
      *
      * @param uniqueID
      * @param path
-     * @return
+     * @return a new <code>NodeId</code>.
+     * @see ItemId ItemId for a description of the uniqueID defined by the SPI
+     * item identifiers.
      */
     public NodeId createNodeId(String uniqueID, Path path);
 
     /**
-     * 
+     * Creates a new <code>NodeId</code> from the given unique id.
+     *
      * @param uniqueID
-     * @return
+     * @return a new <code>NodeId</code>.
+     * @see ItemId ItemId for a description of the uniqueID defined by the SPI
+     * item identifiers.
      */
     public NodeId createNodeId(String uniqueID);
 }

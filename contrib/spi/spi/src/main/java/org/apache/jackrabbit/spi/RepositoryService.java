@@ -39,6 +39,7 @@ import javax.jcr.ValueFormatException;
 import javax.jcr.Node;
 import javax.jcr.LoginException;
 import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.Item;
 import javax.jcr.query.InvalidQueryException;
 import java.util.Map;
 import java.util.Iterator;
@@ -52,19 +53,23 @@ public interface RepositoryService {
     /**
      * Return the <code>IdFactory</code>.
      *
-     * @return
+     * @return The <code>IdFactory</code>.
      */
     public IdFactory getIdFactory();
 
     /**
      * Return the <code>QValueFactory</code> defined with this SPI implementation.
      *
-     * @return
+     * @return The <code>QValueFactory</code>.
      */
     public QValueFactory getQValueFactory();
 
     //--------------------------------------------------------------------------
     /**
+     * Returns all property descriptors that can be exposed with the
+     * {@link javax.jcr.Repository Repository} implementation built on top of
+     * this <code>RepositoryService</code>.
+     *
      * @return key-value pairs for repository descriptor keys and values.
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Repository#getDescriptorKeys()
@@ -132,7 +137,7 @@ public interface RepositoryService {
     //--------------------------------------------------------------------------
     /**
      * @param sessionInfo
-     * @return an array of workspace ids
+     * @return An array of workspace ids.
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Workspace#getAccessibleWorkspaceNames()
      * @see javax.jcr.Workspace#getName()
@@ -161,42 +166,63 @@ public interface RepositoryService {
      * to "/".
      *
      * @param sessionInfo
-     * @return
+     * @return The <code>NodeId</code> of the root <code>Node</code>.
      * @throws RepositoryException
      */
     public NodeId getRootId(SessionInfo sessionInfo) throws RepositoryException;
 
     /**
+     * Returns the <code>QNodeDefinition</code> for the <code>Node</code>
+     * identified by the given id. This method should only be used if the
+     * caller is not able to unambiguously determine the applicable definition
+     * from the parent node type definition or if no parent exists (i.e. for
+     * the root).
      *
      * @param sessionInfo
      * @param nodeId
-     * @return
+     * @return The node definition applicable to the <code>Node</code> identified
+     * by the given id.
      * @throws RepositoryException
      */
     public QNodeDefinition getNodeDefinition(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException;
 
     /**
+     * Returns the <code>QPropertyDefinition</code> for the <code>Property</code>
+     * identified by the given id. This method should only be used if the
+     * caller is not able to unambiguously determine the applicable definition
+     * from the parent node type definition.
      *
      * @param sessionInfo
      * @param propertyId
-     * @return
+     * @return The property definition applicable for the <code>Property</code>
+     * identified by the given id.
      * @throws RepositoryException
      */
     public QPropertyDefinition getPropertyDefinition(SessionInfo sessionInfo, PropertyId propertyId) throws RepositoryException;
 
     /**
+     * Returns <code>true</code> if an <code>Item</code> with the given
+     * <code>ItemId</code> exists. Note, that the implementation must be able to
+     * deal with the various formats of an <code>ItemId</code>. The caller might
+     * not be aware of the uniqueID part the ItemId may have.
+     *
      * @param sessionInfo
      * @param itemId
-     * @return true if the item with the given id exists
+     * @return true if the item with the given id exists.
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Session#itemExists(String)
      */
     public boolean exists(SessionInfo sessionInfo, ItemId itemId) throws RepositoryException;
 
     /**
+     * Retrieve the <code>NodeInfo</code> for the node identified by the given
+     * <code>NodeId</code>. See {@link #getItemInfos(SessionInfo, NodeId)} for
+     * a similar method that in addition may return <code>ItemInfo</code>s of
+     * children <code>Item</code>s.
+     *
      * @param sessionInfo
      * @param nodeId
-     * @return
+     * @return The <code>NodeInfo</code> for the node identified by the given id.
      * @throws javax.jcr.ItemNotFoundException
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Session#getItem(String)
@@ -246,16 +272,21 @@ public interface RepositoryService {
      *
      * @param sessionInfo
      * @param parentId
-     * @return
+     * @return An Iterator of <code>ChildInfo</code>s present on the
+     * Node represented by the given parentId.
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
     public Iterator getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws ItemNotFoundException, RepositoryException;
 
     /**
+     * Returns the <code>PropertyInfo</code> for the <code>Property</code>
+     * identified by the given id.
+     *
      * @param sessionInfo
      * @param propertyId
-     * @return
+     * @return The <code>PropertyInfo</code> for the <code>Property</code>
+     * identified by the given id.
      * @throws javax.jcr.ItemNotFoundException
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Session#getItem(String)
@@ -267,12 +298,18 @@ public interface RepositoryService {
     /**
      * Indicates the start of a set of operations that cause modifications
      * on the underlying persistence layer. All modification called on the
-     * Batch must be executed at once or non must be executed.
+     * Batch must be executed at once or non must be executed upon calling
+     * {@link #submit(Batch)}.
      *
-     * @param itemId
+     * @param itemId Id of the Item that is a common ancestor of all
+     * <code>Item</code>s affected upon batch execution. This <code>Item</code>
+     * might itself be modified within the scope of the <code>Batch</code>.
      * @param sessionInfo
-     * @return
+     * @return A Batch indicating the start of a set of transient modifications
+     * that will be execute at once upon {@link #submit(Batch)}.
      * @throws RepositoryException
+     * @see Item#save()
+     * @see Session#save()
      */
     public Batch createBatch(ItemId itemId, SessionInfo sessionInfo) throws RepositoryException;
 
@@ -295,6 +332,10 @@ public interface RepositoryService {
 
     //-------------------------------------------------------------< Import >---
     /**
+     * Imports the data present in the given <code>InputStream</code> into the
+     * persistent layer. Note, that the implemenation is responsible for
+     * validating the data presented and for the integrity of the repository
+     * upon completion.
      *
      * @param sessionInfo
      * @param parentId
@@ -385,7 +426,6 @@ public interface RepositoryService {
     public void clone(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, QName destName, boolean removeExisting) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException;
 
     //------------------------------------------------------------< Locking >---
-
     /**
      * Retrieve available lock information for the given <code>NodeId</code>.
      *
@@ -399,6 +439,8 @@ public interface RepositoryService {
     public LockInfo getLockInfo(SessionInfo sessionInfo, NodeId nodeId) throws LockException, RepositoryException;
 
     /**
+     * Create a lock on the <code>Node</code> identified by the given id.
+     * 
      * @param sessionInfo
      * @param nodeId
      * @param deep
@@ -426,7 +468,8 @@ public interface RepositoryService {
     public void refreshLock(SessionInfo sessionInfo, NodeId nodeId) throws LockException, RepositoryException;
 
     /**
-     * Releases the lock on the given node.<p/>
+     * Releases the lock on the <code>Node</code> identified by the given
+     * <code>NodeId</code>.<p/>
      * Please note, that on {@link javax.jcr.Session#logout() logout} all
      * session-scoped locks must be released by calling unlock.
      *
@@ -443,6 +486,9 @@ public interface RepositoryService {
 
     //---------------------------------------------------------< Versioning >---
     /**
+     * Performs a checkin for the <code>Node</code> identified by the given
+     * <code>NodeId</code>.
+     *
      * @param sessionInfo
      * @param nodeId
      * @throws javax.jcr.version.VersionException
@@ -455,6 +501,9 @@ public interface RepositoryService {
     public void checkin(SessionInfo sessionInfo, NodeId nodeId) throws VersionException, UnsupportedRepositoryOperationException, InvalidItemStateException, LockException, RepositoryException;
 
     /**
+     * Performs a checkout for the <code>Node</code> identified by the given
+     * <code>NodeId</code>.
+     *
      * @param sessionInfo
      * @param nodeId
      * @throws javax.jcr.UnsupportedRepositoryOperationException
@@ -571,8 +620,12 @@ public interface RepositoryService {
 
     //----------------------------------------------------------< Searching >---
     /**
+     * Returns a String array identifying all query languages supported by this
+     * SPI implementation.
+     *
      * @param sessionInfo
-     * @return
+     * @return String array identifying all query languages supported by this
+     * SPI implementation.
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.query.QueryManager#getSupportedQueryLanguages()
      */
@@ -608,7 +661,6 @@ public interface RepositoryService {
     public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map namespaces) throws RepositoryException;
 
     //--------------------------------------------------------< Observation >---
-
     /**
      * Creates an event filter. If the repository supportes observation, the
      * filter created is based on the parameters available in {@link
