@@ -24,6 +24,7 @@ import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProviderImpl;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.jcr2spi.name.NamespaceStorage;
 import org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryImpl;
+import org.apache.jackrabbit.jcr2spi.name.NamespaceCache;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
 import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
@@ -158,7 +159,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         this.cacheBehaviour = cacheBehaviour;
 
         Map repositoryDescriptors = service.getRepositoryDescriptors();
-        nsRegistry = createNamespaceRegistry(repositoryDescriptors);
+        nsRegistry = createNamespaceRegistry(NamespaceCache.getInstance(service));
         QNodeDefinition rootNodeDef = service.getNodeDefinition(sessionInfo, service.getRootId(sessionInfo));
         ntRegistry = createNodeTypeRegistry(rootNodeDef, nsRegistry);
         changeFeed = createChangeFeed(pollTimeout);
@@ -370,12 +371,11 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
     /**
      *
-     * @param descriptors
+     * @param nsCache the namespace cache.
      * @return
      */
-    private NamespaceRegistryImpl createNamespaceRegistry(Map descriptors) {
-        boolean level2 = Boolean.valueOf((String) descriptors.get(Repository.LEVEL_2_SUPPORTED)).booleanValue();
-        return new NamespaceRegistryImpl(this, level2);
+    private NamespaceRegistryImpl createNamespaceRegistry(NamespaceCache nsCache) {
+        return new NamespaceRegistryImpl(this, nsCache);
     }
 
     /**
