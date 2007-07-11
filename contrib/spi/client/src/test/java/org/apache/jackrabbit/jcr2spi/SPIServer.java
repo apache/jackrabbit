@@ -34,9 +34,9 @@ import java.rmi.NotBoundException;
  */
 public class SPIServer {
 
-    private static final String REPO_CONFIG = "../../../jackrabbit-core/applications/test/repository.xml";
+    private static final String REPO_CONFIG = "src/test/resources/repository.xml";
 
-    private static final String REPO_HOME = "../../../jackrabbit-core/applications/test";
+    private static final String REPO_HOME = "target/repo-home";
 
     private final org.apache.jackrabbit.core.RepositoryImpl repo;
 
