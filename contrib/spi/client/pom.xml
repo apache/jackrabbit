@@ -45,17 +45,6 @@
     <url>http://svn.apache.org/viewvc/jackrabbit/trunk/contrib/spi/client</url>
   </scm>
 
-  <build>
-    <resources>
-      <resource>
-        <directory>${basedir}/src/test/config</directory>
-        <includes>
-          <include>**/*.properties</include>
-        </includes>
-      </resource>
-    </resources>
-  </build>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
