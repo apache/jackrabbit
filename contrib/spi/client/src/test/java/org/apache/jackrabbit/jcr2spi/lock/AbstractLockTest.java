@@ -308,4 +308,25 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
             // OK
         }
     }
+
+    /**
+     * Test if the lock token has been automatically added to the set of lock
+     * tokens present with the Session that created the new Lock.
+     * 
+     * @throws RepositoryException
+     */
+    public void testLockTokenPresentWithSession() throws RepositoryException {
+        String token = lock.getLockToken();
+        String[] allTokens = lockedNode.getSession().getLockTokens();
+        for (int i = 0; i < allTokens.length; i++) {
+            if (allTokens[i].equals(token)) {
+                // lock token is present with the session that applied the lock
+                // OK
+                return;
+            }
+        }
+
+        // lock token not present within tokens returned by Session.getLockTokens.
+        fail("Upon successful call to Node.lock, the lock token must automatically be added to the set of tokens held by the Session.");
+    }
 }
