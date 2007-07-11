@@ -39,42 +39,42 @@ public interface QItemDefinition {
      *
      * @return the name of the child item.
      */
-    QName getQName();
+    public QName getQName();
 
     /**
      * Gets the name of the declaring node type.
      *
      * @return the name of the declaring node type.
      */
-    QName getDeclaringNodeType();
+    public QName getDeclaringNodeType();
 
     /**
      * Determines whether the item is 'autoCreated'.
      *
      * @return the 'autoCreated' flag.
      */
-    boolean isAutoCreated();
+    public boolean isAutoCreated();
 
     /**
      * Gets the 'onParentVersion' attribute of the item.
      *
      * @return the 'onParentVersion' attribute.
      */
-    int getOnParentVersion();
+    public int getOnParentVersion();
 
     /**
      * Determines whether the item is 'protected'.
      *
      * @return the 'protected' flag.
      */
-    boolean isProtected();
+    public boolean isProtected();
 
     /**
      * Determines whether the item is 'mandatory'.
      *
      * @return the 'mandatory' flag.
      */
-    boolean isMandatory();
+    public boolean isMandatory();
 
     /**
      * Determines whether this item definition defines a residual set of
@@ -83,7 +83,7 @@ public interface QItemDefinition {
      * @return <code>true</code> if this definition defines a residual set;
      *         <code>false</code> otherwise.
      */
-    boolean definesResidual();
+    public boolean definesResidual();
 
     /**
      * Determines whether this item definition defines a node.
@@ -91,5 +91,5 @@ public interface QItemDefinition {
      * @return <code>true</code> if this is a node definition;
      *         <code>false</code> otherwise (i.e. it is a property definition).
      */
-    boolean definesNode();
+    public boolean definesNode();
 }

@@ -39,19 +39,19 @@ public interface QNodeDefinition extends QItemDefinition {
      *
      * @return the name of the default primary type.
      */
-    QName getDefaultPrimaryType();
+    public QName getDefaultPrimaryType();
 
     /**
      * Returns the array of names of the required primary types.
      *
      * @return the array of names of the required primary types.
      */
-    QName[] getRequiredPrimaryTypes();
+    public QName[] getRequiredPrimaryTypes();
 
     /**
      * Reports whether this node can have same-name siblings.
      *
      * @return the 'allowsSameNameSiblings' flag.
      */
-    boolean allowsSameNameSiblings();
+    public boolean allowsSameNameSiblings();
 }

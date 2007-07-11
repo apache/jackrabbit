@@ -19,9 +19,18 @@ package org.apache.jackrabbit.spi;
 import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.RangeIterator;
+import java.util.Map;
 
 /**
- * QueryInfo...
+ * <code>QueryInfo</code> is the the return value of
+ * {@link RepositoryService#executeQuery(SessionInfo, String, String, Map)}
+ * which is used to run a query on the <code>RepositoryService</code>. It
+ * provides access to the rows of the query result as well as to the column
+ * names.
+ *
+ * @see javax.jcr.query.QueryResult#getRows()
+ * @see javax.jcr.query.QueryResult#getColumnNames()
+ * @see javax.jcr.query.QueryResult#getNodes()
  */
 public interface QueryInfo {
 
