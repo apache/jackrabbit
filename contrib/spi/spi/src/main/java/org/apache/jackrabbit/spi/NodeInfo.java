@@ -26,6 +26,9 @@ import java.util.Iterator;
 public interface NodeInfo extends ItemInfo {
 
     /**
+     * Returns the <code>NodeId</code> for the node that is based on this info
+     * object.
+     *
      * @return identifier for the item that is based on this info object. the id
      * can either be an absolute path or a uniqueID (+ relative path).
      * @see RepositoryService#getNodeInfo(SessionInfo, NodeId)

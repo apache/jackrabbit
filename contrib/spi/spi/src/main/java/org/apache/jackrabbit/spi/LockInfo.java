@@ -17,7 +17,11 @@
 package org.apache.jackrabbit.spi;
 
 /**
- * <code>LockInfo</code>...
+ * <code>LockInfo</code> is used to transport lock information across the SPI
+ * boundary.
+ *
+ * @see RepositoryService#getLockInfo(SessionInfo, NodeId)
+ * @see RepositoryService#lock(SessionInfo, NodeId, boolean, boolean) 
  */
 public interface LockInfo {
 

@@ -19,16 +19,20 @@ package org.apache.jackrabbit.spi;
 import org.apache.jackrabbit.name.QName;
 
 /**
- * <code>PropertyId</code>...
+ * <code>PropertyId</code> identifies a property on the SPI layer.
  */
 public interface PropertyId extends ItemId {
 
     /**
+     * Returns the <code>NodeId</code> of the parent.
+     *
      * @return The {@link NodeId parentId} of this <code>PropertyId</code>.
      */
     public NodeId getParentId();
 
     /**
+     * Returns the {@link QName name} of the property identified by this id.
+     * 
      * @return The name of the property that is identified by this <code>PropertyId</code>.
      */
     public QName getQName();
