@@ -35,7 +35,7 @@ public interface QNodeTypeDefinition {
      *
      * @return the name of the node type or <code>null</code> if not set.
      */
-    QName getQName();
+    public QName getQName();
 
     /**
      * Returns an array containing the names of the supertypes. If no
@@ -47,21 +47,21 @@ public interface QNodeTypeDefinition {
      *
      * @return an array of supertype names
      */
-    QName[] getSupertypes();
+    public QName[] getSupertypes();
 
     /**
      * Returns the value of the mixin flag.
      *
      * @return true if this is a mixin node type; false otherwise.
      */
-    boolean isMixin();
+    public boolean isMixin();
 
     /**
      * Returns the value of the orderableChildNodes flag.
      *
      * @return true if nodes of this node type can have orderable child nodes; false otherwise.
      */
-    boolean hasOrderableChildNodes();
+    public boolean hasOrderableChildNodes();
 
     /**
      * Returns the name of the primary item (one of the child items of the
@@ -69,7 +69,7 @@ public interface QNodeTypeDefinition {
      *
      * @return the name of the primary item or <code>null</code> if not set.
      */
-    QName getPrimaryItemName();
+    public QName getPrimaryItemName();
 
     /**
      * Returns an array containing the property definitions or
@@ -78,7 +78,7 @@ public interface QNodeTypeDefinition {
      * @return an array containing the property definitions or
      *         <code>null</code> if not set.
      */
-    QPropertyDefinition[] getPropertyDefs();
+    public QPropertyDefinition[] getPropertyDefs();
 
     /**
      * Returns an array containing the child node definitions or
@@ -87,7 +87,7 @@ public interface QNodeTypeDefinition {
      * @return an array containing the child node definitions or
      *         <code>null</code> if not set.
      */
-    QNodeDefinition[] getChildNodeDefs();
+    public QNodeDefinition[] getChildNodeDefs();
 
     /**
      * Returns a collection of node type <code>QName</code>s that are being
@@ -101,5 +101,5 @@ public interface QNodeTypeDefinition {
      *
      * @return a collection of node type <code>QName</code>s
      */
-    Collection getDependencies();
+    public Collection getDependencies();
 }

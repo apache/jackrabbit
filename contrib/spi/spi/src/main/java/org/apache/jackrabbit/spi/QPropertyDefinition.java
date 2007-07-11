@@ -38,14 +38,14 @@ public interface QPropertyDefinition extends QItemDefinition {
      *
      * @return the required type.
      */
-    int getRequiredType();
+    public int getRequiredType();
 
     /**
      * Returns the array of value constraints.
      *
      * @return the array of value constraints.
      */
-    String[] getValueConstraints();
+    public String[] getValueConstraints();
 
     /**
      * Returns the array of default values or <code>null</code> if no default
@@ -53,12 +53,12 @@ public interface QPropertyDefinition extends QItemDefinition {
      *
      * @return the array of default values or <code>null</code>
      */
-    QValue[] getDefaultValues();
+    public QValue[] getDefaultValues();
 
     /**
      * Reports whether this property can have multiple values.
      *
      * @return the 'multiple' flag.
      */
-    boolean isMultiple();
+    public boolean isMultiple();
 }

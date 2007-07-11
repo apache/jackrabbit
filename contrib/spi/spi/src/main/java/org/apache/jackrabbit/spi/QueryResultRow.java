@@ -17,26 +17,30 @@
 package org.apache.jackrabbit.spi;
 
 /**
- * <code>QueryResultRow</code>...
+ * <code>QueryResultRow</code> represents the SPI equivalent of a query result
+ * row. It provides access to the id of the Node this row represents as well
+ * as to the score and to the qualified values represent in this result row.
  */
 public interface QueryResultRow {
   
     /**
      * Returns {@link NodeId} of node this result row represents.
      * 
-     * @return node id 
+     * @return node id of the <code>Node</code> this result row represents.
      */
     public NodeId getNodeId();
     
     /**
      * Returns score of this result row.
      * 
-     * @return score
+     * @return score of this result row.
      */
     public double getScore();
     
     /**
-     * @return an array of <code>QValue</code> representing the values present
+     * Returns an array of <code>QValue</code>s.
+     *
+     * @return an array of <code>QValue</code>s representing the values present
      * in this result row.
      * @see javax.jcr.query.Row#getValue(String)
      * @see javax.jcr.query.Row#getValues()
