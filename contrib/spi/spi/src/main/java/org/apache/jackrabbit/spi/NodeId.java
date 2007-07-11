@@ -17,7 +17,8 @@
 package org.apache.jackrabbit.spi;
 
 /**
- * <code>NodeId</code>...
+ * <code>NodeId</code> identifies a node on the SPI layer. The interface does
+ * not add additional methods.
  */
 public interface NodeId extends ItemId {
 

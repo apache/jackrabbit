@@ -29,14 +29,22 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 
 /**
- * <code>Batch</code>...
+ * <code>Batch</code> defines a set of modifications that must be executed and
+ * persisted at once. If any of the modifications added to the batch fails, none
+ * of the other changes must be persisted, thus leaving the persistent layer
+ * unaffected by the given batch. The <code>Batch</code> object is obtained by calling
+ * {@link RepositoryService#createBatch(ItemId, SessionInfo)}. The modifications
+ * collected in a Batch are persisted upon a sucessful call to
+ * {@link RepositoryService#submit(Batch)}.
  */
 public interface Batch {
 
     /**
-     * @param parentId
-     * @param nodeName Name of the node to be created
-     * @param nodetypeName
+     * Add a new node to the persistent layer.
+     *
+     * @param parentId NodeId identifying the parent node.
+     * @param nodeName Name of the node to be created.
+     * @param nodetypeName Primary node type name of the node to be created.
      * @param uuid Value for the jcr:uuid property of the node to be created or
      * <code>null</code>. If due to an import the uuid of the resulting node is
      * already defined, it must be passed as separate uuid parameter, indicating
@@ -58,10 +66,11 @@ public interface Batch {
     public void addNode(NodeId parentId, QName nodeName, QName nodetypeName, String uuid) throws RepositoryException;
 
     /**
+     * Add a new property to the persistent layer.
      *
-     * @param parentId
-     * @param propertyName Name of the property to be created
-     * @param value
+     * @param parentId NodeId identifying the parent node.
+     * @param propertyName Name of the property to be created.
+     * @param value The qualified value of the property to be created.
      * @throws ValueFormatException
      * @throws VersionException
      * @throws LockException
@@ -86,9 +95,11 @@ public interface Batch {
     public void addProperty(NodeId parentId, QName propertyName, QValue value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
-     * @param parentId
-     * @param propertyName Name of the property to be created
-     * @param values
+     * Add a new multi-valued property to the persistent layer.
+     *
+     * @param parentId NodeId identifying the parent node.
+     * @param propertyName Name of the property to be created.
+     * @param values The qualified values of the property to be created.
      * @throws javax.jcr.ValueFormatException
      * @throws javax.jcr.version.VersionException
      * @throws javax.jcr.lock.LockException
@@ -107,9 +118,10 @@ public interface Batch {
     public void addProperty(NodeId parentId, QName propertyName, QValue[] values) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
+     * Modify the value of an existing property.
      *
-     * @param propertyId
-     * @param value
+     * @param propertyId PropertyId identifying the property to be modified.
+     * @param value The new value.
      * @throws ValueFormatException
      * @throws VersionException
      * @throws LockException
@@ -128,8 +140,10 @@ public interface Batch {
     public void setValue(PropertyId propertyId, QValue value) throws RepositoryException;
 
     /**
-     * @param propertyId
-     * @param values
+     * Modify the value of an existing, multi-valued property.
+     *
+     * @param propertyId PropertyId identifying the property to be modified.
+     * @param values The new values.
      * @throws javax.jcr.ValueFormatException
      * @throws javax.jcr.version.VersionException
      * @throws javax.jcr.lock.LockException
@@ -143,7 +157,9 @@ public interface Batch {
     public void setValue(PropertyId propertyId, QValue[] values) throws RepositoryException;
 
     /**
-     * @param itemId
+     * Remove an existing item.
+     *
+     * @param itemId ItemId identifying the item to be removed.
      * @throws javax.jcr.version.VersionException
      * @throws javax.jcr.lock.LockException
      * @throws javax.jcr.nodetype.ConstraintViolationException
@@ -155,9 +171,13 @@ public interface Batch {
     public void remove(ItemId itemId) throws RepositoryException;
 
     /**
-     * @param parentId
-     * @param srcNodeId
-     * @param beforeNodeId
+     * Modify the order of the child nodes identified by the given
+     * <code>NodeId</code>s.
+     *
+     * @param parentId NodeId identifying the parent node.
+     * @param srcNodeId NodeId identifying the node to be reordered.
+     * @param beforeNodeId NodeId identifying the child node, before which the
+     * source node must be placed.
      * @throws javax.jcr.UnsupportedRepositoryOperationException
      * @throws javax.jcr.version.VersionException
      * @throws javax.jcr.nodetype.ConstraintViolationException
@@ -170,8 +190,12 @@ public interface Batch {
     public void reorderNodes(NodeId parentId, NodeId srcNodeId, NodeId beforeNodeId) throws RepositoryException;
 
     /**
-     * @param nodeId
-     * @param mixinNodeTypeIds
+     * Modify the set of mixin node types present on the node identified by the
+     * given id.
+     *
+     * @param nodeId NodeId identifying the node to be modified.
+     * @param mixinNodeTypeIds The new set of mixin types. Compared to the
+     * previous values this may result in both adding and/or removing mixin types.
      * @throws javax.jcr.nodetype.NoSuchNodeTypeException
      * @throws javax.jcr.version.VersionException
      * @throws javax.jcr.nodetype.ConstraintViolationException
@@ -180,13 +204,18 @@ public interface Batch {
      * @throws javax.jcr.UnsupportedRepositoryOperationException
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Node#addMixin(String)
+     * @see javax.jcr.Node#removeMixin(String)
      */
     public void setMixins(NodeId nodeId, QName[] mixinNodeTypeIds) throws RepositoryException;
 
     /**
-     * @param srcNodeId
-     * @param destParentNodeId
-     * @param destName
+     * Move the node identified by the given <code>srcNodeId</code> to the
+     * new parent identified by <code>destParentNodeId</code> and change its
+     * name to <code>destName</code>.
+     *
+     * @param srcNodeId NodeId identifying the node to be moved.
+     * @param destParentNodeId NodeId identifying the new parent.
+     * @param destName The new name of the moved node.
      * @throws javax.jcr.ItemExistsException
      * @throws javax.jcr.PathNotFoundException
      * @throws javax.jcr.version.VersionException
