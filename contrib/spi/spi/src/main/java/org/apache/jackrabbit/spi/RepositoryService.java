@@ -46,7 +46,36 @@ import java.util.Iterator;
 import java.io.InputStream;
 
 /**
- * <code>RepositoryService</code>...
+ * The <code>RepositoryService</code> interface defines methods used to
+ * retrieve information from the persistent layer of the repository as well
+ * as the methods that modify its persistent state.
+ * The implementation of this interface is intended to hold only the state of
+ * the persistent layer, no session-related state should be held. Consequently,
+ * each method that alters persistent state always includes all the information
+ * necessary to fully specify and authorize a change.<p/>
+ * For example, consider the method
+ * <pre>
+ *    void RepositoryService.copy(SessionInfo sessionInfo,
+ *                                String srcWorkspaceName,
+ *                                NodeId srcNodeId, NodeId destParentNodeId,
+ *                                QName destName)
+ * </pre>
+ * This method performs an immediate persistent copy of the node identified by
+ * srcNodeId and that node's subtree to a position as child of the node
+ * identified by destParentNodeId and assigns the newly copied node the name
+ * destName.<br>
+ * The <code>SessionInfo</code> object provides user and workspace identification
+ * as well as eventual lock tokens required to execute the copy.<br>
+ * If <code>srcWorkspaceName</code> differs from the workspace name present with
+ * the SessionInfo, the copy is corresponds to a copy across workspaces.
+ * The source and destination of the copy operation are specified by
+ * {@link NodeId}s. The <code>QName</code> holds the new name in fully qualified
+ * form. Taken together, this information is sufficient to completely specify
+ * and authorize the copy operations.<p/>
+ *
+ * The RepositoryService in addition allows to create and submit {@link Batch}
+ * objects, that cover lists of operations that have to be applied to the
+ * persistent layer at once.
  */
 public interface RepositoryService {
 
@@ -440,7 +469,7 @@ public interface RepositoryService {
 
     /**
      * Create a lock on the <code>Node</code> identified by the given id.
-     * 
+     *
      * @param sessionInfo
      * @param nodeId
      * @param deep
