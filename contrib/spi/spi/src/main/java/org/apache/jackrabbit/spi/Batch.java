@@ -29,13 +29,51 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 
 /**
- * <code>Batch</code> defines a set of modifications that must be executed and
- * persisted at once. If any of the modifications added to the batch fails, none
- * of the other changes must be persisted, thus leaving the persistent layer
- * unaffected by the given batch. The <code>Batch</code> object is obtained by calling
- * {@link RepositoryService#createBatch(ItemId, SessionInfo)}. The modifications
- * collected in a Batch are persisted upon a sucessful call to
- * {@link RepositoryService#submit(Batch)}.
+ * The <code>Batch</code> defines an ordered list of of operations that must be
+ * executed at once on the persistent layer. If any of the modifications added
+ * to the batch fails, none of the other changes must be persisted, thus leaving
+ * the persistent layer unaffected.<p/>
+ *
+ * The <code>Batch</code> object is obtained by calling
+ * {@link RepositoryService#createBatch(ItemId, SessionInfo)}. The following
+ * methods can then be called on the returned <code>Batch</code> object to queue
+ * the corresponding operations:
+ * <ul>
+ * <li>addNode,</li>
+ * <li>addProperty,</li>
+ * <li>setValue,</li>
+ * <li>remove,</li>
+ * <li>reorderNodes,</li>
+ * <li>setMixins,</li>
+ * <li>move</li>
+ * </ul>
+ * The operations collected in a Batch are persisted upon a sucessful call to
+ * {@link RepositoryService#submit(Batch)}. The operations queued in the batch
+ * must be validated as a single unit and (if validation succeeds) applied to
+ * the persistent layer. If validation fails submitting the <code>Batch</code>
+ * is aborted and an exception is thrown.<p/>
+ *
+ * The Batch mechanism is required because there are sets of operations for
+ * which the following are both true:
+ * <ul>
+ * <li>The set can only be validated and put into effect as a single logical unit.<br>
+ * For example, adding mutually referring reference properties.</li>
+ * <li>The set contains operations that can only be validated on the persistent
+ * layer.<br>For example, operations that require a referential integrity check.</li>
+ * </ul>
+ * In addition the <code>Batch</code> mechanism is desirable in order to
+ * minimize calls to the persistent layer, which enables client-server
+ * implementations to reduce the number of network roundtrips.<p/>
+ *
+ * Since the batch records the “delta” of pending changes within the scope of
+ * an {@link javax.jcr.Item#save()} (or a {@link javax.jcr.Session#save()} it is
+ * intended to be constructed upon save (not before) and then submitted to the
+ * persistent layer as a single logical operation (see above).<p/>
+ *
+ * Note however, that methods of the JCR API that have immediate effect on the
+ * persistent storage have to call that storage, validate and return. The batch
+ * does not play a role in these operations, instead they are covered by the
+ * {@link RepositoryService}.
  */
 public interface Batch {
 
