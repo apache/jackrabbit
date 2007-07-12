@@ -29,7 +29,6 @@ import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.value.DateValue;
-import org.apache.jackrabbit.util.ISO8601;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
