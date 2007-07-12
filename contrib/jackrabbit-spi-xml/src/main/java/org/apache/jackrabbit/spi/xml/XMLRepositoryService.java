@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Collections;
 import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -42,6 +44,7 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.version.VersionException;
 
@@ -224,11 +227,6 @@ public class XMLRepositoryService implements RepositoryService {
         return null;
     }
 
-    public Iterator getNodeTypeDefinitions(
-            SessionInfo session) {
-        return Arrays.asList(types).iterator();
-    }
-
     public NodeId getRootId(SessionInfo session) {
         return new XMLNodeId(document);
     }
@@ -297,7 +295,7 @@ public class XMLRepositoryService implements RepositoryService {
         return new String[] { "xml" };
     }
 
-    public Batch createBatch(ItemId itemId, SessionInfo sessionInfo)
+    public Batch createBatch(SessionInfo sessionInfo, ItemId itemId)
             throws RepositoryException {
         return null;
     }
@@ -607,10 +605,40 @@ public class XMLRepositoryService implements RepositoryService {
     }
 
     /* (non-Javadoc)
+     * @see org.apache.jackrabbit.spi.RepositoryService#getQNodeTypeDefinitions(org.apache.jackrabbit.spi.SessionInfo)
+     */
+    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
+        return Arrays.asList(types).iterator();
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.jackrabbit.spi.RepositoryService#getQNodeTypeDefinitions(org.apache.jackrabbit.spi.SessionInfo, QName[])
+     */
+    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, QName[] qNames) throws RepositoryException {
+        List l = new ArrayList();
+        List qNameList = Arrays.asList(qNames);
+        for (int i = 0; i < types.length && !qNameList.isEmpty(); i++) {
+            if (qNameList.contains(types[i].getQName())) {
+                l.add(types[i]);
+                qNameList.remove(types[i].getQName());
+            }
+        }
+        if (!qNameList.isEmpty()) {
+            // not for all names nodetypes exist -> throw
+            StringBuffer message = new StringBuffer("No such nodetypes: ");
+            for (Iterator it = qNameList.iterator(); it.hasNext();) {
+                message.append(it.next().toString()).append(", ");
+            }
+            throw new NoSuchNodeTypeException(message.toString());
+        }
+        return l.iterator();
+    }
+
+    /* (non-Javadoc)
      * @see org.apache.jackrabbit.spi.RepositoryService#update(org.apache.jackrabbit.spi.SessionInfo, org.apache.jackrabbit.spi.NodeId, java.lang.String)
      */
     public void update(SessionInfo sessionInfo, NodeId nodeId,
-            String srcWorkspaceName) throws NoSuchWorkspaceException,
+                       String srcWorkspaceName) throws NoSuchWorkspaceException,
             AccessDeniedException, LockException, InvalidItemStateException,
             RepositoryException {
         // TODO Auto-generated method stub
