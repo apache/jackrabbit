@@ -21,7 +21,13 @@ import org.apache.jackrabbit.name.QName;
 import java.util.Iterator;
 
 /**
- * <code>NodeInfo</code>...
+ * The <code>NodeInfo</code> provides the basic information required to build
+ * nodes making up the repository hierarchy.<p/>
+ * Note however, that the list of child nodes does not form part of a
+ * <code>NodeInfo</code>. It is retrieved by calling
+ * {@link RepositoryService#getChildInfos(SessionInfo, NodeId)}. In case of
+ * {@link RepositoryService#getItemInfos(SessionInfo, NodeId) batch read} the
+ * child nodes might be part of the returned <code>Iterator</code>.
  */
 public interface NodeInfo extends ItemInfo {
 
