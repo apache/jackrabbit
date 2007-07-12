@@ -20,7 +20,8 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 
 /**
- * <code>ItemInfo</code>...
+ * The <code>ItemInfo</code> is the base interface of <code>{@link NodeInfo}</code>
+ * and <code>{@link PropertyInfo}</code>.
  */
 public interface ItemInfo {
 

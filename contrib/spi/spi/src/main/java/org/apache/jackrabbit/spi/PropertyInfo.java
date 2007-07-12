@@ -17,7 +17,9 @@
 package org.apache.jackrabbit.spi;
 
 /**
- * <code>PropertyInfo</code>...
+ * The <code>PropertyInfo</code> provides the basic information to build a
+ * <code>Property</code>. The definition must be calculated from the parent
+ * node type or retrieved from the RepositoryService.
  */
 public interface PropertyInfo extends ItemInfo {
 
