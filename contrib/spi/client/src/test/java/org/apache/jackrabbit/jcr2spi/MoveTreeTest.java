@@ -19,7 +19,9 @@ package org.apache.jackrabbit.jcr2spi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.*;
+import javax.jcr.RepositoryException;
+import javax.jcr.Item;
+import javax.jcr.PathNotFoundException;
 
 /**
  * <code>MoveTreeTest</code>...
