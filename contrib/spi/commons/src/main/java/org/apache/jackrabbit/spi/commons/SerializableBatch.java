@@ -21,7 +21,6 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.RepositoryException;

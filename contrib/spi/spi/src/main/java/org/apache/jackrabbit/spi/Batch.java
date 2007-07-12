@@ -35,7 +35,7 @@ import javax.jcr.version.VersionException;
  * the persistent layer unaffected.<p/>
  *
  * The <code>Batch</code> object is obtained by calling
- * {@link RepositoryService#createBatch(ItemId, SessionInfo)}. The following
+ * {@link RepositoryService#createBatch(SessionInfo,ItemId)}. The following
  * methods can then be called on the returned <code>Batch</code> object to queue
  * the corresponding operations:
  * <ul>

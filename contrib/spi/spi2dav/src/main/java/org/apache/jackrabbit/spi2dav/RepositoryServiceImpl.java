@@ -1017,9 +1017,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * @see RepositoryService#createBatch(ItemId, SessionInfo)
+     * @see RepositoryService#createBatch(SessionInfo,ItemId)
      */
-    public Batch createBatch(ItemId itemId, SessionInfo sessionInfo) throws RepositoryException {
+    public Batch createBatch(SessionInfo sessionInfo, ItemId itemId) throws RepositoryException {
         checkSessionInfo(sessionInfo);
         return new BatchImpl(itemId, sessionInfo);
     }

@@ -241,11 +241,11 @@ public class RepositoryServiceLogger implements RepositoryService {
         }, "getPropertyInfo(SessionInfo,PropertyId)", new Object[]{propertyId});
     }
 
-    public Batch createBatch(final ItemId itemId, final SessionInfo sessionInfo)
+    public Batch createBatch(final SessionInfo sessionInfo, final ItemId itemId)
             throws RepositoryException {
         return (Batch) execute(new Callable() {
             public Object call() throws RepositoryException {
-                return service.createBatch(itemId, sessionInfo);
+                return service.createBatch(sessionInfo, itemId);
             }
         }, "createBatch(ItemId,SessionInfo)", new Object[]{itemId});
     }
