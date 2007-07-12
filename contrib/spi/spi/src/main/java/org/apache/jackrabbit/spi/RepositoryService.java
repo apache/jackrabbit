@@ -335,10 +335,10 @@ public interface RepositoryService {
      * {@link Batch} must be executed at once or non must be executed upon
      * calling {@link #submit(Batch)}.
      *
+     * @param sessionInfo
      * @param itemId Id of the Item that is a common ancestor of all
      * <code>Item</code>s affected upon batch execution. This <code>Item</code>
      * might itself be modified within the scope of the <code>Batch</code>.
-     * @param sessionInfo
      * @return A Batch indicating the start of a set of transient modifications
      * that will be execute at once upon {@link #submit(Batch)}.
      * @throws RepositoryException
@@ -346,11 +346,11 @@ public interface RepositoryService {
      * @see Session#save()
      * @see Batch
      */
-    public Batch createBatch(ItemId itemId, SessionInfo sessionInfo) throws RepositoryException;
+    public Batch createBatch(SessionInfo sessionInfo, ItemId itemId) throws RepositoryException;
 
     /**
      * Completes the given {@link Batch} or discard all the previous modifications.
-     * See {@link #createBatch(ItemId, SessionInfo)} for additional information
+     * See {@link #createBatch(SessionInfo,ItemId)} for additional information
      * regarding batch creation.
      *
      * @param batch

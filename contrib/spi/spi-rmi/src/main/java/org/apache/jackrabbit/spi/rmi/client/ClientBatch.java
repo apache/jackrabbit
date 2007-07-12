@@ -41,7 +41,7 @@ class ClientBatch implements Batch {
      */
     private final SerializableBatch batch;
 
-    ClientBatch(ItemId itemId, RemoteSessionInfo remoteSession) {
+    ClientBatch(RemoteSessionInfo remoteSession, ItemId itemId) {
         this.remoteSession = remoteSession;
         this.batch = new SerializableBatch(itemId);
     }

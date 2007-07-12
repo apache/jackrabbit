@@ -415,7 +415,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public Batch createBatch(ItemId itemId, SessionInfo sessionInfo)
+    public Batch createBatch(SessionInfo sessionInfo, ItemId itemId)
             throws RepositoryException {
         return new BatchImpl(getSessionInfoImpl(sessionInfo));
     }

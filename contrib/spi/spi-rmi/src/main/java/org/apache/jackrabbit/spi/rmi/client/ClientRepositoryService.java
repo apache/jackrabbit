@@ -31,7 +31,6 @@ import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteRepositoryService;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteSessionInfo;
@@ -65,7 +64,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.Map;
 import java.util.Iterator;
 import java.util.HashMap;
-import java.util.Arrays;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.rmi.RemoteException;
@@ -304,9 +302,9 @@ public class ClientRepositoryService implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public Batch createBatch(ItemId itemId, SessionInfo sessionInfo)
+    public Batch createBatch(SessionInfo sessionInfo, ItemId itemId)
             throws RepositoryException {
-        return new ClientBatch(itemId, getRemoteSessionInfo(sessionInfo));
+        return new ClientBatch(getRemoteSessionInfo(sessionInfo), itemId);
     }
 
     /**

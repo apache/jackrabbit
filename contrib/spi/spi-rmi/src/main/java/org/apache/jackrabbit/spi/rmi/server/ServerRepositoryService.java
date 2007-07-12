@@ -354,7 +354,7 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
             throws RepositoryException, RemoteException {
         try {
             Batch local = service.createBatch(
-                    batch.getSaveTarget(), getSessionInfo(sessionInfo));
+                    getSessionInfo(sessionInfo), batch.getSaveTarget());
             batch.replay(local);
             service.submit(local);
         } catch (RepositoryException e) {
