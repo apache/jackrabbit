@@ -19,7 +19,6 @@ package org.apache.jackrabbit.jcr2spi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.Node;
 import javax.jcr.Property;

@@ -21,7 +21,11 @@ import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.name.Path;
 
-import javax.jcr.*;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.NodeIterator;
 
 /**
  * <code>SNSIndexTest</code>...
