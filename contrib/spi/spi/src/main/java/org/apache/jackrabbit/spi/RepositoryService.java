@@ -165,8 +165,10 @@ public interface RepositoryService {
 
     //--------------------------------------------------------------------------
     /**
+     * Return all workspace names available for the given <code>SessionInfo</code>.
+     *
      * @param sessionInfo
-     * @return An array of workspace ids.
+     * @return An array of workspace names.
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Workspace#getAccessibleWorkspaceNames()
      * @see javax.jcr.Workspace#getName()
@@ -175,6 +177,9 @@ public interface RepositoryService {
 
     //-----------------------------------------------------< Access Control >---
     /**
+     * Returns true if all actions defined in the specified array are granted
+     * to given <code>SessionInfo</code>. False otherwise.
+     *
      * @param sessionInfo
      * @param itemId
      * @param actions
@@ -327,8 +332,8 @@ public interface RepositoryService {
     /**
      * Indicates the start of a set of operations that cause modifications
      * on the underlying persistence layer. All modification called on the
-     * Batch must be executed at once or non must be executed upon calling
-     * {@link #submit(Batch)}.
+     * {@link Batch} must be executed at once or non must be executed upon
+     * calling {@link #submit(Batch)}.
      *
      * @param itemId Id of the Item that is a common ancestor of all
      * <code>Item</code>s affected upon batch execution. This <code>Item</code>
@@ -339,11 +344,14 @@ public interface RepositoryService {
      * @throws RepositoryException
      * @see Item#save()
      * @see Session#save()
+     * @see Batch
      */
     public Batch createBatch(ItemId itemId, SessionInfo sessionInfo) throws RepositoryException;
 
     /**
-     * Completes the this Batch or discard all the previous modifications.
+     * Completes the given {@link Batch} or discard all the previous modifications.
+     * See {@link #createBatch(ItemId, SessionInfo)} for additional information
+     * regarding batch creation.
      *
      * @param batch
      * @throws PathNotFoundException
@@ -356,6 +364,7 @@ public interface RepositoryService {
      * @throws AccessDeniedException
      * @throws UnsupportedRepositoryOperationException
      * @throws RepositoryException
+     * @see Batch
      */
     public void submit(Batch batch) throws PathNotFoundException, ItemNotFoundException, NoSuchNodeTypeException, ValueFormatException, VersionException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
 
@@ -384,6 +393,10 @@ public interface RepositoryService {
 
     //---------------------------------------------------------< Copy, Move >---
     /**
+     * Moves the node identified by the given <code>srcNodeId</code> (and its
+     * entire subtree) to the new location defined by <code>destParentNodeId</code>
+     * and a new name (<code>destName</code>).
+     *
      * @param sessionInfo
      * @param srcNodeId
      * @param destParentNodeId
@@ -401,6 +414,15 @@ public interface RepositoryService {
     public void move(SessionInfo sessionInfo, NodeId srcNodeId, NodeId destParentNodeId, QName destName) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
+     * Clone the subtree identified by the given <code>srcNodeId</code>
+     * in workspace named <code>srcWorkspaceName</code> to the destination
+     * in the workspace specified by the given <code>SessionInfo</code>. The
+     * destination is composed by the given parent id and the new name
+     * as indicated by <code>destName</code>.<p/>
+     * Note, that <code>srcWorkspaceName</code> may be the same as the one
+     * specified within the <code>SessionInfo</code>. In this case the copy
+     * corresponds to a copy within a single workspace.
+     *
      * @param sessionInfo
      * @param srcWorkspaceName
      * @param srcNodeId
@@ -422,6 +444,10 @@ public interface RepositoryService {
 
     //------------------------------------------------------< Update, Clone >---
     /**
+     * Updates the node identified by the given <code>NodeId</code> replacing
+     * it (an the complete subtree) with a clone of its corresponding node
+     * present in the workspace with the given <code>srcWorkspaceName</code>.
+     *
      * @param sessionInfo
      * @param nodeId
      * @param srcWorkspaceName
@@ -435,6 +461,12 @@ public interface RepositoryService {
     public void update(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException;
 
     /**
+     * Clone the subtree identified by the given <code>srcNodeId</code>
+     * in workspace named <code>srcWorkspaceName</code> to the destination
+     * in the workspace specified by the given <code>SessionInfo</code>. The
+     * destination is composed by the given parent id and the new name
+     * as indicated by <code>destName</code>.
+     *
      * @param sessionInfo
      * @param srcWorkspaceName
      * @param srcNodeId
@@ -543,9 +575,11 @@ public interface RepositoryService {
     public void checkout(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, RepositoryException;
 
     /**
+     * Remove the version inditified by the specified <code>versionId</code>.
      *
      * @param sessionInfo
-     * @param versionHistoryId
+     * @param versionHistoryId <code>NodeId</code> identifying the version
+     * history the version identified by <code>versionId</code> belongs to.
      * @param versionId
      * @throws ReferentialIntegrityException
      * @throws AccessDeniedException
@@ -557,10 +591,18 @@ public interface RepositoryService {
     public void removeVersion(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId) throws ReferentialIntegrityException, AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException;
 
     /**
+     * Restores the node identified by <code>nodeId</code> to the state defined
+     * by the version with the specified <code>versionId</code>.
+     *
      * @param sessionInfo
      * @param nodeId
      * @param versionId
-     * @param removeExisting
+     * @param removeExisting boolean flag indicating how to deal with an
+     * identifier collision that may occur if a node exists outside the subtree
+     * to be restored with the same identified as a node that would be
+     * introduces by the restore. If the <code>removeExisting</code> is
+     * <code>true</code> the restored node takes precedence and the
+     * existing node is removed. Otherwise the restore failes.
      * @throws javax.jcr.version.VersionException
      * @throws javax.jcr.PathNotFoundException
      * @throws javax.jcr.ItemExistsException
@@ -576,9 +618,17 @@ public interface RepositoryService {
     public void restore(SessionInfo sessionInfo, NodeId nodeId, NodeId versionId, boolean removeExisting) throws VersionException, PathNotFoundException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException;
 
     /**
+     * Restore multiple versions at once. The versions to be restored are
+     * identified by the given array of <code>NodeId</code>s.
+     *
      * @param sessionInfo
      * @param versionIds
-     * @param removeExisting
+     * @param removeExisting boolean flag indicating how to deal with an
+     * identifier collision that may occur if a node exists outside the subtrees
+     * to be restored with the same identified as any node that would be
+     * introduces by the restore. If the <code>removeExisting</code> is
+     * <code>true</code> the node to be restored takes precedence and the
+     * existing node is removed. Otherwise the restore failes.
      * @throws javax.jcr.ItemExistsException
      * @throws javax.jcr.UnsupportedRepositoryOperationException
      * @throws javax.jcr.version.VersionException
@@ -590,6 +640,10 @@ public interface RepositoryService {
     public void restore(SessionInfo sessionInfo, NodeId[] versionIds, boolean removeExisting) throws ItemExistsException, UnsupportedRepositoryOperationException, VersionException, LockException, InvalidItemStateException, RepositoryException;
 
     /**
+     * Merge the node identified by the given <code>NodeId</code> and its subtree
+     * with the corresponding node present in the workspace with the name of
+     * <code>srcWorkspaceName</code>.
+     *
      * @param sessionInfo
      * @param nodeId
      * @param srcWorkspaceName
@@ -607,6 +661,9 @@ public interface RepositoryService {
     public Iterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
 
     /**
+     * Resolve an existing merge conflict present with the node identified by
+     * the given <code>NodeId</code>.
+     *
      * @param sessionInfo
      * @param nodeId
      * @param mergeFailedIds The <code>NodeId</code>s remaining in the jcr:mergeFailed
@@ -614,7 +671,8 @@ public interface RepositoryService {
      * array and added to the predecessor ids in case of {@link Node#doneMerge(Version)}.
      * In case of a {@link Node#cancelMerge(Version)} the version id only gets
      * removed from the list.
-     * @param predecessorIds
+     * @param predecessorIds The complete set of predecessor id including those
+     * that have been added in order to resolve a merge conflict.
      * @throws javax.jcr.version.VersionException
      * @throws javax.jcr.InvalidItemStateException
      * @throws javax.jcr.UnsupportedRepositoryOperationException
@@ -625,11 +683,19 @@ public interface RepositoryService {
     public void resolveMergeConflict(SessionInfo sessionInfo, NodeId nodeId, NodeId[] mergeFailedIds, NodeId[] predecessorIds) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
+     * Add the given version label in the persistent layer.
+     *
      * @param sessionInfo
-     * @param versionHistoryId
-     * @param versionId
-     * @param label
-     * @param moveLabel
+     * @param versionHistoryId <code>NodeId</code> identifying the version
+     * history the version identified by <code>versionId</code> belongs to.
+     * @param versionId <code>NodeId</code> identifying the version the
+     * label belongs to.
+     * @param label The label to be added.
+     * @param moveLabel If the label is already assigned to a version within
+     * the same version history this parameter has the following effect: If <code>true</code>
+     * the label already present gets moved to be now be a label of the version
+     * indicated by <code>versionId</code>. If <code>false</code> this method
+     * fails and the label remains with the original version.
      * @throws javax.jcr.version.VersionException
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.version.VersionHistory#addVersionLabel(String, String, boolean)
@@ -637,10 +703,14 @@ public interface RepositoryService {
     public void addVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, QName label, boolean moveLabel) throws VersionException, RepositoryException;
 
     /**
+     * Remove the given version label in the persistent layer.
+     *
      * @param sessionInfo
-     * @param versionHistoryId
-     * @param versionId
-     * @param label
+     * @param versionHistoryId <code>NodeId</code> identifying the version
+     * history the version identified by <code>versionId</code> belongs to.
+     * @param versionId <code>NodeId</code> identifying the version the
+     * label belongs to.
+     * @param label The label to be removed.
      * @throws javax.jcr.version.VersionException
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.version.VersionHistory#removeVersionLabel(String)
@@ -678,11 +748,16 @@ public interface RepositoryService {
     public void checkQueryStatement(SessionInfo sessionInfo, String statement, String language, Map namespaces) throws InvalidQueryException, RepositoryException;
 
     /**
+     * Execute the given query statement with the specified query language. The
+     * additional <code>namespaces</code> parameter provides a mapping of prefix
+     * to namespace uri in order to be able to properly resolve prefix:localname
+     * patterns present within the query statement.
+     *
      * @param sessionInfo
-     * @param statement
-     * @param language
-     * @param namespaces  the locally re-mapped namespace which may be used in
-     *                    the query <code>statement</code>.
+     * @param statement the query statement to be execute.
+     * @param language the query language used to parse the query <code>statement</code>.
+     * @param namespaces the locally re-mapped namespace which may be used in
+     * the query <code>statement</code>.
      * @return
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.query.Query#execute()
@@ -808,11 +883,11 @@ public interface RepositoryService {
             throws NamespaceException, RepositoryException;
 
     /**
-     * Register a new namespace with the given prefix and uri
+     * Register a new namespace with the given prefix and uri.
      *
      * @param sessionInfo
-     * @param prefix
-     * @param uri
+     * @param prefix Prefix of the namespace to be registered.
+     * @param uri Namespace URI to be registered.
      * @throws javax.jcr.NamespaceException
      * @throws javax.jcr.UnsupportedRepositoryOperationException
      * @throws javax.jcr.AccessDeniedException
@@ -822,10 +897,10 @@ public interface RepositoryService {
     public void registerNamespace(SessionInfo sessionInfo, String prefix, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException;
 
     /**
-     * Unregister the namespace identified by the given prefix
+     * Unregister the namespace identified by the given uri
      *
      * @param sessionInfo
-     * @param uri
+     * @param uri Namespace URI to be unregistered.
      * @throws javax.jcr.NamespaceException
      * @throws javax.jcr.UnsupportedRepositoryOperationException
      * @throws javax.jcr.AccessDeniedException
