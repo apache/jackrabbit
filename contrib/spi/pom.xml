@@ -56,7 +56,13 @@
     <module>jackrabbit-test-client</module>
   </modules>
   -->
-  
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/contrib/spi</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/contrib/spi</developerConnection>
+    <url>http://svn.apache.org/viewvc/jackrabbit/trunk/contrib/spi</url>
+  </scm>
+
   <build>
     <plugins>
       <!-- Use Java 1.4 everywhere -->
