@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.ocm.nodemanagement.impl.jackrabbit;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -459,7 +460,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
      * @throws org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException 
      * @throws javax.jcr.RepositoryException 
      */
-    public void createNodeTypesFromList(Session session, List nodeTypes)
+    private void createNodeTypesFromList(Session session, List nodeTypes)
     throws InvalidNodeTypeDefException, RepositoryException
     {
         getNodeTypeRegistry(session).registerNodeTypes(nodeTypes);
@@ -468,9 +469,60 @@ public class NodeTypeManagerImpl implements NodeTypeManager
     /**
      * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#removeNodeTypes
      */     
-    public void removeNodeTypes(Session session, InputStream[] mappingXmlFiles)
+    public void removeNodeTypesFromConfiguration(Session session, InputStream jcrRepositoryConfigurationFile)
     throws NodeTypeRemovalException
     {
+    	try
+        {
+            NodeTypeDef[] types = NodeTypeReader.read(jcrRepositoryConfigurationFile);
+
+            ArrayList list = new ArrayList();
+            for (int i = 0; i < types.length; i++)
+            {
+                list.add(types[i]);
+            }
+            
+            removeNodeTypesFromList(session, list);
+            log.info("Registered " + list.size() + " nodetypes from xml configuration file.");
+        }
+        catch (Exception e)
+        {
+            log.error("Could not create node types from configuration file.", e);
+            throw new NodeTypeRemovalException(e);
+        }
+    }
+    
+    private void removeNodeTypesFromList(Session session, List nodeTypes)
+    throws NodeTypeRemovalException
+    {
+        for (Iterator nodeTypeIterator = nodeTypes.iterator(); nodeTypeIterator.hasNext();) 
+        {
+			NodeTypeDef nodeTypeDef = (NodeTypeDef) nodeTypeIterator.next();
+			this.removeSingleNodeType(session, nodeTypeDef.getName());
+			
+		}
+    	
+    }
+
+    /**
+     * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createSingleNodeTypeFromMappingFile
+     */     
+    public void removeNodeTypesFromMappingFile(Session session, InputStream[] mappingXmlFile)
+            throws NodeTypeRemovalException
+    {
+    }
+    
+    public void removeSingleNodeType(Session session, QName qName)
+    throws NodeTypeRemovalException
+    {
+        try
+        {
+            getNodeTypeRegistry(session).unregisterNodeType(qName);
+        }
+        catch (Exception e)
+        {
+            throw new NodeTypeRemovalException(e);
+        }      
     }
     
     /**
