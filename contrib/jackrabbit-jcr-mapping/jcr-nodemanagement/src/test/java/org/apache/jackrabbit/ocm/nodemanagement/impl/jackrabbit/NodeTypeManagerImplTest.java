@@ -159,10 +159,10 @@ public class NodeTypeManagerImplTest extends TestBase {
 
         getJackrabbitNodeTypeManagerImpl().createSingleNodeType(session, classDescriptor);
         
-        NodeType test3 = session.getWorkspace().getNodeTypeManager().getNodeType("ocm:test3");
+        NodeType test3 = session.getWorkspace().getNodeTypeManager().getNodeType("test3");
         assertNotNull(test3);
         assertFalse(test3.isMixin());
-        assertEquals(test3.getName(), "ocm:test3");
+        assertEquals(test3.getName(), "test3");
         assertEquals(test3.getSupertypes().length, 1);
         assertEquals(test3.getSupertypes()[0].getName(), "nt:base");        
     }
@@ -181,10 +181,10 @@ public class NodeTypeManagerImplTest extends TestBase {
 
         getJackrabbitNodeTypeManagerImpl().createSingleNodeType(session, classDescriptor);
         
-        NodeType test4 = session.getWorkspace().getNodeTypeManager().getNodeType("ocm:test.Test4Class");
+        NodeType test4 = session.getWorkspace().getNodeTypeManager().getNodeType("test.Test4Class");
         assertNotNull(test4);
         assertFalse(test4.isMixin());
-        assertEquals(test4.getName(), "ocm:test.Test4Class");
+        assertEquals(test4.getName(), "test.Test4Class");
         assertEquals(test4.getSupertypes().length, 1);
         assertEquals(test4.getSupertypes()[0].getName(), "nt:base");        
     }
@@ -210,7 +210,7 @@ public class NodeTypeManagerImplTest extends TestBase {
         assertEquals(test5.getSupertypes().length, 2);
         assertTrue(containsSuperType("ocm:test2", test5.getSupertypes()));
         assertTrue(containsSuperType("nt:base", test5.getSupertypes()));
-        assertTrue(containsProperty("ocm:abc", test5.getPropertyDefinitions()));
+        assertTrue(containsProperty("abc", test5.getPropertyDefinitions()));
     }
     
     public void testCreateSingleNodeTypeNtNamespace() throws Exception
@@ -261,7 +261,7 @@ public class NodeTypeManagerImplTest extends TestBase {
         // not check node type definition, assuming other tests have done that
         
         // assert property definition a
-        PropertyDefinition propDef = getPropertyDefinition(test9.getPropertyDefinitions(), "ocm:a");
+        PropertyDefinition propDef = getPropertyDefinition(test9.getPropertyDefinitions(), "a");
         assertNotNull(propDef);
         assertEquals(propDef.getRequiredType(), PropertyType.STRING);
     }
@@ -286,7 +286,7 @@ public class NodeTypeManagerImplTest extends TestBase {
         // not check node type definition, assuming other tests have done that
         
         // assert property definition a
-        PropertyDefinition propDef = getPropertyDefinition(test10.getPropertyDefinitions(), "ocm:a");
+        PropertyDefinition propDef = getPropertyDefinition(test10.getPropertyDefinitions(), "a");
         assertNotNull(propDef);
         assertEquals(propDef.getRequiredType(), PropertyType.STRING);
         
@@ -313,7 +313,7 @@ public class NodeTypeManagerImplTest extends TestBase {
         // not check node type definition, assuming other tests have done that
         
         // assert property definition a
-        PropertyDefinition propDef = getPropertyDefinition(test13.getPropertyDefinitions(), "ocm:a");
+        PropertyDefinition propDef = getPropertyDefinition(test13.getPropertyDefinitions(), "a");
         assertNotNull(propDef);
         assertEquals(propDef.getRequiredType(), PropertyType.STRING);
     }
@@ -339,7 +339,7 @@ public class NodeTypeManagerImplTest extends TestBase {
         // not check node type definition, assuming other tests have done that
         
         // assert property definition a
-        PropertyDefinition propDef = getPropertyDefinition(test14.getPropertyDefinitions(), "ocm:a");
+        PropertyDefinition propDef = getPropertyDefinition(test14.getPropertyDefinitions(), "a");
         assertNotNull(propDef);
         assertEquals(propDef.getRequiredType(), PropertyType.STRING);
 
@@ -365,7 +365,7 @@ public class NodeTypeManagerImplTest extends TestBase {
         // not check node type definition, assuming other tests have done that
         
         // assert child node definition a
-        NodeDefinition nodeDef = getChildNodeDefinition(test11.getChildNodeDefinitions(), "ocm:b");
+        NodeDefinition nodeDef = getChildNodeDefinition(test11.getChildNodeDefinitions(), "b");
         assertNotNull(nodeDef);
         assertNotNull(nodeDef.getRequiredPrimaryTypes());
         assertEquals(nodeDef.getRequiredPrimaryTypes().length, 1);
@@ -392,7 +392,7 @@ public class NodeTypeManagerImplTest extends TestBase {
         // not check node type definition, assuming other tests have done that
         
         // assert property definition a
-        NodeDefinition nodeDef = getChildNodeDefinition(test12.getChildNodeDefinitions(), "ocm:b");
+        NodeDefinition nodeDef = getChildNodeDefinition(test12.getChildNodeDefinitions(), "b");
         assertNotNull(nodeDef);
         assertNotNull(nodeDef);
         assertNotNull(nodeDef.getRequiredPrimaryTypes());

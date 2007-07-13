@@ -116,5 +116,12 @@ public class NodeTypeManagerImpl implements NodeTypeManager {
     public List getAllPrimaryNodeTypeNames(Session session)
     {
         return null;
-    }    
+    }
+
+	public void removeNodeTypesFromConfiguration(Session session, InputStream jcrRepositoryConfigurationFile) throws NodeTypeRemovalException {
+	}
+
+	public void removeNodeTypesFromMappingFile(Session session, InputStream[] mappingXmlFiles) throws NodeTypeRemovalException {
+	}   
+    
 }

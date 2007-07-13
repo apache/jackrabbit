@@ -131,7 +131,7 @@ public interface NodeTypeManager {
             String jcrNodeType, boolean reflectSuperClasses)
             throws NodeTypeCreationException;
     
-    /** This method created JCR node types from a JCR vendor specific
+    /** This method creates JCR node types from a JCR vendor specific
      * configuration file.
      *
      * @param session Repository session
@@ -150,8 +150,17 @@ public interface NodeTypeManager {
      * @param mappingXmlFiles InputStreams to jcr-mapping xml file
      * @throws NodeTypeRemovalException NodeTypeRemovalException
      */
-    void removeNodeTypes(Session session, InputStream[] mappingXmlFiles)
+    void removeNodeTypesFromMappingFile(Session session, InputStream[] mappingXmlFiles)
     throws NodeTypeRemovalException;
+    
+    /**
+     * This method removes JCR node types from a JCR vendor specific configuration file
+     * @param session Repository session
+     * @param jcrRepositoryConfigurationFile the file that contains the node type definition
+     * @throws NodeTypeRemovalException
+     */
+    void removeNodeTypesFromConfiguration(Session session, InputStream jcrRepositoryConfigurationFile)
+    throws NodeTypeRemovalException;    
     
     /** This method removes a single JCR node type identified by its jcrNodeType
      * name.
