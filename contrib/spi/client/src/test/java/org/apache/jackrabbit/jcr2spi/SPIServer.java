@@ -23,6 +23,8 @@ import org.apache.jackrabbit.spi2jcr.RepositoryServiceImpl;
 import org.apache.jackrabbit.spi2jcr.BatchReadConfig;
 import org.apache.log4j.PropertyConfigurator;
 
+import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.RemoteException;
@@ -54,6 +56,13 @@ public class SPIServer {
         RepositoryConfig config = RepositoryConfig.create(REPO_CONFIG, REPO_HOME);
         repo = org.apache.jackrabbit.core.RepositoryImpl.create(config);
         System.out.println("Jackrabbit started");
+        // try to setup test data
+        Session s = repo.login(new SimpleCredentials("user", "pass".toCharArray()));
+        try {
+            RepositorySetup.run(s);
+        } finally {
+            s.logout();
+        }
         // wrap with spi2jcr
         // TODO: make BatchReadConfig configurable
         RepositoryService repoService = new RepositoryServiceImpl(repo, new BatchReadConfig());
