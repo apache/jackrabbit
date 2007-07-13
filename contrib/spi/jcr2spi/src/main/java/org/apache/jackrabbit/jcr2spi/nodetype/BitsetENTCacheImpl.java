@@ -152,6 +152,15 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public void clear() {
+        sortedKeys.clear();
+        aggregates.clear();
+        nameIndex.clear();
+    }
+
+    /**
      * Returns the bit number for the given name. If the name does not exist
      * a new new bit number for that name is created.
      *
