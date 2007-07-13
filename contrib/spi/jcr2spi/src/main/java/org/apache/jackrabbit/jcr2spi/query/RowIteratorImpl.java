@@ -16,32 +16,28 @@
  */
 package org.apache.jackrabbit.jcr2spi.query;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.jcr.ItemNotFoundException;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.PropertyType;
 import javax.jcr.RangeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 
 import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
-import org.apache.jackrabbit.value.DoubleValue;
-import org.apache.jackrabbit.value.LongValue;
-import org.apache.jackrabbit.value.PathValue;
-import org.apache.jackrabbit.value.StringValue;
+import org.apache.jackrabbit.value.ValueFormat;
+import org.apache.jackrabbit.spi.QueryInfo;
+import org.apache.jackrabbit.spi.QueryResultRow;
+import org.apache.jackrabbit.spi.QValue;
 
 /**
  * Implements the {@link javax.jcr.query.RowIterator} interface returned by
@@ -50,14 +46,14 @@ import org.apache.jackrabbit.value.StringValue;
 class RowIteratorImpl implements RowIterator {
 
     /**
-     * Iterator over nodes, that constitute the result set.
+     * The result rows from the SPI implementation.
      */
-    private final ScoreNodeIterator nodes;
+    private final RangeIterator rows;
 
     /**
-     * Array of select property names
+     * The column names.
      */
-    private final QName[] properties;
+    private final QName[] columnNames;
 
     /**
      * The <code>NamespaceResolver</code> of the user <code>Session</code>.
@@ -65,19 +61,24 @@ class RowIteratorImpl implements RowIterator {
     private final NamespaceResolver nsResolver;
 
     /**
+     * The JCR value factory.
+     */
+    private final ValueFactory vFactory;
+
+    /**
      * Creates a new <code>RowIteratorImpl</code> that iterates over the result
      * nodes.
      *
-     * @param nodes      a <code>ScoreNodeIterator</code> that contains the nodes of
-     *                   the query result.
-     * @param properties <code>QName</code> of the select properties.
-     * @param resolver   <code>NamespaceResolver</code> of the user
-     *                   <code>Session</code>.
+     * @param queryInfo the query info.
+     * @param resolver  <code>NamespaceResolver</code> of the user
+     *                  <code>Session</code>.
+     * @param vFactory  the JCR value factory.
      */
-    RowIteratorImpl(ScoreNodeIterator nodes, QName[] properties, NamespaceResolver resolver) {
-        this.nodes = nodes;
-        this.properties = properties;
+    RowIteratorImpl(QueryInfo queryInfo, NamespaceResolver resolver, ValueFactory vFactory) {
+        this.rows = queryInfo.getRows();
+        this.columnNames = queryInfo.getColumnNames();
         this.nsResolver = resolver;
+        this.vFactory = vFactory;
     }
 
     //--------------------------------------------------------< RowIterator >---
@@ -89,7 +90,7 @@ class RowIteratorImpl implements RowIterator {
      * @see RowIterator#nextRow()
      */
     public Row nextRow() throws NoSuchElementException {
-        return new RowImpl(nodes.getScore(), nodes.nextNode());
+        return new RowImpl((QueryResultRow) rows.next());
     }
 
     //------------------------------------------------------< RangeIterator >---
@@ -102,7 +103,7 @@ class RowIteratorImpl implements RowIterator {
      * @see javax.jcr.RangeIterator#skip(long)
      */
     public void skip(long skipNum) throws NoSuchElementException {
-        nodes.skip(skipNum);
+        rows.skip(skipNum);
     }
 
     /**
@@ -112,7 +113,7 @@ class RowIteratorImpl implements RowIterator {
      * @see RangeIterator#getSize()
      */
     public long getSize() {
-        return nodes.getSize();
+        return rows.getSize();
     }
 
     /**
@@ -127,7 +128,7 @@ class RowIteratorImpl implements RowIterator {
      * @see RangeIterator#getPosition()
      */
     public long getPosition() {
-        return nodes.getPosition();
+        return rows.getPosition();
     }
 
     /**
@@ -147,7 +148,7 @@ class RowIteratorImpl implements RowIterator {
      * @see Iterator#hasNext()
      */
     public boolean hasNext() {
-        return nodes.hasNext();
+        return rows.hasNext();
     }
 
     /**
@@ -169,14 +170,9 @@ class RowIteratorImpl implements RowIterator {
     class RowImpl implements Row {
 
         /**
-         * The score for this result row
+         * The underlying <code>QueryResultRow</code>.
          */
-        private final double score;
-
-        /**
-         * The underlying <code>Node</code> of this result row.
-         */
-        private final Node node;
+        private final QueryResultRow row;
 
         /**
          * Cached value array for returned by {@link #getValues()}.
@@ -184,19 +180,19 @@ class RowIteratorImpl implements RowIterator {
         private Value[] values;
 
         /**
-         * Set of select property <code>QName</code>s.
+         * Map of select property <code>QName</code>s. Key: QName, Value:
+         * Integer, which refers to the array index in {@link #values}.
          */
-        private Set propertySet;
+        private Map propertyMap;
 
         /**
-         * Creates a new <code>RowImpl</code> instance based on <code>node</code>.
+         * Creates a new <code>RowImpl</code> instance based on a SPI result
+         * row.
          *
-         * @param score the score value for this result row
-         * @param node  the underlying <code>Node</code> for this <code>Row</code>.
+         * @param row the underlying query result row
          */
-        private RowImpl(double score, Node node) {
-            this.score = score;
-            this.node = node;
+        private RowImpl(QueryResultRow row) {
+            this.row = row;
         }
 
         //------------------------------------------------------------< Row >---
@@ -212,35 +208,14 @@ class RowIteratorImpl implements RowIterator {
          */
         public Value[] getValues() throws RepositoryException {
             if (values == null) {
-                Value[] tmp = new Value[properties.length];
-                for (int i = 0; i < properties.length; i++) {
-                    String propName;
-                    try {
-                        propName = NameFormat.format(properties[i], nsResolver);
-                    } catch (NoPrefixDeclaredException e) {
-                        throw new RepositoryException(e.getMessage(), e);
-                    }
-                    if (node.hasProperty(propName)) {
-                        Property prop = node.getProperty(propName);
-                        if (!prop.getDefinition().isMultiple()) {
-                            if (prop.getDefinition().getRequiredType() == PropertyType.UNDEFINED) {
-                                tmp[i] = new StringValue(prop.getString());
-                            } else {
-                                tmp[i] = prop.getValue();
-                            }
-                        } else {
-                            // mvp values cannot be returned
-                            tmp[i] = null;
-                        }
+                QValue[] qVals = row.getValues();
+                Value[] tmp = new Value[qVals.length];
+                for (int i = 0; i < qVals.length; i++) {
+                    if (qVals[i] == null) {
+                        tmp[i] = null;
                     } else {
-                        // property not set or jcr:path / jcr:score
-                        if (QName.JCR_PATH.equals(properties[i])) {
-                            tmp[i] = PathValue.valueOf(node.getPath());
-                        } else if (QName.JCR_SCORE.equals(properties[i])) {
-                            tmp[i] = new DoubleValue(score);
-                        } else {
-                            tmp[i] = null;
-                        }
+                        tmp[i] = ValueFormat.getJCRValue(
+                                qVals[i], nsResolver, vFactory);
                     }
                 }
                 values = tmp;
@@ -265,34 +240,25 @@ class RowIteratorImpl implements RowIterator {
          * @see Row#getValue(String)
          */
         public Value getValue(String propertyName) throws ItemNotFoundException, RepositoryException {
-            if (propertySet == null) {
-                // create the set first
-                Set tmp = new HashSet();
-                tmp.addAll(Arrays.asList(properties));
-                propertySet = tmp;
+            if (propertyMap == null) {
+                // create the map first
+                Map tmp = new HashMap();
+                for (int i = 0; i < columnNames.length; i++) {
+                    tmp.put(columnNames[i], new Integer(i));
+                }
+                propertyMap = tmp;
             }
             try {
                 QName prop = NameFormat.parse(propertyName, nsResolver);
-                if (!propertySet.contains(prop)) {
+                Integer idx = (Integer) propertyMap.get(prop);
+                if (idx == null) {
                     throw new ItemNotFoundException(propertyName);
                 }
-                if (node.hasProperty(propertyName)) {
-                    Property p = node.getProperty(propertyName);
-                    if (p.getDefinition().getRequiredType() == PropertyType.UNDEFINED) {
-                        return new StringValue(p.getString());
-                    } else {
-                        return p.getValue();
-                    }
-                } else {
-                    // either jcr:score, jcr:path or not set
-                    if (QName.JCR_PATH.equals(prop)) {
-                        return PathValue.valueOf(node.getPath());
-                    } else if (QName.JCR_SCORE.equals(prop)) {
-                        return new LongValue((int) (score * 1000f));
-                    } else {
-                        return null;
-                    }
+                // make sure values are there
+                if (values == null) {
+                    getValues();
                 }
+                return values[idx.intValue()];
             } catch (IllegalNameException e) {
                 throw new RepositoryException(e.getMessage(), e);
             } catch (UnknownPrefixException e) {

@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
+import javax.jcr.ValueFactory;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 
@@ -62,19 +63,29 @@ class QueryResultImpl implements QueryResult {
     private final NamespaceResolver nsResolver;
 
     /**
+     * The JCR value factory.
+     */
+    private final ValueFactory valueFactory;
+
+    /**
      * Creates a new query result.
      *
-     * @param itemMgr     the item manager of the session executing the query.
-     * @param hierarchyMgr the HierarchyManager of the session executing the query.
-     * @param queryInfo   the spi query result.
-     * @param nsResolver    the namespace nsResolver of the session executing the query.
+     * @param itemMgr      the item manager of the session executing the query.
+     * @param hierarchyMgr the HierarchyManager of the session executing the
+     *                     query.
+     * @param queryInfo    the spi query result.
+     * @param nsResolver   the namespace nsResolver of the session executing the
+     *                     query.
+     * @param valueFactory the JCR value factory.
      */
     QueryResultImpl(ItemManager itemMgr, HierarchyManager hierarchyMgr,
-                    QueryInfo queryInfo, NamespaceResolver nsResolver) {
+                    QueryInfo queryInfo, NamespaceResolver nsResolver,
+                    ValueFactory valueFactory) {
         this.itemMgr = itemMgr;
         this.hierarchyMgr = hierarchyMgr;
         this.queryInfo = queryInfo;
         this.nsResolver = nsResolver;
+        this.valueFactory = valueFactory;
     }
 
     /**
@@ -107,7 +118,7 @@ class QueryResultImpl implements QueryResult {
      * {@inheritDoc}
      */
     public RowIterator getRows() throws RepositoryException {
-        return new RowIteratorImpl(getNodeIterator(), queryInfo.getColumnNames(), nsResolver);
+        return new RowIteratorImpl(queryInfo, nsResolver, valueFactory);
     }
 
     /**

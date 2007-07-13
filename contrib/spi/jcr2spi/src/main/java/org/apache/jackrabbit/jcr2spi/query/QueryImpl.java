@@ -163,7 +163,8 @@ public class QueryImpl implements Query {
     public QueryResult execute() throws RepositoryException {
         QueryInfo qI = wspManager.executeQuery(statement, language,
                 nsResolver.getLocalNamespaceMappings());
-        return new QueryResultImpl(itemManager, hierarchyManager, qI, nsResolver);
+        return new QueryResultImpl(itemManager, hierarchyManager,
+                qI, nsResolver, session.getValueFactory());
     }
 
     /**
