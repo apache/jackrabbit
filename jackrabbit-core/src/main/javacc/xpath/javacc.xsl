@@ -485,7 +485,7 @@ TOKEN_MGR_DECLS : {
     </xsl:if>
 SKIP:
 {
-  &lt;&lt;skip_&gt;&gt;
+  &lt; &lt;skip_&gt;&gt;
 }
 
 TOKEN :
