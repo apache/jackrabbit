@@ -22,6 +22,7 @@ import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeStorage;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProviderImpl;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeCache;
 import org.apache.jackrabbit.jcr2spi.name.NamespaceStorage;
 import org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryImpl;
 import org.apache.jackrabbit.jcr2spi.name.NamespaceCache;
@@ -398,6 +399,8 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                 throw new UnsupportedOperationException("NodeType registration not yet defined by the SPI");
             }
         };
+        NodeTypeCache ntCache = NodeTypeCache.getInstance(service, sessionInfo.getUserID());
+        ntst = ntCache.wrap(ntst);
         return NodeTypeRegistryImpl.create(ntst, nsRegistry);
     }
 
