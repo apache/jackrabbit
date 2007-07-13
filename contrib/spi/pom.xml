@@ -25,13 +25,14 @@
   <!-- ====================================================================== -->
   <!-- P R O J E C T  D E S C R I P T I O N                                   -->
   <!-- ====================================================================== -->
-  
-  <groupId>org.apache.jackrabbit</groupId>
+  <parent>
+    <groupId>org.apache.jackrabbit</groupId>
+    <artifactId>jackrabbit</artifactId>
+    <version>1.4-SNAPSHOT</version>
+  </parent>
   <artifactId>jackrabbit-spi-contrib</artifactId>
   <name>Jackrabbit SPI</name>
-  <version>1.4-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <url>http://jackrabbit.apache.org/</url>
   
   <modules>
     <module>spi</module>
