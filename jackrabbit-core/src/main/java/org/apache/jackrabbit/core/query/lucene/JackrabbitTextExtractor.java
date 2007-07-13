@@ -187,7 +187,7 @@ public class JackrabbitTextExtractor implements TextExtractor {
         }
 
         if (!types.contains(type)) {
-            logger.warn("Full text indexing of {} is not supported", type);
+            logger.debug("Full text indexing of {} is not supported", type);
             types.add(type);
             extractor.addTextExtractor(new EmptyTextExtractor(type));
         }
