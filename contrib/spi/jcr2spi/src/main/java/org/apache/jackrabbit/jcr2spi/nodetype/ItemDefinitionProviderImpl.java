@@ -129,7 +129,7 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
              evaluated upon creating the workspace state.
              */
             EffectiveNodeType ent = entProvider.getEffectiveNodeType(propertyState.getParent().getNodeTypeNames());
-            definition = getQPropertyDefinition(ent, propertyState.getQName(), propertyState.getType(), propertyState.isMultiValued());
+            definition = getQPropertyDefinition(ent, propertyState.getQName(), propertyState.getType(), propertyState.isMultiValued(), true);
         } catch (RepositoryException e) {
             definition = service.getPropertyDefinition(sessionInfo, ((PropertyEntry) propertyState.getHierarchyEntry()).getWorkspaceId());
         } catch (NodeTypeConflictException e) {
@@ -145,7 +145,7 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
                                                       int type, boolean multiValued)
             throws ConstraintViolationException, NoSuchNodeTypeException {
         EffectiveNodeType ent = entProvider.getEffectiveNodeType(ntName);
-        return getQPropertyDefinition(ent, propName, type, multiValued);
+        return getQPropertyDefinition(ent, propName, type, multiValued, false);
     }
 
     /**
@@ -156,7 +156,7 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
                                                       boolean multiValued)
             throws ConstraintViolationException, NoSuchNodeTypeException {
         EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentState);
-        return getQPropertyDefinition(ent, name, type, multiValued);
+        return getQPropertyDefinition(ent, name, type, multiValued, false);
     }
 
     /**
@@ -248,11 +248,11 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
      */
     private static QPropertyDefinition getQPropertyDefinition(EffectiveNodeType ent,
                                                               QName name, int type,
-                                                              boolean multiValued)
+                                                              boolean multiValued, boolean throwWhenAmbiguous)
            throws ConstraintViolationException {
         // try named property definitions first
         QPropertyDefinition[] defs = ent.getNamedQPropertyDefinitions(name);
-        QPropertyDefinition match = getMatchingPropDef(defs, type, multiValued);
+        QPropertyDefinition match = getMatchingPropDef(defs, type, multiValued, throwWhenAmbiguous);
         if (match != null) {
             return match;
         }
@@ -260,7 +260,7 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
         // no item with that name defined;
         // try residual property definitions
         defs = ent.getUnnamedQPropertyDefinitions();
-        match = getMatchingPropDef(defs, type, multiValued);
+        match = getMatchingPropDef(defs, type, multiValued, throwWhenAmbiguous);
         if (match != null) {
             return match;
         }
@@ -339,7 +339,8 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
     }
 
     private static QPropertyDefinition getMatchingPropDef(QPropertyDefinition[] defs, int type,
-                                                   boolean multiValued) {
+                                                   boolean multiValued, boolean throwWhenAmbiguous)
+        throws ConstraintViolationException {
         QPropertyDefinition match = null;
         for (int i = 0; i < defs.length; i++) {
             QItemDefinition qDef = defs[i];
@@ -354,8 +355,12 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
                     if (multiValued == pd.isMultiple()) {
                         // found match
                         if (pd.getRequiredType() != PropertyType.UNDEFINED) {
-                            // found best possible match, get outta here
-                            return pd;
+                            if (match != null && throwWhenAmbiguous) {
+                                throw new ConstraintViolationException("ambiguous property definitions found: " + match + " vs " + pd);
+                            }
+                          
+                            // found best possible match
+                            match = pd;
                         } else {
                             if (match == null) {
                                 match = pd;
@@ -367,4 +372,5 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
         }
         return match;
     }
+
 }
