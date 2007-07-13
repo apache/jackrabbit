@@ -128,7 +128,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     private final CacheBehaviour cacheBehaviour;
 
     private final NamespaceRegistryImpl nsRegistry;
-    private final NodeTypeRegistry ntRegistry;
+    private final NodeTypeRegistryImpl ntRegistry;
     private final ItemDefinitionProvider definitionProvider;
 
     /**
@@ -381,7 +381,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @param nsRegistry
      * @return
      */
-    private NodeTypeRegistry createNodeTypeRegistry(NamespaceRegistry nsRegistry) {
+    private NodeTypeRegistryImpl createNodeTypeRegistry(NamespaceRegistry nsRegistry) {
         NodeTypeStorage ntst = new NodeTypeStorage() {
             public Iterator getAllDefinitions() throws RepositoryException {
                 return service.getQNodeTypeDefinitions(sessionInfo);
@@ -498,6 +498,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         } finally {
             updateSync.release();
         }
+        ntRegistry.dispose();
     }
     //------------------------------------------------------< AccessManager >---
     /**

@@ -87,6 +87,11 @@ public interface EffectiveNodeTypeCache extends Cloneable, Dumpable {
     Key findBest(Key key);
 
     /**
+     * Clears the cache.
+     */
+    void clear();
+
+    /**
     * An <code>ENTKey</code> uniquely identifies
     * a combination (i.e. an aggregation) of one or more node types.
     */

@@ -92,6 +92,17 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
     }
 
     /**
+     * Clears all caches.
+     */
+    public synchronized void dispose() {
+        entCache.clear();
+        registeredNTDefs.clear();
+        propDefs.clear();
+        nodeDefs.clear();
+        listeners.clear();
+    }
+
+    /**
      * Private constructor
      *
      * @param storage
@@ -632,7 +643,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
         }
 
         public void clear() {
-            throw new UnsupportedOperationException("Implementation missing");
+            nodetypeDefinitions.clear();
         }
 
         public boolean isEmpty() {
