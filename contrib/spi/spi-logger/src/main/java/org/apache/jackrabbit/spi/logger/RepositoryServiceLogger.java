@@ -619,7 +619,7 @@ public class RepositoryServiceLogger implements RepositoryService {
             public Object call() throws RepositoryException {
                 return service.getQNodeTypeDefinitions(sessionInfo, ntNames);
             }
-        }, "getQNodeTypeDefinition(SessionInfo,QName)", new Object[]{ntNames});
+        }, "getQNodeTypeDefinitions(SessionInfo,QName[])", new Object[]{ntNames});
     }
 
     private Object execute(Callable callable, String methodName, Object[] args)
