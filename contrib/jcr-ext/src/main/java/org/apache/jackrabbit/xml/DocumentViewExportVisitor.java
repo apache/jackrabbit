@@ -433,7 +433,7 @@ public class DocumentViewExportVisitor implements ItemVisitor {
 
         for (int i = 0; i < characters.length; i++) {
             char ch = characters[i];
-            if ((i == 0) ? XMLChar.isNCNameStart(ch) : XMLChar.isNCName(ch)) {
+            if ((i == 0) ? !XMLChar.isNCNameStart(ch) : !XMLChar.isNCName(ch)) {
                 String hex = Integer.toHexString((int) ch);
                 buffer.append("_x");
                 for (int j = 4; j > hex.length(); j--) {
