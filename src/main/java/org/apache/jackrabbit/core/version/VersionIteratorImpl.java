@@ -66,7 +66,7 @@ class VersionIteratorImpl implements VersionIterator {
         this.session = (SessionImpl) session;
 
         addVersion(rootVersion);
-        // retrieve inital size, since size of the list is not stable
+        // retrieve initial size, since size of the list is not stable
         size = versions.size();
     }
 
@@ -134,19 +134,25 @@ class VersionIteratorImpl implements VersionIterator {
     }
 
     /**
-     * Adds the version 'v' to the list of versions to return and then calls
-     * it self recursively with all the verions prodecessors.
+     * Adds the version 'v' to the list of versions to return and then iterates
+     * over the hierarchy of successors of 'v'.
      *
      * @param v
      */
     private synchronized void addVersion(InternalVersion v) {
-        NodeId id = v.getId();
-        if (!versions.contains(id)) {
-            versions.add(id);
-            InternalVersion[] vs = v.getSuccessors();
-            for (int i = 0; i < vs.length; i++) {
-                addVersion(vs[i]);
+        LinkedList workQueue = new LinkedList();
+        workQueue.add(v);
+        while (!workQueue.isEmpty()) {
+            InternalVersion currentVersion = (InternalVersion) workQueue.removeFirst();
+            NodeId id = currentVersion.getId();
+            if (!versions.contains(id)) {
+                versions.add(id);
+                InternalVersion[] successors = currentVersion.getSuccessors();
+                for (int i = 0; i < successors.length; i++) {
+                    workQueue.add(successors[i]);
+                }
             }
         }
+
     }
 }
