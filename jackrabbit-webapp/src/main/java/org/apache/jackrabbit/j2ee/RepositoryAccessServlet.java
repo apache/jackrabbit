@@ -67,7 +67,12 @@ public class RepositoryAccessServlet extends HttpServlet {
      * the initialized initial context
      */
     private InitialContext jndiContext;
-
+    
+    /**
+     * if this is set we try to get a Repository from the ServletContext
+     */
+    private String repositoryContextAttributeName;
+    
     /**
      * the repository
      */
@@ -87,6 +92,9 @@ public class RepositoryAccessServlet extends HttpServlet {
             throw new ServletException("Only one repository access servlet allowed per web-app.");
         }
         getServletContext().setAttribute(CTX_PARAM_THIS, this);
+        
+        repositoryContextAttributeName = getServletConfig().getInitParameter("repository.context.attribute.name");
+            
         log.info("RepositoryAccessServlet initialized.");
     }
 
@@ -96,7 +104,13 @@ public class RepositoryAccessServlet extends HttpServlet {
      * @return this servlet
      */
     private static RepositoryAccessServlet getInstance(ServletContext ctx) {
-        return (RepositoryAccessServlet) ctx.getAttribute(CTX_PARAM_THIS);
+        final RepositoryAccessServlet instance = (RepositoryAccessServlet) ctx.getAttribute(CTX_PARAM_THIS);
+        if(instance==null) {
+            throw new IllegalStateException(
+                "No RepositoryAccessServlet instance in ServletContext, RepositoryAccessServlet servlet not initialized?"
+            );
+        }
+        return instance;
     }
 
     /**
@@ -236,6 +250,25 @@ public class RepositoryAccessServlet extends HttpServlet {
             return null;
         }
     }
+    
+    /**
+     *  If our config said so, try to retrieve a Repository from the ServletContext 
+     */
+    protected Repository getRepositoryByContextAttribute() {
+        Repository result = null;
+        if(repositoryContextAttributeName!=null) {
+            result = (Repository)getServletContext().getAttribute(repositoryContextAttributeName);
+            
+            if(log.isDebugEnabled()) {
+                if(result!=null) {
+                    log.debug("Got Repository from ServletContext attribute '" + repositoryContextAttributeName + "'");
+                } else {
+                    log.debug("ServletContext attribute '" + repositoryContextAttributeName + "' does not provide a Repository");
+                }
+            }
+        }
+        return result;
+    }
 
     /**
      * Return the fully qualified name of the class providing the client
@@ -256,6 +289,10 @@ public class RepositoryAccessServlet extends HttpServlet {
      */
     public Repository getRepository() {
         try {
+            if (repository == null) {
+                // try to get via context attribute
+                repository = getRepositoryByContextAttribute();
+            }
             if (repository == null) {
                 // try to retrieve via jndi
                 repository = getRepositoryByJNDI();
