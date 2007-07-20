@@ -61,7 +61,16 @@ public abstract class ORMNodeState implements Serializable {
         getMixinTypeNames().clear();
         getParentUUIDs().clear();
         uuid = state.getNodeId().getUUID().toString();
-        parentUUID = state.getParentId().getUUID().toString();
+        
+        if (state.getParentId() != null )
+        {
+            parentUUID = state.getParentId().getUUID().toString();
+        }
+        else
+        {
+            parentUUID = null;
+        }
+        
         if (state.getNodeTypeName() != null) {
             nodeTypeName = state.getNodeTypeName().toString();
         }
@@ -144,7 +153,11 @@ public abstract class ORMNodeState implements Serializable {
     public void toPersistentNodeState(NodeState state) {
         state.setDefinitionId(NodeDefId.valueOf(getDefinitionId()));
         state.setNodeTypeName(QName.valueOf(getNodeTypeName()));
-        state.setParentId(NodeId.valueOf(getParentUUID()));
+        
+        if (getParentUUID() != null)
+        {
+            state.setParentId(NodeId.valueOf(getParentUUID()));
+        }
 
         Iterator childNodeEntryIter = getChildNodeEntries().iterator();
         while (childNodeEntryIter.hasNext()) {
