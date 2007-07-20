@@ -149,6 +149,17 @@
                 places the one in the bootstrap-config wins.
             </description>
         </init-param>
+        <!-- 
+        <init-param>
+          <param-name>repository.context.attribute.name</param-name>
+          <param-value>javax.jcr.Repository</param-value>
+          <description>
+            If this is set, the RepositoryAccessServlet expects a Repository in the ServletContext 
+            attribute having this name. This allows servlets of this module to be used with repositories
+            intialized by the jackrabbit-jcr-servlet module utilities.
+          </description>
+        </init-param>
+         -->
         <!--
         <init-param>
             <param-name>repository-name</param-name>
