@@ -91,9 +91,9 @@ public class JNDIConfig extends AbstractConfig {
     public void init(ServletConfig ctx) throws ServletException  {
         super.init(ctx);
         // add all params whose name starts with 'java.namming.' to the env
-        Enumeration enum = ctx.getInitParameterNames();
-        while (enum.hasMoreElements()) {
-            String name = (String) enum.nextElement();
+        Enumeration names = ctx.getInitParameterNames();
+        while (names.hasMoreElements()) {
+            String name = (String) names.nextElement();
             if (name.startsWith("java.naming.")) {
                 jndiEnv.put(name, ctx.getInitParameter(name));
             }
