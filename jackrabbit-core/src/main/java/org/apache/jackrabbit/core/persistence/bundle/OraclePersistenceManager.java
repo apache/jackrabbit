@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.bundle.util.NGKDbNameIndex;
 import org.apache.jackrabbit.core.persistence.bundle.util.DbNameIndex;
+import org.apache.jackrabbit.util.Text;
 
 /**
  * Extends the {@link BundleDbPersistenceManager} by Oracle specific code.
@@ -38,6 +39,7 @@ import org.apache.jackrabbit.core.persistence.bundle.util.DbNameIndex;
  * <li>&lt;param name="{@link #setPassword(String) password}" value="crx"/>
  * <li>&lt;param name="{@link #setSchema(String) schema}" value="oracle"/>
  * <li>&lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value="${wsp.name}_"/>
+ * <li>&lt;param name="{@link #setTableSpace(String) tableSpace}" value=""/>
  * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/>
  * </ul>
  */
@@ -46,12 +48,39 @@ public class OraclePersistenceManager extends BundleDbPersistenceManager {
     /** the cvs/svn id */
     static final String CVS_ID = "$URL$ $Rev$ $Date$";
 
+    /** the variable for the Oracle table space */
+    public static final String TABLE_SPACE_VARIABLE =
+        "${tableSpace}";
+
+    /** the Oracle table space to use */
+    protected String tableSpace;
+
     /**
      * Creates a new oracle persistence manager
      */
     public OraclePersistenceManager() {
         // enable db blob support
         setExternalBLOBs(false);
+    }
+
+    /**
+     * Returns the configured Oracle table space.
+     * @return the configured Oracle table space.
+     */
+    public String getTableSpace() {
+        return tableSpace;
+    }
+
+    /**
+     * Sets the Oracle table space.
+     * @param tableSpace the Oracle table space.
+     */
+    public void setTableSpace(String tableSpace) {
+        if (tableSpace != null) {
+            this.tableSpace = tableSpace.trim();
+        } else {
+            this.tableSpace = null;
+        }
     }
 
     public void init(PMContext context) throws Exception {
@@ -104,6 +133,21 @@ public class OraclePersistenceManager extends BundleDbPersistenceManager {
      */
     protected boolean checkTablesWithUser() {
         return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected String createSchemaSQL(String sql) {
+        sql = Text.replace(sql, SCHEMA_OBJECT_PREFIX_VARIABLE, schemaObjectPrefix).trim();
+        // set the tablespace if it is defined
+        String tspace;
+        if (tableSpace == null || "".equals(tableSpace)) {
+            tspace = "";
+        } else {
+            tspace = "tablespace " + tableSpace;
+        }
+        return Text.replace(sql, TABLE_SPACE_VARIABLE, tspace).trim();
     }
 
     /**

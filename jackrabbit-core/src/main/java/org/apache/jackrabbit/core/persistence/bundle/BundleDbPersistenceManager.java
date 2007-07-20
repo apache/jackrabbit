@@ -411,8 +411,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             try {
                 String sql = reader.readLine();
                 while (sql != null) {
-                    // replace prefix variable
-                    sql = Text.replace(sql, SCHEMA_OBJECT_PREFIX_VARIABLE, schemaObjectPrefix).trim();
+                    sql = createSchemaSQL(sql);
                     if (sql.length() > 0 && (sql.indexOf("BINVAL") < 0 || useDbBlobStore())) {
                         // only create blob related tables of db blob store configured
                         // execute sql stmt
@@ -434,6 +433,17 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                 stmt.close();
             }
         }
+    }
+
+    /**
+     * Creates an SQL statement for schema creation by variable substitution.
+     *
+     * @param sql a SQL string which may contain variables to substitute
+     * @return a valid SQL string
+     */
+    protected String createSchemaSQL(String sql) {
+        // replace prefix variable
+        return Text.replace(sql, SCHEMA_OBJECT_PREFIX_VARIABLE, schemaObjectPrefix).trim();
     }
 
     /**

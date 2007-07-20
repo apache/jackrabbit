@@ -12,10 +12,10 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-create table ${schemaObjectPrefix}JOURNAL (REVISION_ID number(20,0) NOT NULL, JOURNAL_ID varchar(255), PRODUCER_ID varchar(255), REVISION_DATA blob)
-create unique index ${schemaObjectPrefix}JOURNAL_IDX on ${schemaObjectPrefix}JOURNAL (REVISION_ID)
-create table ${schemaObjectPrefix}GLOBAL_REVISION (REVISION_ID number(20,0) NOT NULL)
-create unique index ${schemaObjectPrefix}GLOBAL_REVISION_IDX on ${schemaObjectPrefix}GLOBAL_REVISION (REVISION_ID)
+create table ${schemaObjectPrefix}JOURNAL (REVISION_ID number(20,0) NOT NULL, JOURNAL_ID varchar(255), PRODUCER_ID varchar(255), REVISION_DATA blob) ${tableSpace}
+create unique index ${schemaObjectPrefix}JOURNAL_IDX on ${schemaObjectPrefix}JOURNAL (REVISION_ID) ${tableSpace}
+create table ${schemaObjectPrefix}GLOBAL_REVISION (REVISION_ID number(20,0) NOT NULL) ${tableSpace}
+create unique index ${schemaObjectPrefix}GLOBAL_REVISION_IDX on ${schemaObjectPrefix}GLOBAL_REVISION (REVISION_ID) ${tableSpace}
 
 # Inserting the one and only revision counter record now helps avoiding race conditions
 insert into ${schemaObjectPrefix}GLOBAL_REVISION VALUES(0)

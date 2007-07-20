@@ -61,6 +61,7 @@ import java.sql.Statement;
  * <li><code>user</code>: the database user</li>
  * <li><code>password</code>: the user's password</li>
  * <li><code>schemaObjectPrefix</code>: prefix to be prepended to schema objects</li>
+ * <li><code>tableSpace</code>: the tablespace to use</li>
  * <li><code>externalBLOBs</code>: if <code>true</code> (the default) BINARY
  * values (BLOBs) are stored in the local file system;
  * if <code>false</code> BLOBs are stored in the database</li>
@@ -74,6 +75,7 @@ import java.sql.Statement;
  *       &lt;param name="user" value="scott"/&gt;
  *       &lt;param name="password" value="tiger"/&gt;
  *       &lt;param name="schemaObjectPrefix" value="${wsp.name}_"/&gt;
+ *       &lt;param name="tableSpace" value=""/&gt;
  *       &lt;param name="externalBLOBs" value="false"/&gt;
  *  &lt;/PersistenceManager&gt;
  * </pre>
@@ -89,6 +91,13 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
     private Integer DURATION_SESSION_CONSTANT;
     private Integer MODE_READWRITE_CONSTANT;
 
+    /** the variable for the Oracle table space */
+    public static final String TABLE_SPACE_VARIABLE =
+        "${tableSpace}";
+
+    /** the Oracle table space to use */
+    protected String tableSpace;
+
     /**
      * Creates a new <code>OraclePersistenceManager</code> instance.
      */
@@ -100,6 +109,26 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
         user = "";
         password = "";
         initialized = false;
+    }
+
+    /**
+     * Returns the configured Oracle table space.
+     * @return the configured Oracle table space.
+     */
+    public String getTableSpace() {
+        return tableSpace;
+    }
+
+    /**
+     * Sets the Oracle table space.
+     * @param tableSpace the Oracle table space.
+     */
+    public void setTableSpace(String tableSpace) {
+        if (tableSpace != null) {
+            this.tableSpace = tableSpace.trim();
+        } else {
+            this.tableSpace = null;
+        }
     }
 
     //---------------------------------< SimpleDbPersistenceManager overrides >
@@ -297,6 +326,16 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
                     if (!sql.startsWith("#") && sql.length() > 0) {
                         // replace prefix variable
                         sql = Text.replace(sql, SCHEMA_OBJECT_PREFIX_VARIABLE, schemaObjectPrefix);
+
+                        // set the tablespace if it is defined
+                        String tspace;
+                        if (tableSpace == null || "".equals(tableSpace)) {
+                            tspace = "";
+                        } else {
+                            tspace = "tablespace " + tableSpace;
+                        }
+                        sql = Text.replace(sql, TABLE_SPACE_VARIABLE, tspace).trim();
+
                         // execute sql stmt
                         stmt.executeUpdate(sql);
                     }
