@@ -58,6 +58,7 @@ import java.lang.reflect.Method;
  * <li><code>user</code>: the database user</li>
  * <li><code>password</code>: the user's password</li>
  * <li><code>schemaObjectPrefix</code>: prefix to be prepended to schema objects</li>
+ * <li><code>tableSpace</code>: the tablespace to use</li>
  * </ul>
  * See also {@link DbFileSystem}.
  * <p/>
@@ -68,6 +69,7 @@ import java.lang.reflect.Method;
  *       &lt;param name="user" value="scott"/&gt;
  *       &lt;param name="password" value="tiger"/&gt;
  *       &lt;param name="schemaObjectPrefix" value="rep_"/&gt;
+ *       &lt;param name="tableSpace" value="default"/&gt;
  *  &lt;/FileSystem&gt;
  * </pre>
  */
@@ -82,6 +84,13 @@ public class OracleFileSystem extends DbFileSystem {
     private Integer DURATION_SESSION_CONSTANT;
     private Integer MODE_READWRITE_CONSTANT;
 
+    /** the variable for the Oracle table space */
+    public static final String TABLE_SPACE_VARIABLE =
+        "${tableSpace}";
+
+    /** the Oracle table space to use */
+    protected String tableSpace;
+
     /**
      * Creates a new <code>OracleFileSystem</code> instance.
      */
@@ -93,6 +102,26 @@ public class OracleFileSystem extends DbFileSystem {
         user = "";
         password = "";
         initialized = false;
+    }
+
+    /**
+     * Returns the configured Oracle table space.
+     * @return the configured Oracle table space.
+     */
+    public String getTableSpace() {
+        return tableSpace;
+    }
+
+    /**
+     * Sets the Oracle table space.
+     * @param tableSpace the Oracle table space.
+     */
+    public void setTableSpace(String tableSpace) {
+        if (tableSpace != null) {
+            this.tableSpace = tableSpace.trim();
+        } else {
+            this.tableSpace = null;
+        }
     }
 
     //-----------------------------------------< DatabaseFileSystem overrides >
@@ -169,6 +198,16 @@ public class OracleFileSystem extends DbFileSystem {
                     if (!sql.startsWith("#") && sql.length() > 0) {
                         // replace prefix variable
                         sql = Text.replace(sql, SCHEMA_OBJECT_PREFIX_VARIABLE, schemaObjectPrefix);
+
+                        // set the tablespace if it is defined
+                        String tspace;
+                        if (tableSpace == null || "".equals(tableSpace)) {
+                            tspace = "";
+                        } else {
+                            tspace = "tablespace " + tableSpace;
+                        }
+                        sql = Text.replace(sql, TABLE_SPACE_VARIABLE, tspace).trim();
+
                         // execute sql stmt
                         stmt.executeUpdate(sql);
                     }

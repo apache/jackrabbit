@@ -578,7 +578,7 @@ public class DatabaseJournal extends AbstractJournal {
                     // Skip comments and empty lines
                     if (!sql.startsWith("#") && sql.length() > 0) {
                         // replace prefix variable
-                        sql = Text.replace(sql, SCHEMA_OBJECT_PREFIX_VARIABLE, schemaObjectPrefix);
+                        sql = createSchemaSQL(sql);
                         // execute sql stmt
                         stmt.executeUpdate(sql);
                     }
@@ -590,6 +590,16 @@ public class DatabaseJournal extends AbstractJournal {
                 close(stmt);
             }
         }
+    }
+
+    /**
+     * Creates an SQL statement for schema creation by variable substitution.
+     *
+     * @param sql a SQL string which may contain variables to substitute
+     * @return a valid SQL string
+     */
+    protected String createSchemaSQL(String sql) {
+        return Text.replace(sql, SCHEMA_OBJECT_PREFIX_VARIABLE, schemaObjectPrefix);
     }
 
     /**
