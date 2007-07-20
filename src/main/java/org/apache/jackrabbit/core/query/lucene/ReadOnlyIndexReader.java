@@ -256,5 +256,27 @@ class ReadOnlyIndexReader extends FilterIndexReader {
         public int nextPosition() throws IOException {
             return ((TermPositions) this.in).nextPosition();
         }
+
+        /**
+         * @inheritDoc
+         */
+        public int getPayloadLength() {
+            return ((TermPositions) in).getPayloadLength();
+        }
+
+        /**
+         * @inheritDoc
+         */
+        public byte[] getPayload(byte data[], int offset) throws IOException {
+            return ((TermPositions) in).getPayload(data, offset);
+        }
+
+        /**
+         * @inheritDoc
+         */
+        public boolean isPayloadAvailable() {
+            return ((TermPositions) in).isPayloadAvailable();
+        }
+
     }
 }
