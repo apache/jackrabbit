@@ -63,9 +63,9 @@ public abstract class AbstractConfig {
     }
 
     public void init(ServletConfig ctx) throws ServletException {
-        Enumeration enum = ctx.getInitParameterNames();
-        while (enum.hasMoreElements()) {
-            String name = (String) enum.nextElement();
+        Enumeration names = ctx.getInitParameterNames();
+        while (names.hasMoreElements()) {
+            String name = (String) names.nextElement();
             String mapName = toMapName(name, '-');
             try {
                 if (map.containsKey(mapName)) {
