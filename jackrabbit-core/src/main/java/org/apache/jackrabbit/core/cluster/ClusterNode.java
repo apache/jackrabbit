@@ -677,64 +677,46 @@ public class ClusterNode implements Runnable,
         /**
          * {@inheritDoc}
          */
-        public void locked(NodeId nodeId, boolean deep, String owner) {
+        public ClusterOperation create(NodeId nodeId, boolean deep, String owner) {
             if (status != STARTED) {
                 log.info("not started: lock operation ignored.");
-                return;
+                return null;
             }
-            Record record = null;
-            boolean succeeded = false;
-
             try {
-                record = journal.getProducer(PRODUCER_ID).append();
-                record.writeString(workspace);
-                write(record, nodeId, deep, owner);
-                record.writeChar('\0');
-                record.update();
-                setRevision(record.getRevision());
-                succeeded = true;
+                Record record = journal.getProducer(PRODUCER_ID).append();
+                return new LockOperation(ClusterNode.this, workspace, record,
+                        nodeId, deep, owner);
             } catch (JournalException e) {
                 String msg = "Unable to create log entry: " + e.getMessage();
                 log.error(msg);
+                return null;
             } catch (Throwable e) {
                 String msg = "Unexpected error while creating log entry.";
                 log.error(msg, e);
-            } finally {
-                if (!succeeded && record != null) {
-                    record.cancelUpdate();
-                }
+                return null;
             }
         }
 
         /**
          * {@inheritDoc}
          */
-        public void unlocked(NodeId nodeId) {
+        public ClusterOperation create(NodeId nodeId) {
             if (status != STARTED) {
                 log.info("not started: unlock operation ignored.");
-                return;
+                return null;
             }
-            Record record = null;
-            boolean succeeded = false;
-
             try {
-                record = journal.getProducer(PRODUCER_ID).append();
-                record.writeString(workspace);
-                write(record, nodeId);
-                record.writeChar('\0');
-                record.update();
-                setRevision(record.getRevision());
-                succeeded = true;
+                Record record = journal.getProducer(PRODUCER_ID).append();
+                return new LockOperation(ClusterNode.this, workspace, record,
+                        nodeId);
             } catch (JournalException e) {
                 String msg = "Unable to create log entry: " + e.getMessage();
                 log.error(msg);
+                return null;
             } catch (Throwable e) {
                 String msg = "Unexpected error while creating log entry.";
                 log.error(msg, e);
-            } finally {
-                if (!succeeded && record != null) {
-                    record.cancelUpdate();
-                }
+                return null;
             }
         }
 
@@ -1182,18 +1164,6 @@ public class ClusterNode implements Runnable,
         record.writeString(uri);
     }
 
-    private static void write(Record record, NodeId nodeId, boolean isDeep, String owner)
-            throws JournalException {
-
-        write(record, nodeId, true, isDeep, owner);
-    }
-
-    private static void write(Record record, NodeId nodeId)
-            throws JournalException {
-
-        write(record, nodeId, false, false, null);
-    }
-
     private static void write(Record record, Collection c, boolean register)
             throws JournalException {
 
@@ -1268,16 +1238,40 @@ public class ClusterNode implements Runnable,
         record.writeString(event.getUserId());
     }
 
-    private static void write(Record record, NodeId nodeId, boolean isLock,
-                              boolean isDeep, String owner)
-            throws JournalException {
+    /**
+     * Invoked when a cluster operation has ended. If <code>successful</code>,
+     * attempts to fill the journal record and update it, otherwise cancels
+     * the update.
+     *
+     * @param operation cluster operation
+     * @param successful <code>true</code> if the operation was successful and
+     *                   the journal record should be updated;
+     *                   <code>false</code> to revoke changes
+     */
+    public void ended(AbstractClusterOperation operation, boolean successful) {
+        Record record = operation.getRecord();
+        boolean succeeded = false;
 
-        record.writeChar('L');
-        record.writeNodeId(nodeId);
-        record.writeBoolean(isLock);
-        if (isLock) {
-            record.writeBoolean(isDeep);
-            record.writeString(owner);
+        try {
+            if (successful) {
+                record = operation.getRecord();
+                record.writeString(operation.getWorkspace());
+                operation.write();
+                record.writeChar('\0');
+                record.update();
+                setRevision(record.getRevision());
+                succeeded = true;
+            }
+        } catch (JournalException e) {
+            String msg = "Unable to create log entry: " + e.getMessage();
+            log.error(msg);
+        } catch (Throwable e) {
+            String msg = "Unexpected error while creating log entry.";
+            log.error(msg, e);
+        } finally {
+            if (!succeeded) {
+                record.cancelUpdate();
+            }
         }
     }
 }

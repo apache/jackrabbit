@@ -27,6 +27,7 @@ import org.apache.jackrabbit.core.SessionListener;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.cluster.LockEventChannel;
 import org.apache.jackrabbit.core.cluster.LockEventListener;
+import org.apache.jackrabbit.core.cluster.ClusterOperation;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
@@ -261,6 +262,14 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         LockInfo info = new LockInfo(new LockToken(node.getNodeId()),
                 isSessionScoped, isDeep, session.getUserID());
 
+        ClusterOperation operation = null;
+        boolean successful = false;
+
+        // Cluster is only informed about open-scoped locks
+        if (eventChannel != null && !isSessionScoped) {
+            operation = eventChannel.create(node.getNodeId(), isDeep, session.getUserID());
+        }
+
         acquire();
 
         try {
@@ -289,15 +298,16 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             lockMap.put(path, info);
 
             if (!info.sessionScoped) {
-                if (eventChannel != null) {
-                    eventChannel.locked(node.getNodeId(), isDeep, session.getUserID());
-                }
                 save();
+                successful = true;
             }
             return info;
 
         } finally {
             release();
+            if (operation != null) {
+                operation.ended(successful);
+            }
         }
     }
 
@@ -310,6 +320,13 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     void internalUnlock(NodeImpl node)
             throws LockException, RepositoryException {
 
+        ClusterOperation operation = null;
+        boolean successful = false;
+
+        if (eventChannel != null) {
+            operation = eventChannel.create(node.getNodeId());
+        }
+        
         acquire();
 
         try {
@@ -334,14 +351,15 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             info.setLive(false);
 
             if (!info.sessionScoped) {
-                if (eventChannel != null) {
-                    eventChannel.unlocked(node.getNodeId());
-                }
                 save();
+                successful = true;
             }
-
         } finally {
             release();
+
+            if (operation != null) {
+                operation.ended(successful);
+            }
         }
     }
 
