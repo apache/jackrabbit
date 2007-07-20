@@ -24,20 +24,27 @@ import org.apache.jackrabbit.core.NodeId;
 public interface LockEventChannel {
 
     /**
-     * Called when a node has been locked.
+     * Create a new cluster operation that should be used to inform other
+     * instances in the cluster. Called when a node is about to be
+     * locked. 
      *
      * @param nodeId node id
      * @param deep flag indicating whether lock is deep
      * @param owner lock owner
+     * @return cluster operation or <code>null</code> if the cluster node
+     *         is not started or some error occurs
      */
-    public void locked(NodeId nodeId, boolean deep, String owner);
+    public ClusterOperation create(NodeId nodeId, boolean deep, String owner);
 
     /**
-     * Called when a node has been unlocked.
+     * Create a new cluster operation  that should be used to inform other
+     * instances in the cluster. Called when a node has been unlocked.
      *
      * @param nodeId node id
+     * @return cluster operation or <code>null</code> if the cluster node
+     *         is not started or some error occurs
      */
-    public void unlocked(NodeId nodeId);
+    public ClusterOperation create(NodeId nodeId);
 
     /**
      * Set listener that will receive information about incoming, external lock events.
