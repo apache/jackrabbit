@@ -88,7 +88,7 @@
             <include>**/TestAll.java</include>
           </includes>
           <forkMode>once</forkMode>
-          <argLine>-Xmx512m -enableassertions</argLine>
+          <argLine>-Xmx128m -enableassertions</argLine>
           <systemProperties>
             <property>
               <name>derby.system.durability</name>
@@ -97,7 +97,10 @@
             <property>
               <name>known.issues</name>
               <value>
-                org.apache.jackrabbit.core.xml.DocumentViewTest#testMultiValue
+                org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespaceVisibility
+                org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testRegisteredNamespaceVisibility
+                org.apache.jackrabbit.jcr2spi.ReorderMoveTest#testRevertMoveAndReorderSNS
+                org.apache.jackrabbit.jcr2spi.ReorderMoveTest#testRevertMoveReorderedSNS
                 org.apache.jackrabbit.value.BinaryValueTest#testBinaryValueEquals
               </value>
             </property>
