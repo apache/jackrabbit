@@ -744,7 +744,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
                     lockState.unlocked();
                 } catch (RepositoryException e) {
                     // may occur if session has been logged out. rather throw?
-                    log.warn("Unable to determine lock status.", e);
+                    log.warn("Unable to determine lock status.", e.getMessage());
                 }
             } // else: nothing to do.
         }
