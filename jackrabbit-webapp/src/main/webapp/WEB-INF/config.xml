@@ -56,6 +56,12 @@
         -->
         <class name="org.apache.jackrabbit.server.io.IOManagerImpl" />
         <iohandler>
+            <class name="org.apache.jackrabbit.server.io.VersionHandler" />
+        </iohandler>
+        <iohandler>
+            <class name="org.apache.jackrabbit.server.io.VersionHistoryHandler" />
+        </iohandler>
+        <iohandler>
             <class name="org.apache.jackrabbit.server.io.ZipHandler" />
         </iohandler>
         <iohandler>
@@ -88,6 +94,12 @@
              they appear in the configuration.
         -->
         <class name="org.apache.jackrabbit.server.io.PropertyManagerImpl" />
+        <propertyhandler>
+            <class name="org.apache.jackrabbit.server.io.VersionHandler" />
+        </propertyhandler>
+        <propertyhandler>
+            <class name="org.apache.jackrabbit.server.io.VersionHistoryHandler" />
+        </propertyhandler>
         <propertyhandler>
             <class name="org.apache.jackrabbit.server.io.ZipHandler" />
         </propertyhandler>
