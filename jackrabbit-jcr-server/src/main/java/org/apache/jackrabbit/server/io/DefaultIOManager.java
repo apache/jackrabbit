@@ -51,6 +51,8 @@ public class DefaultIOManager extends IOManagerImpl {
     /**
      * Add the predefined <code>IOHandler</code>s to this manager. This includes
      * <ul>
+     * <li>{@link VersionHistoryHandler}</li>
+     * <li>{@link VersionHandler}</li>
      * <li>{@link ZipHandler}</li>
      * <li>{@link XmlHandler}</li>
      * <li>{@link DirListingExportHandler}</li>
@@ -58,6 +60,8 @@ public class DefaultIOManager extends IOManagerImpl {
      * </ul>
      */
     protected void init() {
+        addIOHandler(new VersionHistoryHandler(this));
+        addIOHandler(new VersionHandler(this));
         addIOHandler(new ZipHandler(this));
         addIOHandler(new XmlHandler(this));
         addIOHandler(new DirListingExportHandler(this));

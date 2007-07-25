@@ -543,8 +543,8 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
                 Property p = it.nextProperty();
                 String name = p.getName();
                 PropertyDefinition def = p.getDefinition();
-                if (def.isMultiple()) {
-                    log.debug("Multivalued property '" + name + "' not added to webdav property set.");
+                if (def.isMultiple() || isDefinedByFilteredNodeType(def)) {
+                    log.debug("Skip property '" + name + "': not added to webdav property set.");
                     continue;
                 }
                 if (JcrConstants.JCR_DATA.equals(name)
@@ -708,5 +708,13 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
             contentNode.getProperty(jcrName).remove();
         }
         // removal of non existing property succeeds
+    }
+
+    private static boolean isDefinedByFilteredNodeType(PropertyDefinition def) {
+        String ntName = def.getDeclaringNodeType().getName();
+        return ntName.equals(JcrConstants.NT_BASE)
+               || ntName.equals(JcrConstants.MIX_REFERENCEABLE)
+               || ntName.equals(JcrConstants.MIX_VERSIONABLE)
+               || ntName.equals(JcrConstants.MIX_LOCKABLE);
     }
 }

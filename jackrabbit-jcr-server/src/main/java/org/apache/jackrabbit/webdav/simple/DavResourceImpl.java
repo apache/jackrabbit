@@ -17,20 +17,19 @@
 package org.apache.jackrabbit.webdav.simple;
 
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.server.io.AbstractExportContext;
+import org.apache.jackrabbit.server.io.DefaultIOListener;
 import org.apache.jackrabbit.server.io.ExportContext;
 import org.apache.jackrabbit.server.io.ExportContextImpl;
+import org.apache.jackrabbit.server.io.IOListener;
 import org.apache.jackrabbit.server.io.IOManager;
 import org.apache.jackrabbit.server.io.IOUtil;
 import org.apache.jackrabbit.server.io.ImportContext;
 import org.apache.jackrabbit.server.io.ImportContextImpl;
-import org.apache.jackrabbit.server.io.PropertyManager;
-import org.apache.jackrabbit.server.io.PropertyImportContext;
-import org.apache.jackrabbit.server.io.IOListener;
 import org.apache.jackrabbit.server.io.PropertyExportContext;
-import org.apache.jackrabbit.server.io.AbstractExportContext;
-import org.apache.jackrabbit.server.io.DefaultIOListener;
+import org.apache.jackrabbit.server.io.PropertyImportContext;
+import org.apache.jackrabbit.server.io.PropertyManager;
 import org.apache.jackrabbit.util.Text;
-import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
@@ -52,15 +51,14 @@ import org.apache.jackrabbit.webdav.lock.LockManager;
 import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.lock.SupportedLock;
 import org.apache.jackrabbit.webdav.lock.Type;
-import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyIterator;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameIterator;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.ResourceType;
-import org.apache.jackrabbit.webdav.property.DavPropertyNameIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,15 +69,15 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.lock.Lock;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Collections;
 
 /**
  * DavResourceImpl implements a DavResource.
@@ -91,21 +89,14 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      */
     private static final Logger log = LoggerFactory.getLogger(DavResourceImpl.class);
 
-    private static final HashMap reservedNamespaces = new HashMap();
-
-    static {
-        reservedNamespaces.put(DavConstants.NAMESPACE.getPrefix(), DavConstants.NAMESPACE.getURI());
-        reservedNamespaces.put(ObservationConstants.NAMESPACE.getPrefix(), ObservationConstants.NAMESPACE.getURI());
-    }
-
     private DavResourceFactory factory;
     private LockManager lockManager;
     private JcrDavSession session;
     private Node node;
     private DavResourceLocator locator;
 
-    private DavPropertySet properties = new DavPropertySet();
-    private boolean inited = false;
+    protected DavPropertySet properties = new DavPropertySet();
+    protected boolean propsInitialized = false;
     private boolean isCollection = true;
 
     private ItemFilter filter;
@@ -120,6 +111,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @param locator
      * @param factory
      * @param session
+     * @deprecated
      */
     public DavResourceImpl(DavResourceLocator locator, DavResourceFactory factory,
                            DavSession session, ResourceConfig config) throws DavException {
@@ -144,6 +136,57 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             } catch (RepositoryException e) {
                 // some other error
                 throw new JcrDavException(e);
+            }
+        } else {
+            throw new DavException(DavServletResponse.SC_NOT_FOUND);
+        }
+    }
+
+    /**
+     * Create a new {@link DavResource}.
+     *
+     * @param locator
+     * @param factory
+     * @param session
+     * @param config
+     * @param isCollection
+     * @throws DavException
+     */
+    public DavResourceImpl(DavResourceLocator locator, DavResourceFactory factory,
+                           DavSession session, ResourceConfig config,
+                           boolean isCollection) throws DavException {
+        this(locator, factory, session, config, null);
+        this.isCollection = isCollection;
+    }
+    
+    /**
+     * Create a new {@link DavResource}.
+     *
+     * @param locator
+     * @param factory
+     * @param session
+     * @param config
+     * @param node
+     * @throws DavException
+     */
+    public DavResourceImpl(DavResourceLocator locator, DavResourceFactory factory,
+                           DavSession session, ResourceConfig config, Node node) throws DavException {
+        if (locator == null || session == null || config == null) {
+            throw new IllegalArgumentException();
+        }
+        JcrDavSession.checkImplementation(session);
+        this.session = (JcrDavSession)session;
+        this.factory = factory;
+        this.locator = locator;
+        this.filter = config.getItemFilter();
+        this.ioManager = config.getIOManager();
+        this.propManager = config.getPropertyManager();
+
+        if (locator.getResourcePath() != null) {
+            if (node != null) {
+                this.node = node;
+                // define what is a collection in webdav
+                isCollection = config.isCollectionResource(node);
             }
         } else {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
@@ -185,6 +228,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * represents a collection or not.
      *
      * @param isCollection
+     * @deprecated Use the constructor taking a boolean flag instead.
      */
     void setIsCollection(boolean isCollection) {
         this.isCollection = isCollection;
@@ -283,7 +327,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * Fill the set of properties
      */
     protected void initProperties() {
-        if (!exists() || inited) {
+        if (!exists() || propsInitialized) {
             return;
         }
 
@@ -316,7 +360,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         supportedLock.addEntry(Type.WRITE, Scope.EXCLUSIVE);
         properties.add(supportedLock);
 
-        inited = true;
+        propsInitialized = true;
     }
 
     /**
@@ -501,12 +545,14 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         if (isLocked(this) || isLocked(member)) {
             throw new DavException(DavServletResponse.SC_LOCKED);
         }
-        // don't allow creation of nodes, that would be filtered out
-        if (isFilteredResource(member)) {
-            log.debug("Avoid creation of filtered resource: " + member.getDisplayName());
-            throw new DavException(DavServletResponse.SC_FORBIDDEN);
-        }
         try {
+            // don't allow creation of nodes if this resource represents a protected
+            // item or if the new resource would be filtered out
+            if (isFilteredResource(member) || node.getDefinition().isProtected()) {
+                log.debug("Forbidden to add member: " + member.getDisplayName());
+                throw new DavException(DavServletResponse.SC_FORBIDDEN);
+            }
+
             String memberName = Text.getName(member.getLocator().getRepositoryPath());
             ImportContext ctx = getImportContext(inputContext, memberName);
             if (!ioManager.importContent(ctx, member)) {
