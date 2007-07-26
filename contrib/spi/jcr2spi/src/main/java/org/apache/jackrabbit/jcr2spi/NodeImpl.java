@@ -332,8 +332,8 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property setProperty(String name, String value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
         // validation performed in subsequent method
-        // best-effort conversion if the target property is not of type STRING
-        return setProperty(name, value, PropertyType.STRING);
+        Value v = (value == null) ? null : session.getValueFactory().createValue(value, PropertyType.STRING);
+        return setProperty(name, v, PropertyType.UNDEFINED);
     }
 
     /**
