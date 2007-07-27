@@ -381,12 +381,6 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @throws RepositoryException
      */
     private static NodeEntry createIntermediateNodeEntry(NodeEntry parentEntry, QName name, int index) throws RepositoryException {
-        /*
-        HierarchyEntry entry = parentEntry.lookupDeepEntry(Path.create(name, index));
-        if (entry == null || !entry.denotesNode()) {
-            entry = parentEntry.addNodeEntry(name, null, index);
-        }
-        */
         NodeEntry entry;
         if (parentEntry.hasNodeEntry(name, index)) {
             entry = parentEntry.getNodeEntry(name, index);
