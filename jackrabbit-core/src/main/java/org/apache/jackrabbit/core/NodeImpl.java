@@ -635,6 +635,10 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     protected void onRedefine(NodeDefId defId) throws RepositoryException {
+        if (defId.equals(((NodeState) state).getDefinitionId())) {
+            // no change, ignore silently...
+            return;
+        }
         NodeDefinitionImpl newDef =
                 session.getNodeTypeManager().getNodeDefinition(defId);
         // modify the state of 'this', i.e. the target node
