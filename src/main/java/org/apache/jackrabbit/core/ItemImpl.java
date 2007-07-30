@@ -1114,8 +1114,9 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     NodeState nodeState = (NodeState) transientState;
                     Set dependentIDs = new HashSet();
                     if (nodeState.hasOverlayedState()) {
-                        NodeId oldParentId =
-                                nodeState.getOverlayedState().getParentId();
+                        NodeState overlayedState =
+                                (NodeState) nodeState.getOverlayedState();
+                        NodeId oldParentId = overlayedState.getParentId();
                         NodeId newParentId = nodeState.getParentId();
                         if (oldParentId != null) {
                             if (newParentId == null) {
@@ -1124,14 +1125,31 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                                 dependentIDs.add(oldParentId);
                             } else {
                                 if (!oldParentId.equals(newParentId)) {
-                                    // node has been moved, add old and new parent
-                                    // to dependencies
+                                    // node has been moved to a new location,
+                                    // add old and new parent to dependencies
                                     dependentIDs.add(oldParentId);
                                     dependentIDs.add(newParentId);
+                                } else {
+                                    // edge case: check whether definition id
+                                    // has changed (indicating that the node
+                                    // had been renamed, subsequently acquiring
+                                    // a new definition) (JCR-1034)
+                                    if (!nodeState.getDefinitionId().equals(
+                                            overlayedState.getDefinitionId())) {
+                                        // node has been renamed and as result
+                                        // got redefined, add parent to dependencies
+                                        dependentIDs.add(newParentId);
+                                    }
                                 }
                             }
                         }
                     }
+
+                    // note that there's no need to check removed/added
+                    // child node entries since those, being descendants, 
+                    // will automatically be included in the hierarchical
+                    // scope of this save operation.
+/*
                     // removed child node entries
                     for (Iterator cneIt =
                             nodeState.getRemovedChildNodeEntries().iterator();
@@ -1148,7 +1166,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                                 (NodeState.ChildNodeEntry) cneIt.next();
                         dependentIDs.add(cne.getId());
                     }
-
+  */
                     // now walk through dependencies and check whether they
                     // are within the scope of this save operation
                     Iterator depIt = dependentIDs.iterator();
