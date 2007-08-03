@@ -189,7 +189,7 @@ public class SessionTest extends AbstractJCRTest {
         // save only old parent node
         try {
             srcParentNode.save();
-            fail("Saving only the source parent node after a Session.move() operation must throw ContstraintViolationException");
+            fail("Saving only the source parent node after a Session.move() operation must throw ConstraintViolationException");
         } catch (ConstraintViolationException e) {
             // ok both work as expected
         }
