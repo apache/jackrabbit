@@ -626,6 +626,43 @@ public class NodeState extends ItemState {
 
     /**
      * Returns a list of child node entries that exist both in <i>this</i> node
+     * state and in the overlayed node state but have been renamed.
+     *
+     * @return list of renamed child node entries
+     */
+    public synchronized List getRenamedChildNodeEntries() {
+        if (!hasOverlayedState()) {
+            return Collections.EMPTY_LIST;
+        }
+
+        ChildNodeEntries otherChildNodeEntries =
+                ((NodeState) overlayedState).childNodeEntries;
+
+        // do a lazy init
+        List renamed = null;
+
+        for (Iterator iter = childNodeEntries.iterator(); iter.hasNext();) {
+            ChildNodeEntry cne = (ChildNodeEntry) iter.next();
+            ChildNodeEntry cneOther = otherChildNodeEntries.get(cne.getId());
+            if (cneOther != null && !cne.getName().equals(cneOther.getName())) {
+                // child node entry with same id but different name exists in
+                // overlayed and this state => renamed entry detected
+                if (renamed == null) {
+                    renamed = new ArrayList();
+                }
+                renamed.add(cne);
+            }
+        }
+
+        if (renamed == null) {
+            return Collections.EMPTY_LIST;
+        } else {
+            return renamed;
+        }
+    }
+
+    /**
+     * Returns a list of child node entries that exist both in <i>this</i> node
      * state and in the overlayed node state but have been reordered.
      * <p/>
      * The list may include only the minimal set of nodes that have been
