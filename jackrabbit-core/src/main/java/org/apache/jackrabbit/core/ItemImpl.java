@@ -1130,26 +1130,34 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                                     dependentIDs.add(oldParentId);
                                     dependentIDs.add(newParentId);
                                 } else {
-                                    // edge case: check whether definition id
-                                    // has changed (indicating that the node
-                                    // had been renamed, subsequently acquiring
-                                    // a new definition) (JCR-1034)
-                                    if (!nodeState.getDefinitionId().equals(
-                                            overlayedState.getDefinitionId())) {
-                                        // node has been renamed and as result
-                                        // got redefined, add parent to dependencies
-                                        dependentIDs.add(newParentId);
+                                    // parent id hasn't changed, check whether
+                                    // the node has been renamed (JCR-1034)
+                                    if (!affectedIds.contains(newParentId)
+                                            && stateMgr.hasTransientItemState(newParentId)) {
+                                        try {
+                                            NodeState parent = (NodeState) stateMgr.getTransientItemState(newParentId);
+                                            // check parent's renamed child node entries
+                                            for (Iterator cneIt =
+                                                    parent.getRenamedChildNodeEntries().iterator();
+                                                 cneIt.hasNext();) {
+                                                NodeState.ChildNodeEntry cne =
+                                                        (NodeState.ChildNodeEntry) cneIt.next();
+                                                if (cne.getId().equals(nodeState.getId())) {
+                                                    // node has been renamed,
+                                                    // add parent to dependencies
+                                                    dependentIDs.add(newParentId);
+                                                }
+                                            }
+                                        } catch (ItemStateException ise) {
+                                            // should never get here
+                                            log.warn("failed to retrieve transient state: " + newParentId, ise);
+                                        }
                                     }
                                 }
                             }
                         }
                     }
 
-                    // note that there's no need to check removed/added
-                    // child node entries since those, being descendants, 
-                    // will automatically be included in the hierarchical
-                    // scope of this save operation.
-/*
                     // removed child node entries
                     for (Iterator cneIt =
                             nodeState.getRemovedChildNodeEntries().iterator();
@@ -1166,14 +1174,14 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                                 (NodeState.ChildNodeEntry) cneIt.next();
                         dependentIDs.add(cne.getId());
                     }
-  */
+
                     // now walk through dependencies and check whether they
                     // are within the scope of this save operation
                     Iterator depIt = dependentIDs.iterator();
                     while (depIt.hasNext()) {
                         NodeId id = (NodeId) depIt.next();
                         if (!affectedIds.contains(id)) {
-                            // need to save the parent as well
+                            // need to save dependency as well
                             String msg = itemMgr.safeGetJCRPath(id)
                                     + " needs to be saved as well.";
                             log.debug(msg);
