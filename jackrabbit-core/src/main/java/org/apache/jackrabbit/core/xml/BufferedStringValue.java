@@ -194,7 +194,9 @@ class BufferedStringValue implements TextValue {
             } else {
                 if (bufferPos + length > buffer.length) {
                     // reallocate new buffer and spool old buffer contents
-                    char[] newBuffer = new char[buffer.length + BUFFER_INCREMENT];
+                    int bufferSize =
+                            BUFFER_INCREMENT * (((bufferPos + length) / BUFFER_INCREMENT) + 1);
+                    char[] newBuffer = new char[bufferSize];
                     System.arraycopy(buffer, 0, newBuffer, 0, bufferPos);
                     buffer = newBuffer;
                 }
