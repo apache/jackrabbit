@@ -22,7 +22,12 @@ import javax.jcr.RepositoryException;
 import javax.jcr.ValueFactory;
 
 /**
- * <code>RepositoryConfig</code>...
+ * This class bundles the information required by JCR2SPI to
+ * bootstrap an SPI implementation.
+ * <p>
+ * Instances of this class <em>should</em> implement
+ * {@link javax.naming.Referenceable} in order to make JCR2SPI's
+ * {@link javax.jcr.Repository} itself referenceable.
  */
 public interface RepositoryConfig {
 
