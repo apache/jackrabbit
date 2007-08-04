@@ -16,30 +16,42 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
-import org.apache.jackrabbit.spi.SessionInfo;
-import org.apache.jackrabbit.spi.XASessionInfo;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Map;
 
-import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.NoSuchWorkspaceException;
-import java.util.Map;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.naming.Context;
+import javax.naming.Name;
+import javax.naming.NamingException;
+import javax.naming.RefAddr;
+import javax.naming.Reference;
+import javax.naming.Referenceable;
+import javax.naming.StringRefAddr;
+import javax.naming.spi.ObjectFactory;
+
+import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
+import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.XASessionInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>RepositoryImpl</code>...
  */
-public class RepositoryImpl implements Repository {
+public class RepositoryImpl implements Repository, Referenceable {
 
     private static Logger log = LoggerFactory.getLogger(RepositoryImpl.class);
 
     // configuration of the repository
     private final RepositoryConfig config;
     private final Map descriptors;
+    private Reference reference = null;
 
     private RepositoryImpl(RepositoryConfig config) throws RepositoryException {
         this.config = config;
@@ -103,5 +115,108 @@ public class RepositoryImpl implements Repository {
      */
     public Session login() throws LoginException, NoSuchWorkspaceException, RepositoryException {
         return login(null, null);
+    }
+
+    //---------------------------------------------------------< Rereferencable >---
+
+    /**
+     * @see Referenceable#getReference()
+     */
+    public Reference getReference() throws NamingException {
+        if (config instanceof Referenceable) {
+            Referenceable confref = (Referenceable)config;
+            if (reference == null) {
+                reference = new Reference(RepositoryImpl.class.getName(), RepositoryImpl.Factory.class.getName(), null);
+                // carry over all addresses from referenceable config
+                for (Enumeration en = confref.getReference().getAll(); en.hasMoreElements(); ) {
+                    reference.add((RefAddr)(en.nextElement()));
+                }
+
+                // also add the information required by factory class
+                reference.add(new StringRefAddr(Factory.RCF, confref.getReference().getFactoryClassName()));
+                reference.add(new StringRefAddr(Factory.RCC, config.getClass().getName()));
+            }
+
+            return reference;
+        }
+        else {
+            throw new javax.naming.OperationNotSupportedException("Contained RepositoryConfig needs to implement javax.naming.Referenceable");
+        }
+    }
+
+    /**
+     * Implementation of {@link ObjectFactory} for repository instances.
+     * <p>
+     * Works by creating a {@link Reference} to a {@link RepositoryConfig}
+     * instance based on the information obtained from the {@link RepositoryImpl}'s
+     * {@link Reference}.
+     * <p>
+     * Address Types:
+     * <dl>
+     *  <dt>{@link #RCF}
+     *  <dd>Class name for {@link ObjectFactory} creating instances of {@link RepositoryConfig}</dd>
+     *  <dt>{@link #RCC}
+     *  <dd>Class name for {@link RepositoryConfig} instances</dd>
+     * </dl>
+     * <p>
+     * All other types are copied over verbatim to the new {@link Reference}
+     */
+    public static class Factory implements ObjectFactory {
+
+        public static final String RCF = RepositoryImpl.class.getName() + ".factory";
+        public static final String RCC = RepositoryImpl.class.getName() + ".class";
+
+        public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable environment) throws Exception {
+
+            Object res = null;
+            if (obj instanceof Reference) {
+                Reference ref = (Reference)obj;
+                String classname = ref.getClassName();
+                                
+                if (RepositoryImpl.class.getName().equals(classname)) {
+                
+                    RefAddr rfac = ref.get(RCF);
+                    if (rfac == null || !(rfac instanceof StringRefAddr)) {
+                        throw new Exception("Address type " + RCF + " missing or of wrong class: " + rfac);
+                    }
+                    String configFactoryClassName = (String)((StringRefAddr)rfac).getContent();
+
+                    RefAddr rclas = ref.get(RCC);
+                    if (rclas == null || !(rclas instanceof StringRefAddr)) {
+                        throw new Exception("Address type " + RCC + " missing or of wrong class: " + rclas);
+                    }
+                    String repositoryConfigClassName = (String)((StringRefAddr)rclas).getContent();
+
+                    Object rof = Class.forName(configFactoryClassName).newInstance();
+                    
+                    if (! (rof instanceof ObjectFactory)) {
+                        throw new Exception(rof + " must implement ObjectFactory");
+                    }
+
+                    ObjectFactory of = (ObjectFactory)rof;
+                    Reference newref = new Reference(repositoryConfigClassName,
+                        configFactoryClassName, null);
+
+                    // carry over all arguments except our own
+                    for (Enumeration en = ref.getAll(); en.hasMoreElements(); ){
+                        RefAddr ra = (RefAddr)en.nextElement();
+                        String type = ra.getType();
+                        if (! RCF.equals(type) && ! RCC.equals(type)) {
+                            newref.add(ra);
+                        }
+                    }
+
+                    Object config = of.getObjectInstance(newref, name, nameCtx, environment);
+                    if (! (config instanceof RepositoryConfig)) {
+                        throw new Exception(config + " must implement RepositoryConfig");
+                    }
+                    return RepositoryImpl.create((RepositoryConfig)config);
+                }
+                else {
+                    throw new Exception("Unexpected class: " + classname);
+                }
+            }
+            return res;
+        }
     }
 }
