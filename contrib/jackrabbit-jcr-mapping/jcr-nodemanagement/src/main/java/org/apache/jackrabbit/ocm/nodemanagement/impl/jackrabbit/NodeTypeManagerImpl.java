@@ -173,7 +173,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
                     while (fieldIterator.hasNext())
                     {
                         FieldDescriptor field = (FieldDescriptor) fieldIterator.next();
-                        if (!field.isPath() && !field.isId()) {
+                        if (!field.isPath()) {
                             propDefs.add(getPropertyDefinition(field.getFieldName(), field, nodeTypeDef.getName()));
                         }
                     }
@@ -269,7 +269,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
         NodeTypeDef type = new NodeTypeDef();
         type.setMixin(false);
         
-        if (jcrNodeType != null)
+        if (jcrNodeType != null && (! jcrNodeType.equals("")))
         {
             type.setName(getNamespaceHelper().getQName(jcrNodeType));
         }
@@ -345,7 +345,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
         if (field.getJcrName() != null) {
             node.setName(getNamespaceHelper().getQName(field.getJcrName()));
         } else {
-            node.setName(getNamespaceHelper().getQName(fieldName));
+            node.setName(getNamespaceHelper().getQName("*"));
         }
 
         if (field.getJcrNodeType() != null) {
