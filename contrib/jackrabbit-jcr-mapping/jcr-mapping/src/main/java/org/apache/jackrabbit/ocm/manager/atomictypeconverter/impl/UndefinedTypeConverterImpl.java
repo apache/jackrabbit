@@ -18,7 +18,6 @@
 package org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl;
 
 import java.io.InputStream;
-import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
