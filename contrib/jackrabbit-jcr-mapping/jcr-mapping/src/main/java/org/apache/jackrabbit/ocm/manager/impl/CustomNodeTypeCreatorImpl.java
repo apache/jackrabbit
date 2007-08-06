@@ -18,7 +18,6 @@ package org.apache.jackrabbit.ocm.manager.impl;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.apache.jackrabbit.ocm.exception.CustomNodeTypeCreationException;
 import org.apache.jackrabbit.ocm.manager.CustomNodeTypeCreator;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
