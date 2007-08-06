@@ -27,19 +27,17 @@ import java.lang.annotation.RetentionPolicy;
  */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Node {
+    
+	String jcrNodeType() default "nt:unstructured";
+	String jcrSuperTypes() default "";
+	String jcrMixinTypes() default "";
+    // Define the extend setting in the mapping descriptor - Provide less flexibility if we use the java instrospection	
+	String extend() default "";
 
-    String requiredPrimaryTypes() default "{http://www.jcp.org/jcr/nt/1.0}base";
-
-    String declaringNodeType() default "";
-
-    String namespace() default "http://jackrabbit.apache.org/ocm";
-
-    String prefix() default "ocm";
-
-    boolean allowSameNameSiblings() default false;
-
-    String name() default "";
-
-    boolean mixin() default false;
-
+	// Define the abstract setting in the mapping descriptor - Provide less flexibility if we use the java instrospection
+	boolean isAbstract() default false; 
+	
+	// Discriminator is used when an object hierarchy tree is mapped into the same jcr node type
+	// TODO : try to drop it from the mapping strategy. it should be hidden in the persistence manager impl. 
+	boolean discriminator() default true;
 }

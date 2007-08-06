@@ -20,6 +20,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.DefaultCollectionConverterImpl;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl;
 
 /**
  * Allows the annotation of getting methods to show that they reflect a child node in JCR
@@ -30,8 +31,10 @@ import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.DefaultCollect
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Collection {
 
-    String name() default "*";
+	Class converter() default DefaultCollectionConverterImpl.class;
 
+    String jcrName() default ""; 
+    
     boolean sameNameSiblings() default false;
 
     boolean autoCreate() default false;
@@ -44,13 +47,11 @@ public @interface Collection {
 
     boolean autoInsert() default true;
 
-    boolean autoRetrieve() default false;
+    boolean autoRetrieve() default true;
 
     boolean autoUpdate() default true;
 
-    Class type();
-
-    Class converter() default DefaultCollectionConverterImpl.class;
+    Class type();    
     
     boolean proxy() default false;
     
