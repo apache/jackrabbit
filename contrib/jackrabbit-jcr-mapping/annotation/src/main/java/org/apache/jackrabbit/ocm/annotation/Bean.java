@@ -19,41 +19,33 @@ package org.apache.jackrabbit.ocm.annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import org.apache.jackrabbit.ocm.manager.beanconverter.impl.DefaultBeanConverterImpl;
+
 /**
- * Allows the annotation of a getter method to show that it will be mapped to a JCR property
+ * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  * 
- * @author Philip Dodds
  * 
  */
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Field {
-    
-    String jcrName() default "";    
+public @interface Bean {
 
-    boolean id() default false;
+	String jcrName() default "";
+    boolean proxy() default false;	 
+    Class converter() default DefaultBeanConverterImpl.class;    
+    boolean autoInsert() default true;
+    boolean autoRetrieve() default true;
+    boolean autoUpdate() default true;
     
-    boolean path() default false;
-    
-    boolean uuid() default false;
-    
-    // Use Object.class as default value 
-    // because it is not possible to have a default null value in annotation field
-    Class converter() default Object.class;
-    
-    String jcrDefaultValue() default "";
-    
-    String jcrValueConstraints() default ""; 
-    
-    String jcrType() default ""; 
-    
-    boolean jcrAutoCreated() default false;     
-    
-    boolean jcrMandatory() default false;    
-    
-    String jcrOnParentVersion() default "COPY";
-    
-    boolean jcrProtected() default false;
-    
-    boolean jcrMultiple () default false;
-    
+    // The folling annotation props are used to create jcr node type. 
+    // There are not necessary for the mapping bean strategies. 
+    String jcrType() default "";    
+    boolean jcrAutoCreated() default false;
+    boolean jcrMandatory() default false;        
+    String jcrOnParentVersion() default "COPY";    
+    boolean jcrProtected() default false; 
+    boolean jcrSameNameSiblings() default false; 
+            
+	       
+
+
 }
