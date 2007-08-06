@@ -24,8 +24,8 @@ import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.ocm.exception.IllegalUnlockException;
 import org.apache.jackrabbit.ocm.exception.LockedException;
-import org.apache.jackrabbit.ocm.lock.Lock;
 import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
+import org.apache.jackrabbit.ocm.lock.Lock;
 import org.apache.jackrabbit.ocm.query.Query;
 import org.apache.jackrabbit.ocm.query.QueryManager;
 import org.apache.jackrabbit.ocm.version.Version;
