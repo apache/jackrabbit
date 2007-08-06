@@ -19,10 +19,6 @@ package org.apache.jackrabbit.ocm;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import org.apache.jackrabbit.ocm.mapper.DigesterMapperImplTest;
-import org.apache.jackrabbit.ocm.querymanager.QueryManagerTest;
-import org.apache.jackrabbit.ocm.repository.RepositoryUtilTest;
-
 
 /**
  * OCM suite definition. Bundles together all independent and package level test suites.
