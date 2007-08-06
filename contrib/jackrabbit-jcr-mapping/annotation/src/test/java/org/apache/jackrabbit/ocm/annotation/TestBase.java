@@ -20,6 +20,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -90,5 +92,28 @@ public class TestBase extends TestCase {
 
         return found;
     }
+    
+	protected  void cleanUpRepisotory() {
+		try 
+		{
+						
+				NodeIterator nodeIterator = session.getRootNode().getNodes();
+		
+				while (nodeIterator.hasNext())
+				{
+					Node node = nodeIterator.nextNode();
+					if (! node.getName().startsWith("jcr:"))
+					{
+					   
+					    node.remove();
+					}
+				}
+				session.save();
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}    
     
 }

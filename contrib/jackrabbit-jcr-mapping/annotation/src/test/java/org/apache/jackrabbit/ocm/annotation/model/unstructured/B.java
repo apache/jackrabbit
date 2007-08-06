@@ -14,49 +14,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.ocm.annotation.model;
+package org.apache.jackrabbit.ocm.annotation.model.unstructured;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.jackrabbit.ocm.annotation.Collection;
 import org.apache.jackrabbit.ocm.annotation.Field;
 import org.apache.jackrabbit.ocm.annotation.Node;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl;
 
 /**
- * A simple model to test the annotation mapping
+ *
+ * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  * 
- * @author Philip Dodds
  */
+
 @Node
-public class Person {
-
-
-    private String path;
-
-    private List<Address> addresses = new ArrayList<Address>();
-
-    @Collection(type = Address.class, converter = NTCollectionConverterImpl.class )
-    public List<Address> getAddresses() {
-        return addresses;
+public class B
+{
+     private String b1;
+     private String b2;   
+     
+    @Field
+    public String getB1()
+    {
+        return b1;
     }
 
-    public void setAddresses(List<Address> addresses) {
-        this.addresses = addresses;
+    public void setB1(String b1)
+    {
+        this.b1 = b1;
     }
 
-    @Field(path = true)
-    public String getPath() {
-        return path;
+    @Field
+    public String getB2()
+    {
+        return b2;
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    public void setB2(String b2)
+    {
+        this.b2 = b2;
     }
-
-    public void addAddress(Address address) {
-        addresses.add(address);
-    }
-
+    
+    
 }

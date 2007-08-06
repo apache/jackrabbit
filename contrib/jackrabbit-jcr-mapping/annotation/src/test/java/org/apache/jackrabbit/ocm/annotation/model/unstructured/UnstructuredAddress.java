@@ -1,15 +1,16 @@
-package org.apache.jackrabbit.ocm.annotation.model;
+package org.apache.jackrabbit.ocm.annotation.model.unstructured;
 
 import org.apache.jackrabbit.ocm.annotation.Field;
 import org.apache.jackrabbit.ocm.annotation.Node;
 
 /**
- * A simple model to test the annotation mapping
+ * This class is mapped into a unstructured jcr node type
  * 
- * @author Philip Dodds
+ * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a> 
  */
-@Node(jcrNodeType="ocm:Adress")
-public class Address {
+
+@Node
+public class UnstructuredAddress {
 
     private String path; 
     
@@ -44,7 +45,11 @@ public class Address {
     public String getCity() {
         return city;
     }
-
+    
+    public void setCity(String city) {
+        this.city = city;
+    }
+    
     @Field(id=true)
     public String getType() {
         return type;
@@ -54,11 +59,6 @@ public class Address {
         this.type = type;
     }
 
-    public void setCity(String city) {
-        this.city = city;
-    }
-
-    @Field
     public String getState() {
         return state;
     }

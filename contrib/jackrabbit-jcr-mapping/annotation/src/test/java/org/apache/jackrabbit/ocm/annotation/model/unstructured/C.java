@@ -14,49 +14,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.ocm.annotation.model;
+package org.apache.jackrabbit.ocm.annotation.model.unstructured;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.jackrabbit.ocm.annotation.Collection;
 import org.apache.jackrabbit.ocm.annotation.Field;
 import org.apache.jackrabbit.ocm.annotation.Node;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl;
 
 /**
- * A simple model to test the annotation mapping
+ *
+ * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  * 
- * @author Philip Dodds
  */
 @Node
-public class Person {
-
-
-    private String path;
-
-    private List<Address> addresses = new ArrayList<Address>();
-
-    @Collection(type = Address.class, converter = NTCollectionConverterImpl.class )
-    public List<Address> getAddresses() {
-        return addresses;
+public class C
+{
+     private String id;
+     private String name;
+     
+    /**
+     * @return Returns the id.
+     */
+    @Field
+    public String getId()
+    {
+        return id;
     }
-
-    public void setAddresses(List<Address> addresses) {
-        this.addresses = addresses;
+    /**
+     * @param id The id to set.
+     */
+    public void setId(String id)
+    {
+        this.id = id;
     }
-
-    @Field(path = true)
-    public String getPath() {
-        return path;
+    /**
+     * @return Returns the name.
+     */
+    @Field
+    public String getName()
+    {
+        return name;
     }
-
-    public void setPath(String path) {
-        this.path = path;
+    /**
+     * @param name The name to set.
+     */
+    public void setName(String name)
+    {
+        this.name = name;
     }
-
-    public void addAddress(Address address) {
-        addresses.add(address);
-    }
-
 }
