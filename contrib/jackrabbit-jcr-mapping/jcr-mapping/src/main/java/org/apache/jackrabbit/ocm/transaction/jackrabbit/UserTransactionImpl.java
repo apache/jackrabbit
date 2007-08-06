@@ -16,17 +16,17 @@
  */
 package org.apache.jackrabbit.ocm.transaction.jackrabbit;
 
-import javax.transaction.xa.XAResource;
-import javax.transaction.xa.Xid;
-import javax.transaction.xa.XAException;
-import javax.transaction.UserTransaction;
-import javax.transaction.Status;
-import javax.transaction.NotSupportedException;
-import javax.transaction.SystemException;
+import javax.jcr.Session;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
+import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
-import javax.jcr.Session;
+import javax.transaction.Status;
+import javax.transaction.SystemException;
+import javax.transaction.UserTransaction;
+import javax.transaction.xa.XAException;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
 
 import org.apache.jackrabbit.core.XASession;
 
