@@ -16,11 +16,9 @@
  */
 package org.apache.jackrabbit.ocm.security;
 
-import org.apache.jackrabbit.core.security.AnonymousPrincipal;
-import org.apache.jackrabbit.core.security.CredentialsCallback;
-import org.apache.jackrabbit.core.security.SecurityConstants;
-import org.apache.jackrabbit.core.security.UserPrincipal;
-import org.apache.log4j.Logger;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
@@ -31,9 +29,12 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+
+import org.apache.jackrabbit.core.security.AnonymousPrincipal;
+import org.apache.jackrabbit.core.security.CredentialsCallback;
+import org.apache.jackrabbit.core.security.SecurityConstants;
+import org.apache.jackrabbit.core.security.UserPrincipal;
+import org.apache.log4j.Logger;
 
 /**
  * A <code>SimpleLoginModule</code> ...
