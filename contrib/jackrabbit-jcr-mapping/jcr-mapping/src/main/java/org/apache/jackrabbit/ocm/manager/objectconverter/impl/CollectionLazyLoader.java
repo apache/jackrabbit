@@ -20,14 +20,13 @@ package org.apache.jackrabbit.ocm.manager.objectconverter.impl;
 import javax.jcr.Node;
 import javax.jcr.Session;
 
+import net.sf.cglib.proxy.LazyLoader;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.CollectionConverter;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
-import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
-
-import net.sf.cglib.proxy.LazyLoader;
 
 public class CollectionLazyLoader implements LazyLoader {
 

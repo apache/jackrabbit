@@ -19,11 +19,11 @@ package org.apache.jackrabbit.ocm.manager.objectconverter.impl;
 
 import javax.jcr.Session;
 
+import net.sf.cglib.proxy.LazyLoader;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
-
-import net.sf.cglib.proxy.LazyLoader;
 
 public class BeanLazyLoader implements LazyLoader
 {
