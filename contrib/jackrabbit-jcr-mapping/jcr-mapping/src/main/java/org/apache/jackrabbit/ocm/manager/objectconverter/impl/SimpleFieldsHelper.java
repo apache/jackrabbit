@@ -276,9 +276,7 @@ public class SimpleFieldsHelper
 		else
 		{
 			// Get the default atomic converter in function of the classname
-			if (null != fd.getFieldTypeClass()) {
-				fieldTypeClass = fd.getFieldTypeClass();
-			} else if (null != object) {
+			 if (null != object) {
 				fieldTypeClass = ReflectionUtils.getPropertyType(object, fieldName);
 			}
 

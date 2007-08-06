@@ -133,7 +133,10 @@ public class ClassDescriptor {
      * @param jcrNodeType The jcrNodeType to set.
      */
     public void setJcrNodeType(String jcrNodeType) {
-        this.jcrNodeType = jcrNodeType;
+    	if (jcrNodeType != null && ! jcrNodeType.equals(""))
+    	{
+    	   this.jcrNodeType = jcrNodeType;
+    	}
     }
 
     /**
@@ -330,7 +333,12 @@ public class ClassDescriptor {
      * @param superTypes Comma separated list of JCR node super types
      */
     public void setJcrSuperTypes(String superTypes) {
-        this.jcrSuperTypes = superTypes;
+
+    	if (superTypes != null && ! superTypes.equals(""))
+    	{
+    	   this.jcrSuperTypes = superTypes;
+    	}
+    	
     }
 
     /**
@@ -352,7 +360,12 @@ public class ClassDescriptor {
             jcrMixinTypes = mixinTypes[0].split(" *, *");
         }
     }
-
+    public void setJcrMixinTypes(String mixinTypes) {                
+    	if (mixinTypes != null && ! mixinTypes.equals(""))
+    	{
+    	    jcrMixinTypes = mixinTypes.split(" *, *");
+    	}
+    }
     /**
      * @return Returns the mappingDescriptor.
      */
@@ -424,7 +437,8 @@ public class ClassDescriptor {
      * @param className
      */
     public void setExtend(String className) {
-        this.superClassName = className;
+        if (className.equals("")) className = null;
+    	this.superClassName = className;
     }
 
     /**
@@ -539,33 +553,12 @@ public class ClassDescriptor {
             if (!merged.containsKey(collectionDescriptor.getFieldName())) {
                 merged.put(collectionDescriptor.getFieldName(), collectionDescriptor);
             }
-//            else {
-//                log.warn("Collection name conflict in " + this.className + " - field : " +collectionDescriptor.getFieldName() + " -  this  field name is also defined  in the ancestor class : " + this.getExtend());
-//            }
         }
 
         return merged;
     }    
     
-    
-//    private List mergeInterfaces(List  existing, Collection superSource) {
-//        if (null == superSource) {
-//            return existing;
-//        }
-//
-//        ArrayList merged = new ArrayList(existing);
-//        for (Iterator it = superSource.iterator(); it.hasNext();)
-//        {
-//             String interfaceName = (String) it.next();
-//             if (! merged.contains(interfaceName))
-//             {
-//            	     merged.add(interfaceName);
-//             }            	 
-//        }
-//        
-//        return merged;
-//    }    
-    
+       
     
 	public String toString() {
 		return "Class Descriptor : " +  this.getClassName();

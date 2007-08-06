@@ -47,6 +47,7 @@ import org.apache.jackrabbit.ocm.exception.JcrMappingException;
 import org.apache.jackrabbit.ocm.exception.LockedException;
 import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.exception.VersionException;
+import org.apache.jackrabbit.ocm.lock.Lock;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.DefaultAtomicTypeConverterProvider;
 import org.apache.jackrabbit.ocm.manager.cache.ObjectCache;
@@ -63,7 +64,6 @@ import org.apache.jackrabbit.ocm.query.impl.QueryManagerImpl;
 import org.apache.jackrabbit.ocm.repository.RepositoryUtil;
 import org.apache.jackrabbit.ocm.version.Version;
 import org.apache.jackrabbit.ocm.version.VersionIterator;
-import org.apache.jackrabbit.ocm.lock.Lock;
 /**
  *
  * Default implementation for {@link org.apache.jackrabbit.ocm.manager.ObjectContentManager}
@@ -103,23 +103,31 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
 
     /**
      * Creates a new <code>ObjectContentManager</code> that uses the passed in
-     * <code>Mapper</code>, <code>QueryManager</code> and a default 
-     * <code>ObjectConverter</code>
+     * <code>Mapper</code>, and a <code>Session</code>
      *
      * @param mapper the Mapper component
-     * @param queryManager the query manager to used
      * @param session The JCR session
      */
-    public ObjectContentManagerImpl(Mapper mapper,
-                                  QueryManager queryManager,
-                                  Session session) {
-        this.mapper = mapper;
-        this.session = session;
-        this.requestObjectCache = new RequestObjectCacheImpl();        
-        this.objectConverter = new ObjectConverterImpl(mapper, new DefaultAtomicTypeConverterProvider(), new ProxyManagerImpl(), requestObjectCache);
-        this.queryManager = queryManager;
-        
-        RepositoryUtil.setupSession(session);
+    public ObjectContentManagerImpl(Session session, Mapper mapper) {
+        try 
+        {
+			this.session = session;
+			this.mapper = mapper;
+			// Use default setting for the following dependencies
+			DefaultAtomicTypeConverterProvider converterProvider = new DefaultAtomicTypeConverterProvider();
+			Map atomicTypeConverters = converterProvider.getAtomicTypeConverters();
+			this.queryManager = new QueryManagerImpl(mapper, atomicTypeConverters, session.getValueFactory());
+			this.requestObjectCache = new RequestObjectCacheImpl();        
+			this.objectConverter = new ObjectConverterImpl(mapper, converterProvider, new ProxyManagerImpl(), requestObjectCache);
+			
+			RepositoryUtil.setupSession(session);
+		} 
+        catch (RepositoryException e) 
+        {
+            throw new org.apache.jackrabbit.ocm.exception.RepositoryException(
+                    "Impossible to instantiate the object content manager", e);
+
+		}
 
     }
 
