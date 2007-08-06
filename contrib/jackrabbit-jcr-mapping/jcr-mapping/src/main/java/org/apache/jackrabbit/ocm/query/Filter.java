@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.ocm.query;
 
-import org.apache.jackrabbit.ocm.exception.IncorrectAtomicTypeException;
 
 
 /**
