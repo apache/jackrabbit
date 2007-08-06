@@ -14,35 +14,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.ocm.annotation.model;
+package org.apache.jackrabbit.ocm.annotation.model.unstructured;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.jackrabbit.ocm.annotation.Bean;
 import org.apache.jackrabbit.ocm.annotation.Collection;
 import org.apache.jackrabbit.ocm.annotation.Field;
 import org.apache.jackrabbit.ocm.annotation.Node;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl;
+
 
 /**
- * A simple model to test the annotation mapping
  * 
- * @author Philip Dodds
+ * 
+ * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  */
 @Node
-public class Person {
+public class UnstructuredPerson {
 
 
     private String path;
 
-    private List<Address> addresses = new ArrayList<Address>();
+    private List<UnstructuredAddress> addresses = new ArrayList<UnstructuredAddress>();
+    
+    private UnstructuredAddress anotherAdress; // Add here to test the Bean mapping
 
-    @Collection(type = Address.class, converter = NTCollectionConverterImpl.class )
-    public List<Address> getAddresses() {
+    @Collection(type = UnstructuredAddress.class)
+    public List<UnstructuredAddress> getAddresses() {
         return addresses;
     }
 
-    public void setAddresses(List<Address> addresses) {
+    public void setAddresses(List<UnstructuredAddress> addresses) {
         this.addresses = addresses;
     }
 
@@ -55,8 +58,19 @@ public class Person {
         this.path = path;
     }
 
-    public void addAddress(Address address) {
+    public void addAddress(UnstructuredAddress address) {
         addresses.add(address);
     }
+
+    @Bean
+	public UnstructuredAddress getAnotherAdress() {
+		return anotherAdress;
+	}
+
+	public void setAnotherAdress(UnstructuredAddress anotherAdress) {
+		this.anotherAdress = anotherAdress;
+	}
+    
+    
 
 }
