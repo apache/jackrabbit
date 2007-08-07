@@ -125,6 +125,16 @@ public class LazyQueryResultImpl implements QueryResult {
     private ExcerptProvider excerptProvider;
 
     /**
+     * The offset in the total result set
+     */
+    private final long offset;
+
+    /**
+     * The maximum size of this result if limit > 0
+     */
+    private final long limit;
+
+    /**
      * Creates a new query result.
      *
      * @param index         the search index where the query is executed.
@@ -141,6 +151,8 @@ public class LazyQueryResultImpl implements QueryResult {
      * @param orderSpecs    the order specs, one for each order property name.
      * @param documentOrder if <code>true</code> the result is returned in
      *                      document order.
+     * @param limit         the maximum result size
+     * @param offset        the offset in the total result set
      */
     public LazyQueryResultImpl(SearchIndex index,
                            ItemManager itemMgr,
@@ -151,7 +163,9 @@ public class LazyQueryResultImpl implements QueryResult {
                            QName[] selectProps,
                            QName[] orderProps,
                            boolean[] orderSpecs,
-                           boolean documentOrder) throws RepositoryException {
+                           boolean documentOrder,
+                           long offset,
+                           long limit) throws RepositoryException {
         this.index = index;
         this.itemMgr = itemMgr;
         this.resolver = resolver;
@@ -162,6 +176,8 @@ public class LazyQueryResultImpl implements QueryResult {
         this.orderProps = orderProps;
         this.orderSpecs = orderSpecs;
         this.docOrder = orderProps.length == 0 && documentOrder;
+        this.offset = offset;
+        this.limit = limit;
         // if document order is requested get all results right away
         getResults(docOrder ? Integer.MAX_VALUE : index.getResultFetchSize());
     }
@@ -242,11 +258,19 @@ public class LazyQueryResultImpl implements QueryResult {
      * @throws RepositoryException if an error occurs while executing the
      *                             query.
      */
-    private void getResults(int size) throws RepositoryException {
+    private void getResults(long size) throws RepositoryException {
         if (log.isDebugEnabled()) {
             log.debug("getResults(" + size + ")");
         }
-        if (resultNodes.size() >= size) {
+        
+        long maxResultSize = size;
+        
+        // is there any limit?
+        if (limit > 0) {
+            maxResultSize = limit;
+        }
+        
+        if (resultNodes.size() >= maxResultSize) {
             // we already have them all
             return;
         }
@@ -263,12 +287,16 @@ public class LazyQueryResultImpl implements QueryResult {
 
             int start = resultNodes.size() + invalid;
             int max = Math.min(result.length(), numResults);
-            for (int i = start; i < max && resultNodes.size() < size; i++) {
+            for (int i = start; i < max && resultNodes.size() < maxResultSize; i++) {
                 NodeId id = NodeId.valueOf(result.doc(i).get(FieldNames.UUID));
                 // check access
                 try {
                     if (accessMgr.isGranted(id, AccessManager.READ)) {
-                        resultNodes.add(new ScoreNode(id, result.score(i)));
+                        if (i < offset) {
+                            invalid++;
+                        } else {
+                            resultNodes.add(new ScoreNode(id, result.score(i)));
+                        }
                     } else {
                         invalid++;
                     }

@@ -89,6 +89,16 @@ public class QueryImpl extends AbstractQueryImpl {
     private boolean initialized = false;
 
     /**
+     * The maximum result size
+     */
+    private long limit;
+
+    /**
+     * The offset in the total result set
+     */
+    private long offset;
+
+    /**
      * @inheritDoc
      */
     public void init(SessionImpl session,
@@ -136,7 +146,7 @@ public class QueryImpl extends AbstractQueryImpl {
     public QueryResult execute() throws RepositoryException {
         checkInitialized();
         long time = System.currentTimeMillis();
-        QueryResult result = query.execute();
+        QueryResult result = query.execute(offset, limit);
         if (log.isDebugEnabled()) {
             time = System.currentTimeMillis() - time;
             NumberFormat format = NumberFormat.getNumberInstance();
@@ -206,6 +216,24 @@ public class QueryImpl extends AbstractQueryImpl {
         } catch (NameException e) {
             throw new RepositoryException(e.getMessage(), e);
         }
+    }
+    
+    /**
+     * Sets the maximum size of the result set.
+     * 
+     * @param limit new maximum size of the result set
+     */
+    public void setLimit(long limit) {
+        this.limit = limit;
+    }
+
+    /**
+     * Sets the start offset of the result set.
+     * 
+     * @param offset new start offset of the result set
+     */
+    public void setOffset(long offset) {
+        this.offset = offset;
     }
 
     //-----------------------------< internal >---------------------------------
