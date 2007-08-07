@@ -28,9 +28,11 @@ public interface ExecutableQuery {
 
     /**
      * Executes this query and returns a <code>{@link QueryResult}</code>.
+     * @param offset the offset in the total result set
+     * @param limit the maximum result size
      *
      * @return a <code>QueryResult</code>
      * @throws RepositoryException if an error occurs
      */
-    QueryResult execute() throws RepositoryException;
+    QueryResult execute(long offset, long limit) throws RepositoryException;
 }

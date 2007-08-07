@@ -126,10 +126,12 @@ public class QueryImpl implements ExecutableQuery {
     /**
      * Executes this query and returns a <code>{@link QueryResult}</code>.
      *
+     * @param offset the offset in the total result set
+     * @param limit the maximum result size
      * @return a <code>QueryResult</code>
      * @throws RepositoryException if an error occurs
      */
-    public QueryResult execute() throws RepositoryException {
+    public QueryResult execute(long offset, long limit) throws RepositoryException {
         if (log.isDebugEnabled()) {
             log.debug("Executing query: \n" + root.dump());
         }
@@ -163,7 +165,7 @@ public class QueryImpl implements ExecutableQuery {
 
         return new LazyQueryResultImpl(index, itemMgr, session.getNamespaceResolver(),
                 session.getAccessManager(), this, query, getSelectProperties(),
-                orderProperties, ascSpecs, documentOrder);
+                orderProperties, ascSpecs, documentOrder, offset, limit);
     }
 
     /**
