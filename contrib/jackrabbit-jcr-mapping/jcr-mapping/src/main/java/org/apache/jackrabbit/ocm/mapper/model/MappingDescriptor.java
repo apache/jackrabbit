@@ -65,10 +65,10 @@ public class MappingDescriptor {
 
         classDescriptorsByClassName.put(classDescriptor.getClassName(), classDescriptor);
         
-        if (null != classDescriptor.getJcrNodeType() && !  "".equals(classDescriptor.getJcrNodeType()) && 
-        		 ! ManagerConstant.NT_UNSTRUCTURED.equals(classDescriptor.getJcrNodeType()))
+        if (null != classDescriptor.getJcrType() && !  "".equals(classDescriptor.getJcrType()) && 
+        		 ! ManagerConstant.NT_UNSTRUCTURED.equals(classDescriptor.getJcrType()))
         	 {
-             classDescriptorsByNodeType.put(classDescriptor.getJcrNodeType(), classDescriptor);	
+             classDescriptorsByNodeType.put(classDescriptor.getJcrType(), classDescriptor);	
         	 }
         classDescriptor.setMappingDescriptor(this);
     }

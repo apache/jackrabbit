@@ -138,7 +138,7 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
         if (collection == null || !elementClassDescriptor.hasIdField()) {
             this.deleteCollectionItems(session,
                                        parentNode,
-                                       elementClassDescriptor.getJcrNodeType());
+                                       elementClassDescriptor.getJcrType());
         }
 
         if (collection == null) {
@@ -176,7 +176,7 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
         // Delete JCR nodes that are not present in the collection
         if (elementClassDescriptor.hasIdField()) {
             Iterator nodeIterator = this.getCollectionNodes(session, parentNode,
-                    elementClassDescriptor.getJcrNodeType()).iterator();
+                    elementClassDescriptor.getJcrType()).iterator();
 
             while (nodeIterator.hasNext()) {
                 Node child = (Node) nodeIterator.next();
@@ -198,7 +198,7 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
 	    ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass( ReflectionUtils.forName(collectionDescriptor.getElementClassName())); 
         ManageableCollection collection = ManageableCollectionUtil.getManageableCollection(collectionFieldClass);
         //Class elementClass = ReflectionUtils.forName(collectionDescriptor.getElementClassName());
-        Collection nodes = this.getCollectionNodes(session, parentNode, elementClassDescriptor.getJcrNodeType());
+        Collection nodes = this.getCollectionNodes(session, parentNode, elementClassDescriptor.getJcrType());
         
         if (nodes == null)
         {

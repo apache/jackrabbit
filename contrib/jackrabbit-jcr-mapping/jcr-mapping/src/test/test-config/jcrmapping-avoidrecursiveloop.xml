@@ -4,7 +4,7 @@
 <jackrabbit-ocm>
 
 	<class-descriptor
-		className="org.apache.jackrabbit.ocm.testmodel.crossreference.A" jcrNodeType="nt:unstructured" jcrMixinTypes="mix:referenceable">		
+		className="org.apache.jackrabbit.ocm.testmodel.crossreference.A" jcrType="nt:unstructured" jcrMixinTypes="mix:referenceable">		
 		<field-descriptor fieldName="path" path="true"/>
 		<field-descriptor fieldName="uuid" uuid="true"/>
 		<field-descriptor fieldName="a1" jcrName="a1" />
@@ -14,7 +14,7 @@
 		                       elementClassName="org.apache.jackrabbit.ocm.testmodel.crossreference.B" />                               
 	</class-descriptor>
 
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.crossreference.B"  jcrNodeType="nt:unstructured" >
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.crossreference.B"  jcrType="nt:unstructured" >
 		<field-descriptor fieldName="b1" jcrName="b1"  />		
         <field-descriptor fieldName="b2" jcrName="b2"  />
         <bean-descriptor fieldName="a" jcrName="a" proxy="false" converter="org.apache.jackrabbit.ocm.manager.beanconverter.impl.ReferenceBeanConverterImpl" />

@@ -48,7 +48,7 @@ public class ClassDescriptor {
     private Collection descendantClassDescriptors = new ArrayList();
 
     private String className;
-    private String jcrNodeType;
+    private String jcrType;
     private String jcrSuperTypes;
     private String[] jcrMixinTypes = new String[0];
     private FieldDescriptor idFieldDescriptor;
@@ -123,19 +123,19 @@ public class ClassDescriptor {
     }
 
     /**
-     * @return Returns the jcrNodeType.
+     * @return Returns the jcrType.
      */
-    public String getJcrNodeType() {
-        return jcrNodeType;
+    public String getJcrType() {
+        return jcrType;
     }
 
     /**
-     * @param jcrNodeType The jcrNodeType to set.
+     * @param jcrType The jcrType to set.
      */
-    public void setJcrNodeType(String jcrNodeType) {
-    	if (jcrNodeType != null && ! jcrNodeType.equals(""))
+    public void setJcrType(String jcrType) {
+    	if (jcrType != null && ! jcrType.equals(""))
     	{
-    	   this.jcrNodeType = jcrNodeType;
+    	   this.jcrType = jcrType;
     	}
     }
 
@@ -466,7 +466,7 @@ public class ClassDescriptor {
         while (iterator.hasNext()) {
             ClassDescriptor descendantClassDescriptor = (ClassDescriptor) iterator.next();
   
-            if (descendantClassDescriptor.getJcrNodeType().equals(nodeType)) {
+            if (descendantClassDescriptor.getJcrType().equals(nodeType)) {
                 return descendantClassDescriptor;
             }
   

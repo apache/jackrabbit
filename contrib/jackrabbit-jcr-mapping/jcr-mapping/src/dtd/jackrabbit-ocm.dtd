@@ -24,7 +24,7 @@
 <!--
     Class descriptor - Each class descriptor describes the mapping strategy used for one a java class
     * className : the class name
-    * jcrNodeType : the primary jcr node type, it can be nt:unstructured
+    * jcrType : the primary jcr node type, optional, default is nt:unstructured
     * jcrSuperTypes : the jcr super types, optional
     * jcrMixinTypes: the jcr mixin types (comma separated list) (optional)
     * extends: name of super class (optional)
@@ -35,7 +35,7 @@
 
 <!ATTLIST class-descriptor
 	className CDATA #REQUIRED
-	jcrNodeType CDATA #IMPLIED
+	jcrType CDATA #IMPLIED
     jcrSuperTypes CDATA #IMPLIED
     jcrMixinTypes CDATA #IMPLIED
     extend CDATA #IMPLIED
@@ -99,7 +99,7 @@
     * autoUpdate : If false, the bean associated to this descriptor is not updated when the main ojbect is updated
     * autoInsert : If false, the bean associated to this descriptor is not inserted  when the main ojbect is inserted    
     * converter: fully qualified name of the converter class to be used (default is ObjectConverterImpl)
-    * jcrNodeType: defines the child node type, optional
+    * jcrType: defines the node type, optional, nt:unstructured by default
     * jcrAutoCreated (boolean) default is "false"
     * jcrMandatory (boolean) default is "false"
     * jcrOnParentVersion default is "COPY"
@@ -115,7 +115,7 @@
 	autoUpdate (true|false) "true"
 	autoInsert (true|false) "true"	
 	converter CDATA #IMPLIED
-	jcrNodeType CDATA #IMPLIED
+	jcrType CDATA #IMPLIED
     jcrAutoCreated (true | false) "false"   
     jcrMandatory (true | false) "false"
     jcrOnParentVersion (COPY | VERSION | INITIALIZE | COMPUTE | IGNORE | ABORT) "COPY"
@@ -137,7 +137,7 @@
                             The declared class must implement ManageableCollection to let the ocm engine handles this type of collection.
     * collectionConverter : The class name converter. This is the collection mapping strategy to used. 
                             If this attribute is not specify, the default collection mapping strategy is used (DefaultCollectionConverterImpl)                            
-    * jcrNodeType: defines the child node type, optional
+    * jcrType: defines the node type used for the collection elements, optional
     * jcrAutoCreated (boolean) default is "false"
     * jcrMandatory (boolean) default is "false"
     * jcrOnParentVersion default is "COPY"
@@ -156,7 +156,7 @@
 	elementClassName CDATA #IMPLIED
 	collectionClassName CDATA #IMPLIED
 	collectionConverter CDATA #IMPLIED
-	jcrNodeType CDATA #IMPLIED
+	jcrType CDATA #IMPLIED
     jcrAutoCreated (true | false) "false"   
     jcrMandatory (true | false) "false"
     jcrOnParentVersion (COPY | VERSION | INITIALIZE | COMPUTE | IGNORE | ABORT) "COPY"

@@ -160,19 +160,19 @@ public class ObjectConverterImpl implements ObjectConverter {
 	public void insert(Session session, Node parentNode, String nodeName, Object object) {
 		ClassDescriptor classDescriptor = mapper.getClassDescriptorByClass(object.getClass());
 
-		String jcrNodeType = classDescriptor.getJcrNodeType();
-		if ((jcrNodeType == null) || jcrNodeType.equals("")) {
-			jcrNodeType = ManagerConstant.NT_UNSTRUCTURED;
+		String jcrType = classDescriptor.getJcrType();
+		if ((jcrType == null) || jcrType.equals("")) {
+			jcrType = ManagerConstant.NT_UNSTRUCTURED;
 		}
 
 		Node objectNode = null;
 		try {
-			objectNode = parentNode.addNode(nodeName, jcrNodeType);
+			objectNode = parentNode.addNode(nodeName, jcrType);
 
 		} catch (NoSuchNodeTypeException nsnte) {
-			throw new JcrMappingException("Unknown node type " + jcrNodeType + " for mapped class " + object.getClass(), nsnte);
+			throw new JcrMappingException("Unknown node type " + jcrType + " for mapped class " + object.getClass(), nsnte);
 		} catch (RepositoryException re) {
-			throw new ObjectContentManagerException("Cannot create new node of type " + jcrNodeType + " from mapped class "
+			throw new ObjectContentManagerException("Cannot create new node of type " + jcrType + " from mapped class "
 					+ object.getClass(), re);
 		}
 
@@ -195,7 +195,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 					String interfaceName = (String) interfacesIterator.next();
 					ClassDescriptor interfaceDescriptor = mapper
 							.getClassDescriptorByClass(ReflectionUtils.forName(interfaceName));
-					objectNode.addMixin(interfaceDescriptor.getJcrNodeType().trim());
+					objectNode.addMixin(interfaceDescriptor.getJcrType().trim());
 				}
 			}
 
@@ -211,7 +211,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 		} catch (NoSuchNodeTypeException nsnte) {
 			throw new JcrMappingException("Unknown mixin type " + mixinTypeName + " for mapped class " + object.getClass(), nsnte);
 		} catch (RepositoryException re) {
-			throw new ObjectContentManagerException("Cannot create new node of type " + jcrNodeType + " from mapped class "
+			throw new ObjectContentManagerException("Cannot create new node of type " + jcrType + " from mapped class "
 					+ object.getClass(), re);
 		}
 
@@ -358,7 +358,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 			} else {
 				if (classDescriptor.usesNodeTypePerConcreteClassStrategy()) {
 					String nodeType = node.getPrimaryNodeType().getName();
-					if (!nodeType.equals(classDescriptor.getJcrNodeType())) {
+					if (!nodeType.equals(classDescriptor.getJcrType())) {
 						classDescriptor = classDescriptor.getDescendantClassDescriptor(nodeType);
 					}
 				}
@@ -462,7 +462,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 					session.getWorkspace().getNodeTypeManager().getNodeType(jcrTypeName);
 				}
 			} else {
-				jcrTypeName = classDescriptor.getJcrNodeType();
+				jcrTypeName = classDescriptor.getJcrType();
 				if (jcrTypeName != null && !jcrTypeName.equals("")) {
 					session.getWorkspace().getNodeTypeManager().getNodeType(jcrTypeName);
 				}
@@ -512,7 +512,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 			if (!compatible) {
 				throw new ObjectContentManagerException("Cannot map object of type '" + classDescriptor.getClassName() + "'. Node type '"
 						+ node.getPrimaryNodeType().getName() + "' does not match descriptor node type '"
-						+ classDescriptor.getJcrNodeType() + "'");
+						+ classDescriptor.getJcrType() + "'");
 			}
 		} catch (RepositoryException re) {
 			throw new org.apache.jackrabbit.ocm.exception.RepositoryException(re);
@@ -532,17 +532,17 @@ public class ObjectConverterImpl implements ObjectConverter {
 	private boolean checkCompatibleNodeTypes(NodeType nodeType, ClassDescriptor descriptor) {
 
 		//return true if node type is not used
-		if (descriptor.getJcrNodeType() == null || descriptor.getJcrNodeType().equals("")) {
+		if (descriptor.getJcrType() == null || descriptor.getJcrType().equals("")) {
 			return true;
 		}
 
-		if (nodeType.getName().equals(descriptor.getJcrNodeType())) {
+		if (nodeType.getName().equals(descriptor.getJcrType())) {
 			return true;
 		}
 
 		NodeType[] superTypes = nodeType.getSupertypes();
 		for (int i = 0; i < superTypes.length; i++) {
-			if (superTypes[i].getName().equals(descriptor.getJcrNodeType())) {
+			if (superTypes[i].getName().equals(descriptor.getJcrType())) {
 				return true;
 			}
 		}

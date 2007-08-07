@@ -101,7 +101,7 @@
 				 <ol>
 					<li>Specify the converter class in the field descriptor : 
 					   <source><![CDATA[ 
-<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.Atomic" jcrNodeType="nt:unstructured" >
+<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.Atomic" jcrType="nt:unstructured" >
   <field-descriptor fieldName="int2boolean" jcrName="int2boolean" converter="org.apache.portals.graffito.jcr.persistence.atomic.Int2BooleanTypeConverterImpl" />	
 </class-descriptor>
 						]]></source>

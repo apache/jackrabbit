@@ -3,12 +3,12 @@
 <!DOCTYPE jackrabbit-ocm PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/jackrabbit-ocm.dtd">
 <jackrabbit-ocm>
 
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.HierarchyNode"  jcrNodeType="nt:hierarchyNode" >
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.HierarchyNode"  jcrType="nt:hierarchyNode" >
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="creationDate" jcrName="jcr:created"/>	
 	</class-descriptor>	
 	
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Folder"  jcrNodeType="nt:folder"
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Folder"  jcrType="nt:folder"
 	                  extend="org.apache.jackrabbit.ocm.testmodel.HierarchyNode" >
 		<field-descriptor fieldName="path" path="true" />
 		<collection-descriptor fieldName="children" proxy="false" autoUpdate="false" 
@@ -17,21 +17,21 @@
 
 	</class-descriptor>	
 	
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.File"  jcrNodeType="nt:file" 
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.File"  jcrType="nt:file" 
 	                  extend="org.apache.jackrabbit.ocm.testmodel.HierarchyNode" >
 	                  
 		<field-descriptor fieldName="path" path="true" />
 		<bean-descriptor  fieldName="resource"  jcrName="jcr:content" />
 	</class-descriptor>
 		
-    <class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Resource"  jcrNodeType="nt:resource">
+    <class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Resource"  jcrType="nt:resource">
 		<field-descriptor fieldName="mimeType" jcrName="jcr:mimeType"/>	
 		<!-- field-descriptor fieldName="encoding" jcrName="jcr:encoding"/ -->	
 		<field-descriptor fieldName="data" jcrName="jcr:data"/>	
 		<field-descriptor fieldName="lastModified" jcrName="jcr:lastModified"/>	
 	</class-descriptor>	
 
-    <class-descriptor className="org.apache.jackrabbit.ocm.testmodel.PropertyTest" jcrNodeType="ocm:propertytest" >
+    <class-descriptor className="org.apache.jackrabbit.ocm.testmodel.PropertyTest" jcrType="ocm:propertytest" >
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="requiredProp" jcrName="ocm:requiredProp" />
 		<field-descriptor fieldName="requiredWithConstraintsProp" jcrName="ocm:requiredWithConstraintsProp" jcrValueConstraints="abc,def,ghi" />

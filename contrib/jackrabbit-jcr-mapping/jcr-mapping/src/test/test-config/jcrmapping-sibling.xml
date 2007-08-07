@@ -3,7 +3,7 @@
 <!DOCTYPE jackrabbit-ocm PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/jackrabbit-ocm.dtd">
 <jackrabbit-ocm>
 
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Page" jcrNodeType="ocm:pagewithoutsibling" discriminator="false" >
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Page" jcrType="ocm:pagewithoutsibling" discriminator="false" >
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="title" jcrName="ocm:title" />
 		<collection-descriptor fieldName="paragraphs" proxy="false" 
@@ -11,13 +11,13 @@
 		                       collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl" />
 	</class-descriptor>
 
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Paragraph" jcrNodeType="ocm:paragraph" discriminator="false" >
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Paragraph" jcrType="ocm:paragraph" discriminator="false" >
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="text" jcrName="ocm:text"/>
 	</class-descriptor>
 
 <class-descriptor
-		className="org.apache.jackrabbit.ocm.testmodel.Atomic" jcrNodeType="nt:unstructured" discriminator="true" >
+		className="org.apache.jackrabbit.ocm.testmodel.Atomic" jcrType="nt:unstructured" discriminator="true" >
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="string" jcrName="string" />
 		<field-descriptor fieldName="booleanObject" jcrName="booleanObject" />
