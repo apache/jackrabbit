@@ -153,13 +153,13 @@ class MatchAllScorer extends Scorer {
         // otherwise calculate new
         docFilter = new BitSet(reader.maxDoc());
         // we match all terms
-        TermEnum terms = reader.terms(new Term(FieldNames.PROPERTIES, field));
+        TermEnum terms = reader.terms(new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, "")));
         try {
             TermDocs docs = reader.termDocs();
             try {
                 while (terms.term() != null
                         && terms.term().field() == FieldNames.PROPERTIES
-                        && terms.term().text().startsWith(field)) {
+                        && terms.term().text().startsWith(FieldNames.createNamedValue(field, ""))) {
                     docs.seek(terms);
                     while (docs.next()) {
                         docFilter.set(docs.doc());

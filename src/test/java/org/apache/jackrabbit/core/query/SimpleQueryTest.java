@@ -343,7 +343,9 @@ public class SimpleQueryTest extends AbstractQueryTest {
         foo.setProperty("mytext", "the quick brown fox jumps over the lazy dog.");
         Node bar = testRootNode.addNode("bar");
         bar.setProperty("text", "the quick brown fox jumps over the lazy dog.");
-
+        // documents which field name is not exactly "mytext" should not match (JCR-1051)
+        bar.setProperty("mytextwhichstartswithmytext", "the quick brown fox jumps over the lazy dog.");
+        
         testRootNode.save();
 
         String sql = "SELECT * FROM nt:unstructured WHERE mytext is not null";
