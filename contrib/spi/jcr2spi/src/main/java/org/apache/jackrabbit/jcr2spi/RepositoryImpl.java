@@ -159,7 +159,20 @@ public class RepositoryImpl implements Repository, Referenceable {
      *  <dd>Class name for {@link RepositoryConfig} instances</dd>
      * </dl>
      * <p>
-     * All other types are copied over verbatim to the new {@link Reference}
+     * All other types are copied over verbatim to the new {@link Reference}.
+     * <p>
+     * A sample JNDI configuration inside a servlet container's <code>server.xml</code>:
+     * <pre>
+     *   &lt;Resource
+     *         name="jcr/repositoryname"
+     *         auth="Container"
+     *         type="org.apache.jackrabbit.jcr2spi.RepositoryImpl"
+     *         factory="org.apache.jackrabbit.jcr2spi.RepositoryImpl$Factory"
+     *         org.apache.jackrabbit.jcr2spi.RepositoryImpl.factory="<em>class name of {@link ObjectFactory} for {@link RepositoryConfig} instances</em>"
+     *         org.apache.jackrabbit.jcr2spi.RepositoryImpl.class="<em>class name of {@link RepositoryConfig} implementation class</em>"
+     *         <em>...additional properties passed to the {@link ObjectFactory}...</em>
+     *   /&gt;
+     * </pre>
      */
     public static class Factory implements ObjectFactory {
 
