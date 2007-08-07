@@ -151,9 +151,9 @@ public class NodeTypeManagerImpl implements NodeTypeManager
             getNamespaceHelper().setRegistry(session.getWorkspace().getNamespaceRegistry());
             ArrayList list = new ArrayList();
             
-            if (classDescriptor.getJcrNodeType() != null &&
-                    (classDescriptor.getJcrNodeType().startsWith("nt:")
-                    || classDescriptor.getJcrNodeType().startsWith("mix:")))
+            if (classDescriptor.getJcrType() != null &&
+                    (classDescriptor.getJcrType().startsWith("nt:")
+                    || classDescriptor.getJcrType().startsWith("mix:")))
             {
                 throw new NodeTypeCreationException("Namespace nt and mix are reserved namespaces. Please specify your own.");
             }
@@ -161,7 +161,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
             if (checkSuperTypes(session.getWorkspace().getNodeTypeManager(),
                     classDescriptor.getJcrSuperTypes()))
             {
-                NodeTypeDef nodeTypeDef = getNodeTypeDef(classDescriptor.getJcrNodeType(),
+                NodeTypeDef nodeTypeDef = getNodeTypeDef(classDescriptor.getJcrType(),
                         classDescriptor.getJcrSuperTypes(),
                         classDescriptor.getClassName());
 
@@ -183,7 +183,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
                     Iterator beanIterator = classDescriptor.getBeanDescriptors().iterator();
                     while (beanIterator.hasNext()) {
                         BeanDescriptor field = (BeanDescriptor) beanIterator.next();
-                        if (field.getJcrType() != null) {
+                        if (this.isPropertyType(field.getJcrType())) {
                             propDefs.add(getPropertyDefinition(field.getFieldName(), field, nodeTypeDef.getName()));
                         } else {
                             nodeDefs.add(getNodeDefinition(field.getFieldName(), field, nodeTypeDef.getName()));
@@ -195,7 +195,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
                     Iterator collectionIterator = classDescriptor.getCollectionDescriptors().iterator();
                     while (collectionIterator.hasNext()) {
                         CollectionDescriptor field = (CollectionDescriptor) collectionIterator.next();
-                        if (field.getJcrType() != null) {
+                        if (this.isPropertyType(field.getJcrType())) {
                             propDefs.add(getPropertyDefinition(field.getFieldName(), field, nodeTypeDef.getName()));
                         } else {
                             nodeDefs.add(getNodeDefinition(field.getFieldName(), field, nodeTypeDef.getName()));
@@ -348,8 +348,8 @@ public class NodeTypeManagerImpl implements NodeTypeManager
             node.setName(getNamespaceHelper().getQName("*"));
         }
 
-        if (field.getJcrNodeType() != null) {
-            node.setRequiredPrimaryTypes(getJcrSuperTypes(field.getJcrNodeType()));
+        if (field.getJcrType() != null) {
+            node.setRequiredPrimaryTypes(getJcrSuperTypes(field.getJcrType()));
         }
 
         node.setDeclaringNodeType(declaringNodeType);
@@ -588,5 +588,19 @@ public class NodeTypeManagerImpl implements NodeTypeManager
     public void setNamespaceHelper(NamespaceHelper object)
     {
         this.namespaceHelper = object;
+    }
+    
+
+    private boolean isPropertyType(String type)
+    {
+    	return (type.equals(PropertyType.TYPENAME_BINARY) ||
+    	        type.equals(PropertyType.TYPENAME_BOOLEAN) ||
+    	        type.equals(PropertyType.TYPENAME_DATE) ||
+    	        type.equals(PropertyType.TYPENAME_DOUBLE) ||
+    	        type.equals(PropertyType.TYPENAME_LONG) ||
+    	        type.equals(PropertyType.TYPENAME_NAME) ||
+    	        type.equals(PropertyType.TYPENAME_PATH) ||
+    	        type.equals(PropertyType.TYPENAME_REFERENCE) ||
+    	        type.equals(PropertyType.TYPENAME_STRING));    	       
     }
 }
