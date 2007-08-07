@@ -97,7 +97,7 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.TestClass");
-        classDescriptor.setJcrNodeType("ocm:test2");
+        classDescriptor.setJcrType("ocm:test2");
         classDescriptor.setJcrSuperTypes("nt:base");
         
         FieldDescriptor field1 = new FieldDescriptor();
@@ -148,7 +148,7 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test3Class");
-        classDescriptor.setJcrNodeType("test3");
+        classDescriptor.setJcrType("test3");
         classDescriptor.setJcrSuperTypes("nt:base");
 
         FieldDescriptor field1 = new FieldDescriptor();
@@ -193,7 +193,7 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test5Class");
-        classDescriptor.setJcrNodeType("ocm:test5");
+        classDescriptor.setJcrType("ocm:test5");
         classDescriptor.setJcrSuperTypes("ocm:test2");
         
         FieldDescriptor field1 = new FieldDescriptor();
@@ -217,7 +217,7 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test6Class");
-        classDescriptor.setJcrNodeType("nt:test3");
+        classDescriptor.setJcrType("nt:test3");
         classDescriptor.setJcrSuperTypes("nt:base");
 
         FieldDescriptor field1 = new FieldDescriptor();
@@ -245,13 +245,14 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test9Class");
-        classDescriptor.setJcrNodeType("ocm:test9");
+        classDescriptor.setJcrType("ocm:test9");
         classDescriptor.setJcrSuperTypes("nt:base");
         
         CollectionDescriptor collection1 = new CollectionDescriptor();
         collection1.setFieldName("a");
         collection1.setJcrName("a");
         collection1.setJcrType("String");
+        
         classDescriptor.addCollectionDescriptor(collection1);
         
         getJackrabbitNodeTypeManagerImpl().createSingleNodeType(session, classDescriptor);
@@ -270,7 +271,7 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test10Class");
-        classDescriptor.setJcrNodeType("ocm:test10");
+        classDescriptor.setJcrType("ocm:test10");
         classDescriptor.setJcrSuperTypes("nt:base");
         
         BeanDescriptor bean1 = new BeanDescriptor();
@@ -296,14 +297,13 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test13Class");
-        classDescriptor.setJcrNodeType("ocm:test13");
+        classDescriptor.setJcrType("ocm:test13");
         classDescriptor.setJcrSuperTypes("nt:base");
 
         CollectionDescriptor collection1 = new CollectionDescriptor();
         collection1.setFieldName("a");
         collection1.setJcrName("a");
-        collection1.setJcrType("String");      // should overwrite setJcrNodeType
-        collection1.setJcrNodeType("nt:base"); // should be ignored
+        collection1.setJcrType("String");            
         classDescriptor.addCollectionDescriptor(collection1);
 
         getJackrabbitNodeTypeManagerImpl().createSingleNodeType(session, classDescriptor);
@@ -322,14 +322,13 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test14Class");
-        classDescriptor.setJcrNodeType("ocm:test14");
+        classDescriptor.setJcrType("ocm:test14");
         classDescriptor.setJcrSuperTypes("nt:base");
 
         BeanDescriptor bean1 = new BeanDescriptor();
         bean1.setFieldName("a");
         bean1.setJcrName("a");
-        bean1.setJcrType("String");      // should overwrite setJcrNodeType
-        bean1.setJcrNodeType("nt:base"); // should be ignored
+        bean1.setJcrType("String");         
         classDescriptor.addBeanDescriptor(bean1);
 
         getJackrabbitNodeTypeManagerImpl().createSingleNodeType(session, classDescriptor);
@@ -349,13 +348,13 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test11Class");
-        classDescriptor.setJcrNodeType("ocm:test11");
+        classDescriptor.setJcrType("ocm:test11");
         classDescriptor.setJcrSuperTypes("nt:base");
 
         CollectionDescriptor collection1 = new CollectionDescriptor();
         collection1.setFieldName("a");
         collection1.setJcrName("b");
-        collection1.setJcrNodeType("nt:unstructured");
+        collection1.setJcrType("nt:unstructured");
         classDescriptor.addCollectionDescriptor(collection1);
 
         getJackrabbitNodeTypeManagerImpl().createSingleNodeType(session, classDescriptor);
@@ -376,13 +375,13 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test12Class");
-        classDescriptor.setJcrNodeType("ocm:test12");
+        classDescriptor.setJcrType("ocm:test12");
         classDescriptor.setJcrSuperTypes("nt:base");
 
         BeanDescriptor bean1 = new BeanDescriptor();
         bean1.setFieldName("a");
         bean1.setJcrName("b");
-        bean1.setJcrNodeType("nt:unstructured");
+        bean1.setJcrType("nt:unstructured");
         classDescriptor.addBeanDescriptor(bean1);
 
         getJackrabbitNodeTypeManagerImpl().createSingleNodeType(session, classDescriptor);
@@ -394,7 +393,6 @@ public class NodeTypeManagerImplTest extends TestBase {
         // assert property definition a
         NodeDefinition nodeDef = getChildNodeDefinition(test12.getChildNodeDefinitions(), "b");
         assertNotNull(nodeDef);
-        assertNotNull(nodeDef);
         assertNotNull(nodeDef.getRequiredPrimaryTypes());
         assertEquals(nodeDef.getRequiredPrimaryTypes().length, 1);
         assertEquals(nodeDef.getRequiredPrimaryTypes()[0].getName(), "nt:unstructured");
@@ -404,7 +402,7 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test6Class");
-        classDescriptor.setJcrNodeType("ocm:test6");
+        classDescriptor.setJcrType("ocm:test6");
         classDescriptor.setJcrSuperTypes("nt:base");
         
         FieldDescriptor field1 = new FieldDescriptor();
@@ -421,7 +419,7 @@ public class NodeTypeManagerImplTest extends TestBase {
         
         ClassDescriptor classDescriptor2 = new ClassDescriptor();
         classDescriptor2.setClassName("test.Test7Class");
-        classDescriptor2.setJcrNodeType("ocm:test7");
+        classDescriptor2.setJcrType("ocm:test7");
         classDescriptor2.setJcrSuperTypes("nt:base");
         
         FieldDescriptor field3 = new FieldDescriptor();
@@ -453,7 +451,7 @@ public class NodeTypeManagerImplTest extends TestBase {
     {
         ClassDescriptor classDescriptor = new ClassDescriptor();
         classDescriptor.setClassName("test.Test8Class");
-        classDescriptor.setJcrNodeType("ocm:test8");
+        classDescriptor.setJcrType("ocm:test8");
         classDescriptor.setJcrSuperTypes("nt:base");
 
         FieldDescriptor field1 = new FieldDescriptor();
