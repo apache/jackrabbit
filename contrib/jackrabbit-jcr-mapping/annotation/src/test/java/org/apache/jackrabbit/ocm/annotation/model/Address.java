@@ -8,7 +8,7 @@ import org.apache.jackrabbit.ocm.annotation.Node;
  * 
  * @author Philip Dodds
  */
-@Node(jcrNodeType="ocm:Adress")
+@Node(jcrType="ocm:Adress")
 public class Address {
 
     private String path; 

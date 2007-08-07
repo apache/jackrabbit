@@ -28,7 +28,7 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Node {
     
-	String jcrNodeType() default "nt:unstructured";
+	String jcrType() default "nt:unstructured";
 	String jcrSuperTypes() default "";
 	String jcrMixinTypes() default "";
     // Define the extend setting in the mapping descriptor - Provide less flexibility if we use the java instrospection	

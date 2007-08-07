@@ -164,7 +164,7 @@ public class AnnotatedObjectMapper implements Mapper {
 			ClassDescriptor classDescriptor = buildClassDescriptor(clazz);
 			try {
 				session.getWorkspace().getNodeTypeManager().getNodeType(
-						classDescriptor.getJcrNodeType());
+						classDescriptor.getJcrType());
 				log.info("Class " + className + " already registered");
 			} catch (NoSuchNodeTypeException e) {
 				log.info("Class " + className + " will be registered");
@@ -174,7 +174,7 @@ public class AnnotatedObjectMapper implements Mapper {
 			}
 
 			descriptorMap.put(clazz, classDescriptor);
-			nodeTypeMap.put(classDescriptor.getJcrNodeType(), classDescriptor);
+			nodeTypeMap.put(classDescriptor.getJcrType(), classDescriptor);
 		}
 
 		return classDescriptorsToRegister;
@@ -184,7 +184,7 @@ public class AnnotatedObjectMapper implements Mapper {
 		Node annotationNode =  (Node) clazz.getAnnotation(Node.class);
 		ClassDescriptor descriptor = new ClassDescriptor();
 		descriptor.setClassName(clazz.getName());
-		descriptor.setJcrNodeType(annotationNode.jcrNodeType());
+		descriptor.setJcrType(annotationNode.jcrType());
 		descriptor.setJcrSuperTypes(annotationNode.jcrSuperTypes());		
 		descriptor.setJcrMixinTypes(annotationNode.jcrMixinTypes());
 		descriptor.setExtend(annotationNode.extend());		
@@ -228,7 +228,7 @@ public class AnnotatedObjectMapper implements Mapper {
 				}
 				
 				Node annotationNode = (Node) targetClass.getAnnotation(Node.class);
-				collectionDescriptor.setDefaultPrimaryType(annotationNode.jcrNodeType());
+				collectionDescriptor.setDefaultPrimaryType(annotationNode.jcrType());
 				collectionDescriptor.setJcrSameNameSiblings(jcrChildNode.sameNameSiblings());
 				collectionDescriptor.setJcrAutoCreated(jcrChildNode.autoCreate());
 				collectionDescriptor.setJcrProtected(jcrChildNode.protect());
@@ -242,7 +242,7 @@ public class AnnotatedObjectMapper implements Mapper {
 				collectionDescriptor.setCollectionConverter(jcrChildNode.converter().getName());
 				collectionDescriptor.setFieldName(propertyDescriptor.getName());
 
-				collectionDescriptor.setJcrNodeType(annotationNode.jcrNodeType());
+				collectionDescriptor.setJcrType(annotationNode.jcrType());
 				collectionDescriptor.setJcrSameNameSiblings(jcrChildNode.sameNameSiblings());
 				collectionDescriptor.setProxy(jcrChildNode.proxy());
 
@@ -281,7 +281,7 @@ public class AnnotatedObjectMapper implements Mapper {
 				beanDescriptor.setAutoInsert(jcrChildNode.autoInsert());
 				beanDescriptor.setAutoRetrieve(jcrChildNode.autoRetrieve());
 				beanDescriptor.setAutoUpdate(jcrChildNode.autoUpdate());
-				beanDescriptor.setJcrNodeType(jcrChildNode.jcrType());
+				beanDescriptor.setJcrType(jcrChildNode.jcrType());
 				beanDescriptor.setJcrAutoCreated(jcrChildNode.jcrAutoCreated());
 				beanDescriptor.setJcrMandatory(jcrChildNode.jcrMandatory());
 				beanDescriptor.setJcrOnParentVersion(jcrChildNode.jcrOnParentVersion());
