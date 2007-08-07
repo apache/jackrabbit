@@ -115,7 +115,7 @@ public class QueryManagerImpl implements QueryManager {
     private String getNodeType(Filter filter) {
         ClassDescriptor classDescriptor = mapper.getClassDescriptorByClass(filter.getFilterClass());
 
-        String jcrNodeType = classDescriptor.getJcrNodeType();
+        String jcrNodeType = classDescriptor.getJcrType();
         if (jcrNodeType == null || jcrNodeType.equals(""))
         	{
            return ManagerConstant.NT_UNSTRUCTURED;	

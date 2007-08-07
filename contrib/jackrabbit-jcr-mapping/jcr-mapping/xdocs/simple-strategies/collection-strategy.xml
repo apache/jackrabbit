@@ -28,13 +28,13 @@
 				<p>Based on our model defined <a href="introduction-strategies.html">here</a>, the following collection-descriptor is used to map the "paragraphs" field into the JCR node called "paragraphs".</p>
 				
 				<source><![CDATA[ 				
-<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.Page" jcrNodeType="graffito:page">
+<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.Page" jcrType="graffito:page">
 	<collection-descriptor fieldName="paragraphs" jcrName="paragraphs" 
 			       elementClassName="org.apache.portals.graffito.jcr.testmodel.Paragraph" />
 	<!-- other field, bean and collection mapping here !-->
 </class-descriptor>
 																		
-<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.Paragraph" jcrNodeType="graffito:paragraph">
+<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.Paragraph" jcrType="graffito:paragraph">
 	<field-descriptor fieldName="path" path="true" />
 	<field-descriptor fieldName="text" jcrName="graffito:text"/>
 </class-descriptor>									

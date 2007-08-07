@@ -32,7 +32,7 @@ public interface ChildNodeDefDescriptor {
     /**
      * @return Returns the child node type name.
      */
-    String getJcrNodeType();
+    String getJcrType();
 
     /**
      * @return Whether the child node is auto created.

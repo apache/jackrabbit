@@ -35,8 +35,7 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
      private boolean proxy;
      private boolean autoRetrieve = true;
      private boolean autoUpdate = true;
-     private boolean autoInsert = true;     
-     private String jcrNodeType;
+     private boolean autoInsert = true;          
      private String jcrType;
      private boolean jcrAutoCreated;
      private boolean jcrMandatory;
@@ -184,23 +183,6 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
         this.classDescriptor = classDescriptor;
     }
     
-    /** Getter for property jcrNodeType.
-     * 
-     * @return jcrNodeType
-     */
-    public String getJcrNodeType()
-    {
-        return jcrNodeType;
-    }
-
-    /** Setter for property jcrNodeType.
-     * 
-     * @param value jcrNodeType
-     */
-    public void setJcrNodeType(String value)
-    {
-        this.jcrNodeType = value;
-    }
 
     /**
      * Getter for property jcrType.

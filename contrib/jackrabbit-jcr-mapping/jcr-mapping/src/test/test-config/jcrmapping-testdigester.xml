@@ -13,7 +13,7 @@
 	-->
 	<class-descriptor
 		className="org.apache.jackrabbit.ocm.testmodel.A"
-		jcrNodeType="nt:unstructured" jcrMixinTypes="mixin:a,mixin:b">
+		jcrType="nt:unstructured" jcrMixinTypes="mixin:a,mixin:b">
 		<!-- Field-descriptor is used to map simple attributes to jcr property -->
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="a1" jcrName="a1" />
@@ -25,7 +25,7 @@
 		-->
 		<bean-descriptor fieldName="b" jcrName="b" proxy="false"
 			converter="org.apache.jackrabbit.ocm.manager.beanconverter.impl.InlineBeanConverterImpl"
-			jcrNodeType="nt:unstructured" jcrAutoCreated="false"
+			jcrType="nt:unstructured" jcrAutoCreated="false"
 			jcrMandatory="false" jcrOnParentVersion="IGNORE" jcrProtected="false"
 			jcrSameNameSiblings="false" />
 
@@ -37,7 +37,7 @@
 		<collection-descriptor fieldName="collection"
 			jcrName="collection" proxy="false"
 			elementClassName="org.apache.jackrabbit.ocm.testmodel.C"
-			jcrNodeType="ocm:C" jcrAutoCreated="false" jcrMandatory="false"
+			jcrType="ocm:C" jcrAutoCreated="false" jcrMandatory="false"
 			jcrOnParentVersion="IGNORE" jcrProtected="false"
 			jcrSameNameSiblings="false" />
 
@@ -49,7 +49,7 @@
 
 	<class-descriptor
 		className="org.apache.jackrabbit.ocm.testmodel.B"
-		jcrNodeType="nt:unstructured" jcrSuperTypes="nt:base">
+		jcrType="nt:unstructured" jcrSuperTypes="nt:base">
 		<!-- Field-descriptor is used to map simple attributes to jcr property -->
 
 		<field-descriptor fieldName="b1" jcrName="b1" jcrType="String"
@@ -64,7 +64,7 @@
 
 	<class-descriptor
 		className="org.apache.jackrabbit.ocm.testmodel.C"
-		jcrNodeType="ocm:C" discriminator="false">
+		jcrType="ocm:C" discriminator="false">
 		<!-- Field-descriptor is used to map simple attributes to jcr property -->
 		<field-descriptor fieldName="id" jcrName="ocm:id"
 			id="true" />
@@ -74,7 +74,7 @@
 
 	<class-descriptor
 		className="org.apache.jackrabbit.ocm.testmodel.collection.Main"
-		jcrNodeType="nt:unstructured">
+		jcrType="nt:unstructured">
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="text" jcrName="text" />
 		<collection-descriptor fieldName="hashMap" proxy="false"
@@ -91,14 +91,14 @@
 
 	<class-descriptor
 		className="org.apache.jackrabbit.ocm.testmodel.collection.Element"
-		jcrNodeType="ocm:element" discriminator="false">
+		jcrType="ocm:element" discriminator="false">
 		<field-descriptor fieldName="id" jcrName="ocm:id" />
 		<field-descriptor fieldName="text" jcrName="ocm:text" />
 	</class-descriptor>
 	
 	
 	<class-descriptor
-		className="org.apache.jackrabbit.ocm.testmodel.uuid.A" jcrNodeType="nt:unstructured" >
+		className="org.apache.jackrabbit.ocm.testmodel.uuid.A" jcrType="nt:unstructured" >
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="uuid" uuid="true" />
         <field-descriptor fieldName="stringData" jcrName="stringData" />

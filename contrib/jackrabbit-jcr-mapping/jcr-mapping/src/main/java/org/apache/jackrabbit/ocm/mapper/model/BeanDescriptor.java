@@ -34,8 +34,7 @@ public class BeanDescriptor implements ChildNodeDefDescriptor, PropertyDefDescri
     private boolean autoUpdate = true;
     private boolean autoInsert = true;    
     private String converter;
-    private BeanConverter beanConverter;
-    private String jcrNodeType;
+    private BeanConverter beanConverter;    
     private String jcrType;
     private boolean jcrAutoCreated;
     private boolean jcrMandatory;
@@ -132,22 +131,6 @@ public class BeanDescriptor implements ChildNodeDefDescriptor, PropertyDefDescri
         this.converter = converterClass;
     }
 
-    
-    /** Getter for property jcrNodeType.
-     *
-     * @return jcrNodeType
-     */
-    public String getJcrNodeType() {
-        return jcrNodeType;
-    }
-
-    /** Setter for property jcrNodeType.
-     *
-     * @param value jcrNodeType
-     */
-    public void setJcrNodeType(String value) {
-        this.jcrNodeType = value;
-    }
 
     /**
      * Getter for property jcrType.

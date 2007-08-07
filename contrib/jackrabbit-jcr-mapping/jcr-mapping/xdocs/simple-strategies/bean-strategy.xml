@@ -101,7 +101,7 @@
 				</p>
 <source><![CDATA[ 
 <class-descriptor className="org.apache.portals.graffito.jcr.testmodel.inheritance.impl.CmsObjectImpl" 
-                  jcrNodeType="graffito:cmsobjectimpl" >
+                  jcrType="graffito:cmsobjectimpl" >
 
 	<field-descriptor fieldName="path" path="true" />
 	<field-descriptor fieldName="name" jcrName="graffito:name"  id="true" />
@@ -119,7 +119,7 @@
 				<li>Specify the converter class in the bean descriptor : 		
 <source><![CDATA[ 
 <class-descriptor className="org.apache.portals.graffito.jcr.testmodel.inheritance.impl.CmsObjectImpl" 
-                  jcrNodeType="graffito:cmsobjectimpl" >
+                  jcrType="graffito:cmsobjectimpl" >
 	<bean-descriptor  fieldName="parentFolder"  					 
 					  converter="org.apache.portals.graffito.jcr.persistence.beanconverter.impl.ParentBeanConverterImpl" />
 </class-descriptor>  

@@ -2,7 +2,7 @@
 
 <!DOCTYPE jackrabbit-ocm PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/jackrabbit-ocm.dtd">
 <jackrabbit-ocm>
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.D"  jcrNodeType="nt:unstructured" jcrSuperTypes="nt:base">
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.D"  jcrType="nt:unstructured" jcrSuperTypes="nt:base">
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="d1" jcrName="d1" jcrType="String" jcrAutoCreated="false" jcrMandatory="false"
         jcrOnParentVersion="IGNORE" jcrProtected="false" jcrMultiple="false" />
@@ -11,7 +11,7 @@
 
 	</class-descriptor>
 	
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.E"  jcrNodeType="nt:unstructured" jcrSuperTypes="nt:base">
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.E"  jcrType="nt:unstructured" jcrSuperTypes="nt:base">
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="d1" 
 						  jcrName="d1" 
@@ -28,7 +28,7 @@
 
 	</class-descriptor>
 	
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.DFull"  jcrNodeType="nt:unstructured" jcrSuperTypes="nt:base">
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.DFull"  jcrType="nt:unstructured" jcrSuperTypes="nt:base">
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="d1" jcrName="d1" jcrType="String" jcrAutoCreated="false" jcrMandatory="false"
         jcrOnParentVersion="IGNORE" jcrProtected="false" jcrMultiple="false" />

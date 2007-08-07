@@ -3,7 +3,7 @@
 <!DOCTYPE jackrabbit-ocm PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/jackrabbit-ocm.dtd">
 <jackrabbit-ocm>
     <class-descriptor
-		className="org.apache.jackrabbit.ocm.testmodel.Atomic" jcrNodeType="nt:unstructured" discriminator="true" >
+		className="org.apache.jackrabbit.ocm.testmodel.Atomic" jcrType="nt:unstructured" discriminator="true" >
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="string" jcrName="string" />
 		<field-descriptor fieldName="booleanObject" jcrName="booleanObject" />
@@ -24,7 +24,7 @@
 	</class-descriptor>
 
     <class-descriptor
-		className="org.apache.jackrabbit.ocm.testmodel.MultiValue" jcrNodeType="nt:unstructured" discriminator="true" >
+		className="org.apache.jackrabbit.ocm.testmodel.MultiValue" jcrType="nt:unstructured" discriminator="true" >
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="name" jcrName="name" />
 		<collection-descriptor fieldName="multiValues" jcrName="multiValue" proxy="false" 

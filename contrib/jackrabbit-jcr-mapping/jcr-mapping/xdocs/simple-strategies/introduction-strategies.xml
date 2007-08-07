@@ -119,7 +119,7 @@ public class Paragraph
 				    You can find more information on the field-descriptors in the page <a href="atomic-strategy.html">Mapping Atomic fields</a>. 
 				</p>	
 				<p>
-					It is also possible to map a bean class to a particular JCR node type by specifying the desired type in the attribute jcrNodeType. 
+					It is also possible to map a bean class to a particular JCR node type by specifying the desired type in the attribute jcrType. 
 					The following class-descriptor map the class "org.apache.portals.graffito.jcr.testmodel.Paragraph" into the node type "graffito:paragraph".
 						
 				</p>				   

@@ -194,7 +194,7 @@ public class DigesterMapperImplTest extends TestCase {
 					.getBeanDescriptor("b");
 			assertNotNull(beanDescriptor);
 			assertEquals(beanDescriptor.getFieldName(), "b");
-			assertEquals(beanDescriptor.getJcrNodeType(), "nt:unstructured");
+			assertEquals(beanDescriptor.getJcrType(), "nt:unstructured");
 			assertFalse(beanDescriptor.isJcrAutoCreated());
 			assertFalse(beanDescriptor.isJcrMandatory());
 			assertFalse(beanDescriptor.isJcrProtected());
@@ -204,7 +204,7 @@ public class DigesterMapperImplTest extends TestCase {
 			CollectionDescriptor collectionDescriptor = classDescriptor2
 					.getCollectionDescriptor("collection");
 			assertNotNull(collectionDescriptor);
-			assertEquals(collectionDescriptor.getJcrNodeType(), "ocm:C");
+			assertEquals(collectionDescriptor.getJcrType(), "ocm:C");
 			assertFalse(collectionDescriptor.isJcrAutoCreated());
 			assertFalse(collectionDescriptor.isJcrMandatory());
 			assertFalse(collectionDescriptor.isJcrProtected());
