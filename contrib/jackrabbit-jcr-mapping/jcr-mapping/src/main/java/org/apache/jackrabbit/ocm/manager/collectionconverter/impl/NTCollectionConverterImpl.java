@@ -174,9 +174,10 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
         }
 
         // Delete JCR nodes that are not present in the collection
-        if (elementClassDescriptor.hasIdField()) {
-            Iterator nodeIterator = this.getCollectionNodes(session, parentNode,
-                    elementClassDescriptor.getJcrType()).iterator();
+         Collection collectionNodes = this.getCollectionNodes(session, parentNode, 
+        		                                              elementClassDescriptor.getJcrType());
+         if (collectionNodes != null && elementClassDescriptor.hasIdField()) {
+            Iterator nodeIterator = collectionNodes.iterator();
 
             while (nodeIterator.hasNext()) {
                 Node child = (Node) nodeIterator.next();
