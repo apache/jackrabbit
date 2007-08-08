@@ -541,7 +541,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                     cne = ne;
                 }
             }
-        } else if (loadIfNotFound && !containsAtticChild(entries, nodeName, index)) {
+        } else if (loadIfNotFound
+                && !containsAtticChild(entries, nodeName, index) 
+                && Status.NEW != getStatus()) {
             NodeId cId = factory.getIdFactory().createNodeId(getId(), Path.create(nodeName, index));
             cne = loadNodeEntry(cId);
         }
@@ -650,7 +652,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      */
     public PropertyEntry getPropertyEntry(QName propName, boolean loadIfNotFound) throws RepositoryException {
         PropertyEntry entry = properties.get(propName);
-        if (entry == null && loadIfNotFound) {
+        if (entry == null && loadIfNotFound && Status.NEW != getStatus()) {
             PropertyId propId = factory.getIdFactory().createPropertyId(getId(), propName);
             entry = loadPropertyEntry(propId);
         } else if (!EntryValidation.isValidPropertyEntry(entry)) {

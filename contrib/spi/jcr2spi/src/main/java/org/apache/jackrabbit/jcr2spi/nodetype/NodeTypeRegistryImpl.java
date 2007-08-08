@@ -21,6 +21,7 @@ import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
@@ -318,15 +319,18 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
                 QName primaryType = nodeState.getNodeTypeName();
                 allNtNames = new QName[] { primaryType }; // default
                 try {
-                    PropertyState mixins = nodeState.getPropertyState(QName.JCR_MIXINTYPES);
-                    QValue[] values = mixins.getValues();
-                    allNtNames = new QName[values.length + 1];
-                    for (int i = 0; i < values.length; i++) {
-                        allNtNames[i] = values[i].getQName();
-                    }
-                    allNtNames[values.length] = primaryType;
+                    PropertyEntry pe = nodeState.getNodeEntry().getPropertyEntry(QName.JCR_MIXINTYPES, true);
+                    if (pe != null) {
+                        PropertyState mixins = pe.getPropertyState();
+                        QValue[] values = mixins.getValues();
+                        allNtNames = new QName[values.length + 1];
+                        for (int i = 0; i < values.length; i++) {
+                            allNtNames[i] = values[i].getQName();
+                        }
+                        allNtNames[values.length] = primaryType;
+                    } // else: no jcr:mixinTypes property exists -> ignore
                 } catch (RepositoryException e) {
-                    // ignore: apparently no jcr:mixinTypes property exists.
+                    // unexpected error: ignore
                 }
             }
             return getEffectiveNodeType(allNtNames);
