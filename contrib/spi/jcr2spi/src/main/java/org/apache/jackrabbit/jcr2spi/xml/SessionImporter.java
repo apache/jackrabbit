@@ -414,40 +414,35 @@ public class SessionImporter implements Importer, SessionListener {
              *
              * see http://issues.apache.org/jira/browse/JCR-61
              */
-            try {
                 PropertyState conflicting = parent.getPropertyState(nodeInfo.getName());
-                if (conflicting.getStatus() == Status.NEW) {
-                    // assume this property has been imported as well;
-                    // rename conflicting property
-                    // TODO: use better reversible escaping scheme to create unique name
-                    QName newName = new QName(nodeInfo.getName().getNamespaceURI(), nodeInfo.getName().getLocalName() + "_");
-                    if (parent.hasPropertyName(newName)) {
-                        newName = new QName(newName.getNamespaceURI(), newName.getLocalName() + "_");
-                    }
-                    // since name changes, need to find new applicable definition
-                    QPropertyDefinition propDef;
-                    if (conflicting.getValues().length == 1) {
-                        // could be single- or multi-valued (n == 1)
-                        try {
-                            // try single-valued
-                            propDef = session.getItemDefinitionProvider().getQPropertyDefinition(parent, newName, conflicting.getType(), false);
-                        } catch (ConstraintViolationException cve) {
-                            // try multi-valued
-                            propDef = session.getItemDefinitionProvider().getQPropertyDefinition(parent, newName, conflicting.getType(), true);
-                        }
-                    } else {
-                        // can only be multi-valued (n == 0 || n > 1)
+            if (conflicting.getStatus() == Status.NEW) {
+                // assume this property has been imported as well;
+                // rename conflicting property
+                // TODO: use better reversible escaping scheme to create unique name
+                QName newName = new QName(nodeInfo.getName().getNamespaceURI(), nodeInfo.getName().getLocalName() + "_");
+                if (parent.hasPropertyName(newName)) {
+                    newName = new QName(newName.getNamespaceURI(), newName.getLocalName() + "_");
+                }
+                // since name changes, need to find new applicable definition
+                QPropertyDefinition propDef;
+                if (conflicting.getValues().length == 1) {
+                    // could be single- or multi-valued (n == 1)
+                    try {
+                        // try single-valued
+                        propDef = session.getItemDefinitionProvider().getQPropertyDefinition(parent, newName, conflicting.getType(), false);
+                    } catch (ConstraintViolationException cve) {
+                        // try multi-valued
                         propDef = session.getItemDefinitionProvider().getQPropertyDefinition(parent, newName, conflicting.getType(), true);
                     }
-
-                    Operation ap = AddProperty.create(parent, newName, conflicting.getType(), propDef, conflicting.getValues());
-                    stateMgr.execute(ap);
-                    Operation rm = Remove.create(conflicting);
-                    stateMgr.execute(rm);
+                } else {
+                    // can only be multi-valued (n == 0 || n > 1)
+                    propDef = session.getItemDefinitionProvider().getQPropertyDefinition(parent, newName, conflicting.getType(), true);
                 }
-            } catch (RepositoryException e) {
-                // should not occur. existance has been checked before
-                throw new RepositoryException(e);
+
+                Operation ap = AddProperty.create(parent, newName, conflicting.getType(), propDef, conflicting.getValues());
+                stateMgr.execute(ap);
+                Operation rm = Remove.create(conflicting);
+                stateMgr.execute(rm);
             }
         }
 
