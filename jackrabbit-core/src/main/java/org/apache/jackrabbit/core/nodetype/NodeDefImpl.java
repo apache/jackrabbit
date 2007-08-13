@@ -156,8 +156,8 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
     /**
      * {@inheritDoc}
      * <p/>
-     * The identifier is computed based on the characteristics of this property
-     * definition, i.e. modifying attributes of this property definition will
+     * The identifier is computed based on the characteristics of this node
+     * definition, i.e. modifying attributes of this node definition will
      * have impact on the identifier returned by this method.
      */
     public NodeDefId getId() {
