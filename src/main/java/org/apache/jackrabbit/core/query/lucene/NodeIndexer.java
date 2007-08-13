@@ -154,15 +154,15 @@ public class NodeIndexer {
 
         // special fields
         // UUID
-        doc.add(new Field(FieldNames.UUID, node.getNodeId().getUUID().toString(), Field.Store.YES, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
+        doc.add(new Field(FieldNames.UUID, node.getNodeId().getUUID().toString(), Field.Store.YES, Field.Index.NO_NORMS, Field.TermVector.NO));
         try {
             // parent UUID
             if (node.getParentId() == null) {
                 // root node
-                doc.add(new Field(FieldNames.PARENT, "", Field.Store.YES, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
-                doc.add(new Field(FieldNames.LABEL, "", Field.Store.NO, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
+                doc.add(new Field(FieldNames.PARENT, "", Field.Store.YES, Field.Index.NO_NORMS, Field.TermVector.NO));
+                doc.add(new Field(FieldNames.LABEL, "", Field.Store.NO, Field.Index.NO_NORMS, Field.TermVector.NO));
             } else {
-                doc.add(new Field(FieldNames.PARENT, node.getParentId().toString(), Field.Store.YES, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
+                doc.add(new Field(FieldNames.PARENT, node.getParentId().toString(), Field.Store.YES, Field.Index.NO_NORMS, Field.TermVector.NO));
                 NodeState parent = (NodeState) stateProvider.getItemState(node.getParentId());
                 NodeState.ChildNodeEntry child = parent.getChildNodeEntry(node.getNodeId());
                 if (child == null) {
@@ -172,7 +172,7 @@ public class NodeIndexer {
                             "for node with id: " + node.getNodeId());
                 }
                 String name = NameFormat.format(child.getName(), mappings);
-                doc.add(new Field(FieldNames.LABEL, name, Field.Store.NO, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
+                doc.add(new Field(FieldNames.LABEL, name, Field.Store.NO, Field.Index.NO_NORMS, Field.TermVector.NO));
             }
         } catch (NoSuchItemStateException e) {
             throwRepositoryException(e);
@@ -391,30 +391,43 @@ public class NodeIndexer {
      * @param internalValue The value for the field to add to the document.
      */
     protected void addBooleanValue(Document doc, String fieldName, Object internalValue) {
-        doc.add(new Field(FieldNames.PROPERTIES,
-                FieldNames.createNamedValue(fieldName, internalValue.toString()),
-                Field.Store.NO,
-                Field.Index.UN_TOKENIZED,
-                Field.TermVector.NO));
+        doc.add(createFieldWithoutNorms(fieldName, internalValue.toString(), false));
+    }
+
+    /**
+     * Creates a field of name <code>fieldName</code> with the value of <code>
+     * internalValue</code>. The created field is indexed without norms.
+     * 
+     * @param fieldName     The name of the field to add
+     * @param internalValue The value for the field to add to the document.
+     * @param store         <code>true</code> if the value should be stored, 
+     *                      <code>false</code> otherwise
+     */
+    protected Field createFieldWithoutNorms(String fieldName,
+            String internalValue, boolean store) {
+        Field field = new Field(FieldNames.PROPERTIES,
+                FieldNames.createNamedValue(fieldName, internalValue),
+                store ? Field.Store.YES : Field.Store.NO, Field.Index.NO_NORMS,
+                Field.TermVector.NO);
+        return field;
     }
 
     /**
      * Adds the calendar value to the document as the named field. The calendar
-     * value is converted to an indexable string value using the {@link DateField}
-     * class.
-     *
-     * @param doc           The document to which to add the field
-     * @param fieldName     The name of the field to add
-     * @param internalValue The value for the field to add to the document.
+     * value is converted to an indexable string value using the
+     * {@link DateField} class.
+     * 
+     * @param doc
+     *            The document to which to add the field
+     * @param fieldName
+     *            The name of the field to add
+     * @param internalValue
+     *            The value for the field to add to the document.
      */
     protected void addCalendarValue(Document doc, String fieldName, Object internalValue) {
         Calendar value = (Calendar) internalValue;
         long millis = value.getTimeInMillis();
-        doc.add(new Field(FieldNames.PROPERTIES,
-                FieldNames.createNamedValue(fieldName, DateField.timeToString(millis)),
-                Field.Store.NO,
-                Field.Index.UN_TOKENIZED,
-                Field.TermVector.NO));
+        doc.add(createFieldWithoutNorms(fieldName, DateField.timeToString(millis), false));
     }
 
     /**
@@ -428,11 +441,7 @@ public class NodeIndexer {
      */
     protected void addDoubleValue(Document doc, String fieldName, Object internalValue) {
         double doubleVal = ((Double) internalValue).doubleValue();
-        doc.add(new Field(FieldNames.PROPERTIES,
-                FieldNames.createNamedValue(fieldName, DoubleField.doubleToString(doubleVal)),
-                Field.Store.NO,
-                Field.Index.UN_TOKENIZED,
-                Field.TermVector.NO));
+        doc.add(createFieldWithoutNorms(fieldName, DoubleField.doubleToString(doubleVal), false));
     }
 
     /**
@@ -446,11 +455,7 @@ public class NodeIndexer {
      */
     protected void addLongValue(Document doc, String fieldName, Object internalValue) {
         long longVal = ((Long) internalValue).longValue();
-        doc.add(new Field(FieldNames.PROPERTIES,
-                FieldNames.createNamedValue(fieldName, LongField.longToString(longVal)),
-                Field.Store.NO,
-                Field.Index.UN_TOKENIZED,
-                Field.TermVector.NO));
+        doc.add(createFieldWithoutNorms(fieldName, LongField.longToString(longVal), false));
     }
 
     /**
@@ -465,11 +470,7 @@ public class NodeIndexer {
     protected void addReferenceValue(Document doc, String fieldName, Object internalValue) {
         UUID value = (UUID) internalValue;
         String uuid = value.toString();
-        doc.add(new Field(FieldNames.PROPERTIES,
-                FieldNames.createNamedValue(fieldName, uuid),
-                Field.Store.YES, // store
-                Field.Index.UN_TOKENIZED,
-                Field.TermVector.NO));
+        doc.add(createFieldWithoutNorms(fieldName, uuid, true));
     }
 
     /**
@@ -489,11 +490,7 @@ public class NodeIndexer {
         } catch (NoPrefixDeclaredException e) {
             // will never happen
         }
-        doc.add(new Field(FieldNames.PROPERTIES,
-                FieldNames.createNamedValue(fieldName, pathString),
-                Field.Store.NO,
-                Field.Index.UN_TOKENIZED,
-                Field.TermVector.NO));
+        doc.add(createFieldWithoutNorms(fieldName, pathString, false));
     }
 
     /**
@@ -548,11 +545,7 @@ public class NodeIndexer {
 
         // simple String
         String stringValue = (String) internalValue;
-        doc.add(new Field(FieldNames.PROPERTIES,
-                FieldNames.createNamedValue(fieldName, stringValue),
-                Field.Store.NO,
-                Field.Index.UN_TOKENIZED,
-                Field.TermVector.NO));
+        doc.add(createFieldWithoutNorms(fieldName, stringValue, false));
         if (tokenized) {
             if (stringValue.length() == 0) {
                 return;
@@ -594,11 +587,7 @@ public class NodeIndexer {
         } catch (NamespaceException e) {
             // will never happen
         }
-        doc.add(new Field(FieldNames.PROPERTIES,
-                FieldNames.createNamedValue(fieldName, normValue),
-                Field.Store.NO,
-                Field.Index.UN_TOKENIZED,
-                Field.TermVector.NO));
+        doc.add(createFieldWithoutNorms(fieldName, normValue, false));
     }
 
     /**
