@@ -219,6 +219,16 @@ public class SearchIndex extends AbstractQueryHandler {
     private boolean forceConsistencyCheck = false;
 
     /**
+     * If set <code>true</code> the index is checked for consistency depending
+     * on the {@link #forceConsistencyCheck} parameter. If set to
+     * <code>false</code>, no consistency check is performed, even if the redo
+     * log had been applied on startup.
+     * <p/>
+     * Default value is: <code>false</code>.
+     */
+    private boolean consistencyCheckEnabled = false;
+
+    /**
      * If set <code>true</code> errors detected by the consistency check are
      * repaired. If <code>false</code> the errors are only reported in the log.
      * <p/>
@@ -343,7 +353,8 @@ public class SearchIndex extends AbstractQueryHandler {
 
         index = new MultiIndex(indexDir, this, context.getItemStateManager(),
                 context.getRootId(), excludedIDs, nsMappings);
-        if (index.getRedoLogApplied() || forceConsistencyCheck) {
+        if (consistencyCheckEnabled
+                && (index.getRedoLogApplied() || forceConsistencyCheck)) {
             log.info("Running consistency check...");
             try {
                 ConsistencyCheck check = ConsistencyCheck.run(index,
@@ -1440,6 +1451,24 @@ public class SearchIndex extends AbstractQueryHandler {
     public String getSynonymProviderClass() {
         return synonymProviderClass != null ?
                 synonymProviderClass.getName() : null;
+    }
+
+    /**
+     * Enables or disables the consistency check on startup. Consistency checks
+     * are disabled per default.
+     *
+     * @param b <code>true</code> enables consistency checks.
+     * @see #setForceConsistencyCheck(boolean)
+     */
+    public void setEnableConsistencyCheck(boolean b) {
+        this.consistencyCheckEnabled = b;
+    }
+
+    /**
+     * @return <code>true</code> if consistency checks are enabled.
+     */
+    public boolean getEnableConsistencyCheck() {
+        return consistencyCheckEnabled;
     }
 
     //----------------------------< internal >----------------------------------
