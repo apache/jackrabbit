@@ -91,7 +91,12 @@
               uuids to lucene document numbers
             - forceConsistencyCheck: runs a consistency check on every startup. If
               false, a consistency check is only performed when the search index
-              detects a prior forced shutdown.
+              detects a prior forced shutdown. This parameter only has an effect
+              if 'enableConsistencyCheck' is set to 'true'.
+            - enableConsistencyCheck: if set to 'true' a consistency check is
+              performed depending on the parameter 'forceConsistencyCheck'. If
+              set to 'false' no consistency check is performed on startup, even
+              if a redo log had been applied.
             - autoRepair: errors detected by a consistency check are automatically
               repaired. If false, errors are only written to the log.
             - analyzer: class name of a lucene analyzer to use for fulltext indexing of text.
@@ -131,6 +136,7 @@
             <param name="bufferSize" value="10"/>
             <param name="cacheSize" value="1000"/>
             <param name="forceConsistencyCheck" value="false"/>
+            <param name="enableConsistencyCheck" value="false"/>
             <param name="autoRepair" value="true"/>
             <param name="analyzer" value="org.apache.lucene.analysis.standard.StandardAnalyzer"/>
             <param name="queryClass" value="org.apache.jackrabbit.core.query.QueryImpl"/>
