@@ -18,6 +18,10 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.query.LocationStepQueryNode;
+import org.apache.jackrabbit.core.query.lucene.hits.AdaptingHits;
+import org.apache.jackrabbit.core.query.lucene.hits.Hits;
+import org.apache.jackrabbit.core.query.lucene.hits.HitsIntersection;
+import org.apache.jackrabbit.core.query.lucene.hits.ScorerHits;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -37,7 +41,6 @@ import org.apache.lucene.search.Weight;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -238,19 +241,14 @@ class ChildAxisQuery extends Query {
         private final IndexReader reader;
 
         /**
-         * BitSet storing the id's of selected documents
-         */
-        private final BitSet hits;
-
-        /**
-         * List of UUIDs of selected nodes
-         */
-        private List uuids = null;
-
-        /**
          * The next document id to return
          */
         private int nextDoc = -1;
+
+        /**
+         * A <code>Hits</code> instance containing all hits
+         */
+        private Hits hits;
 
         /**
          * Creates a new <code>ChildAxisScorer</code>.
@@ -261,7 +259,6 @@ class ChildAxisQuery extends Query {
         protected ChildAxisScorer(Similarity similarity, IndexReader reader) {
             super(similarity);
             this.reader = reader;
-            this.hits = new BitSet(reader.maxDoc());
         }
 
         /**
@@ -269,7 +266,10 @@ class ChildAxisQuery extends Query {
          */
         public boolean next() throws IOException {
             calculateChildren();
-            nextDoc = hits.nextSetBit(nextDoc + 1);
+            do {
+                nextDoc = hits.next();
+            } while (nextDoc >= 0 && !indexIsValid(nextDoc));
+            
             return nextDoc > -1;
         }
 
@@ -292,8 +292,10 @@ class ChildAxisQuery extends Query {
          */
         public boolean skipTo(int target) throws IOException {
             calculateChildren();
-            nextDoc = hits.nextSetBit(target);
-            return nextDoc > -1;
+            nextDoc = hits.skipTo(target);
+            while (!indexIsValid(nextDoc))
+                next();
+            return nextDoc > -1;            
         }
 
         /**
@@ -307,117 +309,113 @@ class ChildAxisQuery extends Query {
         }
 
         private void calculateChildren() throws IOException {
-            if (uuids == null) {
-                uuids = new ArrayList();
+            if (hits == null) {
+                
+                // collect all context nodes
+                List uuids = new ArrayList();
+                final Hits contextHits = new AdaptingHits();
                 contextScorer.score(new HitCollector() {
                     public void collect(int doc, float score) {
-                        hits.set(doc);
+                        contextHits.set(doc);
                     }
                 });
 
-                // collect nameTest hits
-                final BitSet nameTestHits = new BitSet();
-                if (nameTestScorer != null) {
-                    nameTestScorer.score(new HitCollector() {
-                        public void collect(int doc, float score) {
-                            nameTestHits.set(doc);
-                        }
-                    });
-                }
-
                 // read the uuids of the context nodes
-                for (int i = hits.nextSetBit(0); i >= 0; i = hits.nextSetBit(i + 1)) {
+                int i = contextHits.next();
+                while (i > -1) {
                     String uuid = reader.document(i).get(FieldNames.UUID);
                     uuids.add(uuid);
+                    i = contextHits.next();
                 }
+                
+                // collect all children of the context nodes
+                Hits childrenHits = new AdaptingHits();
 
-                // collect the doc ids of all child nodes. we reuse the existing
-                // bitset.
-                hits.clear();
                 TermDocs docs = reader.termDocs();
                 try {
                     for (Iterator it = uuids.iterator(); it.hasNext();) {
                         docs.seek(new Term(FieldNames.PARENT, (String) it.next()));
                         while (docs.next()) {
-                            hits.set(docs.doc());
+                            childrenHits.set(docs.doc());
                         }
                     }
                 } finally {
                     docs.close();
                 }
-                // filter out the child nodes that do not match the name test
-                // if there is any name test at all.
+                
                 if (nameTestScorer != null) {
-                    hits.and(nameTestHits);
-                }
-
-                // filter by index
-                if (position != LocationStepQueryNode.NONE) {
-                    for (int i = hits.nextSetBit(0); i >= 0; i = hits.nextSetBit(i + 1)) {
-                        Document node = reader.document(i);
-                        NodeId parentId = NodeId.valueOf(node.get(FieldNames.PARENT));
-                        NodeId id = NodeId.valueOf(node.get(FieldNames.UUID));
-                        try {
-                            NodeState state = (NodeState) itemMgr.getItemState(parentId);
-                            if (nameTest == null) {
-                                // only select this node if it is the child at
-                                // specified position
-                                if (position == LocationStepQueryNode.LAST) {
-                                    // only select last
-                                    List childNodes = state.getChildNodeEntries();
-                                    if (childNodes.size() == 0
-                                            || !((NodeState.ChildNodeEntry) childNodes.get(childNodes.size() - 1))
-                                                .getId().equals(id)) {
-                                        hits.flip(i);
-                                    }
-                                } else {
-                                    List childNodes = state.getChildNodeEntries();
-                                    if (position < 1
-                                            || childNodes.size() < position
-                                            || !((NodeState.ChildNodeEntry) childNodes.get(position - 1)).getId().equals(id)) {
-                                        hits.flip(i);
-                                    }
-                                }
-                            } else {
-                                // select the node when its index is equal to
-                                // specified position
-                                if (position == LocationStepQueryNode.LAST) {
-                                    // only select last
-                                    NodeState.ChildNodeEntry entry =
-                                            state.getChildNodeEntry(id);
-                                    if (entry == null) {
-                                        // no such child node, probably deleted meanwhile
-                                        hits.flip(i);
-                                    } else {
-                                        // only use the last one
-                                        QName name = entry.getName();
-                                        List childNodes = state.getChildNodeEntries(name);
-                                        if (childNodes.size() == 0
-                                                || !((NodeState.ChildNodeEntry) childNodes.get(childNodes.size() - 1))
-                                                    .getId().equals(id)) {
-                                            hits.flip(i);
-                                        }
-                                    }
-                                } else {
-                                    NodeState.ChildNodeEntry entry =
-                                            state.getChildNodeEntry(id);
-                                    if (entry == null) {
-                                        // no such child node, probably has been deleted meanwhile
-                                        hits.flip(i);
-                                    } else {
-                                        if (entry.getIndex() != position) {
-                                            hits.flip(i);
-                                        }
-                                    }
-                                }
-                            }
-                        } catch (ItemStateException e) {
-                            // ignore this node, probably has been deleted meanwhile
-                            hits.flip(i);
-                        }
-                    }
+                    hits = new HitsIntersection(childrenHits, new ScorerHits(nameTestScorer));
+                } else {
+                    hits = childrenHits;
                 }
             }
+        }
+
+        private boolean indexIsValid(int i) throws IOException {
+            if (position != LocationStepQueryNode.NONE) {
+                Document node = reader.document(i);
+                NodeId parentId = NodeId.valueOf(node.get(FieldNames.PARENT));
+                NodeId id = NodeId.valueOf(node.get(FieldNames.UUID));
+                try {
+                    NodeState state = (NodeState) itemMgr.getItemState(parentId);
+                    if (nameTest == null) {
+                        // only select this node if it is the child at
+                        // specified position
+                        if (position == LocationStepQueryNode.LAST) {
+                            // only select last
+                            List childNodes = state.getChildNodeEntries();
+                            if (childNodes.size() == 0
+                                    || !((NodeState.ChildNodeEntry) childNodes.get(childNodes.size() - 1))
+                                        .getId().equals(id)) {
+                                return false;
+                            }
+                        } else {
+                            List childNodes = state.getChildNodeEntries();
+                            if (position < 1
+                                    || childNodes.size() < position
+                                    || !((NodeState.ChildNodeEntry) childNodes.get(position - 1)).getId().equals(id)) {
+                                return false;
+                            }
+                        }
+                    } else {
+                        // select the node when its index is equal to
+                        // specified position
+                        if (position == LocationStepQueryNode.LAST) {
+                            // only select last
+                            NodeState.ChildNodeEntry entry =
+                                    state.getChildNodeEntry(id);
+                            if (entry == null) {
+                                // no such child node, probably deleted meanwhile
+                                return false;
+                            } else {
+                                // only use the last one
+                                QName name = entry.getName();
+                                List childNodes = state.getChildNodeEntries(name);
+                                if (childNodes.size() == 0
+                                        || !((NodeState.ChildNodeEntry) childNodes.get(childNodes.size() - 1))
+                                            .getId().equals(id)) {
+                                    return false;
+                                }
+                            }
+                        } else {
+                            NodeState.ChildNodeEntry entry =
+                                    state.getChildNodeEntry(id);
+                            if (entry == null) {
+                                // no such child node, probably has been deleted meanwhile
+                                return false;
+                            } else {
+                                if (entry.getIndex() != position) {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                } catch (ItemStateException e) {
+                    // ignore this node, probably has been deleted meanwhile
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }
