@@ -1459,7 +1459,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          * @return the timestamp when the workspace has become idle or zero if
          *         the workspace is not idle.
          */
-        long getIdleTimestamp() {
+        final long getIdleTimestamp() {
             return idleTimestamp;
         }
 
@@ -1470,7 +1470,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          *
          * @param ts timestamp when workspace has become idle.
          */
-        void setIdleTimestamp(long ts) {
+        final void setIdleTimestamp(long ts) {
             idleTimestamp = ts;
         }
 
@@ -1480,7 +1480,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          *
          * @return <code>true</code> if this workspace info is initialized.
          */
-        protected boolean isInitialized() {
+        protected final boolean isInitialized() {
             try {
                 if (!initLock.readLock().attempt(0)) {
                     return false;
@@ -1499,7 +1499,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          *
          * @return the workspace file system
          */
-        FileSystem getFileSystem() {
+        protected FileSystem getFileSystem() {
             if (!isInitialized()) {
                 throw new IllegalStateException("workspace '" + getName()
                         + "' not initialized");
@@ -1515,7 +1515,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          * @throws RepositoryException if the persistence manager could not be
          * instantiated/initialized
          */
-        PersistenceManager getPersistenceManager()
+        protected PersistenceManager getPersistenceManager()
                 throws RepositoryException {
             if (!isInitialized()) {
                 throw new IllegalStateException("workspace '" + getName()
@@ -1532,7 +1532,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          * @throws RepositoryException if the workspace item state provider
          *                             could not be created
          */
-        SharedItemStateManager getItemStateProvider()
+        protected SharedItemStateManager getItemStateProvider()
                 throws RepositoryException {
             if (!isInitialized()) {
                 throw new IllegalStateException("workspace '" + getName()
@@ -1547,7 +1547,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          *
          * @return the observation dispatcher for this workspace
          */
-        ObservationDispatcher getObservationDispatcher() {
+        protected ObservationDispatcher getObservationDispatcher() {
             if (!isInitialized()) {
                 throw new IllegalStateException("workspace '" + getName()
                         + "' not initialized");
@@ -1563,7 +1563,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          *         if no <code>SearchManager</code>
          * @throws RepositoryException if the search manager could not be created
          */
-        SearchManager getSearchManager() throws RepositoryException {
+        protected SearchManager getSearchManager() throws RepositoryException {
             if (!isInitialized()) {
                 throw new IllegalStateException("workspace '" + getName()
                         + "' not initialized");
@@ -1595,7 +1595,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          * @return the lock manager for this workspace
          * @throws RepositoryException if the lock manager could not be created
          */
-        LockManager getLockManager() throws RepositoryException {
+        protected LockManager getLockManager() throws RepositoryException {
             if (!isInitialized()) {
                 throw new IllegalStateException("workspace '" + getName()
                         + "' not initialized");
@@ -1659,7 +1659,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          *         initialized, <code>false</code> if it is already initialized.
          * @throws RepositoryException if an error occured during the initialization
          */
-        boolean initialize() throws RepositoryException {
+        final boolean initialize() throws RepositoryException {
             // check initialize status
             try {
                 initLock.readLock().acquire();
@@ -1686,53 +1686,57 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                     // already initialized, some other thread was quicker, we're done
                     return false;
                 }
-
                 log.info("initializing workspace '" + getName() + "'...");
-
-                FileSystemConfig fsConfig = config.getFileSystemConfig();
-                fs = fsConfig.createFileSystem();
-
-                persistMgr = createPersistenceManager(new File(config.getHomeDir()),
-                        fs,
-                        config.getPersistenceManagerConfig(),
-                        rootNodeId,
-                        nsReg,
-                        ntReg);
-
-                // create item state manager
-                try {
-                    itemStateMgr = createItemStateManager(persistMgr, rootNodeId, ntReg, true, cacheFactory);
-                    try {
-                        itemStateMgr.addVirtualItemStateProvider(
-                                vMgr.getVirtualItemStateProvider());
-                        itemStateMgr.addVirtualItemStateProvider(
-                                virtNTMgr.getVirtualItemStateProvider());
-                    } catch (Exception e) {
-                        log.error("Unable to add vmgr: " + e.toString(), e);
-                    }
-                    if (clusterNode != null && config.isClustered()) {
-                        updateChannel = clusterNode.createUpdateChannel(getName());
-                        itemStateMgr.setEventChannel(updateChannel);
-                        updateChannel.setListener(this);
-                    }
-                } catch (ItemStateException ise) {
-                    String msg = "failed to instantiate shared item state manager";
-                    log.debug(msg);
-                    throw new RepositoryException(msg, ise);
-                }
-
-                dispatcher = new ObservationDispatcher();
-
-                // register the observation factory of that workspace
-                delegatingDispatcher.addDispatcher(dispatcher);
-
+                doInitialize();
                 initialized = true;
-
                 log.info("workspace '" + getName() + "' initialized");
                 return true;
             } finally {
                 initLock.writeLock().release();
             }
+        }
+
+        /**
+         * Does the actual initialization work. assumes holding write lock.
+         * @throws RepositoryException if an error occurs.
+         */
+        protected void doInitialize() throws RepositoryException {
+            FileSystemConfig fsConfig = config.getFileSystemConfig();
+            fs = fsConfig.createFileSystem();
+
+            persistMgr = createPersistenceManager(new File(config.getHomeDir()),
+                    fs,
+                    config.getPersistenceManagerConfig(),
+                    rootNodeId,
+                    nsReg,
+                    ntReg);
+
+            // create item state manager
+            try {
+                itemStateMgr = createItemStateManager(persistMgr, rootNodeId, ntReg, true, cacheFactory);
+                try {
+                    itemStateMgr.addVirtualItemStateProvider(
+                            vMgr.getVirtualItemStateProvider());
+                    itemStateMgr.addVirtualItemStateProvider(
+                            virtNTMgr.getVirtualItemStateProvider());
+                } catch (Exception e) {
+                    log.error("Unable to add vmgr: " + e.toString(), e);
+                }
+                if (clusterNode != null && config.isClustered()) {
+                    updateChannel = clusterNode.createUpdateChannel(getName());
+                    itemStateMgr.setEventChannel(updateChannel);
+                    updateChannel.setListener(this);
+                }
+            } catch (ItemStateException ise) {
+                String msg = "failed to instantiate shared item state manager";
+                log.debug(msg);
+                throw new RepositoryException(msg, ise);
+            }
+
+            dispatcher = new ObservationDispatcher();
+
+            // register the observation factory of that workspace
+            delegatingDispatcher.addDispatcher(dispatcher);
         }
 
         /**
@@ -1742,7 +1746,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          * @param maxIdleTime amount of time in mmilliseconds before an idle
          *                    workspace is automatically shutdown.
          */
-        void disposeIfIdle(long maxIdleTime) {
+        final void disposeIfIdle(long maxIdleTime) {
             try {
                 initLock.readLock().acquire();
             } catch (InterruptedException e) {
@@ -1773,13 +1777,12 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         /**
          * Disposes all objects this <code>WorkspaceInfo</code> is holding.
          */
-        protected void dispose() {
+        final void dispose() {
             try {
                 initLock.writeLock().acquire();
             } catch (InterruptedException e) {
                 throw new IllegalStateException("Unable to aquire write lock.");
             }
-
             try {
                 if (!initialized) {
                     // nothing to dispose of, we're already done
@@ -1787,72 +1790,76 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                 }
 
                 log.info("shutting down workspace '" + getName() + "'...");
-
-                // inform cluster node about disposal
-                if (updateChannel != null) {
-                    updateChannel.setListener(null);
-                }
-                if (lockChannel != null) {
-                    lockChannel.setListener(null);
-                }
-
-                // deregister the observation factory of that workspace
-                delegatingDispatcher.removeDispatcher(dispatcher);
-
-                // dispose observation manager factory
-                dispatcher.dispose();
-                dispatcher = null;
-
-                // shutdown search managers
-                if (searchMgr != null) {
-                    searchMgr.close();
-                    searchMgr = null;
-                }
-
-                // close system session
-                if (systemSession != null) {
-                    systemSession.removeListener(RepositoryImpl.this);
-                    systemSession.logout();
-                    systemSession = null;
-                }
-
-                // dispose shared item state manager
-                itemStateMgr.dispose();
-                itemStateMgr = null;
-
-                // close persistence manager
-                try {
-                    persistMgr.close();
-                } catch (Exception e) {
-                    log.error("error while closing persistence manager of workspace "
-                            + config.getName(), e);
-                }
-                persistMgr = null;
-
-                // close lock manager
-                if (lockMgr != null) {
-                    lockMgr.close();
-                    lockMgr = null;
-                }
-
-                // close workspace file system
-                try {
-                    fs.close();
-                } catch (FileSystemException fse) {
-                    log.error("error while closing file system of workspace "
-                            + config.getName(), fse);
-                }
-                fs = null;
-
+                doDispose();
                 // reset idle timestamp
                 idleTimestamp = 0;
 
                 initialized = false;
-
                 log.info("workspace '" + getName() + "' has been shutdown");
             } finally {
                 initLock.writeLock().release();
             }
+        }
+
+        /**
+         * Does the actual disposal. assumes holding write lock.
+         */
+        protected void doDispose() {
+            // inform cluster node about disposal
+            if (updateChannel != null) {
+                updateChannel.setListener(null);
+            }
+            if (lockChannel != null) {
+                lockChannel.setListener(null);
+            }
+
+            // deregister the observation factory of that workspace
+            delegatingDispatcher.removeDispatcher(dispatcher);
+
+            // dispose observation manager factory
+            dispatcher.dispose();
+            dispatcher = null;
+
+            // shutdown search managers
+            if (searchMgr != null) {
+                searchMgr.close();
+                searchMgr = null;
+            }
+
+            // close system session
+            if (systemSession != null) {
+                systemSession.removeListener(RepositoryImpl.this);
+                systemSession.logout();
+                systemSession = null;
+            }
+
+            // dispose shared item state manager
+            itemStateMgr.dispose();
+            itemStateMgr = null;
+
+            // close persistence manager
+            try {
+                persistMgr.close();
+            } catch (Exception e) {
+                log.error("error while closing persistence manager of workspace "
+                        + config.getName(), e);
+            }
+            persistMgr = null;
+
+            // close lock manager
+            if (lockMgr != null) {
+                lockMgr.close();
+                lockMgr = null;
+            }
+
+            // close workspace file system
+            try {
+                fs.close();
+            } catch (FileSystemException fse) {
+                log.error("error while closing file system of workspace "
+                        + config.getName(), fse);
+            }
+            fs = null;
         }
 
         /**
