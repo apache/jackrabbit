@@ -1,13 +1,12 @@
 package org.apache.jackrabbit.core.query;
 
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
-
-import org.apache.jackrabbit.api.JackrabbitQuery;
 
 public class LimitAndOffsetTest extends AbstractQueryTest {
 
@@ -15,7 +14,7 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
     private Node node2;
     private Node node3;
 
-    private JackrabbitQuery query;
+    private QueryImpl query;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -32,10 +31,10 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
         query = createXPathQuery("/jcr:root" + testRoot + "/* order by @name");
     }
 
-    private JackrabbitQuery createXPathQuery(String xpath)
+    private QueryImpl createXPathQuery(String xpath)
             throws InvalidQueryException, RepositoryException {
         QueryManager queryManager = superuser.getWorkspace().getQueryManager();
-        return (JackrabbitQuery) queryManager.createQuery(xpath, Query.XPATH);
+        return (QueryImpl) queryManager.createQuery(xpath, Query.XPATH);
     }
 
     public void testLimit() throws Exception {
@@ -86,6 +85,14 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
         query.setLimit(2);
         result = query.execute();
         checkResult(result, new Node[] { node1, node2 });
+    }
+
+    public void testOffsetAndSkip() throws Exception {
+        query.setOffset(1);
+        QueryResult result = query.execute();
+        NodeIterator nodes = result.getNodes();
+        nodes.skip(1);
+        assertTrue(nodes.nextNode() == node3);
     }
 
 }

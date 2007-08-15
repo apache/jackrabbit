@@ -16,18 +16,18 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.api.JackrabbitQuery;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.ItemManager;
-
-import javax.jcr.query.InvalidQueryException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.Query;
+
+import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.SessionImpl;
 
 /**
  * Defines common initialization methods for all query implementations.
  */
-public abstract class AbstractQueryImpl implements JackrabbitQuery {
+public abstract class AbstractQueryImpl implements Query {
 
     /**
      * Initializes a query instance from a query string.
