@@ -396,7 +396,12 @@ public class LazyQueryResultImpl implements QueryResult {
          * nodes or the session does not have access to a node.
          */
         public long getSize() {
-            return numResults - invalid;
+            int totalSize = numResults - invalid;
+            if (limit > 0 && totalSize > limit) {
+                return limit;
+            } else {
+                return totalSize;
+            }
         }
 
         /**

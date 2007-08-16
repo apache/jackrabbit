@@ -95,4 +95,17 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
         assertTrue(nodes.nextNode() == node3);
     }
 
+    public void testOffsetAndLimitWithGetSize() throws Exception {
+        query.setOffset(1);
+        QueryResult result = query.execute();
+        NodeIterator nodes = result.getNodes();
+        assertEquals(2, nodes.getSize());
+
+        query.setOffset(1);
+        query.setLimit(1);
+        result = query.execute();
+        nodes = result.getNodes();
+        assertEquals(1, nodes.getSize());
+    }
+
 }
