@@ -21,5 +21,20 @@
 		<field-descriptor fieldName="field" jcrName="field" />
 	</class-descriptor>
 	
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.proxy.NTDetail" jcrType="ocm:ntdetail" >		
+		<field-descriptor fieldName="path" path="true" />
+		<field-descriptor fieldName="field" jcrName="ocm:field" />
+	</class-descriptor>	
+		
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.proxy.NTMain" 	jcrType="ocm:ntmain"  >		
+		<field-descriptor fieldName="path" path="true" />
+		<!--  bean-descriptor fieldName="nullDetail" jcrName="nulldetail" proxy="true" jcrType="ocm:ntdetail" / -->		
+
+		<collection-descriptor fieldName="proxyCollection" proxy="true" 
+		                       elementClassName="org.apache.jackrabbit.ocm.testmodel.proxy.NTDetail" 
+		                       collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl" />		
+	</class-descriptor>
+
+
+	
 </jackrabbit-ocm>
- 
