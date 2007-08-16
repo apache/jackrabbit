@@ -33,6 +33,9 @@ import javax.jcr.Session;
 import javax.jcr.ValueFormatException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryResult;
 import javax.jcr.version.VersionException;
 
 import org.apache.commons.logging.Log;
@@ -44,14 +47,19 @@ import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
 import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
+import org.apache.jackrabbit.util.ISO9075;
 
 /**
  * Collection Mapping/convertion based on node type.
  *
- * This collection mapping strategy maps a collection into several nodes based on specific node type.
+ * This collection mapping strategy maps the collection elements into subnodes based on the same node types.
+ * 
+ * There are 2 constraints in this collection converter : 
+ * 1/ this is not possible to have 2 different collections in the main object which are used the same jcr node type for their elements. 
+ * 2/ this is not possible to make a distinction between an empty collection and an null collection. 
  *
  *
- * If the collection element class contains an id (see the FieldDescriptor definition), this id value is used to build the collection element node.
+ * If the collection element class contains an id (see the FieldDescriptor definition), this id value is used to build the collection element node name.
  * Otherwise, the element node name is a simple constant (collection-element)
  *
  * Example - without an id attribute:
@@ -61,6 +69,8 @@ import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
  *                ....
  *          /collection-element (node used to store the second collection element)
  *          ...
+ *          
+ *          Each "collection-element" nodes have the same jcr node type
  *
  * Example - with an id attribute:
  *   /test (Main object containing the collection field )
@@ -69,6 +79,8 @@ import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
  *                ....
  *          /anotherValue (id value assigned to the first element)
  *          ...
+ *          
+ *          Each collection element nodes have the same jcr node type
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  *
@@ -174,13 +186,13 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
         }
 
         // Delete JCR nodes that are not present in the collection
-         Collection collectionNodes = this.getCollectionNodes(session, parentNode, 
+         NodeIterator nodes = this.getCollectionNodes(session, parentNode, 
         		                                              elementClassDescriptor.getJcrType());
-         if (collectionNodes != null && elementClassDescriptor.hasIdField()) {
-            Iterator nodeIterator = collectionNodes.iterator();
+         if (nodes != null && elementClassDescriptor.hasIdField()) {
+            
 
-            while (nodeIterator.hasNext()) {
-                Node child = (Node) nodeIterator.next();
+            while (nodes.hasNext()) {
+                Node child = (Node) nodes.next();
                 
                 if (!updatedItems.containsKey(child.getName())) {
                     child.remove();
@@ -198,17 +210,16 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
                                                    Class collectionFieldClass) throws RepositoryException {
 	    ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass( ReflectionUtils.forName(collectionDescriptor.getElementClassName())); 
         ManageableCollection collection = ManageableCollectionUtil.getManageableCollection(collectionFieldClass);
-        //Class elementClass = ReflectionUtils.forName(collectionDescriptor.getElementClassName());
-        Collection nodes = this.getCollectionNodes(session, parentNode, elementClassDescriptor.getJcrType());
+
+        NodeIterator nodes = this.getCollectionNodes(session, parentNode, elementClassDescriptor.getJcrType());
         
-        if (nodes == null)
+        if (nodes == null || nodes.getSize() == 0)
         {
         	return null;
         }
-        
-        Iterator children = nodes.iterator();
-        while (children.hasNext()) {
-            Node itemNode = (Node) children.next();
+                
+        while (nodes.hasNext()) {
+            Node itemNode = (Node) nodes.next();
             log.debug("Collection node found : " + itemNode.getPath());
             Object item = objectConverter.getObject(session,  itemNode.getPath());
             collection.addObject(item);
@@ -219,54 +230,29 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
     
     /**
      * @see AbstractCollectionConverterImpl#doIsNull(Session, Node, CollectionDescriptor, Class)
+     * 
+     * return true If the parent node doesn't contains node based on the node type associated to the collection elements
+     *  
      */
     protected boolean doIsNull(Session session,
                                               Node parentNode,
                                               CollectionDescriptor collectionDescriptor,
                                               Class collectionFieldClass) throws RepositoryException {
 
-    	    // This collection converter returns at least a empty collection (see in doGetCollection) 
-        return false;
-    }         
-
-    private Collection getCollectionNodes(Session session, Node parentNode, String itemNodeType)
+        String elementClassName = collectionDescriptor.getElementClassName();
+        ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass(ReflectionUtils.forName(elementClassName));
+		QueryResult queryResult = getQuery(session, parentNode, elementClassDescriptor.getJcrType());    	
+    	return queryResult.getNodes().getSize() == 0;
+    }
+        
+    private NodeIterator getCollectionNodes(Session session, Node parentNode, String itemNodeType)
     throws PathNotFoundException, ValueFormatException, RepositoryException {
 
-        List collectionNodes = new ArrayList();
-
-        // TODO : review this workaround used to support version nodes
-        // Searching on the version storage has some bugs => loop on all child noded and check the property jcr:frozenPrimaryType
-        // I have to investigate in more detail what's happen exactly
-        if (!parentNode.getPath().startsWith("/jcr:system/jcr:versionStorage")) {
-            NodeIterator nodeIterator = parentNode.getNodes();
-            while (nodeIterator.hasNext()) {
-                Node child = nodeIterator.nextNode();
-
-                if (child.isNodeType(itemNodeType)) {
-                    collectionNodes.add(child);
-                }
-            }
-        }
-        else {
-            NodeIterator nodeIterator = parentNode.getNodes();
-            while (nodeIterator.hasNext()) {
-                Node child = nodeIterator.nextNode();
-
-                if (child.getProperty("jcr:frozenPrimaryType").getString().equals(itemNodeType)) {
-                    collectionNodes.add(child);
-                }
-            }
-
-        }
-
-        if (collectionNodes.size() == 0)
-        {
-        	return null; 
-        }
-        else
-        {
-            return collectionNodes;
-        }
+        List collectionNodes = null;
+        
+        QueryResult queryResult = getQuery(session, parentNode, itemNodeType);
+        return  queryResult.getNodes();
+        
     }
 
     private void deleteCollectionItems(Session session, Node parentNode, String itemNodeType) 
@@ -277,13 +263,35 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
            ValueFormatException, 
            RepositoryException
     {
-        Collection nodes = this.getCollectionNodes(session, parentNode, itemNodeType);
-        if (nodes == null) return;
-        	
-        Iterator nodeIterator = nodes.iterator();
-        while (nodeIterator.hasNext()) {
-            Node node = (Node) nodeIterator.next();
+        NodeIterator nodes = this.getCollectionNodes(session, parentNode, itemNodeType);
+        if (nodes == null || nodes.getSize()==0) return;
+        
+        while (nodes.hasNext()) {
+            Node node = (Node) nodes.next();
             node.remove();
         }
     }
+    
+   
+	
+	private QueryResult getQuery(Session session, Node parentNode, String jcrNodeType) throws RepositoryException, InvalidQueryException {
+    	String jcrExpression= "";    	
+    	if (!parentNode.getPath().startsWith("/jcr:system/jcr:versionStorage")) 
+    	{
+            jcrExpression = "SELECT * FROM " + jcrNodeType + " WHERE jcr:path LIKE '" + parentNode.getPath() 
+                                       + "/%' AND NOT jcr:path LIKE '" + parentNode.getPath() + "/%/%'";
+    	}
+    	else
+    	{
+    	
+    		jcrExpression = "SELECT * FROM nt:frozenNode" + " WHERE jcr:path LIKE '" + parentNode.getPath() + "/%'" 
+    		                 + " AND NOT jcr:path LIKE '" + parentNode.getPath() + "/%/%'"
+    		                 + " AND jcr:frozenPrimaryType = '" + jcrNodeType + "'";
+
+    		                
+    	}
+        Query jcrQuery = session.getWorkspace().getQueryManager().createQuery(jcrExpression, javax.jcr.query.Query.SQL);
+        QueryResult queryResult = jcrQuery.execute();
+		return queryResult;
+	}
 }

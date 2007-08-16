@@ -29,6 +29,7 @@ import org.apache.jackrabbit.ocm.TestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.testmodel.proxy.Detail;
 import org.apache.jackrabbit.ocm.testmodel.proxy.Main;
+import org.apache.jackrabbit.ocm.testmodel.proxy.NTMain;
 
 /**
  * Test inheritance with node type per concrete class (without  discreminator field)
@@ -114,7 +115,6 @@ public class ProxyTest extends TestBase {
 			//---------------------------------------------------------------------------------------------------------
 			// Retrieve the main object
 			//---------------------------------------------------------------------------------------------------------						
-
 			main = (Main) ocm.getObject( "/test");
 			assertNotNull("detail is null", main.getDetail());
 			assertTrue("Invalid detail bean", main.getDetail().getField().equals("AnotherFieldValue"));
@@ -126,6 +126,11 @@ public class ProxyTest extends TestBase {
 						
 			assertNull("nulldetail is not  null",main.getNullDetail());
 				
+			//---------------------------------------------------------------------------------------------------------
+			// Delete the main object
+			//---------------------------------------------------------------------------------------------------------						
+			ocm.remove("/test");
+			ocm.save();
 	
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -135,7 +140,7 @@ public class ProxyTest extends TestBase {
 		
 	}
 	
-	public void testCollectionProxy() {
+	public void testDefaultCollectionConverterWithProxy() {
 
 		try {
 			ObjectContentManager ocm = this.getObjectContentManager();
@@ -183,7 +188,12 @@ public class ProxyTest extends TestBase {
 			assertNotNull("main  is null", main);
             assertEquals("Invalide size",main.getProxyCollection().size(), 101);
             assertNull("nullcollectionproxy  is not null", main.getNullProxyCollection());
-            
+
+            //---------------------------------------------------------------------------------------------------------
+			// Delete the main object
+			//---------------------------------------------------------------------------------------------------------						
+			ocm.remove("/test");
+			ocm.save();            
 	
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -193,6 +203,82 @@ public class ProxyTest extends TestBase {
 		
 	}
 
+	public void testNTCollectionconverterWithProxy() {
+
+		try {
+
+			ObjectContentManager ocm = this.getObjectContentManager();			
+			
+			NTMain main = new NTMain();
+			main.setPath("/test");							
+            ocm.insert(main);
+			ocm.save();
+			
+			//---------------------------------------------------------------------------------------------------------
+			// Retrieve the main object
+			//---------------------------------------------------------------------------------------------------------						
+			main = (NTMain) ocm.getObject( "/test");
+			assertNotNull("main is null", main);
+
+            Collection result = main.getProxyCollection();
+            assertNull("Collection is not null", result);
+            
+/*			
+			//---------------------------------------------------------------------------------------------------------
+			// Update  
+			//---------------------------------------------------------------------------------------------------------
+			ArrayList  details= new ArrayList();
+			for(int i=1; i<=100;i++)
+			{
+				Detail detail = new Detail();
+				detail.setField("field" + i);				
+				details.add(detail);
+			}
+			main.setProxyCollection(details);
+			ocm.update(main);
+			ocm.save();
+            
+			//---------------------------------------------------------------------------------------------------------
+			// Retrieve the main object
+			//---------------------------------------------------------------------------------------------------------						
+			main = (NtMain) ocm.getObject( "/test");
+			assertNotNull("main is null", main);
+
+            result = main.getProxyCollection();
+            assertEquals("Invalide size", result.size(), 100);
+            
+			
+			//---------------------------------------------------------------------------------------------------------
+			// Update  
+			//---------------------------------------------------------------------------------------------------------            
+            Detail detail = new Detail();
+			detail.setField("newFieldValue");			
+			result.add(detail);
+			main.setProxyCollection(result);
+			ocm.update(main);
+			ocm.save();
+
+			//---------------------------------------------------------------------------------------------------------
+			// Retrieve the main object
+			//---------------------------------------------------------------------------------------------------------						
+			main = (NtMain) ocm.getObject("/test");
+			assertNotNull("main  is null", main);
+            assertEquals("Invalide size",main.getProxyCollection().size(), 101);
+            
+*/
+            //---------------------------------------------------------------------------------------------------------
+			// Delete the main object
+			//---------------------------------------------------------------------------------------------------------						
+			ocm.remove("/test");
+			ocm.save();            
+	
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail();
+		}
+
+		
+	}
 
 
 	    

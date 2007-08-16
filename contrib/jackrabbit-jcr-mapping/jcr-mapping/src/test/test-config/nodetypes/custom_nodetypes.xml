@@ -221,5 +221,26 @@
             </defaultValues>     
      </propertyDefinition>
    </nodeType> 
+   
+  <nodeType name="ocm:ntdetail" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="ocm:field" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+  </nodeType>
+  
+  <nodeType name="ocm:ntmain" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <childNodeDefinition name="*" defaultPrimaryType="ocm:ntdetail" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" sameNameSiblings="true">
+      <requiredPrimaryTypes>
+        <requiredPrimaryType>ocm:ntdetail</requiredPrimaryType>
+      </requiredPrimaryTypes>
+    </childNodeDefinition>    
+  </nodeType>
+   
 </nodeTypes>
 
