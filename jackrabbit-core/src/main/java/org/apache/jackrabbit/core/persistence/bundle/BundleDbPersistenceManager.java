@@ -718,7 +718,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                         try {
                             NodePropBundle child = loadBundle(entry.getId());
                             if (child == null) {
-                                log.error("NodeState " + id.getUUID() + " references unexistent child " + entry.getName() + " with id " + entry.getId().getUUID());
+                                log.error("NodeState " + id.getUUID() + " references inexistent child " + entry.getName() + " with id " + entry.getId().getUUID());
                                 missingChildren.add(entry);
                             } else {
                                 NodeId cp = child.getParentId();
@@ -743,7 +743,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                     NodeId parentId = bundle.getParentId();
                     if (parentId != null) {
                         if (!exists(parentId)) {
-                            log.error("NodeState " + id + " references unexistent parent id " + parentId);
+                            log.error("NodeState " + id + " references inexistent parent id " + parentId);
                         }
                     }
                 } catch (IOException e) {
