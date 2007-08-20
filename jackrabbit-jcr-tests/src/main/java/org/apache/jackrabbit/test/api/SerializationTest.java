@@ -75,18 +75,30 @@ public class SerializationTest extends AbstractJCRTest {
     public void setUp() throws RepositoryException, Exception {
         super.setUp();
 
-        session = superuser;
-        workspace = session.getWorkspace();
-        file = File.createTempFile("test", ".xml");
-        log.print("Tempfile: " + file.getAbsolutePath());
-
-        SerializationContext sc = new SerializationContext(this);
-        treeComparator = new TreeComparator(sc, session);
-        treeComparator.createComplexTree(treeComparator.WORKSPACE);
+        try {
+            session = superuser;
+            workspace = session.getWorkspace();
+            file = File.createTempFile("serializationTest", ".xml");
+            log.print("Tempfile: " + file.getAbsolutePath());
+  
+            SerializationContext sc = new SerializationContext(this);
+            treeComparator = new TreeComparator(sc, session);
+            treeComparator.createComplexTree(treeComparator.WORKSPACE);
+        }
+        catch (Exception ex) {
+            if (file != null) {
+                file.delete();
+                file = null;
+            }
+            throw (ex);
+        }
     }
 
     public void tearDown() throws Exception {
-        file.delete();
+        if (file != null) {
+            file.delete();
+            file = null;
+        }
         if (session != null && session.isLive()) {
             session.logout();
         }

@@ -135,31 +135,43 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
     public void setUp() throws Exception {
         super.setUp();
 
-        dom = factory.newDocumentBuilder();
-        file = File.createTempFile("docViewImportTest", ".xml");
-        log.print("Tempfile: " + file.getAbsolutePath());
-        session = superuser;
-        workspace = session.getWorkspace();
-        // create the target nodes for the imports
-        target = testRoot + "/target";
-        targetNode = createAncestors(target);
-        refTarget = testRoot + "/refTarget";
-        refTargetNode = createAncestors(refTarget);
-
-        nsp = workspace.getNamespaceRegistry();
-        ntManager = workspace.getNodeTypeManager();
-
-        // construct a namespace not existing in the repository
-        unusedPrefix = getUnusedPrefix();
-        unusedURI = getUnusedURI();
-        referenced = nodeName1;
-        referencing = nodeName2;
-        // test if jcr:uuid of mix:referenceable node type is respected
-        respectMixRef = isMixRefRespected();
+        try {
+            dom = factory.newDocumentBuilder();
+            file = File.createTempFile("docViewImportTest", ".xml");
+            log.print("Tempfile: " + file.getAbsolutePath());
+            session = superuser;
+            workspace = session.getWorkspace();
+            // create the target nodes for the imports
+            target = testRoot + "/target";
+            targetNode = createAncestors(target);
+            refTarget = testRoot + "/refTarget";
+            refTargetNode = createAncestors(refTarget);
+  
+            nsp = workspace.getNamespaceRegistry();
+            ntManager = workspace.getNodeTypeManager();
+  
+            // construct a namespace not existing in the repository
+            unusedPrefix = getUnusedPrefix();
+            unusedURI = getUnusedURI();
+            referenced = nodeName1;
+            referencing = nodeName2;
+            // test if jcr:uuid of mix:referenceable node type is respected
+            respectMixRef = isMixRefRespected();
+        }
+        catch (Exception ex) {
+            if (file != null) {
+                file.delete();
+                file = null;
+            }
+            throw (ex);
+        }
     }
 
     public void tearDown() throws Exception {
-        file.delete();
+        if (file != null) {
+            file.delete();
+            file = null;
+        }
         super.tearDown();
     }
 
