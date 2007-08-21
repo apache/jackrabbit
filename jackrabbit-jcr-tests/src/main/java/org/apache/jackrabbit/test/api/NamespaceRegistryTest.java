@@ -18,6 +18,7 @@ package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
+import javax.jcr.Item;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
@@ -136,11 +137,21 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
         assertEquals("Namespace prefix was not registered.", namespacePrefix, nsp.getPrefix(namespaceUri));
         assertEquals("Namespace URI was not registered.", namespaceUri, nsp.getURI(namespacePrefix));
 
-        testRootNode.addNode(namespacePrefix + ":root");
-        testRootNode.save();
+        Item created;
+        
+        try {
+            created = testRootNode.addNode(namespacePrefix + ":root");
+            testRootNode.save();
+        }
+        catch (RepositoryException ex) {
+            // that didn't work; maybe the repository allows a property here?
+            testRootNode.getSession().refresh(false);
+            created = testRootNode.setProperty(namespacePrefix + ":root", "test");
+            testRootNode.save();
+        }
 
         // Need to remove it here, otherwise teardown can't unregister the NS.
-        testRootNode.getNode(namespacePrefix + ":root").remove();
+        testRootNode.getSession().getItem(created.getPath()).remove();
         testRootNode.save();
     }
 
