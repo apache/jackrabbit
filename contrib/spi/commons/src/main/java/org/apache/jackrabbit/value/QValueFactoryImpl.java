@@ -68,7 +68,7 @@ public final class QValueFactoryImpl implements QValueFactory {
             case PropertyType.BOOLEAN:
                 return new QValueImpl(Boolean.valueOf(value));
             case PropertyType.DATE:
-                return new QValueImpl(ISO8601.parse(value));
+                return new DateQValue(value);
             case PropertyType.DOUBLE:
                 return new QValueImpl(Double.valueOf(value));
             case PropertyType.LONG:
@@ -95,7 +95,7 @@ public final class QValueFactoryImpl implements QValueFactory {
             throw new IllegalArgumentException("Cannot create QValue from null value.");
         }
         // Calendar is not constant, must create a clone
-        return new QValueImpl((Calendar) value.clone());
+        return new DateQValue((Calendar) value.clone());
     }
 
     /**
@@ -163,6 +163,11 @@ public final class QValueFactoryImpl implements QValueFactory {
         private final Object val;
         private final int type;
 
+        private QValueImpl(Object value, int type) {
+            val = value;
+            this.type = type;
+        }
+
         private QValueImpl(String value, int type) {
             if (!(type == PropertyType.STRING || type == PropertyType.REFERENCE)) {
                 throw new IllegalArgumentException();
@@ -179,11 +184,6 @@ public final class QValueFactoryImpl implements QValueFactory {
         private QValueImpl(Double value) {
             val = value;
             type = PropertyType.DOUBLE;
-        }
-
-        private QValueImpl(Calendar value) {
-            val = value;
-            type = PropertyType.DATE;
         }
 
         private QValueImpl(Boolean value) {
@@ -220,11 +220,7 @@ public final class QValueFactoryImpl implements QValueFactory {
          * @see QValue#getString()
          */
         public String getString() throws RepositoryException {
-            if (type == PropertyType.DATE) {
-                return ISO8601.format((Calendar) val);
-            } else {
-                return val.toString();
-            }
+            return val.toString();
         }
 
         /**
@@ -301,7 +297,7 @@ public final class QValueFactoryImpl implements QValueFactory {
             }
             if (obj instanceof QValueImpl) {
                 QValueImpl other = (QValueImpl) obj;
-                return val.equals(other.val) && type == other.type;
+                return type == other.type && val.equals(other.val);
             }
             return false;
         }
@@ -313,11 +309,61 @@ public final class QValueFactoryImpl implements QValueFactory {
         public int hashCode() {
             return val.hashCode();
         }
-
-        //---------------------------------------------------< Serializable >---
-
     }
 
+    //--------------------------------------------------------< Inner Class >---
+    /**
+     * Extension for values of type {@link PropertyType#DATE}.
+     */
+    private static class DateQValue extends QValueImpl {
+
+        private final String formattedStr;
+
+        private DateQValue(String value) {
+            super(ISO8601.parse(value), PropertyType.DATE);
+            formattedStr = value;
+        }
+
+        private DateQValue(Calendar value) {
+            super(value, PropertyType.DATE);
+            formattedStr = ISO8601.format(value);
+        }
+
+        /**
+         * @return The formatted String of the internal Calendar value.
+         * @throws RepositoryException
+         * @see QValue#getString()
+         * @see ISO8601#format(Calendar) 
+         */
+        public String getString() throws RepositoryException {
+            return formattedStr;
+        }
+
+        /**
+         * @param obj
+         * @return true if the given Object is a <code>DateQValue</code> with an
+         * equal String representation.
+         * @see Object#equals(Object)
+         */
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj instanceof DateQValue) {
+                DateQValue other = (DateQValue) obj;
+                return formattedStr.equals(other.formattedStr);
+            }
+            return false;
+        }
+
+        /**
+         * @return the hashCode of the formatted String of the Calender value.
+         * @see Object#hashCode()
+         */
+        public int hashCode() {
+            return formattedStr.hashCode();
+        }
+    }
 
     //--------------------------------------------------------< Inner Class >---
     /**
