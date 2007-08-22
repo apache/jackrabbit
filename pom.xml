@@ -66,6 +66,8 @@
     <module>jackrabbit-classloader</module>
     <module>jackrabbit-webapp</module>
     <module>jackrabbit-jca</module>
+    <module>jackrabbit-spi</module>
+    <module>jackrabbit-spi-commons</module>
   </modules>
 
   <build>
@@ -698,6 +700,16 @@
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-jcr-server</artifactId>
+        <version>1.4-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.jackrabbit</groupId>
+        <artifactId>jackrabbit-spi</artifactId>
+        <version>1.4-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.jackrabbit</groupId>
+        <artifactId>jackrabbit-spi-commons</artifactId>
         <version>1.4-SNAPSHOT</version>
       </dependency>
       <dependency>
