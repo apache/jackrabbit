@@ -112,7 +112,7 @@ public class ValueFactoryTest extends AbstractJCRTest {
             // ok
         }
         // a referenceable node
-        Node n1 = testRootNode.addNode(name);
+        Node n1 = testRootNode.addNode(name, testNodeType);
         if (n1.canAddMixin(mixReferenceable)) {
             n1.addMixin(mixReferenceable);
             // make sure jcr:uuid is available
