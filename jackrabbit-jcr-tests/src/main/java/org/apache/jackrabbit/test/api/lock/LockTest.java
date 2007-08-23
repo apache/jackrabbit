@@ -16,15 +16,17 @@
  */
 package org.apache.jackrabbit.test.api.lock;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-
+import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
-import javax.jcr.Session;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
-import javax.jcr.lock.LockException;
+import javax.jcr.Session;
 import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * <code>LockTest</code> contains the test cases for the lock support in
@@ -48,7 +50,12 @@ public class LockTest extends AbstractJCRTest {
     public void testAddRemoveLockToken() throws Exception {
         // create new node
         Node n = testRootNode.addNode(nodeName1, testNodeType);
-        n.addMixin(mixLockable);
+        try {
+            n.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         testRootNode.save();
 
         // lock node and get lock token
@@ -104,7 +111,12 @@ public class LockTest extends AbstractJCRTest {
     public void testNodeLocked() throws Exception {
         // create new node and lock it
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixLockable);
+        try {
+            n1.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         testRootNode.save();
 
         // lock node
@@ -142,9 +154,14 @@ public class LockTest extends AbstractJCRTest {
     public void testGetNode() throws Exception {
         // create new node with a sub node and lock it
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixLockable);
         Node n1Sub = n1.addNode(nodeName1, testNodeType);
-        n1Sub.addMixin(mixLockable);
+        try {
+            n1.addMixin(mixLockable);
+            n1Sub.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         testRootNode.save();
 
         // lock node
@@ -168,7 +185,12 @@ public class LockTest extends AbstractJCRTest {
     public void testGetLockOwnerProperty() throws Exception {
         // create new node and lock it
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixLockable);
+        try {
+            n1.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         testRootNode.save();
 
         // lock node
@@ -194,7 +216,12 @@ public class LockTest extends AbstractJCRTest {
     public void testGetLockOwner() throws Exception {
         // create new node and lock it
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixLockable);
+        try {
+            n1.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         testRootNode.save();
 
         // lock node
@@ -214,7 +241,12 @@ public class LockTest extends AbstractJCRTest {
     public void testShallowLock() throws Exception {
         // create new nodes
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixLockable);
+        try {
+            n1.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         Node n2 = n1.addNode(nodeName2, testNodeType);
         testRootNode.save();
 
@@ -231,15 +263,18 @@ public class LockTest extends AbstractJCRTest {
     public void testCheckedIn()
             throws NotExecutableException, RepositoryException {
 
-        Session session = testRootNode.getSession();
-
         if (!isSupported(Repository.OPTION_LOCKING_SUPPORTED)) {
             throw new NotExecutableException("Versioning is not supported.");
         }
 
         // create a node that is lockable and versionable
         Node node = testRootNode.addNode(nodeName1, testNodeType);
-        node.addMixin(mixLockable);
+        try {
+            node.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         // try to make it versionable if it is not
         if (!node.isNodeType(mixVersionable)) {
             if (node.canAddMixin(mixVersionable)) {
@@ -254,7 +289,15 @@ public class LockTest extends AbstractJCRTest {
 
         node.checkin();
 
-        node.lock(false, false);
+        try {
+            node.lock(false, false);
+        }
+        catch (RepositoryException ex) {
+            // repository may not allow shallow locks on this resource
+            // retry with a deep lock
+            node.lock(true, false);
+        }
+        
         assertTrue("Locking of a checked-in node failed.",
                 node.isLocked());
 
@@ -269,9 +312,19 @@ public class LockTest extends AbstractJCRTest {
     public void testParentChildLock() throws Exception {
         // create new nodes
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixLockable);
+        try {
+            n1.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         Node n2 = n1.addNode(nodeName2, testNodeType);
-        n2.addMixin(mixLockable);
+        try {
+            n2.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         testRootNode.save();
 
         // lock parent node
@@ -293,9 +346,19 @@ public class LockTest extends AbstractJCRTest {
     public void testParentChildDeepLock() throws Exception {
         // create new nodes
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixLockable);
+        try {
+            n1.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         Node n2 = n1.addNode(nodeName2, testNodeType);
-        n2.addMixin(mixLockable);
+        try {
+            n2.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         testRootNode.save();
 
         // lock child node
@@ -316,9 +379,19 @@ public class LockTest extends AbstractJCRTest {
     public void testIsDeep() throws RepositoryException {
         // create two lockable nodes
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixLockable);
+        try {
+            n1.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
-        n2.addMixin(mixLockable);
+        try {
+            n2.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         testRootNode.save();
 
         // lock node 1 "undeeply"
@@ -340,9 +413,19 @@ public class LockTest extends AbstractJCRTest {
     public void testIsSessionScoped() throws RepositoryException {
         // create two lockable nodes
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixLockable);
+        try {
+            n1.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+          // may already be lockable, just proceed
+        }
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
-        n2.addMixin(mixLockable);
+        try {
+            n2.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+          // may already be lockable, just proceed
+        }
         testRootNode.save();
 
         // lock node 1 session-scoped
@@ -366,7 +449,12 @@ public class LockTest extends AbstractJCRTest {
     public void testLogout() throws Exception {
         // add node
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixLockable);
+        try {
+            n1.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+          // may already be lockable, just proceed
+        }
         testRootNode.save();
 
         // create new session
@@ -404,7 +492,12 @@ public class LockTest extends AbstractJCRTest {
     public void testLockTransfer() throws Exception {
         // add node
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixLockable);
+        try {
+            n1.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         testRootNode.save();
 
         // create new session
@@ -445,7 +538,12 @@ public class LockTest extends AbstractJCRTest {
     public void testOpenScopedLocks() throws Exception {
         // add node
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixLockable);
+        try {
+            n1.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         testRootNode.save();
 
         // create new session
@@ -477,7 +575,12 @@ public class LockTest extends AbstractJCRTest {
     public void testRefresh() throws Exception {
         // create new node
         Node n = testRootNode.addNode(nodeName1, testNodeType);
-        n.addMixin(mixLockable);
+        try {
+            n.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         testRootNode.save();
 
         // lock node and get lock token
@@ -502,7 +605,12 @@ public class LockTest extends AbstractJCRTest {
     public void testRefreshNotLive() throws Exception {
         // create new node
         Node n = testRootNode.addNode(nodeName1, testNodeType);
-        n.addMixin(mixLockable);
+        try {
+            n.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         testRootNode.save();
 
         // lock node and get lock token
@@ -532,9 +640,19 @@ public class LockTest extends AbstractJCRTest {
     public void testGetLock() throws Exception {
         // create new nodes
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixLockable);
+        try {
+            n1.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         Node n2 = n1.addNode(nodeName2, testNodeType);
-        n2.addMixin(mixLockable);
+        try {
+            n2.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         testRootNode.save();
 
         // deep lock parent node
@@ -556,13 +674,25 @@ public class LockTest extends AbstractJCRTest {
         }
 
         // set up versionable and lockable node
-        Node testNode = testRootNode.addNode(nodeName1);
+        Node testNode = testRootNode.addNode(nodeName1, testNodeType);
+        try {
+            testNode.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         testNode.addMixin(mixVersionable);
-        testNode.addMixin(mixLockable);
         testRootNode.save();
 
         // lock and check-in
-        testNode.lock(false, true);
+        try {
+            testNode.lock(false, false);
+        }
+        catch (RepositoryException ex) {
+            // repository may not allow shallow locks on this resource
+            // retry with a deep lock
+            testNode.lock(true, false);
+        }
         testNode.save();
         testNode.checkin();
 
@@ -575,14 +705,8 @@ public class LockTest extends AbstractJCRTest {
      * Tests if locks are maintained when child nodes are reordered
      */
     public void testReorder() throws Exception {
-        // create three lockable nodes with same name
-        Node testNode = testRootNode.addNode(nodeName1);
-        testNode.addMixin(mixLockable);
-        testNode = testRootNode.addNode(nodeName1);
-        testNode.addMixin(mixLockable);
-        testNode = testRootNode.addNode(nodeName1);
-        testNode.addMixin(mixLockable);
-        testRootNode.save();
+      
+        Node testNode = setUpSameNameSiblings();
 
         // lock last node (3)
         testNode.lock(false, true);
@@ -604,14 +728,8 @@ public class LockTest extends AbstractJCRTest {
      * Tests if locks are maintained when child nodes are reordered
      */
     public void testReorder2() throws Exception {
-        // create three lockable nodes with same name
-        Node testNode = testRootNode.addNode(nodeName1);
-        testNode.addMixin(mixLockable);
-        testNode = testRootNode.addNode(nodeName1);
-        testNode.addMixin(mixLockable);
-        testNode = testRootNode.addNode(nodeName1);
-        testNode.addMixin(mixLockable);
-        testRootNode.save();
+        
+        setUpSameNameSiblings();
 
         // lock first node (1)
         testRootNode.getNode(nodeName1 + "[1]").lock(false, true);
@@ -638,10 +756,20 @@ public class LockTest extends AbstractJCRTest {
         Session session = testRootNode.getSession();
 
         // create two nodes, parent and child
-        Node testNode1 = testRootNode.addNode(nodeName1);
-        testNode1.addMixin(mixLockable);
-        Node testNode2 = testNode1.addNode(nodeName2);
-        testNode2.addMixin(mixLockable);
+        Node testNode1 = testRootNode.addNode(nodeName1, testNodeType);
+        try {
+            testNode1.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
+        Node testNode2 = testNode1.addNode(nodeName2, testNodeType);
+        try {
+            testNode2.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
         testRootNode.save();
 
         // lock child node
@@ -666,16 +794,25 @@ public class LockTest extends AbstractJCRTest {
      * Tests if unlocking the first of two locked same-name sibling nodes does
      * not unlock the second (JIRA issue JCR-284).
      */
-    public void testUnlockSameNameSibling() throws RepositoryException {
+    public void testUnlockSameNameSibling() throws RepositoryException, NotExecutableException {
         Session session = testRootNode.getSession();
 
-        // create two same-name sibling nodes
-        Node n1 = testRootNode.addNode(nodeName1);
+        Node n1, n2;
+        
+        try {
+            // create two same-name sibling nodes
+            n1 = testRootNode.addNode(nodeName1, testNodeType);
+            n2 = testRootNode.addNode(nodeName1, testNodeType);
+            session.save();
+        }
+        catch (ItemExistsException ex) {
+            throw new NotExecutableException("Node does not seem to allow same name siblings");
+        }
+
         n1.addMixin("mix:lockable");
-        Node n2 = testRootNode.addNode(nodeName1);
         n2.addMixin("mix:lockable");
         session.save();
-
+        
         // lock both nodes
         n1.lock(true, true);
         n2.lock(true, true);
@@ -704,6 +841,42 @@ public class LockTest extends AbstractJCRTest {
             }
         }
         return false;
+    }
+    
+    /**
+     * Create three child nodes with identical names
+     */
+    private Node setUpSameNameSiblings() throws RepositoryException, NotExecutableException {
+        // create three lockable nodes with same name
+        Node testNode = testRootNode.addNode(nodeName1, testNodeType);
+        try {
+            testNode.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
+        try {
+          testNode = testRootNode.addNode(nodeName1, testNodeType);
+        }
+        catch (ItemExistsException ex) {
+            // repository does not seem to support same name siblings on this node type
+            throw new NotExecutableException("Node type " + testNodeType + " does not support same-name-siblings");
+        }
+        try {
+            testNode.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
+        testNode = testRootNode.addNode(nodeName1, testNodeType);
+        try {
+            testNode.addMixin(mixLockable);
+        }
+        catch (ConstraintViolationException ex) {
+            // may already be lockable, just proceed
+        }
+        testRootNode.save();
+        return testNode;
     }
 }
 
