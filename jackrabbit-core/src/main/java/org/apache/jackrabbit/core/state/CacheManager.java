@@ -122,7 +122,7 @@ public class CacheManager implements CacheAccessListener {
      * Re-calcualte the maximum memory for each cache, and set the new limits.
      */
     private void resizeAll() {
-        log.info("resizeAll size=" + caches.size());
+        log.debug("resizeAll size=" + caches.size());
         // get strong references
         // entries in a weak hash map may disappear any time
         // so can't use size() / keySet() directly
