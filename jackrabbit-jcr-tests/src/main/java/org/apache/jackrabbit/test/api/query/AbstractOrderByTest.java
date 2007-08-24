@@ -108,8 +108,8 @@ class AbstractOrderByTest extends AbstractQueryTest {
     protected void checkOrder(String[] nodeNames) throws RepositoryException {
         // first check ascending
 
-        String sql = "SELECT " + propertyName1 + " FROM " + testNodeType + " WHERE " +
-                    jcrPath + " LIKE '" + testRoot + "/%' ORDER BY " + propertyName1;
+        String sql = "SELECT " + escapeIdentifierForSQL(propertyName1) + " FROM " + escapeIdentifierForSQL(testNodeType) + " WHERE " +
+                    jcrPath + " LIKE '" + testRoot + "/%' ORDER BY " + escapeIdentifierForSQL(propertyName1);
         String xpath = "/" + jcrRoot + testRoot + "/*[@jcr:primaryType='" + testNodeType + "'] order by @" + propertyName1;
         Query q;
         QueryResult result;

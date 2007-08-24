@@ -305,4 +305,20 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
         }
         return (Node[]) nodes.toArray(new Node[nodes.size()]);
     }
+    
+    /**
+     * Escape an identifier suitable for the SQL parser
+     * @TODO currently only handles dash character 
+     */
+    protected String escapeIdentifierForSQL(String identifier) {
+      
+        boolean needsEscaping = identifier.indexOf('-') >= 0;
+        
+        if (!needsEscaping) {
+            return identifier;
+        }
+        else {
+            return '"' + identifier + '"';
+        }
+    }
 }
