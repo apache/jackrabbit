@@ -577,7 +577,7 @@ PropertyDefinition
                 <p>
                     And, here it is in the new CND notation:
                 </p>
-<source><![CDATA[[nt:resource] > mix:referencable
+<source><![CDATA[[nt:resource] > mix:referenceable
 - jcr:encoding
 - jcr:mimeType mandatory
 - jcr:data (binary) mandatory
