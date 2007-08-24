@@ -170,32 +170,6 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
      * Creates a lucene {@link org.apache.lucene.search.Query} tree from an
      * abstract query tree.
      *
-     * @param root          the root node of the abstract query tree.
-     * @param session       of the user executing the query.
-     * @param sharedItemMgr the shared item state manager of the workspace.
-     * @param nsMappings    namespace resolver for internal prefixes.
-     * @param analyzer      for parsing the query statement of the contains
-     *                      function.
-     * @param propReg       the property type registry to lookup type
-     *                      information.
-     * @return the lucene query tree.
-     * @throws RepositoryException if an error occurs during the translation.
-     */
-    public static Query createQuery(QueryRootNode root,
-                                    SessionImpl session,
-                                    ItemStateManager sharedItemMgr,
-                                    NamespaceMappings nsMappings,
-                                    Analyzer analyzer,
-                                    PropertyTypeRegistry propReg)
-            throws RepositoryException {
-        return createQuery(root, session, sharedItemMgr, 
-                nsMappings, analyzer, propReg, null);
-    }
-
-    /**
-     * Creates a lucene {@link org.apache.lucene.search.Query} tree from an
-     * abstract query tree.
-     *
      * @param root            the root node of the abstract query tree.
      * @param session         of the user executing the query.
      * @param sharedItemMgr   the shared item state manager of the workspace.
