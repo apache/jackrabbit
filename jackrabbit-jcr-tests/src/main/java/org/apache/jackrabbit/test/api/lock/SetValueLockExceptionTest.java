@@ -20,7 +20,6 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.Session;
 import javax.jcr.Node;
 import javax.jcr.Property;
@@ -89,11 +88,8 @@ public class SetValueLockExceptionTest extends AbstractJCRTest {
         else {
             // add a lockable node
             testNode = testRootNode.addNode(nodeName1, testNodeType);
-            try {
+            if (needsMixin(testNode, mixLockable)) {
                 testNode.addMixin(mixLockable);
-            }
-            catch (ConstraintViolationException ex) {
-                // may already be lockable, just proceed
             }
 
             // add properties

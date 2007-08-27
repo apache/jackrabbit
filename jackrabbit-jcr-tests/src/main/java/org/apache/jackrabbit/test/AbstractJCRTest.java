@@ -602,6 +602,13 @@ public abstract class AbstractJCRTest extends JUnitTest {
     }
 
     /**
+     * Checks whether the node already has the specified mixin node type
+     */
+    protected boolean needsMixin(Node node, String mixin) throws RepositoryException {
+        return ! node.getSession().getWorkspace().getNodeTypeManager().getNodeType(node.getPrimaryNodeType().getName()).isNodeType(mixin);
+    }
+
+    /**
      * Reverts any pending changes made by <code>s</code> and deletes any nodes
      * under {@link #testRoot}. If there is no node at {@link #testRoot} then
      * the necessary nodes are created.

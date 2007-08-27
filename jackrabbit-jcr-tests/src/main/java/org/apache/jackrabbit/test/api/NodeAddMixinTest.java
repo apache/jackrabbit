@@ -27,7 +27,6 @@ import javax.jcr.Node;
 import javax.jcr.Value;
 import javax.jcr.Repository;
 import javax.jcr.ValueFormatException;
-import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 
@@ -226,12 +225,8 @@ public class NodeAddMixinTest extends AbstractJCRTest {
 
         // get session an create default node
         Node node = testRootNode.addNode(nodeName1, testNodeType);
-
-        try {
+        if (needsMixin(node, mixReferenceable)) {
             node.addMixin(mixReferenceable);
-        }
-        catch (ConstraintViolationException ex) {
-            // can occur if the node type already inherits mix:referenceable
         }
         // implementation specific: mixin may take effect only upon save
         testRootNode.save();

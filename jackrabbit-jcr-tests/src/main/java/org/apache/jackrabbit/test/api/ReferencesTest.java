@@ -20,7 +20,6 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.*;
-import javax.jcr.nodetype.ConstraintViolationException;
 
 /**
  * <code>ReferencesTest</code> contains the test cases for the references.
@@ -37,11 +36,8 @@ public class ReferencesTest extends AbstractJCRTest {
      */
     public void testReferences() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        try {
+        if (needsMixin(n1, mixReferenceable)) {
             n1.addMixin(mixReferenceable);
-        }
-        catch (ConstraintViolationException ex) {
-            // may already be present in the node type
         }
 
         // with some impls. the mixin type has only affect upon save
@@ -117,11 +113,8 @@ public class ReferencesTest extends AbstractJCRTest {
      */
     public void testReferenceTarget() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        try {
+        if (needsMixin(n1, mixReferenceable)) {
             n1.addMixin(mixReferenceable);
-        }
-        catch (ConstraintViolationException ex) {
-            // may already be present in the node type
         }
         
         // with some impls. the mixin type has only affect upon save
@@ -149,14 +142,12 @@ public class ReferencesTest extends AbstractJCRTest {
      */
     public void testAlterReference() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        Node n2 = testRootNode.addNode(nodeName2, testNodeType);
-
-        try {
+        if (needsMixin(n1, mixReferenceable)) {
             n1.addMixin(mixReferenceable);
-            n2.addMixin(mixReferenceable);
         }
-        catch (ConstraintViolationException ex) {
-            // may already be present in the node type
+        Node n2 = testRootNode.addNode(nodeName2, testNodeType);
+        if (needsMixin(n2, mixReferenceable)) {
+            n2.addMixin(mixReferenceable);
         }
 
         // with some impls. the mixin type has only affect upon save
