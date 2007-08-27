@@ -35,6 +35,8 @@ import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.config.VersioningConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.data.DataStore;
+import org.apache.jackrabbit.core.data.FileDataStore;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
@@ -157,6 +159,11 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
 
     // sub file system where the repository stores meta data such as uuid of root node, etc.
     private final FileSystem metaDataStore;
+    
+    /**
+     * Data store for binary properties.
+     */
+    private final DataStore dataStore;    
 
     /**
      * the delegating observation dispatcher for all workspaces
@@ -241,6 +248,8 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             throw new RepositoryException(msg, fse);
         }
         metaDataStore = new BasedFileSystem(repStore, fsRootPath);
+        dataStore =
+            new FileDataStore(new File(repConfig.getHomeDir(), "datastore"));        
 
         // init root node uuid
         rootNodeId = loadRootNodeId(metaDataStore);
@@ -321,6 +330,10 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
 
         log.info("Repository started");
     }
+    
+    public DataStore getDataStore() {
+        return dataStore;
+    }    
 
     /**
      * Get the cache manager of this repository, useful
@@ -2023,6 +2036,13 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         public void lockEventsReady(String workspace) throws RepositoryException {
             // toggle the initialization of some workspace's lock manager
             getWorkspaceInfo(workspace).getLockManager();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public DataStore getDataStore() {
+            return RepositoryImpl.this.getDataStore();
         }
     }
 }
