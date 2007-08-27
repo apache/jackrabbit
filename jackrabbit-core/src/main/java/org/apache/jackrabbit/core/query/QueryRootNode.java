@@ -45,7 +45,7 @@ public class QueryRootNode extends QueryNode {
     /**
      * Creates a new <code>QueryRootNode</code> instance.
      */
-    public QueryRootNode() {
+    protected QueryRootNode() {
         super(null);
     }
 

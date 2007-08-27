@@ -29,7 +29,7 @@ public class NodeTypeQueryNode extends ExactQueryNode {
      * @param parent   the parent node for this query node.
      * @param nodeType the name of the node type.
      */
-    public NodeTypeQueryNode(QueryNode parent, QName nodeType) {
+    protected NodeTypeQueryNode(QueryNode parent, QName nodeType) {
         // we only use the jcr primary type as a dummy value
         // the property name is actually replaced in the query builder
         // when the runtime query is created to search the index.

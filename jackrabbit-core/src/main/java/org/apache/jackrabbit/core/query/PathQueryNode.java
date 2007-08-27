@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.query;
 
+import java.util.List;
+
 import org.apache.jackrabbit.name.QName;
 
 /**
@@ -29,17 +31,33 @@ public class PathQueryNode extends NAryQueryNode {
     private boolean absolute = false;
 
     /**
+     * List of valid node type names under /jcr:system
+     */
+    private final List validJcrSystemNodeTypeNames;
+
+    /**
      * Empty step node array.
      */
     private static final LocationStepQueryNode[] EMPTY = new LocationStepQueryNode[0];
 
     /**
-     * Creates a relative <code>PathQueryNode</code> with no location steps.
+     * Creates a relative <code>PathQueryNode</code> with no location steps and
+     * the list of node types under /jcr:system.
      *
      * @param parent the parent query node.
      */
-    public PathQueryNode(QueryNode parent) {
+    protected PathQueryNode(QueryNode parent, List validJcrSystemNodeTypeNames) {
         super(parent);
+        this.validJcrSystemNodeTypeNames = validJcrSystemNodeTypeNames;
+    }
+
+    /**
+     * Returns a list of valid node types under /jcr:system. List&lt;QName>.
+     *
+     * @return a list of valid node types under /jcr:system.
+     */
+    public List getValidJcrSystemNodeTypeNames() {
+        return validJcrSystemNodeTypeNames;
     }
 
     /**
@@ -125,10 +143,23 @@ public class PathQueryNode extends NAryQueryNode {
         }
 
         QName firstPathStepName = pathSteps[0].getNameTest();
-        // If the first location step has a null name test we need to include
-        // the system tree ("*")
-        if (firstPathStepName == null)
+        if (firstPathStepName == null) {
+            // If the first operand of the path steps is a node type query
+            // we do not need to include the system index if the node type is
+            // none of the node types that may occur in the system index.
+            QueryNode[] pathStepOperands = pathSteps[0].getOperands();
+            if (pathStepOperands.length > 0) {
+                if (pathStepOperands[0] instanceof NodeTypeQueryNode) {
+                    NodeTypeQueryNode nodeTypeQueryNode = (NodeTypeQueryNode) pathStepOperands[0];
+                    if (!validJcrSystemNodeTypeNames.contains(nodeTypeQueryNode.getValue())) {
+                        return false;
+                    }
+                }
+            }
+            // If the first location step has a null name test we need to include
+            // the system tree ("*")
             return true;
+        }
         
         // Calculate the first workspace relative location step
         LocationStepQueryNode firstWorkspaceRelativeStep = pathSteps[0];

@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
 import org.apache.jackrabbit.core.query.PropertyFunctionQueryNode;
+import org.apache.jackrabbit.core.query.QueryNodeFactory;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
@@ -74,7 +75,6 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
      */
     private static Map parsers = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
-
     /**
      * The root node of the sql query syntax tree
      */
@@ -93,7 +93,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     /**
      * Query node to gather the constraints defined in the WHERE clause
      */
-    private final AndQueryNode constraintNode = new AndQueryNode(null);
+    private final AndQueryNode constraintNode;
 
     /**
      * The QName of the node type in the from clause.
@@ -106,26 +106,39 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     private final List pathConstraints = new ArrayList();
 
     /**
+     * The query node factory.
+     */
+    private final QueryNodeFactory factory;
+
+    /**
      * Creates a new <code>JCRSQLQueryBuilder</code>.
      *
      * @param statement the root node of the SQL syntax tree.
      * @param resolver  a namespace resolver to use for names in the
      *                  <code>statement</code>.
+     * @param factory   the query node factory.
      */
-    private JCRSQLQueryBuilder(ASTQuery statement, NamespaceResolver resolver) {
+    private JCRSQLQueryBuilder(ASTQuery statement,
+                               NamespaceResolver resolver,
+                               QueryNodeFactory factory) {
         this.stmt = statement;
         this.resolver = resolver;
+        this.factory = factory;
+        this.constraintNode =  factory.createAndQueryNode(null);
     }
 
     /**
-     * Creates a <code>QueryNode</code> tree from a SQL <code>statement</code>.
+     * Creates a <code>QueryNode</code> tree from a SQL <code>statement</code>
+     * using the passed query node <code>factory</code>.
      *
      * @param statement the SQL statement.
      * @param resolver  the namespace resolver to use.
      * @return the <code>QueryNode</code> tree.
      * @throws InvalidQueryException if <code>statement</code> is malformed.
      */
-    public static QueryRootNode createQuery(String statement, NamespaceResolver resolver)
+    public static QueryRootNode createQuery(String statement,
+                                            NamespaceResolver resolver,
+                                            QueryNodeFactory factory)
             throws InvalidQueryException {
         try {
             // get parser
@@ -143,7 +156,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             // guard against concurrent use within same session
             synchronized (parser) {
                 parser.ReInit(new StringReader(statement));
-                builder = new JCRSQLQueryBuilder(parser.Query(), resolver);
+                builder = new JCRSQLQueryBuilder(parser.Query(), resolver, factory);
             }
             return builder.getRootNode();
         } catch (ParseException e) {
@@ -191,8 +204,8 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     }
 
     public Object visit(ASTQuery node, Object data) {
-        root = new QueryRootNode();
-        root.setLocationNode(new PathQueryNode(root));
+        root = factory.createQueryRootNode();
+        root.setLocationNode(factory.createPathQueryNode(root));
 
         // pass to select, from, where, ...
         node.childrenAccept(this, root);
@@ -201,7 +214,10 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         PathQueryNode pathNode = root.getLocationNode();
         pathNode.setAbsolute(true);
         if (pathConstraints.size() == 0) {
-            pathNode.addPathStep(new LocationStepQueryNode(pathNode, null, true));
+            LocationStepQueryNode step = factory.createLocationStepQueryNode(pathNode);
+            step.setNameTest(null);
+            step.setIncludeDescendants(true);
+            pathNode.addPathStep(step);
         } else {
             try {
                 while (pathConstraints.size() > 1) {
@@ -231,7 +247,9 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             MergingPathQueryNode path = (MergingPathQueryNode) pathConstraints.get(0);
             LocationStepQueryNode[] steps = path.getPathSteps();
             for (int i = 0; i < steps.length; i++) {
-                LocationStepQueryNode step = new LocationStepQueryNode(pathNode, steps[i].getNameTest(), steps[i].getIncludeDescendants());
+                LocationStepQueryNode step = factory.createLocationStepQueryNode(pathNode);
+                step.setNameTest(steps[i].getNameTest());
+                step.setIncludeDescendants(steps[i].getIncludeDescendants());
                 step.setIndex(steps[i].getIndex());
                 pathNode.addPathStep(step);
             }
@@ -247,7 +265,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             // add node type constraint
             LocationStepQueryNode[] steps = pathNode.getPathSteps();
             NodeTypeQueryNode nodeType
-                    = new NodeTypeQueryNode(steps[steps.length - 1], nodeTypeName);
+                    = factory.createNodeTypeQueryNode(steps[steps.length - 1], nodeTypeName);
             steps[steps.length - 1].addPredicate(nodeType);
         }
 
@@ -351,7 +369,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             }
 
             if (type == QueryConstants.OPERATION_BETWEEN) {
-                AndQueryNode between = new AndQueryNode(parent);
+                AndQueryNode between = factory.createAndQueryNode(parent);
                 RelationQueryNode rel = createRelationQueryNode(between,
                         identifier, QueryConstants.OPERATION_GE_GENERAL, (ASTLiteral) node.children[1]);
                 node.childrenAccept(this, rel);
@@ -389,7 +407,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                         identifier, type, pattern);
                 node.childrenAccept(this, predicateNode);
             } else if (type == QueryConstants.OPERATION_IN) {
-                OrQueryNode in = new OrQueryNode(parent);
+                OrQueryNode in = factory.createOrQueryNode(parent);
                 for (int i = 1; i < node.children.length; i++) {
                     RelationQueryNode rel = createRelationQueryNode(in,
                             identifier, QueryConstants.OPERATION_EQ_VALUE, (ASTLiteral) node.children[i]);
@@ -424,7 +442,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
     public Object visit(ASTOrExpression node, Object data) {
         NAryQueryNode parent = (NAryQueryNode) data;
-        OrQueryNode orQuery = new OrQueryNode(parent);
+        OrQueryNode orQuery = factory.createOrQueryNode(parent);
         // pass to operands
         node.childrenAccept(this, orQuery);
 
@@ -436,7 +454,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
     public Object visit(ASTAndExpression node, Object data) {
         NAryQueryNode parent = (NAryQueryNode) data;
-        AndQueryNode andQuery = new AndQueryNode(parent);
+        AndQueryNode andQuery = factory.createAndQueryNode(parent);
         // pass to operands
         node.childrenAccept(this, andQuery);
 
@@ -446,7 +464,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
     public Object visit(ASTNotExpression node, Object data) {
         NAryQueryNode parent = (NAryQueryNode) data;
-        NotQueryNode notQuery = new NotQueryNode(parent);
+        NotQueryNode notQuery = factory.createNotQueryNode(parent);
         // pass to operand
         node.childrenAccept(this, notQuery);
 
@@ -474,7 +492,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     public Object visit(ASTOrderByClause node, Object data) {
         QueryRootNode root = (QueryRootNode) data;
 
-        OrderQueryNode order = new OrderQueryNode(root);
+        OrderQueryNode order = factory.createOrderQueryNode(root);
         root.setOrderNode(order);
         node.childrenAccept(this, order);
         return root;
@@ -521,7 +539,10 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 builder.addLast(node.getPropertyName());
                 relPath = builder.getPath();
             }
-            parent.addOperand(new TextsearchQueryNode(parent, node.getQuery(), relPath, true));
+            TextsearchQueryNode tsNode = factory.createTextsearchQueryNode(parent, node.getQuery());
+            tsNode.setRelativePath(relPath);
+            tsNode.setReferencesProperty(true);
+            parent.addOperand(tsNode);
         } catch (MalformedPathException e) {
             // path is always valid
         }
@@ -534,7 +555,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             String msg = "LOWER() function is only supported for String literal";
             throw new IllegalArgumentException(msg);
         }
-        parent.addOperand(new PropertyFunctionQueryNode(parent, PropertyFunctionQueryNode.LOWER_CASE));
+        parent.addOperand(factory.createPropertyFunctionQueryNode(parent, PropertyFunctionQueryNode.LOWER_CASE));
         return parent;
     }
 
@@ -544,7 +565,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             String msg = "UPPER() function is only supported for String literal";
             throw new IllegalArgumentException(msg);
         }
-        parent.addOperand(new PropertyFunctionQueryNode(parent, PropertyFunctionQueryNode.UPPER_CASE));
+        parent.addOperand(factory.createPropertyFunctionQueryNode(parent, PropertyFunctionQueryNode.UPPER_CASE));
         return parent;
     }
 
@@ -585,18 +606,28 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             if (literal.getType() == QueryConstants.TYPE_DATE) {
                 SimpleDateFormat format = new SimpleDateFormat(DATE_PATTERN);
                 Date date = format.parse(stringValue);
-                node = new RelationQueryNode(parent, relPath, date, operationType);
+                node = factory.createRelationQueryNode(parent, operationType);
+                node.setRelativePath(relPath);
+                node.setDateValue(date);
             } else if (literal.getType() == QueryConstants.TYPE_DOUBLE) {
                 double d = Double.parseDouble(stringValue);
-                node = new RelationQueryNode(parent, relPath, d, operationType);
+                node = factory.createRelationQueryNode(parent, operationType);
+                node.setRelativePath(relPath);
+                node.setDoubleValue(d);
             } else if (literal.getType() == QueryConstants.TYPE_LONG) {
                 long l = Long.parseLong(stringValue);
-                node = new RelationQueryNode(parent, relPath, l, operationType);
+                node = factory.createRelationQueryNode(parent, operationType);
+                node.setRelativePath(relPath);
+                node.setLongValue(l);
             } else if (literal.getType() == QueryConstants.TYPE_STRING) {
-                node = new RelationQueryNode(parent, relPath, stringValue, operationType);
+                node = factory.createRelationQueryNode(parent, operationType);
+                node.setRelativePath(relPath);
+                node.setStringValue(stringValue);
             } else if (literal.getType() == QueryConstants.TYPE_TIMESTAMP) {
                 Calendar c = ISO8601.parse(stringValue);
-                node = new RelationQueryNode(parent, relPath, c.getTime(), operationType);
+                node = factory.createRelationQueryNode(parent, operationType);
+                node.setRelativePath(relPath);
+                node.setDateValue(c.getTime());
             }
         } catch (java.text.ParseException e) {
             throw new IllegalArgumentException(e.toString());
@@ -620,11 +651,12 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
      * @param operation the type of the parent node
      */
     private void createPathQuery(String path, int operation) {
-        MergingPathQueryNode pathNode = new MergingPathQueryNode(operation);
+        MergingPathQueryNode pathNode = new MergingPathQueryNode(operation,
+                factory.createPathQueryNode(null).getValidJcrSystemNodeTypeNames());
         pathNode.setAbsolute(true);
 
         if (path.equals("/")) {
-            pathNode.addPathStep(new LocationStepQueryNode(pathNode));
+            pathNode.addPathStep(factory.createLocationStepQueryNode(pathNode));
             pathConstraints.add(pathNode);
             return;
         }
@@ -635,13 +667,13 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             if (names[i].length() == 0) {
                 if (i == 0) {
                     // root
-                    pathNode.addPathStep(new LocationStepQueryNode(pathNode));
+                    pathNode.addPathStep(factory.createLocationStepQueryNode(pathNode));
                 } else {
                     // descendant '//' -> invalid path
                     // todo throw or ignore?
                     // we currently do not throw and add location step for an
                     // empty name (which is basically the root node)
-                    pathNode.addPathStep(new LocationStepQueryNode(pathNode));
+                    pathNode.addPathStep(factory.createLocationStepQueryNode(pathNode));
                 }
             } else {
                 int idx = names[i].indexOf('[');
@@ -686,7 +718,9 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 }
                 // if name test is % this means also search descendants
                 boolean descendant = name == null;
-                LocationStepQueryNode step = new LocationStepQueryNode(pathNode, qName, descendant);
+                LocationStepQueryNode step = factory.createLocationStepQueryNode(pathNode);
+                step.setNameTest(qName);
+                step.setIncludeDescendants(descendant);
                 if (index > 0) {
                     step.setIndex(index);
                 }
@@ -779,9 +813,11 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
          * {@link org.apache.jackrabbit.core.query.QueryNode#TYPE_NOT}.
          *
          * @param operation the operation type of the parent node.
+         * @param validJcrSystemNodeTypeNames names of valid node types under
+         *        /jcr:system.
          */
-        MergingPathQueryNode(int operation) {
-            super(null);
+        MergingPathQueryNode(int operation, List validJcrSystemNodeTypeNames) {
+            super(null, validJcrSystemNodeTypeNames);
             if (operation != QueryNode.TYPE_OR && operation != QueryNode.TYPE_AND && operation != QueryNode.TYPE_NOT) {
                 throw new IllegalArgumentException("operation");
             }
@@ -883,7 +919,8 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
          */
         private MergingPathQueryNode[] doOrMerge(MergingPathQueryNode[] nodes) {
             // compact this
-            MergingPathQueryNode compacted = new MergingPathQueryNode(QueryNode.TYPE_OR);
+            MergingPathQueryNode compacted = new MergingPathQueryNode(
+                    QueryNode.TYPE_OR, getValidJcrSystemNodeTypeNames());
             for (Iterator it = operands.iterator(); it.hasNext();) {
                 LocationStepQueryNode step = (LocationStepQueryNode) it.next();
                 if (step.getIncludeDescendants() && step.getNameTest() == null) {

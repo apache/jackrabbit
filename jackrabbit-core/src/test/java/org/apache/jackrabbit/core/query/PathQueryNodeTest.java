@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.query;
 
+import java.util.Arrays;
+
 import junit.framework.TestCase;
 
 import org.apache.jackrabbit.core.query.xpath.XPathQueryBuilder;
@@ -24,44 +26,59 @@ import org.apache.jackrabbit.name.QName;
 
 public class PathQueryNodeTest extends TestCase {
 
+    private static final DefaultQueryNodeFactory QUERY_NODE_FACTORY = new DefaultQueryNodeFactory(
+            Arrays.asList(new QName[] { QName.NT_NODETYPE }));
+    
     private static final NamespaceResolver JCR_RESOLVER = new NamespaceResolver() {
         public String getJCRName(QName qName) {
-            return this.getPrefix(qName.getNamespaceURI()) + ":"
-                    + qName.getLocalName();
+            throw new UnsupportedOperationException();
         }
 
         public String getPrefix(String uri) {
-            return QName.NS_JCR_PREFIX;
+            throw new UnsupportedOperationException();
         }
 
         public QName getQName(String jcrName) {
-            return new QName(QName.NS_JCR_URI,
-                    jcrName.substring(jcrName.indexOf(':')));
+            throw new UnsupportedOperationException();
         }
 
         public String getURI(String prefix) {
-            return QName.NS_JCR_URI;
+            if (QName.NS_JCR_PREFIX.equals(prefix))
+                return QName.NS_JCR_URI;
+            if (QName.NS_NT_PREFIX.equals(prefix))
+                return QName.NS_NT_URI;
+            return "";
         }
     };    
     
     public void testNeedsSystemTree() throws Exception {
-        QueryRootNode queryRootNode = XPathQueryBuilder.createQuery("/jcr:root/*", JCR_RESOLVER);
+        QueryRootNode queryRootNode = XPathQueryBuilder.createQuery("/jcr:root/*", JCR_RESOLVER, QUERY_NODE_FACTORY);
         assertTrue(queryRootNode.needsSystemTree());
 
-        queryRootNode = XPathQueryBuilder.createQuery("/jcr:root/test/*", JCR_RESOLVER);
+        queryRootNode = XPathQueryBuilder.createQuery("/jcr:root/test/*", JCR_RESOLVER, QUERY_NODE_FACTORY);
         assertFalse(queryRootNode.needsSystemTree());
 
-        queryRootNode = XPathQueryBuilder.createQuery("*", JCR_RESOLVER);
+        queryRootNode = XPathQueryBuilder.createQuery("*", JCR_RESOLVER, QUERY_NODE_FACTORY);
         assertTrue(queryRootNode.needsSystemTree());
 
-        queryRootNode = XPathQueryBuilder.createQuery("jcr:system/*", JCR_RESOLVER);
+        queryRootNode = XPathQueryBuilder.createQuery("jcr:system/*", JCR_RESOLVER, QUERY_NODE_FACTORY);
         assertTrue(queryRootNode.needsSystemTree());
 
-        queryRootNode = XPathQueryBuilder.createQuery("test//*", JCR_RESOLVER);
+        queryRootNode = XPathQueryBuilder.createQuery("test//*", JCR_RESOLVER, QUERY_NODE_FACTORY);
         assertFalse(queryRootNode.needsSystemTree());
         
-        queryRootNode = XPathQueryBuilder.createQuery("//test/*", JCR_RESOLVER);
+        queryRootNode = XPathQueryBuilder.createQuery("//test/*", JCR_RESOLVER, QUERY_NODE_FACTORY);
         assertTrue(queryRootNode.needsSystemTree());         
     }
     
+    public void testNeedsSystemTreeForAllNodesByNodeType() throws Exception {
+        QueryRootNode queryRootNode = XPathQueryBuilder.createQuery("//element(*, nt:resource)", JCR_RESOLVER, QUERY_NODE_FACTORY);
+        assertFalse(queryRootNode.needsSystemTree());
+
+        queryRootNode = XPathQueryBuilder.createQuery("//element(*, nt:resource)[@jcr:test = 'foo']", JCR_RESOLVER, QUERY_NODE_FACTORY);
+        assertFalse(queryRootNode.needsSystemTree());
+
+        queryRootNode = XPathQueryBuilder.createQuery("//element(*, nt:nodeType)", JCR_RESOLVER, QUERY_NODE_FACTORY);
+        assertTrue(queryRootNode.needsSystemTree());
+    }
 }
