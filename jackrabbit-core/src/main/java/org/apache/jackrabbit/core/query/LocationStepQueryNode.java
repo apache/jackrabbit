@@ -65,26 +65,11 @@ public class LocationStepQueryNode extends NAryQueryNode {
     private int index = NONE;
 
     /**
-     * Creates a new <code>LocationStepQueryNode</code> with a reference to
-     * its <code>parent</code>.
-     * @param parent the parent of this <code>LocationStepQueryNode</code>.
-     * @param nameTest the name test or <code>null</code> if this step should
-     *   match all names.
-     * @param descendants if <code>true</code> this location step uses the
-     *   descendant-or-self axis; otherwise the child axis.
-     */
-    public LocationStepQueryNode(QueryNode parent, QName nameTest, boolean descendants) {
-        super(parent);
-        this.nameTest = nameTest;
-        this.includeDescendants = descendants;
-    }
-
-    /**
      * Creates a new <code>LocationStepQueryNode</code> that matches only
      * the empty name (the repository root). The created location step
      * uses only the child axis.
      */
-    public LocationStepQueryNode(QueryNode parent) {
+    protected LocationStepQueryNode(QueryNode parent) {
         super(parent);
         this.nameTest = EMPTY_NAME;
         this.includeDescendants = false;

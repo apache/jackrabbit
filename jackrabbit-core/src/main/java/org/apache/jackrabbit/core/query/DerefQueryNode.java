@@ -36,8 +36,10 @@ public class DerefQueryNode extends LocationStepQueryNode {
      * @param descendants if <code>true</code> this location step uses the
      *   descendant-or-self axis; otherwise the child axis.
      */
-    public DerefQueryNode(QueryNode parent, QName nameTest, boolean descendants) {
-        super(parent, nameTest, descendants);
+    protected DerefQueryNode(QueryNode parent, QName nameTest, boolean descendants) {
+        super(parent);
+        setNameTest(nameTest);
+        setIncludeDescendants(descendants);
     }
 
     /**

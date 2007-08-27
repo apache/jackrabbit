@@ -52,27 +52,11 @@ public class TextsearchQueryNode extends QueryNode {
      * @param parent the parent node of this query node.
      * @param query  the textsearch statement.
      */
-    public TextsearchQueryNode(QueryNode parent, String query) {
-        this(parent, query, null, false);
-    }
-
-    /**
-     * Creates a new <code>TextsearchQueryNode</code> with a <code>parent</code>
-     * and a textsearch <code>query</code> statement. The scope of the query is
-     * the property or node referenced by <code>relPath</code>.
-     *
-     * @param parent     the parent node of this query node.
-     * @param query      the textsearch statement.
-     * @param relPath    scope of the fulltext search. If <code>null</code> the
-     *                   context node is searched.
-     * @param isProperty if <code>relPath</code> references a property or a
-     *                   node.
-     */
-    public TextsearchQueryNode(QueryNode parent, String query, Path relPath, boolean isProperty) {
+    protected TextsearchQueryNode(QueryNode parent, String query) {
         super(parent);
         this.query = query;
-        this.relPath = relPath;
-        this.propertyRef = isProperty;
+        this.relPath = null;
+        this.propertyRef = false;
     }
 
     /**

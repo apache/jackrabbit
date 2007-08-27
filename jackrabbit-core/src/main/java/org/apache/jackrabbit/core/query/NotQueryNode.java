@@ -26,20 +26,8 @@ public class NotQueryNode extends NAryQueryNode {
      *
      * @param parent the parent node for this query node.
      */
-    public NotQueryNode(QueryNode parent) {
+    protected NotQueryNode(QueryNode parent) {
         super(parent);
-    }
-
-    /**
-     * Creates a new <code>NotQueryNode</code> instance.
-     *
-     * @param parent the parent node for this query node.
-     * @param node   the child query node to invert.
-     */
-    public NotQueryNode(QueryNode parent, QueryNode node) {
-        super(parent, new QueryNode[]{
-            node
-        });
     }
 
     /**

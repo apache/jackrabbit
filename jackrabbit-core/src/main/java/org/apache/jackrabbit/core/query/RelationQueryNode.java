@@ -92,77 +92,9 @@ public class RelationQueryNode extends NAryQueryNode implements QueryConstants {
      *
      * @param parent the parent node for this query node.
      */
-    public RelationQueryNode(QueryNode parent, int operation) {
+    protected RelationQueryNode(QueryNode parent, int operation) {
         super(parent);
         this.operation = operation;
-    }
-
-    /**
-     * Creates a new <code>RelationQueryNode</code> with a <code>long</code>
-     * <code>value</code> and an <code>operation</code> type.
-     *
-     * @param parent    the parent node for this query node.
-     * @param relPath   the relative path to a property.
-     * @param value     a property value
-     * @param operation the type of the relation.
-     */
-    public RelationQueryNode(QueryNode parent, Path relPath, long value, int operation) {
-        super(parent);
-        this.relPath = relPath;
-        this.valueLong = value;
-        this.operation = operation;
-        this.type = TYPE_LONG;
-    }
-
-    /**
-     * Creates a new <code>RelationQueryNode</code> with a <code>double</code>
-     * <code>value</code> and an <code>operation</code> type.
-     *
-     * @param parent    the parent node for this query node.
-     * @param relPath   the relative path to a property.
-     * @param value     a property value
-     * @param operation the type of the relation.
-     */
-    public RelationQueryNode(QueryNode parent, Path relPath, double value, int operation) {
-        super(parent);
-        this.relPath = relPath;
-        this.valueDouble = value;
-        this.operation = operation;
-        this.type = TYPE_DOUBLE;
-    }
-
-    /**
-     * Creates a new <code>RelationQueryNode</code> with a <code>Date</code>
-     * <code>value</code> and an <code>operation</code> type.
-     *
-     * @param parent    the parent node for this query node.
-     * @param relPath   the relative path to a property.
-     * @param value     a property value
-     * @param operation the type of the relation.
-     */
-    public RelationQueryNode(QueryNode parent, Path relPath, Date value, int operation) {
-        super(parent);
-        this.relPath = relPath;
-        this.valueDate = value;
-        this.operation = operation;
-        this.type = TYPE_DATE;
-    }
-
-    /**
-     * Creates a new <code>RelationQueryNode</code> with a <code>String</code>
-     * <code>value</code> and an <code>operation</code> type.
-     *
-     * @param parent    the parent node for this query node.
-     * @param relPath   the relative path to a property.
-     * @param value     a property value
-     * @param operation the type of the relation.
-     */
-    public RelationQueryNode(QueryNode parent, Path relPath, String value, int operation) {
-        super(parent);
-        this.relPath = relPath;
-        this.valueString = value;
-        this.operation = operation;
-        this.type = TYPE_STRING;
     }
 
     /**

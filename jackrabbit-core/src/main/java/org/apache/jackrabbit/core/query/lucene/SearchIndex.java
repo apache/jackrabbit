@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeIdIterator;
 import org.apache.jackrabbit.core.query.AbstractQueryHandler;
+import org.apache.jackrabbit.core.query.DefaultQueryNodeFactory;
 import org.apache.jackrabbit.core.query.ExecutableQuery;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.query.QueryHandler;
@@ -59,6 +60,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.File;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
@@ -73,6 +75,27 @@ import java.util.Map;
  * Lucene.
  */
 public class SearchIndex extends AbstractQueryHandler {
+
+    public static final List VALID_SYSTEM_INDEX_NODE_TYPE_NAMES
+        = Collections.unmodifiableList(Arrays.asList(new QName[]{
+            QName.NT_CHILDNODEDEFINITION,
+            QName.NT_FROZENNODE,
+            QName.NT_NODETYPE,
+            QName.NT_PROPERTYDEFINITION,
+            QName.NT_VERSION,
+            QName.NT_VERSIONEDCHILD,
+            QName.NT_VERSIONHISTORY,
+            QName.NT_VERSIONLABELS,
+            QName.REP_NODETYPES,
+            QName.REP_SYSTEM,
+            QName.REP_VERSIONSTORAGE,
+            // Supertypes
+            QName.NT_BASE,
+            QName.MIX_REFERENCEABLE
+        }));
+
+    private static final DefaultQueryNodeFactory DEFAULT_QUERY_NODE_FACTORY = new DefaultQueryNodeFactory(
+            VALID_SYSTEM_INDEX_NODE_TYPE_NAMES);
 
     /** The logger instance for this class */
     private static final Logger log = LoggerFactory.getLogger(SearchIndex.class);
@@ -492,9 +515,17 @@ public class SearchIndex extends AbstractQueryHandler {
                                              String language)
             throws InvalidQueryException {
         QueryImpl query = new QueryImpl(session, itemMgr, this,
-                getContext().getPropertyTypeRegistry(), statement, language);
+                getContext().getPropertyTypeRegistry(), statement, language, getQueryNodeFactory());
         query.setRespectDocumentOrder(documentOrder);
         return query;
+    }
+
+    /**
+     * This method returns the QueryNodeFactory used to parse Queries. This method
+     * may be overridden to provide a customized QueryNodeFactory
+     */
+    protected DefaultQueryNodeFactory getQueryNodeFactory() {
+        return DEFAULT_QUERY_NODE_FACTORY;
     }
 
     /**
