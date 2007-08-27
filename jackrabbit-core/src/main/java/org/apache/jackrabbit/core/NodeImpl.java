@@ -1039,9 +1039,11 @@ public class NodeImpl extends ItemImpl implements Node {
         if (!mixin.isMixin()) {
             throw new RepositoryException(mixinName + ": not a mixin node type");
         }
+
         NodeTypeImpl primaryType = ntMgr.getNodeType(primaryTypeName);
         if (primaryType.isDerivedFrom(mixinName)) {
-            throw new RepositoryException(mixinName + ": already contained in primary node type");
+            // new mixin is already included in primary type
+            return;
         }
 
         // build effective node type of mixin's & primary type in order to detect conflicts
@@ -1055,8 +1057,10 @@ public class NodeImpl extends ItemImpl implements Node {
             // build effective node type representing primary type including existing mixin's
             entExisting = ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
             if (entExisting.includesNodeType(mixinName)) {
-                throw new RepositoryException(mixinName + ": already contained in mixin types");
+                // new mixin is already included in existing mixin type(s)
+                return;
             }
+
             // add new mixin
             set.add(mixinName);
             // try to build new effective node type (will throw in case of conflicts)
