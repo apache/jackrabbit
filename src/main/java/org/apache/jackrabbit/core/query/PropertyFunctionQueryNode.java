@@ -70,7 +70,7 @@ public class PropertyFunctionQueryNode extends QueryNode {
      * @throws IllegalArgumentException if <code>functionName</code> is not a
      *                                  supported function.
      */
-    public PropertyFunctionQueryNode(QueryNode parent, String functionName)
+    protected PropertyFunctionQueryNode(QueryNode parent, String functionName)
             throws IllegalArgumentException {
         super(parent);
         if (!SUPPORTED_FUNCTION_NAMES.contains(functionName)) {

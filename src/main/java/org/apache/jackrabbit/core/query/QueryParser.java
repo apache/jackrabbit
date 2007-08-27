@@ -41,17 +41,19 @@ public class QueryParser {
      *
      * @param statement the query statement.
      * @param language  the language of the query statement.
+     * @param factory   the query node factory.
      * @return the root node of the generated query tree.
      * @throws InvalidQueryException if an error occurs while parsing the
      *                               statement.
      */
     public static QueryRootNode parse(String statement,
                                       String language,
-                                      NamespaceResolver resolver)
+                                      NamespaceResolver resolver,
+                                      QueryNodeFactory factory)
             throws InvalidQueryException {
 
         QueryTreeBuilder builder = QueryTreeBuilderRegistry.getQueryTreeBuilder(language);
-        return builder.createQueryTree(statement, resolver);
+        return builder.createQueryTree(statement, resolver, factory);
     }
 
     /**

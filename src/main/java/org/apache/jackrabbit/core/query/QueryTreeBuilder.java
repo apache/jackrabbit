@@ -26,15 +26,19 @@ import javax.jcr.query.InvalidQueryException;
 public interface QueryTreeBuilder {
 
     /**
-     * Creates a <code>QueryNode</code> tree from a statement.
+     * Creates a <code>QueryNode</code> tree from a statement using the passed
+     * query node factory.
      *
      * @param statement the statement.
      * @param resolver  the namespace resolver to use.
+     * @param factory   the query node factory to use.
      * @return the <code>QueryNode</code> tree for the statement.
      * @throws javax.jcr.query.InvalidQueryException
      *          if the statement is malformed.
      */
-    QueryRootNode createQueryTree(String statement, NamespaceResolver resolver)
+    QueryRootNode createQueryTree(String statement,
+                                  NamespaceResolver resolver,
+                                  QueryNodeFactory factory)
             throws InvalidQueryException;
 
     /**

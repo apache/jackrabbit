@@ -16,13 +16,11 @@
  */
 package org.apache.jackrabbit.core.query.xpath;
 
-import org.apache.jackrabbit.core.query.AndQueryNode;
 import org.apache.jackrabbit.core.query.DerefQueryNode;
 import org.apache.jackrabbit.core.query.LocationStepQueryNode;
 import org.apache.jackrabbit.core.query.NAryQueryNode;
 import org.apache.jackrabbit.core.query.NodeTypeQueryNode;
 import org.apache.jackrabbit.core.query.NotQueryNode;
-import org.apache.jackrabbit.core.query.OrQueryNode;
 import org.apache.jackrabbit.core.query.OrderQueryNode;
 import org.apache.jackrabbit.core.query.PathQueryNode;
 import org.apache.jackrabbit.core.query.QueryConstants;
@@ -32,6 +30,7 @@ import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
 import org.apache.jackrabbit.core.query.PropertyFunctionQueryNode;
 import org.apache.jackrabbit.core.query.DefaultQueryNodeVisitor;
+import org.apache.jackrabbit.core.query.QueryNodeFactory;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
@@ -223,7 +222,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     /**
      * The root <code>QueryNode</code>
      */
-    private final QueryRootNode root = new QueryRootNode();
+    private final QueryRootNode root;
 
     /**
      * The {@link NamespaceResolver} in use
@@ -241,15 +240,25 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     private Path.PathBuilder tmpRelPath;
 
     /**
+     * The query node factory.
+     */
+    private final QueryNodeFactory factory;
+
+    /**
      * Creates a new <code>XPathQueryBuilder</code> instance.
      *
      * @param statement the XPath statement.
      * @param resolver  the namespace resolver to use.
+     * @param factory   the query node factory.
      * @throws InvalidQueryException if the XPath statement is malformed.
      */
-    private XPathQueryBuilder(String statement, NamespaceResolver resolver)
+    private XPathQueryBuilder(String statement,
+                              NamespaceResolver resolver,
+                              QueryNodeFactory factory)
             throws InvalidQueryException {
         this.resolver = resolver;
+        this.factory = factory;
+        this.root = factory.createQueryRootNode();
         try {
             // create an XQuery statement because we're actually using an
             // XQuery parser.
@@ -291,17 +300,20 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     }
 
     /**
-     * Creates a <code>QueryNode</code> tree from a XPath statement.
+     * Creates a <code>QueryNode</code> tree from a XPath statement using the
+     * passed query node <code>factory</code>.
      *
      * @param statement the XPath statement.
      * @param resolver  the namespace resolver to use.
+     * @param factory   the query node factory.
      * @return the <code>QueryNode</code> tree for the XPath statement.
      * @throws InvalidQueryException if the XPath statement is malformed.
      */
     public static QueryRootNode createQuery(String statement,
-                                            NamespaceResolver resolver)
+                                            NamespaceResolver resolver,
+                                            QueryNodeFactory factory)
             throws InvalidQueryException {
-        return new XPathQueryBuilder(statement, resolver).getRootNode();
+        return new XPathQueryBuilder(statement, resolver, factory).getRootNode();
     }
 
     /**
@@ -365,7 +377,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     } else if (queryNode.getType() == QueryNode.TYPE_NOT) {
                         // is null expression
                         RelationQueryNode isNull
-                                = new RelationQueryNode(queryNode,
+                                = factory.createRelationQueryNode(queryNode,
                                         RelationQueryNode.OPERATION_NULL);
                         applyRelativePath(isNull);
                         node.childrenAccept(this, isNull);
@@ -376,7 +388,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     } else {
                         // not null expression
                         RelationQueryNode notNull =
-                                new RelationQueryNode(queryNode,
+                                factory.createRelationQueryNode(queryNode,
                                         RelationQueryNode.OPERATION_NOT_NULL);
                         applyRelativePath(notNull);
                         node.childrenAccept(this, notNull);
@@ -390,7 +402,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                         node.childrenAccept(this, queryNode);
                     } else {
                         // step within a predicate
-                        RelationQueryNode tmp = new RelationQueryNode(
+                        RelationQueryNode tmp = factory.createRelationQueryNode(
                                 null, RelationQueryNode.OPERATION_NOT_NULL);
                         node.childrenAccept(this, tmp);
                         if (tmpRelPath == null) {
@@ -434,7 +446,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     String ntName = ((SimpleNode) node.jjtGetChild(0)).getValue();
                     try {
                         QName nt = NameFormat.parse(ntName, resolver);
-                        NodeTypeQueryNode nodeType = new NodeTypeQueryNode(loc, nt);
+                        NodeTypeQueryNode nodeType = factory.createNodeTypeQueryNode(loc, nt);
                         loc.addPredicate(nodeType);
                     } catch (NameException e) {
                         exceptions.add(new InvalidQueryException("Not a valid name: " + ntName));
@@ -443,14 +455,14 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 break;
             case JJTOREXPR:
                 NAryQueryNode parent = (NAryQueryNode) queryNode;
-                QueryNode orQueryNode = new OrQueryNode(parent);
+                QueryNode orQueryNode = factory.createOrQueryNode(parent);
                 parent.addOperand(orQueryNode);
                 // traverse
                 node.childrenAccept(this, orQueryNode);
                 break;
             case JJTANDEXPR:
                 parent = (NAryQueryNode) queryNode;
-                QueryNode andQueryNode = new AndQueryNode(parent);
+                QueryNode andQueryNode = factory.createAndQueryNode(parent);
                 parent.addOperand(andQueryNode);
                 // traverse
                 node.childrenAccept(this, andQueryNode);
@@ -486,7 +498,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 queryNode = createFunction(node, queryNode);
                 break;
             case JJTORDERBYCLAUSE:
-                root.setOrderNode(new OrderQueryNode(root));
+                root.setOrderNode(factory.createOrderQueryNode(root));
                 queryNode = root.getOrderNode();
                 node.childrenAccept(this, queryNode);
                 break;
@@ -561,7 +573,9 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
         for (int i = 0; i < p.jjtGetNumChildren(); i++) {
             SimpleNode c = (SimpleNode) p.jjtGetChild(i);
             if (c == node) {
-                queryNode = new LocationStepQueryNode(parent, null, descendant);
+                queryNode = factory.createLocationStepQueryNode(parent);
+                queryNode.setNameTest(null);
+                queryNode.setIncludeDescendants(descendant);
                 parent.addOperand(queryNode);
                 break;
             }
@@ -670,7 +684,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             exceptions.add(new InvalidQueryException("Unsupported ComparisonExpr type:" + node.getValue()));
         }
 
-        final RelationQueryNode rqn = new RelationQueryNode(queryNode, type);
+        final RelationQueryNode rqn = factory.createRelationQueryNode(queryNode, type);
 
         // traverse
         node.childrenAccept(this, rqn);
@@ -699,7 +713,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      * @return the path qurey node
      */
     private PathQueryNode createPathQueryNode(SimpleNode node) {
-        root.setLocationNode(new PathQueryNode(root));
+        root.setLocationNode(factory.createPathQueryNode(root));
         node.childrenAccept(this, root.getLocationNode());
         return root.getLocationNode();
     }
@@ -746,7 +760,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             if (NameFormat.format(FN_NOT, resolver).equals(fName)
                     || NameFormat.format(FN_NOT_10, resolver).equals(fName)) {
                 if (queryNode instanceof NAryQueryNode) {
-                    QueryNode not = new NotQueryNode(queryNode);
+                    QueryNode not = factory.createNotQueryNode(queryNode);
                     ((NAryQueryNode) queryNode).addOperand(not);
                     // @todo is this needed?
                     queryNode = not;
@@ -791,7 +805,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     if (queryNode instanceof NAryQueryNode) {
                         SimpleNode literal = (SimpleNode) node.jjtGetChild(2).jjtGetChild(0);
                         if (literal.getId() == JJTSTRINGLITERAL) {
-                            TextsearchQueryNode contains = new TextsearchQueryNode(
+                            TextsearchQueryNode contains = factory.createTextsearchQueryNode(
                                     queryNode, unescapeQuotes(literal.getValue()));
                             // assign property name
                             SimpleNode path = (SimpleNode) node.jjtGetChild(1);
@@ -809,7 +823,8 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 // check number of arguments
                 if (node.jjtGetNumChildren() == 3) {
                     if (queryNode instanceof NAryQueryNode) {
-                        RelationQueryNode like = new RelationQueryNode(queryNode, RelationQueryNode.OPERATION_LIKE);
+                        RelationQueryNode like = factory.createRelationQueryNode(
+                                queryNode, RelationQueryNode.OPERATION_LIKE);
                         ((NAryQueryNode) queryNode).addOperand(like);
 
                         // assign property name
@@ -889,7 +904,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     }
                     if (queryNode.getType() == QueryNode.TYPE_PATH) {
                         PathQueryNode pathNode = (PathQueryNode) queryNode;
-                        DerefQueryNode derefNode = new DerefQueryNode(pathNode, null, false);
+                        DerefQueryNode derefNode = factory.createDerefQueryNode(pathNode, null, false);
 
                         // assign property name
                         node.jjtGetChild(1).jjtAccept(this, derefNode);
@@ -944,7 +959,8 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 if (node.jjtGetNumChildren() == 2) {
                     if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                         RelationQueryNode relNode = (RelationQueryNode) queryNode;
-                        relNode.addOperand(new PropertyFunctionQueryNode(relNode, PropertyFunctionQueryNode.LOWER_CASE));
+                        relNode.addOperand(factory.createPropertyFunctionQueryNode(
+                                relNode, PropertyFunctionQueryNode.LOWER_CASE));
                         // get property name
                         node.jjtGetChild(1).jjtAccept(this, relNode);
                     } else {
@@ -957,7 +973,8 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 if (node.jjtGetNumChildren() == 2) {
                     if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                         RelationQueryNode relNode = (RelationQueryNode) queryNode;
-                        relNode.addOperand(new PropertyFunctionQueryNode(relNode, PropertyFunctionQueryNode.UPPER_CASE));
+                        relNode.addOperand(factory.createPropertyFunctionQueryNode(
+                                relNode, PropertyFunctionQueryNode.UPPER_CASE));
                         // get property name
                         node.jjtGetChild(1).jjtAccept(this, relNode);
                     } else {
@@ -970,7 +987,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 if (node.jjtGetNumChildren() == 3) {
                     if (queryNode instanceof NAryQueryNode) {
                         NAryQueryNode parent = (NAryQueryNode) queryNode;
-                        RelationQueryNode rel = new RelationQueryNode(
+                        RelationQueryNode rel = factory.createRelationQueryNode(
                                 parent, RelationQueryNode.OPERATION_SIMILAR);
                         parent.addOperand(rel);
                         // assign path

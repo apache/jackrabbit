@@ -28,20 +28,8 @@ public class AndQueryNode extends NAryQueryNode {
      *
      * @param parent the parent of <code>this</code> <code>AndQueryNode</code>.
      */
-    public AndQueryNode(QueryNode parent) {
+    protected AndQueryNode(QueryNode parent) {
         super(parent);
-    }
-
-    /**
-     * Creates a new <code>AndQueryNode</code> with a <code>parent</code> query
-     * node and <code>operands</code> for <code>this</code>
-     * <code>AndQueryNode</code>.
-     *
-     * @param parent   the parent of <code>this</code> <code>AndQueryNode</code>.
-     * @param operands the operands for this AND operation.
-     */
-    public AndQueryNode(QueryNode parent, QueryNode[] operands) {
-        super(parent, operands);
     }
 
     /**

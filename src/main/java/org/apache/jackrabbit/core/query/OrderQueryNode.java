@@ -38,7 +38,7 @@ public class OrderQueryNode extends QueryNode {
      *
      * @param parent the parent node of this query node.
      */
-    public OrderQueryNode(QueryNode parent) {
+    protected OrderQueryNode(QueryNode parent) {
         super(parent);
     }
 

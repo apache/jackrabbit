@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
 import org.apache.jackrabbit.core.query.QueryParser;
 import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.AndQueryNode;
+import org.apache.jackrabbit.core.query.QueryNodeFactory;
 import org.apache.jackrabbit.name.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,14 +57,7 @@ public class QueryImpl implements ExecutableQuery {
     /**
      * Represents a query that selects all nodes. E.g. in XPath: //*
      */
-    protected static final QueryRootNode ALL_NODES = new QueryRootNode();
-
-    static {
-        PathQueryNode pathNode = new PathQueryNode(ALL_NODES);
-        pathNode.addPathStep(new LocationStepQueryNode(pathNode, null, true));
-        pathNode.setAbsolute(true);
-        ALL_NODES.setLocationNode(pathNode);
-    }
+    protected final QueryRootNode allNodesQueryNode;
 
     /**
      * The root node of the query tree
@@ -105,6 +99,7 @@ public class QueryImpl implements ExecutableQuery {
      * @param propReg   the property type registry.
      * @param statement the query statement.
      * @param language  the syntax of the query statement.
+     * @param factory   the query node factory.
      * @throws InvalidQueryException if the query statement is invalid according
      *                               to the specified <code>language</code>.
      */
@@ -113,14 +108,26 @@ public class QueryImpl implements ExecutableQuery {
                      SearchIndex index,
                      PropertyTypeRegistry propReg,
                      String statement,
-                     String language) throws InvalidQueryException {
+                     String language,
+                     QueryNodeFactory factory) throws InvalidQueryException {
         this.session = session;
         this.itemMgr = itemMgr;
         this.index = index;
         this.propReg = propReg;
         // parse query according to language
-        // build query tree
-        this.root = QueryParser.parse(statement, language, session.getNamespaceResolver());
+        // build query tree using the passed factory
+        this.root = QueryParser.parse(statement, language,
+                session.getNamespaceResolver(), factory);
+
+        allNodesQueryNode = factory.createQueryRootNode();
+        PathQueryNode pathNode = factory.createPathQueryNode(allNodesQueryNode);
+        LocationStepQueryNode lsNode = factory.createLocationStepQueryNode(pathNode);
+        lsNode.setNameTest(null);
+        lsNode.setIncludeDescendants(true);
+        pathNode.addPathStep(lsNode);
+        pathNode.setAbsolute(true);
+        allNodesQueryNode.setLocationNode(pathNode);
+        
     }
 
     /**
@@ -137,7 +144,7 @@ public class QueryImpl implements ExecutableQuery {
         }
 
         // check for special query
-        if (ALL_NODES.equals(root)) {
+        if (allNodesQueryNode.equals(root)) {
             return new WorkspaceTraversalResult(session,
                     new QName[] { QName.JCR_PRIMARYTYPE, QName.JCR_PATH, QName.JCR_SCORE },
                     session.getNamespaceResolver());

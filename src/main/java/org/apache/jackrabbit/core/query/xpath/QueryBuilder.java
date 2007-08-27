@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.query.xpath;
 
 import org.apache.jackrabbit.core.query.QueryTreeBuilder;
 import org.apache.jackrabbit.core.query.QueryRootNode;
+import org.apache.jackrabbit.core.query.QueryNodeFactory;
 import org.apache.jackrabbit.name.NamespaceResolver;
 
 import javax.jcr.query.InvalidQueryException;
@@ -32,9 +33,10 @@ public class QueryBuilder implements QueryTreeBuilder {
      * @inheritDoc
      */
     public QueryRootNode createQueryTree(String statement,
-                                         NamespaceResolver resolver)
+                                         NamespaceResolver resolver,
+                                         QueryNodeFactory factory)
             throws InvalidQueryException {
-        return XPathQueryBuilder.createQuery(statement, resolver);
+        return XPathQueryBuilder.createQuery(statement, resolver, factory);
     }
 
     /**

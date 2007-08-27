@@ -28,20 +28,8 @@ public class OrQueryNode extends NAryQueryNode {
      *
      * @param parent the parent of <code>this</code> <code>OrQueryNode</code>.
      */
-    public OrQueryNode(QueryNode parent) {
+    protected OrQueryNode(QueryNode parent) {
         super(parent);
-    }
-
-    /**
-     * Creates a new <code>OrQueryNode</code> with a <code>parent</code> query
-     * node and <code>operands</code> for <code>this</code>
-     * <code>OrQueryNode</code>.
-     *
-     * @param parent   the parent of <code>this</code> <code>OrQueryNode</code>.
-     * @param operands the operands for this OR operation.
-     */
-    public OrQueryNode(QueryNode parent, QueryNode[] operands) {
-        super(parent, operands);
     }
 
     /**
