@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.data;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 
 /**
  * Append-only store for binary streams. A data store consists of a number
@@ -69,5 +70,27 @@ public interface DataStore {
      * @throws IOException if the data store could not be accessed
      */
     DataRecord addRecord(InputStream stream) throws IOException;
+
+    /**
+     * From now on, update the modified date of an object even when reading from it.
+     * Usually, the modified date is only updated when creating a new object, 
+     * or when a new link is added to an existing object.
+     * 
+     * @param before - update the modified date to the current time if it is older than this value
+     */
+    void updateModifiedDateOnRead(long before);
+
+    /**
+     * Delete objects that have a modified date older than the specified date.
+     * 
+     * @param min
+     * @return the number of data records deleted
+     */
+    int deleteAllOlderThan(long min);
+    
+    /**
+     * Get all identifiers.
+     */
+    Iterator getAllIdentifiers();
 
 }
