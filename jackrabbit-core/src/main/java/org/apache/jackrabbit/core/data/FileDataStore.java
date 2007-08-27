@@ -23,7 +23,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Random;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Simple file-based data store. Data records are stored as normal files
@@ -45,32 +47,15 @@ public class FileDataStore implements DataStore {
 
     /**
      * Name of the directory used for temporary files.
+     * Must be at least 3 characters.
      */
     private static final String TMP = "tmp";
 
     /**
-     * Temporary file counter used to guarantee that concurrent threads
-     * in this JVM do not accidentally use the same temporary file names.
-     * <p>
-     * This variable is static to allow multiple separate data store
-     * instances in the same JVM to access the same data store directory
-     * on disk. The counter is initialized to a random number based on the
-     * time when this class was first loaded to minimize the chance of two
-     * separate JVM processes (or class loaders within the same JVM) using
-     * the same temporary file names. 
+     * The minimum modified date. If a file is accessed (read or write) with a modified date 
+     * older than this value, the modified date is updated to the current time.
      */
-    private static long counter = new Random().nextLong();
-    
     private long minModifiedDate;
-
-    /**
-     * Returns the next value of the internal temporary file counter.
-     *
-     * @return next counter value
-     */
-    private static synchronized long nextCount() {
-        return counter++;
-    }
 
     /**
      * The directory that contains all the data record files. The structure
@@ -107,8 +92,8 @@ public class FileDataStore implements DataStore {
     }
 
     /**
-     * Creates a new record based on the given input stream. The stream
-     * is first consumed and the contents are saved in a temporary file
+     * Creates a new data record. 
+     * The stream is first consumed and the contents are saved in a temporary file
      * and the SHA-1 message digest of the stream is calculated. If a
      * record with the same SHA-1 digest (and length) is found then it is
      * returned. Otherwise the temporary file is moved in place to become
@@ -191,21 +176,77 @@ public class FileDataStore implements DataStore {
 
     /**
      * Returns a unique temporary file to be used for creating a new
-     * data record. A synchronized counter value and the current time are
-     * used to construct the name of the temporary file in a way that
-     * minimizes the chance of collisions across concurrent threads or
-     * processes.
+     * data record. 
      *
      * @return temporary file
+     * @throws IOException 
      */
-    private File newTemporaryFile() {
-        File temporary = new File(directory, TMP);
-
-        if (!temporary.isDirectory()) {
-            temporary.mkdirs();
+    private File newTemporaryFile() throws IOException {
+        if (!directory.isDirectory()) {
+            directory.mkdirs();
         }
-        String name = TMP + "-" + nextCount() + "-" + System.currentTimeMillis();
-        return new File(temporary, name);
+        File temporary = File.createTempFile(TMP, null, directory);
+        return temporary;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void updateModifiedDateOnRead(long before) {
+        minModifiedDate = before;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */    
+    public int deleteAllOlderThan(long min) {
+        return deleteOlderRecursive(directory, min);
+    }
+
+    private int deleteOlderRecursive(File file, long min) {
+        int count = 0;
+        if(file.isFile() && file.exists() && file.canWrite()) {
+            if(file.lastModified() < min) {
+                file.delete();
+                count++;
+            }
+        } else if(file.isDirectory()) {
+            File[] list = file.listFiles();
+            for(int i=0; i<list.length; i++) {
+                count += deleteOlderRecursive(list[i], min);
+            }
+        }
+        return count;
+    }
+    
+    private void listRecursive(List list, File file) {
+        File[] l = file.listFiles();
+        for(int i=0; l != null && i<l.length; i++) {
+            File f = l[i];
+            if(f.isDirectory()) {
+                listRecursive(list, f);
+            } else {
+                list.add(f);
+            }
+        }
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public Iterator getAllIdentifiers() {
+        ArrayList files = new ArrayList();
+        listRecursive(files, directory);
+        ArrayList identifiers = new ArrayList();
+        for(int i=0; i<files.size(); i++) {
+            File f = (File) files.get(i);
+            String name = f.getName();
+            if(!name.startsWith(TMP)) {
+                DataIdentifier id = new DataIdentifier(name);
+                identifiers.add(id);
+            }
+        }
+        return identifiers.iterator();
     }
 
 }
