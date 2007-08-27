@@ -43,7 +43,9 @@ public class SQLJoinTest extends AbstractQueryTest {
      */
     public void testJoin() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixReferenceable);
+        if (needsMixin(n1, mixReferenceable)) {
+            n1.addMixin(mixReferenceable);
+        }
         testRootNode.addNode(nodeName2, testNodeType);
         testRootNode.save();
 
@@ -64,7 +66,9 @@ public class SQLJoinTest extends AbstractQueryTest {
      */
     public void testJoinNtBase() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixReferenceable);
+        if (needsMixin(n1, mixReferenceable)) {
+            n1.addMixin(mixReferenceable);
+        }
         testRootNode.addNode(nodeName2, testNodeType);
         testRootNode.save();
 
@@ -85,9 +89,13 @@ public class SQLJoinTest extends AbstractQueryTest {
      */
     public void testJoinFilterPrimaryType() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixReferenceable);
+        if (needsMixin(n1, mixReferenceable)) {
+            n1.addMixin(mixReferenceable);
+        }
         Node n2 = testRootNode.addNode(nodeName2, ntBase);
-        n2.addMixin(mixReferenceable);
+        if (needsMixin(n2, mixReferenceable)) {
+            n2.addMixin(mixReferenceable);
+        }
         testRootNode.save();
 
         StringBuffer query = new StringBuffer("SELECT * FROM ");
@@ -112,7 +120,9 @@ public class SQLJoinTest extends AbstractQueryTest {
      */
     public void testJoinSNS() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addMixin(mixReferenceable);
+        if (needsMixin(n1, mixReferenceable)) {
+            n1.addMixin(mixReferenceable);
+        }
         if (!n1.getDefinition().allowsSameNameSiblings()) {
             throw new NotExecutableException("Node at " + testRoot + " does not allow same name siblings with name " + nodeName1);
         }
