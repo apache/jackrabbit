@@ -255,7 +255,11 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             }
         }
 
-        if (constraintNode.getNumOperands() > 0) {
+        if (constraintNode.getNumOperands() == 1) {
+            // attach operand to last path step
+            LocationStepQueryNode[] steps = pathNode.getPathSteps();
+            steps[steps.length - 1].addPredicate(constraintNode.getOperands()[0]);
+        } else if (constraintNode.getNumOperands() > 1) {
             // attach constraint to last path step
             LocationStepQueryNode[] steps = pathNode.getPathSteps();
             steps[steps.length - 1].addPredicate(constraintNode);
