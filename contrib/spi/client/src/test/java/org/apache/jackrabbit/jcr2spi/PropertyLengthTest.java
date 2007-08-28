@@ -48,7 +48,7 @@ public class PropertyLengthTest extends AbstractJCRTest {
     }
 
     private Property getProperty(int propertyType) throws RepositoryException, NotExecutableException {
-        Property p = PropertyUtil.searchProp(testRootNode.getSession(), testRootNode, propertyType);
+        Property p = PropertyUtil.searchProp(testRootNode.getSession(), testRootNode, propertyType, null);
         if (p == null) {
             try {
                 Value val;
