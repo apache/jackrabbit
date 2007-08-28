@@ -26,6 +26,7 @@ import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.util.name.NamespaceMapping;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
 import org.apache.jackrabbit.core.nodetype.compact.ParseException;
 import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
@@ -101,6 +102,8 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      * <code>NodeTypeManager</code>
      */
     private final Map ndCache;
+    
+    private final DataStore store;
 
     /**
      * Creates a new <code>NodeTypeManagerImpl</code> instance.
@@ -111,11 +114,12 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      */
     public NodeTypeManagerImpl(
             NodeTypeRegistry ntReg, NamespaceRegistryImpl nsReg,
-            NamespaceResolver nsResolver) {
+            NamespaceResolver nsResolver, DataStore store) {
         this.nsResolver = nsResolver;
         this.ntReg = ntReg;
         this.nsReg = nsReg;
         this.ntReg.addListener(this);
+        this.store = store;
 
         // setup caches with soft references to node type
         // & item definition instances
@@ -182,7 +186,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
             if (nt == null) {
                 EffectiveNodeType ent = ntReg.getEffectiveNodeType(name);
                 NodeTypeDef def = ntReg.getNodeTypeDef(name);
-                nt = new NodeTypeImpl(ent, def, this, nsResolver);
+                nt = new NodeTypeImpl(ent, def, this, nsResolver, store);
                 ntCache.put(name, nt);
             }
             return nt;

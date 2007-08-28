@@ -246,7 +246,7 @@ public class SessionImpl implements Session, NamePathResolver, Dumpable {
         }
         this.subject = subject;
         nsMappings = new LocalNamespaceMappings(rep.getNamespaceRegistry());
-        ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), rep.getNamespaceRegistry(), getNamespaceResolver());
+        ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), rep.getNamespaceRegistry(), getNamespaceResolver(), rep.getDataStore());
         String wspName = wspConfig.getName();
         wsp = createWorkspaceInstance(wspConfig,
                 rep.getWorkspaceStateManager(wspName), rep, this);
