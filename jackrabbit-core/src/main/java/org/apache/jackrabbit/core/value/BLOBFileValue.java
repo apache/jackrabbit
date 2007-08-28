@@ -237,7 +237,6 @@ public class BLOBFileValue {
      * If this <code>BLOBFileValue</code> is backed by a persistent resource
      * calling this method will have no effect.
      *
-     * @see #delete()
      * @see #delete(boolean)
      */
     public void discard() {
@@ -252,21 +251,6 @@ public class BLOBFileValue {
         } else if (buffer != null) {
             // this instance is backed by an in-memory buffer
             buffer = EMPTY_BYTE_ARRAY;
-        }
-    }
-
-    /**
-     * Deletes the persistent resource backing this <code>BLOBFileValue</code>.
-     * Same as <code>{@link #delete(false)}</code>.
-     * <p/>
-     * If this <code>BLOBFileValue</code> is <i>not</i> backed by a persistent
-     * resource calling this method will have no effect.
-     *
-     * @see #discard()
-     */
-    private void delete() {
-        if (!temp) {
-            delete(false);
         }
     }
 

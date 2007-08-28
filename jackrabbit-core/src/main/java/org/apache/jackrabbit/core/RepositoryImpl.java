@@ -373,7 +373,8 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                 vConfig.getPersistenceManagerConfig(),
                 rootNodeId,
                 nsReg,
-                ntReg);
+                ntReg,
+                dataStore);
 
         return new VersionManagerImpl(pm, fs, ntReg, delegatingDispatcher,
                 VERSION_STORAGE_NODE_ID, SYSTEM_ROOT_NODE_ID, cacheFactory);
@@ -1123,11 +1124,12 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                                                                PersistenceManagerConfig pmConfig,
                                                                NodeId rootNodeId,
                                                                NamespaceRegistry nsReg,
-                                                               NodeTypeRegistry ntReg)
+                                                               NodeTypeRegistry ntReg,
+                                                               DataStore dataStore)
             throws RepositoryException {
         try {
             PersistenceManager pm = (PersistenceManager) pmConfig.newInstance();
-            pm.init(new PMContext(homeDir, fs, rootNodeId, nsReg, ntReg));
+            pm.init(new PMContext(homeDir, fs, rootNodeId, nsReg, ntReg, dataStore));
             return pm;
         } catch (Exception e) {
             String msg = "Cannot instantiate persistence manager " + pmConfig.getClassName();
@@ -1722,7 +1724,8 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                     config.getPersistenceManagerConfig(),
                     rootNodeId,
                     nsReg,
-                    ntReg);
+                    ntReg,
+                    dataStore);
 
             // create item state manager
             try {

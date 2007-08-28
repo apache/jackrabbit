@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 
@@ -31,7 +32,7 @@ import java.io.File;
 public class PMContext extends org.apache.jackrabbit.core.persistence.PMContext {
 
     public PMContext(File homeDir, FileSystem fs, NodeId rootNodeId,
-                         NamespaceRegistry nsReg, NodeTypeRegistry ntReg) {
-        super(homeDir, fs, rootNodeId, nsReg, ntReg);
+                         NamespaceRegistry nsReg, NodeTypeRegistry ntReg, DataStore dataStore) {
+        super(homeDir, fs, rootNodeId, nsReg, ntReg, dataStore);
     }
 }

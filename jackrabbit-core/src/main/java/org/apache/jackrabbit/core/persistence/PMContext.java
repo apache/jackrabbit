@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.persistence;
 
+import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.NodeId;
@@ -58,6 +59,11 @@ public class PMContext {
     private final NodeId rootNodeId;
 
     /**
+     * Data store for binary properties.
+     */
+    private final DataStore dataStore;
+
+    /**
      * Creates a new <code>PMContext</code>.
      *
      * @param homeDir the physical home directory
@@ -70,12 +76,14 @@ public class PMContext {
                      FileSystem fs,
                      NodeId rootNodeId,
                      NamespaceRegistry nsReg,
-                     NodeTypeRegistry ntReg) {
+                     NodeTypeRegistry ntReg, 
+                     DataStore dataStore) {
         this.physicalHomeDir = homeDir;
         this.fs = fs;
         this.rootNodeId = rootNodeId;
         this.nsReg = nsReg;
         this.ntReg = ntReg;
+        this.dataStore = dataStore;
     }
 
 
@@ -119,5 +127,14 @@ public class PMContext {
      */
     public NodeTypeRegistry getNodeTypeRegistry() {
         return ntReg;
+    }
+    
+    /**
+     * Returns the data store
+     *
+     * @return the data store
+     */
+    public DataStore getDataStore() {
+        return dataStore;
     }
 }
