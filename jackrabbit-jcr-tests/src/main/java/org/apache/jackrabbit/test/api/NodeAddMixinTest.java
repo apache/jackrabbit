@@ -60,13 +60,13 @@ public class NodeAddMixinTest extends AbstractJCRTest {
 
         // test if mixin is written to property jcr:mixinTypes immediately
         Value mixinValues[] = node.getProperty(jcrMixinTypes).getValues();
-        if (mixinValues.length != 1) {
-            fail("Mixin node must be added to property " + jcrMixinTypes + " immediately.");
+        boolean found = false;
+        for (int i = 0; i < mixinValues.length; i++) {
+            found |= mixinName.equals(mixinValues[i].getString());
         }
-        assertEquals("Mixin was not properly assigned to property " + jcrMixinTypes + ": ",
-                mixinName,
-                mixinValues[0].getString());
-
+        if (! found) {
+            fail("Mixin type must be added to property " + jcrMixinTypes + " immediately.");
+        }
 
         // it is implementation-specific if a added mixin is available
         // before or after save therefore save before further tests
@@ -74,13 +74,13 @@ public class NodeAddMixinTest extends AbstractJCRTest {
 
         // test if added mixin is available by node.getMixinNodeTypes()
         NodeType mixins[] = node.getMixinNodeTypes();
-        if (mixins.length != 1) {
-            fail("Mixin node not added.");
+        found = false;
+        for (int i = 0; i < mixins.length; i++) {
+            found |= mixinName.equals(mixins[i].getName());
         }
-        assertEquals("Mixin was not properly assigned: ",
-                mixinName,
-                mixins[0].getName());
-
+        if (! found) {
+            fail("Mixin '" + mixinName+ "' type not added.");
+        }
     }
 
     /**
