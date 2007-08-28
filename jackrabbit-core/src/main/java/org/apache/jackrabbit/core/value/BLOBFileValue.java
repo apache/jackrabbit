@@ -285,6 +285,51 @@ public class BLOBFileValue {
         }
     }
 
+    /**
+     * Spools the contents of this <code>BLOBFileValue</code> to the given
+     * output stream.
+     *
+     * @param out output stream
+     * @throws RepositoryException if the input stream for this
+     *                             <code>BLOBFileValue</code> could not be obtained
+     * @throws IOException         if an error occurs while while spooling
+     */
+    public void spool(OutputStream out) throws RepositoryException, IOException {
+        InputStream in;
+        if (file != null) {
+            // this instance is backed by a 'real' file
+            try {
+                in = new FileInputStream(file);
+            } catch (FileNotFoundException fnfe) {
+                throw new RepositoryException("file backing binary value not found",
+                        fnfe);
+            }
+        } else if (fsResource != null) {
+            // this instance is backed by a resource in the virtual file system
+            try {
+                in = fsResource.getInputStream();
+            } catch (FileSystemException fse) {
+                throw new RepositoryException(fsResource.getPath()
+                        + ": the specified resource does not exist", fse);
+            }
+        } else {
+            // this instance is backed by an in-memory buffer
+            in = new ByteArrayInputStream(buffer);
+        }
+        try {
+            byte[] buffer = new byte[0x2000];
+            int read;
+            while ((read = in.read(buffer)) > 0) {
+                out.write(buffer, 0, read);
+            }
+        } finally {
+            try {
+                in.close();
+            } catch (IOException ignore) {
+            }
+        }
+    }
+
     //-------------------------------------------< java.lang.Object overrides >
     /**
      * Returns a string representation of this <code>BLOBFileValue</code>
