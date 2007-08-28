@@ -68,7 +68,7 @@ public class DerefQueryLevel1Test extends AbstractQueryTest {
      */
     public void testDerefSinglePropWithNodeTest()
             throws RepositoryException, NotExecutableException {
-        Property refProp = PropertyUtil.searchProp(session, testRootNode, PropertyType.REFERENCE);
+        Property refProp = PropertyUtil.searchProp(session, testRootNode, PropertyType.REFERENCE, Boolean.FALSE);
         if (refProp == null) {
             throw new NotExecutableException("Workspace does not contain a node with a reference property.");
         }
@@ -85,7 +85,7 @@ public class DerefQueryLevel1Test extends AbstractQueryTest {
      */
     public void testDerefSinglePropWithNodeStar()
             throws RepositoryException, NotExecutableException {
-        Property refProp = PropertyUtil.searchProp(session, testRootNode, PropertyType.REFERENCE);
+        Property refProp = PropertyUtil.searchProp(session, testRootNode, PropertyType.REFERENCE, Boolean.FALSE);
         if (refProp == null) {
             throw new NotExecutableException("Workspace does not contain a node with a reference property.");
         }

@@ -44,12 +44,20 @@ public class UndefinedPropertyTest extends AbstractJCRTest {
     }
 
     /**
+     * Returns "does not matter" (<code>null</code>).
+     * @return <code>null</code>.
+     */
+    protected Boolean getPropertyIsMultivalued() {
+        return null;
+    }
+
+    /**
      * Tests that no actual property with type Undefined exists.
      */
     public void testUndefinedProperty() throws RepositoryException {
         Session session = helper.getReadOnlySession();
         try {
-            Property prop = PropertyUtil.searchProp(session, session.getRootNode().getNode(testPath), PropertyType.UNDEFINED);
+            Property prop = PropertyUtil.searchProp(session, session.getRootNode().getNode(testPath), PropertyType.UNDEFINED, null);
             assertNull("Property with type Undefined found.", prop);
         } finally {
             session.logout();

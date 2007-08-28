@@ -77,6 +77,14 @@ public class StringPropertyTest extends AbstractPropertyTest {
     }
 
     /**
+     * Returns "does not matter" (<code>null</code>).
+     * @return <code>null</code>.
+     */
+    protected Boolean getPropertyIsMultivalued() {
+        return null;
+    }
+
+    /**
      * Tests that Property.getString() delivers a string equal to the string
      * received with Value.getString().
      */

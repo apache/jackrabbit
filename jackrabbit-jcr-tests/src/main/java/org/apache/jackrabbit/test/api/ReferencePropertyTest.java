@@ -24,8 +24,6 @@ import javax.jcr.Property;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 
-import org.apache.jackrabbit.test.NotExecutableException;
-
 /**
  * Tests a reference property. If the workspace does not contain a node with
  * a reference property a {@link org.apache.jackrabbit.test.NotExecutableException}
@@ -46,16 +44,7 @@ public class ReferencePropertyTest extends AbstractPropertyTest {
      */
     protected void setUp() throws Exception {
         super.setUp();
-        if (prop.getDefinition().isMultiple()) {
-            Value v[] = prop.getValues();
-            if (v.length == 0) {
-                throw new NotExecutableException("Property " + prop.getName() + " is multivalued with length 0");
-            }
-            referencedNode = prop.getSession().getNodeByUUID(prop.getValues()[0].getString());
-        }
-        else {
-            referencedNode = prop.getNode();
-        }
+        referencedNode = prop.getNode();
     }
 
     /**
@@ -64,6 +53,14 @@ public class ReferencePropertyTest extends AbstractPropertyTest {
      */
     protected int getPropertyType() {
         return PropertyType.REFERENCE;
+    }
+
+    /**
+     * Returns {@link Boolean#FALSE}.
+     * @return {@link Boolean#FALSE}.
+     */
+    protected Boolean getPropertyIsMultivalued() {
+        return Boolean.FALSE;
     }
 
     /**
