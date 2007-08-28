@@ -263,6 +263,18 @@ public class InternalValue {
         }
         return ret;
     }
+    
+    /**
+     * @param values
+     * @return the created value
+     */
+    public static InternalValue[] create(String[] values) {
+        InternalValue[] ret = new InternalValue[values.length];
+        for (int i = 0; i < values.length; i++) {
+            ret[i] = new InternalValue(values[i]);
+        }
+        return ret;
+    }    
 
     /**
      * @param value
