@@ -146,9 +146,10 @@ public class PropertyUtil {
      *
      * @param node the node to start traverse
      * @param type the property type to search for
+     * @param multiple whether the property should be multivalued (<code>null</code>: does not matter)
      * @return the property found or null if no property is found
      */
-    public static Property searchProp(Session session, Node node, int type)
+    public static Property searchProp(Session session, Node node, int type, Boolean multiple)
             throws RepositoryException, ValueFormatException {
 
         Property prop = null;
@@ -157,7 +158,7 @@ public class PropertyUtil {
             for (PropertyIterator props = node.getProperties(); props.hasNext();) {
                 Property property = props.nextProperty();
                 propType = property.getType();
-                if (propType == type) {
+                if (propType == type && (multiple == null || multiple.booleanValue() == property.getDefinition().isMultiple())) {
                     prop = property;
                     break;
                 }
@@ -166,7 +167,7 @@ public class PropertyUtil {
         if (prop == null) {
             for (NodeIterator nodes = node.getNodes(); nodes.hasNext();) {
                 Node n = nodes.nextNode();
-                prop = searchProp(session, n, type);
+                prop = searchProp(session, n, type, multiple);
                 if (prop != null) {
                     break;
                 }

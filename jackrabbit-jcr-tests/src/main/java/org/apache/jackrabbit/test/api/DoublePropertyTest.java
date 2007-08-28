@@ -47,6 +47,14 @@ public class DoublePropertyTest extends AbstractPropertyTest {
     }
 
     /**
+     * Returns "does not matter" (<code>null</code>).
+     * @return <code>null</code>.
+     */
+    protected Boolean getPropertyIsMultivalued() {
+        return null;
+    }
+
+    /**
      * tests that Property.getDouble() delivers the same as Value.getDouble()
      * and if in case of a multivalue property a ValueFormatException is
      * thrown.

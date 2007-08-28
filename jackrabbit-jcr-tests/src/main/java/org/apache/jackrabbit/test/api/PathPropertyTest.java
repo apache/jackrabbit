@@ -43,6 +43,14 @@ public class PathPropertyTest extends AbstractPropertyTest {
     }
 
     /**
+     * Returns "does not matter" (<code>null</code>).
+     * @return <code>null</code>.
+     */
+    protected Boolean getPropertyIsMultivalued() {
+        return null;
+    }
+
+    /**
      * Tests conversion from Path type to String type and if the resulting
      * string has correct format.
      */

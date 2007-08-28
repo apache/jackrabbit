@@ -46,6 +46,14 @@ public class BinaryPropertyTest extends AbstractPropertyTest {
     }
 
     /**
+     * Returns "does not matter" (<code>null</code>).
+     * @return <code>null</code>.
+     */
+    protected Boolean getPropertyIsMultivalued() {
+        return null;
+    }
+
+    /**
      * Tests that when Value.getStream() is called a second time the same Stream
      * object is returned. Also tests that when a new Value object is requested
      * also a new Stream object is returned by calling getStream() on the new

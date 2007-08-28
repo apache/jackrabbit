@@ -46,6 +46,12 @@ abstract class AbstractPropertyTest extends AbstractJCRTest {
      * values defined in {@link javax.jcr.PropertyType}.
      */
     protected abstract int getPropertyType();
+    
+    /**
+     * Concrete subclasses return the multivalued-ness of property they test.
+     * (<code>null</code>: does not matter)
+     */
+    protected abstract Boolean getPropertyIsMultivalued();
 
     /**
      * Sets up the fixture for the tests.
@@ -55,7 +61,7 @@ abstract class AbstractPropertyTest extends AbstractJCRTest {
         super.setUp();
         session = helper.getReadOnlySession();
 
-        prop = PropertyUtil.searchProp(session, session.getRootNode().getNode(testPath), getPropertyType());
+        prop = PropertyUtil.searchProp(session, session.getRootNode().getNode(testPath), getPropertyType(), getPropertyIsMultivalued());
         if (prop == null) {
             cleanUp();
             String msg = "Workspace does not contain a node with a " +
