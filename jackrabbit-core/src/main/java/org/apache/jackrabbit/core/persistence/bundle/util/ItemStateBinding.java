@@ -146,7 +146,7 @@ public class ItemStateBinding {
             throws IOException {
         NodeReferences state = new NodeReferences(id);
         int count = in.readInt();   // count & version
-        int version = (count >> 24) | 0x0ff;
+        // int version = (count >> 24) | 0x0ff;
         count &= 0x00ffffff;
         for (int i = 0; i < count; i++) {
             state.addReference(readPropertyId(in));    // propertyId
@@ -302,7 +302,7 @@ public class ItemStateBinding {
                                 val = InternalValue.create(
                                         ((ResourceBasedBLOBStore) blobStore).getResource(s));
                             } else {
-                                val = InternalValue.create(blobStore.get(s), false);
+                                val = InternalValue.create(blobStore.get(s));
                             }
                         } catch (IOException e) {
                             if (errorHandling.ignoreMissingBlobs()) {
@@ -399,7 +399,7 @@ public class ItemStateBinding {
                             if (blobStore instanceof ResourceBasedBLOBStore) {
                                 values[i] = InternalValue.create(((ResourceBasedBLOBStore) blobStore).getResource(blobId));
                             } else {
-                                values[i] = InternalValue.create(blobStore.get(blobId), false);
+                                values[i] = InternalValue.create(blobStore.get(blobId));
                             }
                             blobVal.discard();
                         } else {

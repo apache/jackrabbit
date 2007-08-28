@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.data;
 
 import org.apache.jackrabbit.core.RepositoryImpl;
+import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,7 +36,6 @@ import javax.jcr.Value;
 import javax.jcr.Workspace;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
-import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
 
 /**
@@ -50,11 +50,11 @@ import javax.jcr.observation.ObservationManager;
  */
 public class GarbageCollector {
 
-    private static final int WAIT_FOR_EVENT_LISTENERS = 5000;
-
     private final ScanEventListener callback;
 
     private final int sleepBetweenNodes;
+    
+    private final int sleepBetweenEvents;
 
     private DataStore store;
 
@@ -64,12 +64,20 @@ public class GarbageCollector {
 
     // TODO Observation: it is up to the implementation whether changes made to
     // the subtree below jcr:system trigger events.
-    // TODO How long do we have to wait for the observation listeners?
     // TODO It should be possible to stop and restart a garbage collection scan.
     // TODO It may be possible to delete files early, see rememberNode()
 
-    public GarbageCollector(int sleepBetweenNodes, ScanEventListener callback) {
+    /**
+     * Create a new garbage collector. 
+     * To display the progress, a callback object may be used.
+     * 
+     * @param callback if set, this is called while scanning
+     * @param sleepBetweenNodes the number of milliseconds to sleep in the main scan loop (0 if the scan should run at full speed)
+     * @param sleepBetweenEvents the number of milliseconds to sleep while processing events (0 to avoid delays in the application)
+     */
+    public GarbageCollector(ScanEventListener callback, int sleepBetweenNodes, int sleepBetweenEvents) {
         this.sleepBetweenNodes = sleepBetweenNodes;
+        this.sleepBetweenEvents = sleepBetweenEvents;
         this.callback = callback;
     }
 
@@ -89,16 +97,11 @@ public class GarbageCollector {
 
         // adding a link to a BLOB updates the modified date
         // reading usually doesn't, but when scanning, it does
-        recurse(session.getRootNode());
+        recurse(session.getRootNode(), sleepBetweenNodes);
     }
 
     public void stopScan() throws RepositoryException {
         checkScanStarted();
-        try {
-            Thread.sleep(WAIT_FOR_EVENT_LISTENERS);
-        } catch (InterruptedException e) {
-            // ignore
-        }
         for (int i = 0; i < listeners.size(); i++) {
             Listener listener = (Listener) listeners.get(i);
             try {
@@ -132,11 +135,11 @@ public class GarbageCollector {
         return store;
     }
 
-    private void recurse(final Node n) throws RepositoryException,
+    private void recurse(final Node n, int sleep) throws RepositoryException,
             IllegalStateException, IOException {
-        if (sleepBetweenNodes > 0) {
+        if (sleep > 0) {
             try {
-                Thread.sleep(sleepBetweenNodes);
+                Thread.sleep(sleep);
             } catch (InterruptedException e) {
                 // ignore
             }
@@ -166,7 +169,7 @@ public class GarbageCollector {
             callback.afterScanning(n);
         }
         for (NodeIterator it = n.getNodes(); it.hasNext();) {
-            recurse(it.nextNode());
+            recurse(it.nextNode(), sleep);
         }
     }
 
@@ -204,8 +207,9 @@ public class GarbageCollector {
 
     /**
      * Event listener to detect moved nodes.
+     * A SynchronousEventListener is used to make sure this method is called before the main iteration ends.
      */
-    class Listener implements EventListener {
+    class Listener implements SynchronousEventListener {
 
         private final Session session;
 
@@ -231,6 +235,13 @@ public class GarbageCollector {
         }
 
         public void onEvent(EventIterator events) {
+            if(sleepBetweenEvents > 0) {
+                try {
+                    Thread.sleep(sleepBetweenEvents);
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+            }
             while (events.hasNext()) {
                 Event event = events.nextEvent();
                 try {
@@ -239,7 +250,7 @@ public class GarbageCollector {
                         Item item = session.getItem(path);
                         if (item.isNode()) {
                             Node n = (Node) item;
-                            recurse(n);
+                            recurse(n, sleepBetweenEvents);
                         }
                     } catch (PathNotFoundException e) {
                         // ignore
