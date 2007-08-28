@@ -345,7 +345,7 @@ public class PropertyState extends ItemState {
                         public void close() {
                             // nop
                         }
-                    }, false);
+                    });
                 } else {
                     values[i] = InternalValue.valueOf(in.readUTF(), type);
                 }

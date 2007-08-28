@@ -740,15 +740,13 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         InternalValue value;
         try {
+            value = InternalValue.createTemporary(stream);
             if (reqType != PropertyType.BINARY) {
                 // type conversion required
+                Value jcrValue = value.toJCRValue(session.getNamespaceResolver());
                 Value targetVal = ValueHelper.convert(
-                        new BLOBFileValue(stream), reqType,
-                        ValueFactoryImpl.getInstance());
-                value = InternalValue.create(targetVal, session.getNamespaceResolver());
-            } else {
-                // no type conversion required
-                value = InternalValue.create(stream);
+                        jcrValue, reqType, ValueFactoryImpl.getInstance());
+                value = InternalValue.create(targetVal, session.getNamespaceResolver(), rep.getDataStore());
             }
         } catch (IOException ioe) {
             String msg = "failed to spool stream to internal storage";

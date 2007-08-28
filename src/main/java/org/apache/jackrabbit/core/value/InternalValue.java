@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.value;
 
+import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NameException;
@@ -69,14 +70,31 @@ public class InternalValue {
 
     public static final InternalValue[] EMPTY_ARRAY = new InternalValue[0];
 
-    public static final InternalValue BOOLEAN_TRUE = create(true);
+    private static final InternalValue BOOLEAN_TRUE = new InternalValue(true);
 
-    public static final InternalValue BOOLEAN_FALSE = create(false);
+    private static final InternalValue BOOLEAN_FALSE = new InternalValue(false);
+    
+    /**
+     * If set to 'true', the new global data store will be used, otherwise the old blob store implementation
+     */
+    public static final boolean USE_DATA_STORE = Boolean.valueOf(System.getProperty("org.jackrabbit.useDataStore", "false")).booleanValue();
 
     private final Object val;
     private final int type;
 
     //------------------------------------------------------< factory methods >
+    /**
+     * @param value
+     * @param nsResolver
+     * @return
+     * @throws ValueFormatException
+     * @throws RepositoryException
+     */
+    public static InternalValue create(Value value, NamespaceResolver nsResolver, DataStore store)
+            throws ValueFormatException, RepositoryException {
+        return create(value, nsResolver);
+    }
+
     /**
      * @param value
      * @param nsResolver
@@ -98,7 +116,7 @@ public class InternalValue {
                     } else {
                         InputStream stream = value.getStream();
                         try {
-                            return new InternalValue(new BLOBFileValue(stream));
+                            return createTemporary(stream);
                         } finally {
                             try {
                                 stream.close();
@@ -177,7 +195,7 @@ public class InternalValue {
      * @return the created value
      */
     public static InternalValue create(boolean value) {
-        return new InternalValue(value);
+        return value ? BOOLEAN_TRUE : BOOLEAN_FALSE;
     }
 
     /**
@@ -193,9 +211,9 @@ public class InternalValue {
      * @return
      * @throws IOException
      */
-    public static InternalValue create(InputStream value) throws IOException {
-        return new InternalValue(new BLOBFileValue(value));
-    }
+    public static InternalValue createTemporary(InputStream value) throws IOException {
+        return new InternalValue(new BLOBFileValue(value, true));
+    }    
 
     /**
      * @param value
@@ -203,8 +221,8 @@ public class InternalValue {
      * @return
      * @throws IOException
      */
-    public static InternalValue create(InputStream value, boolean temp) throws IOException {
-        return new InternalValue(new BLOBFileValue(value, temp));
+    public static InternalValue create(InputStream value) throws IOException {
+        return new InternalValue(new BLOBFileValue(value, false));
     }
 
     /**
@@ -239,30 +257,6 @@ public class InternalValue {
      * @return the created value
      */
     public static InternalValue[] create(QName[] values) {
-        InternalValue[] ret = new InternalValue[values.length];
-        for (int i = 0; i < values.length; i++) {
-            ret[i] = new InternalValue(values[i]);
-        }
-        return ret;
-    }
-
-    /**
-     * @param values
-     * @return the created value
-     */
-    public static InternalValue[] create(String[] values) {
-        InternalValue[] ret = new InternalValue[values.length];
-        for (int i = 0; i < values.length; i++) {
-            ret[i] = new InternalValue(values[i]);
-        }
-        return ret;
-    }
-
-    /**
-     * @param values
-     * @return the created value
-     */
-    public static InternalValue[] create(Calendar[] values) {
         InternalValue[] ret = new InternalValue[values.length];
         for (int i = 0; i < values.length; i++) {
             ret[i] = new InternalValue(values[i]);
@@ -393,7 +387,7 @@ public class InternalValue {
             try {
                 InputStream stream = ((BLOBFileValue) val).getStream();
                 try {
-                    return new InternalValue(new BLOBFileValue(stream));
+                    return createTemporary(stream);
                 } finally {
                     try {
                         stream.close();
@@ -428,7 +422,7 @@ public class InternalValue {
     public static InternalValue valueOf(String s, int type) {
         switch (type) {
             case PropertyType.BOOLEAN:
-                return new InternalValue(Boolean.valueOf(s).booleanValue());
+                return create(Boolean.valueOf(s).booleanValue());
             case PropertyType.DATE:
                 return new InternalValue(ISO8601.parse(s));
             case PropertyType.DOUBLE:
@@ -448,7 +442,7 @@ public class InternalValue {
                 throw new IllegalArgumentException(
                         "this method does not support the type PropertyType.BINARY");
             default:
-                throw new IllegalArgumentException("illegal type");
+                throw new IllegalArgumentException("illegal type: " + type);
         }
     }
 
