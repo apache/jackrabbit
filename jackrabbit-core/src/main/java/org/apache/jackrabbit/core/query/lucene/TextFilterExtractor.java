@@ -97,7 +97,7 @@ public class TextFilterExtractor implements TextExtractor {
      */
     public Reader extractText(InputStream stream, String type, String encoding)
             throws IOException {
-        final InternalValue value = InternalValue.create(stream);
+        final InternalValue value = InternalValue.createTemporary(stream);
         try {
             PropertyState state = new PropertyState(
                     (PropertyId) null, ItemState.STATUS_EXISTING, true);

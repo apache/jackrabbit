@@ -219,7 +219,7 @@ public final class Serializer {
                 } else {
                     in = blobStore.get(blobId);
                     try {
-                        values[i] = InternalValue.create(in, false);
+                        values[i] = InternalValue.create(in);
                     } finally {
                         try {
                             in.close();
@@ -292,7 +292,7 @@ public final class Serializer {
                 } else {
                     InputStream is = blobStore.get(s);
                     try {
-                        val = InternalValue.create(is, false);
+                        val = InternalValue.create(is);
                     } finally {
                         try {
                             is.close();

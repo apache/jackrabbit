@@ -326,7 +326,7 @@ public class BundleBinding extends ItemStateBinding {
                             if (blobStore instanceof ResourceBasedBLOBStore) {
                                 val = InternalValue.create(((ResourceBasedBLOBStore) blobStore).getResource(blobIds[i]));
                             } else {
-                                val = InternalValue.create(blobStore.get(blobIds[i]), false);
+                                val = InternalValue.create(blobStore.get(blobIds[i]));
                             }
                         } catch (IOException e) {
                             if (errorHandling.ignoreMissingBlobs()) {
@@ -586,7 +586,7 @@ public class BundleBinding extends ItemStateBinding {
                                 if (blobStore instanceof ResourceBasedBLOBStore) {
                                     values[i] = InternalValue.create(((ResourceBasedBLOBStore) blobStore).getResource(blobId));
                                 } else {
-                                    values[i] = InternalValue.create(blobStore.get(blobId), false);
+                                    values[i] = InternalValue.create(blobStore.get(blobId));
                                 }
                             } catch (Exception e) {
                                 log.error("Error while reloading blob. truncating. id=" + state.getId() +
