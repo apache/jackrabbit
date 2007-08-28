@@ -129,29 +129,29 @@ public class InternalValue {
                     throw new ValueFormatException(ioe.getMessage());
                 }
             case PropertyType.BOOLEAN:
-                return value.getBoolean() ? BOOLEAN_TRUE : BOOLEAN_FALSE;
+                return create(value.getBoolean());
             case PropertyType.DATE:
-                return new InternalValue(value.getDate());
+                return create(value.getDate());
             case PropertyType.DOUBLE:
-                return new InternalValue(value.getDouble());
+                return create(value.getDouble());
             case PropertyType.LONG:
-                return new InternalValue(value.getLong());
+                return create(value.getLong());
             case PropertyType.REFERENCE:
-                return new InternalValue(new UUID(value.getString()));
+                return create(new UUID(value.getString()));
             case PropertyType.NAME:
                 try {
-                    return new InternalValue(NameFormat.parse(value.getString(), nsResolver));
+                    return create(NameFormat.parse(value.getString(), nsResolver));
                 } catch (NameException e) {
                     throw new ValueFormatException(e.getMessage());
                 }
             case PropertyType.PATH:
                 try {
-                    return new InternalValue(PathFormat.parse(value.getString(), nsResolver));
+                    return create(PathFormat.parse(value.getString(), nsResolver));
                 } catch (MalformedPathException mpe) {
                     throw new ValueFormatException(mpe.getMessage());
                 }
             case PropertyType.STRING:
-                return new InternalValue(value.getString());
+                return create(value.getString());
 
             default:
                 throw new IllegalArgumentException("illegal value");
@@ -424,19 +424,19 @@ public class InternalValue {
             case PropertyType.BOOLEAN:
                 return create(Boolean.valueOf(s).booleanValue());
             case PropertyType.DATE:
-                return new InternalValue(ISO8601.parse(s));
+                return create(ISO8601.parse(s));
             case PropertyType.DOUBLE:
-                return new InternalValue(Double.valueOf(s).doubleValue());
+                return create(Double.valueOf(s).doubleValue());
             case PropertyType.LONG:
-                return new InternalValue(Long.valueOf(s).longValue());
+                return create(Long.valueOf(s).longValue());
             case PropertyType.REFERENCE:
-                return new InternalValue(new UUID(s));
+                return create(new UUID(s));
             case PropertyType.PATH:
-                return new InternalValue(Path.valueOf(s));
+                return create(Path.valueOf(s));
             case PropertyType.NAME:
-                return new InternalValue(QName.valueOf(s));
+                return create(QName.valueOf(s));
             case PropertyType.STRING:
-                return new InternalValue(s);
+                return create(s);
 
             case PropertyType.BINARY:
                 throw new IllegalArgumentException(

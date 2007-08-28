@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
+import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.name.QName;
@@ -62,8 +63,8 @@ public class BundleBinding extends ItemStateBinding {
      * @param nameIndex the name index
      */
     public BundleBinding(ErrorHandling errorHandling, BLOBStore blobStore,
-                         StringIndex nsIndex, StringIndex nameIndex) {
-        super(errorHandling, blobStore, nsIndex, nameIndex);
+                         StringIndex nsIndex, StringIndex nameIndex, DataStore dataStore) {
+        super(errorHandling, blobStore, nsIndex, nameIndex, dataStore);
     }
 
     /**

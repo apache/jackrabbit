@@ -572,7 +572,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             nodeReferenceDelete = con.prepareStatement("delete from " + schemaObjectPrefix + "REFS where NODE_ID_HI = ? and NODE_ID_LO = ?");
         }
         // load namespaces
-        binding = new BundleBinding(errorHandling, blobStore, getNsIndex(), getNameIndex());
+        binding = new BundleBinding(errorHandling, blobStore, getNsIndex(), getNameIndex(), context.getDataStore());
         binding.setMinBlobSize(minBlobSize);
 
         initialized = true;

@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
+import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
@@ -50,6 +51,7 @@ public class NodeTypeImpl implements NodeType {
     private final NodeTypeManagerImpl ntMgr;
     // namespace resolver used to translate qualified names to JCR names
     private final NamespaceResolver nsResolver;
+    private final DataStore store;    
 
     /**
      * Package private constructor
@@ -64,11 +66,12 @@ public class NodeTypeImpl implements NodeType {
      * @param nsResolver namespace resolver
      */
     NodeTypeImpl(EffectiveNodeType ent, NodeTypeDef ntd,
-                 NodeTypeManagerImpl ntMgr, NamespaceResolver nsResolver) {
+                 NodeTypeManagerImpl ntMgr, NamespaceResolver nsResolver, DataStore store) {
         this.ent = ent;
         this.ntMgr = ntMgr;
         this.nsResolver = nsResolver;
         this.ntd = ntd;
+        this.store = store;
     }
 
     /**
@@ -381,10 +384,10 @@ public class NodeTypeImpl implements NodeType {
                 Value targetVal = ValueHelper.convert(
                         value, targetType,
                         ValueFactoryImpl.getInstance());
-                internalValue = InternalValue.create(targetVal, nsResolver);
+                internalValue = InternalValue.create(targetVal, nsResolver, store);
             } else {
                 // no type conversion required
-                internalValue = InternalValue.create(value, nsResolver);
+                internalValue = InternalValue.create(value, nsResolver, store);
             }
             EffectiveNodeType.checkSetPropertyValueConstraints(
                     def, new InternalValue[]{internalValue});
@@ -459,10 +462,10 @@ public class NodeTypeImpl implements NodeType {
                         Value targetVal = ValueHelper.convert(
                                 values[i], targetType,
                                 ValueFactoryImpl.getInstance());
-                        internalValue = InternalValue.create(targetVal, nsResolver);
+                        internalValue = InternalValue.create(targetVal, nsResolver, store);
                     } else {
                         // no type conversion required
-                        internalValue = InternalValue.create(values[i], nsResolver);
+                        internalValue = InternalValue.create(values[i], nsResolver, store);
                     }
                     list.add(internalValue);
                 }

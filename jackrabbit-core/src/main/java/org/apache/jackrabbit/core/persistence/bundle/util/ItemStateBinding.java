@@ -29,6 +29,7 @@ import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
+import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.name.QName;
@@ -96,6 +97,11 @@ public class ItemStateBinding {
     protected final ErrorHandling errorHandling;
 
     /**
+     * Data store for binary properties.
+     */
+    protected final DataStore dataStore;
+
+    /**
      * Creates a new item state binding
      *
      * @param errorHandling the error handing configuration
@@ -105,11 +111,12 @@ public class ItemStateBinding {
      */
     public ItemStateBinding(ErrorHandling errorHandling,
                             BLOBStore blobStore,
-                            StringIndex nsIndex, StringIndex nameIndex) {
+                            StringIndex nsIndex, StringIndex nameIndex, DataStore dataStore) {
         this.errorHandling = errorHandling;
         this.nsIndex = nsIndex;
         this.nameIndex = nameIndex;
         this.blobStore = blobStore;
+        this.dataStore = dataStore;
     }
 
     /**

@@ -370,7 +370,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
         }
 
         // load namespaces
-        binding = new BundleBinding(errorHandling, blobStore, getNsIndex(), getNameIndex());
+        binding = new BundleBinding(errorHandling, blobStore, getNsIndex(), getNameIndex(), context.getDataStore());
         binding.setMinBlobSize(minBlobSize);
 
         initialized = true;

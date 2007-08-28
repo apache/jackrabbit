@@ -54,7 +54,7 @@ public class GarbageCollector {
 
     private final int sleepBetweenNodes;
     
-    private final int sleepBetweenEvents;
+    private int testDelay;
 
     private DataStore store;
 
@@ -62,8 +62,6 @@ public class GarbageCollector {
 
     private ArrayList listeners = new ArrayList();
 
-    // TODO Observation: it is up to the implementation whether changes made to
-    // the subtree below jcr:system trigger events.
     // TODO It should be possible to stop and restart a garbage collection scan.
     // TODO It may be possible to delete files early, see rememberNode()
 
@@ -73,12 +71,18 @@ public class GarbageCollector {
      * 
      * @param callback if set, this is called while scanning
      * @param sleepBetweenNodes the number of milliseconds to sleep in the main scan loop (0 if the scan should run at full speed)
-     * @param sleepBetweenEvents the number of milliseconds to sleep while processing events (0 to avoid delays in the application)
      */
-    public GarbageCollector(ScanEventListener callback, int sleepBetweenNodes, int sleepBetweenEvents) {
+    public GarbageCollector(ScanEventListener callback, int sleepBetweenNodes) {
         this.sleepBetweenNodes = sleepBetweenNodes;
-        this.sleepBetweenEvents = sleepBetweenEvents;
         this.callback = callback;
+    }
+    
+    /**
+     * When testing the garbage collection, a delay class is tested, 
+     * @param testDelay the delay in milliseconds
+     */
+    public void setTestDelay(int testDelay) {
+        this.testDelay = testDelay;
     }
 
     public void scan(Session session) throws RepositoryException,
@@ -235,9 +239,9 @@ public class GarbageCollector {
         }
 
         public void onEvent(EventIterator events) {
-            if(sleepBetweenEvents > 0) {
+            if(testDelay > 0) {
                 try {
-                    Thread.sleep(sleepBetweenEvents);
+                    Thread.sleep(testDelay);
                 } catch (InterruptedException e) {
                     // ignore
                 }
@@ -250,7 +254,7 @@ public class GarbageCollector {
                         Item item = session.getItem(path);
                         if (item.isNode()) {
                             Node n = (Node) item;
-                            recurse(n, sleepBetweenEvents);
+                            recurse(n, testDelay);
                         }
                     } catch (PathNotFoundException e) {
                         // ignore
