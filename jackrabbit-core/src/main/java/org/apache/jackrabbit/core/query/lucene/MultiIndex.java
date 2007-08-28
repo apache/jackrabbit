@@ -210,8 +210,6 @@ public class MultiIndex {
      *
      * @param indexDir the base file system
      * @param handler the search handler
-     * @param stateMgr shared item state manager
-     * @param rootId id of the root node
      * @param excludedIDs   Set&lt;NodeId> that contains uuids that should not
      *                      be indexed nor further traversed.
      * @param mapping the namespace mapping to use
@@ -219,8 +217,6 @@ public class MultiIndex {
      */
     MultiIndex(File indexDir,
                SearchIndex handler,
-               ItemStateManager stateMgr,
-               NodeId rootId,
                Set excludedIDs,
                NamespaceMappings mapping) throws IOException {
 
@@ -262,71 +258,51 @@ public class MultiIndex {
         // initialize indexing queue
         this.indexingQueue = new IndexingQueue(store, this);
 
-
-        try {
-            // open persistent indexes
-            for (int i = 0; i < indexNames.size(); i++) {
-                File sub = new File(indexDir, indexNames.getName(i));
-                // only open if it still exists
-                // it is possible that indexNames still contains a name for
-                // an index that has been deleted, but indexNames has not been
-                // written to disk.
-                if (!sub.exists()) {
-                    log.debug("index does not exist anymore: " + sub.getAbsolutePath());
-                    // move on to next index
-                    continue;
-                }
-                PersistentIndex index = new PersistentIndex(
-                        indexNames.getName(i), sub, false,
-                        handler.getTextAnalyzer(), cache, indexingQueue);
-                index.setMaxMergeDocs(handler.getMaxMergeDocs());
-                index.setMergeFactor(handler.getMergeFactor());
-                index.setMinMergeDocs(handler.getMinMergeDocs());
-                index.setMaxFieldLength(handler.getMaxFieldLength());
-                index.setUseCompoundFile(handler.getUseCompoundFile());
-                indexes.add(index);
-                merger.indexAdded(index.getName(), index.getNumDocuments());
+        // open persistent indexes
+        for (int i = 0; i < indexNames.size(); i++) {
+            File sub = new File(indexDir, indexNames.getName(i));
+            // only open if it still exists
+            // it is possible that indexNames still contains a name for
+            // an index that has been deleted, but indexNames has not been
+            // written to disk.
+            if (!sub.exists()) {
+                log.debug("index does not exist anymore: " + sub.getAbsolutePath());
+                // move on to next index
+                continue;
             }
-
-            // init volatile index
-            resetVolatileIndex();
-
-            redoLogApplied = redoLog.hasEntries();
-
-            // run recovery
-            Recovery.run(this, redoLog);
-
-            // now that we are ready, start index merger
-            merger.start();
-
-            if (redoLogApplied) {
-                // wait for the index merge to finish pending jobs
-                try {
-                    merger.waitUntilIdle();
-                } catch (InterruptedException e) {
-                    // move on
-                }
-                flush();
-            }
-
-            // do an initial index if there are no indexes at all
-            if (indexNames.size() == 0) {
-                reindexing = true;
-                // traverse and index workspace
-                executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
-                NodeState rootState = (NodeState) stateMgr.getItemState(rootId);
-                createIndex(rootState, stateMgr);
-                executeAndLog(new Commit(getTransactionId()));
-                reindexing = false;
-            }
-        } catch (Exception e) {
-            String msg = "Error reindexing workspace";
-            IOException ex = new IOException(msg);
-            ex.initCause(e);
-            throw ex;
+            PersistentIndex index = new PersistentIndex(
+                    indexNames.getName(i), sub, false,
+                    handler.getTextAnalyzer(), cache, indexingQueue);
+            index.setMaxMergeDocs(handler.getMaxMergeDocs());
+            index.setMergeFactor(handler.getMergeFactor());
+            index.setMinMergeDocs(handler.getMinMergeDocs());
+            index.setMaxFieldLength(handler.getMaxFieldLength());
+            index.setUseCompoundFile(handler.getUseCompoundFile());
+            indexes.add(index);
+            merger.indexAdded(index.getName(), index.getNumDocuments());
         }
 
-        lastFlushTime = System.currentTimeMillis();
+        // init volatile index
+        resetVolatileIndex();
+
+        redoLogApplied = redoLog.hasEntries();
+
+        // run recovery
+        Recovery.run(this, redoLog);
+
+        // now that we are ready, start index merger
+        merger.start();
+
+        if (redoLogApplied) {
+            // wait for the index merge to finish pending jobs
+            try {
+                merger.waitUntilIdle();
+            } catch (InterruptedException e) {
+                // move on
+            }
+            flush();
+        }
+
         flushTask = new Timer.Task() {
             public void run() {
                 // check if there are any indexing jobs finished
@@ -335,7 +311,64 @@ public class MultiIndex {
                 checkFlush();
             }
         };
-        FLUSH_TIMER.schedule(flushTask, 0, 1000);
+
+        if (indexNames.size() > 0) {
+            scheduleFlushTask();
+        }
+    }
+
+    /**
+     * Returns the number of documents in this index.
+     *
+     * @return the number of documents in this index.
+     * @throws IOException if an error occurs while reading from the index.
+     */
+    int numDocs() throws IOException {
+        if (indexNames.size() == 0) {
+            return volatileIndex.getNumDocuments();
+        } else {
+            IndexReader reader = getIndexReader();
+            try {
+                return reader.numDocs();
+            } finally {
+                reader.close();
+            }
+        }
+    }
+
+    /**
+     * Creates an initial index by traversing the node hierarchy starting at the
+     * node with <code>rootId</code>.
+     *
+     * @param stateMgr the item state manager.
+     * @param rootId   the id of the node from where to start.
+     * @throws IOException           if an error occurs while indexing the
+     *                               workspace.
+     * @throws IllegalStateException if this index is not empty.
+     */
+    void createInitialIndex(ItemStateManager stateMgr, NodeId rootId)
+            throws IOException {
+        // only do an initial index if there are no indexes at all
+        if (indexNames.size() == 0) {
+            reindexing = true;
+            try {
+                // traverse and index workspace
+                executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
+                NodeState rootState = (NodeState) stateMgr.getItemState(rootId);
+                createIndex(rootState, stateMgr);
+                executeAndLog(new Commit(getTransactionId()));
+                scheduleFlushTask();
+            } catch (Exception e) {
+                String msg = "Error indexing workspace";
+                IOException ex = new IOException(msg);
+                ex.initCause(e);
+                throw ex;
+            } finally {
+                reindexing = false;
+            }
+        } else {
+            throw new IllegalStateException("Index already present");
+        }
     }
 
     /**
@@ -608,10 +641,7 @@ public class MultiIndex {
             }
             index.commit();
 
-            if (reindexing) {
-                // do some cleanup right away when reindexing
-                attemptDelete();
-            } else {
+            if (!reindexing) {
                 // only commit if we are not reindexing
                 // when reindexing the final commit is done at the very end
                 executeAndLog(new Commit(getTransactionId()));
@@ -625,6 +655,10 @@ public class MultiIndex {
                     multiReader = null;
                 }
             }
+        }
+        if (reindexing) {
+            // do some cleanup right away when reindexing
+            attemptDelete();
         }
     }
 
@@ -838,6 +872,11 @@ public class MultiIndex {
     }
 
     //-------------------------< internal >-------------------------------------
+
+    private void scheduleFlushTask() {
+        lastFlushTime = System.currentTimeMillis();
+        FLUSH_TIMER.schedule(flushTask, 0, 1000);
+    }
 
     /**
      * Resets the volatile index to a new instance.

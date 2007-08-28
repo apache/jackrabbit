@@ -374,8 +374,11 @@ public class SearchIndex extends AbstractQueryHandler {
             }
         }
 
-        index = new MultiIndex(indexDir, this, context.getItemStateManager(),
-                context.getRootId(), excludedIDs, nsMappings);
+        index = new MultiIndex(indexDir, this, excludedIDs, nsMappings);
+        if (index.numDocs() == 0) {
+            index.createInitialIndex(
+                    context.getItemStateManager(), context.getRootId());
+        }
         if (consistencyCheckEnabled
                 && (index.getRedoLogApplied() || forceConsistencyCheck)) {
             log.info("Running consistency check...");
