@@ -29,7 +29,6 @@ import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.query.TextFilter;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.extractor.TextExtractor;
 

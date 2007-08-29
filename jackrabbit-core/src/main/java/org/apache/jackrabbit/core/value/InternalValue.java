@@ -203,7 +203,7 @@ public class InternalValue {
      * @return the created value
      */
     public static InternalValue create(byte[] value) {
-        return new InternalValue(new BLOBFileValue(value));
+        return new InternalValue(new BLOBValue(value));
     }
 
     /**
@@ -212,7 +212,7 @@ public class InternalValue {
      * @throws IOException
      */
     public static InternalValue createTemporary(InputStream value) throws IOException {
-        return new InternalValue(new BLOBFileValue(value, true));
+        return new InternalValue(new BLOBValue(value, true));
     }    
 
     /**
@@ -222,7 +222,7 @@ public class InternalValue {
      * @throws IOException
      */
     public static InternalValue create(InputStream value) throws IOException {
-        return new InternalValue(new BLOBFileValue(value, false));
+        return new InternalValue(new BLOBValue(value, false));
     }
 
     /**
@@ -232,7 +232,7 @@ public class InternalValue {
      */
     public static InternalValue create(FileSystemResource value)
             throws IOException {
-        return new InternalValue(new BLOBFileValue(value));
+        return new InternalValue(new BLOBValue(value));
     }
 
     /**
@@ -241,7 +241,7 @@ public class InternalValue {
      * @throws IOException
      */
     public static InternalValue create(File value) throws IOException {
-        return new InternalValue(new BLOBFileValue(value));
+        return new InternalValue(new BLOBValue(value));
     }
 
     /**
