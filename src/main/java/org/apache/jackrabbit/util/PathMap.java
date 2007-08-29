@@ -264,22 +264,28 @@ public class PathMap {
          * @return removed child, may be <code>null</code>
          */
         public Element remove(Path.PathElement nameIndex) {
-            return remove(nameIndex, true);
+            return remove(nameIndex, true, true);
         }
 
         /**
          * Remove a child. If <code>shift</code> is set to <code>true</code>,
          * will shift all children having an index greater than the child
-         * removed to the left. If there are no more children left in
+         * removed to the left. If <code>removeIfEmpty</code> is set to
+         * <code>true</code> and there are no more children left in
          * this element and no object is associated with this element, the
          * element itself gets removed.
          *
          * @param nameIndex child's path element
          * @param shift whether to shift same name siblings having a greater
          *              index to the left
+         * @param removeIfEmpty remove this element itself if it contains
+         *                      no more children and is not associated to
+         *                      an element
          * @return removed child, may be <code>null</code>
          */
-        private Element remove(Path.PathElement nameIndex, boolean shift) {
+        private Element remove(Path.PathElement nameIndex, boolean shift,
+                               boolean removeIfEmpty) {
+
             // convert 1-based index value to 0-base value
             int index = getZeroBasedIndex(nameIndex);
             if (children == null) {
@@ -303,8 +309,8 @@ public class PathMap {
                 element.parent = null;
                 childrenCount--;
             }
-            if (childrenCount == 0 && obj == null && parent != null) {
-                parent.remove(getPathElement(), shift);
+            if (removeIfEmpty && childrenCount == 0 && obj == null && parent != null) {
+                parent.remove(getPathElement(), shift, true);
             }
             return element;
         }
@@ -323,7 +329,7 @@ public class PathMap {
          */
         public void remove(boolean shift) {
             if (parent != null) {
-                parent.remove(getPathElement(), shift);
+                parent.remove(getPathElement(), shift, true);
             } else {
                 // Removing the root node is not possible: if it has become
                 // invalid, remove all its children and the associated object
@@ -342,8 +348,28 @@ public class PathMap {
             childrenCount = 0;
 
             if (obj == null && parent != null) {
-                parent.remove(getPathElement(), false);
+                parent.remove(getPathElement(), false, true);
             }
+        }
+
+        /**
+         * Move a child of this element to a different location inside the
+         * same parent.
+         *
+         * @param oldNameIndex old name/index 
+         * @param newNameIndex new name/index
+         * @return <code>true</code> if the element was successfully moved;
+         *         otherwise <code>false</code>
+         */
+        public boolean move(Path.PathElement oldNameIndex, 
+                            Path.PathElement newNameIndex) {
+            
+            Element child = remove(oldNameIndex, false, false);
+            if (child != null) {
+                put(newNameIndex, child);
+                return true;
+            }
+            return false;
         }
 
         /**
@@ -362,7 +388,7 @@ public class PathMap {
             this.obj = obj;
 
             if (obj == null && childrenCount == 0 && parent != null) {
-                parent.remove(getPathElement(), false);
+                parent.remove(getPathElement(), false, true);
             }
         }
 
