@@ -321,7 +321,9 @@ public class BundleBinding extends ItemStateBinding {
             switch (type) {
                 case PropertyType.BINARY:
                     int size = in.readInt();
-                    if (size == -1) {
+                    if (InternalValue.USE_DATA_STORE && size == -2) {
+                        val = InternalValue.create(dataStore, in.readUTF());
+                    } else if (size == -1) {
                         blobIds[i] = in.readUTF();
                         try {
                             if (blobStore instanceof ResourceBasedBLOBStore) {
@@ -433,7 +435,15 @@ public class BundleBinding extends ItemStateBinding {
                         log.error("Error while reading size of binary: " + e);
                         return false;
                     }
-                    if (size == -1) {
+                    if (InternalValue.USE_DATA_STORE && size == -2) {
+                        try {
+                            String s = in.readUTF();
+                            log.info("  global data store id: " + s);
+                        } catch (IOException e) {
+                            log.error("Error while reading blob id: " + e);
+                            return false;
+                        }
+                    } else if (size == -1) {
                         try {
                             String s = in.readUTF();
                             log.info("  blobid: " + s);
@@ -548,6 +558,11 @@ public class BundleBinding extends ItemStateBinding {
             InternalValue val = values[i];
             switch (state.getType()) {
                 case PropertyType.BINARY:
+                    if(InternalValue.USE_DATA_STORE) {
+                        out.writeInt(-2);
+                        out.writeUTF(val.toString());
+                        break;
+                    }
                     // special handling required for binary value:
                     // spool binary value to file in blob store
                     BLOBFileValue blobVal = val.getBLOBFileValue();

@@ -42,9 +42,12 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
+
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.util.Calendar;
 
 /**
@@ -79,38 +82,52 @@ public class InternalValue {
      */
     public static final boolean USE_DATA_STORE = Boolean.valueOf(System.getProperty("org.jackrabbit.useDataStore", "false")).booleanValue();
 
+    /**
+     * Byte arrays smaller or equal this size are always kept in memory
+     */
+    private final static int MIN_BLOB_FILE_SIZE = Integer.parseInt(System.getProperty("org.jackrabbit.minBlobFileSize", "100"));
+
     private final Object val;
     private final int type;
 
     //------------------------------------------------------< factory methods >
     /**
-     * @param value
-     * @param nsResolver
-     * @return
-     * @throws ValueFormatException
-     * @throws RepositoryException
+     * Create a new internal value from the given JCR value.
+     * Large binary values are stored in a temporary file.
+     * 
+     * @param value the JCR value
+     * @param nsResolver the namespace resolver
+     * @return the created internal value
      */
-    public static InternalValue create(Value value, NamespaceResolver nsResolver, DataStore store)
+    public static InternalValue create(Value value, NamespaceResolver nsResolver)
             throws ValueFormatException, RepositoryException {
-        return create(value, nsResolver);
+        return create(value, nsResolver, null);
     }
 
     /**
-     * @param value
-     * @param nsResolver
-     * @return
-     * @throws ValueFormatException
-     * @throws RepositoryException
+     * Create a new internal value from the given JCR value.
+     * If the data store is enabled, large binary values are stored in the data store.
+     * 
+     * @param value the JCR value
+     * @param nsResolver the namespace resolver
+     * @param store the data store
+     * @return the created internal value
      */
-    public static InternalValue create(Value value, NamespaceResolver nsResolver)
+    public static InternalValue create(Value value, NamespaceResolver nsResolver, DataStore store)
             throws ValueFormatException, RepositoryException {
         if (value == null) {
             throw new IllegalArgumentException("null value");
         }
-
         switch (value.getType()) {
             case PropertyType.BINARY:
                 try {
+                    if(USE_DATA_STORE) {
+                        if(store == null) {
+                            return new InternalValue(BLOBInTempFile.getInstance(value.getStream()));
+                        } else {
+                            return new InternalValue(getBLOBFileValue(store, value.getStream()));
+                        }
+                    }
                     if (value instanceof BLOBFileValue) {
                         return new InternalValue((BLOBFileValue) value);
                     } else {
@@ -203,17 +220,40 @@ public class InternalValue {
      * @return the created value
      */
     public static InternalValue create(byte[] value) {
+        if(USE_DATA_STORE) {        
+            return new InternalValue(BLOBInMemory.getInstance(value));
+        }
         return new InternalValue(new BLOBValue(value));
     }
 
     /**
-     * @param value
-     * @return
-     * @throws IOException
+     * Create an internal value that is backed by a temporary file.
+     * 
+     * @param value the stream
+     * @param store the data store
+     * @return the internal value
      */
     public static InternalValue createTemporary(InputStream value) throws IOException {
+        if(USE_DATA_STORE) {        
+            return new InternalValue(BLOBInTempFile.getInstance(value));
+        }
         return new InternalValue(new BLOBValue(value, true));
-    }    
+    }
+    
+    /**
+     * Create an internal value that is backed by a temporary file (if data store usage is disabled)
+     * or (if it is enabled) in the data store.
+     * 
+     * @param value the stream
+     * @param store the data store
+     * @return the internal value
+     */
+    public static InternalValue createTemporary(InputStream value, DataStore store) throws IOException {
+        if(USE_DATA_STORE) {
+            return new InternalValue(getBLOBFileValue(store, value));
+        }
+        return new InternalValue(new BLOBValue(value, true));
+    }
 
     /**
      * @param value
@@ -242,6 +282,18 @@ public class InternalValue {
      */
     public static InternalValue create(File value) throws IOException {
         return new InternalValue(new BLOBValue(value));
+    }
+    
+    /**
+     * Create a binary object with the given identifier.
+     * 
+     * @param store the data store
+     * @param id the identifier
+     * @return the value
+     */    
+    public static InternalValue create(DataStore store, String id) {
+        assert USE_DATA_STORE;
+        return new InternalValue(getBLOBFileValue(store, id));
     }
 
     /**
@@ -394,6 +446,9 @@ public class InternalValue {
      * @throws RepositoryException
      */
     public InternalValue createCopy() throws RepositoryException {
+        if(USE_DATA_STORE) {
+            return this;
+        }
         if (type == PropertyType.BINARY) {
             // return a copy since the wrapped BLOBFileValue instance is mutable
             try {
@@ -538,4 +593,38 @@ public class InternalValue {
         val = value;
         type = PropertyType.REFERENCE;
     }
+    
+    private static BLOBFileValue getBLOBFileValue(DataStore store, InputStream in) throws IOException {
+        byte[] buffer = new byte[MIN_BLOB_FILE_SIZE];
+        int pos = 0, len = MIN_BLOB_FILE_SIZE;
+        while(pos < MIN_BLOB_FILE_SIZE) {
+            int l = in.read(buffer, pos, len);
+            if(l < 0) {
+                break;
+            }
+            pos += l;
+            len -= l;
+        }
+        if(pos < MIN_BLOB_FILE_SIZE) {
+            // shrink the buffer
+            byte[] data = new byte[pos];
+            System.arraycopy(buffer, 0, data, 0, pos);
+            return BLOBInMemory.getInstance(data);
+        } else {
+            // a few bytes are already read, need to re-build the input stream
+            in = new SequenceInputStream(new ByteArrayInputStream(buffer, 0, pos), in);
+            return BLOBInDataStore.getInstance(store, in);
+        }
+    }
+
+    private static BLOBFileValue getBLOBFileValue(DataStore store, String id) {
+        if(BLOBInMemory.isInstance(id)) {
+            return BLOBInMemory.getInstance(id);
+        } else if(BLOBInDataStore.isInstance(id)) {
+            return BLOBInDataStore.getInstance(store, id);
+        } else {
+            throw new IllegalArgumentException("illegal binary id: " + id);
+        }
+    }
+
 }

@@ -740,7 +740,7 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         InternalValue value;
         try {
-            value = InternalValue.createTemporary(stream);
+            value = InternalValue.createTemporary(stream, rep.getDataStore());
             if (reqType != PropertyType.BINARY) {
                 // type conversion required
                 Value jcrValue = value.toJCRValue(session.getNamespaceResolver());
