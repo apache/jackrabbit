@@ -302,7 +302,9 @@ public class ItemStateBinding {
             switch (type) {
                 case PropertyType.BINARY:
                     int size = in.readInt();
-                    if (size == -1) {
+                    if (InternalValue.USE_DATA_STORE && size == -2) {
+                        val = InternalValue.create(dataStore, in.readUTF());
+                    } else if (size == -1) {
                         String s = in.readUTF();
                         try {
                             if (blobStore instanceof ResourceBasedBLOBStore) {
@@ -382,6 +384,11 @@ public class ItemStateBinding {
             switch (state.getType()) {
                 case PropertyType.BINARY:
                     try {
+                        if(InternalValue.USE_DATA_STORE) {
+                            out.writeInt(-2);
+                            out.writeUTF(val.toString());
+                            break;
+                        }
                         // special handling required for binary value:
                         // spool binary value to file in blob store
                         BLOBFileValue blobVal = val.getBLOBFileValue();
