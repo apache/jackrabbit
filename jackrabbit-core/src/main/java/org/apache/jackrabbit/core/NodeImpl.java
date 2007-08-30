@@ -4098,11 +4098,11 @@ public class NodeImpl extends ItemImpl implements Node {
             Value[] values = prop.getValues();
             InternalValue[] ivalues = new InternalValue[values.length];
             for (int i = 0; i < values.length; i++) {
-                ivalues[i] = InternalValue.create(values[i], session.getNamespaceResolver());
+                ivalues[i] = InternalValue.create(values[i], session.getNamespaceResolver(), rep.getDataStore());
             }
             internalSetProperty(prop.getQName(), ivalues);
         } else {
-            InternalValue value = InternalValue.create(prop.getValue(), session.getNamespaceResolver());
+            InternalValue value = InternalValue.create(prop.getValue(), session.getNamespaceResolver(), rep.getDataStore());
             internalSetProperty(prop.getQName(), value);
         }
     }
