@@ -39,7 +39,7 @@ public abstract class BLOBFileValue {
      * 
      * @return An InputStream representation of this value.
      */
-    abstract public InputStream getStream() throws IllegalStateException, RepositoryException;
+    public abstract InputStream getStream() throws RepositoryException;
 
     /**
      * Returns the length of this <code>BLOBFileValue</code>.
@@ -48,7 +48,7 @@ public abstract class BLOBFileValue {
      *         or -1L if the length can't be determined.
      * @throws IOException 
      */
-    abstract public long getLength();
+    public abstract long getLength();
 
     /**
      * Frees temporarily allocated resources such as temporary file, buffer, etc.
@@ -58,7 +58,7 @@ public abstract class BLOBFileValue {
      * @see #delete()
      * @see #delete(boolean)
      */
-    abstract public void discard();
+    public abstract void discard();
 
     /**
      * Deletes the persistent resource backing this <code>BLOBFileValue</code>.
@@ -66,17 +66,17 @@ public abstract class BLOBFileValue {
      * @param pruneEmptyParentDirs if <code>true</code>, empty parent directories
      *                             will automatically be deleted
      */
-    abstract public void delete(boolean pruneEmptyParentDirs);
+    public abstract void delete(boolean pruneEmptyParentDirs);
 
     /**
      * {@inheritDoc}
      */
-    abstract public boolean equals(Object obj);
+    public abstract boolean equals(Object obj);
     
     /**
      * {@inheritDoc}
      */
-    abstract public String toString();
+    public abstract String toString();
     
     /*
      * Spools the contents of this <code>BLOBFileValue</code> to the given
@@ -104,14 +104,8 @@ public abstract class BLOBFileValue {
     }
 
     /**
-     * Returns zero to satisfy the Object equals/hashCode contract.
-     * This class is not meant to be used as a hash key.
-     *
-     * @return always zero
-     * @see Object#hashCode()
+     * {@inheritDoc}
      */
-    public int hashCode() {
-        return 0;
-    }
+    public abstract int hashCode();
 
 }

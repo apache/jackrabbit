@@ -73,7 +73,7 @@ public class BLOBInMemory extends BLOBFileValue {
      * @param data the byte array
      */    
     static BLOBInMemory getInstance(byte[] data) {
-        if(data.length == 0) {
+        if (data.length == 0) {
             return EMPTY;
         } else {
             return new BLOBInMemory(data);
@@ -175,5 +175,16 @@ public class BLOBInMemory extends BLOBFileValue {
         }
         return false;
     }
+    
+    /**
+     * Returns zero to satisfy the Object equals/hashCode contract.
+     * This class is mutable and not meant to be used as a hash key.
+     *
+     * @return always zero
+     * @see Object#hashCode()
+     */
+    public int hashCode() {
+        return 0;
+    }    
 
 }
