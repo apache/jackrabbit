@@ -32,6 +32,7 @@ import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
+import org.apache.jackrabbit.core.nodetype.ItemDef;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
@@ -174,11 +175,9 @@ public class CompactNodeTypeDefWriter {
         QName[] sta = ntd.getSupertypes();
         String delim = " > ";
         for (int i = 0; i < sta.length; i++) {
-            if (!sta[i].equals(QName.NT_BASE)) {
-                out.write(delim);
-                out.write(resolve(sta[i]));
-                delim = ", ";
-            }
+            out.write(delim);
+            out.write(resolve(sta[i]));
+            delim = ", ";
         }
     }
 
@@ -278,7 +277,7 @@ public class CompactNodeTypeDefWriter {
     private void writeValueConstraints(ValueConstraint[] vca) throws IOException {
         if (vca != null && vca.length > 0) {
             String vc = vca[0].getDefinition(resolver);
-            out.write("\n" + INDENT + INDENT + "< '");
+            out.write(" < '");
             out.write(escape(vc));
             out.write("'");
             for (int i = 1; i < vca.length; i++) {
@@ -296,7 +295,13 @@ public class CompactNodeTypeDefWriter {
      */
     private void writeNodeDef(NodeTypeDef ntd, NodeDef nd) throws IOException {
         out.write("\n" + INDENT + "+ ");
-        writeItemDefName(nd.getName());
+
+        QName name = nd.getName();
+        if (name.equals(ItemDef.ANY_NAME)) {
+            out.write('*');
+        } else {
+            writeItemDefName(name);
+        }
         writeRequiredTypes(nd.getRequiredPrimaryTypes());
         writeDefaultType(nd.getDefaultPrimaryType());
         out.write(ntd.getPrimaryItemName() != null && ntd.getPrimaryItemName().equals(nd.getName()) ? " primary" : "");
