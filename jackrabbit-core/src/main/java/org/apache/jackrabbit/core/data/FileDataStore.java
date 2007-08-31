@@ -83,8 +83,8 @@ public class FileDataStore implements DataStore {
      */
     public DataRecord getRecord(DataIdentifier identifier) {
         File file = getFile(identifier);
-        if(minModifiedDate != 0 && file.exists() && file.canWrite()) {
-            if(file.lastModified() < minModifiedDate) {
+        if (minModifiedDate != 0 && file.exists() && file.canWrite()) {
+            if (file.lastModified() < minModifiedDate) {
                 file.setLastModified(System.currentTimeMillis());
             }
         }
@@ -134,7 +134,7 @@ public class FileDataStore implements DataStore {
                 temporary.renameTo(file);
             } else {
                 long now = System.currentTimeMillis();
-                if(file.lastModified() < now) {
+                if (file.lastModified() < now) {
                     file.setLastModified(now);
                 }
             }
@@ -205,14 +205,14 @@ public class FileDataStore implements DataStore {
 
     private int deleteOlderRecursive(File file, long min) {
         int count = 0;
-        if(file.isFile() && file.exists() && file.canWrite()) {
-            if(file.lastModified() < min) {
+        if (file.isFile() && file.exists() && file.canWrite()) {
+            if (file.lastModified() < min) {
                 file.delete();
                 count++;
             }
-        } else if(file.isDirectory()) {
+        } else if (file.isDirectory()) {
             File[] list = file.listFiles();
-            for(int i=0; i<list.length; i++) {
+            for (int i = 0; i < list.length; i++) {
                 count += deleteOlderRecursive(list[i], min);
             }
         }
@@ -221,9 +221,9 @@ public class FileDataStore implements DataStore {
     
     private void listRecursive(List list, File file) {
         File[] l = file.listFiles();
-        for(int i=0; l != null && i<l.length; i++) {
+        for (int i = 0; l != null && i < l.length; i++) {
             File f = l[i];
-            if(f.isDirectory()) {
+            if (f.isDirectory()) {
                 listRecursive(list, f);
             } else {
                 list.add(f);
@@ -238,10 +238,10 @@ public class FileDataStore implements DataStore {
         ArrayList files = new ArrayList();
         listRecursive(files, directory);
         ArrayList identifiers = new ArrayList();
-        for(int i=0; i<files.size(); i++) {
+        for (int i = 0; i < files.size(); i++) {
             File f = (File) files.get(i);
             String name = f.getName();
-            if(!name.startsWith(TMP)) {
+            if (!name.startsWith(TMP)) {
                 DataIdentifier id = new DataIdentifier(name);
                 identifiers.add(id);
             }

@@ -65,11 +65,22 @@ public class BLOBInDataStore extends BLOBFileValue {
     }
 
     public boolean equals(Object obj) {
-        if(!(obj instanceof BLOBInDataStore) || obj == null) {
+        if (!(obj instanceof BLOBInDataStore) || obj == null) {
             return false;
         }
         BLOBInDataStore other = (BLOBInDataStore) obj;
         return store == other.store && identifier.equals(other.identifier);
+    }
+    
+    /**
+     * Returns zero to satisfy the Object equals/hashCode contract.
+     * This class is mutable and not meant to be used as a hash key.
+     *
+     * @return always zero
+     * @see Object#hashCode()
+     */
+    public int hashCode() {
+        return 0;
     }
 
     public long getLength() {
@@ -81,7 +92,7 @@ public class BLOBInDataStore extends BLOBFileValue {
         }
     }
 
-    public InputStream getStream() throws IllegalStateException, RepositoryException {
+    public InputStream getStream() throws RepositoryException {
         try {
             return getDataRecord().getStream();
         } catch (IOException e) {
@@ -121,7 +132,7 @@ public class BLOBInDataStore extends BLOBFileValue {
     }    
     
     private DataRecord getDataRecord() throws IOException {
-        if(dataRecord == null) {
+        if (dataRecord == null) {
             dataRecord = store.getRecord(identifier);
         }
         return dataRecord;

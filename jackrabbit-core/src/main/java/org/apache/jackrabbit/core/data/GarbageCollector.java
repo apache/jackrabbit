@@ -239,7 +239,7 @@ public class GarbageCollector {
         }
 
         public void onEvent(EventIterator events) {
-            if(testDelay > 0) {
+            if (testDelay > 0) {
                 try {
                     Thread.sleep(testDelay);
                 } catch (InterruptedException e) {
