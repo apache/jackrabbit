@@ -80,6 +80,9 @@ public class TestAll extends TestCase {
         // update
         suite.addTestSuite(UpdateTest.class);
 
+        // various
+        suite.addTestSuite(ReplaceNode.class);
+
         return suite;
     }
 }
