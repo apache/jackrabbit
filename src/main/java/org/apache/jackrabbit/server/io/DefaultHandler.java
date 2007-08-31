@@ -570,7 +570,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
         }
         Item contextItem = context.getImportRoot();
         try {
-            return contextItem != null && contextItem.isNode() && (!isCollection || ((Node)contextItem).hasNode(JcrConstants.JCR_CONTENT));
+            return contextItem != null && contextItem.isNode() && (isCollection || ((Node)contextItem).hasNode(JcrConstants.JCR_CONTENT));
         } catch (RepositoryException e) {
             log.error("Unexpected error: " + e.getMessage());
             return false;
