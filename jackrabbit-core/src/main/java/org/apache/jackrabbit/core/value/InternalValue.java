@@ -85,7 +85,7 @@ public class InternalValue {
     /**
      * Byte arrays smaller or equal this size are always kept in memory
      */
-    private final static int MIN_BLOB_FILE_SIZE = Integer.parseInt(System.getProperty("org.jackrabbit.minBlobFileSize", "100"));
+    private static final int MIN_BLOB_FILE_SIZE = Integer.parseInt(System.getProperty("org.jackrabbit.minBlobFileSize", "100"));
 
     private final Object val;
     private final int type;
@@ -121,8 +121,8 @@ public class InternalValue {
         switch (value.getType()) {
             case PropertyType.BINARY:
                 try {
-                    if(USE_DATA_STORE) {
-                        if(store == null) {
+                    if (USE_DATA_STORE) {
+                        if (store == null) {
                             return new InternalValue(BLOBInTempFile.getInstance(value.getStream()));
                         } else {
                             return new InternalValue(getBLOBFileValue(store, value.getStream()));
@@ -220,7 +220,7 @@ public class InternalValue {
      * @return the created value
      */
     public static InternalValue create(byte[] value) {
-        if(USE_DATA_STORE) {        
+        if (USE_DATA_STORE) {        
             return new InternalValue(BLOBInMemory.getInstance(value));
         }
         return new InternalValue(new BLOBValue(value));
@@ -234,7 +234,7 @@ public class InternalValue {
      * @return the internal value
      */
     public static InternalValue createTemporary(InputStream value) throws IOException {
-        if(USE_DATA_STORE) {        
+        if (USE_DATA_STORE) {        
             return new InternalValue(BLOBInTempFile.getInstance(value));
         }
         return new InternalValue(new BLOBValue(value, true));
@@ -249,7 +249,7 @@ public class InternalValue {
      * @return the internal value
      */
     public static InternalValue createTemporary(InputStream value, DataStore store) throws IOException {
-        if(USE_DATA_STORE) {
+        if (USE_DATA_STORE) {
             return new InternalValue(getBLOBFileValue(store, value));
         }
         return new InternalValue(new BLOBValue(value, true));
@@ -446,7 +446,7 @@ public class InternalValue {
      * @throws RepositoryException
      */
     public InternalValue createCopy() throws RepositoryException {
-        if(USE_DATA_STORE) {
+        if (USE_DATA_STORE) {
             return this;
         }
         if (type == PropertyType.BINARY) {
@@ -597,15 +597,15 @@ public class InternalValue {
     private static BLOBFileValue getBLOBFileValue(DataStore store, InputStream in) throws IOException {
         byte[] buffer = new byte[MIN_BLOB_FILE_SIZE];
         int pos = 0, len = MIN_BLOB_FILE_SIZE;
-        while(pos < MIN_BLOB_FILE_SIZE) {
+        while (pos < MIN_BLOB_FILE_SIZE) {
             int l = in.read(buffer, pos, len);
-            if(l < 0) {
+            if (l < 0) {
                 break;
             }
             pos += l;
             len -= l;
         }
-        if(pos < MIN_BLOB_FILE_SIZE) {
+        if (pos < MIN_BLOB_FILE_SIZE) {
             // shrink the buffer
             byte[] data = new byte[pos];
             System.arraycopy(buffer, 0, data, 0, pos);
@@ -618,9 +618,9 @@ public class InternalValue {
     }
 
     private static BLOBFileValue getBLOBFileValue(DataStore store, String id) {
-        if(BLOBInMemory.isInstance(id)) {
+        if (BLOBInMemory.isInstance(id)) {
             return BLOBInMemory.getInstance(id);
-        } else if(BLOBInDataStore.isInstance(id)) {
+        } else if (BLOBInDataStore.isInstance(id)) {
             return BLOBInDataStore.getInstance(store, id);
         } else {
             throw new IllegalArgumentException("illegal binary id: " + id);

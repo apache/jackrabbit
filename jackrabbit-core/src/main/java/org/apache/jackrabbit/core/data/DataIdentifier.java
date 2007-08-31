@@ -58,8 +58,8 @@ public final class DataIdentifier implements Serializable {
     public DataIdentifier(byte[] identifier) {
         char[] buffer = new char[identifier.length * 2];
         for (int i = 0; i < identifier.length; i++) {
-            buffer[2*i] = HEX[(identifier[i] >> 4) & 0x0f]; 
-            buffer[2*i + 1] = HEX[identifier[i] & 0x0f]; 
+            buffer[2 * i] = HEX[(identifier[i] >> 4) & 0x0f];
+            buffer[2 * i + 1] = HEX[identifier[i] & 0x0f]; 
         }
         this.identifier = new String(buffer);
     }

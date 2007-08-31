@@ -56,16 +56,16 @@ public class BLOBInTempFile extends BLOBFileValue {
             file = fileFactory.createTransientFile("bin", null, null);
             out = new FileOutputStream(file);
             byte[] buffer = new byte[4 * 1024];
-            while(true) {
+            while (true) {
                 int len = in.read(buffer);
-                if(len < 0) {
+                if (len < 0) {
                     break;
                 }
                 out.write(buffer, 0, len);
                 length += len;                
             }
         } finally {
-            if(out != null) {
+            if (out != null) {
                 out.close();
             }
             in.close();
@@ -138,5 +138,16 @@ public class BLOBInTempFile extends BLOBFileValue {
         }
         return false;
     }
+    
+    /**
+     * Returns zero to satisfy the Object equals/hashCode contract.
+     * This class is mutable and not meant to be used as a hash key.
+     *
+     * @return always zero
+     * @see Object#hashCode()
+     */
+    public int hashCode() {
+        return 0;
+    }    
     
 }
