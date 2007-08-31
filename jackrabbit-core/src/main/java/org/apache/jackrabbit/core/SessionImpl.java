@@ -50,6 +50,7 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
+import javax.jcr.Property;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -1424,6 +1425,121 @@ public class SessionImpl implements Session, NamePathResolver, Dumpable {
      */
     public LockManager getLockManager() throws RepositoryException {
         return wsp.getLockManager();
+    }
+
+    //--------------------------------------------------< new JSR 283 methods >
+    /**
+     * Returns the node specified by the given identifier. Applies to both
+     * referenceable and non-referenceable nodes.
+     * <p/>
+     * An <code>ItemNotFoundException</code> is thrown if no node with the
+     * specified identifier exists. This exception is also thrown if this
+     * <code>Session<code> does not have read access to the node with the
+     * specified identifier.
+     * <p/>
+     * A <code>RepositoryException</code> is thrown if another error occurs.
+     *
+     * @param id An identifier.
+     * @return A <code>Node</code>.
+     * @throws ItemNotFoundException if the specified identifier is not found.
+     * @throws RepositoryException if another error occurs.
+     * @since JCR 2.0
+     */
+    public Node getNodeByIdentifier(String id)
+            throws ItemNotFoundException, RepositoryException {
+        NodeId nodeId;
+        try {
+            nodeId = NodeId.valueOf(id);
+        } catch (IllegalArgumentException iae) {
+            throw new RepositoryException("invalid identifier: " + id);
+        }
+        return getNodeById(nodeId);
+    }
+
+    /**
+     * Returns the node at the specified absolute path in the workspace.
+     * If no node exists, then a <code>PathNotFoundException</code> is thrown.
+     *
+     * @param absPath An absolute path.
+     * @return the specified <code>Node</code>.
+     * @throws PathNotFoundException If no node exists.
+     * @throws RepositoryException If another error occurs.
+     * @since JCR 2.0
+     */
+    public Node getNode(String absPath)
+            throws PathNotFoundException, RepositoryException {
+        Item item  = getItem(absPath);
+        if (!item.isNode()) {
+            throw new PathNotFoundException(absPath);
+        }
+        return (Node) item;
+    }
+
+    /**
+     * Returns the property at the specified absolute path in the workspace.
+     * If no property exists, then a <code>PathNotFoundException</code> is thrown.
+     *
+     * @param absPath An absolute path.
+     * @return the specified <code>Property</code>.
+     * @throws PathNotFoundException If no property exists.
+     * @throws RepositoryException if another error occurs.
+     * @since JCR 2.0
+     */
+    public Property getProperty(String absPath)
+            throws PathNotFoundException, RepositoryException {
+        Item item  = getItem(absPath);
+        if (item.isNode()) {
+            throw new PathNotFoundException(absPath);
+        }
+        return (Property) item;
+    }
+
+    /**
+     * Returns <code>true</code> if a node exists at <code>absPath</code>
+     * and this <code>Session</code> has read access to it; otherwise returns
+     * <code>false</code>.
+     * <p/>
+     * Throws a <code>RepositoryException</code> if <code>absPath</code>
+     * is not a well-formed absolute path.
+     *
+     * @param absPath An absolute path.
+     * @return a <code>boolean</code>
+     * @throws RepositoryException if <code>absPath</code> is not a well-formed
+     *         absolute path.
+     * @since JCR 2.0
+     */
+    public boolean nodeExists(String absPath) throws RepositoryException {
+        // TODO: optimize...
+        try {
+            getNode(absPath);
+            return true;
+        } catch (PathNotFoundException pnfe) {
+            return false;
+        }
+    }
+
+    /**
+     * Returns <code>true</code> if a property exists at <code>absPath</code>
+     * and this <code>Session</code> has read access to it; otherwise returns
+     * <code>false</code>.
+     * <p/>
+     * Throws a <code>RepositoryException</code> if <code>absPath</code>
+     * is not a well-formed absolute path.
+     *
+     * @param absPath An absolute path.
+     * @return a <code>boolean</code>
+     * @throws RepositoryException if <code>absPath</code> is not a well-formed
+     *         absolute path.
+     * @since JCR 2.0
+     */
+    boolean propertyExists(String absPath) throws RepositoryException {
+        // TODO: optimize...
+        try {
+            getProperty(absPath);
+            return true;
+        } catch (PathNotFoundException pnfe) {
+            return false;
+        }
     }
 
     //-------------------------------------------------------------< Dumpable >
