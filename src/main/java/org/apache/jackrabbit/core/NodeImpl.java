@@ -4261,4 +4261,20 @@ public class NodeImpl extends ItemImpl implements Node {
         }
         session.getLockManager().checkLock(this);
     }
+
+    //--------------------------------------------------< new JSR 283 methods >
+    /**
+     * Returns the identifier of this node. Applies to both referenceable and
+     * non-referenceable nodes.
+     * <p/>
+     * A <code>RepositoryException</code> is thrown if an error occurs.
+     *
+     * @return the identifier of this node
+     * @throws RepositoryException If an error occurs.
+     * @since JCR 2.0
+     */
+    public String getIdentifier() throws RepositoryException {
+        return ((NodeId) id).toString();
+    }
+
 }
