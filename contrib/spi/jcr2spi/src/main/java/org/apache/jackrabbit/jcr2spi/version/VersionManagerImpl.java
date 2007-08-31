@@ -182,7 +182,7 @@ public class VersionManagerImpl implements VersionManager {
     public NodeEntry getVersionableNodeEntry(NodeState versionState) throws RepositoryException {
         NodeState ns = versionState.getChildNodeState(QName.JCR_FROZENNODE, Path.INDEX_DEFAULT);
         PropertyState ps = ns.getPropertyState(QName.JCR_FROZENUUID);
-        String uniqueID = ps.getValue().toString();
+        String uniqueID = ps.getValue().getString();
 
         NodeId versionableId = workspaceManager.getIdFactory().createNodeId(uniqueID);
         return (NodeEntry) workspaceManager.getHierarchyManager().getHierarchyEntry(versionableId);
