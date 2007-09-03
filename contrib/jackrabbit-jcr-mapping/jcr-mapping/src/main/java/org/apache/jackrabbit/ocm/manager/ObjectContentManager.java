@@ -187,7 +187,7 @@ public interface ObjectContentManager
      * 
      */
     public Collection getObjects(Query query) throws ObjectContentManagerException;
-    
+
     
     /**
      * Retrieve some objects matching to a query. 
@@ -198,6 +198,37 @@ public interface ObjectContentManager
      */
     public Iterator getObjectIterator (Query query) throws ObjectContentManagerException;
      
+    
+    /**
+     * Retrieve an objects matching a query specified in a specific query language.
+     * This method is expected to call create a <code>Query</code> using the
+     * session's <code>QueryManager</code> with the given query exception and
+     * language parameters.
+     * <p>
+     * If the query <code>statement</code> is syntactically invalid, given the
+     * language specified, an <code>InvalidQueryException</code> is thrown. The
+     * <code>language</code> must be a string from among those returned by
+     * <code>javax.jcr.QueryManager.getSupportedQueryLanguages()</code>;
+     * if it is not, then an <code>InvalidQueryException</code> is thrown.
+     * 
+     * @param query The query to execute to find the objects.
+     * @param language The language in which the query is  written
+     * 
+     * @return An iterator of objects instances. Each entry in the iterator
+     *      represents the mapping of a node returned by the query. If the
+     *      query returns a node, which may not be mapped, the respective node
+     *      is ignored.
+     * 
+     * @throws org.apache.jackrabbit.ocm.exception.InvalidQueryException If the
+     *      query is not a valid JCR Query according to the specified language 
+     * @throws ObjectContentManagerException If an error occurrs querying for
+     *      the objects.
+     *      
+     * @see javax.jcr.query.QueryManager#createQuery(String, String)
+     * @see javax.jcr.query.QueryManager#getSupportedQueryLanguages()
+     */
+    public Iterator getObjectIterator(String query, String language);
+
     
     /**
      * Checkout - Create a new version

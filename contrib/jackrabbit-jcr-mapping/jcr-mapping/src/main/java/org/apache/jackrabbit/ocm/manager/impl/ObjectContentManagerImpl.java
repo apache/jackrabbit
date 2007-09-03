@@ -627,7 +627,6 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
             NodeIterator nodeIterator = queryResult.getNodes();
 
             return new ObjectIterator(nodeIterator,
-                                      query.getFilter().getFilterClass(),
                                       this.objectConverter,
                                       this.session);
 
@@ -641,6 +640,29 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
         }
     }
 
+    /**
+    *
+    * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#getObjectIterator(String, String)
+    */
+    public Iterator getObjectIterator(String query, String language) {
+        try {
+            log.debug("Get Object with expression : " + query);
+
+            javax.jcr.query.Query jcrQuery = session.getWorkspace().getQueryManager().createQuery(query, language);
+            QueryResult queryResult = jcrQuery.execute();
+            NodeIterator nodeIterator = queryResult.getNodes();
+
+            return new ObjectIterator(nodeIterator,
+                                      this.objectConverter,
+                                      this.session);
+
+        } catch (InvalidQueryException iqe) {
+            throw new org.apache.jackrabbit.ocm.exception.InvalidQueryException(iqe);
+        } catch (RepositoryException re) {
+            throw new ObjectContentManagerException(re.getMessage(), re);
+        }
+    }
+    
     /**
      *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#checkin(java.lang.String)
