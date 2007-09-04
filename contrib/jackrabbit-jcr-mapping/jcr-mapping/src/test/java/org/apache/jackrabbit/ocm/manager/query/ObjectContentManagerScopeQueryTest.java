@@ -72,7 +72,9 @@ public class ObjectContentManagerScopeQueryTest extends TestBase
     {
         super.setUp();
 		this.importData();
+		//this.importDocument("data.xml", "/");
         
+		
     }
     
     public void tearDown() throws Exception
@@ -179,8 +181,6 @@ public class ObjectContentManagerScopeQueryTest extends TestBase
 			root.addNode("test/node1");
 			root.addNode("test/node2");
 			
-			root.save();
-			
 			Page page = new Page();
 			page.setPath("/test/node1/page1");
 			page.setTitle("Page 1 Title");
@@ -238,7 +238,7 @@ public class ObjectContentManagerScopeQueryTest extends TestBase
 			
 			ocm.insert(page);
 			ocm.save();
-
+			
 			
 		}
 		catch (RepositoryException e)
