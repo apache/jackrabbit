@@ -42,11 +42,10 @@
   <!-- ====================================================================== -->
   <dependencies>
       <dependency>
-	<groupId>javax.jcr</groupId>
-	<artifactId>jcr</artifactId>
-	<version>1.0</version>
+		<groupId>javax.jcr</groupId>
+		<artifactId>jcr</artifactId>
+		<version>1.0</version>
       </dependency>
-
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-api</artifactId>
@@ -62,25 +61,15 @@
       <artifactId>jackrabbit-jcr-commons</artifactId>
       <version>1.4-SNAPSHOT</version>
     </dependency>
-    <dependency>
-	    <groupId>org.apache.lucene</groupId>
-	    <artifactId>lucene-core</artifactId>
-	    <version>2.0.0</version>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-core</artifactId>
+        <version>2.2.0</version>
       </dependency>
-    <dependency>
+      <dependency>
 	    <groupId>commons-collections</groupId>
 	    <artifactId>commons-collections</artifactId>
 	    <version>3.1</version>
-    </dependency>
-    <dependency>
-	    <groupId>commons-beanutils</groupId>	    
-	    <artifactId>commons-beanutils</artifactId>
-	    <version>1.7.0</version>
-    </dependency>    
-    <dependency>
-	    <groupId>commons-digester</groupId>
-	    <artifactId>commons-digester</artifactId>
-	    <version>1.7</version>	    
     </dependency>
     <dependency>
 	    <groupId>commons-logging</groupId>
@@ -92,23 +81,27 @@
 	    <artifactId>commons-lang</artifactId>
 	    <version>2.1</version>
     </dependency>    
+ 
+    <dependency>
+	    <groupId>org.slf4j</groupId>
+	    <artifactId>slf4j-log4j12</artifactId>
+	    <version>1.0</version>
+    </dependency>
+    <dependency>
+	    <groupId>cglib</groupId>
+	    <artifactId>cglib</artifactId>
+	    <version>2.1_3</version>
+    </dependency> 	
+    <dependency>
+	    <groupId>commons-beanutils</groupId>	    
+	    <artifactId>commons-beanutils</artifactId>
+	    <version>1.7.0</version>
+    </dependency>  
     <dependency>
 	    <groupId>log4j</groupId>
 	    <artifactId>log4j</artifactId>
 	    <version>1.2.8</version>	   
     </dependency>
-    <dependency>
-	    <groupId>cglib</groupId>
-	    <artifactId>cglib-full</artifactId>
-	    <version>2.0.2</version>
-    </dependency>
-    <dependency>
-	    <groupId>org.slf4j</groupId>
-	    <artifactId>slf4j-log4j12</artifactId>
-	    <version>1.0</version>
-
-    </dependency>
-
     <!-- Test -->
     <dependency>
 	    <groupId>geronimo-spec</groupId>
@@ -131,10 +124,14 @@
     <dependency>
 	    <groupId>org.apache.derby</groupId>
 	    <artifactId>derby</artifactId>
-	    <version>10.1.1.0</version>
+	    <version>10.2.1.6</version>
 	    <scope>test</scope>
     </dependency>
-    
+    <dependency>
+	    <groupId>commons-digester</groupId>
+	    <artifactId>commons-digester</artifactId>
+	    <version>1.7</version>	    
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
