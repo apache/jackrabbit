@@ -98,15 +98,23 @@ public class SetValueLockExceptionTest extends AbstractJCRTest {
             binaryValue = createRandomString(10).getBytes();
 
             ByteArrayInputStream in = new ByteArrayInputStream(binaryValue);
+            ensureCanSetProperty(testNode, binaryProp, PropertyType.BINARY, false);
             testNode.setProperty(binaryProp, in);
+            ensureCanSetProperty(testNode, booleanProp, PropertyType.BOOLEAN, false);
             testNode.setProperty(booleanProp, booleanValue);
+            ensureCanSetProperty(testNode, dateProp, PropertyType.DATE, false);
             testNode.setProperty(dateProp, dateValue);
+            ensureCanSetProperty(testNode, doubleProp, PropertyType.DOUBLE, false);
             testNode.setProperty(doubleProp, doubleValue);
+            ensureCanSetProperty(testNode, longProp, PropertyType.LONG, false);
             testNode.setProperty(longProp, longValue);
             if (referenceNode != null) {
+                ensureCanSetProperty(testNode, referenceProp, PropertyType.REFERENCE, false);
                 testNode.setProperty(referenceProp, referenceNode);
             }
+            ensureCanSetProperty(testNode, stringProp, PropertyType.STRING, false);
             testNode.setProperty(stringProp, stringValue);
+            ensureCanSetProperty(testNode, multiStringProp, PropertyType.STRING, true);
             testNode.setProperty(multiStringProp, multiString);
             testRootNode.save();
         }
@@ -223,7 +231,6 @@ public class SetValueLockExceptionTest extends AbstractJCRTest {
      * Create a referenceable node under the testRootNode
      * or null if it is not possible to create one.
      * @param name
-     * @return
      * @throws RepositoryException
      */
     public Node createReferenceableNode(String name) throws RepositoryException {
