@@ -143,7 +143,7 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
                                       Node parentNode,
                                       CollectionDescriptor collectionDescriptor,
                                       ManageableCollection collection) throws RepositoryException {
-        Mapper mapper = collectionDescriptor.getClassDescriptor().getMappingDescriptor().getMapper();
+        
         ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass(
                 ReflectionUtils.forName(collectionDescriptor.getElementClassName()));
 
