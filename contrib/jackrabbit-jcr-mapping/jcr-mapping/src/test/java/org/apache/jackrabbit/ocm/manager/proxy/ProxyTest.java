@@ -29,6 +29,7 @@ import org.apache.jackrabbit.ocm.TestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.testmodel.proxy.Detail;
 import org.apache.jackrabbit.ocm.testmodel.proxy.Main;
+import org.apache.jackrabbit.ocm.testmodel.proxy.NTDetail;
 import org.apache.jackrabbit.ocm.testmodel.proxy.NTMain;
 
 /**
@@ -203,6 +204,7 @@ public class ProxyTest extends TestBase {
 		
 	}
 
+
 	public void testNTCollectionconverterWithProxy() {
 
 		try {
@@ -222,15 +224,14 @@ public class ProxyTest extends TestBase {
 
             Collection result = main.getProxyCollection();
             assertNull("Collection is not null", result);
-            
-/*			
+            			
 			//---------------------------------------------------------------------------------------------------------
 			// Update  
 			//---------------------------------------------------------------------------------------------------------
 			ArrayList  details= new ArrayList();
 			for(int i=1; i<=100;i++)
 			{
-				Detail detail = new Detail();
+				NTDetail detail = new NTDetail();
 				detail.setField("field" + i);				
 				details.add(detail);
 			}
@@ -241,7 +242,7 @@ public class ProxyTest extends TestBase {
 			//---------------------------------------------------------------------------------------------------------
 			// Retrieve the main object
 			//---------------------------------------------------------------------------------------------------------						
-			main = (NtMain) ocm.getObject( "/test");
+			main = (NTMain) ocm.getObject( "/test");
 			assertNotNull("main is null", main);
 
             result = main.getProxyCollection();
@@ -251,7 +252,7 @@ public class ProxyTest extends TestBase {
 			//---------------------------------------------------------------------------------------------------------
 			// Update  
 			//---------------------------------------------------------------------------------------------------------            
-            Detail detail = new Detail();
+            NTDetail detail = new NTDetail();
 			detail.setField("newFieldValue");			
 			result.add(detail);
 			main.setProxyCollection(result);
@@ -261,11 +262,11 @@ public class ProxyTest extends TestBase {
 			//---------------------------------------------------------------------------------------------------------
 			// Retrieve the main object
 			//---------------------------------------------------------------------------------------------------------						
-			main = (NtMain) ocm.getObject("/test");
+			main = (NTMain) ocm.getObject("/test");
 			assertNotNull("main  is null", main);
             assertEquals("Invalide size",main.getProxyCollection().size(), 101);
             
-*/
+
             //---------------------------------------------------------------------------------------------------------
 			// Delete the main object
 			//---------------------------------------------------------------------------------------------------------						
