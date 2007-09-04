@@ -66,6 +66,11 @@ public class TransactionContext extends Timer.Task {
     private int status;
 
     /**
+     * Flag indicating whether the association is currently suspended.
+     */
+    private boolean suspended;
+
+    /**
      * Create a new instance of this class.
      * @param resources transactional resources
      * @param timeout timeout, in seconds
@@ -264,5 +269,24 @@ public class TransactionContext extends Timer.Task {
         for (int i = 0; i < resources.length; i++) {
             resources[i].afterOperation(this);
         }
+    }
+
+    /**
+     * Return a flag indicating whether the association is suspended.
+     *
+     * @return <code>true</code> if the association is suspended;
+     *         <code>false</code> otherwise
+     */
+    public boolean isSuspended() {
+        return suspended;
+    }
+
+    /**
+     * Set a flag indicating whether the association is suspended.
+     *
+     * @param suspended flag whether that the association is suspended.
+     */
+    public void setSuspended(boolean suspended) {
+        this.suspended = suspended;
     }
 }

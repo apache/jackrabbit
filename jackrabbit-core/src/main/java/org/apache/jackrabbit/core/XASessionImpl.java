@@ -233,23 +233,25 @@ public class XASessionImpl extends SessionImpl
             log.error("Resource already associated with a transaction.");
             throw new XAException(XAException.XAER_PROTO);
         }
-        TransactionContext tx;
+        TransactionContext tx = (TransactionContext) txGlobal.get(xid);
         if (flags == TMNOFLAGS) {
-            tx = (TransactionContext) txGlobal.get(xid);
             if (tx != null) {
                 throw new XAException(XAException.XAER_DUPID);
             }
             tx = createTransaction(xid);
         } else if (flags == TMJOIN) {
-            tx = (TransactionContext) txGlobal.get(xid);
             if (tx == null) {
                 throw new XAException(XAException.XAER_NOTA);
             }
         } else if (flags == TMRESUME) {
-            tx = (TransactionContext) txGlobal.get(xid);
             if (tx == null) {
                 throw new XAException(XAException.XAER_NOTA);
             }
+            if (!tx.isSuspended()) {
+                log.error("Unable to resume: transaction not suspended.");
+                throw new XAException(XAException.XAER_PROTO);
+            }
+            tx.setSuspended(false);
         } else {
             throw new XAException(XAException.XAER_INVAL);
         }
@@ -279,18 +281,33 @@ public class XASessionImpl extends SessionImpl
      * from the transaction specified.
      * All other flags generate an <code>XAException</code> of type
      * <code>XAER_INVAL</code>
+     * <p/>
+     * It is legal for a transaction association to be suspended and then
+     * ended (either with <code>TMSUCCESS</code> or <code>TMFAIL</code>)
+     * without having been resumed again.
      */
     public void end(Xid xid, int flags) throws XAException {
-        if (!isAssociated()) {
-            log.error("Resource not associated with a transaction.");
-            throw new XAException(XAException.XAER_PROTO);
-        }
         TransactionContext tx = (TransactionContext) txGlobal.get(xid);
         if (tx == null) {
             throw new XAException(XAException.XAER_NOTA);
         }
-        if (flags == TMSUCCESS || flags == TMFAIL || flags == TMSUSPEND) {
+        if (flags == TMSUSPEND) {
+            if (!isAssociated()) {
+                log.error("Resource not associated with a transaction.");
+                throw new XAException(XAException.XAER_PROTO);
+            }
             associate(null);
+            tx.setSuspended(true);
+        } else if (flags == TMFAIL || flags == TMSUCCESS) {
+            if (!tx.isSuspended()) {
+                if (!isAssociated()) {
+                    log.error("Resource not associated with a transaction.");
+                    throw new XAException(XAException.XAER_PROTO);
+                }
+                associate(null);
+            } else {
+                tx.setSuspended(false);
+            }
         } else {
             throw new XAException(XAException.XAER_INVAL);
         }
