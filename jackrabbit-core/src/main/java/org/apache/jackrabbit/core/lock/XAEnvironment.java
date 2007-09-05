@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.lock.LockException;
+import javax.jcr.lock.Lock;
 import javax.transaction.Status;
 import java.util.Map;
 import java.util.HashMap;
@@ -208,6 +209,33 @@ class XAEnvironment {
         }
         // ask parent
         return lockMgr.getLockInfo(id);
+    }
+
+    /**
+     * Returns all <code>AbstractLockInfo</code>s associated with the specified
+     * session.
+     * @param session session
+     * @return an array of <code>AbstractLockInfo</code>s
+     * @throws RepositoryException if an error occurs
+     */
+    public AbstractLockInfo[] getLockInfos(SessionImpl session)
+            throws RepositoryException {
+        ArrayList result = new ArrayList();
+
+        // get lock infos from global lock manager first
+        AbstractLockInfo[] infos = lockMgr.getLockInfos(session);
+        for (int i = 0; i < infos.length; i++) {
+            AbstractLockInfo info = infos[i];
+            // check negative set
+            if (!unlockedNodesMap.containsKey(info.getId())) {
+                result.add(info);
+            }
+        }
+
+        // add 'uncommitted' lock infos 
+        result.addAll(lockedNodesMap.values());
+
+        return (AbstractLockInfo[]) result.toArray(new AbstractLockInfo[result.size()]);
     }
 
     /**

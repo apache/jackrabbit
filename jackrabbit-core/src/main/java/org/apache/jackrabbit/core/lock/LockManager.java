@@ -55,6 +55,15 @@ public interface LockManager {
     Lock getLock(NodeImpl node) throws LockException, RepositoryException;
 
     /**
+     * Returns all locks owned by the specified session.
+     * @param session session
+     * @return an array of lock objects
+     * @throws RepositoryException if an error occurs
+     * @see SessionImpl#getLocks
+     */
+    Lock[] getLocks(SessionImpl session) throws RepositoryException;
+
+    /**
      * Removes the lock on a node given by its path.
      * @param node node
      * @throws LockException if this node is not locked or the session

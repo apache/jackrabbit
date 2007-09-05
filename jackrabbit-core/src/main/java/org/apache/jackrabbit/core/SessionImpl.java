@@ -52,6 +52,7 @@ import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
 import javax.jcr.Property;
 import javax.jcr.lock.LockException;
+import javax.jcr.lock.Lock;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.observation.EventListener;
@@ -1539,6 +1540,28 @@ public class SessionImpl implements Session, NamePathResolver, Dumpable {
             return true;
         } catch (PathNotFoundException pnfe) {
             return false;
+        }
+    }
+
+    /**
+     * Returns all locks owned by this session.
+     *
+     * @return an array of <code>Lock</code>s
+     * @since JCR 2.0
+     */
+    public Lock[] getLocks() {
+        // check sanity of this session
+        //sanityCheck();
+        if (!alive) {
+            log.error("failed to retrieve locks: session has been closed");
+            return new Lock[0];
+        }
+
+        try {
+            return getLockManager().getLocks(this);
+        } catch (RepositoryException e) {
+            log.error("Lock manager not available.", e);
+            return new Lock[0];
         }
     }
 
