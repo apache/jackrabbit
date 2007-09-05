@@ -364,6 +364,26 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     }
 
     /**
+     * Package-private low-level helper method returning all
+     * <code>AbstractLockInfo</code>s associated with the specified
+     * session.
+     * @param session session
+     * @return an array of <code>AbstractLockInfo</code>s
+     */
+    AbstractLockInfo[] getLockInfos(final SessionImpl session) {
+        final ArrayList infos = new ArrayList();
+        lockMap.traverse(new PathMap.ElementVisitor() {
+            public void elementVisited(PathMap.Element element) {
+                LockInfo info = (LockInfo) element.get();
+                if (info.isLive() && info.getLockHolder().equals(session)) {
+                    infos.add(info);
+                }
+            }
+        }, false);
+        return (AbstractLockInfo[]) infos.toArray(new AbstractLockInfo[infos.size()]);
+    }
+
+    /**
      * Return the most appropriate lock information for a node. This is either
      * the lock info for the node itself, if it is locked, or a lock info for one
      * of its parents, if that is deep locked.
@@ -428,6 +448,28 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             }
         } catch (ItemNotFoundException e) {
             throw new LockException("Node not locked: " + node.safeGetJCRPath());
+        } finally {
+            release();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Lock[] getLocks(SessionImpl session) throws RepositoryException {
+
+        acquire();
+
+        AbstractLockInfo infos[] = getLockInfos(session);
+
+        try {
+            Lock[] locks = new Lock[infos.length];
+            for (int i = 0; i < infos.length; i++) {
+                AbstractLockInfo info = infos[i];
+                Node holder = (Node) session.getItemManager().getItem(info.getId());
+                locks[i] = new LockImpl(info, holder);
+            }
+            return locks;
         } finally {
             release();
         }

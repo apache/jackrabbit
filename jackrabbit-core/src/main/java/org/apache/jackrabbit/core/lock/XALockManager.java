@@ -27,6 +27,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
+import java.util.ArrayList;
 
 /**
  * Session-local lock manager that implements the semantical changes inside
@@ -91,6 +92,27 @@ public class XALockManager implements LockManager, InternalXAResource {
         SessionImpl session = (SessionImpl) node.getSession();
         NodeImpl holder = (NodeImpl) session.getItemManager().getItem(info.getId());
         return new XALock(this, info, holder);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Lock[] getLocks(SessionImpl session) throws RepositoryException {
+        AbstractLockInfo[] infos;
+        if (isInXA()) {
+            infos = xaEnv.getLockInfos(session);
+        } else {
+            infos = lockMgr.getLockInfos(session);
+        }
+
+        XALock[] locks = new XALock[infos.length];
+
+        for (int i = 0; i < infos.length; i++) {
+            AbstractLockInfo info = infos[i];
+            NodeImpl holder = (NodeImpl) session.getItemManager().getItem(info.getId());
+            locks[i] = new XALock(this, info, holder);
+        }
+        return locks;
     }
 
     /**
