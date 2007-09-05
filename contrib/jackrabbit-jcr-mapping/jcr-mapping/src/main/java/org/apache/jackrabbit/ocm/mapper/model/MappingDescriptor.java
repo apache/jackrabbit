@@ -17,18 +17,19 @@
 package org.apache.jackrabbit.ocm.mapper.model;
 
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.manager.ManagerConstant;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
-import org.apache.jackrabbit.ocm.mapper.impl.DigesterMapperImpl;
+
 
 /**
- * This class match to the complete xml mapping files.
- * it contains mainly a collection of {@link ClassDescriptor}
+ * MappingDescriptor is an helper class used to access to the {@link ClassDescriptor}
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart Christophe </a>
  * @version $Id: Exp $
@@ -46,6 +47,7 @@ public class MappingDescriptor {
     public void setPackage(String pckgName) {
         this.packageName = pckgName;
     }
+    
     
     /**
      * Add a new ClassDescriptor
@@ -87,6 +89,11 @@ public class MappingDescriptor {
         return (ClassDescriptor) classDescriptorsByNodeType.get(nodeType);	
     }
 
+    public Collection getAllClassDescriptors()
+    {
+    	return classDescriptorsByClassName.values();
+    }
+    
     /**
      * Get all class descriptors by class name
      * @return all class descriptors found
