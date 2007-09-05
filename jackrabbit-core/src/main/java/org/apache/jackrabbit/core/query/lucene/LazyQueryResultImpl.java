@@ -47,7 +47,7 @@ public class LazyQueryResultImpl implements QueryResult {
     /**
      * The logger instance for this class
      */
-    private static final Logger log = LoggerFactory.getLogger(QueryResultImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(LazyQueryResultImpl.class);
 
     /**
      * The search index to execute the query.
@@ -285,18 +285,14 @@ public class LazyQueryResultImpl implements QueryResult {
                 numResults = result.length();
             }
 
-            int start = resultNodes.size() + invalid;
+            int start = resultNodes.size() + invalid + (int)offset;
             int max = Math.min(result.length(), numResults);
             for (int i = start; i < max && resultNodes.size() < maxResultSize; i++) {
                 NodeId id = NodeId.valueOf(result.doc(i).get(FieldNames.UUID));
                 // check access
                 try {
                     if (accessMgr.isGranted(id, AccessManager.READ)) {
-                        if (i < offset) {
-                            invalid++;
-                        } else {
-                            resultNodes.add(new ScoreNode(id, result.score(i)));
-                        }
+                        resultNodes.add(new ScoreNode(id, result.score(i)));
                     } else {
                         invalid++;
                     }
@@ -317,6 +313,16 @@ public class LazyQueryResultImpl implements QueryResult {
                 }
             }
         }
+    }
+    
+    /**
+     * Returns the total number of hits. This is the number of results you
+     * will get get if you don't set any limit or offset. Keep in mind that this
+     * number may get smaller if nodes are found in the result set which the
+     * current session has no permission to access.
+     */
+    public int getTotalSize() {
+        return numResults - invalid;
     }
 
     private final class LazyScoreNodeIterator implements ScoreNodeIterator {
@@ -396,11 +402,11 @@ public class LazyQueryResultImpl implements QueryResult {
          * nodes or the session does not have access to a node.
          */
         public long getSize() {
-            int totalSize = numResults - invalid;
+            int totalSize = getTotalSize();
             if (limit > 0 && totalSize > limit) {
                 return limit;
             } else {
-                return totalSize;
+                return totalSize - offset;
             }
         }
 
