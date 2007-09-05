@@ -42,12 +42,12 @@ import java.util.NoSuchElementException;
 /**
  * Implements the <code>javax.jcr.query.QueryResult</code> interface.
  */
-public class LazyQueryResultImpl implements QueryResult {
+public class QueryResultImpl implements QueryResult {
 
     /**
      * The logger instance for this class
      */
-    private static final Logger log = LoggerFactory.getLogger(LazyQueryResultImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(QueryResultImpl.class);
 
     /**
      * The search index to execute the query.
@@ -154,7 +154,7 @@ public class LazyQueryResultImpl implements QueryResult {
      * @param limit         the maximum result size
      * @param offset        the offset in the total result set
      */
-    public LazyQueryResultImpl(SearchIndex index,
+    public QueryResultImpl(SearchIndex index,
                            ItemManager itemMgr,
                            NamespaceResolver resolver,
                            AccessManager accessMgr,
