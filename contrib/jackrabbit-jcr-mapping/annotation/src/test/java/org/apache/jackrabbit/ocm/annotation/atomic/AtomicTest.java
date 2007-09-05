@@ -23,15 +23,16 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import junit.framework.Test;
+import junit.framework.TestSuite;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.jackrabbit.ocm.annotation.TestBase;
-import org.apache.jackrabbit.ocm.annotation.mapper.AnnotatedObjectMapper;
+import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
+import org.apache.jackrabbit.ocm.TestBase;
+import org.apache.jackrabbit.ocm.annotation.UnstructuredMappingTest;
 import org.apache.jackrabbit.ocm.annotation.model.unstructured.Atomic;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
-import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl;
-import org.apache.jackrabbit.ocm.mapper.Mapper;
-import org.apache.jackrabbit.ocm.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl;
 
 /**
  * Test Atomic perisstence fields
@@ -44,12 +45,23 @@ public class AtomicTest extends TestBase
 
 
 
+	public AtomicTest(String testName) {
+		super(testName);
+		
+	}
+
 	public void tearDown() throws Exception {
 
 		cleanUpRepisotory();
 		super.tearDown();
 		
 	}
+
+    public static Test suite()
+    {
+        // All methods starting with "test" will be executed in the test suite.
+        return new RepositoryLifecycleTestSetup(new TestSuite(AtomicTest.class));
+    }
     
     public void testAtomicFields()
     {
@@ -60,8 +72,7 @@ public class AtomicTest extends TestBase
 
     		classNames.add(Atomic.class.getName());
 
-    		ObjectContentManager ocm = new ObjectContentManagerImpl(
-    				session, (Mapper) new AnnotatedObjectMapper(session, classNames, new NodeTypeManagerImpl()));
+    		ObjectContentManager ocm = this.initObjectContentManager(classNames);
 
     		
         	Date date = new Date();

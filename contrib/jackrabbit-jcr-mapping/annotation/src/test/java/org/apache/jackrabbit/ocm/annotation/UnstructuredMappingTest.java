@@ -19,13 +19,14 @@ package org.apache.jackrabbit.ocm.annotation;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.jackrabbit.ocm.annotation.mapper.AnnotatedObjectMapper;
+import junit.framework.Test;
+import junit.framework.TestSuite;
+
+import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
+import org.apache.jackrabbit.ocm.TestBase;
 import org.apache.jackrabbit.ocm.annotation.model.unstructured.UnstructuredAddress;
 import org.apache.jackrabbit.ocm.annotation.model.unstructured.UnstructuredPerson;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
-import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl;
-import org.apache.jackrabbit.ocm.mapper.Mapper;
-import org.apache.jackrabbit.ocm.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl;
 
 /**
  * 
@@ -37,6 +38,12 @@ import org.apache.jackrabbit.ocm.nodemanagement.impl.jackrabbit.NodeTypeManagerI
  */
 public class UnstructuredMappingTest extends TestBase {
 	
+	
+	public UnstructuredMappingTest(String testName) {
+		super(testName);
+		
+	}
+
 	public void tearDown() throws Exception {
 
 		cleanUpRepisotory();
@@ -44,13 +51,18 @@ public class UnstructuredMappingTest extends TestBase {
 		
 	}
 	
+    public static Test suite()
+    {
+        // All methods starting with "test" will be executed in the test suite.
+        return new RepositoryLifecycleTestSetup(new TestSuite(UnstructuredMappingTest.class));
+    }	
+	
 	public void testBasic() throws Exception {
 		List<String> classNames = new ArrayList<String>();
 
 		classNames.add(UnstructuredAddress.class.getName());
 
-		ObjectContentManager objectContentManager = new ObjectContentManagerImpl(
-				session, (Mapper) new AnnotatedObjectMapper(session, classNames, new NodeTypeManagerImpl()));
+		ObjectContentManager objectContentManager = this.initObjectContentManager(classNames);
 
 		// -----------------------------------------------------------------------------
 		// Insert 
@@ -101,8 +113,7 @@ public class UnstructuredMappingTest extends TestBase {
 			classNames.add(UnstructuredAddress.class.getName());
 			classNames.add(UnstructuredPerson.class.getName());
 
-			ObjectContentManager ocm = new ObjectContentManagerImpl(
-					session, (Mapper) new AnnotatedObjectMapper(session, classNames, new NodeTypeManagerImpl()));
+			ObjectContentManager ocm = this.initObjectContentManager(classNames);
 
 			
 			// -----------------------------------------------------------------------------
