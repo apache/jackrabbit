@@ -19,6 +19,9 @@ package org.apache.jackrabbit.core.query;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SearchManager;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.query.jsr283.PreparedQuery;
+import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelFactory;
+import org.apache.jackrabbit.core.query.qom.QueryObjectModelFactoryImpl;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -61,6 +64,11 @@ public class QueryManagerImpl implements QueryManager {
     private final SearchManager searchMgr;
 
     /**
+     * The <code>QueryObjectModelFactory</code> for this query manager.
+     */
+    private final QueryObjectModelFactoryImpl qomFactory;
+
+    /**
      * Creates a new <code>QueryManagerImpl</code> for the passed
      * <code>session</code>
      *
@@ -74,6 +82,7 @@ public class QueryManagerImpl implements QueryManager {
         this.session = session;
         this.itemMgr = itemMgr;
         this.searchMgr = searchMgr;
+        this.qomFactory = new QueryObjectModelFactoryImpl(session, searchMgr);
     }
 
     /**
@@ -100,6 +109,45 @@ public class QueryManagerImpl implements QueryManager {
     public String[] getSupportedQueryLanguages() throws RepositoryException {
         return (String[]) SUPPORTED_QUERIES_LIST.toArray(new String[SUPPORTED_QUERIES.length]);
     }
+
+    //---------------------------< JSR 283 >------------------------------------
+
+    /**
+     * Creates a new prepared query by specifying the query
+     * <code>statement</code> itself and the <code>language</code> in which the
+     * query is stated. If the query statement is syntactically invalid, given
+     * the language specified, an <code>InvalidQueryException</code> is thrown.
+     * The language parameter must be a string from among those returned by
+     * <code>QueryManager.getSupportedQueryLanguages()</code>; if it is not,
+     * then an <code>InvalidQueryException</code> is thrown.
+     *
+     * @param statement a <code>String</code>
+     * @param language  a <code>String</code>
+     * @return a <code>PreparedQuery</code> object
+     * @throws InvalidQueryException if the query statement is syntactically
+     *                               invalid or the specified language is not
+     *                               supported
+     * @throws RepositoryException   if another error occurs
+     * @since JCR 2.0
+     */
+    public PreparedQuery createPreparedQuery(String statement, String language)
+            throws InvalidQueryException, RepositoryException {
+        sanityCheck();
+        return searchMgr.createPreparedQuery(session, itemMgr, statement, language);
+    }
+
+    /**
+     * Returns a <code>QueryObjectModelFactory</code> with which a JCR-JQOM
+     * query can be built programmatically.
+     *
+     * @return a <code>QueryObjectModelFactory</code> object
+     * @since JCR 2.0
+     */
+    public QueryObjectModelFactory getQOMFactory() {
+        return qomFactory;
+    }
+
+    //---------------------------< internal >-----------------------------------
 
     /**
      * Checks if this <code>QueryManagerImpl</code> instance is still usable,

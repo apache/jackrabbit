@@ -25,6 +25,8 @@ import org.apache.jackrabbit.core.state.NodeStateIterator;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
+import org.apache.jackrabbit.core.query.qom.QueryObjectModelTree;
+
 import java.io.IOException;
 
 /**
@@ -106,4 +108,21 @@ public interface QueryHandler {
                              ItemManager itemMgr,
                              String statement,
                              String language) throws InvalidQueryException;
+    
+    /**
+     * Creates a new query by specifying the query object model. If the query
+     * object model is considered invalid for the implementing class, an
+     * InvalidQueryException is thrown.
+     *
+     * @param session the session of the current user creating the query
+     *                object.
+     * @param itemMgr the item manager of the current user.
+     * @param qomTree query query object model tree.
+     * @return A <code>Query</code> object.
+     * @throws InvalidQueryException if the query object model tree is invalid.
+     */
+    ExecutablePreparedQuery createExecutablePreparedQuery(
+            SessionImpl session,
+            ItemManager itemMgr,
+            QueryObjectModelTree qomTree) throws InvalidQueryException;
 }

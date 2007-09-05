@@ -26,6 +26,11 @@ import org.apache.jackrabbit.core.query.AbstractQueryImpl;
 import org.apache.jackrabbit.core.query.QueryHandler;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.query.QueryImpl;
+import org.apache.jackrabbit.core.query.PreparedQueryImpl;
+import org.apache.jackrabbit.core.query.qom.QueryObjectModelTree;
+import org.apache.jackrabbit.core.query.qom.QueryObjectModelImpl;
+import org.apache.jackrabbit.core.query.jsr283.PreparedQuery;
+import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModel;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -87,6 +92,12 @@ public class SearchManager implements SynchronousEventListener {
     private static final String PARAM_QUERY_IMPL = "queryClass";
 
     /**
+     * Name of the parameter that indicates the prepared query implementation
+     * class.
+     */
+    private static final String PARAM_PREPARED_QUERY_IMPL = "preparedQueryClass";
+
+    /**
      * Name of the parameter that specifies the idle time for a query handler.
      */
     private static final String PARAM_IDLE_TIME = "idleTime";
@@ -95,6 +106,11 @@ public class SearchManager implements SynchronousEventListener {
      * Name of the default query implementation class.
      */
     private static final String DEFAULT_QUERY_IMPL_CLASS = QueryImpl.class.getName();
+
+    /**
+     * Name of the default prepared query implementation class.
+     */
+    private static final String DEFAULT_PREPARED_QUERY_IMPL_CLASS = PreparedQueryImpl.class.getName();
 
     /**
      * The search configuration.
@@ -153,6 +169,13 @@ public class SearchManager implements SynchronousEventListener {
      * This class must extend {@link org.apache.jackrabbit.core.query.AbstractQueryImpl}!
      */
     private final String queryImplClassName;
+
+    /**
+     * Fully qualified name of the prepared query implementation class.
+     * This class must extend {@link org.apache.jackrabbit.core.query.AbstractQueryImpl}
+     * and implement {@link PreparedQuery}!
+     */
+    private final String preparedQueryImplClassName;
 
     /**
      * Creates a new <code>SearchManager</code>.
@@ -215,6 +238,7 @@ public class SearchManager implements SynchronousEventListener {
 
         Properties params = config.getParameters();
         queryImplClassName = params.getProperty(PARAM_QUERY_IMPL, DEFAULT_QUERY_IMPL_CLASS);
+        preparedQueryImplClassName = params.getProperty(PARAM_PREPARED_QUERY_IMPL, DEFAULT_PREPARED_QUERY_IMPL_CLASS);
         if (params.containsKey(PARAM_IDLE_TIME)) {
             String msg = "Parameter 'idleTime' is not supported anymore. " +
                     "Please use 'maxIdleTime' in the repository configuration.";
@@ -270,6 +294,50 @@ public class SearchManager implements SynchronousEventListener {
         AbstractQueryImpl query = createQueryInstance();
         query.init(session, itemMgr, handler, statement, language);
         return query;
+    }
+
+    /**
+     * Creates a prepared query object that can be executed on the workspace.
+     *
+     * @param session   the session of the user executing the query.
+     * @param itemMgr   the item manager of the user executing the query. Needed
+     *                  to return <code>Node</code> instances in the result set.
+     * @param statement the actual query statement.
+     * @param language  the syntax of the query statement.
+     * @return a <code>Query</code> instance to execute.
+     * @throws InvalidQueryException if the query is malformed or the
+     *                               <code>language</code> is unknown.
+     * @throws RepositoryException   if any other error occurs.
+     */
+    public PreparedQuery createPreparedQuery(SessionImpl session,
+                                             ItemManager itemMgr,
+                                             String statement,
+                                             String language)
+            throws InvalidQueryException, RepositoryException {
+        AbstractQueryImpl query = createPreparedQueryInstance();
+        query.init(session, itemMgr, handler, statement, language);
+        return (PreparedQuery) query;
+    }
+
+    /**
+     * Creates a query object model that can be executed on the workspace.
+     *
+     * @param session   the session of the user executing the query.
+     * @param qomTree   the query object model tree, representing the query.
+     * @param langugage the original language of the query statement.
+     * @return the query object model for the query.
+     * @throws InvalidQueryException the the query object model tree is
+     *                               considered invalid by the query handler
+     *                               implementation.
+     * @throws RepositoryException   if any other error occurs.
+     */
+    public QueryObjectModel createQueryObjectModel(SessionImpl session,
+                                                   QueryObjectModelTree qomTree,
+                                                   String langugage)
+            throws InvalidQueryException, RepositoryException {
+        QueryObjectModelImpl qom = new QueryObjectModelImpl();
+        qom.init(session, session.getItemManager(), handler, qomTree, langugage);
+        return qom;
     }
 
     /**
@@ -454,6 +522,33 @@ public class SearchManager implements SynchronousEventListener {
             }
         } catch (Throwable t) {
             throw new RepositoryException("Unable to create query: " + t.toString());
+        }
+    }
+
+    /**
+     * Creates a new instance of an {@link AbstractQueryImpl}, which also
+     * implements {@link PreparedQuery} and is not initialized.
+     *
+     * @return an new query instance.
+     * @throws RepositoryException if an error occurs while creating a new query
+     *                             instance.
+     */
+    protected AbstractQueryImpl createPreparedQueryInstance()
+            throws RepositoryException {
+        try {
+            Object obj = Class.forName(preparedQueryImplClassName).newInstance();
+            if (!(obj instanceof AbstractQueryImpl)) {
+                throw new IllegalArgumentException(preparedQueryImplClassName
+                        + " is not of type " + AbstractQueryImpl.class.getName());
+            } else if (!(obj instanceof PreparedQuery)) {
+                throw new IllegalArgumentException(preparedQueryImplClassName
+                        + " is not of type " + PreparedQuery.class.getName());
+            } else {
+                return (AbstractQueryImpl) obj;
+            }
+        } catch (Throwable t) {
+            throw new RepositoryException("Unable to create prepared query: "
+                    + t.toString(), t);
         }
     }
 
