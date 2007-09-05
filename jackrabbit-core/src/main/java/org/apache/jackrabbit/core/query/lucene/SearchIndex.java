@@ -25,6 +25,8 @@ import org.apache.jackrabbit.core.query.DefaultQueryNodeFactory;
 import org.apache.jackrabbit.core.query.ExecutableQuery;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.query.QueryHandler;
+import org.apache.jackrabbit.core.query.ExecutablePreparedQuery;
+import org.apache.jackrabbit.core.query.qom.QueryObjectModelTree;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateIterator;
 import org.apache.jackrabbit.core.state.ItemStateManager;
@@ -524,6 +526,30 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
+     * Creates a new query by specifying the query object model. If the query
+     * object model is considered invalid for the implementing class, an
+     * InvalidQueryException is thrown.
+     *
+     * @param session the session of the current user creating the query
+     *                object.
+     * @param itemMgr the item manager of the current user.
+     * @param qomTree query query object model tree.
+     * @return A <code>Query</code> object.
+     * @throws javax.jcr.query.InvalidQueryException
+     *          if the query object model tree is invalid.
+     * @see QueryHandler#createExecutablePreparedQuery(org.apache.jackrabbit.core.SessionImpl, org.apache.jackrabbit.core.ItemManager, org.apache.jackrabbit.core.query.qom.QueryObjectModelTree)
+     */
+    public ExecutablePreparedQuery createExecutablePreparedQuery(
+            SessionImpl session,
+            ItemManager itemMgr,
+            QueryObjectModelTree qomTree) throws InvalidQueryException {
+        PreparedQueryImpl query = new PreparedQueryImpl(session, itemMgr, this,
+                getContext().getPropertyTypeRegistry(), qomTree);
+        query.setRespectDocumentOrder(documentOrder);
+        return query;
+    }
+
+    /**
      * This method returns the QueryNodeFactory used to parse Queries. This method
      * may be overridden to provide a customized QueryNodeFactory
      */
@@ -557,7 +583,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * @return the lucene Hits object.
      * @throws IOException if an error occurs while searching the index.
      */
-    public QueryHits executeQuery(QueryImpl queryImpl,
+    public QueryHits executeQuery(AbstractQueryImpl queryImpl,
                                   Query query,
                                   QName[] orderProps,
                                   boolean[] orderSpecs) throws IOException {

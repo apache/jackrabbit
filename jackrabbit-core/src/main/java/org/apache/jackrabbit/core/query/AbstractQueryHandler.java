@@ -18,9 +18,13 @@ package org.apache.jackrabbit.core.query;
 
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeIdIterator;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.query.qom.QueryObjectModelTree;
 import org.apache.jackrabbit.core.state.NodeStateIterator;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.query.InvalidQueryException;
 import java.io.IOException;
 
 /**
@@ -79,5 +83,18 @@ public abstract class AbstractQueryHandler implements QueryHandler {
         while (add.hasNext()) {
             addNode(add.nextNodeState());
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Throws {@link UnsupportedOperationException}.
+     */
+    public ExecutablePreparedQuery createExecutablePreparedQuery(
+            SessionImpl session,
+            ItemManager itemMgr,
+            QueryObjectModelTree qomTree) throws InvalidQueryException {
+        throw new UnsupportedOperationException(
+                "This query handler does not support prepared queries");
     }
 }

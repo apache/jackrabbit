@@ -34,6 +34,8 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
+import org.apache.jackrabbit.core.query.qom.QueryObjectModelTree;
+
 import javax.jcr.version.VersionException;
 import java.text.NumberFormat;
 
@@ -46,6 +48,22 @@ public class QueryImpl extends AbstractQueryImpl {
      * The logger instance for this class
      */
     private static final Logger log = LoggerFactory.getLogger(QueryImpl.class);
+
+    /**
+     * A string constant representing the JCR-SQL2 query language.
+     *
+     * @since JCR 2.0
+     * TODO: REMOVE WHEN JSR 283 IS FINAL!!
+     */
+    public static final String JCR_SQL2 = "JCR-SQL2";
+
+    /**
+     * A string constant representing the JCR-JQOM query language.
+     *
+     * @since JCR 2.0
+     * TODO: REMOVE WHEN JSR 283 IS FINAL!!
+     */
+    public static final String JCR_JQOM = "JCR-JQOM";
 
     /**
      * The session of the user executing this query
@@ -107,7 +125,7 @@ public class QueryImpl extends AbstractQueryImpl {
         this.language = language;
         this.handler = handler;
         this.query = handler.createExecutableQuery(session, itemMgr, statement, language);
-        initialized = true;
+        setInitialized();
     }
 
     /**
@@ -129,7 +147,21 @@ public class QueryImpl extends AbstractQueryImpl {
         statement = node.getProperty(session.getJCRName(QName.JCR_STATEMENT)).getString();
         language = node.getProperty(session.getJCRName(QName.JCR_LANGUAGE)).getString();
         query = handler.createExecutableQuery(session, itemMgr, statement, language);
-        initialized = true;
+        setInitialized();
+    }
+    
+    /**
+     * @inheritDoc
+     * <p/>
+     * Throws an {@link UnsupportedOperationException}.
+     */
+    public void init(SessionImpl session,
+                     ItemManager itemMgr,
+                     QueryHandler handler,
+                     QueryObjectModelTree qomTree,
+                     String language)
+            throws InvalidQueryException, RepositoryException {
+        throw new UnsupportedOperationException("not a prepared query");
     }
 
     /**
@@ -232,6 +264,13 @@ public class QueryImpl extends AbstractQueryImpl {
     }
 
     //-----------------------------< internal >---------------------------------
+
+    /**
+     * Sets the initialized flag.
+     */
+    protected void setInitialized() {
+        initialized = true;
+    }
 
     /**
      * Checks if this query is not yet initialized and throws an

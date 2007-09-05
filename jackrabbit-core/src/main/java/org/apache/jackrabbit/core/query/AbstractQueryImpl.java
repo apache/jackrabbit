@@ -23,6 +23,7 @@ import javax.jcr.query.Query;
 
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.query.qom.QueryObjectModelTree;
 
 /**
  * Defines common initialization methods for all query implementations.
@@ -62,4 +63,21 @@ public abstract class AbstractQueryImpl implements Query {
                               QueryHandler handler,
                               Node node)
             throws InvalidQueryException, RepositoryException;
+
+    /**
+     * Initializes a query instance from a query object model.
+     *
+     * @param session  the session of the user executing this query.
+     * @param itemMgr  the item manager of the session executing this query.
+     * @param handler  the query handler of the search index.
+     * @param qomTree  the query object model tree.
+     * @param language the original query syntax from where the JQOM was
+     *                 created.
+     * @throws RepositoryException if another error occurs
+     */
+    public abstract void init(SessionImpl session,
+                              ItemManager itemMgr,
+                              QueryHandler handler,
+                              QueryObjectModelTree qomTree,
+                              String language) throws RepositoryException;
 }

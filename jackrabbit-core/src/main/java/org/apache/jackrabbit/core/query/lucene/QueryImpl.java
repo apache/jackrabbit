@@ -47,7 +47,7 @@ import java.util.List;
 /**
  * Implements the {@link ExecutableQuery} interface.
  */
-public class QueryImpl implements ExecutableQuery {
+public class QueryImpl extends AbstractQueryImpl {
 
     /**
      * The logger instance for this class
@@ -63,32 +63,6 @@ public class QueryImpl implements ExecutableQuery {
      * The root node of the query tree
      */
     protected final QueryRootNode root;
-
-    /**
-     * The session of the user executing this query
-     */
-    protected final SessionImpl session;
-
-    /**
-     * The item manager of the user executing this query
-     */
-    protected final ItemManager itemMgr;
-
-    /**
-     * The actual search index
-     */
-    protected final SearchIndex index;
-
-    /**
-     * The property type registry for type lookup.
-     */
-    protected final PropertyTypeRegistry propReg;
-
-    /**
-     * If <code>true</code> the default ordering of the result nodes is in
-     * document order.
-     */
-    private boolean documentOrder = true;
 
     /**
      * Creates a new query instance from a query string.
@@ -110,26 +84,14 @@ public class QueryImpl implements ExecutableQuery {
                      String statement,
                      String language,
                      QueryNodeFactory factory) throws InvalidQueryException {
-        this.session = session;
-        this.itemMgr = itemMgr;
-        this.index = index;
-        this.propReg = propReg;
+        super(session, itemMgr, index, propReg);
         // parse query according to language
         // build query tree using the passed factory
         this.root = QueryParser.parse(statement, language,
                 session.getNamespaceResolver(), factory);
-
-        allNodesQueryNode = factory.createQueryRootNode();
-        PathQueryNode pathNode = factory.createPathQueryNode(allNodesQueryNode);
-        LocationStepQueryNode lsNode = factory.createLocationStepQueryNode(pathNode);
-        lsNode.setNameTest(null);
-        lsNode.setIncludeDescendants(true);
-        pathNode.addPathStep(lsNode);
-        pathNode.setAbsolute(true);
-        allNodesQueryNode.setLocationNode(pathNode);
-        
+        allNodesQueryNode = createMatchAllNodesQuery(factory);
     }
-
+    
     /**
      * Executes this query and returns a <code>{@link QueryResult}</code>.
      *
@@ -170,36 +132,10 @@ public class QueryImpl implements ExecutableQuery {
             ascSpecs[i] = orderSpecs[i].isAscending();
         }
 
-        return new QueryResultImpl(index, itemMgr, session.getNamespaceResolver(),
-                session.getAccessManager(), this, query, getSelectProperties(),
-                orderProperties, ascSpecs, documentOrder, offset, limit);
-    }
-
-    /**
-     * If set <code>true</code> the result nodes will be in document order
-     * per default (if no order by clause is specified). If set to
-     * <code>false</code> the result nodes are returned in whatever sequence
-     * the index has stored the nodes. That sequence is stable over multiple
-     * invocations of the same query, but will change when nodes get added or
-     * removed from the index.
-     * <p/>
-     * The default value for this property is <code>true</code>.
-     * @return the current value of this property.
-     */
-    public boolean getRespectDocumentOrder() {
-        return documentOrder;
-    }
-
-    /**
-     * Sets a new value for this property.
-     *
-     * @param documentOrder if <code>true</code> the result nodes are in
-     * document order per default.
-     *
-     * @see #getRespectDocumentOrder()
-     */
-    public void setRespectDocumentOrder(boolean documentOrder) {
-        this.documentOrder = documentOrder;
+        return new QueryResultImpl(index, itemMgr,
+                session.getNamespaceResolver(), session.getAccessManager(),
+                this, query, getSelectProperties(), orderProperties, ascSpecs,
+                getRespectDocumentOrder(), offset, limit);
     }
 
     /**
@@ -258,7 +194,29 @@ public class QueryImpl implements ExecutableQuery {
      * @return <code>true</code> if this query node needs content under
      *         /jcr:system to be queried; <code>false</code> otherwise.
      */
-    protected boolean needsSystemTree() {
+    public boolean needsSystemTree() {
         return this.root.needsSystemTree();
+    }
+
+    //----------------------------< internal >----------------------------------
+
+    /**
+     * Creates an abstract query tree that matches all nodes. XPath example:
+     * //element(*, nt:base)
+     *
+     * @param factory the query node factory.
+     * @return the abstract query tree.
+     */
+    private static QueryRootNode createMatchAllNodesQuery(
+            QueryNodeFactory factory) {
+        QueryRootNode allNodesQueryNode = factory.createQueryRootNode();
+        PathQueryNode pathNode = factory.createPathQueryNode(allNodesQueryNode);
+        LocationStepQueryNode lsNode = factory.createLocationStepQueryNode(pathNode);
+        lsNode.setNameTest(null);
+        lsNode.setIncludeDescendants(true);
+        pathNode.addPathStep(lsNode);
+        pathNode.setAbsolute(true);
+        allNodesQueryNode.setLocationNode(pathNode);
+        return allNodesQueryNode;
     }
 }

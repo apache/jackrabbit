@@ -72,7 +72,7 @@ public class QueryResultImpl implements QueryResult {
     /**
      * The query instance which created this query result.
      */
-    protected final QueryImpl queryImpl;
+    protected final AbstractQueryImpl queryImpl;
 
     /**
      * The lucene query to execute.
@@ -158,7 +158,7 @@ public class QueryResultImpl implements QueryResult {
                            ItemManager itemMgr,
                            NamespaceResolver resolver,
                            AccessManager accessMgr,
-                           QueryImpl queryImpl,
+                           AbstractQueryImpl queryImpl,
                            Query query,
                            QName[] selectProps,
                            QName[] orderProps,
