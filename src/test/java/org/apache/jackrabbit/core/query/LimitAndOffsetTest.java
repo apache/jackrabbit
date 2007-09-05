@@ -8,6 +8,8 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 
+import org.apache.jackrabbit.core.query.lucene.LazyQueryResultImpl;
+
 public class LimitAndOffsetTest extends AbstractQueryTest {
 
     private Node node1;
@@ -100,12 +102,14 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
         QueryResult result = query.execute();
         NodeIterator nodes = result.getNodes();
         assertEquals(2, nodes.getSize());
+        assertEquals(3, ((LazyQueryResultImpl) result).getTotalSize());
 
         query.setOffset(1);
         query.setLimit(1);
         result = query.execute();
         nodes = result.getNodes();
         assertEquals(1, nodes.getSize());
+        assertEquals(3, ((LazyQueryResultImpl) result).getTotalSize());
     }
 
 }
