@@ -16,12 +16,13 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Node;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStreamWriter;
+import javax.jcr.RepositoryException;
+
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.Calendar;
 
 /**
@@ -231,4 +232,15 @@ public class ChildAxisQueryTest extends AbstractQueryTest {
         executeXPathQuery(base + "*/*, 'lazy')]",
                 new Node[]{});
     }
+    
+    public void testSimpleQuery() throws Exception {
+        Node foo = testRootNode.addNode("foo");
+        testRootNode.addNode("bar");
+       
+        testRootNode.save();
+
+        String sql = "SELECT * FROM nt:unstructured WHERE jcr:path LIKE '"+testRoot+"/foo'";
+        executeSQLQuery(sql, new Node[] {foo});
+    }
+    
 }
