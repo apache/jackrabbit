@@ -16,6 +16,12 @@
  */
 package org.apache.jackrabbit.ocm.annotation;
 
+import junit.framework.Test;
+import junit.framework.TestSuite;
+
+import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
+import org.apache.jackrabbit.ocm.TestBase;
+
 
 /**
  * 
@@ -26,12 +32,23 @@ package org.apache.jackrabbit.ocm.annotation;
  */
 public class CollectionTest extends TestBase {
 
+	
+	public CollectionTest(String testName) {
+		super(testName);
+		
+	}
 	public void tearDown() throws Exception {
 
 		//cleanUpRepisotory();
 		super.tearDown();
 		
 	}
+	
+    public static Test suite()
+    {
+        // All methods starting with "test" will be executed in the test suite.
+        return new RepositoryLifecycleTestSetup(new TestSuite(CollectionTest.class));
+    }	
 	public void testBasicCollectionInsert() throws Exception {
 	/*
 		List<String> classNames = new ArrayList<String>();

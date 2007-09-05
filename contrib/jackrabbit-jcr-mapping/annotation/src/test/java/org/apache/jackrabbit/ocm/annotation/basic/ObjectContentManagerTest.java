@@ -20,18 +20,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import junit.framework.Test;
+import junit.framework.TestSuite;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.jackrabbit.ocm.annotation.TestBase;
-import org.apache.jackrabbit.ocm.annotation.mapper.AnnotatedObjectMapper;
+import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
+import org.apache.jackrabbit.ocm.TestBase;
 import org.apache.jackrabbit.ocm.annotation.model.unstructured.A;
 import org.apache.jackrabbit.ocm.annotation.model.unstructured.Atomic;
 import org.apache.jackrabbit.ocm.annotation.model.unstructured.B;
 import org.apache.jackrabbit.ocm.annotation.model.unstructured.C;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
-import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl;
-import org.apache.jackrabbit.ocm.mapper.Mapper;
-import org.apache.jackrabbit.ocm.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl;
 
 /**
  * Test JcrSession
@@ -41,12 +41,25 @@ import org.apache.jackrabbit.ocm.nodemanagement.impl.jackrabbit.NodeTypeManagerI
 public class ObjectContentManagerTest extends TestBase {
 	private final static Log log = LogFactory.getLog(ObjectContentManagerTest.class);
 
+	
 	public void tearDown() throws Exception {
 
 		cleanUpRepisotory();
 		super.tearDown();
 
 	}
+
+    public static Test suite()
+    {
+        // All methods starting with "test" will be executed in the test suite.
+        return new RepositoryLifecycleTestSetup(new TestSuite(ObjectContentManagerTest.class));
+    }
+    
+	public ObjectContentManagerTest(String testName) {
+		super(testName);
+		
+	}
+
 
 	public void testClassA() {
 		try {
@@ -57,8 +70,7 @@ public class ObjectContentManagerTest extends TestBase {
 			classNames.add(C.class.getName());
 			classNames.add(A.class.getName());
 
-			ObjectContentManager ocm = new ObjectContentManagerImpl(
-					session, (Mapper) new AnnotatedObjectMapper(session, classNames, new NodeTypeManagerImpl()));
+			ObjectContentManager ocm = this.initObjectContentManager(classNames);
 
 
 			// --------------------------------------------------------------------------------
@@ -139,8 +151,7 @@ public class ObjectContentManagerTest extends TestBase {
 
 			classNames.add(Atomic.class.getName());
 
-			ObjectContentManager ocm = new ObjectContentManagerImpl(
-					session, (Mapper) new AnnotatedObjectMapper(session, classNames, new NodeTypeManagerImpl()));
+			ObjectContentManager ocm = this.initObjectContentManager(classNames);
 
 
 			assertTrue("Class A is not persistent ", ocm.isPersistent(Atomic.class));
