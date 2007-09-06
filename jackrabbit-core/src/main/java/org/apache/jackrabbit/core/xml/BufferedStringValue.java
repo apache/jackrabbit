@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.StringReader;
@@ -285,6 +286,10 @@ class BufferedStringValue implements TextValue {
                 } else {
                     // >= 65kb: deserialize BINARY type
                     // using Reader and temporay file
+                    if (InternalValue.USE_DATA_STORE) {
+                        Base64ReaderInputStream in = new Base64ReaderInputStream(reader());
+                        return InternalValue.createTemporary(in);
+                    }
                     TransientFileFactory fileFactory = TransientFileFactory.getInstance();
                     File tmpFile = fileFactory.createTransientFile("bin", null, null);
                     FileOutputStream out = new FileOutputStream(tmpFile);
@@ -305,6 +310,47 @@ class BufferedStringValue implements TextValue {
             }
         } catch (IOException e) {
             throw new RepositoryException("Error accessing property value", e);
+        }
+    }
+    
+    private static class Base64ReaderInputStream extends InputStream {
+
+        private static final int BUFFER_SIZE = 1024;
+        private final char[] chars;
+        private final ByteArrayOutputStream out;
+        private final Reader reader;
+        private int pos;
+        private int remaining;
+        private byte[] buffer;
+
+        public Base64ReaderInputStream(Reader reader) {
+            chars = new char[BUFFER_SIZE];
+            this.reader = reader;
+            out = new ByteArrayOutputStream(BUFFER_SIZE);
+        }
+
+        private void fillBuffer() throws IOException {
+            int len = reader.read(chars, 0, BUFFER_SIZE);
+            if (len < 0) {
+                remaining = -1;
+                return;
+            }
+            Base64.decode(chars, 0, len, out);
+            buffer = out.toByteArray();
+            pos = 0;
+            remaining = buffer.length;
+            out.reset();
+        }
+
+        public int read() throws IOException {
+            if (remaining == 0) {
+                fillBuffer();
+            }
+            if (remaining < 0) {
+                return -1;
+            }
+            remaining--;
+            return buffer[pos++] & 0xff;
         }
     }
 

@@ -30,6 +30,15 @@ import java.util.List;
 /**
  * Simple file-based data store. Data records are stored as normal files
  * named using a message digest of the contained binary stream.
+ * 
+ * Configuration:<br>
+ * <ul>
+ * <li>&lt;param name="className" value="org.apache.jackrabbit.core.data.FileDataStore"/>
+ * <li>&lt;param name="{@link #setPath(String) path}" value="/data/datastore"/>
+ * </ul>
+ * 
+ * <p>
+ * If the directory is not set, the directory &lt;repository home&gt;/repository/datastore is used.
  * <p>
  * A three level directory structure is used to avoid placing too many
  * files in a single directory. The chosen structure is designed to scale
@@ -61,15 +70,34 @@ public class FileDataStore implements DataStore {
      * The directory that contains all the data record files. The structure
      * of content within this directory is controlled by this class.
      */
-    private final File directory;
+    private File directory;
+    
+    /**
+     * The name of the directory that contains all the data record files. The structure
+     * of content within this directory is controlled by this class.
+     */
+    private String path;
 
     /**
-     * Creates a data store based on the given directory.
+     * Creates a uninitialized data store.
      *
-     * @param directory data store directory
      */
-    public FileDataStore(File directory) {
-        this.directory = directory;
+    public FileDataStore() {
+    }
+    
+    /**
+     * Initialized the data store.
+     * If the path is not set, &lt;repository home&gt;/repository/datastore is used.
+     * This directory is automatically created if it does not yet exist.
+     * 
+     * @param config the repository configuration
+     */
+    public void init(String homeDir) {
+        if (path == null) {
+            path = homeDir + "/repository/datastore";
+        }
+        directory = new File(path);
+        directory.mkdirs();
     }
 
     /**
@@ -132,6 +160,9 @@ public class FileDataStore implements DataStore {
             }
             if (!file.exists()) {
                 temporary.renameTo(file);
+                if (!file.exists()) {
+                    throw new IOException("Can not rename " + temporary.getAbsolutePath() + " to " + file.getAbsolutePath() + " (media read only?)");
+                }
             } else {
                 long now = System.currentTimeMillis();
                 if (file.lastModified() < now) {
@@ -247,6 +278,24 @@ public class FileDataStore implements DataStore {
             }
         }
         return identifiers.iterator();
+    }
+
+    /**
+     * Get the name of the directory where this data store keeps the files.
+     * 
+     * @return the full path name
+     */
+    public String getPath() {
+        return path;
+    }
+
+    /**
+     * Set the name of the directory where this data store keeps the files.
+     * 
+     * @param path the full path name
+     */
+    public void setPath(String directoryName) {
+        this.path = directoryName;
     }
 
 }

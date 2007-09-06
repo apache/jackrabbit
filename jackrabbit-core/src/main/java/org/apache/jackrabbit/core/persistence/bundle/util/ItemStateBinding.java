@@ -64,12 +64,12 @@ public class ItemStateBinding {
     /**
      * serialization version 1
      */
-    public final static int VERSION_1 = 1;
+    public static final int VERSION_1 = 1;
 
     /**
      * current version
      */
-    public final static int VERSION_CURRENT = VERSION_1;
+    public static final int VERSION_CURRENT = VERSION_1;
 
     /**
      * the namespace index
@@ -288,7 +288,7 @@ public class ItemStateBinding {
         // type and modcount
         int type = in.readInt();
         state.setModCount((short) ((type >> 16) & 0x0ffff));
-        type&=0x0ffff;
+        type &= 0x0ffff;
         state.setType(type);
         // multiValued
         state.setMultiValued(in.readBoolean());
@@ -350,9 +350,9 @@ public class ItemStateBinding {
                     // Strings are serialized as <length><byte[]>
                     int len = in.readInt();
                     byte[] bytes = new byte[len];
-                    int pos=0;
+                    int pos = 0;
                     while (pos < len) {
-                        pos+= in.read(bytes, pos, len-pos);
+                        pos += in.read(bytes, pos, len - pos);
                     }
                     val = InternalValue.valueOf(new String(bytes, "UTF-8"), type);
             }
@@ -384,7 +384,7 @@ public class ItemStateBinding {
             switch (state.getType()) {
                 case PropertyType.BINARY:
                     try {
-                        if(InternalValue.USE_DATA_STORE) {
+                        if (InternalValue.USE_DATA_STORE && dataStore != null) {
                             out.writeInt(-2);
                             out.writeUTF(val.toString());
                             break;
@@ -424,7 +424,7 @@ public class ItemStateBinding {
                             try {
                                 int pos = 0;
                                 while (pos < size) {
-                                    int n = in.read(data, pos, (int) size-pos);
+                                    int n = in.read(data, pos, (int) size - pos);
                                     if (n < 0) {
                                         throw new EOFException();
                                     }
@@ -483,9 +483,9 @@ public class ItemStateBinding {
     public UUID readUUID(DataInputStream in) throws IOException {
         if (in.readBoolean()) {
             byte[] bytes = new byte[16];
-            int pos=0;
+            int pos = 0;
             while (pos < 16) {
-                pos += in.read(bytes, pos, 16-pos);
+                pos += in.read(bytes, pos, 16 - pos);
             }
             return new UUID(bytes);
         } else {
@@ -517,9 +517,9 @@ public class ItemStateBinding {
     public NodeId readID(DataInputStream in) throws IOException {
         if (in.readBoolean()) {
             byte[] bytes = new byte[16];
-            int pos=0;
+            int pos = 0;
             while (pos < 16) {
-                pos += in.read(bytes, pos, 16-pos);
+                pos += in.read(bytes, pos, 16 - pos);
             }
             return new NodeId(new UUID(bytes));
         } else {
@@ -608,7 +608,7 @@ public class ItemStateBinding {
      */
     public QName readIndexedQName(DataInputStream in) throws IOException {
         int index = in.readInt();
-        if (index<0) {
+        if (index < 0) {
             return null;
         } else {
             String uri = nsIndex.indexToString(index);

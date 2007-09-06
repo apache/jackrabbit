@@ -288,7 +288,7 @@ public class BundleBinding extends ItemStateBinding {
         writeModCount(out, bundle.getModCount());
 
         // set size of bundle
-        bundle.setSize(out.size()-size);
+        bundle.setSize(out.size() - size);
     }
 
     /**
@@ -305,7 +305,7 @@ public class BundleBinding extends ItemStateBinding {
         // type and modcount
         int type = in.readInt();
         entry.setModCount((short) ((type >> 16) & 0x0ffff));
-        type&=0x0ffff;
+        type &= 0x0ffff;
         entry.setType(type);
 
         // multiValued
@@ -369,8 +369,8 @@ public class BundleBinding extends ItemStateBinding {
                     int len = in.readInt();
                     byte[] bytes = new byte[len];
                     int pos = 0;
-                    while (pos<len) {
-                        pos+= in.read(bytes, pos, len-pos);
+                    while (pos < len) {
+                        pos += in.read(bytes, pos, len - pos);
                     }
                     val = InternalValue.valueOf(new String(bytes, "UTF-8"), type);
             }
@@ -522,8 +522,8 @@ public class BundleBinding extends ItemStateBinding {
                     try {
                         byte[] bytes = new byte[len];
                         int pos = 0;
-                        while (pos<len) {
-                            pos+= in.read(bytes, pos, len-pos);
+                        while (pos < len) {
+                            pos += in.read(bytes, pos, len - pos);
                         }
                         log.info("  string: " + new String(bytes, "UTF-8"));
                     } catch (IOException e) {
@@ -558,7 +558,7 @@ public class BundleBinding extends ItemStateBinding {
             InternalValue val = values[i];
             switch (state.getType()) {
                 case PropertyType.BINARY:
-                    if(InternalValue.USE_DATA_STORE) {
+                    if (InternalValue.USE_DATA_STORE && dataStore != null) {
                         out.writeInt(-2);
                         out.writeUTF(val.toString());
                         break;
@@ -622,7 +622,7 @@ public class BundleBinding extends ItemStateBinding {
                             try {
                                 int pos = 0;
                                 while (pos < size) {
-                                    int n = in.read(data, pos, (int) size-pos);
+                                    int n = in.read(data, pos, (int) size - pos);
                                     if (n < 0) {
                                         throw new EOFException();
                                     }
