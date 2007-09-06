@@ -27,6 +27,11 @@ import org.apache.jackrabbit.core.query.jsr283.qom.DynamicOperand;
 public class OrderingImpl extends AbstractQOMNode implements Ordering {
 
     /**
+     * Empty <code>OrderingImpl</code> array.
+     */
+    public static final OrderingImpl[] EMPTY_ARRAY = new OrderingImpl[0];
+
+    /**
      * Operand by which to order.
      */
     private final DynamicOperandImpl operand;

@@ -27,6 +27,11 @@ import org.apache.jackrabbit.core.query.jsr283.qom.Column;
 public class ColumnImpl extends AbstractQOMNode implements Column {
 
     /**
+     * Empty <code>ColumnImpl</code> array.
+     */
+    public static final ColumnImpl[] EMPTY_ARRAY = new ColumnImpl[0];
+
+    /**
      * The name of the selector.
      */
     private final QName selectorName;
