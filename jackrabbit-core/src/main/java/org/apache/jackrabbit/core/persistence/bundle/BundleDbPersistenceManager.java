@@ -25,7 +25,6 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.persistence.PMContext;
-import org.apache.jackrabbit.core.persistence.AbstractPersistenceManager;
 import org.apache.jackrabbit.core.persistence.bundle.util.DbNameIndex;
 import org.apache.jackrabbit.core.persistence.bundle.util.NodePropBundle;
 import org.apache.jackrabbit.core.persistence.bundle.util.BundleBinding;
@@ -538,6 +537,15 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         Driver drv = (Driver) Class.forName(driver).newInstance();
         log.info("JDBC driver created: {}", drv);
         con = DriverManager.getConnection(url, user, password);
+        
+        DatabaseMetaData meta = con.getMetaData();
+        try {
+            log.info("Database: " + meta.getDatabaseProductName() + " / " + meta.getDatabaseProductVersion());
+            log.info("Driver: " + meta.getDriverName() + " / " + meta.getDriverVersion());
+        } catch (SQLException e) {
+            log.warn("Can not retrieve database and driver name / version", e);
+        }
+        
         con.setAutoCommit(true);
 
         // make sure schemaObjectPrefix consists of legal name characters only
