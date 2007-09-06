@@ -72,6 +72,8 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
 
     private static final BitSet VALID_JOIN_TYPES = new BitSet();
 
+    private static final BitSet VALID_ORDERS = new BitSet();
+
     static {
         VALID_OPERATORS.set(QueryObjectModelConstants.OPERATOR_EQUAL_TO);
         VALID_OPERATORS.set(QueryObjectModelConstants.OPERATOR_GREATER_THAN);
@@ -84,6 +86,9 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
         VALID_JOIN_TYPES.set(QueryObjectModelConstants.JOIN_TYPE_INNER);
         VALID_JOIN_TYPES.set(QueryObjectModelConstants.JOIN_TYPE_LEFT_OUTER);
         VALID_JOIN_TYPES.set(QueryObjectModelConstants.JOIN_TYPE_RIGHT_OUTER);
+
+        VALID_ORDERS.set(QueryObjectModelConstants.ORDER_ASCENDING);
+        VALID_ORDERS.set(QueryObjectModelConstants.ORDER_DESCENDING);
     }
 
     /**
@@ -153,13 +158,17 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
                                         Ordering[] orderings,
                                         Column[] columns)
             throws InvalidQueryException, RepositoryException {
+        if (source == null) {
+            // TODO: correct exception?
+            throw new RepositoryException("source must not be null");
+        }
         if (!(source instanceof SourceImpl)) {
             throw new RepositoryException("Unknown Source implementation");
         }
-        if (!(constraint instanceof ConstraintImpl)) {
+        if (constraint != null && !(constraint instanceof ConstraintImpl)) {
             throw new RepositoryException("Unknown Constraint implementation");
         }
-        OrderingImpl[] ords = null;
+        OrderingImpl[] ords;
         if (orderings != null) {
             ords = new OrderingImpl[orderings.length];
             for (int i = 0; i < orderings.length; i++) {
@@ -168,8 +177,10 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
                 }
                 ords[i] = (OrderingImpl) orderings[i];
             }
+        } else {
+            ords = OrderingImpl.EMPTY_ARRAY;
         }
-        ColumnImpl[] cols = null;
+        ColumnImpl[] cols;
         if (columns != null) {
             cols = new ColumnImpl[columns.length];
             for (int i = 0; i < columns.length; i++) {
@@ -178,6 +189,8 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
                 }
                 cols[i] = (ColumnImpl) columns[i];
             }
+        } else {
+            cols = ColumnImpl.EMPTY_ARRAY;
         }
         QueryObjectModelTree qomTree = new QueryObjectModelTree(
                 resolver, (SourceImpl) source,
@@ -518,8 +531,11 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
                                          String fullTextSearchExpression)
             throws InvalidQueryException, RepositoryException                          // CM
     {
-        return new FullTextSearchImpl(resolver, null,
-                checkPropertyName(propertyName),
+        QName propName = null;
+        if (propertyName != null) {
+            propName = checkPropertyName(propertyName);
+        }
+        return new FullTextSearchImpl(resolver, null, propName,
                 checkFullTextSearchExpression(fullTextSearchExpression));
     }
 
@@ -541,9 +557,12 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
                                          String propertyName,
                                          String fullTextSearchExpression)
             throws InvalidQueryException, RepositoryException {
+        QName propName = null;
+        if (propertyName != null) {
+            propName = checkPropertyName(propertyName);
+        }
         return new FullTextSearchImpl(resolver,
-                checkSelectorName(selectorName),
-                checkPropertyName(propertyName),
+                checkSelectorName(selectorName), propName,
                 checkFullTextSearchExpression(fullTextSearchExpression));
     }
 
