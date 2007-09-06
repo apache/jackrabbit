@@ -216,6 +216,11 @@ public class RepositoryConfig {
      * Optional cluster configuration.
      */
     private final ClusterConfig cc;
+    
+    /**
+     * Optional data store configuration
+     */
+    private final DataStoreConfig dataStoreConfig;
 
     /**
      * Creates a repository configuration object.
@@ -237,7 +242,7 @@ public class RepositoryConfig {
             String workspaceDirectory, String workspaceConfigDirectory,
             String defaultWorkspace, int workspaceMaxIdleTime,
             Element template, VersioningConfig vc, SearchConfig sc,
-            ClusterConfig cc, RepositoryConfigurationParser parser) {
+            ClusterConfig cc, DataStoreConfig dataStoreConfig, RepositoryConfigurationParser parser) {
         workspaces = new HashMap();
         this.home = home;
         this.sec = sec;
@@ -250,6 +255,7 @@ public class RepositoryConfig {
         this.vc = vc;
         this.sc = sc;
         this.cc = cc;
+        this.dataStoreConfig = dataStoreConfig;
         this.parser = parser;
     }
 
@@ -742,4 +748,13 @@ public class RepositoryConfig {
     public ClusterConfig getClusterConfig() {
         return cc;
     }
+    
+    /**
+     * Returns the data store configuration. Returns <code>null</code> if data store
+     * has not been configured.
+     */
+    public DataStoreConfig getDataStoreConfig() {
+        return dataStoreConfig;
+    }
 }
+

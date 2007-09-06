@@ -122,11 +122,7 @@ public class InternalValue {
             case PropertyType.BINARY:
                 try {
                     if (USE_DATA_STORE) {
-                        if (store == null) {
-                            return new InternalValue(BLOBInTempFile.getInstance(value.getStream()));
-                        } else {
-                            return new InternalValue(getBLOBFileValue(store, value.getStream()));
-                        }
+                        return new InternalValue(getBLOBFileValue(store, value.getStream()));
                     }
                     if (value instanceof BLOBFileValue) {
                         return new InternalValue((BLOBFileValue) value);
@@ -169,7 +165,6 @@ public class InternalValue {
                 }
             case PropertyType.STRING:
                 return create(value.getString());
-
             default:
                 throw new IllegalArgumentException("illegal value");
         }
@@ -235,17 +230,18 @@ public class InternalValue {
      */
     public static InternalValue createTemporary(InputStream value) throws IOException {
         if (USE_DATA_STORE) {        
-            return new InternalValue(BLOBInTempFile.getInstance(value));
+            return new InternalValue(getBLOBFileValue(null, value));
         }
         return new InternalValue(new BLOBValue(value, true));
     }
     
     /**
-     * Create an internal value that is backed by a temporary file (if data store usage is disabled)
-     * or (if it is enabled) in the data store.
+     * Create an internal value that is backed by a temporary file 
+     * (if data store usage is disabled or the store is null)
+     * or in the data store if it is not null and enabled.
      * 
      * @param value the stream
-     * @param store the data store
+     * @param store the data store or null to use a temporary file
      * @return the internal value
      */
     public static InternalValue createTemporary(InputStream value, DataStore store) throws IOException {
@@ -262,6 +258,9 @@ public class InternalValue {
      * @throws IOException
      */
     public static InternalValue create(InputStream value) throws IOException {
+        if (USE_DATA_STORE) {
+            return new InternalValue(getBLOBFileValue(null, value));
+        }
         return new InternalValue(new BLOBValue(value, false));
     }
 
@@ -270,8 +269,10 @@ public class InternalValue {
      * @return
      * @throws IOException
      */
-    public static InternalValue create(FileSystemResource value)
-            throws IOException {
+    public static InternalValue create(FileSystemResource value) throws IOException {
+        if (USE_DATA_STORE) {
+            return new InternalValue(BLOBInResource.getInstance(value));
+        }        
         return new InternalValue(new BLOBValue(value));
     }
 
@@ -281,6 +282,9 @@ public class InternalValue {
      * @throws IOException
      */
     public static InternalValue create(File value) throws IOException {
+        if (USE_DATA_STORE) {
+            return new InternalValue(BLOBInTempFile.getInstance(value, false));
+        }                
         return new InternalValue(new BLOBValue(value));
     }
     
@@ -292,7 +296,7 @@ public class InternalValue {
      * @return the value
      */    
     public static InternalValue create(DataStore store, String id) {
-        assert USE_DATA_STORE;
+        assert USE_DATA_STORE && store != null;
         return new InternalValue(getBLOBFileValue(store, id));
     }
 
@@ -613,7 +617,11 @@ public class InternalValue {
         } else {
             // a few bytes are already read, need to re-build the input stream
             in = new SequenceInputStream(new ByteArrayInputStream(buffer, 0, pos), in);
-            return BLOBInDataStore.getInstance(store, in);
+            if (store != null) {
+                return BLOBInDataStore.getInstance(store, in);
+            } else {
+                return BLOBInTempFile.getInstance(in, true);
+            }
         }
     }
 
