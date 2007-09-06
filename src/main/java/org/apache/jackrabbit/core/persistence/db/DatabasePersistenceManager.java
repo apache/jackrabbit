@@ -195,6 +195,14 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         // setup jdbc connection
         initConnection();
 
+        DatabaseMetaData meta = con.getMetaData();
+        try {
+            log.info("Database: " + meta.getDatabaseProductName() + " / " + meta.getDatabaseProductVersion());
+            log.info("Driver: " + meta.getDriverName() + " / " + meta.getDriverVersion());
+        } catch (SQLException e) {
+            log.warn("Can not retrieve database and driver name / version", e);
+        }
+
         // make sure schemaObjectPrefix consists of legal name characters only
         prepareSchemaObjectPrefix();
 
@@ -237,7 +245,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
 
         try {
             // close shared prepared statements
-            for (Iterator it = preparedStatements.values().iterator(); it.hasNext(); ) {
+            for (Iterator it = preparedStatements.values().iterator(); it.hasNext();) {
                 closeStatement((PreparedStatement) it.next());
             }
             preparedStatements.clear();
@@ -777,7 +785,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         // gracefully in order to avoid potential memory leaks
 
         // close shared prepared statements
-        for (Iterator it = preparedStatements.values().iterator(); it.hasNext(); ) {
+        for (Iterator it = preparedStatements.values().iterator(); it.hasNext();) {
             PreparedStatement stmt = ((PreparedStatement) it.next());
             if (stmt != null) {
                 try {
@@ -1160,12 +1168,12 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             return super.skip(n);
         }
 
-        public int read(byte b[]) throws IOException {
+        public int read(byte[] b) throws IOException {
             consumed = true;
             return super.read(b);
         }
 
-        public int read(byte b[], int off, int len) throws IOException {
+        public int read(byte[] b, int off, int len) throws IOException {
             consumed = true;
             return super.read(b, off, len);
         }
