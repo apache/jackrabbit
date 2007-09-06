@@ -92,5 +92,12 @@ public interface DataStore {
      * Get all identifiers.
      */
     Iterator getAllIdentifiers();
+    
+    /**
+     * Initialized the data store
+     * 
+     * @param homeDir the home directory of the repository
+     */
+    void init(String homeDir);
 
 }

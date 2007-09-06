@@ -36,20 +36,20 @@ public class BLOBInTempFile extends BLOBFileValue {
     /**
      * the prefix of the string representation of this value
      */    
-    private static final String PREFIX = "tempFile:";
+    private static final String PREFIX = "file:";
     
     private File file;
     private long length;
+    private final boolean temp;
     
     /**
-     * Creates a new instance from a
-     * <code>byte[]</code> array.
+     * Creates a new instance from a stream.
      *
-     * @param data the byte array
-     * @throws IOException 
+     * @param in the input stream
      * @throws IOException 
      */    
-    private BLOBInTempFile(InputStream in) throws IOException {
+    private BLOBInTempFile(InputStream in, boolean temp) throws IOException {
+        this.temp = temp;
         OutputStream out = null;
         try {
             TransientFileFactory fileFactory = TransientFileFactory.getInstance();
@@ -71,16 +71,35 @@ public class BLOBInTempFile extends BLOBFileValue {
             in.close();
         }
     }
-    
+
     /**
-     * Creates a new instance from a
-     * <code>in[]</code> stream.
+     * Creates a new instance from file.
+     *
+     * @param in the input stream
+     */    
+    private BLOBInTempFile(File file, boolean temp) {
+        this.file = file;
+        this.length = file.length();
+        this.temp = temp;
+    }
+
+    /**
+     * Creates a new instance from a stream.
      *
      * @param in the stream
      */    
-    static BLOBInTempFile getInstance(InputStream in) throws IOException {
-        return new BLOBInTempFile(in);
+    static BLOBInTempFile getInstance(InputStream in, boolean temp) throws IOException {
+        return new BLOBInTempFile(in, temp);
     }
+    
+    /**
+     * Creates a new instance from a file.
+     *
+     * @param file the file
+     */    
+    static BLOBInTempFile getInstance(File file, boolean temp) throws IOException {
+        return new BLOBInTempFile(file, temp);
+    }    
     
     /**
      * {@inheritDoc}
@@ -95,9 +114,9 @@ public class BLOBInTempFile extends BLOBFileValue {
      * {@inheritDoc}
      */
     public void discard() {
-        file.delete();
-        length = -1;
-        file = null;
+        if (temp) {
+            delete(true);
+        }
     }
 
     /**

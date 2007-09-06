@@ -29,6 +29,7 @@ import org.apache.jackrabbit.core.cluster.LockEventChannel;
 import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
 import org.apache.jackrabbit.core.cluster.UpdateEventListener;
 import org.apache.jackrabbit.core.config.ClusterConfig;
+import org.apache.jackrabbit.core.config.DataStoreConfig;
 import org.apache.jackrabbit.core.config.FileSystemConfig;
 import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
@@ -36,7 +37,6 @@ import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.config.VersioningConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.data.DataStore;
-import org.apache.jackrabbit.core.data.FileDataStore;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
@@ -58,6 +58,7 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ManagedMLRUItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.util.RepositoryLock;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.name.NamespaceResolver;
@@ -248,8 +249,6 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             throw new RepositoryException(msg, fse);
         }
         metaDataStore = new BasedFileSystem(repStore, fsRootPath);
-        dataStore =
-            new FileDataStore(new File(repConfig.getHomeDir(), "datastore"));        
 
         // init root node uuid
         rootNodeId = loadRootNodeId(metaDataStore);
@@ -262,6 +261,13 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         // create registries
         nsReg = createNamespaceRegistry(new BasedFileSystem(repStore, "/namespaces"));
         ntReg = createNodeTypeRegistry(nsReg, new BasedFileSystem(repStore, "/nodetypes"));
+        
+        if (repConfig.getDataStoreConfig() != null) {
+            assert InternalValue.USE_DATA_STORE;
+            dataStore = createDataStore();
+        } else {
+            dataStore = null;            
+        }
 
         // init workspace configs
         Iterator iter = repConfig.getWorkspaceConfigs().iterator();
@@ -627,6 +633,18 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         } catch (Exception e) {
             throw new RepositoryException(e);
         }
+    }
+    
+    /**
+     * Create a data store object using the data store configuration.
+     *
+     * @return the data store object
+     */
+    protected DataStore createDataStore() throws RepositoryException {
+        DataStoreConfig dsc = repConfig.getDataStoreConfig();
+        DataStore dataStore = (DataStore) dsc.newInstance();
+        dataStore.init(repConfig.getHomeDir());
+        return dataStore;
     }
 
     protected NamespaceRegistryImpl getNamespaceRegistry() {

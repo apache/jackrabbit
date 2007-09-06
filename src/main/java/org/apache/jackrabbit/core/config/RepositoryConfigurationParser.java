@@ -78,6 +78,9 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
 
     /** Name of the journal configuration element. */
     public static final String JOURNAL_ELEMENT = "Journal";
+    
+    /** Name of the data store configuration element. */
+    public static final String DATA_STORE_ELEMENT = "DataStore";    
 
     /** Name of the persistence manager configuration element. */
     public static final String PERSISTENCE_MANAGER_ELEMENT =
@@ -216,10 +219,13 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
 
         // Optional journal configuration
         ClusterConfig cc = parseClusterConfig(root);
+        
+        // Optional data store configuration
+        DataStoreConfig dsc = parseDataStoreConfig(root);
 
         return new RepositoryConfig(home, securityConfig, fsc,
                 workspaceDirectory, workspaceConfigDirectory, defaultWorkspace,
-                maxIdleTime, template, vc, sc, cc, this);
+                maxIdleTime, template, vc, sc, cc, dsc, this);
     }
 
     /**
@@ -513,6 +519,37 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         return new JournalConfig(
                 parseBeanConfig(cluster, JOURNAL_ELEMENT));
     }
+    
+    /**
+     * Parses data store configuration. Data store configuration uses the following format:
+     * <pre>
+     *   &lt;DataStore class="..."&gt;
+     *     &lt;param name="..." value="..."&gt;
+     *     ...
+     *   &lt;/DataStore&gt;
+     * </pre>
+     * <p/>
+     * <code>DataStore</code> is a {@link #parseBeanConfig(Element,String) bean configuration}
+     * element.
+     *
+     * @param cluster parent cluster element
+     * @return journal configuration, or <code>null</code>
+     * @throws ConfigurationException if the configuration is broken
+     */
+    protected DataStoreConfig parseDataStoreConfig(Element parent)
+            throws ConfigurationException {
+        NodeList children = parent.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE
+                    && DATA_STORE_ELEMENT.equals(child.getNodeName())) {
+                DataStoreConfig cfg = new DataStoreConfig(parseBeanConfig(
+                        parent, DATA_STORE_ELEMENT));
+                return cfg;
+            }
+        }
+        return null;
+    }    
 
     /**
      * Parses the PersistenceManager config.
