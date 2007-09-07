@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.name.QName;
+import org.apache.lucene.analysis.Analyzer;
 import org.w3c.dom.Element;
 
 /**
@@ -39,9 +40,10 @@ public interface IndexingConfiguration {
      *
      * @param config the document element of the configuration DOM.
      * @param context the context of the query handler.
+     * @param namespaceMappings the namespaceMappings.
      * @throws Exception if initialization fails.
      */
-    public void init(Element config, QueryHandlerContext context) throws Exception;
+    public void init(Element config, QueryHandlerContext context, NamespaceMappings namespaceMappings) throws Exception;
 
     /**
      * Returns the configured indexing aggregate rules or <code>null</code> if
@@ -92,4 +94,19 @@ public interface IndexingConfiguration {
      * @return the boost for the node scope fulltext index field.
      */
     float getNodeBoost(NodeState state);
+    
+    /**
+     * Returns the analyzer configured for the property with this fieldName 
+     * (the string representation ,JCR-style name, of the given <code>QName</code> 
+     * prefixed with <code>FieldNames.FULLTEXT_PREFIX</code>), 
+     * and <code>null</code> if none is configured, or the configured analyzer
+     * cannot be found. If <code>null</code> is returned, the default Analyzer
+     * is used.
+     * 
+     * @param fieldName the string representation ,JCR-style name, of the given <code>QName</code>, 
+     * prefixed with <code>FieldNames.FULLTEXT_PREFIX</code>)
+     * @return the <code>analyzer</code> to use for indexing this property 
+     */
+    Analyzer getPropertyAnalyzer(String fieldName);
+    
 }
