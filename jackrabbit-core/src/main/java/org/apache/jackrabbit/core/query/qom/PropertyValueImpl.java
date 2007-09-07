@@ -51,6 +51,26 @@ public class PropertyValueImpl
      *
      * @return the selector name; non-null
      */
+    public QName getSelectorQName() {
+        return selectorName;
+    }
+
+    /**
+     * Gets the name of the property.
+     *
+     * @return the property name; non-null
+     */
+    public QName getPropertyQName() {
+        return propertyName;
+    }
+
+    //------------------------------< PropertyValue >---------------------------
+
+    /**
+     * Gets the name of the selector against which to evaluate this operand.
+     *
+     * @return the selector name; non-null
+     */
     public String getSelectorName() {
         return getJCRName(selectorName);
     }
@@ -72,7 +92,7 @@ public class PropertyValueImpl
      *
      * @param visitor the visitor.
      */
-    public void accept(QOMTreeVisitor visitor, Object data) {
-        visitor.visit(this, data);
+    public Object accept(QOMTreeVisitor visitor, Object data) throws Exception {
+        return visitor.visit(this, data);
     }
 }

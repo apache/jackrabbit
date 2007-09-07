@@ -58,6 +58,28 @@ public class FullTextSearchImpl
      *
      * @return the selector name; non-null
      */
+    public QName getSelectorQName() {
+        return selectorName;
+    }
+
+    /**
+     * Gets the name of the property.
+     *
+     * @return the property name if the full-text search scope is a property,
+     *         otherwise null if the full-text search scope is the node (or node
+     *         subtree, in some implementations).
+     */
+    public QName getPropertyQName() {
+        return propertyName;
+    }
+
+    //--------------------------< FullTextSearch >------------------------------
+
+    /**
+     * Gets the name of the selector against which to apply this constraint.
+     *
+     * @return the selector name; non-null
+     */
     public String getSelectorName() {
         return getJCRName(selectorName);
     }
@@ -90,7 +112,7 @@ public class FullTextSearchImpl
      *
      * @param visitor the visitor.
      */
-    public void accept(QOMTreeVisitor visitor, Object data) {
-        visitor.visit(this, data);
+    public Object accept(QOMTreeVisitor visitor, Object data) throws Exception {
+        return visitor.visit(this, data);
     }
 }

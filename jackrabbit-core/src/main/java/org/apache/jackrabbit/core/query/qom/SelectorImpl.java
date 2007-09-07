@@ -49,6 +49,29 @@ public class SelectorImpl extends SourceImpl implements Selector {
      *
      * @return the node type name; non-null
      */
+    public QName getNodeTypeQName() {
+        return nodeTypeName;
+    }
+
+    /**
+     * Gets the selector name.
+     * <p/>
+     * A selector's name can be used elsewhere in the query to identify the
+     * selector.
+     *
+     * @return the selector name; non-null
+     */
+    public QName getSelectorQName() {
+        return selectorName;
+    }
+
+    //-----------------------------< Selector >---------------------------------
+
+    /**
+     * Gets the name of the required node type.
+     *
+     * @return the node type name; non-null
+     */
     public String getNodeTypeName() {
         return getJCRName(nodeTypeName);
     }
@@ -73,7 +96,7 @@ public class SelectorImpl extends SourceImpl implements Selector {
      *
      * @param visitor the visitor.
      */
-    public void accept(QOMTreeVisitor visitor, Object data) {
-        visitor.visit(this, data);
+    public Object accept(QOMTreeVisitor visitor, Object data) throws Exception {
+        return visitor.visit(this, data);
     }
 }

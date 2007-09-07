@@ -48,7 +48,7 @@ import java.util.Set;
  * <li><code>_</code> : matches exactly one character</li>
  * </ul>
  */
-public class WildcardQuery extends Query implements TransformConstants {
+public class WildcardQuery extends Query implements Transformable {
 
     /**
      * Logger instance for this class.
@@ -74,7 +74,7 @@ public class WildcardQuery extends Query implements TransformConstants {
      * How property values are tranformed before they are matched using the
      * provided pattern.
      */
-    private final int transform;
+    private int transform = TRANSFORM_NONE;
 
     /**
      * The standard multi term query to execute wildcard queries. This is only
@@ -107,6 +107,13 @@ public class WildcardQuery extends Query implements TransformConstants {
      */
     public WildcardQuery(String field, String propName, String pattern) {
         this(field, propName, pattern, TRANSFORM_NONE);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setTransformation(int transformation) {
+        this.transform = transformation;
     }
 
     /**

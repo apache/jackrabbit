@@ -16,48 +16,28 @@
  */
 package org.apache.jackrabbit.core.query.qom;
 
+import org.apache.jackrabbit.core.query.jsr283.qom.Literal;
 import org.apache.jackrabbit.name.NamePathResolver;
 
-import org.apache.jackrabbit.core.query.jsr283.qom.Or;
-import org.apache.jackrabbit.core.query.jsr283.qom.Constraint;
+import javax.jcr.Value;
 
 /**
- * <code>OrImpl</code>...
+ * <code>LiteralImpl</code>...
  */
-public class OrImpl extends ConstraintImpl implements Or {
+public class LiteralImpl extends StaticOperandImpl implements Literal {
 
-    /**
-     * The first constraint.
-     */
-    private final ConstraintImpl constraint1;
+    private final Value value;
 
-    /**
-     * The second constraint.
-     */
-    private final ConstraintImpl constraint2;
-
-    OrImpl(NamePathResolver resolver, ConstraintImpl c1, ConstraintImpl c2) {
+    public LiteralImpl(NamePathResolver resolver, Value value) {
         super(resolver);
-        this.constraint1 = c1;
-        this.constraint2 = c2;
+        this.value = value;
     }
 
     /**
-     * Gets the first constraint.
-     *
-     * @return the constraint; non-null
+     * @return the value of this literal.
      */
-    public Constraint getConstraint1() {
-        return constraint1;
-    }
-
-    /**
-     * Gets the second constraint.
-     *
-     * @return the constraint; non-null
-     */
-    public Constraint getConstraint2() {
-        return constraint2;
+    public Value getValue() {
+        return value;
     }
 
     //------------------------< AbstractQOMNode >-------------------------------

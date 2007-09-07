@@ -45,7 +45,7 @@ import java.util.Set;
  * but will calculate the matching documents itself. That way a
  * <code>TooManyClauses</code> can be avoided.
  */
-public class RangeQuery extends Query implements TransformConstants {
+public class RangeQuery extends Query implements Transformable {
 
     /**
      * Logger instance for this class.
@@ -73,13 +73,25 @@ public class RangeQuery extends Query implements TransformConstants {
      * How the term enum is transformed before it is compared to lower and upper
      * term.
      */
-    private final int transform;
+    private int transform = TRANSFORM_NONE;
 
     /**
      * The rewritten range query or <code>null</code> if the range spans more
      * than {@link org.apache.lucene.search.BooleanQuery#maxClauseCount} terms.
      */
     private Query stdRangeQuery;
+
+    /**
+     * Creates a new RangeQuery. The lower or the upper term may be
+     * <code>null</code>, but not both!
+     *
+     * @param lowerTerm the lower term of the interval, or <code>null</code>
+     * @param upperTerm the upper term of the interval, or <code>null</code>.
+     * @param inclusive if <code>true</code> the interval is inclusive.
+     */
+    public RangeQuery(Term lowerTerm, Term upperTerm, boolean inclusive) {
+        this(lowerTerm, upperTerm, inclusive, TRANSFORM_NONE);
+    }
 
     /**
      * Creates a new RangeQuery. The lower or the upper term may be
@@ -108,6 +120,13 @@ public class RangeQuery extends Query implements TransformConstants {
         this.upperTerm = upperTerm;
         this.inclusive = inclusive;
         this.transform = transform;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setTransformation(int transformation) {
+        this.transform = transformation;
     }
 
     /**

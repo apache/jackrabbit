@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 
 /**
  * A <code>QueryObjectModelFactory</code> creates instances of the JCR query
@@ -561,6 +562,17 @@ public interface QueryObjectModelFactory
      * @throws RepositoryException   if the operation otherwise fails
      */
     public BindVariableValue bindVariable(String bindVariableName)
+            throws InvalidQueryException, RepositoryException;
+
+    /**
+     * Evaluates to a literal value.
+     *
+     * @param value a JCR value; non-null
+     * @return the operand; non-null
+     * @throws InvalidQueryException if the query is invalid
+     * @throws RepositoryException   if the operation otherwise fails
+     */
+    public Literal literal(Value value)
             throws InvalidQueryException, RepositoryException;
 
     ///
