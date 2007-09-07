@@ -69,7 +69,7 @@ public class ChildNodeImpl extends ConstraintImpl implements ChildNode {
      *
      * @param visitor the visitor.
      */
-    public void accept(QOMTreeVisitor visitor, Object data) {
-        visitor.visit(this, data);
+    public Object accept(QOMTreeVisitor visitor, Object data) throws Exception {
+        return visitor.visit(this, data);
     }
 }

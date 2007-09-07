@@ -21,55 +21,57 @@ package org.apache.jackrabbit.core.query.qom;
  */
 public interface QOMTreeVisitor {
 
-    public void visit(AndImpl node, Object data);
+    public Object visit(AndImpl node, Object data) throws Exception;
 
-    public void visit(BindVariableValueImpl node, Object data);
+    public Object visit(BindVariableValueImpl node, Object data) throws Exception;
 
-    public void visit(ChildNodeImpl node, Object data);
+    public Object visit(ChildNodeImpl node, Object data) throws Exception;
 
-    public void visit(ChildNodeJoinConditionImpl node, Object data);
+    public Object visit(ChildNodeJoinConditionImpl node, Object data) throws Exception;
 
-    public void visit(ColumnImpl node, Object data);
+    public Object visit(ColumnImpl node, Object data) throws Exception;
 
-    public void visit(ComparisonImpl node, Object data);
+    public Object visit(ComparisonImpl node, Object data) throws Exception;
 
-    public void visit(DescendantNodeImpl node, Object data);
+    public Object visit(DescendantNodeImpl node, Object data) throws Exception;
 
-    public void visit(DescendantNodeJoinConditionImpl node, Object data);
+    public Object visit(DescendantNodeJoinConditionImpl node, Object data) throws Exception;
 
-    public void visit(EquiJoinConditionImpl node, Object data);
+    public Object visit(EquiJoinConditionImpl node, Object data) throws Exception;
 
-    public void visit(FullTextSearchImpl node, Object data);
+    public Object visit(FullTextSearchImpl node, Object data) throws Exception;
 
-    public void visit(FullTextSearchScoreImpl node, Object data);
+    public Object visit(FullTextSearchScoreImpl node, Object data) throws Exception;
 
-    public void visit(JoinImpl node, Object data);
+    public Object visit(JoinImpl node, Object data) throws Exception;
 
-    public void visit(LengthImpl node, Object data);
+    public Object visit(LengthImpl node, Object data) throws Exception;
 
-    public void visit(LowerCaseImpl node, Object data);
+    public Object visit(LiteralImpl node, Object data) throws Exception;
 
-    public void visit(NodeLocalNameImpl node, Object data);
+    public Object visit(LowerCaseImpl node, Object data) throws Exception;
 
-    public void visit(NodeNameImpl node, Object data);
+    public Object visit(NodeLocalNameImpl node, Object data) throws Exception;
 
-    public void visit(NotImpl node, Object data);
+    public Object visit(NodeNameImpl node, Object data) throws Exception;
 
-    public void visit(OrderingImpl node, Object data);
+    public Object visit(NotImpl node, Object data) throws Exception;
 
-    public void visit(OrImpl node, Object data);
+    public Object visit(OrderingImpl node, Object data) throws Exception;
 
-    public void visit(PropertyExistenceImpl node, Object data);
+    public Object visit(OrImpl node, Object data) throws Exception;
 
-    public void visit(PropertyValueImpl node, Object data);
+    public Object visit(PropertyExistenceImpl node, Object data) throws Exception;
 
-    public void visit(QueryObjectModelTree node, Object data);
+    public Object visit(PropertyValueImpl node, Object data) throws Exception;
 
-    public void visit(SameNodeImpl node, Object data);
+    public Object visit(QueryObjectModelTree node, Object data) throws Exception;
 
-    public void visit(SameNodeJoinConditionImpl node, Object data);
+    public Object visit(SameNodeImpl node, Object data) throws Exception;
 
-    public void visit(SelectorImpl node, Object data);
+    public Object visit(SameNodeJoinConditionImpl node, Object data) throws Exception;
 
-    public void visit(UpperCaseImpl node, Object data);
+    public Object visit(SelectorImpl node, Object data) throws Exception;
+
+    public Object visit(UpperCaseImpl node, Object data) throws Exception;
 }

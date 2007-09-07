@@ -36,7 +36,7 @@ public class PreparedQueryImpl extends QueryImpl implements PreparedQuery {
     /**
      * The executable prepared query.
      */
-    protected ExecutablePreparedQuery query;
+    protected ExecutablePreparedQuery prepQuery;
 
     /**
      * The query object model tree.
@@ -56,8 +56,8 @@ public class PreparedQueryImpl extends QueryImpl implements PreparedQuery {
         this.language = language;
         this.handler = handler;
         this.statement = statement;
-        this.query = handler.createExecutablePreparedQuery(
-                session, itemMgr, createQOMTree(statement, language));
+        setExecutableQuery(handler.createExecutablePreparedQuery(
+                session, itemMgr, createQOMTree(statement, language)));
         setInitialized();
     }
 
@@ -76,10 +76,10 @@ public class PreparedQueryImpl extends QueryImpl implements PreparedQuery {
         if (!node.isNodeType(session.getJCRName(QName.NT_QUERY))) {
             throw new InvalidQueryException("node is not of type nt:query");
         }
-        statement = node.getProperty(session.getJCRName(QName.JCR_STATEMENT)).getString();
-        language = node.getProperty(session.getJCRName(QName.JCR_LANGUAGE)).getString();
-        query = handler.createExecutablePreparedQuery(
-                session, itemMgr, createQOMTree(statement, language));
+        this.statement = node.getProperty(session.getJCRName(QName.JCR_STATEMENT)).getString();
+        this.language = node.getProperty(session.getJCRName(QName.JCR_LANGUAGE)).getString();
+        setExecutableQuery(handler.createExecutablePreparedQuery(
+                session, itemMgr, createQOMTree(statement, language)));
         setInitialized();
     }
 
@@ -98,7 +98,8 @@ public class PreparedQueryImpl extends QueryImpl implements PreparedQuery {
         this.handler = handler;
         this.qomTree = qomTree;
         this.statement = null; // TODO: format qomTree into a SQL2 statement
-        this.query = handler.createExecutablePreparedQuery(session, itemMgr, qomTree);
+        setExecutableQuery(handler.createExecutablePreparedQuery(
+                session, itemMgr, qomTree));
         setInitialized();
     }
 
@@ -116,13 +117,23 @@ public class PreparedQueryImpl extends QueryImpl implements PreparedQuery {
     public void bindValue(String varName, Value value)
             throws IllegalArgumentException, RepositoryException {
         try {
-            query.bindValue(session.getQName(varName), value);
+            prepQuery.bindValue(session.getQName(varName), value);
         } catch (NameException e) {
             throw new RepositoryException(e.getMessage());
         }
     }
 
     //----------------------------< internal >----------------------------------
+
+    /**
+     * Sets the executable query.
+     *
+     * @param query the executable query.
+     */
+    private void setExecutableQuery(ExecutablePreparedQuery query) {
+        super.query = query;
+        this.prepQuery = query;
+    }
 
     /**
      * Creates a {@link QueryObjectModelTree} representation for the query

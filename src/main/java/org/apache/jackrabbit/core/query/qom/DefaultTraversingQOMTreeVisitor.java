@@ -17,194 +17,81 @@
 package org.apache.jackrabbit.core.query.qom;
 
 /**
- * <code>DefaultTraversingQOMTreeVisitor</code>...
+ * <code>DefaultTraversingQOMTreeVisitor</code> default implementation of a
+ * traversing {@link QOMTreeVisitor}.
  */
-public class DefaultTraversingQOMTreeVisitor implements QOMTreeVisitor {
+public class DefaultTraversingQOMTreeVisitor extends DefaultQOMTreeVisitor {
 
     /**
-     * {@inheritDoc}
-     * <p/>
      * Calls accept on each of the attached constraints of the AND node.
      */
-    public final void visit(AndImpl node, Object data) {
+    public final Object visit(AndImpl node, Object data) throws Exception {
         ((ConstraintImpl) node.getConstraint1()).accept(this, data);
         ((ConstraintImpl) node.getConstraint2()).accept(this, data);
+        return data;
     }
 
     /**
-     * {@inheritDoc}
-     * <p/>
-     * Does nothing.
-     */
-    public void visit(BindVariableValueImpl node, Object data) {
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Does nothing.
-     */
-    public void visit(ChildNodeImpl node, Object data) {
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Does nothing.
-     */
-    public void visit(ChildNodeJoinConditionImpl node, Object data) {
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Does nothing.
-     */
-    public void visit(ColumnImpl node, Object data) {
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
      * Calls accept on the two operands in the comparison node.
      */
-    public void visit(ComparisonImpl node, Object data) {
+    public Object visit(ComparisonImpl node, Object data) throws Exception {
         ((DynamicOperandImpl) node.getOperand1()).accept(this, data);
         ((StaticOperandImpl) node.getOperand2()).accept(this, data);
+        return data;
     }
 
     /**
-     * {@inheritDoc}
-     * <p/>
-     * Does nothing.
-     */
-    public void visit(DescendantNodeImpl node, Object data) {
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Does nothing.
-     */
-    public void visit(DescendantNodeJoinConditionImpl node, Object data) {
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Does nothing.
-     */
-    public void visit(EquiJoinConditionImpl node, Object data) {
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Does nothing.
-     */
-    public void visit(FullTextSearchImpl node, Object data) {
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Does nothing.
-     */
-    public void visit(FullTextSearchScoreImpl node, Object data) {
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
      * Calls accept on the two sources and the join condition in the join node.
      */
-    public void visit(JoinImpl node, Object data) {
+    public Object visit(JoinImpl node, Object data) throws Exception {
         ((SourceImpl) node.getRight()).accept(this, data);
         ((SourceImpl) node.getLeft()).accept(this, data);
         ((JoinConditionImpl) node.getJoinCondition()).accept(this, data);
+        return data;
     }
 
     /**
-     * {@inheritDoc}
-     * <p/>
      * Calls accept on the property value in the length node.
      */
-    public void visit(LengthImpl node, Object data) {
+    public Object visit(LengthImpl node, Object data) throws Exception {
         ((PropertyValueImpl) node.getPropertyValue()).accept(this, data);
+        return data;
     }
 
     /**
-     * {@inheritDoc}
-     * <p/>
      * Calls accept on the dynamic operand in the lower-case node.
      */
-    public void visit(LowerCaseImpl node, Object data) {
+    public Object visit(LowerCaseImpl node, Object data) throws Exception {
         ((DynamicOperandImpl) node.getOperand()).accept(this, data);
+        return data;
     }
 
     /**
-     * {@inheritDoc}
-     * <p/>
-     * Does nothing.
-     */
-    public void visit(NodeLocalNameImpl node, Object data) {
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Does nothing.
-     */
-    public void visit(NodeNameImpl node, Object data) {
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
      * Calls accept on the constraint in the NOT node.
      */
-    public void visit(NotImpl node, Object data) {
+    public Object visit(NotImpl node, Object data) throws Exception {
         ((ConstraintImpl) node.getConstraint()).accept(this, data);
+        return data;
     }
 
     /**
-     * {@inheritDoc}
-     * <p/>
      * Calls accept on the dynamic operand in the ordering node.
      */
-    public void visit(OrderingImpl node, Object data) {
+    public Object visit(OrderingImpl node, Object data) throws Exception {
         ((DynamicOperandImpl) node.getOperand()).accept(this, data);
+        return data;
     }
 
     /**
-     * {@inheritDoc}
-     * <p/>
      * Calls accept on each of the attached constraints of the OR node.
      */
-    public final void visit(OrImpl node, Object data) {
+    public Object visit(OrImpl node, Object data) throws Exception {
         ((ConstraintImpl) node.getConstraint1()).accept(this, data);
         ((ConstraintImpl) node.getConstraint2()).accept(this, data);
+        return data;
     }
 
     /**
-     * {@inheritDoc}
-     * <p/>
-     * Does nothing.
-     */
-    public void visit(PropertyExistenceImpl node, Object data) {
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Does nothing.
-     */
-    public void visit(PropertyValueImpl node, Object data) {
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
      * Calls accept on the following contained QOM nodes:
      * <ul>
      * <li>Source</li>
@@ -213,7 +100,7 @@ public class DefaultTraversingQOMTreeVisitor implements QOMTreeVisitor {
      * <li>Columns</li>
      * </ul>
      */
-    public void visit(QueryObjectModelTree node, Object data) {
+    public Object visit(QueryObjectModelTree node, Object data) throws Exception {
         node.getSource().accept(this, data);
         ConstraintImpl constraint = node.getConstraint();
         if (constraint != null) {
@@ -227,38 +114,14 @@ public class DefaultTraversingQOMTreeVisitor implements QOMTreeVisitor {
         for (int i = 0; i < columns.length; i++) {
             columns[i].accept(this, data);
         }
+        return data;
     }
 
     /**
-     * {@inheritDoc}
-     * <p/>
-     * Does nothing.
-     */
-    public void visit(SameNodeImpl node, Object data) {
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Does nothing.
-     */
-    public void visit(SameNodeJoinConditionImpl node, Object data) {
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Does nothing.
-     */
-    public void visit(SelectorImpl node, Object data) {
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
      * Calls accept on the dynamic operand in the lower-case node.
      */
-    public void visit(UpperCaseImpl node, Object data) {
+    public Object visit(UpperCaseImpl node, Object data) throws Exception {
         ((DynamicOperandImpl) node.getOperand()).accept(this, data);
+        return data;
     }
 }

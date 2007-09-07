@@ -54,12 +54,14 @@ import org.apache.jackrabbit.core.query.jsr283.qom.LowerCase;
 import org.apache.jackrabbit.core.query.jsr283.qom.UpperCase;
 import org.apache.jackrabbit.core.query.jsr283.qom.BindVariableValue;
 import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants;
+import org.apache.jackrabbit.core.query.jsr283.qom.Literal;
 import org.apache.jackrabbit.core.query.QueryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SearchManager;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import java.util.BitSet;
 
 /**
@@ -867,6 +869,23 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
         } catch (NameException e) {
             throw new InvalidQueryException(e.getMessage());
         }
+    }
+
+    /**
+     * Evaluates to a literal value.
+     *
+     * @param value a JCR value; non-null
+     * @return the operand; non-null
+     * @throws InvalidQueryException if the query is invalid
+     * @throws RepositoryException   if the operation otherwise fails
+     */
+    public Literal literal(Value value)
+            throws InvalidQueryException, RepositoryException {
+        if (value == null) {
+            // TODO: correct exception?
+            throw new RepositoryException("value must not be null");
+        }
+        return new LiteralImpl(resolver, value);
     }
 
     /**

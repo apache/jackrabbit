@@ -40,7 +40,7 @@ public abstract class AbstractQOMNode {
      * @param visitor the visitor.
      * @param data    user defined data, which is passed to the visit method.
      */
-    public abstract void accept(QOMTreeVisitor visitor, Object data);
+    public abstract Object accept(QOMTreeVisitor visitor, Object data) throws Exception;
 
     //---------------------------< internal >-----------------------------------
 
