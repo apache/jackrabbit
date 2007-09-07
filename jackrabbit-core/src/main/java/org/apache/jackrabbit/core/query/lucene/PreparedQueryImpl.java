@@ -102,8 +102,10 @@ public class PreparedQueryImpl
      */
     public QueryResult execute(long offset, long limit)
             throws RepositoryException {
-        // TODO: turn QOM tree into a lucene query
-        Query query = null;
+        Query query = JQOM2LuceneQueryBuilder.createQuery(qomTree, session,
+                index.getContext().getItemStateManager(),
+                index.getNamespaceMappings(), index.getTextAnalyzer(),
+                propReg, index.getSynonymProvider(), bindValues);
 
         ColumnImpl[] columns = qomTree.getColumns();
         QName[] selectProps = new QName[columns.length];
@@ -155,10 +157,15 @@ public class PreparedQueryImpl
      */
     private void extractBindVariableNames(QueryObjectModelTree qomTree,
                                            final Set bindVariableNames) {
-        qomTree.accept(new DefaultTraversingQOMTreeVisitor() {
-            public void visit(BindVariableValueImpl node, Object data) {
-                bindVariableNames.add(node.getBindVariableQName());
-            }
-        }, null);
+        try {
+            qomTree.accept(new DefaultTraversingQOMTreeVisitor() {
+                public Object visit(BindVariableValueImpl node, Object data) {
+                    bindVariableNames.add(node.getBindVariableQName());
+                    return data;
+                }
+            }, null);
+        } catch (Exception e) {
+            // will never happen
+        }
     }
 }
