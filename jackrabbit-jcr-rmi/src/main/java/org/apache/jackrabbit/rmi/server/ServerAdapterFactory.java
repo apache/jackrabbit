@@ -48,7 +48,9 @@ import javax.jcr.query.RowIterator;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
+import javax.transaction.xa.XAResource;
 
+import org.apache.jackrabbit.api.XASession;
 import org.apache.jackrabbit.rmi.remote.ArrayIterator;
 import org.apache.jackrabbit.rmi.remote.BufferIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteEventCollection;
@@ -73,6 +75,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteSession;
 import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
+import org.apache.jackrabbit.rmi.remote.RemoteXAResource;
 import org.apache.jackrabbit.rmi.server.iterator.ServerNodeIterator;
 import org.apache.jackrabbit.rmi.server.iterator.ServerNodeTypeIterator;
 import org.apache.jackrabbit.rmi.server.iterator.ServerPropertyIterator;
@@ -127,11 +130,19 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
 
     /**
      * Creates a {@link ServerSession ServerSession} instance.
+     * In case the underlying session is transaction enabled, the
+     * remote interface is will be transaction enabled too through
+     * the {@link ServerXASession}.
+     *
      * {@inheritDoc}
      */
     public RemoteSession getRemoteSession(Session session)
             throws RemoteException {
-        return new ServerSession(session, this);
+        if (session instanceof XASession) {
+            return new ServerXASession((XASession) session, this);
+        } else {
+            return new ServerSession(session, this);
+        }
     }
 
     /**
@@ -394,6 +405,14 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
             throws RemoteException {
         return optimizeIterator(
                 new ServerRowIterator(iterator, this, bufferSize));
+    }
+
+    /**
+     * Creates a {@link ServerXAResource} instance.
+     */
+    public RemoteXAResource getRemoteXAResource(XAResource resource)
+            throws RemoteException {
+        return new ServerXAResource(resource);
     }
 
 }
