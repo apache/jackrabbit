@@ -28,6 +28,8 @@ import javax.transaction.HeuristicRollbackException;
 import javax.transaction.RollbackException;
 import javax.jcr.Session;
 
+import org.apache.jackrabbit.api.XASession;
+
 /**
  * Internal {@link javax.transaction.UserTransaction} implementation.
  */
