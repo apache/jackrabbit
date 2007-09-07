@@ -23,9 +23,7 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
