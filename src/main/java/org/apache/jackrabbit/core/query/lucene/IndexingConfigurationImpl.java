@@ -38,7 +38,10 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.util.ISO9075;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.commons.collections.iterators.AbstractIteratorDecorator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -62,6 +65,11 @@ import java.util.Properties;
  */
 public class IndexingConfigurationImpl implements IndexingConfiguration {
 
+    /**
+     * The logger instance for this class
+     */
+    private static final Logger log = LoggerFactory.getLogger(IndexingConfigurationImpl.class);
+    
     /**
      * A namespace resolver for parsing QNames in the configuration.
      */
@@ -93,9 +101,14 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
     private AggregateRule[] aggregateRules;
 
     /**
+     * The configured analyzers for indexing properties.
+     */
+    private Map analyzers = new HashMap();
+    
+    /**
      * {@inheritDoc}
      */
-    public void init(Element config, QueryHandlerContext context) throws Exception {
+    public void init(Element config, QueryHandlerContext context, NamespaceMappings nsMappings) throws Exception {
         ntReg = context.getNodeTypeRegistry();
         ism = context.getItemStateManager();
         NameResolver nameResolver = new ParsingNameResolver(
@@ -126,7 +139,49 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
             } else if (configNode.getNodeName().equals("aggregate")) {
                 idxAggregates.add(new AggregateRuleImpl(
                         configNode, nsResolver, ism, hmgr));
+            } else if (configNode.getNodeName().equals("analyzers")) {
+                NodeList childNodes = configNode.getChildNodes();
+                for (int j = 0; j < childNodes.getLength(); j++) {
+                    Node analyzerNode = childNodes.item(j);
+                    if (analyzerNode.getNodeName().equals("analyzer")) {
+                        String analyzerClassName = analyzerNode.getAttributes().getNamedItem("class").getNodeValue();
+                        try {
+                        Class clazz = Class.forName(analyzerClassName);
+                            if(clazz == JackrabbitAnalyzer.class) {
+                                log.warn("Not allowed to configure " + JackrabbitAnalyzer.class.getName() +  " for a property. " +
+                                        "Using default analyzer for that property.");
+                            }
+                            else if(Analyzer.class.isAssignableFrom(clazz)){
+                                Analyzer analyzer = (Analyzer)clazz.newInstance();
+                                NodeList propertyChildNodes = analyzerNode.getChildNodes();
+                                for (int k = 0; k < propertyChildNodes.getLength(); k++) {
+                                    Node propertyNode = propertyChildNodes.item(k);
+                                    if (propertyNode.getNodeName().equals("property")) {
+                                        // get property name
+                                        QName propName = NameFormat.parse(getTextContent(propertyNode), nsResolver);
+                                        String fieldName = NameFormat.format(propName, nsMappings);
+                                        // set analyzer for the fulltext property fieldname
+                                        int idx = fieldName.indexOf(':');
+                                        fieldName = fieldName.substring(0, idx + 1)
+                                                    + FieldNames.FULLTEXT_PREFIX + fieldName.substring(idx + 1);;
+                                        Object prevAnalyzer = analyzers.put(fieldName, analyzer);
+                                        if(prevAnalyzer!=null){
+                                            log.warn("Property " + propName.getLocalName() + " has been configured for multiple analyzers. " +
+                                                    " Last configured analyzer is used");
+                                        }
+                                    }
+                                }
+                            } else {
+                                log.warn("org.apache.lucene.analysis.Analyzer is not a superclass of " 
+                                        + analyzerClassName +". Ignoring this configure analyzer" );
+                            }
+                        } catch (ClassNotFoundException e) {
+                            log.warn("Analyzer class not found: " + analyzerClassName, e);
+                        }
+                    }
+                }
             }
+            
         }
         aggregateRules = (AggregateRule[]) idxAggregates.toArray(
                 new AggregateRule[idxAggregates.size()]);
@@ -211,6 +266,25 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
         return true;
     }
 
+    
+    /**
+     * Returns the analyzer configured for the property with this fieldName 
+     * (the string representation ,JCR-style name, of the given <code>QName</code>
+     * prefixed with <code>FieldNames.FULLTEXT_PREFIX</code>)), 
+     * and <code>null</code> if none is configured, or the configured analyzer
+     * cannot be found. If <code>null</code> is returned, the default Analyzer
+     * is used.
+     * 
+     * @param fieldName the string representation ,JCR-style name, of the given <code>QName</code>
+     * prefixed with <code>FieldNames.FULLTEXT_PREFIX</code>))
+     * @return the <code>analyzer</code> to use for indexing this property 
+     */
+    public Analyzer getPropertyAnalyzer(String fieldName) {
+        if(analyzers.containsKey(fieldName)){
+            return (Analyzer)analyzers.get(fieldName);
+        }
+        return null;
+    }
     //---------------------------------< internal >-----------------------------
 
     /**

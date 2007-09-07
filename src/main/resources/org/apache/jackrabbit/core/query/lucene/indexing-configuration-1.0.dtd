@@ -64,3 +64,14 @@
 <!ELEMENT property (#PCDATA)>
 <!ATTLIST property boost CDATA "1.0"
                    nodeScopeIndex CDATA "true">
+
+<!--
+    An analyzer element with property elements in it defines which analyzer is to 
+    be used for indexing and parsing the full text of this property. If the analyzer
+    class can not be found, the default analyzer is used. The node scope is always 
+    indexed with the default analyzer, so might return different results for search 
+    queries in some rare cases. 
+-->
+<!ELEMENT analyzers (analyzer*)>   
+<!ELEMENT analyzer (property*)>
+<!ATTLIST analyzer class CDATA #REQUIRED>

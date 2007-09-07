@@ -39,7 +39,6 @@ import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.index.Term;
@@ -152,7 +151,7 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * The analyzer we use for indexing.
      */
-    private Analyzer analyzer;
+    private JackrabbitAnalyzer analyzer;
 
     /**
      * List of text extractor and text filter class names. The configured
@@ -330,7 +329,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * Default constructor.
      */
     public SearchIndex() {
-        this.analyzer = new StandardAnalyzer(new String[]{});
+        this.analyzer = new JackrabbitAnalyzer();
     }
 
     /**
@@ -352,7 +351,6 @@ public class SearchIndex extends AbstractQueryHandler {
         }
 
         extractor = createTextExtractor();
-        indexingConfig = createIndexingConfiguration();
         synProvider = createSynonymProvider();
 
         File indexDir = new File(path);
@@ -375,7 +373,10 @@ public class SearchIndex extends AbstractQueryHandler {
                         context.getNamespaceRegistry());
             }
         }
-
+        
+        indexingConfig = createIndexingConfiguration(nsMappings);
+        analyzer.setIndexingConfig(indexingConfig);
+        
         index = new MultiIndex(indexDir, this, excludedIDs, nsMappings);
         if (index.numDocs() == 0) {
             index.createInitialIndex(
@@ -793,10 +794,11 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
+     * @param namespaceMappings The namespace mappings 
      * @return the fulltext indexing configuration or <code>null</code> if there
      *         is no configuration.
      */
-    protected IndexingConfiguration createIndexingConfiguration() {
+    protected IndexingConfiguration createIndexingConfiguration(NamespaceMappings namespaceMappings) {
         Element docElement = getIndexingConfigurationDOM();
         if (docElement == null) {
             return null;
@@ -804,7 +806,7 @@ public class SearchIndex extends AbstractQueryHandler {
         try {
             IndexingConfiguration idxCfg = (IndexingConfiguration)
                     indexingConfigurationClass.newInstance();
-            idxCfg.init(docElement, getContext());
+            idxCfg.init(docElement, getContext(), namespaceMappings);
             return idxCfg;
         } catch (Exception e) {
             log.warn("Exception initializing indexing configuration from: " +
@@ -1121,7 +1123,7 @@ public class SearchIndex extends AbstractQueryHandler {
     public void setAnalyzer(String analyzerClassName) {
         try {
             Class analyzerClass = Class.forName(analyzerClassName);
-            analyzer = (Analyzer) analyzerClass.newInstance();
+            analyzer.setDefaultAnalyzer((Analyzer) analyzerClass.newInstance());
         } catch (Exception e) {
             log.warn("Invalid Analyzer class: " + analyzerClassName, e);
         }
