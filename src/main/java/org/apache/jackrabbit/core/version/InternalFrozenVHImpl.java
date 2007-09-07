@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.uuid.UUID;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionException;

@@ -27,7 +27,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
-import java.util.ArrayList;
 
 /**
  * Session-local lock manager that implements the semantical changes inside

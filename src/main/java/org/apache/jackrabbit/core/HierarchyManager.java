@@ -20,7 +20,6 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.ItemNotFoundException;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 
 /**

@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.cluster;
 
 import org.apache.jackrabbit.core.state.ChangeLog;
-import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 
 /**
