@@ -41,6 +41,7 @@ import javax.jcr.query.RowIterator;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
+import javax.transaction.xa.XAResource;
 
 import org.apache.jackrabbit.rmi.client.iterator.ClientNodeIterator;
 import org.apache.jackrabbit.rmi.client.iterator.ClientNodeTypeIterator;
@@ -68,6 +69,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteSession;
 import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
+import org.apache.jackrabbit.rmi.remote.RemoteXAResource;
+import org.apache.jackrabbit.rmi.remote.RemoteXASession;
 
 /**
  * Default implementation of the
@@ -91,11 +94,18 @@ public class ClientAdapterFactory implements LocalAdapterFactory {
 
     /**
      * Creates and returns a {@link ClientSession ClientSession} instance.
+     * In case the remote session is transaction enabled, the returned session
+     * will be transaction enabled too through the {@link ClientXASession}.
      *
      * {@inheritDoc}
      */
     public Session getSession(Repository repository, RemoteSession remote) {
-        return new ClientSession(repository, remote, this);
+        if (remote instanceof RemoteXASession) {
+            return new ClientXASession(
+                    repository, (RemoteXASession) remote, this);
+        } else {
+            return new ClientSession(repository, remote, this);
+        }
     }
 
     /**
@@ -310,6 +320,13 @@ public class ClientAdapterFactory implements LocalAdapterFactory {
      */
     public RowIterator getRowIterator(RemoteIterator remote) {
         return new ClientRowIterator(remote, this);
+    }
+
+    /**
+     * Creates and returns a {@link ClientXAResource} instance.
+     */
+    public XAResource getXAResource(RemoteXAResource remote) {
+        return new ClientXAResource(remote);
     }
 
 }

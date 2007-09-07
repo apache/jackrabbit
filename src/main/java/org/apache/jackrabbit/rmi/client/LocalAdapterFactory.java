@@ -41,6 +41,7 @@ import javax.jcr.query.RowIterator;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
+import javax.transaction.xa.XAResource;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteItemDefinition;
@@ -63,6 +64,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteSession;
 import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
+import org.apache.jackrabbit.rmi.remote.RemoteXAResource;
 
 /**
  * Factory interface for creating local adapters for remote references.
@@ -316,5 +318,13 @@ public interface LocalAdapterFactory {
      * @return local row iterator adapter
      */
     RowIterator getRowIterator(RemoteIterator remote);
+
+    /**
+     * Factory method for creating a local adapter for a remote XA resource.
+     *
+     * @param remote remote XA resource
+     * @return local XA adapter
+     */
+    XAResource getXAResource(RemoteXAResource remote);
 
 }
