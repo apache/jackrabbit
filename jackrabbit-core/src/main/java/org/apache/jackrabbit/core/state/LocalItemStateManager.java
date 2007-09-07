@@ -22,8 +22,6 @@ import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.name.QName;
 
-import java.util.Iterator;
-
 import javax.jcr.ReferentialIntegrityException;
 
 /**

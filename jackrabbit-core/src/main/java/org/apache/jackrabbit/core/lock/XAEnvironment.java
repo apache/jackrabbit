@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.lock.LockException;
-import javax.jcr.lock.Lock;
 import javax.transaction.Status;
 import java.util.Map;
 import java.util.HashMap;
