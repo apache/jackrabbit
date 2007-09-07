@@ -179,26 +179,127 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
         session.sanityCheck();
     }
 
-    //--------------------------------------------------< JackrabbitWorkspace >
-
+    //--------------------------------------------------< new JSR 283 methods >
     /**
-     * Creates a workspace with the given name.
+     * Creates a new <code>Workspace</code> with the specified <code>name</code>
+     * initialized with a <code>clone</code> of the content of the workspace
+     * <code>srcWorkspace</code>. Semantically, this method is equivalent to
+     * creating a new workspace and manually cloning <code>srcWorkspace</code>
+     * to it; however, this method may assist some implementations in optimizing
+     * subsequent <code>Node.update</code> and <code>Node.merge</code> calls
+     * between the new workspace and its source.
+     * <p/>
+     * The new workspace can be accessed through a <code>login</code>
+     * specifying its name.
+     * <p/>
+     * Throws an <code>AccessDeniedException</code> if the session through which
+     * this <code>Workspace</code> object was acquired does not have permission
+     * to create the new workspace.
+     * <p/>
+     * Throws an <code>UnsupportedRepositoryOperationException</code> if the repository does
+     * not support the creation of workspaces.
+     * <p/>
+     * A <code>RepositoryException</code> is thrown if another error occurs.
      *
-     * @param workspaceName name of the new workspace
-     * @throws AccessDeniedException if the current session is not allowed to
-     *                               create the workspace
-     * @throws RepositoryException   if a workspace with the given name
-     *                               already exists or if another error occurs
-     * @see #getAccessibleWorkspaceNames()
+     * @param name A <code>String</code>, the name of the new workspace.
+     * @param srcWorkspace The name of the workspace from which the new workspace is to be cloned.
+     * @throws AccessDeniedException if the session through which
+     * this <code>Workspace</code> object was acquired does not have permission
+     * to create the new workspace.
+     * @throws UnsupportedRepositoryOperationException if the repository does
+     * not support the creation of workspaces.
+     * @throws RepositoryException if another error occurs.
+     * @since JCR 2.0
      */
-    public void createWorkspace(String workspaceName)
-            throws AccessDeniedException, RepositoryException {
+    public void createWorkspace(String name, String srcWorkspace)
+            throws AccessDeniedException, UnsupportedRepositoryOperationException,
+            RepositoryException {
         // check state of this instance
         sanityCheck();
 
-        session.createWorkspace(workspaceName);
+        session.createWorkspace(name);
+
+        SessionImpl tmpSession = null;
+        try {
+            // create a temporary session on new workspace for current subject
+            tmpSession = rep.createSession(session.getSubject(), name);
+            WorkspaceImpl newWsp = (WorkspaceImpl) tmpSession.getWorkspace();
+
+            newWsp.clone(srcWorkspace, "/", "/", false);
+        } finally {
+            if (tmpSession != null) {
+                // we don't need the temporary session anymore, logout
+                tmpSession.logout();
+            }
+        }
     }
 
+    /**
+     * Deletes the workspace with the specified <code>name</code> from the
+     * repository, deleting all content within it.
+     * <p/>
+     * Throws an <code>AccessDeniedException</code> if the session through which
+     * this <code>Workspace</code> object was acquired does not have permission
+     * to remove the workspace.
+     * <p/>
+     * Throws an <code>UnsupportedRepositoryOperationException</code> if the
+     * repository does not support the removal of workspaces.
+     *
+     * @param name A <code>String</code>, the name of the workspace to be deleted.
+     * @throws AccessDeniedException if the session through which
+     * this <code>Workspace</code> object was acquired does not have permission
+     * to remove the workspace.
+     * @throws UnsupportedRepositoryOperationException if the
+     * repository does not support the removal of workspaces.
+     * @throws RepositoryException if another error occurs.
+     * @since JCR 2.0
+     */
+    public void deleteWorkspace(String name) throws AccessDeniedException,
+            UnsupportedRepositoryOperationException, RepositoryException {
+        // check if workspace exists (will throw NoSuchWorkspaceException if not)
+        rep.getWorkspaceInfo(name);
+        // todo implement deleteWorkspace
+        throw new UnsupportedRepositoryOperationException("not yet implemented");
+    }
+
+    //-------------------------------< JackrabbitWorkspace/new JSR 283 method >
+    /**
+     * Creates a new <code>Workspace</code> with the specified
+     * <code>name</code>. The new workspace is empty, meaning it contains only
+     * root node.
+     * <p/>
+     * The new workspace can be accessed through a <code>login</code>
+     * specifying its name.
+     * <p/>
+     * Throws an <code>AccessDeniedException</code> if the session through which
+     * this <code>Workspace</code> object was acquired does not have permission
+     * to create the new workspace.
+     * <p/>
+     * Throws an <code>UnsupportedRepositoryOperationException</code> if the repository does
+     * not support the creation of workspaces.
+     * <p/>
+     * A <code>RepositoryException</code> is thrown if another error occurs.
+     *
+     * @param name A <code>String</code>, the name of the new workspace.
+     * @throws AccessDeniedException if the session through which
+     * this <code>Workspace</code> object was acquired does not have permission
+     * to create the new workspace.
+     * @throws UnsupportedRepositoryOperationException if the repository does
+     * not support the creation of workspaces.
+     * @throws RepositoryException if another error occurs.
+     * @since JCR 2.0
+     */
+    public void createWorkspace(String name)
+            throws AccessDeniedException,
+            UnsupportedRepositoryOperationException,
+            RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        session.createWorkspace(name);
+    }
+
+    //--------------------------------------------------< JackrabbitWorkspace >
     /**
      * Creates a workspace with the given name and a workspace configuration
      * template.
