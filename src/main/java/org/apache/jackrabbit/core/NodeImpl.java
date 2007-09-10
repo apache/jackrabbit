@@ -2789,25 +2789,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * {@inheritDoc}
      */
     public PropertyIterator getReferences() throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        try {
-            NodeReferencesId targetId = new NodeReferencesId((NodeId) id);
-            if (stateMgr.hasNodeReferences(targetId)) {
-                NodeReferences refs = stateMgr.getNodeReferences(targetId);
-                // refs.getReferences() returns a list of PropertyId's
-                List idList = refs.getReferences();
-                return new LazyItemIterator(itemMgr, idList);
-            } else {
-                // there are no references, return empty iterator
-                return IteratorHelper.EMPTY;
-            }
-        } catch (ItemStateException e) {
-            String msg = "Unable to retrieve REFERENCE properties that refer to " + id;
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
+        return getReferences(null);
     }
 
     /**
@@ -4277,4 +4259,71 @@ public class NodeImpl extends ItemImpl implements Node {
         return ((NodeId) id).toString();
     }
 
+    /**
+     * This method returns all <code>REFERENCE</code> properties that refer to
+     * this node, have the specified <code>name</code> and that are accessible
+     * through the current <code>Session</code>.
+     * <p/>
+     * If the <code>name</code> parameter is <code>null</code> then all
+     * referring <code>REFERENCES</code> are returned regardless of name.
+     * <p/>
+     * Some level 2 implementations may only return properties that have been
+     * saved (in a transactional setting this includes both those properties
+     * that have been saved but not yet committed, as well as properties that
+     * have been committed). Other level 2 implementations may additionally
+     * return properties that have been added within the current <code>Session</code>
+     * but are not yet saved.
+     * <p/>
+     * In implementations that support versioning, this method does not return
+     * properties that are part of the frozen state of a version in version
+     * storage.
+     * <p/>
+     * If this node has no referring properties with the specified name,
+     * an empty iterator is returned.
+     *
+     * @param name name of referring <code>REFERENCE</code> properties to be
+     *        returned; if <code>null</code> then all referring <code>REFERENCE</code>s
+     *        are returned
+     * @return A <code>PropertyIterator</code>.
+     * @throws RepositoryException if an error occurs
+     * @since JCR 2.0
+     */
+    public PropertyIterator getReferences(String name)
+            throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        try {
+            NodeReferencesId targetId = new NodeReferencesId((NodeId) id);
+            if (stateMgr.hasNodeReferences(targetId)) {
+                NodeReferences refs = stateMgr.getNodeReferences(targetId);
+                // refs.getReferences() returns a list of PropertyId's
+                List idList = refs.getReferences();
+                if (name != null) {
+                    QName qName;
+                    try {
+                        qName = session.getQName(name);
+                    } catch (NameException e) {
+                        throw new RepositoryException("invalid property name: " + name, e);
+                    }
+                    ArrayList filteredList = new ArrayList(idList.size());
+                    for (Iterator iter = idList.iterator(); iter.hasNext();) {
+                        PropertyId propId = (PropertyId) iter.next();
+                        if (propId.getName().equals(qName)) {
+                            filteredList.add(propId);
+                        }
+                    }
+                    idList = filteredList;
+                }
+                return new LazyItemIterator(itemMgr, idList);
+            } else {
+                // there are no references, return empty iterator
+                return IteratorHelper.EMPTY;
+            }
+        } catch (ItemStateException e) {
+            String msg = "Unable to retrieve REFERENCE properties that refer to " + id;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+    }
 }
