@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
@@ -29,7 +30,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteXAResource;
  *
  * @since 1.4
  */
-public class ServerXAResource implements RemoteXAResource {
+public class ServerXAResource extends UnicastRemoteObject
+        implements RemoteXAResource {
 
     /**
      * The adapted local XA resource
