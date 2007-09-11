@@ -24,8 +24,6 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Arrays;
 
-import javax.jcr.RepositoryException;
-
 /**
  * Represents binary data which is backed by a byte[] (in memory).
  */
@@ -143,7 +141,7 @@ public class BLOBInMemory extends BLOBFileValue {
     /**
      * {@inheritDoc}
      */
-    public InputStream getStream() throws IllegalStateException, RepositoryException {
+    public InputStream getStream() {
         return new ByteArrayInputStream(data);
     }
 

@@ -83,11 +83,11 @@ public class InternalValue {
     public static final boolean USE_DATA_STORE = Boolean.valueOf(System.getProperty("org.jackrabbit.useDataStore", "false")).booleanValue();
 
     /**
-     * Byte arrays smaller or equal this size are always kept in memory
+     * Temporary binary values smaller or equal this size are kept in memory
      */
-    private static final int MIN_BLOB_FILE_SIZE = Integer.parseInt(System.getProperty("org.jackrabbit.minBlobFileSize", "100"));
+    private static final int MIN_BLOB_FILE_SIZE = 1024;
 
-    private final Object val;
+    private Object val;
     private final int type;
 
     //------------------------------------------------------< factory methods >
@@ -282,9 +282,7 @@ public class InternalValue {
      * @throws IOException
      */
     public static InternalValue create(File value) throws IOException {
-        if (USE_DATA_STORE) {
-            return new InternalValue(BLOBInTempFile.getInstance(value, false));
-        }                
+        assert !USE_DATA_STORE;
         return new InternalValue(new BLOBValue(value));
     }
     
@@ -599,9 +597,16 @@ public class InternalValue {
     }
     
     private static BLOBFileValue getBLOBFileValue(DataStore store, InputStream in) throws IOException {
-        byte[] buffer = new byte[MIN_BLOB_FILE_SIZE];
-        int pos = 0, len = MIN_BLOB_FILE_SIZE;
-        while (pos < MIN_BLOB_FILE_SIZE) {
+        int maxMemorySize;
+        if (store != null) {
+            maxMemorySize = store.getMinRecordLength() - 1;
+        } else {
+            maxMemorySize = MIN_BLOB_FILE_SIZE;
+        }
+        maxMemorySize = Math.max(0, maxMemorySize);
+        byte[] buffer = new byte[maxMemorySize];
+        int pos = 0, len = maxMemorySize;
+        while (pos < maxMemorySize) {
             int l = in.read(buffer, pos, len);
             if (l < 0) {
                 break;
@@ -609,7 +614,7 @@ public class InternalValue {
             pos += l;
             len -= l;
         }
-        if (pos < MIN_BLOB_FILE_SIZE) {
+        if (pos < maxMemorySize) {
             // shrink the buffer
             byte[] data = new byte[pos];
             System.arraycopy(buffer, 0, data, 0, pos);
@@ -633,6 +638,24 @@ public class InternalValue {
         } else {
             throw new IllegalArgumentException("illegal binary id: " + id);
         }
+    }
+
+    public void store(DataStore dataStore) throws RepositoryException, IOException {
+        assert USE_DATA_STORE;
+        assert dataStore != null;
+        assert type == PropertyType.BINARY;
+        BLOBFileValue v = (BLOBFileValue) val;
+        if (v instanceof BLOBInDataStore) {
+            // already in the data store, OK
+            return;
+        } else if (v instanceof BLOBInMemory) {
+            if (v.getLength() < dataStore.getMinRecordLength()) {
+                // in memory and does not make sense to store, OK
+                return;
+            }
+        }
+        // store the temp file to the data store, or (theoretically) load it in memory
+        val = getBLOBFileValue(dataStore, v.getStream());
     }
 
 }

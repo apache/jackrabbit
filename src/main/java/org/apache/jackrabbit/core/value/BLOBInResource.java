@@ -110,7 +110,7 @@ public class BLOBInResource extends BLOBFileValue {
     /**
      * {@inheritDoc}
      */
-    public InputStream getStream() throws IllegalStateException, RepositoryException {
+    public InputStream getStream() throws RepositoryException {
         try {
             return fsResource.getInputStream();
         } catch (FileSystemException fse) {

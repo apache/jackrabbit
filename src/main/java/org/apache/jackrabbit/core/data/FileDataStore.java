@@ -35,6 +35,7 @@ import java.util.List;
  * <ul>
  * <li>&lt;param name="className" value="org.apache.jackrabbit.core.data.FileDataStore"/>
  * <li>&lt;param name="{@link #setPath(String) path}" value="/data/datastore"/>
+ * <li>&lt;param name="{@link #setMinRecordLength(int) minRecordLength}" value="1024"/>
  * </ul>
  * 
  * <p>
@@ -53,6 +54,11 @@ public class FileDataStore implements DataStore {
      * The digest algorithm used to uniquely identify records.
      */
     private static final String DIGEST = "SHA-1";
+    
+    /**
+     * The default value for the minimum object size.
+     */
+    private static final int DEFAULT_MIN_RECORD_LENGTH = 100;
 
     /**
      * Name of the directory used for temporary files.
@@ -77,6 +83,11 @@ public class FileDataStore implements DataStore {
      * of content within this directory is controlled by this class.
      */
     private String path;
+    
+    /**
+     * The minimum size of an object that should be stored in this data store.
+     */
+    private int minRecordLength = DEFAULT_MIN_RECORD_LENGTH;
 
     /**
      * Creates a uninitialized data store.
@@ -296,6 +307,22 @@ public class FileDataStore implements DataStore {
      */
     public void setPath(String directoryName) {
         this.path = directoryName;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public int getMinRecordLength() {
+        return minRecordLength;
+    }
+
+    /**
+     * Set the minimum object length.
+     * 
+     * @param minRecordLength the length
+     */
+    public void setMinRecordLength(int minRecordLength) {
+        this.minRecordLength = minRecordLength;
     }
 
 }
