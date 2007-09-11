@@ -40,6 +40,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
 
 /**
  * This Class implements efficient serialization methods for item states.
@@ -560,6 +561,14 @@ public class BundleBinding extends ItemStateBinding {
                 case PropertyType.BINARY:
                     if (InternalValue.USE_DATA_STORE && dataStore != null) {
                         out.writeInt(-2);
+                        try {
+                            val.store(dataStore);
+                        } catch (RepositoryException e) {
+                            String msg = "Error while storing blob. id="
+                                + state.getId() + " idx=" + i + " size=" + val.getBLOBFileValue().getLength();
+                            log.error(msg, e);
+                            throw new IOException(msg);                            
+                        }
                         out.writeUTF(val.toString());
                         break;
                     }
