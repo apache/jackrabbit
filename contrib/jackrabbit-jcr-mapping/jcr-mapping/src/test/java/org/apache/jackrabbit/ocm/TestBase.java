@@ -171,7 +171,8 @@ public abstract class TestBase extends TestCase
 		Repository repository = RepositoryUtil.getRepository("repositoryTest");
 		String[] files = { "./src/test/test-config/jcrmapping.xml", 
 						   "./src/test/test-config/jcrmapping-proxy.xml",
-                           "./src/test/test-config/jcrmapping-atomic.xml",
+						   "./src/test/test-config/jcrmapping-atomic.xml",
+                           "./src/test/test-config/jcrmapping-default.xml",
                            "./src/test/test-config/jcrmapping-beandescriptor.xml",
                            "./src/test/test-config/jcrmapping-inheritance.xml",
                            "./src/test/test-config/jcrmapping-jcrnodetypes.xml", 

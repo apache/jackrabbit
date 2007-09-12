@@ -242,5 +242,30 @@
     </childNodeDefinition>    
   </nodeType>
    
+  <!-- START Node Types for testing default simple values -->
+  <!-- Mixin Node Type -->
+  <nodeType name="ocm:DefTestMixin" isMixin="true">
+    <propertyDefinition name="ocm:p5" requiredType="String" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false">
+      <defaultValues>
+        <defaultValue>p5DefaultValue</defaultValue>
+      </defaultValues>
+    </propertyDefinition>    
+  </nodeType>    
+  <!-- Primary Node Type -->
+  <nodeType name="ocm:DefTestPrimary" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>nt:base</supertype>
+      <supertype>ocm:DefTestMixin</supertype>
+    </supertypes>
+    <propertyDefinition name="ocm:p1" requiredType="String" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="ocm:p2" requiredType="String" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="ocm:p3" requiredType="String" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    <propertyDefinition name="ocm:p4" requiredType="String" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false">
+      <defaultValues>
+        <defaultValue>p4DefaultValue</defaultValue>
+      </defaultValues>
+    </propertyDefinition>    
+  </nodeType>
+  <!-- END Node Types for testing default simple values -->
 </nodeTypes>
 
