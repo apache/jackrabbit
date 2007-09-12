@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE jackrabbit-ocm PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/jackrabbit-ocm.dtd">
+<jackrabbit-ocm>
+    <class-descriptor
+		className="org.apache.jackrabbit.ocm.testmodel.Default" jcrType="ocm:DefTestPrimary" discriminator="false" >
+		<field-descriptor fieldName="path" path="true" />
+        
+        <!-- no default value, assigned in test -->
+		<field-descriptor fieldName="p1" jcrName="ocm:p1" />
+        
+        <!-- no default value, expected null in test -->
+		<field-descriptor fieldName="p2" jcrName="ocm:p2" />
+        
+        <!-- default value in descriptor -->
+		<field-descriptor fieldName="p3" jcrName="ocm:p3" jcrDefaultValue="p3DescriptorDefaultValue" />
+        
+        <!-- default value from PropertyDefinition in primary type -->
+		<field-descriptor fieldName="p4" jcrName="ocm:p4" />
+        
+        <!-- default value from PropertyDefinition in mixin type -->
+		<field-descriptor fieldName="p5" jcrName="ocm:p5" />
+	</class-descriptor>
+</jackrabbit-ocm>
+ 
