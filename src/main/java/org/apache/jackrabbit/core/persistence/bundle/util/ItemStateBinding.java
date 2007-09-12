@@ -16,37 +16,25 @@
  */
 package org.apache.jackrabbit.core.persistence.bundle.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
-import org.apache.jackrabbit.core.persistence.util.ResourceBasedBLOBStore;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.uuid.UUID;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
 
 /**
  * This Class implements relatively efficient serialization methods for item
@@ -56,11 +44,6 @@ public class ItemStateBinding {
 
     /** the cvs/svn id */
     static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
-    /**
-     * default logger
-     */
-    private static Logger log = LoggerFactory.getLogger(ItemStateBinding.class);
 
     /**
      * serialization version 1
@@ -271,216 +254,6 @@ public class ItemStateBinding {
             writeID(out, entry.getId());  // uuid
         }
         writeModCount(out, state.getModCount());
-    }
-
-    /**
-     * Deserializes a <code>PropertyState</code> from the data input stream.
-     *
-     * @param in the input stream
-     * @param id the id for the new property state
-     * @param pMgr the persistence manager
-     * @return the property state
-     * @throws IOException in an I/O error occurs.
-     */
-    public PropertyState readState(DataInputStream in, PropertyId id,
-                                   PersistenceManager pMgr)
-            throws IOException {
-        PropertyState state = pMgr.createNew(id);
-        // type and modcount
-        int type = in.readInt();
-        state.setModCount((short) ((type >> 16) & 0x0ffff));
-        type &= 0x0ffff;
-        state.setType(type);
-        // multiValued
-        state.setMultiValued(in.readBoolean());
-        // definitionId
-        state.setDefinitionId(PropDefId.valueOf(in.readUTF()));
-        // values
-        int count = in.readInt();   // count
-        InternalValue[] values = new InternalValue[count];
-        for (int i = 0; i < count; i++) {
-            InternalValue val;
-            switch (type) {
-                case PropertyType.BINARY:
-                    int size = in.readInt();
-                    if (InternalValue.USE_DATA_STORE && size == -2) {
-                        val = InternalValue.create(dataStore, in.readUTF());
-                    } else if (size == -1) {
-                        String s = in.readUTF();
-                        try {
-                            if (blobStore instanceof ResourceBasedBLOBStore) {
-                                val = InternalValue.create(
-                                        ((ResourceBasedBLOBStore) blobStore).getResource(s));
-                            } else {
-                                val = InternalValue.create(blobStore.get(s));
-                            }
-                        } catch (IOException e) {
-                            if (errorHandling.ignoreMissingBlobs()) {
-                                log.warn("Ignoring error while reading blob-resource: " + e);
-                                val = InternalValue.create(new byte[0]);
-                            } else {
-                                throw e;
-                            }
-                        } catch (Exception e) {
-                            throw new IOException("Unable to create property value: " + e.toString());
-                        }
-                    } else {
-                        // short values into memory
-                        byte[] data = new byte[size];
-                        in.readFully(data);
-                        val = InternalValue.create(data);
-                    }
-                    break;
-                case PropertyType.DOUBLE:
-                    val = InternalValue.create(in.readDouble());
-                    break;
-                case PropertyType.LONG:
-                    val = InternalValue.create(in.readLong());
-                    break;
-                case PropertyType.BOOLEAN:
-                    val = InternalValue.create(in.readBoolean());
-                    break;
-                case PropertyType.NAME:
-                    val = InternalValue.create(readQName(in));
-                    break;
-                case PropertyType.REFERENCE:
-                    val = InternalValue.create(readUUID(in));
-                    break;
-                default:
-                    // because writeUTF(String) has a size limit of 64k,
-                    // Strings are serialized as <length><byte[]>
-                    int len = in.readInt();
-                    byte[] bytes = new byte[len];
-                    int pos = 0;
-                    while (pos < len) {
-                        pos += in.read(bytes, pos, len - pos);
-                    }
-                    val = InternalValue.valueOf(new String(bytes, "UTF-8"), type);
-            }
-            values[i] = val;
-        }
-        state.setValues(values);
-        return state;
-    }
-
-    /**
-     * Serializes a <code>PropertyState</code> to the data output stream
-     * @param out the output stream
-     * @param state the property state to write
-     * @throws IOException in an I/O error occurs.
-     */
-    public void writeState(DataOutputStream out, PropertyState state)
-            throws IOException {
-        // type & mod count
-        out.writeInt(state.getType() | (state.getModCount() << 16));
-        // multiValued
-        out.writeBoolean(state.isMultiValued());
-        // definitionId
-        out.writeUTF(state.getDefinitionId().toString());
-        // values
-        InternalValue[] values = state.getValues();
-        out.writeInt(values.length); // count
-        for (int i = 0; i < values.length; i++) {
-            InternalValue val = values[i];
-            switch (state.getType()) {
-                case PropertyType.BINARY:
-                    try {
-                        if (InternalValue.USE_DATA_STORE && dataStore != null) {
-                            try {
-                                val.store(dataStore);
-                            } catch (RepositoryException e) {
-                                String msg = "Error while storing blob. id="
-                                    + state.getId() + " idx=" + i + " size=" + val.getBLOBFileValue().getLength();
-                                log.error(msg, e);
-                                throw new IOException(msg);                            
-                            }
-                            out.writeInt(-2);
-                            out.writeUTF(val.toString());
-                            break;
-                        }
-                        // special handling required for binary value:
-                        // spool binary value to file in blob store
-                        BLOBFileValue blobVal = val.getBLOBFileValue();
-                        long size = blobVal.getLength();
-                        if (size > minBlobSize) {
-                            out.writeInt(-1);
-                            InputStream in = blobVal.getStream();
-                            String blobId = blobStore.createId((PropertyId) state.getId(), i);
-                            try {
-                                blobStore.put(blobId, in, size);
-                            } finally {
-                                try {
-                                    in.close();
-                                } catch (IOException e) {
-                                    // ignore
-                                }
-                            }
-                            // store id of blob as property value
-                            out.writeUTF(blobId);   // value
-                            // replace value instance with value
-                            // backed by resource in blob store and delete temp file
-                            if (blobStore instanceof ResourceBasedBLOBStore) {
-                                values[i] = InternalValue.create(((ResourceBasedBLOBStore) blobStore).getResource(blobId));
-                            } else {
-                                values[i] = InternalValue.create(blobStore.get(blobId));
-                            }
-                            blobVal.discard();
-                        } else {
-                            // delete evt. blob
-                            out.writeInt((int) size);
-                            byte[] data = new byte[(int) size];
-                            InputStream in = blobVal.getStream();
-                            try {
-                                int pos = 0;
-                                while (pos < size) {
-                                    int n = in.read(data, pos, (int) size - pos);
-                                    if (n < 0) {
-                                        throw new EOFException();
-                                    }
-                                    pos += n;
-                                }
-                            } finally {
-                                try {
-                                    in.close();
-                                } catch (IOException e) {
-                                    // ignore
-                                }
-                            }
-                            out.write(data, 0, data.length);
-                            // replace value instance with value
-                            // backed by resource in blob store and delete temp file
-                            values[i] = InternalValue.create(data);
-                            blobVal.discard();
-                        }
-                    } catch (IOException e) {
-                        throw e;
-                    } catch (Exception e) {
-                        throw new IOException("Error converting: " + e.toString());
-                    }
-                    break;
-                case PropertyType.DOUBLE:
-                    out.writeDouble(val.getDouble());
-                    break;
-                case PropertyType.LONG:
-                    out.writeLong(val.getLong());
-                    break;
-                case PropertyType.BOOLEAN:
-                    out.writeBoolean(val.getBoolean());
-                    break;
-                case PropertyType.NAME:
-                    writeQName(out, val.getQName());
-                    break;
-                case PropertyType.REFERENCE:
-                    writeUUID(out, val.getUUID());
-                    break;
-                default:
-                    // because writeUTF(String) has a size limit of 64k,
-                    // we're using write(byte[]) instead
-                    byte[] bytes = val.toString().getBytes("UTF-8");
-                    out.writeInt(bytes.length); // lenght of byte[]
-                    out.write(bytes);   // byte[]
-            }
-        }
     }
 
     /**
