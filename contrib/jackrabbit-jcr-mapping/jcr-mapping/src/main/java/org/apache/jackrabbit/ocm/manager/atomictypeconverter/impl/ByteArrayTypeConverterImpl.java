@@ -17,6 +17,11 @@
 
 package org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
@@ -43,8 +48,8 @@ public class ByteArrayTypeConverterImpl implements AtomicTypeConverter
 		{
 			return null;
 		}
-		String value = new String((byte[]) propValue);
-		return valueFactory.createValue(value);
+		  InputStream ins = new ByteArrayInputStream((byte[]) propValue);
+		  return valueFactory.createValue(ins);
 	}
 
 
@@ -56,11 +61,11 @@ public class ByteArrayTypeConverterImpl implements AtomicTypeConverter
     {
 		try
 		{
-			return value.getString().getBytes();
+			return inputStreamToBytes(value.getStream());
 		}
-		catch (RepositoryException e)
+		catch (Exception e)
 		{
-			throw new IncorrectAtomicTypeException("Impossible to convert the value : " + value.toString() , e);
+			throw new IncorrectAtomicTypeException("Impossible to convert a binary value." , e);
 		}
 	}
 
@@ -70,6 +75,20 @@ public class ByteArrayTypeConverterImpl implements AtomicTypeConverter
 	 */
 	public String getXPathQueryValue(ValueFactory valueFactory, Object object)
 	{
-		return  "'" + object.toString() + "'";
+		throw new IncorrectAtomicTypeException("Binary cannot be used in queries");
 	}
+	
+	private byte[] inputStreamToBytes(InputStream in) throws IOException {
+
+		ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
+		byte[] buffer = new byte[1024];
+		int len;
+
+		while((len = in.read(buffer)) >= 0)
+		out.write(buffer, 0, len);
+
+		in.close();
+		out.close();
+		return out.toByteArray();
+		}
 }
