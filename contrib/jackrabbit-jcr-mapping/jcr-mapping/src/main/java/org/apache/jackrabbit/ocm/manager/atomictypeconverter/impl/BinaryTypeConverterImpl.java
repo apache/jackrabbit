@@ -71,6 +71,6 @@ public class BinaryTypeConverterImpl implements AtomicTypeConverter
      */
 	public String getXPathQueryValue(ValueFactory valueFactory,Object object)
 	{		
-		throw new IncorrectAtomicTypeException("Binary cannot be convert into string");
+		throw new IncorrectAtomicTypeException("Binary cannot be used in queries");
 	}
 }
