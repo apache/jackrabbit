@@ -22,6 +22,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Node;
 import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.Value;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
@@ -187,14 +188,16 @@ public class RemoveVersionTest extends AbstractVersionTest {
      * version is still referenced by another node.
      * @tck.config nodetype name of a node type that supports a reference
      *  property.
-     * @tck.config nodename2 name of the node created with <code>nodetype</code>.
+     * @tck.config nodename4 name of the node created with <code>nodetype</code>.
      * @tck.config propertyname1 a single value reference property available
      *  in <code>nodetype</code>.
      */
-    public void testReferentialIntegrityException() throws RepositoryException {
+    public void testReferentialIntegrityException() throws RepositoryException, NotExecutableException {
         // create reference: n1.p1 -> version
-        Node n1 = testRootNode.addNode(nodeName2, testNodeType);
-        n1.setProperty(propertyName1, superuser.getValueFactory().createValue(version));
+        Node n1 = testRootNode.addNode(nodeName4, testNodeType);
+        Value refValue = superuser.getValueFactory().createValue(version);
+        ensureCanSetProperty(n1, propertyName1, refValue);
+        n1.setProperty(propertyName1, refValue);
         testRootNode.save();
 
         try {
