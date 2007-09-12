@@ -166,14 +166,14 @@ public class ObjectContentManagerAtomicQueryTest extends TestBase
 			assertTrue("Invalid number of objects - should be = 50 ", result.size() == 50);
 			
 			filter = queryManager.createFilter(Atomic.class);			
-			filter.addContains("byteArray", "ocm");
+			filter.addContains("string", "JCR");
 			query = queryManager.createQuery(filter);
 			
 			result = ocm.getObjects(query);			
 			assertTrue("Invalid number of objects - should be = 50 ", result.size() == 50);
 			
 			filter = queryManager.createFilter(Atomic.class);			
-			filter.addContains("byteArray", "String");
+			filter.addContains("string", "ocm");
 			query = queryManager.createQuery(filter);
 			
 			result = ocm.getObjects(query);			
@@ -204,8 +204,7 @@ public class ObjectContentManagerAtomicQueryTest extends TestBase
 				a.setBooleanObject(new Boolean(i%2==0));
 				a.setBooleanPrimitive(true);
 				a.setIntegerObject(new Integer(100 * i));
-				a.setIntPrimitive(200 + i);
-				a.setString("Test String " + i);
+				a.setIntPrimitive(200 + i);				
 				a.setDate(date);
 				Calendar calendar = Calendar.getInstance();
 				calendar.set(1976, 4, 20, 15, 40);
@@ -216,6 +215,7 @@ public class ObjectContentManagerAtomicQueryTest extends TestBase
 				a.setTimestamp(new Timestamp(now));
 				if ((i % 2) == 0)
 				{
+					a.setString("Test String JCR " + i);
 				     a.setByteArray("This is small object stored in a JCR repository".getBytes());
 				     a.setInputStream(new ByteArrayInputStream("Test inputstream".getBytes()));
 				}
@@ -223,6 +223,7 @@ public class ObjectContentManagerAtomicQueryTest extends TestBase
 				{
 					 a.setByteArray("This is small object stored in the ocm repository".getBytes());
 					 a.setInputStream(new ByteArrayInputStream("Another Stream".getBytes()));
+					 a.setString("Test String " + i);
 				}
 				ocm.insert(a);
 				
