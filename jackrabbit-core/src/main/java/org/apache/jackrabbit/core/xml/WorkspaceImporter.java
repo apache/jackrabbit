@@ -397,7 +397,7 @@ public class WorkspaceImporter implements Importer {
             QName[] mixins = nodeInfo.getMixinNames();
 
             if (parent == null) {
-                // parent node was skipped, skip this child node also
+                // parent node was skipped, skip this child node too
                 parents.push(null); // push null onto stack for skipped node
                 succeeded = true;
                 log.debug("skipping node " + nodeName);
@@ -429,7 +429,14 @@ public class WorkspaceImporter implements Importer {
                         // no need to create it
                         node = existing;
                     } else {
-                        throw new ItemExistsException(itemOps.safeGetJCRPath(existing.getNodeId()));
+                        // edge case: colliding node does have same uuid
+                        // (see http://issues.apache.org/jira/browse/JCR-1128)
+                        if (! (idExisting.equals(id)
+                                && (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING
+                                || uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING))) {
+                            throw new ItemExistsException(itemOps.safeGetJCRPath(existing.getNodeId()));
+                        }
+                        // fall through
                     }
                 }
             }
