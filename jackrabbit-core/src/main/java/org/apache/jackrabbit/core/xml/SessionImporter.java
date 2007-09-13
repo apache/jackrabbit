@@ -202,7 +202,7 @@ public class SessionImporter implements Importer {
         QName[] mixins = nodeInfo.getMixinNames();
 
         if (parent == null) {
-            // parent node was skipped, skip this child node also
+            // parent node was skipped, skip this child node too
             parents.push(null); // push null onto stack for skipped node
             log.debug("skipping node " + nodeName);
             return;
@@ -224,7 +224,14 @@ public class SessionImporter implements Importer {
                     // this node has already been auto-created, no need to create it
                     node = existing;
                 } else {
-                    throw new ItemExistsException(existing.safeGetJCRPath());
+                    // edge case: colliding node does have same uuid
+                    // (see http://issues.apache.org/jira/browse/JCR-1128)
+                    if (! (existing.getId().equals(id)
+                            && (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING
+                            || uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING))) {
+                        throw new ItemExistsException(existing.safeGetJCRPath());
+                    }
+                    // fall through
                 }
             }
         }
