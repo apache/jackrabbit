@@ -78,9 +78,9 @@ public class InternalValue {
     private static final InternalValue BOOLEAN_FALSE = new InternalValue(false);
     
     /**
-     * If set to 'true', the new global data store will be used, otherwise the old blob store implementation
+     * If set to 'true', the data store is used when configured in repository.xml
      */
-    public static final boolean USE_DATA_STORE = Boolean.valueOf(System.getProperty("org.jackrabbit.useDataStore", "false")).booleanValue();
+    public static final boolean USE_DATA_STORE = Boolean.valueOf(System.getProperty("org.jackrabbit.useDataStore", "true")).booleanValue();
 
     /**
      * Temporary binary values smaller or equal this size are kept in memory
