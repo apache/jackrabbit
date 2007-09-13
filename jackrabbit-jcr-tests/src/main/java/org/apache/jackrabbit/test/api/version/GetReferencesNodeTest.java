@@ -18,11 +18,11 @@ package org.apache.jackrabbit.test.api.version;
 
 import javax.jcr.Node;
 import javax.jcr.PropertyIterator;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeTypeManager;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * <code>GetReferencesNodeTest</code> contains test to check if references are
@@ -51,17 +51,9 @@ public class GetReferencesNodeTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        NodeTypeManager ntm = superuser.getWorkspace().getNodeTypeManager();
-
         versionableNodeType = getProperty(PROP_VERSIONABLE_NODE_TYPE);
         if (versionableNodeType == null) {
             fail("Property '" + PROP_VERSIONABLE_NODE_TYPE + "' is not defined.");
-        }
-
-        // check if node type is versionable
-        NodeType vNt = ntm.getNodeType(versionableNodeType);
-        if (!vNt.isNodeType(mixVersionable)) {
-            fail("Property '" + PROP_VERSIONABLE_NODE_TYPE + "' does not define a versionable nodetype.");
         }
     }
 
@@ -71,12 +63,13 @@ public class GetReferencesNodeTest extends AbstractJCRTest {
      * 3. Create a new version 1.1 after changing reference 4. Check if
      * reference is found by getReferences()
      */
-    public void testGetReferencesNeverFromVersions() throws RepositoryException {
+    public void testGetReferencesNeverFromVersions() throws RepositoryException, NotExecutableException {
         // create some test nodes
         initTestNodes();
 
         // create a version 1.0 and reference test node
         testNode.checkout();
+        ensureCanSetProperty(testNode, propertyName1, PropertyType.REFERENCE, false);
         testNode.setProperty(propertyName1, nodeToBeReferenced);
 
         testRootNode.save();
@@ -103,6 +96,9 @@ public class GetReferencesNodeTest extends AbstractJCRTest {
     private void initTestNodes() throws RepositoryException {
         // create a versionable node with reference property
         testNode = testRootNode.addNode(nodeName1, versionableNodeType);
+        if (needsMixin(testNode, mixVersionable)) {
+          testNode.addMixin(mixVersionable);
+        }
 
         // node to be referenced, does not have to be versionable
         nodeToBeReferenced = testRootNode.addNode(nodeName2, versionableNodeType);
