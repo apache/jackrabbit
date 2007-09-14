@@ -342,13 +342,12 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     private QName[] getQLabels() throws RepositoryException {
         refreshEntry(labelNodeEntry);
         List labelQNames = new ArrayList();
-        Iterator it = labelNodeEntry.getPropertyEntries();
-        while (it.hasNext()) {
+        for (Iterator it = labelNodeEntry.getPropertyEntries(); it.hasNext(); ) {
             PropertyEntry pe = (PropertyEntry) it.next();
-            if (QName.JCR_PRIMARYTYPE.equals(pe.getQName())) {
-                continue;
+            if (! QName.JCR_PRIMARYTYPE.equals(pe.getQName()) &&
+                ! QName.JCR_MIXINTYPES.equals(pe.getQName())) {
+                labelQNames.add(pe.getQName());
             }
-            labelQNames.add(pe.getQName());
         }
         return (QName[]) labelQNames.toArray(new QName[labelQNames.size()]);
     }
