@@ -28,9 +28,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.DataInputStream;
 import java.io.InputStream;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
  * Extends the {@link BundleDbPersistenceManager} by PostgreSQL specific code.
@@ -54,7 +54,7 @@ public class PostgreSQLPersistenceManager extends BundleDbPersistenceManager {
     /**
      * Logger instance.
      */
-    private static final Logger log =
+    private static Logger log =
         LoggerFactory.getLogger(PostgreSQLPersistenceManager.class);
 
     /**
@@ -77,7 +77,7 @@ public class PostgreSQLPersistenceManager extends BundleDbPersistenceManager {
      * @throws java.sql.SQLException if an SQL error occurs.
      */
     protected DbNameIndex createDbNameIndex() throws SQLException {
-        return new PostgreSQLNameIndex(con, schemaObjectPrefix);
+        return new PostgreSQLNameIndex(connectionManager, schemaObjectPrefix);
     }
 
     /**
@@ -90,10 +90,9 @@ public class PostgreSQLPersistenceManager extends BundleDbPersistenceManager {
 
     protected synchronized NodePropBundle loadBundle(NodeId id)
             throws ItemStateException {
-        PreparedStatement stmt = bundleSelect;
         try {
-            setKey(stmt, id.getUUID(), 1);
-            ResultSet rs = stmt.executeQuery();
+            Statement stmt = connectionManager.executeStmt(bundleSelectSQL, getKey(id.getUUID()));
+            ResultSet rs = stmt.getResultSet();
             try {
                 if (rs.next()) {
                     InputStream input = rs.getBinaryStream(1);
@@ -116,8 +115,6 @@ public class PostgreSQLPersistenceManager extends BundleDbPersistenceManager {
             String msg = "failed to read bundle: " + id + ": " + e;
             log.error(msg);
             throw new ItemStateException(msg, e);
-        } finally {
-            resetStatement(stmt);
         }
     }
 

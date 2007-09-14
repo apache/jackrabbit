@@ -19,9 +19,7 @@ package org.apache.jackrabbit.core.persistence.bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.core.persistence.PMContext;
-import org.apache.jackrabbit.core.persistence.db.DatabasePersistenceManager;
 
-import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -58,7 +56,7 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
 
     /** name of the embedded driver */
     public static final String DERBY_EMBEDDED_DRIVER = "org.apache.derby.jdbc.EmbeddedDriver";
-    
+
     /** the default logger */
     private static Logger log = LoggerFactory.getLogger(DerbyPersistenceManager.class);
 
@@ -271,7 +269,7 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
     protected void checkSchema() throws SQLException, RepositoryException {
         // set properties
         if (DERBY_EMBEDDED_DRIVER.equals(getDriver())) {
-            Statement stmt = con.createStatement();
+            Statement stmt = connectionManager.getConnection().createStatement();
             try {
                 stmt.execute("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY " +
                         "('derby.storage.initialPages', '" + derbyStorageInitialPages + "')");
@@ -317,7 +315,7 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
         }
 
         // prepare connection url for issuing shutdown command
-        String url = con.getMetaData().getURL();
+        String url = connectionManager.getConnection().getMetaData().getURL();
         int pos = url.lastIndexOf(';');
         if (pos != -1) {
             // strip any attributes from connection url
@@ -329,7 +327,7 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
         // otherwise Derby would mysteriously complain about some pending uncommitted
         // changes which can't possibly be true.
         // @todo further investigate
-        con.setAutoCommit(true);
+        connectionManager.getConnection().setAutoCommit(true);
 
         // now it's safe to shutdown the embedded Derby database
         try {

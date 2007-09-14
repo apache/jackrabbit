@@ -18,8 +18,6 @@ package org.apache.jackrabbit.core.persistence.bundle.util;
 
 import java.util.HashMap;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -42,14 +40,19 @@ public class DbNameIndex implements StringIndex {
      */
     static final String CVS_ID = "$URL$ $Rev$ $Date$";
 
-    // name index statements
-    protected PreparedStatement nameSelect;
-    protected PreparedStatement indexSelect;
-    protected PreparedStatement nameInsert;
+    /**
+     * The class that manages statement execution and recovery from connection loss.
+     */
+    protected ConnectionRecoveryManager connectionManager;
 
+    // name index statements
+    protected String nameSelectSQL;
+    protected String indexSelectSQL;
+    protected String nameInsertSQL;
+    
     // caches
     private final HashMap string2Index = new HashMap();
-    private final HashMap index2String= new HashMap();
+    private final HashMap index2String = new HashMap();
 
     /**
      * Creates a new index that is stored in a db.
@@ -57,9 +60,10 @@ public class DbNameIndex implements StringIndex {
      * @param schemaObjectPrefix the prefix for table names
      * @throws SQLException if the statements cannot be prepared.
      */
-    public DbNameIndex(Connection con, String schemaObjectPrefix)
+    public DbNameIndex(ConnectionRecoveryManager conMgr, String schemaObjectPrefix)
             throws SQLException {
-        init(con, schemaObjectPrefix);
+        connectionManager = conMgr;
+        init(schemaObjectPrefix);
     }
 
     /**
@@ -69,20 +73,19 @@ public class DbNameIndex implements StringIndex {
      * @param schemaObjectPrefix the prefix for table names
      * @throws SQLException if the statements cannot be prepared.
      */
-    protected void init(Connection con, String schemaObjectPrefix)
+    protected void init(String schemaObjectPrefix)
             throws SQLException {
-        nameSelect = con.prepareStatement("select NAME from " + schemaObjectPrefix + "NAMES where ID = ?");
-        indexSelect = con.prepareStatement("select ID from " + schemaObjectPrefix + "NAMES where NAME = ?");
-        nameInsert = con.prepareStatement("insert into " + schemaObjectPrefix + "NAMES (NAME) values (?)", Statement.RETURN_GENERATED_KEYS);
+        nameSelectSQL = "select NAME from " + schemaObjectPrefix + "NAMES where ID = ?";
+        indexSelectSQL = "select ID from " + schemaObjectPrefix + "NAMES where NAME = ?";
+        nameInsertSQL = "insert into " + schemaObjectPrefix + "NAMES (NAME) values (?)";
     }
 
     /**
      * Closes this index and releases it's resources.
      */
     public void close() {
-        closeStatement(nameSelect);
-        closeStatement(indexSelect);
-        closeStatement(nameInsert);
+        // closing the database resources is done by the owning
+        // BundleDbPersistenceManager that created this index
     }
 
     /**
@@ -135,11 +138,9 @@ public class DbNameIndex implements StringIndex {
      */
     protected int insertString(String string) {
         // assert index does not exist
-        PreparedStatement stmt = nameInsert;
         ResultSet rs = null;
         try {
-            stmt.setString(1, string);
-            stmt.executeUpdate();
+            Statement stmt = connectionManager.executeStmt(nameInsertSQL, new Object[]{string}, Statement.RETURN_GENERATED_KEYS);
             rs = stmt.getGeneratedKeys();
             if (!rs.next()) {
                 return -1;
@@ -150,7 +151,6 @@ public class DbNameIndex implements StringIndex {
             throw new IllegalStateException("Unable to insert index: " + e);
         } finally {
             closeResultSet(rs);
-            resetStatement(stmt);
         }
     }
 
@@ -160,11 +160,9 @@ public class DbNameIndex implements StringIndex {
      * @return the index or -1 if not found.
      */
     protected int getIndex(String string) {
-        PreparedStatement stmt = indexSelect;
         ResultSet rs = null;
         try {
-            stmt.setString(1, string);
-            stmt.execute();
+            Statement stmt = connectionManager.executeStmt(indexSelectSQL, new Object[]{string});
             rs = stmt.getResultSet();
             if (!rs.next()) {
                 return -1;
@@ -175,7 +173,6 @@ public class DbNameIndex implements StringIndex {
             throw new IllegalStateException("Unable to read index: " + e);
         } finally {
             closeResultSet(rs);
-            resetStatement(stmt);
         }
     }
 
@@ -185,11 +182,9 @@ public class DbNameIndex implements StringIndex {
      * @return the string or <code>null</code> if not found.
      */
     protected String getString(int index) {
-        PreparedStatement stmt = nameSelect;
         ResultSet rs = null;
         try {
-            stmt.setInt(1, index);
-            stmt.execute();
+            Statement stmt = connectionManager.executeStmt(nameSelectSQL, new Object[]{new Integer(index)});
             rs = stmt.getResultSet();
             if (!rs.next()) {
                 return null;
@@ -200,38 +195,6 @@ public class DbNameIndex implements StringIndex {
             throw new IllegalStateException("Unable to read name: " + e);
         } finally {
             closeResultSet(rs);
-            resetStatement(stmt);
-        }
-    }
-
-    /**
-     * closes the statement
-     * @param stmt the statement
-     */
-    protected void closeStatement(PreparedStatement stmt) {
-        if (stmt != null) {
-            try {
-                stmt.close();
-            } catch (SQLException se) {
-                // ignore
-            }
-        }
-    }
-    /**
-     * Resets the given <code>PreparedStatement</code> by clearing the
-     * parameters and warnings contained.
-     *
-     * @param stmt The <code>PreparedStatement</code> to reset. If
-     *             <code>null</code> this method does nothing.
-     */
-    protected void resetStatement(PreparedStatement stmt) {
-        if (stmt != null) {
-            try {
-                stmt.clearParameters();
-                stmt.clearWarnings();
-            } catch (SQLException se) {
-                // ignore
-            }
         }
     }
 

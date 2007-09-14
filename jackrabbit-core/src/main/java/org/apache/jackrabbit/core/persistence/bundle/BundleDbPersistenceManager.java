@@ -25,6 +25,7 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.persistence.PMContext;
+import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionRecoveryManager;
 import org.apache.jackrabbit.core.persistence.bundle.util.DbNameIndex;
 import org.apache.jackrabbit.core.persistence.bundle.util.NodePropBundle;
 import org.apache.jackrabbit.core.persistence.bundle.util.BundleBinding;
@@ -53,15 +54,14 @@ import java.io.InputStreamReader;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Driver;
-import java.util.Iterator;
-import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.jcr.RepositoryException;
 
@@ -82,6 +82,7 @@ import javax.jcr.RepositoryException;
  * <li>&lt;param name="{@link #setSchema(String) schema}" value=""/>
  * <li>&lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/>
  * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/>
+ * <li>&lt;param name="{@link #setBlockOnConnectionLoss(String) blockOnConnectionLoss}" value="false"/>
  * </ul>
  */
 public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager {
@@ -135,21 +136,25 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     /** inidicates if uses (filesystem) blob store */
     protected boolean externalBLOBs;
 
+    /** indicates whether to block if the database connection is lost */
+    protected boolean blockOnConnectionLoss = false;
 
-    /** jdbc conection */
-    protected Connection con;
+    /**
+     * The class that manages statement execution and recovery from connection loss.
+     */
+    protected ConnectionRecoveryManager connectionManager;
 
-    // shared prepared statements for bundle management
-    protected PreparedStatement bundleInsert;
-    protected PreparedStatement bundleUpdate;
-    protected PreparedStatement bundleSelect;
-    protected PreparedStatement bundleDelete;
+    // SQL statements for bundle management
+    protected String bundleInsertSQL;
+    protected String bundleUpdateSQL;
+    protected String bundleSelectSQL;
+    protected String bundleDeleteSQL;
 
-    // shared prepared statements for NodeReference management
-    protected PreparedStatement nodeReferenceInsert;
-    protected PreparedStatement nodeReferenceUpdate;
-    protected PreparedStatement nodeReferenceSelect;
-    protected PreparedStatement nodeReferenceDelete;
+    // SQL statements for NodeReference management
+    protected String nodeReferenceInsertSQL;
+    protected String nodeReferenceUpdateSQL;
+    protected String nodeReferenceSelectSQL;
+    protected String nodeReferenceDeleteSQL;
 
     /** file system where BLOB data is stored */
     protected CloseableBLOBStore blobStore;
@@ -371,6 +376,14 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         return errorHandling.toString();
     }
 
+    public void setBlockOnConnectionLoss(String block) {
+        this.blockOnConnectionLoss = Boolean.valueOf(block).booleanValue();
+    }
+
+    public String getBlockOnConnectionLoss() {
+        return Boolean.toString(blockOnConnectionLoss);
+    }
+
     /**
      * Returns <code>true</code> if the blobs are stored in the DB.
      * @return <code>true</code> if the blobs are stored in the DB.
@@ -404,7 +417,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                 throw new RepositoryException(msg);
             }
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            Statement stmt = con.createStatement();
+            Statement stmt = connectionManager.getConnection().createStatement();
             try {
                 String sql = reader.readLine();
                 while (sql != null) {
@@ -452,7 +465,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * @throws SQLException if an SQL erro occurs.
      */
     protected boolean checkTablesExist() throws SQLException {
-        DatabaseMetaData metaData = con.getMetaData();
+        DatabaseMetaData metaData = connectionManager.getConnection().getMetaData();
         String tableName = schemaObjectPrefix + "BUNDLE";
         if (metaData.storesLowerCaseIdentifiers()) {
             tableName = tableName.toLowerCase();
@@ -486,36 +499,40 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      *
      * Basically wrapps a JDBC transaction around super.store().
      */
-    public synchronized void store(ChangeLog changeLog)
-            throws ItemStateException {
-
+    public synchronized void store(ChangeLog changeLog) throws ItemStateException {
+        Connection con = null;
         try {
-            con.setAutoCommit(false);
-            super.store(changeLog);
-        } catch (SQLException e) {
-            String msg = "setting autocommit failed.";
-            log.error(msg, e);
-            throw new ItemStateException(msg, e);
-        } catch (ItemStateException e) {
-            // storing the changes failed, rollback changes
+            boolean tryAgain = true;
+            do {
+                try {
+                    con = connectionManager.getConnection();
+                    connectionManager.setAutoReconnect(false);
+                    con.setAutoCommit(false);
+                    super.store(changeLog);
+                    con.commit();
+                    con.setAutoCommit(true);
+                } catch (SQLException e) {
+                    if (tryAgain) {
+                        tryAgain = false;
+                        continue;
+                    }
+                    throw e;
+                }
+            } while(false);
+        } catch (Throwable th) {
             try {
-                con.rollback();
-            } catch (SQLException e1) {
-                String msg = "rollback of change log failed";
-                log.error(msg, e1);
+                if (con != null) {
+                    con.rollback();
+                }
+            } catch (SQLException e) {
+                logException("rollback failed", e);
             }
-            // re-throw original exception
-            throw e;
-        }
-
-        // storing the changes succeeded, now commit the changes
-        try {
-            con.commit();
-            con.setAutoCommit(true);
-        } catch (SQLException e) {
-            String msg = "committing change log failed";
-            log.error(msg, e);
-            throw new ItemStateException(msg, e);
+            if (th instanceof SQLException || th.getCause() instanceof SQLException) {
+                connectionManager.close();
+            }
+            throw new ItemStateException(th.getMessage());
+        } finally {
+            connectionManager.setAutoReconnect(true);
         }
     }
 
@@ -530,23 +547,8 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
 
         this.name = context.getHomeDir().getName();
 
-        // setup jdbc connection
-        // Note: Explicit creation of new instance of the driver is required
-        // in order to re-register the driver in the DriverManager after a
-        // repository shutdown.
-        Driver drv = (Driver) Class.forName(driver).newInstance();
-        log.info("JDBC driver created: {}", drv);
-        con = DriverManager.getConnection(url, user, password);
-        
-        DatabaseMetaData meta = con.getMetaData();
-        try {
-            log.info("Database: " + meta.getDatabaseProductName() + " / " + meta.getDatabaseProductVersion());
-            log.info("Driver: " + meta.getDriverName() + " / " + meta.getDriverVersion());
-        } catch (SQLException e) {
-            log.warn("Can not retrieve database and driver name / version", e);
-        }
-        
-        con.setAutoCommit(true);
+        connectionManager = new ConnectionRecoveryManager(blockOnConnectionLoss,
+                getDriver(), getUrl(), getUser(), getPassword());
 
         // make sure schemaObjectPrefix consists of legal name characters only
         prepareSchemaObjectPrefix();
@@ -557,28 +559,8 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         // create correct blob store
         blobStore = createBlobStore();
 
-        // prepare statements
-        if (getStorageModel() == SM_BINARY_KEYS) {
-            bundleInsert = con.prepareStatement("insert into " + schemaObjectPrefix + "BUNDLE (BUNDLE_DATA, NODE_ID) values (?, ?)");
-            bundleUpdate = con.prepareStatement("update " + schemaObjectPrefix + "BUNDLE set BUNDLE_DATA = ? where NODE_ID = ?");
-            bundleSelect = con.prepareStatement("select BUNDLE_DATA from " + schemaObjectPrefix + "BUNDLE where NODE_ID = ?");
-            bundleDelete = con.prepareStatement("delete from " + schemaObjectPrefix + "BUNDLE where NODE_ID = ?");
+        buildSQLStatements();
 
-            nodeReferenceInsert = con.prepareStatement("insert into " + schemaObjectPrefix + "REFS (REFS_DATA, NODE_ID) values (?, ?)");
-            nodeReferenceUpdate = con.prepareStatement("update " + schemaObjectPrefix + "REFS set REFS_DATA = ? where NODE_ID = ?");
-            nodeReferenceSelect = con.prepareStatement("select REFS_DATA from " + schemaObjectPrefix + "REFS where NODE_ID = ?");
-            nodeReferenceDelete = con.prepareStatement("delete from " + schemaObjectPrefix + "REFS where NODE_ID = ?");
-        } else {
-            bundleInsert = con.prepareStatement("insert into " + schemaObjectPrefix + "BUNDLE (BUNDLE_DATA, NODE_ID_HI, NODE_ID_LO) values (?, ?, ?)");
-            bundleUpdate = con.prepareStatement("update " + schemaObjectPrefix + "BUNDLE set BUNDLE_DATA = ? where NODE_ID_HI = ? and NODE_ID_LO = ?");
-            bundleSelect = con.prepareStatement("select BUNDLE_DATA from " + schemaObjectPrefix + "BUNDLE where NODE_ID_HI = ? and NODE_ID_LO = ?");
-            bundleDelete = con.prepareStatement("delete from " + schemaObjectPrefix + "BUNDLE where NODE_ID_HI = ? and NODE_ID_LO = ?");
-
-            nodeReferenceInsert = con.prepareStatement("insert into " + schemaObjectPrefix + "REFS (REFS_DATA, NODE_ID_HI, NODE_ID_LO) values (?, ?, ?)");
-            nodeReferenceUpdate = con.prepareStatement("update " + schemaObjectPrefix + "REFS set REFS_DATA = ? where NODE_ID_HI = ? and NODE_ID_LO = ?");
-            nodeReferenceSelect = con.prepareStatement("select REFS_DATA from " + schemaObjectPrefix + "REFS where NODE_ID_HI = ? and NODE_ID_LO = ?");
-            nodeReferenceDelete = con.prepareStatement("delete from " + schemaObjectPrefix + "REFS where NODE_ID_HI = ? and NODE_ID_LO = ?");
-        }
         // load namespaces
         binding = new BundleBinding(errorHandling, blobStore, getNsIndex(), getNameIndex(), context.getDataStore());
         binding.setMinBlobSize(minBlobSize);
@@ -631,7 +613,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * @throws SQLException if an SQL error occurs.
      */
     protected DbNameIndex createDbNameIndex() throws SQLException {
-        return new DbNameIndex(con, schemaObjectPrefix);
+        return new DbNameIndex(connectionManager, schemaObjectPrefix);
     }
 
     /**
@@ -685,20 +667,16 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         log.info("{}: checking workspace consistency...", name);
 
         Collection modifications = new ArrayList();
-        PreparedStatement stmt = null;
         ResultSet rs = null;
         DataInputStream din = null;
         try {
+            String sql;
             if (getStorageModel() == SM_BINARY_KEYS) {
-                stmt = con.prepareStatement(
-                        "select NODE_ID, BUNDLE_DATA from "
-                        + schemaObjectPrefix + "BUNDLE");
+                sql = "select NODE_ID, BUNDLE_DATA from " + schemaObjectPrefix + "BUNDLE";
             } else {
-                stmt = con.prepareStatement(
-                        "select NODE_ID_HI, NODE_ID_LO, BUNDLE_DATA from "
-                        + schemaObjectPrefix + "BUNDLE");
+                sql = "select NODE_ID_HI, NODE_ID_LO, BUNDLE_DATA from " + schemaObjectPrefix + "BUNDLE";
             }
-            stmt.execute();
+            Statement stmt = connectionManager.executeStmt(sql, new Object[0]);
             rs = stmt.getResultSet();
             while (rs.next()) {
                 NodeId id;
@@ -769,7 +747,6 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         } finally {
             closeStream(din);
             closeResultSet(rs);
-            closeStatement(stmt);
         }
 
         if (consistencyFix && !modifications.isEmpty()) {
@@ -799,7 +776,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * @throws Exception if an error occurs
      */
     protected void prepareSchemaObjectPrefix() throws Exception {
-        DatabaseMetaData metaData = con.getMetaData();
+        DatabaseMetaData metaData = connectionManager.getConnection().getMetaData();
         String legalChars = metaData.getExtraNameCharacters();
         legalChars += "ABCDEFGHIJKLMNOPQRSTUVWXZY0123456789_";
 
@@ -829,24 +806,10 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         }
 
         try {
-            // close shared prepared statements
-            closeStatement(bundleInsert);
-            closeStatement(bundleUpdate);
-            closeStatement(bundleSelect);
-            closeStatement(bundleDelete);
-
-            closeStatement(nodeReferenceInsert);
-            closeStatement(nodeReferenceUpdate);
-            closeStatement(nodeReferenceSelect);
-            closeStatement(nodeReferenceDelete);
-
             if (nameIndex instanceof DbNameIndex) {
                 ((DbNameIndex) nameIndex).close();
             }
-
-            // close jdbc connection
-            con.close();
-
+            connectionManager.close();
             // close blob store
             blobStore.close();
             blobStore = null;
@@ -877,16 +840,63 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     /**
+     * Constructs a parameter list for a PreparedStatement
+     * for the given UUID.
+     *
+     * @param uuid the uuid
+     * @return a list of Objects
+     */
+    protected Object[] getKey(UUID uuid) {
+        if (getStorageModel() == SM_BINARY_KEYS) {
+            return new Object[]{uuid.getRawBytes()};
+        } else {
+            return new Object[]{new Long(uuid.getMostSignificantBits()),
+                    new Long(uuid.getLeastSignificantBits())};
+        }
+    }
+
+    /**
+     * Creates a parameter array for an SQL statement that needs
+     * (i) a UUID, and (2) another parameter.
+     *
+     * @param uuid the UUID
+     * @param p the other parameter
+     * @param before whether the other parameter should be before the uuid parameter
+     * @return an Object array that represents the parameters
+     */
+    protected Object[] createParams(UUID uuid, Object p, boolean before) {
+
+        // Create the key
+        List key = new ArrayList();
+        if (getStorageModel() == SM_BINARY_KEYS) {
+            key.add(uuid.getRawBytes());
+        } else {
+            key.add(new Long(uuid.getMostSignificantBits()));
+            key.add(new Long(uuid.getLeastSignificantBits()));
+        }
+
+        // Create the parameters
+        List params = new ArrayList();
+        if (before) {
+            params.add(p);
+            params.addAll(key);
+        } else {
+            params.addAll(key);
+            params.add(p);
+        }
+
+        return params.toArray();
+    }
+
+    /**
      * {@inheritDoc}
      */
     protected synchronized NodePropBundle loadBundle(NodeId id)
             throws ItemStateException {
-        PreparedStatement stmt = bundleSelect;
         ResultSet rs = null;
         InputStream in = null;
         try {
-            setKey(stmt, id.getUUID(), 1);
-            stmt.execute();
+            Statement stmt = connectionManager.executeStmt(bundleSelectSQL, getKey(id.getUUID()));
             rs = stmt.getResultSet();
             if (!rs.next()) {
                 return null;
@@ -911,7 +921,6 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         } finally {
             closeStream(in);
             closeResultSet(rs);
-            resetStatement(stmt);
         }
     }
 
@@ -919,13 +928,10 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * {@inheritDoc}
      */
     protected synchronized boolean existsBundle(NodeId id) throws ItemStateException {
-        PreparedStatement stmt = bundleSelect;
         ResultSet rs = null;
         try {
-            setKey(stmt, id.getUUID(), 1);
-            stmt.execute();
+            Statement stmt = connectionManager.executeStmt(bundleSelectSQL, getKey(id.getUUID()));
             rs = stmt.getResultSet();
-
             // a bundle exists, if the result has at least one entry
             return rs.next();
         } catch (Exception e) {
@@ -934,7 +940,6 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             throw new ItemStateException(msg, e);
         } finally {
             closeResultSet(rs);
-            resetStatement(stmt);
         }
     }
 
@@ -942,27 +947,19 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * {@inheritDoc}
      */
     protected synchronized void storeBundle(NodePropBundle bundle) throws ItemStateException {
-        PreparedStatement stmt = null;
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
             DataOutputStream dout = new DataOutputStream(out);
             binding.writeBundle(dout, bundle);
             dout.close();
 
-            if (bundle.isNew()) {
-                stmt = bundleInsert;
-            } else {
-                stmt = bundleUpdate;
-            }
-            stmt.setBytes(1, out.toByteArray());
-            setKey(stmt, bundle.getId().getUUID(), 2);
-            stmt.execute();
+            String sql = bundle.isNew() ? bundleInsertSQL : bundleUpdateSQL;
+            Object[] params = createParams(bundle.getId().getUUID(), out.toByteArray(), true);
+            connectionManager.executeStmt(sql, params);
         } catch (Exception e) {
             String msg = "failed to write bundle: " + bundle.getId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
-        } finally {
-            resetStatement(stmt);
         }
     }
 
@@ -970,10 +967,8 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * {@inheritDoc}
      */
     protected synchronized void destroyBundle(NodePropBundle bundle) throws ItemStateException {
-        PreparedStatement stmt = bundleDelete;
         try {
-            setKey(stmt, bundle.getId().getUUID(), 1);
-            stmt.execute();
+            connectionManager.executeStmt(bundleDeleteSQL, getKey(bundle.getId().getUUID()));
             // also delete all
             bundle.removeAllProperties();
         } catch (Exception e) {
@@ -983,8 +978,6 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             String msg = "failed to delete bundle: " + bundle.getId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
-        } finally {
-            resetStatement(stmt);
         }
     }
 
@@ -997,12 +990,11 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             throw new IllegalStateException("not initialized");
         }
 
-        PreparedStatement stmt = nodeReferenceSelect;
         ResultSet rs = null;
         InputStream in = null;
         try {
-            setKey(stmt, targetId.getTargetId().getUUID(), 1);
-            stmt.execute();
+            Statement stmt = connectionManager.executeStmt(
+                    nodeReferenceSelectSQL, getKey(targetId.getTargetId().getUUID()));
             rs = stmt.getResultSet();
             if (!rs.next()) {
                 throw new NoSuchItemStateException(targetId.toString());
@@ -1023,7 +1015,6 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         } finally {
             closeStream(in);
             closeResultSet(rs);
-            resetStatement(stmt);
         }
     }
 
@@ -1041,34 +1032,25 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             throw new IllegalStateException("not initialized");
         }
 
-        PreparedStatement stmt = null;
-        try {
-            // check if insert or update
-            if (exists(refs.getId())) {
-                stmt = nodeReferenceUpdate;
-            } else {
-                stmt = nodeReferenceInsert;
-            }
+        // check if insert or update
+        boolean update = exists(refs.getId());
+        String sql = (update) ? nodeReferenceUpdateSQL : nodeReferenceInsertSQL;
 
-            ByteArrayOutputStream out = new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
+        try {
+            ByteArrayOutputStream out =
+                    new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
             // serialize references
             Serializer.serialize(refs, out);
 
-            // we are synchronized on this instance, therefore we do not
-            // not have to additionally synchronize on the preparedStatement
-
-            stmt.setBytes(1, out.toByteArray());
-            setKey(stmt, refs.getTargetId().getUUID(), 2);
-            stmt.execute();
+            Object[] params = createParams(refs.getTargetId().getUUID(), out.toByteArray(), true);
+            connectionManager.executeStmt(sql, params);
 
             // there's no need to close a ByteArrayOutputStream
             //out.close();
         } catch (Exception e) {
-            String msg = "failed to write property state: " + refs.getTargetId();
+            String msg = "failed to write node references: " + refs.getId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
-        } finally {
-            resetStatement(stmt);
         }
     }
 
@@ -1080,10 +1062,9 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             throw new IllegalStateException("not initialized");
         }
 
-        PreparedStatement stmt = nodeReferenceDelete;
         try {
-            setKey(stmt, refs.getTargetId().getUUID(), 1);
-            stmt.execute();
+            connectionManager.executeStmt(nodeReferenceDeleteSQL,
+                    getKey(refs.getTargetId().getUUID()));
         } catch (Exception e) {
             if (e instanceof NoSuchItemStateException) {
                 throw (NoSuchItemStateException) e;
@@ -1091,8 +1072,6 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             String msg = "failed to delete references: " + refs.getTargetId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
-        } finally {
-            resetStatement(stmt);
         }
     }
 
@@ -1104,22 +1083,21 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             throw new IllegalStateException("not initialized");
         }
 
-        PreparedStatement stmt = nodeReferenceSelect;
         ResultSet rs = null;
         try {
-            setKey(stmt, targetId.getTargetId().getUUID(), 1);
-            stmt.execute();
+            Statement stmt = connectionManager.executeStmt(nodeReferenceSelectSQL,
+                    getKey(targetId.getTargetId().getUUID()));
             rs = stmt.getResultSet();
 
-            // a reference exists, if the result has at least one entry
+            // a reference exists if the result has at least one entry
             return rs.next();
         } catch (Exception e) {
-            String msg = "failed to check existence of node references: " + targetId;
+            String msg = "failed to check existence of node references: "
+                + targetId;
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
             closeResultSet(rs);
-            resetStatement(stmt);
         }
     }
 
@@ -1206,6 +1184,34 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     /**
+     * Initializes the SQL strings.
+     */
+    protected void buildSQLStatements() {
+        // prepare statements
+        if (getStorageModel() == SM_BINARY_KEYS) {
+            bundleInsertSQL = "insert into " + schemaObjectPrefix + "BUNDLE (BUNDLE_DATA, NODE_ID) values (?, ?)";
+            bundleUpdateSQL = "update " + schemaObjectPrefix + "BUNDLE set BUNDLE_DATA = ? where NODE_ID = ?";
+            bundleSelectSQL = "select BUNDLE_DATA from " + schemaObjectPrefix + "BUNDLE where NODE_ID = ?";
+            bundleDeleteSQL = "delete from " + schemaObjectPrefix + "BUNDLE where NODE_ID = ?";
+
+            nodeReferenceInsertSQL = "insert into " + schemaObjectPrefix + "REFS (REFS_DATA, NODE_ID) values (?, ?)";
+            nodeReferenceUpdateSQL = "update " + schemaObjectPrefix + "REFS set REFS_DATA = ? where NODE_ID = ?";
+            nodeReferenceSelectSQL = "select REFS_DATA from " + schemaObjectPrefix + "REFS where NODE_ID = ?";
+            nodeReferenceDeleteSQL = "delete from " + schemaObjectPrefix + "REFS where NODE_ID = ?";
+        } else {
+            bundleInsertSQL = "insert into " + schemaObjectPrefix + "BUNDLE (BUNDLE_DATA, NODE_ID_HI, NODE_ID_LO) values (?, ?, ?)";
+            bundleUpdateSQL = "update " + schemaObjectPrefix + "BUNDLE set BUNDLE_DATA = ? where NODE_ID_HI = ? and NODE_ID_LO = ?";
+            bundleSelectSQL = "select BUNDLE_DATA from " + schemaObjectPrefix + "BUNDLE where NODE_ID_HI = ? and NODE_ID_LO = ?";
+            bundleDeleteSQL = "delete from " + schemaObjectPrefix + "BUNDLE where NODE_ID_HI = ? and NODE_ID_LO = ?";
+
+            nodeReferenceInsertSQL = "insert into " + schemaObjectPrefix + "REFS (REFS_DATA, NODE_ID_HI, NODE_ID_LO) values (?, ?, ?)";
+            nodeReferenceUpdateSQL = "update " + schemaObjectPrefix + "REFS set REFS_DATA = ? where NODE_ID_HI = ? and NODE_ID_LO = ?";
+            nodeReferenceSelectSQL = "select REFS_DATA from " + schemaObjectPrefix + "REFS where NODE_ID_HI = ? and NODE_ID_LO = ?";
+            nodeReferenceDeleteSQL = "delete from " + schemaObjectPrefix + "REFS where NODE_ID_HI = ? and NODE_ID_LO = ?";
+        }
+    }
+
+    /**
      * Helper interface for closeable stores
      */
     protected static interface CloseableBLOBStore extends BLOBStore {
@@ -1244,28 +1250,18 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      */
     protected class DbBlobStore implements CloseableBLOBStore {
 
-        protected PreparedStatement blobInsert;
-        protected PreparedStatement blobUpdate;
-        protected PreparedStatement blobSelect;
-        protected PreparedStatement blobSelectExist;
-        protected PreparedStatement blobDelete;
+        protected String blobInsertSQL;
+        protected String blobUpdateSQL;
+        protected String blobSelectSQL;
+        protected String blobSelectExistSQL;
+        protected String blobDeleteSQL;
 
         public DbBlobStore() throws SQLException {
-            blobInsert =
-                    con.prepareStatement("insert into "
-                    + schemaObjectPrefix + "BINVAL (BINVAL_DATA, BINVAL_ID) values (?, ?)");
-            blobUpdate =
-                    con.prepareStatement("update "
-                    + schemaObjectPrefix + "BINVAL set BINVAL_DATA = ? where BINVAL_ID = ?");
-            blobSelect =
-                    con.prepareStatement("select BINVAL_DATA from "
-                    + schemaObjectPrefix + "BINVAL where BINVAL_ID = ?");
-            blobSelectExist =
-                    con.prepareStatement("select 1 from "
-                    + schemaObjectPrefix + "BINVAL where BINVAL_ID = ?");
-            blobDelete =
-                    con.prepareStatement("delete from "
-                    + schemaObjectPrefix + "BINVAL where BINVAL_ID = ?");
+            blobInsertSQL = "insert into " + schemaObjectPrefix + "BINVAL (BINVAL_DATA, BINVAL_ID) values (?, ?)";
+            blobUpdateSQL = "update " + schemaObjectPrefix + "BINVAL set BINVAL_DATA = ? where BINVAL_ID = ?";
+            blobSelectSQL = "select BINVAL_DATA from " + schemaObjectPrefix + "BINVAL where BINVAL_ID = ?";
+            blobSelectExistSQL = "select 1 from " + schemaObjectPrefix + "BINVAL where BINVAL_ID = ?";
+            blobDeleteSQL = "delete from " + schemaObjectPrefix + "BINVAL where BINVAL_ID = ?";
         }
 
         /**
@@ -1287,39 +1283,31 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
          * {@inheritDoc}
          */
         public InputStream get(String blobId) throws Exception {
-            PreparedStatement stmt = blobSelect;
-            synchronized (stmt) {
-                try {
-                    stmt.setString(1, blobId);
-                    stmt.execute();
-                    final ResultSet rs = stmt.getResultSet();
-                    if (!rs.next()) {
-                        closeResultSet(rs);
-                        throw new Exception("no such BLOB: " + blobId);
-                    }
-                    InputStream in = rs.getBinaryStream(1);
-                    if (in == null) {
-                        // some databases treat zero-length values as NULL;
-                        // return empty InputStream in such a case
-                        closeResultSet(rs);
-                        return new ByteArrayInputStream(new byte[0]);
-                    }
-
-                    /**
-                     * return an InputStream wrapper in order to
-                     * close the ResultSet when the stream is closed
-                     */
-                    return new FilterInputStream(in) {
-                        public void close() throws IOException {
-                            in.close();
-                            // now it's safe to close ResultSet
-                            closeResultSet(rs);
-                        }
-                    };
-                } finally {
-                    resetStatement(stmt);
-                }
+            Statement stmt = connectionManager.executeStmt(blobSelectSQL, new Object[]{blobId});
+            final ResultSet rs = stmt.getResultSet();
+            if (!rs.next()) {
+                closeResultSet(rs);
+                throw new Exception("no such BLOB: " + blobId);
             }
+            InputStream in = rs.getBinaryStream(1);
+            if (in == null) {
+                // some databases treat zero-length values as NULL;
+                // return empty InputStream in such a case
+                closeResultSet(rs);
+                return new ByteArrayInputStream(new byte[0]);
+            }
+
+            /**
+             * return an InputStream wrapper in order to
+             * close the ResultSet when the stream is closed
+             */
+            return new FilterInputStream(in) {
+                public void close() throws IOException {
+                    in.close();
+                    // now it's safe to close ResultSet
+                    closeResultSet(rs);
+                }
+            };
         }
 
         /**
@@ -1327,45 +1315,28 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
          */
         public synchronized void put(String blobId, InputStream in, long size)
                 throws Exception {
-            PreparedStatement stmt = blobSelectExist;
-            try {
-                stmt.setString(1, blobId);
-                stmt.execute();
-                ResultSet rs = stmt.getResultSet();
-                // a BLOB exists if the result has at least one entry
-                boolean exists = rs.next();
-                resetStatement(stmt);
-                closeResultSet(rs);
+            Statement stmt = connectionManager.executeStmt(blobSelectExistSQL, new Object[]{blobId});
+            ResultSet rs = stmt.getResultSet();
+            // a BLOB exists if the result has at least one entry
+            boolean exists = rs.next();
+            closeResultSet(rs);
 
-                stmt = (exists) ? blobUpdate : blobInsert;
-                stmt.setBinaryStream(1, in, (int) size);
-                stmt.setString(2, blobId);
-                stmt.executeUpdate();
-            } finally {
-                resetStatement(stmt);
-            }
+            String sql = (exists) ? blobUpdateSQL : blobInsertSQL;
+            Object[] params = new Object[]{new ConnectionRecoveryManager.StreamWrapper(in, size), blobId};
+            connectionManager.executeStmt(sql, params);
         }
 
         /**
          * {@inheritDoc}
          */
         public synchronized boolean remove(String blobId) throws Exception {
-            PreparedStatement stmt = blobDelete;
-            try {
-                stmt.setString(1, blobId);
-                return stmt.executeUpdate() == 1;
-            } finally {
-                resetStatement(stmt);
-            }
+            Statement stmt = connectionManager.executeStmt(blobDeleteSQL, new Object[]{blobId});
+            return stmt.getUpdateCount() == 1;
         }
 
         public void close() {
-            closeStatement(blobInsert);
-            closeStatement(blobUpdate);
-            closeStatement(blobSelect);
-            closeStatement(blobSelectExist);
-            closeStatement(blobDelete);
+            // closing the database resources of this blobstore is left to the
+            // owning BundleDbPersistenceManager
         }
     }
-
 }
