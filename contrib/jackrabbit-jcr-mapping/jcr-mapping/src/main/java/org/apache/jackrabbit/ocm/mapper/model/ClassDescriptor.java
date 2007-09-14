@@ -437,7 +437,9 @@ public class ClassDescriptor {
      * @param className
      */
     public void setExtend(String className) {
-        if (className.equals("")) className = null;
+        if (className != null && className.length() == 0) {
+            className = null;
+        }
     	this.superClassName = className;
     }
 
