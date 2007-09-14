@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.persistence.bundle.util;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -28,11 +26,11 @@ import java.sql.SQLException;
  */
 public class PostgreSQLNameIndex extends DbNameIndex {
 
-    protected PreparedStatement generatedKeySelect;
+    protected String generatedKeySelectSQL;
 
-    public PostgreSQLNameIndex(Connection con, String schemaObjectPrefix)
+    public PostgreSQLNameIndex(ConnectionRecoveryManager conMgr, String schemaObjectPrefix)
             throws SQLException {
-        super(con, schemaObjectPrefix);
+        super(conMgr, schemaObjectPrefix);
     }
 
     /**
@@ -42,16 +40,12 @@ public class PostgreSQLNameIndex extends DbNameIndex {
      * @param schemaObjectPrefix the prefix for table names
      * @throws SQLException if the statements cannot be prepared.
      */
-    protected void init(Connection con, String schemaObjectPrefix)
+    protected void init(String schemaObjectPrefix)
             throws SQLException {
-        nameSelect = con.prepareStatement(
-                "select NAME from " + schemaObjectPrefix + "NAMES where ID = ?");
-        indexSelect = con.prepareStatement(
-                "select ID from " + schemaObjectPrefix + "NAMES where NAME = ?");
-        nameInsert = con.prepareStatement(
-                "insert into " + schemaObjectPrefix + "NAMES (NAME) values (?)");
-        generatedKeySelect = con.prepareStatement(
-                "select currval('" + schemaObjectPrefix + "NAMES_ID_SEQ')");
+        nameSelectSQL = "select NAME from " + schemaObjectPrefix + "NAMES where ID = ?";
+        indexSelectSQL = "select ID from " + schemaObjectPrefix + "NAMES where NAME = ?";
+        nameInsertSQL = "insert into " + schemaObjectPrefix + "NAMES (NAME) values (?)";
+        generatedKeySelectSQL = "select currval('" + schemaObjectPrefix + "NAMES_ID_SEQ')";
     }
 
     /**
@@ -65,15 +59,11 @@ public class PostgreSQLNameIndex extends DbNameIndex {
      */
     protected int insertString(String string) {
         // assert index does not exist
-        PreparedStatement stmt = nameInsert;
         try {
-            stmt.setString(1, string);
-            stmt.executeUpdate();
+            connectionManager.executeStmt(nameInsertSQL, new Object[]{string});
             return getGeneratedKey();
         } catch (Exception e) {
             throw new IllegalStateException("Unable to insert index: " + e);
-        } finally {
-            resetStatement(stmt);
         }
     }
 
@@ -82,9 +72,8 @@ public class PostgreSQLNameIndex extends DbNameIndex {
      * @return the index.
      */
     protected int getGeneratedKey() {
-        PreparedStatement stmt = generatedKeySelect;
         try {
-            ResultSet rs = stmt.executeQuery();
+            ResultSet rs = connectionManager.executeQuery(generatedKeySelectSQL);
             try {
                 if (!rs.next()) {
                     return -1;
@@ -96,8 +85,6 @@ public class PostgreSQLNameIndex extends DbNameIndex {
             }
         } catch (Exception e) {
             throw new IllegalStateException("Unable to read index: " + e);
-        } finally {
-            resetStatement(stmt);
         }
     }
 
