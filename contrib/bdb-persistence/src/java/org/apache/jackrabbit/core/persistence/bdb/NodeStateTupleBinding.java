@@ -14,16 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.state.bdb;
+package org.apache.jackrabbit.core.persistence.bdb;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.persistence.util.Serializer;
+import org.apache.jackrabbit.core.state.NodeState;
 
 import com.sleepycat.bind.tuple.TupleBinding;
 import com.sleepycat.bind.tuple.TupleInput;
 import com.sleepycat.bind.tuple.TupleOutput;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.util.Serializer;
 
 public class NodeStateTupleBinding extends TupleBinding {
 
