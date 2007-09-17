@@ -34,7 +34,6 @@ public class BLOBInDataStore extends BLOBFileValue {
     
     private final DataStore store;
     private final DataIdentifier identifier;
-    private DataRecord dataRecord;
     
     /**
      * the prefix of the string representation of this value
@@ -56,12 +55,10 @@ public class BLOBInDataStore extends BLOBFileValue {
 
     public void delete(boolean pruneEmptyParentDirs) {
         // do nothing
-        // TODO need to implement garbage collection
     }
 
     public void discard() {
         // do nothing
-        // TODO need to implement garbage collection
     }
 
     public boolean equals(Object obj) {
@@ -132,10 +129,8 @@ public class BLOBInDataStore extends BLOBFileValue {
     }    
     
     private DataRecord getDataRecord() throws IOException {
-        if (dataRecord == null) {
-            dataRecord = store.getRecord(identifier);
-        }
-        return dataRecord;
+        // may not keep the record, otherwise garbage collection doesn't work
+        return store.getRecord(identifier);
     }
 
 }
