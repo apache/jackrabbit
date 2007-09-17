@@ -78,7 +78,8 @@ public class GarbageCollector {
     }
     
     /**
-     * When testing the garbage collection, a delay class is tested, 
+     * When testing the garbage collection, a delay is used instead of simulating concurrent access.
+     *  
      * @param testDelay the delay in milliseconds
      */
     public void setTestDelay(int testDelay) {
