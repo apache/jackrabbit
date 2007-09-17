@@ -34,6 +34,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("Data tests");
         suite.addTestSuite(NodeTypeTest.class);
         suite.addTestSuite(ExportImportTest.class);
+        suite.addTestSuite(GarbageCollectorTest.class);
         return suite;
     }
 
