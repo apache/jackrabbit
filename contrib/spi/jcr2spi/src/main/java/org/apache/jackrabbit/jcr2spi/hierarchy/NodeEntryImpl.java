@@ -1351,7 +1351,10 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      */
     private void completeTransientChanges() {
         // old parent can forget this one
-        revertInfo.oldParent.childNodeAttic.remove(this);
+        // root entry does not have oldParent
+        if (revertInfo.oldParent != null) {
+            revertInfo.oldParent.childNodeAttic.remove(this);
+        }
         revertInfo.dispose();
         revertInfo = null;
     }
