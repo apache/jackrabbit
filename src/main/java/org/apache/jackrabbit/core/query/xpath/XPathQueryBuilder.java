@@ -529,6 +529,9 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             case JJTDOTDOT:
                 exceptions.add(new InvalidQueryException("Parent axis is not supported"));
                 break;
+            case JJTUNIONEXPR:
+                exceptions.add(new InvalidQueryException("Union expression is not supported"));
+                break;
             default:
                 // per default traverse
                 node.childrenAccept(this, queryNode);
