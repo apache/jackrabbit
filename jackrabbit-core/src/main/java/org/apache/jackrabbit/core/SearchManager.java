@@ -402,6 +402,10 @@ public class SearchManager implements SynchronousEventListener {
                 long type = e.getType();
                 if (type == Event.NODE_ADDED) {
                     addedNodes.put(e.getChildId(), e);
+                    // quick'n dirty fix for JCR-905
+                    if (e.isExternal()) {
+                        removedNodes.add(e.getChildId());
+                    }
                 } else if (type == Event.NODE_REMOVED) {
                     removedNodes.add(e.getChildId());
                 } else {
