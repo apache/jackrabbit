@@ -27,7 +27,7 @@ import java.util.Map;
 
 /**
  * Represents the transaction on behalf of the component that wants to
- * explictely demarcate transcation boundaries. After having been prepared,
+ * explicitly demarcate transaction boundaries. After having been prepared,
  * schedules a task that rolls back the transaction if some time passes without
  * any further action. This will guarantee that global objects locked by one
  * of the resources' {@link InternalXAResource#prepare} method, are eventually
