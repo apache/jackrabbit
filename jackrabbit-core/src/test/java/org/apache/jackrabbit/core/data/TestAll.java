@@ -35,6 +35,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(NodeTypeTest.class);
         suite.addTestSuite(ExportImportTest.class);
         suite.addTestSuite(GarbageCollectorTest.class);
+        suite.addTestSuite(PersistenceManagerIteratorTest.class);
         return suite;
     }
 
