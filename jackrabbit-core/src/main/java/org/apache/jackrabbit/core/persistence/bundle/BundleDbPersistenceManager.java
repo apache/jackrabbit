@@ -38,6 +38,7 @@ import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.NodeIdIterator;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.uuid.UUID;
 
@@ -62,6 +63,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import javax.jcr.RepositoryException;
 
@@ -149,6 +151,8 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     protected String bundleUpdateSQL;
     protected String bundleSelectSQL;
     protected String bundleDeleteSQL;
+    protected String bundleSelectAllIdsFromSQL;
+    protected String bundleSelectAllIdsSQL;
 
     // SQL statements for NodeReference management
     protected String nodeReferenceInsertSQL;
@@ -891,6 +895,63 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
+    public synchronized NodeIdIterator getAllNodeIds(NodeId bigger, int maxCount)
+            throws ItemStateException {
+        ResultSet rs = null;
+        try {
+            UUID lowUuid;
+            Object[] keys;
+            String sql;
+            if (bigger == null) {
+                sql = bundleSelectAllIdsSQL;
+                lowUuid = null;
+                keys = new Object[0];
+            } else {
+                sql = bundleSelectAllIdsFromSQL;
+                lowUuid = bigger.getUUID();
+                keys = getKey(lowUuid);
+            }
+            if (maxCount > 0) {
+                // get some more rows, in case the first row is smaller
+                // only required for SM_LONGLONG_KEYS
+                // probability is very low to get get the wrong first key, < 1 : 2^64
+                // see also bundleSelectAllIdsFrom SQL statement
+                maxCount += 10;
+            }
+            Statement stmt = connectionManager.executeStmt(sql, keys, false, maxCount + 10);
+            rs = stmt.getResultSet();
+            ArrayList result = new ArrayList();
+            while ((maxCount == 0 || result.size() < maxCount) && rs.next()) {
+                UUID current;
+                if (getStorageModel() == SM_BINARY_KEYS) {
+                    current = new UUID(rs.getBytes(1));
+                } else {
+                    long high = rs.getLong(1);
+                    long low = rs.getLong(2);
+                    current = new UUID(high, low);
+                }
+                if (lowUuid != null) {
+                    // skip the keys that are smaller or equal (see above, maxCount += 10)
+                    if (current.compareTo(lowUuid) <= 0) {
+                        continue;
+                    }
+                }
+                result.add(current);
+            }        
+            ListNodeIdIterator it = new ListNodeIdIterator(result);
+            return it;
+        } catch (SQLException e) {
+            String msg = "getAllNodeIds failed.";
+            log.error(msg, e);
+            throw new ItemStateException(msg, e);
+        } finally {
+            closeResultSet(rs);
+        }
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
     protected synchronized NodePropBundle loadBundle(NodeId id)
             throws ItemStateException {
         ResultSet rs = null;
@@ -1198,6 +1259,9 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             nodeReferenceUpdateSQL = "update " + schemaObjectPrefix + "REFS set REFS_DATA = ? where NODE_ID = ?";
             nodeReferenceSelectSQL = "select REFS_DATA from " + schemaObjectPrefix + "REFS where NODE_ID = ?";
             nodeReferenceDeleteSQL = "delete from " + schemaObjectPrefix + "REFS where NODE_ID = ?";
+            
+            bundleSelectAllIdsSQL = "select NODE_ID from " + schemaObjectPrefix + "BUNDLE";
+            bundleSelectAllIdsFromSQL = "select NODE_ID from " + schemaObjectPrefix + "BUNDLE WHERE NODE_ID > ? ORDER BY NODE_ID";
         } else {
             bundleInsertSQL = "insert into " + schemaObjectPrefix + "BUNDLE (BUNDLE_DATA, NODE_ID_HI, NODE_ID_LO) values (?, ?, ?)";
             bundleUpdateSQL = "update " + schemaObjectPrefix + "BUNDLE set BUNDLE_DATA = ? where NODE_ID_HI = ? and NODE_ID_LO = ?";
@@ -1208,7 +1272,13 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             nodeReferenceUpdateSQL = "update " + schemaObjectPrefix + "REFS set REFS_DATA = ? where NODE_ID_HI = ? and NODE_ID_LO = ?";
             nodeReferenceSelectSQL = "select REFS_DATA from " + schemaObjectPrefix + "REFS where NODE_ID_HI = ? and NODE_ID_LO = ?";
             nodeReferenceDeleteSQL = "delete from " + schemaObjectPrefix + "REFS where NODE_ID_HI = ? and NODE_ID_LO = ?";
+            
+            bundleSelectAllIdsSQL = "select NODE_ID_HI, NODE_ID_LO from " + schemaObjectPrefix + "BUNDLE";
+            // need to use HI and LO parameters
+            // this is not the exact statement, but not all databases support WHERE (NODE_ID_HI, NODE_ID_LOW) >= (?, ?)
+            bundleSelectAllIdsFromSQL = "select NODE_ID_HI, NODE_ID_LO from " + schemaObjectPrefix + "BUNDLE WHERE (NODE_ID_HI >= ?) AND (? IS NOT NULL) ORDER BY NODE_ID_HI, NODE_ID_LO";
         }
+        
     }
 
     /**
@@ -1339,4 +1409,35 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             // owning BundleDbPersistenceManager
         }
     }
+
+    private class ListNodeIdIterator implements NodeIdIterator {
+        
+        private final ArrayList list;
+        private int pos;
+        
+        ListNodeIdIterator(ArrayList list) {
+            this.list = list;
+        }
+        
+        public NodeId nextNodeId() throws NoSuchElementException {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            return new NodeId((UUID) list.get(pos++));
+        }        
+
+        public boolean hasNext() {
+            return pos < list.size();
+        }
+
+        public Object next() {
+            return nextNodeId();
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+        
+    }
+
 }

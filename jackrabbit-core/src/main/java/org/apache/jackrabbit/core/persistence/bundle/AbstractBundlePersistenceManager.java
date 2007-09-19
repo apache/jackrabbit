@@ -29,6 +29,7 @@ import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.NodeIdIterator;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
@@ -78,7 +79,7 @@ import javax.jcr.PropertyType;
  * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
  * </ul>
  */
-abstract public class AbstractBundlePersistenceManager implements 
+public abstract class AbstractBundlePersistenceManager implements 
         PersistenceManager, CachingPersistenceManager {
 
     /** the cvs/svn id */
@@ -112,13 +113,13 @@ abstract public class AbstractBundlePersistenceManager implements
     private LRUNodeIdCache missing;
 
     /** definition id of the jcr:uuid property */
-    private PropDefId ID_JCR_UUID;
+    private PropDefId idJcrUUID;
 
     /** definition id of the jcr:primaryType property */
-    private PropDefId ID_JCR_PRIMARYTYPE;
+    private PropDefId idJcrPrimaryType;
 
     /** definition id of the jcr:mixinTypes property */
-    private PropDefId ID_JCR_MIXINTYPES;
+    private PropDefId idJcrMixinTypes;
 
     /** the persistence manager context */
     protected PMContext context;
@@ -141,7 +142,7 @@ abstract public class AbstractBundlePersistenceManager implements
      * @param bundleCacheSize the bundle cache size in megabytes.
      */
     public void setBundleCacheSize(String bundleCacheSize) {
-        this.bundleCacheSize = Long.parseLong(bundleCacheSize)*1024*1024;
+        this.bundleCacheSize = Long.parseLong(bundleCacheSize) * 1024 * 1024;
     }
 
     /**
@@ -368,7 +369,7 @@ abstract public class AbstractBundlePersistenceManager implements
     /**
      * {@inheritDoc}
      */
-    abstract public NodeReferences load(NodeReferencesId targetId)
+    public abstract NodeReferences load(NodeReferencesId targetId)
             throws NoSuchItemStateException, ItemStateException;
 
     /**
@@ -404,11 +405,11 @@ abstract public class AbstractBundlePersistenceManager implements
 
         // init prop defs
         if (context.getNodeTypeRegistry() != null) {
-            ID_JCR_UUID = context.getNodeTypeRegistry().getEffectiveNodeType(QName.MIX_REFERENCEABLE).getApplicablePropertyDef(
+            idJcrUUID = context.getNodeTypeRegistry().getEffectiveNodeType(QName.MIX_REFERENCEABLE).getApplicablePropertyDef(
                     QName.JCR_UUID, PropertyType.STRING, false).getId();
-            ID_JCR_PRIMARYTYPE = context.getNodeTypeRegistry().getEffectiveNodeType(QName.NT_BASE).getApplicablePropertyDef(
+            idJcrPrimaryType = context.getNodeTypeRegistry().getEffectiveNodeType(QName.NT_BASE).getApplicablePropertyDef(
                     QName.JCR_PRIMARYTYPE, PropertyType.NAME, false).getId();
-            ID_JCR_MIXINTYPES = context.getNodeTypeRegistry().getEffectiveNodeType(QName.NT_BASE).getApplicablePropertyDef(
+            idJcrMixinTypes = context.getNodeTypeRegistry().getEffectiveNodeType(QName.NT_BASE).getApplicablePropertyDef(
                     QName.JCR_MIXINTYPES, PropertyType.NAME, true).getId();
         }
     }
@@ -444,20 +445,20 @@ abstract public class AbstractBundlePersistenceManager implements
             if (id.getName().equals(QName.JCR_UUID)) {
                 state = createNew(id);
                 state.setType(PropertyType.STRING);
-                state.setDefinitionId(ID_JCR_UUID);
+                state.setDefinitionId(idJcrUUID);
                 state.setMultiValued(false);
                 state.setValues(new InternalValue[]{InternalValue.create(id.getParentId().getUUID().toString())});
             } else if (id.getName().equals(QName.JCR_PRIMARYTYPE)) {
                 state = createNew(id);
                 state.setType(PropertyType.NAME);
-                state.setDefinitionId(ID_JCR_PRIMARYTYPE);
+                state.setDefinitionId(idJcrPrimaryType);
                 state.setMultiValued(false);
                 state.setValues(new InternalValue[]{InternalValue.create(bundle.getNodeTypeName())});
             } else if (id.getName().equals(QName.JCR_MIXINTYPES)) {
                 Set mixins = bundle.getMixinTypeNames();
                 state = createNew(id);
                 state.setType(PropertyType.NAME);
-                state.setDefinitionId(ID_JCR_MIXINTYPES);
+                state.setDefinitionId(idJcrMixinTypes);
                 state.setMultiValued(true);
                 state.setValues(InternalValue.create((QName[]) mixins.toArray(new QName[mixins.size()])));
             } else {
@@ -475,7 +476,7 @@ abstract public class AbstractBundlePersistenceManager implements
      */
     public synchronized boolean exists(PropertyId id) throws ItemStateException {
         NodePropBundle bundle = getBundle(id.getParentId());
-        return bundle !=null && bundle.hasProperty(id.getName());
+        return bundle != null && bundle.hasProperty(id.getName());
     }
 
     /**
@@ -701,4 +702,20 @@ abstract public class AbstractBundlePersistenceManager implements
             bundles.put(bundle);
         }
     }
+
+    /**
+     * Get all node ids. 
+     * A typical application will call this method multiple times, where 'after'
+     * is the last row read. The maxCount parameter defines the maximum number of 
+     * node ids returned, 0 meaning no limit. The order of the node ids is specific for the 
+     * given persistent manager. Items that are added concurrently may not be included.
+     * 
+     * @param after the lower limit, or null for no limit.
+     * @param maxCount the maximum number of node ids to return, or 0 for no limit.
+     * @return an iterator of all bundles.
+     * @throws ItemStateException if an error while loading occurs.
+     */
+    public abstract NodeIdIterator getAllNodeIds(NodeId after, int maxCount)
+            throws ItemStateException;
+
 }
