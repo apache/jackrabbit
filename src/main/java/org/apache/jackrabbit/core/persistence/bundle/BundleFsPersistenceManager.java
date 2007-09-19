@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.bundle.util.NodePropBundle;
@@ -30,11 +31,13 @@ import org.apache.jackrabbit.core.persistence.util.Serializer;
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.FileSystemBLOBStore;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.NodeIdIterator;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.uuid.UUID;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -43,6 +46,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.NoSuchElementException;
 
 /**
  * This is a generic persistence manager that stores the {@link NodePropBundle}s
@@ -675,6 +681,107 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
                 // ignore
             }
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public NodeIdIterator getAllNodeIds(NodeId bigger, int maxCount)
+            throws ItemStateException {
+        ArrayList list = new ArrayList();
+        try {
+            getListRecursive(list, "", bigger == null ? null : bigger.getUUID(), maxCount);
+            return new FileNodeIdIterator(list);
+        } catch (FileSystemException e) {
+            String msg = "failed to read node list: " + bigger + ": " + e;
+            log.error(msg);
+            throw new ItemStateException(msg, e);
+        }
+    }
+    
+    /**
+     * {@inheritDoc}
+     */    
+    protected UUID getUUIDFromFileName(String fileName) {
+        StringBuffer buff = new StringBuffer(35);
+        if (!fileName.endsWith("." + NODEFILENAME)) {
+            return null;
+        }
+        for (int i = 0; i < fileName.length(); i++) {
+            char c = fileName.charAt(i);
+            if (c == '.') {
+                break;
+            }
+            if (c != '/') {
+                buff.append(c);
+                int len = buff.length();
+                if (len == 8 || len == 13 || len == 18 || len == 23) {
+                    buff.append('-');
+                }
+            }
+        }
+        String u = buff.toString();
+        return new UUID(u);
+    }    
+    
+    private void getListRecursive(ArrayList list, String path, UUID bigger,
+            int maxCount) throws FileSystemException {
+        if (maxCount > 0 && list.size() >= maxCount) {
+            return;
+        }
+        String[] files = itemFs.listFiles(path);
+        Arrays.sort(files);
+        for (int i = 0; i < files.length; i++) {
+            String f = files[i];
+            UUID u = getUUIDFromFileName(path + FileSystem.SEPARATOR + f);
+            if (u == null) {
+                continue;
+            }
+            if (bigger != null && bigger.toString().compareTo(u.toString()) < 0) {
+                continue;
+            }
+            NodeId n = new NodeId(u);
+            list.add(n);
+            if (maxCount > 0 && list.size() >= maxCount) {
+                return;
+            }
+        }
+        String[] dirs = itemFs.listFolders(path);
+        Arrays.sort(dirs);
+        for (int i = 0; i < dirs.length; i++) {
+            getListRecursive(list, path + FileSystem.SEPARATOR + dirs[i],
+                    bigger, maxCount);
+        }
+    }
+    
+    private static class FileNodeIdIterator implements NodeIdIterator {
+
+        private final ArrayList list;
+        private int pos;
+
+        FileNodeIdIterator(ArrayList list) {
+            this.list = list;
+        }
+
+        public NodeId nextNodeId() throws NoSuchElementException {
+            if (pos < list.size()) {
+                return (NodeId) list.get(pos++);
+            }
+            throw new NoSuchElementException();
+        }
+
+        public boolean hasNext() {
+            return pos < list.size();
+        }
+
+        public Object next() {
+            return nextNodeId();
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+        
     }
 
 }

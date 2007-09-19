@@ -140,7 +140,7 @@ public class DbNameIndex implements StringIndex {
         // assert index does not exist
         ResultSet rs = null;
         try {
-            Statement stmt = connectionManager.executeStmt(nameInsertSQL, new Object[]{string}, Statement.RETURN_GENERATED_KEYS);
+            Statement stmt = connectionManager.executeStmt(nameInsertSQL, new Object[]{string}, true, 0);
             rs = stmt.getGeneratedKeys();
             if (!rs.next()) {
                 return -1;
