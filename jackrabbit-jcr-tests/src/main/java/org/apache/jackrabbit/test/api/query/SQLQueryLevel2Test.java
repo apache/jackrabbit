@@ -134,7 +134,7 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
         StringBuffer tmp = new StringBuffer("SELECT ");
         tmp.append(escapeIdentifierForSQL(propertyName1));
         tmp.append(" FROM ").append(escapeIdentifierForSQL(testNodeType));
-        tmp.append(" WHERE CONTAINS(., '''quick brown'' -cat')");
+        tmp.append(" WHERE CONTAINS(., '\"quick brown\" -cat')");
         tmp.append(" AND ").append(jcrPath).append(" LIKE '");
         tmp.append(testRoot).append("/%'");
         return new Statement(tmp.toString(), Query.SQL);
