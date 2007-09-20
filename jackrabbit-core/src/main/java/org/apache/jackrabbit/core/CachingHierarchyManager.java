@@ -375,35 +375,47 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     /**
      * {@inheritDoc}
      * <p/>
-     * Generate subsequent add and remove notifications for every replacement. This method
-     * currently assumes that the reordering is detectable by comparing the state's child
-     * node entries to the overlayed state's child node entries. It is not able to handle
-     * a transient reordering and will therefore evict its cached entry if such a situation
-     * is detected.
+     * Iterate over all cached children of this state and verify each
+     * child's position.
      */
     public void nodesReplaced(NodeState state) {
-        List entries = state.getReorderedChildNodeEntries();
-        if (entries.size() == 0) {
-            synchronized (cacheMonitor) {
-                if (idCache.containsKey(state.getNodeId())) {
-                    evict(state.getNodeId());
+        synchronized (cacheMonitor) {
+            LRUEntry entry = (LRUEntry) idCache.get(state.getNodeId());
+            if (entry != null) {
+                PathMap.Element element = entry.getElement();
+                Iterator iter = element.getChildren();
+                while (iter.hasNext()) {
+                    PathMap.Element child = (PathMap.Element) iter.next();
+                    LRUEntry childEntry = (LRUEntry) child.get();
+                    if (childEntry == null) {
+                        /**
+                         * Child has no associated UUID information: we're
+                         * therefore unable to determine if this child's
+                         * position is still accurate and have to assume
+                         * the worst and remove it.
+                         */
+                        child.remove(false);
+                        remove(child);
+                        continue;
+                    }
+                    NodeId childId = childEntry.getId();
+                    NodeState.ChildNodeEntry cne = state.getChildNodeEntry(childId);
+                    if (cne == null) {
+                        /* Child no longer in parent node state, so remove it */
+                        child.remove(false);
+                        remove(child);
+                        continue;
+                    }
+                    if (!cne.getName().equals(child.getName()) ||
+                            cne.getIndex() != child.getNormalizedIndex()) {
+                        /* Child still exists but at a different position */
+                        element.move(child.getPathElement(),
+                                Path.PathElement.create(cne.getName(), cne.getIndex()));
+                        continue;
+                    }
+                    /* At this point the child's position is still valid */
                 }
             }
-            return;
-        }
-        Iterator iter = entries.iterator();
-        while (iter.hasNext()) {
-            NodeState.ChildNodeEntry now = (NodeState.ChildNodeEntry) iter.next();
-            NodeState.ChildNodeEntry old =
-                    ((NodeState) state.getOverlayedState()).getChildNodeEntry(now.getId());
-
-            if (old == null) {
-                log.warn("Reordered child node not found in old list.");
-                continue;
-            }
-
-            nodeAdded(state, now.getName(), now.getIndex(), now.getId());
-            nodeRemoved(state, old.getName(), old.getIndex(), old.getId());
         }
     }
 
@@ -486,23 +498,6 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
         synchronized (cacheMonitor) {
             if (idCache.get(id) != null) {
                 return;
-            }
-
-            /**
-             * Do not cache paths to elements if the parent is transient, since
-             * children may be reordered multiple times (see JCR-993). If a
-             * child's position is cached at some intermediate stage but the
-             * total reordering effectively leaves the child at its initial
-             * position, the child's bad position is hardly detectable.
-             */
-            try {
-                NodeId parentId = state.getParentId();
-                if (parentId != null && provider.getItemState(parentId).isTransient()) {
-                    return;
-                }
-            } catch (ItemStateException e) {
-                String msg = "Unable to retrieve parent state of: " + id;
-                log.warn(msg, e);
             }
 
             if (idCache.size() >= upperLimit) {
