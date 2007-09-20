@@ -77,6 +77,7 @@ public class NodeCanAddMixinTest extends AbstractJCRTest {
             Node node2 = session2.getRootNode().getNode(pathRelToRoot);
             node2.lock(true, true);
 
+            node.refresh(false);
             assertFalse("Node.canAddMixin(String mixinName) must return false " +
                     "if the node is locked.",
                     node.canAddMixin(mixinName));
