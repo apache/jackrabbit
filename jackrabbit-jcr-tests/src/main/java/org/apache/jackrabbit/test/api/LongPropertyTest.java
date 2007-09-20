@@ -47,6 +47,14 @@ public class LongPropertyTest extends AbstractPropertyTest {
     }
 
     /**
+     * Returns "does not matter" (<code>null</code>).
+     * @return <code>null</code>.
+     */
+    protected Boolean getPropertyIsMultivalued() {
+        return null;
+    }
+
+    /**
      * Tests that Property.getLong() delivers the same as Value.getLong() and if
      * in case of a multivalue property a ValueFormatException is thrown.
      */
