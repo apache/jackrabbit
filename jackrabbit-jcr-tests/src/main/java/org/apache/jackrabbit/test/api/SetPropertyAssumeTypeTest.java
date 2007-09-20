@@ -68,6 +68,7 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
 
     public void setUp() throws Exception {
         super.setUp();
+        testNode = testRootNode.addNode(nodeName1, testNodeType);
 
         binaryValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.BINARY);
         booleanValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.BOOLEAN);
@@ -432,24 +433,11 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
     public void testValueConstraintViolationExceptionBecauseOfInvalidTypeParameter()
         throws NotExecutableException, RepositoryException {
 
-        // locate a property definition of type string
-        PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(superuser, PropertyType.STRING, false, false, false, false);
-
-        if (propDef == null) {
-            throw new NotExecutableException("No testable property has been found.");
-        }
-
-        // create a node of type propDef.getDeclaringNodeType()
-        String nodeType = propDef.getDeclaringNodeType().getName();
-        Node testNode = testRootNode.addNode(nodeName1, nodeType);
-        String testPropName = propDef.getName();
-
         try {
             Calendar cal = Calendar.getInstance();
             cal.setTime(new Date(0));
             Value v = superuser.getValueFactory().createValue(ISO8601.format(cal));
-            testNode.setProperty(testPropName, v, PropertyType.DATE);
+            testNode.setProperty(propertyName1, v, PropertyType.DATE);
             testRootNode.save();
             fail("Node.setProperty(String, Value, int) must throw a " +
                  "ConstraintViolationExcpetion if the type parameter and the " +
@@ -469,23 +457,10 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
     public void testStringConstraintViolationExceptionBecauseOfInvalidTypeParameter()
         throws NotExecutableException, RepositoryException {
 
-        // locate a property definition of type string
-        PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(superuser, PropertyType.STRING, false, false, false, false);
-
-        if (propDef == null) {
-            throw new NotExecutableException("No testable property has been found.");
-        }
-
-        // create a node of type propDef.getDeclaringNodeType()
-        String nodeType = propDef.getDeclaringNodeType().getName();
-        Node testNode = testRootNode.addNode(nodeName1, nodeType);
-        String testPropName = propDef.getName();
-
         try {
             Calendar cal = Calendar.getInstance();
             cal.setTime(new Date(0));
-            testNode.setProperty(testPropName, ISO8601.format(cal), PropertyType.DATE);
+            testNode.setProperty(propertyName1, ISO8601.format(cal), PropertyType.DATE);
             testRootNode.save();
             fail("Node.setProperty(String, Value, int) must throw a " +
                  "ConstraintViolationExcpetion if the type parameter and the " +
@@ -505,21 +480,8 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
     public void testValuesConstraintViolationExceptionBecauseOfInvalidTypeParameter()
         throws NotExecutableException, RepositoryException {
 
-        // locate a property definition of type string
-        PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(superuser, PropertyType.STRING, true, false, false, false);
-
-        if (propDef == null) {
-            throw new NotExecutableException("No testable property has been found.");
-        }
-
-        // create a node of type propDef.getDeclaringNodeType()
-        String nodeType = propDef.getDeclaringNodeType().getName();
-        Node testNode = testRootNode.addNode(nodeName1, nodeType);
-        String testPropName = propDef.getName();
-
         try {
-            testNode.setProperty(testPropName, stringValues, PropertyType.DATE);
+            testNode.setProperty(propertyName1, stringValues, PropertyType.DATE);
             testRootNode.save();
             fail("Node.setProperty(String, Value, int) must throw a " +
                     "ConstraintViolationExcpetion or a ValueFormatException if " +
