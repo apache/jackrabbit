@@ -132,8 +132,8 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
      */
     private Statement getFullTextStatement() {
         StringBuffer tmp = new StringBuffer("SELECT ");
-        tmp.append(propertyName1);
-        tmp.append(" FROM ").append(testNodeType);
+        tmp.append(escapeIdentifierForSQL(propertyName1));
+        tmp.append(" FROM ").append(escapeIdentifierForSQL(testNodeType));
         tmp.append(" WHERE CONTAINS(., '''quick brown'' -cat')");
         tmp.append(" AND ").append(jcrPath).append(" LIKE '");
         tmp.append(testRoot).append("/%'");
@@ -146,12 +146,12 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
      */
     private Statement getMultiValueStatement() {
         StringBuffer tmp = new StringBuffer("SELECT ");
-        tmp.append(propertyName1);
-        tmp.append(" FROM ").append(testNodeType);
+        tmp.append(escapeIdentifierForSQL(propertyName1));
+        tmp.append(" FROM ").append(escapeIdentifierForSQL(testNodeType));
         tmp.append(" WHERE 'two' IN ");
-        tmp.append(propertyName2);
+        tmp.append(escapeIdentifierForSQL(propertyName2));
         tmp.append(" AND 'existence' IN ");
-        tmp.append(propertyName1);
+        tmp.append(escapeIdentifierForSQL(propertyName1));
         tmp.append(" AND ").append(jcrPath).append(" LIKE '");
         tmp.append(testRoot).append("/%'");
         return new Statement(tmp.toString(), Query.SQL);
@@ -162,12 +162,12 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
      */
     private Statement getRangeStatement() {
         StringBuffer tmp = new StringBuffer("SELECT ");
-        tmp.append(propertyName1);
-        tmp.append(" FROM ").append(testNodeType);
+        tmp.append(escapeIdentifierForSQL(propertyName1));
+        tmp.append(" FROM ").append(escapeIdentifierForSQL(testNodeType));
         tmp.append(" WHERE ");
-        tmp.append(propertyName1);
+        tmp.append(escapeIdentifierForSQL(propertyName1));
         tmp.append(" <= 'b' AND ");
-        tmp.append(propertyName1);
+        tmp.append(escapeIdentifierForSQL(propertyName1));
         tmp.append(" > 'a'");
         tmp.append(" AND ").append(jcrPath).append(" LIKE '");
         tmp.append(testRoot).append("/%'");
