@@ -26,7 +26,6 @@ import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.AbstractPersistenceManager;
-import org.apache.jackrabbit.core.persistence.bundle.util.TrackingInputStream;
 import org.apache.jackrabbit.core.persistence.bundle.util.DbNameIndex;
 import org.apache.jackrabbit.core.persistence.bundle.util.NodePropBundle;
 import org.apache.jackrabbit.core.persistence.bundle.util.BundleBinding;
@@ -73,7 +72,6 @@ import javax.jcr.RepositoryException;
  * <p/>
  * Configuration:<br>
  * <ul>
- * <li>&lt;param name="{@link #setExternalBLOBs(String)} externalBLOBs}" value="false"/>
  * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
  * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/>
  * <li>&lt;param name="{@link #setConsistencyFix(String) consistencyFix}" value="false"/>
@@ -867,7 +865,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             throws ItemStateException {
         PreparedStatement stmt = bundleSelect;
         ResultSet rs = null;
-        DataInputStream din = null;
+        InputStream in = null;
         try {
             setKey(stmt, id.getUUID(), 1);
             stmt.execute();
@@ -876,17 +874,24 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                 return null;
             }
             Blob b = rs.getBlob(1);
-            TrackingInputStream cin = new TrackingInputStream(b.getBinaryStream());
-            din = new DataInputStream(cin);
+            // JCR-1039: pre-fetch/buffer blob data
+            long length = b.length();
+            byte[] bytes = new byte[(int) length];
+            in = b.getBinaryStream();
+            int read, pos = 0;
+            while ((read = in.read(bytes, pos, bytes.length - pos)) > 0) {
+                pos += read;
+            }
+            DataInputStream din = new DataInputStream(new ByteArrayInputStream(bytes));
             NodePropBundle bundle = binding.readBundle(din, id);
-            bundle.setSize(cin.getPosition());
+            bundle.setSize(length);
             return bundle;
         } catch (Exception e) {
             String msg = "failed to read bundle: " + id + ": " + e;
             log.error(msg);
             throw new ItemStateException(msg, e);
         } finally {
-            closeStream(din);
+            closeStream(in);
             closeResultSet(rs);
             resetStatement(stmt);
         }
