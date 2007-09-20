@@ -1120,13 +1120,13 @@ public class ClusterNode implements Runnable,
     private static void write(Record record, ChangeLog changeLog, EventStateCollection esc)
             throws JournalException {
 
-        Iterator addedStates = changeLog.addedStates();
-        while (addedStates.hasNext()) {
-            ItemState state = (ItemState) addedStates.next();
+        Iterator deletedStates = changeLog.deletedStates();
+        while (deletedStates.hasNext()) {
+            ItemState state = (ItemState) deletedStates.next();
             if (state.isNode()) {
-                write(record, NodeAddedOperation.create((NodeState) state));
+                write(record, NodeDeletedOperation.create((NodeState) state));
             } else {
-                write(record, PropertyAddedOperation.create((PropertyState) state));
+                write(record, PropertyDeletedOperation.create((PropertyState) state));
             }
         }
         Iterator modifiedStates = changeLog.modifiedStates();
@@ -1138,13 +1138,13 @@ public class ClusterNode implements Runnable,
                 write(record, PropertyModifiedOperation.create((PropertyState) state));
             }
         }
-        Iterator deletedStates = changeLog.deletedStates();
-        while (deletedStates.hasNext()) {
-            ItemState state = (ItemState) deletedStates.next();
+        Iterator addedStates = changeLog.addedStates();
+        while (addedStates.hasNext()) {
+            ItemState state = (ItemState) addedStates.next();
             if (state.isNode()) {
-                write(record, NodeDeletedOperation.create((NodeState) state));
+                write(record, NodeAddedOperation.create((NodeState) state));
             } else {
-                write(record, PropertyDeletedOperation.create((PropertyState) state));
+                write(record, PropertyAddedOperation.create((PropertyState) state));
             }
         }
 
