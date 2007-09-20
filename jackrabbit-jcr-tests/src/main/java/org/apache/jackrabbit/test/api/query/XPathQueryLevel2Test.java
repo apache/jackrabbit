@@ -133,7 +133,7 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
         StringBuffer tmp = new StringBuffer("/");
         tmp.append(jcrRoot).append(testRoot);
         tmp.append("/*[").append(jcrContains);
-        tmp.append("(., \"'quick brown' -cat\")]");
+        tmp.append("(., '\"quick brown\" -cat')]");
         return new Statement(tmp.toString(), Query.XPATH);
     }
 
