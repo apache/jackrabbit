@@ -261,21 +261,22 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         writer.println("  " + typeName);
         writer.println("Supertypes");
         NodeType[] supertypes = type.getDeclaredSupertypes();
-        if (supertypes.length > 0) {
-            Arrays.sort(supertypes, NODE_TYPE_COMPARATOR);
-            for (int i = 0; i < supertypes.length; i++) {
-                String name = supertypes[i].getName();
-                if (name.startsWith("nt:") ||
-                        (name.equals("mix:referenceable") &&
-                            (typeName.equals("mix:versionable") ||
-                                typeName.equals("nt:resource") ||
-                                typeName.equals("nt:versionHistory") ||
-                                typeName.equals("nt:version") ||
-                                typeName.equals("nt:frozenNode")))) {
-                    writer.println("  " + supertypes[i].getName());
-                }
+        Arrays.sort(supertypes, NODE_TYPE_COMPARATOR);
+        boolean hasPrinted = false;
+        for (int i = 0; i < supertypes.length; i++) {
+            String name = supertypes[i].getName();
+            if (name.startsWith("nt:") ||
+                    (name.equals("mix:referenceable") &&
+                        (typeName.equals("mix:versionable") ||
+                            typeName.equals("nt:resource") ||
+                            typeName.equals("nt:versionHistory") ||
+                            typeName.equals("nt:version") ||
+                            typeName.equals("nt:frozenNode")))) {
+                writer.println("  " + supertypes[i].getName());
+                hasPrinted = true;
             }
-        } else {
+        }
+        if (!hasPrinted) {
             writer.println("  []");
         }
         writer.println("IsMixin");
