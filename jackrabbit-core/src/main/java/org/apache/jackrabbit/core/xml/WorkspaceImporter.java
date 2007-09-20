@@ -53,6 +53,7 @@ import javax.jcr.version.VersionHistory;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
+import java.util.ArrayList;
 
 /**
  * <code>WorkspaceImporter</code> ...
@@ -226,6 +227,14 @@ public class WorkspaceImporter implements Importer {
                     | BatchedItemOperations.CHECK_LOCK
                     | BatchedItemOperations.CHECK_VERSIONING
                     | BatchedItemOperations.CHECK_CONSTRAINTS);
+
+            // 'replace' is actually a 'remove existing/add new' operation;
+            // this unfortunately changes the order of the parent's
+            // child node entries (JCR-1055);
+            // => backup list of child node entries beforehand in order
+            // to restore it afterwards
+            NodeState.ChildNodeEntry cneConflicting = parent.getChildNodeEntry(nodeInfo.getId());
+            List cneList = new ArrayList(parent.getChildNodeEntries());
             // do remove conflicting (recursive)
             itemOps.removeNodeState(conflicting);
             // create new with given uuid at same location as conflicting:
@@ -241,6 +250,24 @@ public class WorkspaceImporter implements Importer {
             node = itemOps.createNodeState(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(),
                     nodeInfo.getId());
+            // restore list of child node entries (JCR-1055)
+            if (cneConflicting.getName().equals(nodeInfo.getName())) {
+                // restore original child node list
+                parent.setChildNodeEntries(cneList);
+            } else {
+                // replace child node entry with different name
+                // but preserving original position
+                parent.removeAllChildNodeEntries();
+                for (Iterator iter = cneList.iterator(); iter.hasNext();) {
+                    NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) iter.next();
+                    if (cne.getId().equals(nodeInfo.getId())) {
+                        // replace entry with different name
+                        parent.addChildNodeEntry(nodeInfo.getName(), nodeInfo.getId());
+                    } else {
+                        parent.addChildNodeEntry(cne.getName(), cne.getId());
+                    }
+                }
+            }
         } else {
             String msg = "unknown uuidBehavior: " + uuidBehavior;
             log.debug(msg);
@@ -500,7 +527,7 @@ public class WorkspaceImporter implements Importer {
      * being imported already exists; if this property has been imported
      * as well (e.g. through document view import where an element can have
      * the same name as one of the attributes of its parent element) we have
-     * to rename the onflicting property.
+     * to rename the conflicting property.
      *
      * @see http://issues.apache.org/jira/browse/JCR-61
      * @param parent parent node
