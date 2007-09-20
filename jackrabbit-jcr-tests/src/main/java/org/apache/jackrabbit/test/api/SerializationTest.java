@@ -89,6 +89,9 @@ public class SerializationTest extends AbstractJCRTest {
         if (session != null && session.isLive()) {
             session.logout();
         }
+        if (treeComparator != null) {
+            treeComparator.tearDown();
+        }
         super.tearDown();
     }
 
