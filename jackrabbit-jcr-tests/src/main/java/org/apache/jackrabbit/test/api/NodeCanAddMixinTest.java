@@ -135,7 +135,7 @@ public class NodeCanAddMixinTest extends AbstractJCRTest {
         Session session = testRootNode.getSession();
         String nonExistingMixinName = NodeMixinUtil.getNonExistingMixinName(session);
 
-        Node node = testRootNode.addNode(nodeName1);
+        Node node = testRootNode.addNode(nodeName1, testNodeType);
 
         try {
             node.canAddMixin(nonExistingMixinName);
