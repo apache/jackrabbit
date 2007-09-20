@@ -1114,8 +1114,9 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     NodeState nodeState = (NodeState) transientState;
                     Set dependentIDs = new HashSet();
                     if (nodeState.hasOverlayedState()) {
-                        NodeId oldParentId =
-                                nodeState.getOverlayedState().getParentId();
+                        NodeState overlayedState =
+                                (NodeState) nodeState.getOverlayedState();
+                        NodeId oldParentId = overlayedState.getParentId();
                         NodeId newParentId = nodeState.getParentId();
                         if (oldParentId != null) {
                             if (newParentId == null) {
@@ -1124,14 +1125,39 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                                 dependentIDs.add(oldParentId);
                             } else {
                                 if (!oldParentId.equals(newParentId)) {
-                                    // node has been moved, add old and new parent
-                                    // to dependencies
+                                    // node has been moved to a new location,
+                                    // add old and new parent to dependencies
                                     dependentIDs.add(oldParentId);
                                     dependentIDs.add(newParentId);
+                                } else {
+                                    // parent id hasn't changed, check whether
+                                    // the node has been renamed (JCR-1034)
+                                    if (!affectedIds.contains(newParentId)
+                                            && stateMgr.hasTransientItemState(newParentId)) {
+                                        try {
+                                            NodeState parent = (NodeState) stateMgr.getTransientItemState(newParentId);
+                                            // check parent's renamed child node entries
+                                            for (Iterator cneIt =
+                                                    parent.getRenamedChildNodeEntries().iterator();
+                                                 cneIt.hasNext();) {
+                                                NodeState.ChildNodeEntry cne =
+                                                        (NodeState.ChildNodeEntry) cneIt.next();
+                                                if (cne.getId().equals(nodeState.getId())) {
+                                                    // node has been renamed,
+                                                    // add parent to dependencies
+                                                    dependentIDs.add(newParentId);
+                                                }
+                                            }
+                                        } catch (ItemStateException ise) {
+                                            // should never get here
+                                            log.warn("failed to retrieve transient state: " + newParentId, ise);
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
+
                     // removed child node entries
                     for (Iterator cneIt =
                             nodeState.getRemovedChildNodeEntries().iterator();
@@ -1155,7 +1181,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     while (depIt.hasNext()) {
                         NodeId id = (NodeId) depIt.next();
                         if (!affectedIds.contains(id)) {
-                            // need to save the parent as well
+                            // need to save dependency as well
                             String msg = itemMgr.safeGetJCRPath(id)
                                     + " needs to be saved as well.";
                             log.debug(msg);

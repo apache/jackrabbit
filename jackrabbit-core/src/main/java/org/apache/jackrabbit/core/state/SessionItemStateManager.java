@@ -336,6 +336,24 @@ public class SessionItemStateManager
     }
 
     /**
+     *
+     * @param id
+     * @return
+     */
+    public boolean hasTransientItemState(ItemId id) {
+        return transientStore.contains(id);
+    }
+
+    /**
+     *
+     * @param id
+     * @return
+     */
+    public boolean hasTransientItemStateInAttic(ItemId id) {
+        return atticStore.contains(id);
+    }
+
+    /**
      * @return <code>true</code> if this manager has any transient state;
      *         <code>false</code> otherwise.
      */
