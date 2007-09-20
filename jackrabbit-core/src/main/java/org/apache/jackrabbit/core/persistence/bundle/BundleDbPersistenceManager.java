@@ -530,7 +530,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         Driver drv = (Driver) Class.forName(driver).newInstance();
         log.info("JDBC driver created: {}", drv);
         con = DriverManager.getConnection(url, user, password);
-        con.setAutoCommit(true);
+        //con.setAutoCommit(true);
 
         // make sure schemaObjectPrefix consists of legal name characters only
         prepareSchemaObjectPrefix();
