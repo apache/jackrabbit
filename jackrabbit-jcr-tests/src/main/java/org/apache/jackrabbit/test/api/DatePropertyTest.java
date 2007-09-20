@@ -46,6 +46,14 @@ public class DatePropertyTest extends AbstractPropertyTest {
     }
 
     /**
+     * Returns "does not matter" (<code>null</code>).
+     * @return <code>null</code>.
+     */
+    protected Boolean getPropertyIsMultivalued() {
+        return null;
+    }
+
+    /**
      * Tests that Property.getDate() delivers the same as Value.getDate() and
      * that in case of a multivalue property a ValueFormatException is thrown.
      */

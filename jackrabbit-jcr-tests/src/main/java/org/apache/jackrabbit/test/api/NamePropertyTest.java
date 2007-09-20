@@ -43,6 +43,14 @@ public class NamePropertyTest extends AbstractPropertyTest {
     }
 
     /**
+     * Returns "does not matter" (<code>null</code>).
+     * @return <code>null</code>.
+     */
+    protected Boolean getPropertyIsMultivalued() {
+        return null;
+    }
+
+    /**
      * Tests conversion from Name type to String type.
      *
      * @throws RepositoryException

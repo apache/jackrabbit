@@ -56,6 +56,14 @@ public class ReferencePropertyTest extends AbstractPropertyTest {
     }
 
     /**
+     * Returns {@link Boolean#FALSE}.
+     * @return {@link Boolean#FALSE}.
+     */
+    protected Boolean getPropertyIsMultivalued() {
+        return Boolean.FALSE;
+    }
+
+    /**
      * Tests if the referenced node is of nodeType mix:referenceable.
      */
     public void testNodeType() throws RepositoryException {

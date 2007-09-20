@@ -46,6 +46,14 @@ public class BooleanPropertyTest extends AbstractPropertyTest {
     }
 
     /**
+     * Returns "does not matter" (<code>null</code>).
+     * @return <code>null</code>.
+     */
+    protected Boolean getPropertyIsMultivalued() {
+        return null;
+    }
+
+    /**
      * Tests that Property.getBoolean() delivers the same as Value.getBoolean()
      * and that in case of a multivalue property Property.getBoolean() throws a
      * ValueFormatException.
