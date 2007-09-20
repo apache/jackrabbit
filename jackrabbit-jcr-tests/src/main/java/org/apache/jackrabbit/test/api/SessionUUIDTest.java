@@ -23,6 +23,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.Session;
+import javax.jcr.InvalidItemStateException;
 
 /**
  * <code>SessionUUIDTest</code> contains all tests for the {@link javax.jcr.Session}
@@ -100,7 +101,9 @@ public class SessionUUIDTest extends AbstractJCRTest {
      * <li>Session 1 moves node 1 under node 2, saves changes</li>
      * <li>Session 2 modifes node 1, saves</li>
      * </ul>
-     * This should work since the modified node is identified by its UUID, not by position in repository.
+     * This should work (since the modified node is identified by its UUID, not by position in repository)
+     * or throw an <code>InvalidItemStateException</code> if 'move' is reported
+     * to the second session as a sequence of remove and add events.
      * <br><br>Prerequisites:
      * <ul>
      * <li><code>javax.jcr.tck.SessionUUIDTest.nodetype2</code> must have the mixin type <code>mix:referenceable</code> assigned.</li>
@@ -137,13 +140,15 @@ public class SessionUUIDTest extends AbstractJCRTest {
             // make the move persistent with session 1
             superuser.save();
 
-            // modify some prop of the moved node with session 2
-            refTargetNodeSession2.setProperty(propertyName1, "test");
-
-            // save it
-            testSession.save();
-
-            // ok, works as expected
+            try {
+                // modify some prop of the moved node with session 2
+                refTargetNodeSession2.setProperty(propertyName1, "test");
+                // save it
+                testSession.save();
+                // ok, works as expected
+            } catch (InvalidItemStateException e) {
+                // ok as well.
+            }
         } finally {
             testSession.logout();
         }
