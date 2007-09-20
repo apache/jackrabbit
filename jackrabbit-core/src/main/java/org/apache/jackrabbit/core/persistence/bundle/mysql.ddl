@@ -1,6 +1,6 @@
-create table ${schemaObjectPrefix}BUNDLE (NODE_ID binary(16) not null, BUNDLE_DATA longblob not null)
+create table ${schemaObjectPrefix}BUNDLE (NODE_ID varbinary(16) not null, BUNDLE_DATA longblob not null)
 create unique index ${schemaObjectPrefix}BUNDLE_IDX on ${schemaObjectPrefix}BUNDLE (NODE_ID)
-create table ${schemaObjectPrefix}REFS (NODE_ID binary(16) not null, REFS_DATA longblob not null)
+create table ${schemaObjectPrefix}REFS (NODE_ID varbinary(16) not null, REFS_DATA longblob not null)
 create unique index ${schemaObjectPrefix}REFS_IDX on ${schemaObjectPrefix}REFS (NODE_ID)
 create table ${schemaObjectPrefix}BINVAL (BINVAL_ID varchar(64) not null, BINVAL_DATA longblob not null)
 create unique index ${schemaObjectPrefix}BINVAL_IDX on ${schemaObjectPrefix}BINVAL (BINVAL_ID)
