@@ -17,8 +17,10 @@
 package org.apache.jackrabbit.test.api.observation;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
@@ -46,7 +48,12 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
 
     protected void setUp() throws Exception {
         super.setUp();
-        obsMgr = superuser.getWorkspace().getObservationManager();
+        try {
+            obsMgr = superuser.getWorkspace().getObservationManager();
+        }
+        catch (UnsupportedRepositoryOperationException ex) {
+            throw new NotExecutableException("observation not supported");
+        }
     }
 
     /**
