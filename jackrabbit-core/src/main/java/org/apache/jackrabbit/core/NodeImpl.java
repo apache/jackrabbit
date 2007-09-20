@@ -1861,6 +1861,79 @@ public class NodeImpl extends ItemImpl implements Node {
         thisState.setChildNodeEntries(list);
     }
 
+    /**
+     * Replaces the child node with the specified <code>id</code>
+     * by a new child node with the same id and specified <code>nodeName</code>,
+     * <code>nodeTypeName</code> and <code>mixinNames</code>.
+     *
+     * @param id           id of the child node to be replaced
+     * @param nodeName     name of the new node
+     * @param nodeTypeName name of the new node's node type
+     * @param mixinNames   name of the new node's mixin types
+     *
+     * @return the new child node replacing the existing child
+     * @throws ItemNotFoundException
+     * @throws NoSuchNodeTypeException
+     * @throws VersionException
+     * @throws ConstraintViolationException
+     * @throws LockException
+     * @throws RepositoryException
+     */
+    public synchronized NodeImpl replaceChildNode(NodeId id, QName nodeName,
+                                                  QName nodeTypeName,
+                                                  QName[] mixinNames)
+            throws ItemNotFoundException, NoSuchNodeTypeException, VersionException,
+            ConstraintViolationException, LockException, RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        Node existing = (Node) itemMgr.getItem(id);
+
+        // 'replace' is actually a 'remove existing/add new' operation;
+        // this unfortunately changes the order of this node's
+        // child node entries (JCR-1055);
+        // => backup list of child node entries beforehand in order
+        // to restore it afterwards
+        NodeState.ChildNodeEntry cneExisting = ((NodeState) state).getChildNodeEntry(id);
+        if (cneExisting == null) {
+            throw new ItemNotFoundException(safeGetJCRPath()
+                    + ": no child node entry with id " + id);
+        }
+        List cneList = new ArrayList(((NodeState) state).getChildNodeEntries());
+
+        // remove existing
+        existing.remove();
+
+        // create new child node
+        NodeImpl node = addNode(nodeName, nodeTypeName, id.getUUID());
+        if (mixinNames != null) {
+            for (int i = 0; i < mixinNames.length; i++) {
+                node.addMixin(mixinNames[i]);
+            }
+        }
+
+        // restore list of child node entries (JCR-1055)
+        if (cneExisting.getName().equals(nodeName)) {
+            // restore original child node list
+            ((NodeState) state).setChildNodeEntries(cneList);
+        } else {
+            // replace child node entry with different name
+            // but preserving original position
+            ((NodeState) state).removeAllChildNodeEntries();
+            for (Iterator iter = cneList.iterator(); iter.hasNext();) {
+                NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) iter.next();
+                if (cne.getId().equals(id)) {
+                    // replace entry with different name
+                    ((NodeState) state).addChildNodeEntry(nodeName, id);
+                } else {
+                    ((NodeState) state).addChildNodeEntry(cne.getName(), cne.getId());
+                }
+            }
+        }
+
+        return node;
+    }
+
     //-----------------------------------------------------------------< Item >
     /**
      * {@inheritDoc}

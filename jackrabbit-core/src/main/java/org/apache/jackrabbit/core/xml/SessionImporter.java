@@ -166,12 +166,10 @@ public class SessionImporter implements Importer {
             }
             // 'replace' current parent with parent of conflicting
             parent = (NodeImpl) conflicting.getParent();
-            // remove conflicting
-            conflicting.remove();
-            // create new with given uuid at same location as conflicting
-            node = createNode(parent, nodeInfo.getName(),
-                    nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(),
-                    nodeInfo.getId());
+
+            // replace child node
+            node = parent.replaceChildNode(nodeInfo.getId(), nodeInfo.getName(),
+                    nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames());
         } else {
             String msg = "unknown uuidBehavior: " + uuidBehavior;
             log.debug(msg);
