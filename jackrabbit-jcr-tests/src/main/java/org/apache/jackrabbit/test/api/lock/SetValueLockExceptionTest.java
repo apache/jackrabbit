@@ -20,6 +20,7 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.Session;
 import javax.jcr.Node;
 import javax.jcr.Property;
@@ -88,7 +89,12 @@ public class SetValueLockExceptionTest extends AbstractJCRTest {
         else {
             // add a lockable node
             testNode = testRootNode.addNode(nodeName1, testNodeType);
-            testNode.addMixin(mixLockable);
+            try {
+                testNode.addMixin(mixLockable);
+            }
+            catch (ConstraintViolationException ex) {
+                // may already be lockable, just proceed
+            }
 
             // add properties
             dateValue = Calendar.getInstance();
@@ -234,7 +240,7 @@ public class SetValueLockExceptionTest extends AbstractJCRTest {
             // ok
         }
         // a referenceable node
-        Node n1 = testRootNode.addNode(name);
+        Node n1 = testRootNode.addNode(name, testNodeType);
         if (n1.canAddMixin(mixReferenceable)) {
             n1.addMixin(mixReferenceable);
             // make sure jcr:uuid is available
