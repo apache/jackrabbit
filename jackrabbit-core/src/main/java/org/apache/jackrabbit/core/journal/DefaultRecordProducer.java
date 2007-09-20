@@ -46,12 +46,13 @@ public class DefaultRecordProducer implements RecordProducer {
      * {@inheritDoc}
      */
     public Record append() throws JournalException {
-        Record record = null;
+        AppendRecord record = null;
 
         journal.lockAndSync();
 
         try {
             record = createRecord();
+            journal.appending(record);
             return record;
         } finally {
             if (record == null) {
