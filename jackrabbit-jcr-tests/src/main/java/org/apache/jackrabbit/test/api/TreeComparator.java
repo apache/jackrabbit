@@ -70,6 +70,10 @@ class TreeComparator extends AbstractJCRTest {
         init();
     }
 
+    public void tearDown() throws Exception {
+        super.tearDown();
+    }
+
     public void setSession(Session session) {
         this.session = session;
     }
