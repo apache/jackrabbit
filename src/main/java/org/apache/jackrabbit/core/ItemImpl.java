@@ -448,6 +448,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
          *
          * for every transient item:
          * - if it is 'modified' check the WRITE permission
+         * - if it is 'removed' check the REMOVE permission
          *
          * for every transient node:
          * - if it is 'new' check that its node type satisfies the
@@ -460,7 +461,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
          *
          * note that the protected flag is checked in Node.addNode/Node.remove
          * (for adding/removing child entries of a node), in
-         * Node.addMixin/removeMixin (for mixin changes on nodes)
+         * Node.addMixin/removeMixin/setPrimaryType (for type changes on nodes)
          * and in Property.setValue (for properties to be modified).
          */
 
@@ -495,11 +496,13 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                 // effective node type (primary type incl. mixins)
                 EffectiveNodeType ent = validator.getEffectiveNodeType(nodeState);
                 /**
-                 * if the transient node was added (i.e. if it is 'new'),
-                 * check its node's node type against the required node type
-                 * in its definition
+                 * if the transient node was added (i.e. if it is 'new') or if
+                 * its primary type has changed, check its node type against the
+                 * required node type in its definition
                  */
-                if (nodeState.getStatus() == ItemState.STATUS_NEW) {
+                if (nodeState.getStatus() == ItemState.STATUS_NEW
+                        || !nodeState.getNodeTypeName().equals(
+                            ((NodeState) nodeState.getOverlayedState()).getNodeTypeName())) {
                     NodeType[] nta = def.getRequiredPrimaryTypes();
                     for (int i = 0; i < nta.length; i++) {
                         NodeTypeImpl ntReq = (NodeTypeImpl) nta[i];
