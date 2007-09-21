@@ -26,6 +26,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 
+import javax.jcr.RepositoryException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,8 +126,9 @@ public class ConnectionRecoveryManager {
      * @param url the url to use for the connection
      * @param user the user to use for the connection
      * @param password the password to use for the connection
+     * @throws RepositoryException if the database driver could not be loaded
      */
-    public ConnectionRecoveryManager(boolean block, String driver, String url, String user, String password) {
+    public ConnectionRecoveryManager(boolean block, String driver, String url, String user, String password) throws RepositoryException {
         this.block = block;
         this.driver = driver;
         this.url = url;
@@ -147,8 +150,9 @@ public class ConnectionRecoveryManager {
      *
      * @return the database connection that is managed
      * @throws SQLException on error
+     * @throws RepositoryException if the database driver could not be loaded
      */
-    public synchronized Connection getConnection() throws SQLException {
+    public synchronized Connection getConnection() throws SQLException, RepositoryException {
         if (isClosed) {
             if (autoReconnect) {
                 reestablishConnection();
@@ -172,13 +176,38 @@ public class ConnectionRecoveryManager {
     }
 
     /**
+     * Executes the given SQL query. Retries once or blocks (when the
+     * <code>block</code> parameter has been set to true on construction)
+     * if this fails and autoReconnect is enabled.
+     *
+     * @param sql the SQL query to execute
+     * @return the executed ResultSet
+     * @throws SQLException on error
+     * @throws RepositoryException if the database driver could not be loaded
+     */
+    public synchronized ResultSet executeQuery(String sql) throws SQLException, RepositoryException {
+        int trials = 2;
+        SQLException lastException  = null;
+        do {
+            trials--;
+            try {
+                return executeQueryInternal(sql);
+            } catch (SQLException e) {
+                lastException = e;
+            }
+        } while(autoReconnect && (block || trials > 0));
+        throw lastException;
+    }
+
+    /**
      * Executes the given SQL query.
      *
      * @param sql query to execute
      * @return a <code>ResultSet</code> object
      * @throws SQLException if an error occurs
+     * @throws RepositoryException if the database driver could not be loaded
      */
-    public synchronized ResultSet executeQuery(String sql) throws SQLException {
+    private ResultSet executeQueryInternal(String sql) throws SQLException, RepositoryException {
         PreparedStatement stmt = null;
         try {
             stmt = (PreparedStatement) preparedStatements.get(sql);
@@ -203,8 +232,9 @@ public class ConnectionRecoveryManager {
      * @param params parameters to set
      * @return the <code>Statement</code> object that had been executed
      * @throws SQLException if an error occurs
+     * @throws RepositoryException if the database driver could not be loaded
      */
-    public synchronized Statement executeStmt(String sql, Object[] params) throws SQLException {
+    public Statement executeStmt(String sql, Object[] params) throws SQLException, RepositoryException {
         return executeStmt(sql, params, false, 0);
     }    
 
@@ -217,8 +247,34 @@ public class ConnectionRecoveryManager {
      * @param maxRows the maximum number of rows to return (0 for all rows)
      * @return the <code>Statement</code> object that had been executed
      * @throws SQLException if an error occurs
+     * @throws RepositoryException if the database driver could not be loaded
      */
-    public synchronized Statement executeStmt(String sql, Object[] params, boolean returnGeneratedKeys, int maxRows) throws SQLException {
+    public synchronized Statement executeStmt(String sql, Object[] params, boolean returnGeneratedKeys, int maxRows) throws SQLException, RepositoryException {
+        int trials = 2;
+        SQLException lastException  = null;
+        do {
+            trials--;
+            try {
+                return executeStmtInternal(sql, params, returnGeneratedKeys, maxRows);
+            } catch (SQLException e) {
+                lastException = e;
+            }
+        } while(autoReconnect && (block || trials > 0));
+        throw lastException;
+    }
+
+    /**
+     * Executes the given SQL statement with the specified parameters.
+     *
+     * @param sql statement to execute
+     * @param params parameters to set
+     * @param returnGeneratedKeys if the statement should return auto generated keys
+     * @param maxRows the maximum number of rows to return (0 for all rows)
+     * @return the <code>Statement</code> object that had been executed
+     * @throws SQLException if an error occurs
+     * @throws RepositoryException if the database driver could not be loaded
+     */
+    private Statement executeStmtInternal(String sql, Object[] params, boolean returnGeneratedKeys, int maxRows) throws SQLException, RepositoryException {
         try {
             String key = sql;
             if (returnGeneratedKeys) {
@@ -266,14 +322,24 @@ public class ConnectionRecoveryManager {
      * Creates the database connection.
      *
      * @throws SQLException on error
+     * @throws RepositoryException if the database driver could not be loaded
      */
-    private void setupConnection() throws SQLException {
+    private void setupConnection() throws SQLException, RepositoryException {
         try {
-            Class.forName(driver).newInstance();
-        } catch (Exception e) {
-            throw new SQLException("could not load driver: " + e.getMessage());
+            Class driverClass = Class.forName(driver);
+            // Workaround for Apache Derby:
+            // The JDBC specification recommends the Class.ForName method without the .newInstance() method call, 
+            // but adding the newInstance() guarantees that Derby will be booted on any Java Virtual Machine.
+            driverClass.newInstance();
+        } catch (Throwable e) {
+            throw new RepositoryException("Could not load or initialize the database driver class " + driver, e);
         }
-        connection = DriverManager.getConnection(url, user, password);
+        try {
+            connection = DriverManager.getConnection(url, user, password);
+        } catch (SQLException e) {
+            log.warn("Could not connect; driver: " + driver + " url: " + url + " user: " + user + " error: " + e.toString(), e);
+            throw e;
+        }
         connection.setAutoCommit(true);
         try {
             DatabaseMetaData meta = connection.getMetaData();
@@ -308,8 +374,9 @@ public class ConnectionRecoveryManager {
      * Re-establishes the database connection.
      *
      * @throws SQLException if reconnecting failed
+     * @throws RepositoryException 
      */
-    private void reestablishConnection() throws SQLException {
+    private void reestablishConnection() throws SQLException, RepositoryException {
 
         long trials = TRIALS;
         SQLException exception = null;

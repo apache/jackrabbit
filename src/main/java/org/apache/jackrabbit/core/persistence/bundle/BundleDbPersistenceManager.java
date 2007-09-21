@@ -466,9 +466,10 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * @return <code>true</code> if the tables exist;
      *         <code>false</code> otherwise.
      *
-     * @throws SQLException if an SQL erro occurs.
+     * @throws SQLException if a database error occurs.
+     * @throws RepositoryException if a repository exception occurs.
      */
-    protected boolean checkTablesExist() throws SQLException {
+    protected boolean checkTablesExist() throws SQLException, RepositoryException {
         DatabaseMetaData metaData = connectionManager.getConnection().getMetaData();
         String tableName = schemaObjectPrefix + "BUNDLE";
         if (metaData.storesLowerCaseIdentifiers()) {
@@ -504,40 +505,36 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * Basically wrapps a JDBC transaction around super.store().
      */
     public synchronized void store(ChangeLog changeLog) throws ItemStateException {
-        Connection con = null;
-        try {
-            boolean tryAgain = true;
-            do {
-                try {
-                    con = connectionManager.getConnection();
-                    connectionManager.setAutoReconnect(false);
-                    con.setAutoCommit(false);
-                    super.store(changeLog);
-                    con.commit();
-                    con.setAutoCommit(true);
-                } catch (SQLException e) {
-                    if (tryAgain) {
-                        tryAgain = false;
-                        continue;
-                    }
-                    throw e;
-                }
-            } while(false);
-        } catch (Throwable th) {
+        int trials = 2;
+        Throwable lastException  = null;
+        do {
+            trials--;
+            Connection con = null;
             try {
-                if (con != null) {
-                    con.rollback();
+                con = connectionManager.getConnection();
+                connectionManager.setAutoReconnect(false);
+                con.setAutoCommit(false);
+                super.store(changeLog);
+                con.commit();
+                con.setAutoCommit(true);
+                return;
+            } catch (Throwable th) {
+                lastException = th;
+                try {
+                    if (con != null) {
+                        con.rollback();
+                    }
+                } catch (SQLException e) {
+                    logException("rollback failed", e);
                 }
-            } catch (SQLException e) {
-                logException("rollback failed", e);
+                if (th instanceof SQLException || th.getCause() instanceof SQLException) {
+                    connectionManager.close();
+                }
+            } finally {
+                connectionManager.setAutoReconnect(true);
             }
-            if (th instanceof SQLException || th.getCause() instanceof SQLException) {
-                connectionManager.close();
-            }
-            throw new ItemStateException(th.getMessage());
-        } finally {
-            connectionManager.setAutoReconnect(true);
-        }
+        } while(blockOnConnectionLoss || trials > 0);
+        throw new ItemStateException(lastException.getMessage());
     }
 
     /**
@@ -896,7 +893,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * {@inheritDoc}
      */
     public synchronized NodeIdIterator getAllNodeIds(NodeId bigger, int maxCount)
-            throws ItemStateException {
+            throws ItemStateException, RepositoryException {
         ResultSet rs = null;
         try {
             UUID lowUuid;
