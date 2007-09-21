@@ -26,6 +26,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
+import org.apache.jackrabbit.core.nodetype.ItemDef;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
@@ -4324,6 +4325,230 @@ public class NodeImpl extends ItemImpl implements Node {
             String msg = "Unable to retrieve REFERENCE properties that refer to " + id;
             log.debug(msg);
             throw new RepositoryException(msg, e);
+        }
+    }
+
+    /**
+     * Changes the primary node type of this node to <code>nodeTypeName</code>.
+     * Also immediately changes this node's <code>jcr:primaryType</code> property
+     * appropriately. Semantically, the new node type may take effect
+     * immediately and <i>must</i> take effect on <code>save</code>. Whichever
+     * behavior is adopted it must be the same as the behavior adopted for
+     * <code>addMixin()</code> (see below) and the behavior that occurs when a
+     * node is first created.
+     * <p/>
+     * If the presence of an existing property or child node would cause an
+     * incompatibility with the new node type a <code>ConstraintViolationException</code>
+     * is thrown either immediately or on <code>save</code>.
+     * <p/>
+     * If the new node type would cause this node to be incompatible with the
+     * node type of its parent then a <code>ConstraintViolationException</code>
+     * is thrown either immediately or on <code>save</code>.
+     * <p/>
+     * A <code>ConstraintViolationException</code> is also thrown either
+     * immediately or on <code>save</code> if a conflict with an already
+     * assigned mixin occurs.
+     * <p/>
+     * A <code>ConstraintViolationException</code> may also be thrown either
+     * immediately or on <code>save</code> if the attempted change violates
+     * implementation-specific node type transition rules. A repository that
+     * disallows all primary node type changes would simple throw this
+     * exception in all cases.
+     * <p/>
+     * If the specified node type is not recognized a
+     * <code>NoSuchNodeTypeException</code> is thrown either immediately
+     * or on <code>save</code>.
+     * <p/>
+     * A <code>VersionException</code> is thrown either immediately or on
+     * <code>save</code> if this node is versionable and checked-in, or is
+     * non-versionable but its nearest versionable ancestor is checked-in.
+     * <p/>
+     * A <code>LockException</code> is thrown either immediately or on
+     * <code>save</code> if a lock prevents the change of node type.
+     * <p/>
+     * A <code>RepositoryException</code> will be thrown if another error occurs.
+     *
+     * @param nodeTypeName the name of the new node type.
+     * @throws ConstraintViolationException If the specified primary node type
+     * is prevented from being assigned.
+     * @throws NoSuchNodeTypeException If the specified <code>nodeTypeName</code>
+     * is not recognized and this implementation performs this validation
+     * immediately instead of waiting until <code>save</code>.
+     * @throws VersionException if this node is versionable and checked-in or is
+     * non-versionable but its nearest versionable ancestor is checked-in and this
+     * implementation performs this validation immediately instead of waiting until
+     * <code>save</code>.
+     * @throws LockException if a lock prevents the change of the primary node type
+     * and this implementation performs this validation immediately instead of
+     * waiting until <code>save</code>.
+     * @throws RepositoryException  if another error occurs.
+     * @since JCR 2.0
+     */
+    public void setPrimaryType(String nodeTypeName)
+            throws NoSuchNodeTypeException, VersionException,
+            ConstraintViolationException, LockException, RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
+            String msg = safeGetJCRPath() + ": cannot set primary type of a checked-in node";
+            log.debug(msg);
+            throw new VersionException(msg);
+        }
+
+        // check protected flag
+        if (definition.isProtected()) {
+            String msg = safeGetJCRPath() + ": cannot set primary type of a protected node";
+            log.debug(msg);
+            throw new ConstraintViolationException(msg);
+        }
+
+        if (state.getParentId() == null) {
+            String msg = "changing the primary type of the root node is not supported";
+            log.debug(msg);
+            throw new RepositoryException(msg);
+        }
+
+        // check lock status
+        checkLock();
+
+        QName ntName;
+        try {
+            ntName = session.getQName(nodeTypeName);
+        } catch (NameException e) {
+            throw new RepositoryException(
+                    "invalid node type name: " + nodeTypeName, e);
+        }
+
+        if (ntName.equals(primaryTypeName)) {
+            return;
+        }
+
+        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+        if (ntMgr.getNodeType(ntName).isMixin()) {
+            throw new RepositoryException(nodeTypeName + ": not a primary node type");
+        }
+
+        // build effective node type of new primary type & existing mixin's
+        // in order to detect conflicts
+        NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
+        EffectiveNodeType entNew, entOld;
+        try {
+            entNew = ntReg.getEffectiveNodeType(ntName);
+            entOld = ntReg.getEffectiveNodeType(primaryTypeName);
+
+            // existing mixin's
+            HashSet set = new HashSet(((NodeState) state).getMixinTypeNames());
+            // new primary type
+            set.add(ntName);
+            // try to build new effective node type (will throw in case of conflicts)
+            ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
+        } catch (NodeTypeConflictException ntce) {
+            throw new ConstraintViolationException(ntce.getMessage());
+        }
+
+        // get applicable definition for this node using new primary type
+        NodeDefId defId;
+        try {
+            NodeImpl parent = (NodeImpl) getParent();
+            defId = parent.getApplicableChildNodeDefinition(getQName(), ntName).unwrap().getId();
+        } catch (RepositoryException re) {
+            String msg = safeGetJCRPath() + ": no applicable definition found in parent node's node type";
+            log.debug(msg);
+            throw new ConstraintViolationException(msg, re);
+        }
+        
+        if (!defId.equals(((NodeState) state).getDefinitionId())) {
+            onRedefine(defId);
+        }
+
+
+        // build change set: removed/added child items
+        Set oldDefs = new HashSet(Arrays.asList(entOld.getAllItemDefs()));
+        Set newDefs = new HashSet(Arrays.asList(entNew.getAllItemDefs()));
+
+        Set removedDefs = new HashSet(oldDefs);
+        removedDefs.removeAll(newDefs);
+
+        Set addedDefs = new HashSet(newDefs);
+        addedDefs.removeAll(oldDefs);
+
+        // referential integrity check
+        boolean referenceableOld = entOld.includesNodeType(QName.MIX_REFERENCEABLE);
+        boolean referenceableNew = entNew.includesNodeType(QName.MIX_REFERENCEABLE);
+        if (referenceableOld && !referenceableNew) {
+            // node would become non-referenceable;
+            // make sure no references exist
+            PropertyIterator iter = getReferences();
+            if (iter.hasNext()) {
+                throw new ConstraintViolationException(
+                        "the new primary type cannot be set as it would render "
+                                + "this node 'non-referenceable' while it is still being "
+                                + "referenced through at least one property of type REFERENCE");
+            }
+        }
+
+        // do the actual modifications in content as mandated by the new primary type
+
+        // modify the state of this node
+        NodeState thisState = (NodeState) getOrCreateTransientItemState();
+        thisState.setNodeTypeName(ntName);
+
+        // set jcr:primaryType property
+        internalSetProperty(QName.JCR_PRIMARYTYPE, InternalValue.create(ntName));
+
+        // walk through properties and child nodes and remove those that
+        // are not included in the new node type
+        if (!removedDefs.isEmpty()) {
+            // use temp set to avoid ConcurrentModificationException
+            HashSet set = new HashSet(thisState.getPropertyNames());
+            for (Iterator iter = set.iterator(); iter.hasNext();) {
+                QName propName = (QName) iter.next();
+                try {
+                    PropertyState propState =
+                            (PropertyState) stateMgr.getItemState(
+                                    new PropertyId(thisState.getNodeId(), propName));
+                    if (removedDefs.contains(ntReg.getPropDef(propState.getDefinitionId()))) {
+                        removeChildProperty(propName);
+                    }
+                } catch (ItemStateException ise) {
+                    String msg = propName + ": failed to retrieve property state";
+                    log.error(msg, ise);
+                    throw new RepositoryException(msg, ise);
+                }
+            }
+            // use temp array to avoid ConcurrentModificationException
+            ArrayList list = new ArrayList(thisState.getChildNodeEntries());
+            // start from tail to avoid problems with same-name siblings
+            for (int i = list.size() - 1; i >= 0; i--) {
+                NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) list.get(i);
+                try {
+                    NodeState nodeState =
+                            (NodeState) stateMgr.getItemState(entry.getId());
+                    if (removedDefs.contains(ntReg.getNodeDef(nodeState.getDefinitionId()))) {
+                        removeChildNode(entry.getName(), entry.getIndex());
+                    }
+                } catch (ItemStateException ise) {
+                    String msg = entry.getName() + ": failed to retrieve node state";
+                    log.error(msg, ise);
+                    throw new RepositoryException(msg, ise);
+                }
+            }
+        }
+
+        // create new 'auto-create' items
+        for (Iterator iter = addedDefs.iterator(); iter.hasNext();) {
+            ItemDef def = (ItemDef) iter.next();
+            if (def.isAutoCreated()) {
+                if (def.definesNode()) {
+                    NodeDefinitionImpl nd = ntMgr.getNodeDefinition(((NodeDef) def).getId());
+                    createChildNode(nd.getQName(), nd, (NodeTypeImpl) nd.getDefaultPrimaryType(), null);
+                } else {
+                    PropertyDefinitionImpl pd = ntMgr.getPropertyDefinition(((PropDef) def).getId());
+                    createChildProperty(pd.getQName(), pd.getRequiredType(), pd);
+                }
+            }
         }
     }
 }
