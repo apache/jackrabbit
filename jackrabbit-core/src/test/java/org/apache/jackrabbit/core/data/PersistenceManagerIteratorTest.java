@@ -78,7 +78,7 @@ public class PersistenceManagerIteratorTest extends AbstractJCRTest {
                 NodeId id = it.nextNodeId();
                 log("  " + id.toString());
                 if (after != null) {
-                    assertEquals(id.getUUID().compareTo(after.getUUID()), 1);
+                    assertFalse(id.getUUID().compareTo(after.getUUID()) == 0);
                 }
                 after = id;
             }
@@ -93,7 +93,7 @@ public class PersistenceManagerIteratorTest extends AbstractJCRTest {
                 while (it.hasNext()) {
                     NodeId id = it.nextNodeId();
                     log("    " + id.toString());
-                    assertEquals(id.getUUID().compareTo(after.getUUID()), 1);
+                    assertFalse(id.getUUID().compareTo(after.getUUID()) == 0);
                     after = id;
                 }
             }
@@ -106,7 +106,7 @@ public class PersistenceManagerIteratorTest extends AbstractJCRTest {
                 while (it.hasNext()) {
                     NodeId id = it.nextNodeId();
                     log("    " + id.toString());
-                    assertEquals(id.getUUID().compareTo(after.getUUID()), 1);
+                    assertFalse(id.getUUID().compareTo(after.getUUID()) == 0);
                     after = id;
                 }
             }
