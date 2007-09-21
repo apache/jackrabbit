@@ -50,6 +50,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
 
 /**
  * The <code>AbstractBundlePersistenceManager</code> acts as base for all
@@ -714,8 +715,9 @@ public abstract class AbstractBundlePersistenceManager implements
      * @param maxCount the maximum number of node ids to return, or 0 for no limit.
      * @return an iterator of all bundles.
      * @throws ItemStateException if an error while loading occurs.
+     * @throws RepositoryException if a repository exception occurs
      */
     public abstract NodeIdIterator getAllNodeIds(NodeId after, int maxCount)
-            throws ItemStateException;
+            throws ItemStateException, RepositoryException;
 
 }
