@@ -130,6 +130,11 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
     private SynonymProvider synonymProvider;
 
     /**
+     * Wether the index format is new or old.
+     */
+    private IndexFormatVersion indexFormatVersion;
+    
+    /**
      * Exceptions thrown during tree translation
      */
     private List exceptions = new ArrayList();
@@ -137,16 +142,18 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
     /**
      * Creates a new <code>LuceneQueryBuilder</code> instance.
      *
-     * @param root            the root node of the abstract query tree.
-     * @param session         of the user executing this query.
-     * @param sharedItemMgr   the shared item state manager of the workspace.
-     * @param hmgr            a hierarchy manager based on sharedItemMgr.
-     * @param nsMappings      namespace resolver for internal prefixes.
-     * @param analyzer        for parsing the query statement of the contains
-     *                        function.
-     * @param propReg         the property type registry.
-     * @param synonymProvider the synonym provider or <code>null</code> if node
-     *                        is configured.
+     * @param root               the root node of the abstract query tree.
+     * @param session            of the user executing this query.
+     * @param sharedItemMgr      the shared item state manager of the
+     *                           workspace.
+     * @param hmgr               a hierarchy manager based on sharedItemMgr.
+     * @param nsMappings         namespace resolver for internal prefixes.
+     * @param analyzer           for parsing the query statement of the contains
+     *                           function.
+     * @param propReg            the property type registry.
+     * @param synonymProvider    the synonym provider or <code>null</code> if
+     *                           node is configured.
+     * @param indexFormatVersion the index format version for the lucene query.
      */
     private LuceneQueryBuilder(QueryRootNode root,
                                SessionImpl session,
@@ -155,7 +162,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                                NamespaceMappings nsMappings,
                                Analyzer analyzer,
                                PropertyTypeRegistry propReg,
-                               SynonymProvider synonymProvider) {
+                               SynonymProvider synonymProvider, 
+                               IndexFormatVersion indexFormatVersion) {
         this.root = root;
         this.session = session;
         this.sharedItemMgr = sharedItemMgr;
@@ -164,6 +172,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         this.analyzer = analyzer;
         this.propRegistry = propReg;
         this.synonymProvider = synonymProvider;
+        this.indexFormatVersion = indexFormatVersion;
     }
 
     /**
@@ -180,6 +189,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
      *                        information.
      * @param synonymProvider the synonym provider or <code>null</code> if node
      *                        is configured.
+     * @param  indexFormatVersion  the index format version to be used                   
      * @return the lucene query tree.
      * @throws RepositoryException if an error occurs during the translation.
      */
@@ -189,7 +199,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                                     NamespaceMappings nsMappings,
                                     Analyzer analyzer,
                                     PropertyTypeRegistry propReg,
-                                    SynonymProvider synonymProvider)
+                                    SynonymProvider synonymProvider,
+                                    IndexFormatVersion indexFormatVersion)
             throws RepositoryException {
 
         NodeId id = ((NodeImpl) session.getRootNode()).getNodeId();
@@ -197,7 +208,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 id, sharedItemMgr, session);
         LuceneQueryBuilder builder = new LuceneQueryBuilder(
                 root, session, sharedItemMgr, hmgr, nsMappings,
-                analyzer, propReg, synonymProvider);
+                analyzer, propReg, synonymProvider, indexFormatVersion);
 
         Query q = builder.createLuceneQuery();
         if (builder.exceptions.size() > 0) {
@@ -543,7 +554,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     // todo this will traverse the whole index, optimize!
                     Query subQuery = null;
                     try {
-                        subQuery = new MatchAllQuery(NameFormat.format(QName.JCR_PRIMARYTYPE, nsMappings));
+                        subQuery = createMatchAllQuery(NameFormat.format(QName.JCR_PRIMARYTYPE, nsMappings));
                     } catch (NoPrefixDeclaredException e) {
                         // will never happen, prefixes are created when unknown
                     }
@@ -584,7 +595,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             }
 
             if (node.getIncludeDescendants()) {
-                Query refPropQuery = new MatchAllQuery(refProperty);
+                Query refPropQuery = createMatchAllQuery(refProperty);
                 context = new DescendantSelfAxisQuery(context, refPropQuery, false);
             }
 
@@ -789,7 +800,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     // the like operation always has one string value.
                     // no coercing, see above
                     if (stringValues[0].equals("%")) {
-                        query = new MatchAllQuery(field);
+                        query = createMatchAllQuery(field);
                     } else {
                         query = new WildcardQuery(FieldNames.PROPERTIES, field, stringValues[0], transform[0]);
                     }
@@ -810,7 +821,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 case QueryConstants.OPERATION_NE_VALUE:      // !=
                     // match nodes with property 'field' that includes svp and mvp
                     BooleanQuery notQuery = new BooleanQuery();
-                    notQuery.add(new MatchAllQuery(field), Occur.SHOULD);
+                    notQuery.add(createMatchAllQuery(field), Occur.SHOULD);
                     // exclude all nodes where 'field' has the term in question
                     for (int i = 0; i < stringValues.length; i++) {
                         Term t = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
@@ -836,7 +847,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     // minus the nodes that have a multi-valued property 'field' and
                     //    all values are equal to term in question
                     notQuery = new BooleanQuery();
-                    notQuery.add(new MatchAllQuery(field), Occur.SHOULD);
+                    notQuery.add(createMatchAllQuery(field), Occur.SHOULD);
                     for (int i = 0; i < stringValues.length; i++) {
                         // exclude the nodes that have the term and are single valued
                         Term t = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
@@ -859,7 +870,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     query = notQuery;
                     break;
                 case QueryConstants.OPERATION_NULL:
-                    query = new NotQuery(new MatchAllQuery(field));
+                    query = new NotQuery(createMatchAllQuery(field));
                     break;
                 case QueryConstants.OPERATION_SIMILAR:
                     String uuid = "x";
@@ -874,7 +885,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     query = new SimilarityQuery(uuid, analyzer);
                     break;
                 case QueryConstants.OPERATION_NOT_NULL:
-                    query = new MatchAllQuery(field);
+                    query = createMatchAllQuery(field);
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown relation operation: "
@@ -1081,5 +1092,21 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             log.debug("Using literal " + literal + " as is.");
         }
         return (String[]) values.toArray(new String[values.size()]);
+    }
+    
+    /**
+     * Depending on the index format this method returns
+     * a query that matches all nodes that have a property named 'field'
+     *
+     * @param field
+     * @return Query that matches all nodes that have a property named 'field'
+     */
+    private final Query createMatchAllQuery(String field) {
+        if (indexFormatVersion.getVersion() >= IndexFormatVersion.V2.getVersion()) {
+            // new index format style
+            return new TermQuery(new Term(FieldNames.PROPERTIES_SET, field));
+        } else {
+            return new MatchAllQuery(field);
+        }
     }
 }

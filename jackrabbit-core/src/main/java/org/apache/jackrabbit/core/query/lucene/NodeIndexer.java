@@ -96,6 +96,11 @@ public class NodeIndexer {
     protected boolean supportHighlighting = false;
 
     /**
+     * Indicates index format for this node indexer.
+     */
+    protected IndexFormatVersion indexFormatVersion = IndexFormatVersion.V1;
+   
+    /**
      * Creates a new node indexer.
      *
      * @param node          the node state to index.
@@ -131,6 +136,15 @@ public class NodeIndexer {
         supportHighlighting = b;
     }
 
+    /**
+     * Sets the index format version
+     *
+     * @param indexFormatVersion the index format version
+     */
+    public void setIndexFormatVersion(IndexFormatVersion indexFormatVersion) {
+        this.indexFormatVersion = indexFormatVersion;
+    }
+    
     /**
      * Sets the indexing configuration for this node indexer.
      *
@@ -189,6 +203,14 @@ public class NodeIndexer {
             PropertyId id = new PropertyId(node.getNodeId(), propName);
             try {
                 PropertyState propState = (PropertyState) stateProvider.getItemState(id);
+                
+                // add each property to the _PROPERTIES_SET for searching
+                // beginning with V2
+                if (indexFormatVersion.getVersion()
+                        >= IndexFormatVersion.V2.getVersion()) {
+                    addPropertyName(doc, propState.getName());
+                }
+                
                 InternalValue[] values = propState.getValues();
                 for (int i = 0; i < values.length; i++) {
                     addValue(doc, values[i], propState.getName());
@@ -312,6 +334,22 @@ public class NodeIndexer {
         }
     }
 
+    /**
+     * Adds the property name to the lucene _:PROPERTIES_SET field.
+     *
+     * @param doc  the document.
+     * @param name the name of the property.
+     */
+    private void addPropertyName(Document doc, QName name) {
+        String fieldName = name.getLocalName();
+        try {
+            fieldName = NameFormat.format(name, mappings);
+        } catch (NoPrefixDeclaredException e) {
+            // will never happen
+        }
+        doc.add(new Field(FieldNames.PROPERTIES_SET, fieldName, Field.Store.NO, Field.Index.NO_NORMS));
+    }
+    
     /**
      * Adds the binary value to the document as the named field.
      * <p/>

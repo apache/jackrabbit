@@ -206,6 +206,11 @@ public class MultiIndex {
     private boolean reindexing = false;
 
     /**
+     * The index format version of this multi index.
+     */
+    private final IndexFormatVersion version;
+
+    /**
      * Creates a new MultiIndex.
      *
      * @param indexDir the base file system
@@ -285,6 +290,14 @@ public class MultiIndex {
         // init volatile index
         resetVolatileIndex();
 
+        // set index format version
+        IndexReader reader = getIndexReader();
+        try {
+            version = IndexFormatVersion.getVersion(reader);
+        } finally {
+            reader.close();
+        }
+
         redoLogApplied = redoLog.hasEntries();
 
         // run recovery
@@ -334,6 +347,13 @@ public class MultiIndex {
                 reader.close();
             }
         }
+    }
+
+    /**
+     * @return the index format version for this multi index.
+     */
+    IndexFormatVersion getIndexFormatVersion() {
+        return version;
     }
 
     /**
@@ -780,7 +800,7 @@ public class MultiIndex {
      *                             workspace.
      */
     Document createDocument(NodeState node) throws RepositoryException {
-        return handler.createDocument(node, nsMappings);
+        return handler.createDocument(node, nsMappings, version);
     }
 
     /**
