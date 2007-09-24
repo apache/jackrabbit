@@ -320,6 +320,16 @@ public class SearchIndex extends AbstractQueryHandler {
     private SynonymProvider synProvider;
 
     /**
+     * Indicates the index format version which is relevant to a <b>query</b>. This
+     * value may be different from what {@link MultiIndex#getIndexFormatVersion()}
+     * returns because queries may be executed on two physical indexes with
+     * different formats. Index format versions are considered backward
+     * compatible. That is, the lower version of the two physical indexes is
+     * used for querying.
+     */
+    private IndexFormatVersion indexFormatVersion;
+
+    /**
      * Indicates if this <code>SearchIndex</code> is closed and cannot be used
      * anymore.
      */
@@ -404,7 +414,8 @@ public class SearchIndex extends AbstractQueryHandler {
                 log.warn("Failed to run consistency check on index: " + e);
             }
         }
-        log.info("Index initialized: " + path);
+        log.info("Index initialized: {} Version: {}",
+                new Object[]{path, index.getIndexFormatVersion()});
     }
 
     /**
@@ -461,7 +472,8 @@ public class SearchIndex extends AbstractQueryHandler {
                 removedNodeIds.remove(state.getNodeId());
                 Document doc = null;
                 try {
-                    doc = createDocument(state, getNamespaceMappings());
+                    doc = createDocument(state, getNamespaceMappings(),
+                            index.getIndexFormatVersion());
                     retrieveAggregateRoot(state, aggregateRoots);
                 } catch (RepositoryException e) {
                     log.warn("Exception while creating document for node: "
@@ -489,7 +501,8 @@ public class SearchIndex extends AbstractQueryHandler {
                 public Object next() {
                     NodeState state = (NodeState) super.next();
                     try {
-                        return createDocument(state, getNamespaceMappings());
+                        return createDocument(state, getNamespaceMappings(),
+                                index.getIndexFormatVersion());
                     } catch (RepositoryException e) {
                         log.warn("Exception while creating document for node: "
                                 + state.getNodeId() + ": " + e.toString());
@@ -687,6 +700,29 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
+     * Returns the index format version that this search index is able to
+     * support when a query is executed on this index.
+     *
+     * @return the index format version for this search index.
+     */
+    public IndexFormatVersion getIndexFormatVersion() {
+        if (indexFormatVersion == null) {
+            if (getContext().getParentHandler() instanceof SearchIndex) {
+                SearchIndex parent = (SearchIndex) getContext().getParentHandler();
+                if (parent.getIndexFormatVersion().getVersion()
+                        < index.getIndexFormatVersion().getVersion()) {
+                    indexFormatVersion = parent.getIndexFormatVersion();
+                } else {
+                    indexFormatVersion = index.getIndexFormatVersion();
+                }
+            } else {
+                indexFormatVersion = index.getIndexFormatVersion();
+            }
+        }
+        return indexFormatVersion;
+    }
+
+    /**
      * Returns an index reader for this search index. The caller of this method
      * is responsible for closing the index reader when he is finished using
      * it.
@@ -750,20 +786,24 @@ public class SearchIndex extends AbstractQueryHandler {
      * Creates a lucene <code>Document</code> for a node state using the
      * namespace mappings <code>nsMappings</code>.
      *
-     * @param node       the node state to index.
-     * @param nsMappings the namespace mappings of the search index.
+     * @param node               the node state to index.
+     * @param nsMappings         the namespace mappings of the search index.
+     * @param indexFormatVersion the index format version that should be used to
+     *                           index the passed node state.
      * @return a lucene <code>Document</code> that contains all properties of
      *         <code>node</code>.
      * @throws RepositoryException if an error occurs while indexing the
      *                             <code>node</code>.
      */
     protected Document createDocument(NodeState node,
-                                      NamespaceMappings nsMappings)
+                                      NamespaceMappings nsMappings,
+                                      IndexFormatVersion indexFormatVersion)
             throws RepositoryException {
         NodeIndexer indexer = new NodeIndexer(node,
                 getContext().getItemStateManager(), nsMappings, extractor);
         indexer.setSupportHighlighting(supportHighlighting);
         indexer.setIndexingConfiguration(indexingConfig);
+        indexer.setIndexFormatVersion(indexFormatVersion);
         Document doc = indexer.createDoc();
         mergeAggregatedNodeIndexes(node, doc);
         return doc;
@@ -892,7 +932,8 @@ public class SearchIndex extends AbstractQueryHandler {
                     }
                     for (int j = 0; j < aggregates.length; j++) {
                         Document aDoc = createDocument(aggregates[j],
-                                getNamespaceMappings());
+                                getNamespaceMappings(),
+                                index.getIndexFormatVersion());
                         // transfer fields to doc if there are any
                         Field[] fulltextFields = aDoc.getFields(FieldNames.FULLTEXT);
                         if (fulltextFields != null) {
