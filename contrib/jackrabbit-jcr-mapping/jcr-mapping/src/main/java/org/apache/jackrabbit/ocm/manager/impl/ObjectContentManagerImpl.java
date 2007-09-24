@@ -56,7 +56,7 @@ import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 import org.apache.jackrabbit.ocm.manager.objectconverter.impl.ObjectConverterImpl;
 import org.apache.jackrabbit.ocm.manager.objectconverter.impl.ProxyManagerImpl;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
-import org.apache.jackrabbit.ocm.mapper.impl.DigesterMapperImpl;
+import org.apache.jackrabbit.ocm.mapper.impl.digester.DigesterMapperImpl;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 import org.apache.jackrabbit.ocm.query.Query;
 import org.apache.jackrabbit.ocm.query.QueryManager;

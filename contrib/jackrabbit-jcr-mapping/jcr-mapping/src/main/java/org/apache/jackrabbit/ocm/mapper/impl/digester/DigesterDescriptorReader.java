@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.ocm.mapper.impl;
+package org.apache.jackrabbit.ocm.mapper.impl.digester;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

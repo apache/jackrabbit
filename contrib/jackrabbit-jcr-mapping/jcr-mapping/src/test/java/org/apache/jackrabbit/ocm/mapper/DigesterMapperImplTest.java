@@ -23,8 +23,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
-import org.apache.jackrabbit.ocm.mapper.Mapper;
-import org.apache.jackrabbit.ocm.mapper.impl.DigesterMapperImpl;
+import org.apache.jackrabbit.ocm.mapper.impl.digester.DigesterMapperImpl;
 import org.apache.jackrabbit.ocm.mapper.model.BeanDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;

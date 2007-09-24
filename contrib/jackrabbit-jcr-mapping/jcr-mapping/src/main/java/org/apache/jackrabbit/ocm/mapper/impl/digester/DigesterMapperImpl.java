@@ -14,17 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.ocm.mapper.impl;
+package org.apache.jackrabbit.ocm.mapper.impl.digester;
 
 
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.apache.jackrabbit.ocm.exception.InitMapperException;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
-import org.apache.jackrabbit.ocm.mapper.model.MappingDescriptor;
+import org.apache.jackrabbit.ocm.mapper.impl.AbstractMapperImpl;
 
 /**
  *
