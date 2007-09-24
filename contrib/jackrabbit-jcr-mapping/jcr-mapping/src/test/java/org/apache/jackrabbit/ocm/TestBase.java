@@ -98,6 +98,7 @@ public abstract class TestBase extends TestCase
 	        
 	        if (!isInit) {
 	            initObjectContentManager();
+	            RepositoryUtil.setupSession(getSession());
 	            registerNodeTypes(getSession());
 	            isInit = true;
 	        }
@@ -129,6 +130,7 @@ public abstract class TestBase extends TestCase
 			if (ocm == null)
 			{
 				initObjectContentManager();
+				RepositoryUtil.setupSession(getSession());
                 registerNodeTypes(getSession());
 			}
 			return ocm;

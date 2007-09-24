@@ -37,6 +37,7 @@ public class AllTests {
         TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.repository");
         //$JUnit-BEGIN$
         suite.addTestSuite(RepositoryUtilTest.class);
+        suite.addTestSuite(NodeUtilTest.class);
        
         
         //$JUnit-END$

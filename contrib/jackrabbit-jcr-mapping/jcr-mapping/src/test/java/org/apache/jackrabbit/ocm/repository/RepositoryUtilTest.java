@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.ocm.repository;
 
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.Repository;
 import javax.jcr.Session;
@@ -30,7 +29,6 @@ import junit.framework.TestSuite;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.jackrabbit.ocm.repository.RepositoryUtil;
 import org.apache.jackrabbit.ocm.transaction.jackrabbit.UserTransactionImpl;
 
 /** Testcase for RepositoryUtil.
@@ -140,53 +138,7 @@ public class RepositoryUtilTest extends TestCase
         }
     }
 
-    /**
-     * Test for getParentPath() 
-     *
-     */
-    public void testGetParentPath()
-    {
-        try
-        {
-            String parentPath = RepositoryUtil.getParentPath("/test");
-            assertNotNull("parent path is null for /test", parentPath);
-            assertTrue("parent path is incorrect for /test", parentPath.equals("/"));
-
-            parentPath = RepositoryUtil.getParentPath("/test/test2");
-            assertNotNull("parent path is null for /test/test2", parentPath);
-            assertTrue("parent path is incorrect for /test/test2", parentPath.equals("/test"));
-            
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            fail("Unable to find the repository : " + e);
-        }
-    }
     
-    /**
-     * Test for getNodeName() 
-     *
-     */
-    public void testGetNodeName()
-    {
-        try
-        {
-            String nodeName = RepositoryUtil.getNodeName("/test");
-            assertNotNull("node name is null for /test", nodeName);
-            assertTrue("node name is incorrect for /test", nodeName.equals("test"));
-            
-            nodeName = RepositoryUtil.getNodeName("/test/test2");
-            assertNotNull("node name is null for /test/test2", nodeName);
-            assertTrue("node name is incorrect for /test/test2", nodeName.equals("test2"));
-            
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            fail("Unable to find the repository : " + e);
-        }
-    }   
     
     public void testEncodePath()
     {

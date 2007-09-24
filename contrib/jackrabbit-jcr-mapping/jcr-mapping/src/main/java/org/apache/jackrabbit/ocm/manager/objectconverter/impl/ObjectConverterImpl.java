@@ -49,7 +49,7 @@ import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.FieldDescriptor;
 import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
-import org.apache.jackrabbit.ocm.repository.RepositoryUtil;
+import org.apache.jackrabbit.ocm.repository.NodeUtil;
 
 /**
  * Default implementation for {@link ObjectConverterImpl}
@@ -139,8 +139,8 @@ public class ObjectConverterImpl implements ObjectConverter {
 	public void insert(Session session, Object object) {
 		String path = this.getPath(session, object);
 		try {
-			String parentPath = RepositoryUtil.getParentPath(path);
-			String nodeName = RepositoryUtil.getNodeName(path);
+			String parentPath = NodeUtil.getParentPath(path);
+			String nodeName = NodeUtil.getNodeName(path);
 			Node parentNode = (Node) session.getItem(parentPath);
 			this.insert(session, parentNode, nodeName, object);
 
@@ -227,8 +227,8 @@ public class ObjectConverterImpl implements ObjectConverter {
 	public void update(Session session, Object object) {
 		String path = this.getPath(session, object);
 		try {
-			String parentPath = RepositoryUtil.getParentPath(path);
-			String nodeName = RepositoryUtil.getNodeName(path);
+			String parentPath = NodeUtil.getParentPath(path);
+			String nodeName = NodeUtil.getNodeName(path);
 			Node parentNode = (Node) session.getItem(parentPath);
 			this.update(session, parentNode, nodeName, object);
 		} catch (PathNotFoundException pnfe) {

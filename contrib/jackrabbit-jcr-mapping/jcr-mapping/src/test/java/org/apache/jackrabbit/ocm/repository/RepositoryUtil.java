@@ -160,80 +160,10 @@ public class RepositoryUtil
             throw new RepositoryException("Impossible to login ", e);
         }
     }
+      
     
-    /**
-     * Check if a path is valid 
-     * 
-     * @param path The path to validate
-     * @return true if the path is valid, else false
-     */
-    public static boolean isValidPath(String path)
-    {
-        if ((path == null) ||
-            (path.equals(PATH_SEPARATOR)) ||
-            (path.endsWith(PATH_SEPARATOR)) ||
-            (! path.startsWith(PATH_SEPARATOR)) || 
-            (path.equals("")))
-        {
-            return false; 
-        }
-        return true;
-    }    
-    
-    /**
-     * Get the parent path
-     * @param path The path from wich the parent path has to be returned
-     * @return The parent path
-     * 
-     * @throws ObjectContentManagerException when the path is invalid
-     */
-    public static String getParentPath(String path) throws ObjectContentManagerException
-    {
-        String parentPath = "";
-        
-        if (!isValidPath(path))
-        {
-            throw new JcrMappingException("Invalid path : " + path);
-        }
-        
-        String[] pathElements = path.split(PATH_SEPARATOR);         
-        
-        // Firts path element should be = empty string because a uri always start with '/'
-        // So, if len=2, means it is a root folder like '/foo'. 
-        // In this case the uri has not parent folder => return "/"
-        if (pathElements.length == 2)
-        {
-            return PATH_SEPARATOR;
-        }
-        
-        for(int i=0; i < pathElements.length -1; i++)
-        {   
-            if (! pathElements[i].equals(""))
-            {    
-               parentPath += PATH_SEPARATOR + pathElements[i];
-            }
-        }                  
-        return parentPath;
-    }
+  
 
-    /**
-     * Get the node name
-     * @param path  The path from which the node name has to be retrieved
-     * @return The node name
-     * 
-     * @throws ObjectContentManagerException when the path is invalid
-     */
-    public static String getNodeName(String path)  throws ObjectContentManagerException
-    {
-        
-        String[] pathElements = path.split(PATH_SEPARATOR);
-        
-        if (! isValidPath(path))
-        {
-            throw new JcrMappingException("Invalid path : " + path);
-        }        
-        return pathElements[pathElements.length-1];
-    }
     
     /**
      * Setup the session. 
