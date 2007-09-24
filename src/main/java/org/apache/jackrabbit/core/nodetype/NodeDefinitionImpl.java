@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,6 +107,78 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
      */
     public boolean allowsSameNameSiblings() {
         return ((NodeDef) itemDef).allowsSameNameSiblings();
+    }
+
+    //--------------------------------------------------< new JSR 283 methods >
+    /**
+     * Returns the names of the required primary node types.
+     * <p/>
+     * If this <code>NodeDefinition</code> is acquired from a live
+     * <code>NodeType</code> this list will reflect the node types returned by
+     * <code>getRequiredPrimaryTypes</code>, above.
+     * <p/>
+     * If this <code>NodeDefinition</code> is actually a
+     * <code>NodeDefinitionTemplate</code> that is not part of a registered node
+     * type, then this method will return the required primary types as set in
+     * that template. If that template is a newly-created empty one, then this
+     * method will return an array containing a single string indicating the
+     * node type <code>nt:base</code>.
+     *
+     * @return a String array
+     * @since JCR 2.0
+     */
+    public String[] getRequiredPrimaryTypeNames() {
+        QName[] ntNames = ((NodeDef) itemDef).getRequiredPrimaryTypes();
+        try {
+            if (ntNames == null || ntNames.length == 0) {
+                // return "nt:base"
+                return new String[] {NameFormat.format(QName.NT_BASE, nsResolver)};
+            } else {
+                String[] names = new String[ntNames.length];
+                for (int i = 0; i < ntNames.length; i++) {
+                    names[i] = NameFormat.format(ntNames[i], nsResolver);
+                }
+                return names;
+            }
+        } catch (NoPrefixDeclaredException npde) {
+            // should never get here
+            log.error("encountered unregistered namespace in node type name",
+                    npde);
+            return new String[0];
+        }
+    }
+
+    /**
+     * Returns the name of the default primary node type.
+     * <p/>
+     * If this <code>NodeDefinition</code> is acquired from a live
+     * <code>NodeType</code> this list will reflect the NodeType returned by
+     * getDefaultPrimaryType, above.
+     * <p/>
+     * If this <code>NodeDefinition</code> is actually a
+     * <code>NodeDefinitionTemplate</code> that is not part of a registered node
+     * type, then this method will return the required primary types as set in
+     * that template. If that template is a newly-created empty one, then this
+     * method will return <code>null</code>.
+     *
+     * @return a String
+     * @since JCR 2.0
+     */
+    public String getDefaultPrimaryTypeName() {
+        QName ntName = ((NodeDef) itemDef).getDefaultPrimaryType();
+        if (ntName == null) {
+            return null;
+        }
+
+        try {
+            return NameFormat.format(ntName, nsResolver);
+        } catch (NoPrefixDeclaredException npde) {
+            // should never get here
+            log.error("encountered unregistered namespace in node type name",
+                    npde);
+            // not correct, but an acceptable fallback
+            return ntName.toString();
+        }
     }
 }
 
