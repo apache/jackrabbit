@@ -119,7 +119,7 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
                 return NameFormat.format(itemDef.getName(), nsResolver);
             } catch (NoPrefixDeclaredException npde) {
                 // should never get here
-                log.error("encountered unregistered namespace in property name",
+                log.error("encountered unregistered namespace in item name",
                         npde);
                 // not correct, but an acceptable fallback
                 return itemDef.getName().toString();

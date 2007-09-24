@@ -905,6 +905,50 @@ public class EffectiveNodeType implements Cloneable {
     }
 
     /**
+     * @param name
+     * @throws ConstraintViolationException
+     */
+    public void checkRemoveNodeConstraints(QName name) throws ConstraintViolationException {
+        /**
+         * as there might be multiple definitions with the same name and we
+         * don't know which one is applicable, we check all of them
+         */
+        ItemDef[] defs = getNamedNodeDefs(name);
+        if (defs != null) {
+            for (int i = 0; i < defs.length; i++) {
+                if (defs[i].isMandatory()) {
+                    throw new ConstraintViolationException("can't remove mandatory node");
+                }
+                if (defs[i].isProtected()) {
+                    throw new ConstraintViolationException("can't remove protected node");
+                }
+            }
+        }
+    }
+
+    /**
+     * @param name
+     * @throws ConstraintViolationException
+     */
+    public void checkRemovePropertyConstraints(QName name) throws ConstraintViolationException {
+        /**
+         * as there might be multiple definitions with the same name and we
+         * don't know which one is applicable, we check all of them
+         */
+        ItemDef[] defs = getNamedPropDefs(name);
+        if (defs != null) {
+            for (int i = 0; i < defs.length; i++) {
+                if (defs[i].isMandatory()) {
+                    throw new ConstraintViolationException("can't remove mandatory property");
+                }
+                if (defs[i].isProtected()) {
+                    throw new ConstraintViolationException("can't remove protected property");
+                }
+            }
+        }
+    }
+
+    /**
      * Merges another <code>EffectiveNodeType</code> with this one.
      * Checks for merge conflicts.
      *

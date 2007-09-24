@@ -541,4 +541,47 @@ public class NodeTypeImpl implements NodeType {
         }
         return propDefs;
     }
+
+    //--------------------------------------------------< new JSR 283 methods >
+    /**
+     * Returns <code>true</code> if removing the child node called
+     * <code>nodeName</code> is allowed by this node type. Returns
+     * <code>false</code> otherwise.
+     *
+     * @param nodeName The name of the child node
+     * @return a boolean
+     * @since JCR 2.0
+     */
+    public boolean canRemoveNode(String nodeName) {
+        try {
+            ent.checkRemoveNodeConstraints(NameFormat.parse(nodeName, nsResolver));
+            return true;
+        } catch (NameException be) {
+            // implementation specific exception, fall through
+        } catch (RepositoryException re) {
+            // fall through
+        }
+        return false;
+    }
+
+    /**
+     * Returns <code>true</code> if removing the property called
+     * <code>propertyName</code> is allowed by this node type. Returns
+     * <code>false</code> otherwise.
+     *
+     * @param propertyName The name of the property
+     * @return a boolean
+     * @since JCR 2.0
+     */
+    public boolean canRemoveProperty(String propertyName) {
+        try {
+            ent.checkRemovePropertyConstraints(NameFormat.parse(propertyName, nsResolver));
+            return true;
+        } catch (NameException be) {
+            // implementation specific exception, fall through
+        } catch (RepositoryException re) {
+            // fall through
+        }
+        return false;
+    }
 }
