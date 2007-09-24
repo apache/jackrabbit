@@ -345,27 +345,32 @@ public class ObjectConverterImpl implements ObjectConverter {
 				checkCompatiblePrimaryNodeTypes(session, node, classDescriptor, true);
 			}
 
-			Object object = null;
+			ClassDescriptor alternativeDescriptor = null;
 			if (classDescriptor.usesNodeTypePerHierarchyStrategy()) {
-				if (!node.hasProperty(ManagerConstant.DISCRIMINATOR_PROPERTY_NAME)) {
-					throw new ObjectContentManagerException("Cannot fetch object of type '" + clazz.getName()
-							+ "' using NODETYPE_PER_HIERARCHY. Discriminator property is not present.");
+				if (node.hasProperty(ManagerConstant.DISCRIMINATOR_PROPERTY_NAME)) {
+	                String className = node.getProperty(ManagerConstant.DISCRIMINATOR_PROPERTY_NAME).getValue().getString();
+	                alternativeDescriptor = getClassDescriptor(ReflectionUtils.forName(className));
 				}
-
-				String className = node.getProperty(ManagerConstant.DISCRIMINATOR_PROPERTY_NAME).getValue().getString();
-				classDescriptor = getClassDescriptor(ReflectionUtils.forName(className));
-				object = ReflectionUtils.newInstance(className);
 			} else {
 				if (classDescriptor.usesNodeTypePerConcreteClassStrategy()) {
 					String nodeType = node.getPrimaryNodeType().getName();
 					if (!nodeType.equals(classDescriptor.getJcrType())) {
-						classDescriptor = classDescriptor.getDescendantClassDescriptor(nodeType);
+					    alternativeDescriptor = classDescriptor.getDescendantClassDescriptor(nodeType);
 					}
 				}
-				object = ReflectionUtils.newInstance(classDescriptor.getClassName());
+			}
 
+			// if we have an alternative class descriptor, check whether its
+			// extends (or is the same) as the requested class. 
+			if (alternativeDescriptor != null) {
+			    Class alternativeClazz = ReflectionUtils.forName(alternativeDescriptor.getClassName());
+			    if (clazz.isAssignableFrom(alternativeClazz)) {
+			        classDescriptor = alternativeDescriptor;
+			    }
 			}
 			
+            Object object = ReflectionUtils.newInstance(classDescriptor.getClassName());
+            
             if (! requestObjectCache.isCached(path))
             {
 			  requestObjectCache.cache(path, object);
