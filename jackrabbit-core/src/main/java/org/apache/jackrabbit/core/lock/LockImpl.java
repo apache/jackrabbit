@@ -48,7 +48,7 @@ class LockImpl implements Lock {
         this.node = node;
     }
 
-    //------------------------------------------------------------------< Lock >
+    //-----------------------------------------------------------------< Lock >
 
     /**
      * {@inheritDoc}
@@ -109,5 +109,23 @@ class LockImpl implements Lock {
             throw new LockException("Session does not hold lock.");
         }
         // since a lock has no expiration date no other action is required
+    }
+
+    //--------------------------------------------------< new JSR 283 methods >
+    /**
+     * Returns <code>true</code> if the current session is the owner of this
+     * lock, either because it is session-scoped and bound to this session or
+     * open-scoped and this session currently holds the token for this lock.
+     * Returns <code>false</code> otherwise.
+     *
+     * @return a <code>boolean</code>.
+     * @since JCR 2.0
+     */
+    public boolean isLockOwningSession() {
+        try {
+            return info.getLockHolder().equals(node.getSession());
+        } catch (RepositoryException e) {
+            return false;
+        }
     }
 }
