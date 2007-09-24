@@ -18,8 +18,6 @@
 package org.apache.jackrabbit.ocm.manager.collectionconverter.impl;
 
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -47,7 +45,6 @@ import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
 import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
-import org.apache.jackrabbit.util.ISO9075;
 
 /**
  * Collection Mapping/convertion based on node type.

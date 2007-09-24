@@ -61,7 +61,6 @@ import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 import org.apache.jackrabbit.ocm.query.Query;
 import org.apache.jackrabbit.ocm.query.QueryManager;
 import org.apache.jackrabbit.ocm.query.impl.QueryManagerImpl;
-import org.apache.jackrabbit.ocm.repository.RepositoryUtil;
 import org.apache.jackrabbit.ocm.version.Version;
 import org.apache.jackrabbit.ocm.version.VersionIterator;
 /**
@@ -120,7 +119,6 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
 			this.requestObjectCache = new RequestObjectCacheImpl();        
 			this.objectConverter = new ObjectConverterImpl(mapper, converterProvider, new ProxyManagerImpl(), requestObjectCache);
 			
-			RepositoryUtil.setupSession(session);
 		} 
         catch (RepositoryException e) 
         {
@@ -148,8 +146,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
 			this.queryManager = new QueryManagerImpl(mapper, atomicTypeConverters, session.getValueFactory());
 			this.requestObjectCache = new RequestObjectCacheImpl();        
 			this.objectConverter = new ObjectConverterImpl(mapper, converterProvider, new ProxyManagerImpl(), requestObjectCache);
-			
-			RepositoryUtil.setupSession(session);
+						
 		} 
         catch (RepositoryException e) 
         {
@@ -178,7 +175,6 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
 			this.requestObjectCache = new RequestObjectCacheImpl();        
 			this.objectConverter = new ObjectConverterImpl(mapper, converterProvider, new ProxyManagerImpl(), requestObjectCache);
 			
-			RepositoryUtil.setupSession(session);
 		} 
         catch (RepositoryException e) 
         {
@@ -207,8 +203,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
         this.objectConverter = converter;
         this.queryManager = queryManager;
         this.requestObjectCache = requestObjectCache;
-        
-        RepositoryUtil.setupSession(session);
+                
     }
     
     /**
