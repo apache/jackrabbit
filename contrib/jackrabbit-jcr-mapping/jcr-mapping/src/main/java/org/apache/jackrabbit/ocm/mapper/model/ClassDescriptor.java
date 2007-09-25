@@ -37,9 +37,9 @@ import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 public class ClassDescriptor {
-	
+
 	private static final Log log = LogFactory.getLog(ClassDescriptor.class);
-	
+
     private static final String NODETYPE_PER_HIERARCHY = "nodetypeperhierarchy";
     private static final String NODETYPE_PER_CONCRETECLASS = "nodetypeperconcreteclass";
 
@@ -55,22 +55,22 @@ public class ClassDescriptor {
     private FieldDescriptor pathFieldDescriptor;
     private FieldDescriptor uuidFieldDescriptor;
 
-    private Map fieldDescriptors = new HashMap();    
-    private Map beanDescriptors = new HashMap();        
+    private Map fieldDescriptors = new HashMap();
+    private Map beanDescriptors = new HashMap();
     private Map collectionDescriptors = new HashMap();
-        
+
     private Map fieldNames = new HashMap();
 
     private String superClassName;
-    private String extendsStrategy;    
-    private boolean isAbstract = false;    
+    private String extendsStrategy;
+    private boolean isAbstract = false;
     private boolean hasDescendant = false;
-    private boolean hasDiscriminator = true; 
-   
-       
+    private boolean hasDiscriminator = true;
+
+
     private boolean isInterface=false;
     private List interfaces = new ArrayList();
-    
+
     public void setAbstract(boolean flag) {
         this.isAbstract = flag;
     }
@@ -82,11 +82,11 @@ public class ClassDescriptor {
     public void setInterface(boolean flag) {
     	   this.isInterface = flag;
     }
-       
+
     public boolean isInterface() {
     	    return isInterface;
     }
-    
+
     public boolean hasInterfaces()
     {
     	   return this.interfaces.size() > 0;
@@ -94,13 +94,13 @@ public class ClassDescriptor {
 
     public void setDiscriminator(boolean flag)
     {
-        this.hasDiscriminator = flag;	
+        this.hasDiscriminator = flag;
     }
-    
-    public boolean hasDiscriminator() {        
+
+    public boolean hasDiscriminator() {
  	   return this.hasDiscriminator;
- }    
-    
+ }
+
     public boolean usesNodeTypePerHierarchyStrategy() {
         return NODETYPE_PER_HIERARCHY.equals(this.extendsStrategy);
     }
@@ -118,7 +118,7 @@ public class ClassDescriptor {
     /**
      * @param className The className to set.
      */
-    public void setClassName(String className) {    	   
+    public void setClassName(String className) {
         this.className = className;
     }
 
@@ -161,9 +161,9 @@ public class ClassDescriptor {
 
     public void addImplementDescriptor(ImplementDescriptor implementDescriptor)
     {
-        interfaces.add(implementDescriptor.getInterfaceName());	
+        interfaces.add(implementDescriptor.getInterfaceName());
     }
-    
+
     /**
      * Get the FieldDescriptor to used for a specific java bean attribute
      * @param fieldName The java bean attribute name
@@ -273,13 +273,13 @@ public class ClassDescriptor {
         }
 
         return null;
-    }    
+    }
 
     /**
      * Check if this class has an ID
      * @return true if the class has an ID
      */
-    public boolean hasIdField() {        
+    public boolean hasIdField() {
         return (this.idFieldDescriptor != null && ! this.idFieldDescriptor.equals(""));
     }
 
@@ -292,12 +292,12 @@ public class ClassDescriptor {
         String jcrName =  (String) this.fieldNames.get(fieldName);
         if (this.isInterface && jcrName == null)
         {
-            return this.getJcrNameFromDescendants(this, fieldName);          
+            return this.getJcrNameFromDescendants(this, fieldName);
         }
-        
+
         return jcrName;
     }
-    
+
     private String getJcrNameFromDescendants(ClassDescriptor classDescriptor, String fieldName )
     {
         Iterator  descendants = classDescriptor.getDescendantClassDescriptors().iterator();
@@ -313,9 +313,9 @@ public class ClassDescriptor {
         }
         return null;
 
-    	
+
     }
-    
+
     public Map getFieldNames() {
         return this.fieldNames;
     }
@@ -338,7 +338,7 @@ public class ClassDescriptor {
     	{
     	   this.jcrSuperTypes = superTypes;
     	}
-    	
+
     }
 
     /**
@@ -360,7 +360,7 @@ public class ClassDescriptor {
             jcrMixinTypes = mixinTypes[0].split(" *, *");
         }
     }
-    public void setJcrMixinTypes(String mixinTypes) {                
+    public void setJcrMixinTypes(String mixinTypes) {
     	if (mixinTypes != null && ! mixinTypes.equals(""))
     	{
     	    jcrMixinTypes = mixinTypes.split(" *, *");
@@ -384,7 +384,7 @@ public class ClassDescriptor {
      * Revisit information in this descriptor and fills in more.
      */
     public void afterPropertiesSet() {
-        validateClassName();   
+        validateClassName();
         lookupSuperDescriptor();
         lookupInheritanceSettings();
 
@@ -393,12 +393,12 @@ public class ClassDescriptor {
 	private void validateClassName() {
 		try {
             ReflectionUtils.forName(this.className);
-		} catch (JcrMappingException e) {			
+		} catch (JcrMappingException e) {
 			 throw new JcrMappingException("Class used in descriptor not found : " + className);
 		}
 	}
 
-	
+
 	private void lookupSuperDescriptor() {
         if (null != superClassDescriptor) {
             this.hasDiscriminator = superClassDescriptor.hasDiscriminator();
@@ -406,10 +406,10 @@ public class ClassDescriptor {
             {
                 this.fieldDescriptors = mergeFields(this.fieldDescriptors, this.superClassDescriptor.getFieldDescriptors());
                 this.beanDescriptors = mergeBeans(this.beanDescriptors, this.superClassDescriptor.getBeanDescriptors());
-                this.collectionDescriptors = mergeCollections(this.collectionDescriptors, this.superClassDescriptor.getCollectionDescriptors());            
+                this.collectionDescriptors = mergeCollections(this.collectionDescriptors, this.superClassDescriptor.getCollectionDescriptors());
                 this.fieldNames.putAll(this.superClassDescriptor.getFieldNames());
             }
-        
+
         }
     }
 
@@ -423,7 +423,7 @@ public class ClassDescriptor {
             }
         }
     }
-	
+
 
     /**
      * @return return the super class name if defined in mapping, or
@@ -449,29 +449,29 @@ public class ClassDescriptor {
     public ClassDescriptor getSuperClassDescriptor() {
         return superClassDescriptor;
     }
-    
+
     public Collection getDescendantClassDescriptors() {
     	     return this.descendantClassDescriptors;
     }
-    
+
     /**
      * If the node type per concrete class strategy is used, we need to find a descendant class descriptor assigned to a node type
      * This method is not used in other situation.
-     * 
+     *
      * @param nodeType the node type for which the classdescriptor is required
      * @return the classdescriptor found or null
-     * 
-     * @todo : maybe we have to review this implementation to have better performance. 
+     *
+     * @todo : maybe we have to review this implementation to have better performance.
      */
     public ClassDescriptor getDescendantClassDescriptor(String nodeType) {
         Iterator iterator = this.descendantClassDescriptors.iterator();
         while (iterator.hasNext()) {
             ClassDescriptor descendantClassDescriptor = (ClassDescriptor) iterator.next();
-  
-            if (descendantClassDescriptor.getJcrType().equals(nodeType)) {
+
+            if (nodeType.equals(descendantClassDescriptor.getJcrType())) {
                 return descendantClassDescriptor;
             }
-  
+
             if (descendantClassDescriptor.hasDescendants()) {
                 ClassDescriptor classDescriptor = descendantClassDescriptor.getDescendantClassDescriptor(nodeType);
                 if (classDescriptor != null) {
@@ -481,12 +481,12 @@ public class ClassDescriptor {
         }
         return null;
     }
-    
+
     public void addDescendantClassDescriptor(ClassDescriptor classDescriptor) {
     	     this.descendantClassDescriptors.add(classDescriptor);
     	     this.hasDescendant = true;
     }
-    
+
     public boolean hasDescendants() {
     	    return this.hasDescendant;
     }
@@ -498,13 +498,13 @@ public class ClassDescriptor {
         this.superClassDescriptor= superClassDescriptor;
         superClassDescriptor.addDescendantClassDescriptor(this);
     }
-   
+
 
     public Collection getImplements()
     {
     	    return interfaces;
     }
-    
+
     private Map mergeFields(Map existing, Collection superSource) {
         if (null == superSource) {
             return existing;
@@ -524,7 +524,7 @@ public class ClassDescriptor {
         return merged;
     }
 
-    
+
     private Map mergeBeans(Map existing, Collection superSource) {
         if (null == superSource) {
             return existing;
@@ -543,7 +543,7 @@ public class ClassDescriptor {
 
         return merged;
     }
-    
+
     private Map mergeCollections(Map existing, Collection superSource) {
         if (null == superSource) {
             return existing;
@@ -558,10 +558,10 @@ public class ClassDescriptor {
         }
 
         return merged;
-    }    
-    
-       
-    
+    }
+
+
+
 	public String toString() {
 		return "Class Descriptor : " +  this.getClassName();
 	}
