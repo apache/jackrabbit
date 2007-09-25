@@ -58,7 +58,7 @@ class LockOperation extends AbstractClusterOperation {
         this.nodeId = nodeId;
         this.deep = deep;
         this.owner = owner;
-        isLock = false;
+        isLock = true;
     }
 
     /**
@@ -75,7 +75,7 @@ class LockOperation extends AbstractClusterOperation {
         super(clusterNode, workspace, record);
 
         this.nodeId = nodeId;
-        this.isLock = false;
+        isLock = false;
     }
 
     /**
