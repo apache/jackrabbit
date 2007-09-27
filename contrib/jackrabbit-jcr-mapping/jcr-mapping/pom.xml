@@ -69,6 +69,35 @@
 	</build>
 
 	<!-- ====================================================================== -->
+	<!-- P R O F I L E S                                                        -->
+	<!-- ====================================================================== -->
+    <profiles>
+        <profile>
+            <id>jdk1.4</id>
+            <build>
+                <finalName>
+                    ${artifactId}-jdk1.4
+                </finalName>
+                <plugins>
+                    <plugin>
+                        <inherited>true</inherited>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <exclude>
+                                    org/apache/jackrabbit/ocm/mapper/impl/annotation/**
+                                </exclude>
+                            </excludes>
+                            <target>1.4</target>
+                            <source>1.4</source>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+	<!-- ====================================================================== -->
 	<!-- D E P E N D E N C I E S                                                -->
 	<!-- ====================================================================== -->
 	<dependencies>
