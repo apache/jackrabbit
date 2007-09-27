@@ -22,17 +22,12 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.util.List;
 
-import org.apache.jackrabbit.ocm.mapper.impl.annotation.Bean;
-import org.apache.jackrabbit.ocm.mapper.impl.annotation.Collection;
-import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
-import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 import org.apache.jackrabbit.ocm.mapper.DescriptorReader;
 import org.apache.jackrabbit.ocm.mapper.model.BeanDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.FieldDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.MappingDescriptor;
-import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
 
 /**
  * Helper class that reads the xml mapping file and load all class descriptors into memory (object graph)
@@ -42,8 +37,8 @@ import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
  */
 public class AnnotationDescriptorReader implements DescriptorReader
 {
-	List<String> annotatedClassNames;
-    public AnnotationDescriptorReader(List<String> annotatedClassNames)
+	List<Class> annotatedClassNames;
+    public AnnotationDescriptorReader(List<Class> annotatedClassNames)
     {
    	     this.annotatedClassNames = annotatedClassNames;
     }
@@ -53,8 +48,8 @@ public class AnnotationDescriptorReader implements DescriptorReader
     public MappingDescriptor loadClassDescriptors()
 	{
 		MappingDescriptor mappingDescriptor = new MappingDescriptor();	
-		for (String className : annotatedClassNames) {
-			Class clazz = ReflectionUtils.forName(className);
+		for (Class clazz : annotatedClassNames) {
+			
 			ClassDescriptor classDescriptor = buildClassDescriptor(mappingDescriptor, clazz);
 			mappingDescriptor.addClassDescriptor(classDescriptor);
 		}
@@ -68,9 +63,21 @@ public class AnnotationDescriptorReader implements DescriptorReader
 		ClassDescriptor descriptor = new ClassDescriptor();
 		descriptor.setClassName(clazz.getName());
 		descriptor.setJcrType(annotationNode.jcrType());
-		descriptor.setJcrSuperTypes(annotationNode.jcrSuperTypes());		
-		descriptor.setJcrMixinTypes(annotationNode.jcrMixinTypes());
-		descriptor.setExtend(annotationNode.extend());		
+		if (annotationNode.jcrSuperTypes() != null && ! annotationNode.jcrSuperTypes().equals(""))
+		{
+		     descriptor.setJcrSuperTypes(annotationNode.jcrSuperTypes());
+		}
+		
+		if (annotationNode.jcrMixinTypes() != null && ! annotationNode.jcrMixinTypes().equals(""))
+		{		
+		     descriptor.setJcrMixinTypes(annotationNode.jcrMixinTypes());
+		}
+		
+		if (annotationNode.extend() != null && ! annotationNode.extend().equals(""))
+		{
+		     descriptor.setExtend(annotationNode.extend());
+		}
+		
 		descriptor.setAbstract(annotationNode.isAbstract());
 		descriptor.setInterface(clazz.isInterface());
 		
@@ -203,15 +210,33 @@ public class AnnotationDescriptorReader implements DescriptorReader
 				fieldDescriptor.setPath(jcrProperty.path());
 				fieldDescriptor.setUuid(jcrProperty.uuid());
 				
-				// It is not possible to set a null value into a annotation attribute.
-				// If the converter == Object.class, it shoudl be considered as null
+				// It is not possible to set a null value into an annotation attribute.
+				// If the converter == Object.class, it should be considered as null
 				if (! jcrProperty.converter().equals(Object.class))
 				{
 				    fieldDescriptor.setConverter(jcrProperty.converter().getName());
 				}
-				fieldDescriptor.setJcrDefaultValue(jcrProperty.jcrDefaultValue());			
-				fieldDescriptor.setJcrValueConstraints(jcrProperty.jcrDefaultValue());
-				fieldDescriptor.setJcrType(jcrProperty.jcrType());
+				
+				// It is not possible to set a null value into an annotation attribute.
+				// If the jcrDefaultValue value is an empty string => it should be considered as null
+				if ((jcrProperty.jcrDefaultValue() != null) && (!jcrProperty.jcrDefaultValue().equals("")))
+				{
+				     fieldDescriptor.setJcrDefaultValue(jcrProperty.jcrDefaultValue());
+				}
+				
+				// It is not possible to set a null value into an annotation attribute.
+				// If the jcrValueConstraints value is an empty string => it should be considered as null
+				if ((jcrProperty.jcrValueConstraints() != null) && (!jcrProperty.jcrValueConstraints().equals("")))
+				{	
+				     fieldDescriptor.setJcrValueConstraints(jcrProperty.jcrValueConstraints());
+				}
+				
+				// It is not possible to set a null value into an annotation attribute.
+				// If the jcrProperty value is an empty string => it should be considered as null
+				if ((jcrProperty.jcrType() != null) && (!jcrProperty.jcrType().equals("")))
+				{
+				    fieldDescriptor.setJcrType(jcrProperty.jcrType());
+				}
 				
 				fieldDescriptor.setJcrAutoCreated(jcrProperty.jcrAutoCreated());
 				fieldDescriptor.setJcrMandatory(jcrProperty.jcrMandatory());

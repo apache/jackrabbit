@@ -27,7 +27,7 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-import org.apache.jackrabbit.ocm.TestBase;
+import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.testmodel.A;
 import org.apache.jackrabbit.ocm.testmodel.Atomic;
@@ -40,7 +40,7 @@ import org.apache.jackrabbit.ocm.testmodel.C;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerCopyMoveTest extends TestBase
+public class ObjectContentManagerCopyMoveTest extends DigesterTestBase
 {
 	private final static Log log = LogFactory.getLog(ObjectContentManagerCopyMoveTest.class);
 	

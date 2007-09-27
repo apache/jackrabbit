@@ -14,27 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.ocm.mapper.impl.annotation;
+package org.apache.jackrabbit.ocm.testmodel.auto.impl;
 
-import java.util.List;
+import org.apache.jackrabbit.ocm.testmodel.auto.Content;
 
-import org.apache.jackrabbit.ocm.mapper.Mapper;
-import org.apache.jackrabbit.ocm.mapper.impl.AbstractMapperImpl;
+
+
+
 
 /**
- * An implementation of the OCM mapper that builds class descriptors based on
- * the use of annotations on the underlying classes
- * 
- * @author Philip Dodds
+ * Content object
+ *
+ * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  * 
  */
-public class AnnotationMapperImpl extends AbstractMapperImpl implements Mapper {
-
-	
-	public AnnotationMapperImpl(List<Class> annotatedClassNames)
-	{		
-        descriptorReader = new AnnotationDescriptorReader(annotatedClassNames);
-        this.buildMapper();
-	}
-
+public abstract class ContentImpl  extends CmsObjectImpl implements Content
+{
 }
+
+

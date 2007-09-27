@@ -117,6 +117,7 @@ public class DigesterDescriptorReader implements DescriptorReader
 			for (Iterator iter = configFileStreams.iterator(); iter.hasNext();) 
 			{
 				InputStream xmlMappingDescriptorFile = (InputStream) iter.next();
+				
 				Digester digester = new Digester();
 				digester.setValidating(this.validating);
 				if (null != this.dtdResolver) 

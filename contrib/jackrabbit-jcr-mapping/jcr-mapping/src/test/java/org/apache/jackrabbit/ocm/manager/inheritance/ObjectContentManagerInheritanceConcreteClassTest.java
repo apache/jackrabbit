@@ -24,7 +24,7 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-import org.apache.jackrabbit.ocm.TestBase;
+import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.query.Filter;
@@ -45,7 +45,7 @@ import org.apache.jackrabbit.ocm.testmodel.interfaces.Folder;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerInheritanceConcreteClassTest extends TestBase {
+public class ObjectContentManagerInheritanceConcreteClassTest extends DigesterTestBase {
 	private final static Log log = LogFactory.getLog(ObjectContentManagerInheritanceConcreteClassTest.class);
 
 	/**

@@ -28,7 +28,7 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-import org.apache.jackrabbit.ocm.TestBase;
+import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.query.Filter;
 import org.apache.jackrabbit.ocm.query.Query;
@@ -40,7 +40,7 @@ import org.apache.jackrabbit.ocm.testmodel.Atomic;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerAtomicQueryTest extends TestBase
+public class ObjectContentManagerAtomicQueryTest extends DigesterTestBase
 {
 	private final static Log log = LogFactory.getLog(ObjectContentManagerAtomicQueryTest.class);
 	private Date date = new Date();

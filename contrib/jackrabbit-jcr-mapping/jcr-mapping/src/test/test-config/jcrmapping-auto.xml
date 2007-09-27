@@ -5,25 +5,25 @@
 
      <!-- INTERFACE MAPPING   -->	
      
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject"  interface="true" discriminator="false"
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.auto.CmsObject"  interface="true" discriminator="false"
 	                                   jcrType="ocm:cmsobject" />
 
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.interfaces.Folder"  interface="true" discriminator="false" 
-	                                   extend="org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject"  jcrType="ocm:folder" />
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.auto.Folder"  interface="true" discriminator="false" 
+	                                   extend="org.apache.jackrabbit.ocm.testmodel.auto.CmsObject"  jcrType="ocm:folder" />
 
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.interfaces.Content"  interface="true" discriminator="false" 
-	                                   extend="org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject"  jcrType="ocm:content"  />
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.auto.Content"  interface="true" discriminator="false" 
+	                                   extend="org.apache.jackrabbit.ocm.testmodel.auto.CmsObject"  jcrType="ocm:content"  />
 	                                   
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.interfaces.Document"  interface="true" discriminator="false" 
-	                                   extend="org.apache.jackrabbit.ocm.testmodel.interfaces.Content"  jcrType="ocm:document"  />
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.auto.Document"  interface="true" discriminator="false" 
+	                                   extend="org.apache.jackrabbit.ocm.testmodel.auto.Content"  jcrType="ocm:document"  />
 	                                   
 	                                   
 	
      <!-- CLASS MAPPING. The FolderImpl has  the autoRetrieve, autoUpdate & autoInsert parameters set to false  -->	
 
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.CmsObjectImpl" jcrType="ocm:cmsobjectimpl"  
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.auto.impl.CmsObjectImpl" jcrType="ocm:cmsobjectimpl"  
 	                                   discriminator="false" abstract="true" >
-		<implement-descriptor interfaceName="org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject" />	  	                                    
+		<implement-descriptor interfaceName="org.apache.jackrabbit.ocm.testmodel.auto.CmsObject" />	  	                                    
 		
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="name" jcrName="ocm:name"  id="true" />
@@ -32,28 +32,28 @@
 
 	</class-descriptor>     
 
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.FolderImpl" jcrType="ocm:folderimpl" 
-	                                    extend="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.CmsObjectImpl" discriminator="false"  >
-		<implement-descriptor interfaceName="org.apache.jackrabbit.ocm.testmodel.interfaces.Folder" />	  		                                    
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.auto.impl.FolderImpl" jcrType="ocm:folderimpl" 
+	                                    extend="org.apache.jackrabbit.ocm.testmodel.auto.impl.CmsObjectImpl" discriminator="false"  >
+		<implement-descriptor interfaceName="org.apache.jackrabbit.ocm.testmodel.auto.Folder" />	  		                                    
 		<collection-descriptor fieldName="children" proxy="true" autoUpdate="false" autoInsert="false" autoRetrieve="false" 
-		                       elementClassName="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.CmsObjectImpl" 
+		                       elementClassName="org.apache.jackrabbit.ocm.testmodel.auto.impl.CmsObjectImpl" 
 		                       collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl" />
 	</class-descriptor >	
 
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.ContentImpl" jcrType="ocm:contentimpl" abstract="true"
-	                                   extend="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.CmsObjectImpl" discriminator="false"  >
-       		<implement-descriptor interfaceName="org.apache.jackrabbit.ocm.testmodel.interfaces.Content" />	  		                                    
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.auto.impl.ContentImpl" jcrType="ocm:contentimpl" abstract="true"
+	                                   extend="org.apache.jackrabbit.ocm.testmodel.auto.impl.CmsObjectImpl" discriminator="false"  >
+       		<implement-descriptor interfaceName="org.apache.jackrabbit.ocm.testmodel.auto.Content" />	  		                                    
 	</class-descriptor>	
 		
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.DocumentImpl" jcrType="ocm:documentimpl" 
-	                                    extend="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.ContentImpl" discriminator="false" >
-		<implement-descriptor interfaceName="org.apache.jackrabbit.ocm.testmodel.interfaces.Document" />	  		                                    	                                    
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.auto.impl.DocumentImpl" jcrType="ocm:documentimpl" 
+	                                    extend="org.apache.jackrabbit.ocm.testmodel.auto.impl.ContentImpl" discriminator="false" >
+		<implement-descriptor interfaceName="org.apache.jackrabbit.ocm.testmodel.auto.Document" />	  		                                    	                                    
 		<field-descriptor fieldName="contentType" jcrName="ocm:contenttype" />  
 		<field-descriptor fieldName="size" jcrName="ocm:size" />  	
 		<bean-descriptor fieldName="documentStream" jcrName="ocm:documentstream"  autoUpdate="false" autoInsert="false" autoRetrieve="false"  />			
 	</class-descriptor >	
 
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.DocumentStream" jcrType="ocm:documentstream"  discriminator="false"  >
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.auto.impl.DocumentStream" jcrType="ocm:documentstream"  discriminator="false"  >
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="encoding" jcrName="ocm:encoding" />
 		<field-descriptor fieldName="content" jcrName="ocm:binarycontent" />

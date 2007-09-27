@@ -23,23 +23,24 @@ import junit.framework.TestSuite;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.ocm.AnnotationTestBase;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-import org.apache.jackrabbit.ocm.TestBase;
+import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.testmodel.Default;
 
 /**
  * Test Default value assignement
  */
-public class DefaultValueTest extends TestBase
+public class AnnotationDefaultValueTest extends AnnotationTestBase
 {
-    private final static Log log = LogFactory.getLog(DefaultValueTest.class);
+    private final static Log log = LogFactory.getLog(AnnotationDefaultValueTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public DefaultValueTest(String testName) throws Exception
+    public AnnotationDefaultValueTest(String testName) throws Exception
     {
         super(testName);
     }
@@ -47,7 +48,7 @@ public class DefaultValueTest extends TestBase
     public static Test suite()
     {
         // All methods starting with "test" will be executed in the test suite.
-        return new RepositoryLifecycleTestSetup(new TestSuite(DefaultValueTest.class));
+        return new RepositoryLifecycleTestSetup(new TestSuite(AnnotationDefaultValueTest.class));
     }
 
 

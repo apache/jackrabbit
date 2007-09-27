@@ -25,7 +25,7 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-import org.apache.jackrabbit.ocm.TestBase;
+import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManagedHashMap;
 import org.apache.jackrabbit.ocm.testmodel.Residual;
@@ -36,7 +36,7 @@ import org.apache.jackrabbit.ocm.testmodel.Residual;
  * @author <a href="mailto:fmeschbe[at]apache[dot]com">Felix Meschberger</a>
  * 
  */
-public class ResidualPropertiesCollectionConverterImplTest extends TestBase
+public class ResidualPropertiesCollectionConverterImplTest extends DigesterTestBase
 {
     private final static Log log = LogFactory.getLog(ResidualPropertiesCollectionConverterImplTest.class);
 

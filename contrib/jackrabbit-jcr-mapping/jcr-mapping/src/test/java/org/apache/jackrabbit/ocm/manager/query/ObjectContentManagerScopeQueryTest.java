@@ -29,7 +29,7 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-import org.apache.jackrabbit.ocm.TestBase;
+import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl;
@@ -45,7 +45,7 @@ import org.apache.jackrabbit.ocm.testmodel.Paragraph;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerScopeQueryTest extends TestBase
+public class ObjectContentManagerScopeQueryTest extends DigesterTestBase
 {
     private final static Log log = LogFactory.getLog(ObjectContentManagerScopeQueryTest.class);
 

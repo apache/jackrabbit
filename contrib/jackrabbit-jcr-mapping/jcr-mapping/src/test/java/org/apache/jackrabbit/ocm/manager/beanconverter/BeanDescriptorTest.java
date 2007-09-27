@@ -27,7 +27,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-import org.apache.jackrabbit.ocm.TestBase;
+import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.testmodel.A;
 import org.apache.jackrabbit.ocm.testmodel.B;
@@ -43,7 +43,7 @@ import org.apache.jackrabbit.ocm.testmodel.Paragraph;
  * 
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
-public class BeanDescriptorTest extends TestBase {
+public class BeanDescriptorTest extends DigesterTestBase {
 
     
     public BeanDescriptorTest(String testname) {
@@ -58,7 +58,7 @@ public class BeanDescriptorTest extends TestBase {
     
     
     /**
-     * @see org.apache.jackrabbit.ocm.TestBase#setUp()
+     * @see org.apache.jackrabbit.ocm.DigesterTestBase#setUp()
      */
     protected void setUp() throws Exception {
         super.setUp();
@@ -68,7 +68,7 @@ public class BeanDescriptorTest extends TestBase {
 
     
     /**
-     * @see org.apache.jackrabbit.ocm.TestBase#tearDown()
+     * @see org.apache.jackrabbit.ocm.DigesterTestBase#tearDown()
      */
     public void tearDown() throws Exception {
         clean();

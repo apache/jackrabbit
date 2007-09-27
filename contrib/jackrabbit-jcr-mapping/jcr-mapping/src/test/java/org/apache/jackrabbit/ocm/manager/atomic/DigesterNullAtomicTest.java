@@ -26,7 +26,7 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-import org.apache.jackrabbit.ocm.TestBase;
+import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.testmodel.Atomic;
 
@@ -35,15 +35,15 @@ import org.apache.jackrabbit.ocm.testmodel.Atomic;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class NullAtomicTest extends TestBase
+public class DigesterNullAtomicTest extends DigesterTestBase
 {
-    private final static Log log = LogFactory.getLog(NullAtomicTest.class);
+    private final static Log log = LogFactory.getLog(DigesterNullAtomicTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public NullAtomicTest(String testName)
+    public DigesterNullAtomicTest(String testName)
     {
         super(testName);
     }
@@ -51,7 +51,7 @@ public class NullAtomicTest extends TestBase
     public static Test suite()
     {
         // All methods starting with "test" will be executed in the test suite.
-        return new RepositoryLifecycleTestSetup(new TestSuite(NullAtomicTest.class));
+        return new RepositoryLifecycleTestSetup(new TestSuite(DigesterNullAtomicTest.class));
     }
     
 

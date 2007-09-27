@@ -33,7 +33,7 @@ public class AllTests {
 
     public static Test buildSuite() throws Exception {
         TestSuite suite= new TestSuite("Jackrabbit OCM Tests");
-        suite.addTest(org.apache.jackrabbit.ocm.mapper.AllTests.buildSuite());     
+             
         suite.addTest(org.apache.jackrabbit.ocm.manager.atomic.AllTests.buildSuite());
         suite.addTest(org.apache.jackrabbit.ocm.manager.auto.AllTests.buildSuite());
         suite.addTest(org.apache.jackrabbit.ocm.manager.basic.AllTests.buildSuite());
@@ -46,7 +46,8 @@ public class AllTests {
         suite.addTest(org.apache.jackrabbit.ocm.manager.proxy.AllTests.buildSuite());
         suite.addTest(org.apache.jackrabbit.ocm.manager.query.AllTests.buildSuite());
         suite.addTest(org.apache.jackrabbit.ocm.manager.uuid.AllTests.buildSuite());        
-        suite.addTest(org.apache.jackrabbit.ocm.manager.version.AllTests.buildSuite());        
+        suite.addTest(org.apache.jackrabbit.ocm.manager.version.AllTests.buildSuite());
+        suite.addTest(org.apache.jackrabbit.ocm.mapper.AllTests.buildSuite());
         suite.addTest(org.apache.jackrabbit.ocm.querymanager.AllTests.buildSuite());
         suite.addTest(org.apache.jackrabbit.ocm.repository.AllTests.buildSuite());
         

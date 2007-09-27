@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.ocm.manager.auto;
 
+//import javax.jcr.Repository;
+//import javax.jcr.UnsupportedRepositoryOperationException;
+
 import javax.jcr.Repository;
 import javax.jcr.UnsupportedRepositoryOperationException;
 
@@ -24,23 +27,23 @@ import junit.framework.TestSuite;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-import org.apache.jackrabbit.ocm.TestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl;
 import org.apache.jackrabbit.ocm.repository.RepositoryUtil;
-import org.apache.jackrabbit.ocm.testmodel.inheritance.impl.DocumentImpl;
-import org.apache.jackrabbit.ocm.testmodel.inheritance.impl.DocumentStream;
-import org.apache.jackrabbit.ocm.testmodel.inheritance.impl.FolderImpl;
-import org.apache.jackrabbit.ocm.testmodel.interfaces.Document;
-import org.apache.jackrabbit.ocm.testmodel.interfaces.Folder;
+import org.apache.jackrabbit.ocm.testmodel.auto.Document;
+import org.apache.jackrabbit.ocm.testmodel.auto.Folder;
+import org.apache.jackrabbit.ocm.testmodel.auto.impl.DocumentImpl;
+import org.apache.jackrabbit.ocm.testmodel.auto.impl.DocumentStream;
+import org.apache.jackrabbit.ocm.testmodel.auto.impl.FolderImpl;
 
 /**
  * Test autoupdate setting
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerAutoTest extends TestBase {
+public class ObjectContentManagerAutoTest extends DigesterTestBase {
 	private final static Log log = LogFactory.getLog(ObjectContentManagerAutoTest.class);
 
 	/**
@@ -147,11 +150,9 @@ public class ObjectContentManagerAutoTest extends TestBase {
 	protected void initObjectContentManager() throws UnsupportedRepositoryOperationException, javax.jcr.RepositoryException
 	{
 		Repository repository = RepositoryUtil.getRepository("repositoryTest");
-		String[] files = { "./src/test/test-config/jcrmapping-auto.xml"};
+		String[] files = {"./src/test/test-config/jcrmapping-auto.xml"};
 		session = RepositoryUtil.login(repository, "superuser", "superuser");
-
 		ocm = new ObjectContentManagerImpl(session, files);
 		
 	}	
-	
 }
