@@ -135,6 +135,13 @@
     </childNodeDefinition>        
   </nodeType>
   
+   <nodeType name="ocm:documentextimpl" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>ocm:documentimpl</supertype>
+    </supertypes>    
+    <propertyDefinition name="ocm:extinfo" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+  </nodeType>
+  
   <nodeType name="ocm:folderimpl" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
     <supertypes>
       <supertype>ocm:cmsobjectimpl</supertype>       
