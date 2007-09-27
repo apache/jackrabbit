@@ -25,7 +25,7 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-import org.apache.jackrabbit.ocm.TestBase;
+import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.lock.Lock;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.testmodel.A;
@@ -38,7 +38,7 @@ import org.apache.jackrabbit.ocm.testmodel.Lockable;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerLockTest extends TestBase
+public class ObjectContentManagerLockTest extends DigesterTestBase
 {
     private final static Log log = LogFactory.getLog(ObjectContentManagerLockTest.class);
 

@@ -19,7 +19,6 @@ package org.apache.jackrabbit.ocm.mapper.model;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -56,6 +55,12 @@ public class MappingDescriptor {
      */
     public void addClassDescriptor(ClassDescriptor classDescriptor) {
     	
+    	
+    	if (classDescriptorsByClassName.get(classDescriptor.getClassName()) != null)
+    	{
+    	    log.warn("Duplicate classdescriptor for : " + classDescriptor.getClassName() + ". The mapping setting will be overriden");	
+    	}
+    	
         log.debug("Adding the class descriptor for : " + classDescriptor.getClassName());	
         if (null != this.packageName && !"".equals(this.packageName)) {
             classDescriptor.setClassName(this.packageName + "." + classDescriptor.getClassName());
@@ -69,9 +74,14 @@ public class MappingDescriptor {
         
         if (null != classDescriptor.getJcrType() && !  "".equals(classDescriptor.getJcrType()) && 
         		 ! ManagerConstant.NT_UNSTRUCTURED.equals(classDescriptor.getJcrType()))
-        	 {
-             classDescriptorsByNodeType.put(classDescriptor.getJcrType(), classDescriptor);	
-        	 }
+        {
+        	if ((classDescriptorsByNodeType.get(classDescriptor.getClassName()) != null) &&
+        		classDescriptor.usesNodeTypePerConcreteClassStrategy()	)
+        	{
+        	    log.warn("Duplicate classdescriptor for node type : " + classDescriptor.getJcrType());	
+        	}
+            classDescriptorsByNodeType.put(classDescriptor.getJcrType(), classDescriptor);	
+        }
         classDescriptor.setMappingDescriptor(this);
     }
 

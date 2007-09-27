@@ -26,25 +26,25 @@ import junit.framework.TestSuite;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.ocm.AnnotationTestBase;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-import org.apache.jackrabbit.ocm.TestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.testmodel.Atomic;
 
 /**
- * Test Atomic perisstence fields
+ * Test atomic persistence fields
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class AtomicTest extends TestBase
+public class AnnotationAtomicTest extends AnnotationTestBase
 {
-    private final static Log log = LogFactory.getLog(AtomicTest.class);
+    private final static Log log = LogFactory.getLog(AnnotationAtomicTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public AtomicTest(String testName) throws Exception
+    public AnnotationAtomicTest(String testName) throws Exception
     {
         super(testName);
     }
@@ -52,7 +52,7 @@ public class AtomicTest extends TestBase
     public static Test suite()
     {
         // All methods starting with "test" will be executed in the test suite.
-        return new RepositoryLifecycleTestSetup(new TestSuite(AtomicTest.class));
+        return new RepositoryLifecycleTestSetup(new TestSuite(AnnotationAtomicTest.class));
     }
 
 

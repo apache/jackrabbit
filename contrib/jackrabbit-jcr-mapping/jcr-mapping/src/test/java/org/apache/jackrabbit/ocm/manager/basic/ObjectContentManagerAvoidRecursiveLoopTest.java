@@ -27,7 +27,7 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-import org.apache.jackrabbit.ocm.TestBase;
+import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl;
 import org.apache.jackrabbit.ocm.repository.RepositoryUtil;
@@ -42,7 +42,7 @@ import org.apache.jackrabbit.ocm.testmodel.crossreference.B;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com>Christophe Lombart</a>
  */
-public class ObjectContentManagerAvoidRecursiveLoopTest extends TestBase
+public class ObjectContentManagerAvoidRecursiveLoopTest extends DigesterTestBase
 {
     private final static Log log = LogFactory.getLog(ObjectContentManagerAvoidRecursiveLoopTest.class);
 

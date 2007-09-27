@@ -60,10 +60,10 @@ import org.xml.sax.ContentHandler;
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  * @version $Id: Exp $
  */
-public abstract class TestBase extends TestCase
+public abstract class AbstractTestBase extends TestCase
 {
 
-	private final static Log log = LogFactory.getLog(TestBase.class);
+	protected final static Log log = LogFactory.getLog(AbstractTestBase.class);
 	
 	protected Session session;
 
@@ -81,7 +81,7 @@ public abstract class TestBase extends TestCase
 	 * @param testName
 	 *            The test case name.
 	 */
-	public TestBase(String testName)
+	public AbstractTestBase(String testName)
 	{
 		super(testName);
 	}
@@ -142,6 +142,8 @@ public abstract class TestBase extends TestCase
 		}
 	}
 
+	protected abstract void initObjectContentManager() throws UnsupportedRepositoryOperationException, javax.jcr.RepositoryException;
+	
     protected void registerNodeTypes(Session session) 
     throws InvalidNodeTypeDefException, javax.jcr.RepositoryException, IOException {
         InputStream xml = new FileInputStream(
@@ -167,33 +169,7 @@ public abstract class TestBase extends TestCase
 
         }
     }
-    
-	protected void initObjectContentManager() throws UnsupportedRepositoryOperationException, javax.jcr.RepositoryException
-	{
-		Repository repository = RepositoryUtil.getRepository("repositoryTest");
-		String[] files = { "./src/test/test-config/jcrmapping.xml", 
-						   "./src/test/test-config/jcrmapping-proxy.xml",
-						   "./src/test/test-config/jcrmapping-atomic.xml",
-                           "./src/test/test-config/jcrmapping-default.xml",
-                           "./src/test/test-config/jcrmapping-beandescriptor.xml",
-                           "./src/test/test-config/jcrmapping-inheritance.xml",
-                           "./src/test/test-config/jcrmapping-jcrnodetypes.xml", 
-                           "./src/test/test-config/jcrmapping-uuid.xml"};
-		session = RepositoryUtil.login(repository, "superuser", "superuser");
-		ocm = new ObjectContentManagerImpl(session, files);
-		
-	}
-
-	/**
-	 * Setter for property jcrSession.
-	 * 
-	 * @param ocm
-	 *            The object content manager
-	 */
-	public void setObjectContentManager(ObjectContentManager ocm)
-	{
-		this.ocm = ocm;
-	}
+   
 
 	public void exportDocument(String filePath, String nodePath, boolean skipBinary, boolean noRecurse)
 	{
@@ -263,7 +239,8 @@ public abstract class TestBase extends TestCase
     }
 
 	
-	protected  void cleanUpRepisotory() {
+	protected  void cleanUpRepisotory() 
+	{
 		try 
 		{
 				Session session = this.getSession();		

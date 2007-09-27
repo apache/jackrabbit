@@ -25,7 +25,7 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-import org.apache.jackrabbit.ocm.TestBase;
+import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.testmodel.A;
 import org.apache.jackrabbit.ocm.testmodel.C;
@@ -35,7 +35,7 @@ import org.apache.jackrabbit.ocm.testmodel.C;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class DefaultCollectionConverterImplTest extends TestBase
+public class DefaultCollectionConverterImplTest extends DigesterTestBase
 {
     private final static Log log = LogFactory.getLog(DefaultCollectionConverterImplTest.class);
 

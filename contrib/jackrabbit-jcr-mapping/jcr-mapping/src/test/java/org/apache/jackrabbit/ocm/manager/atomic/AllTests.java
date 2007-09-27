@@ -36,9 +36,13 @@ public class AllTests {
     public static Test buildSuite() {
         TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.jcr.manager.atomic");
         //$JUnit-BEGIN$
-        suite.addTestSuite(AtomicTest.class);
-        suite.addTestSuite(NullAtomicTest.class);        
-        
+        suite.addTestSuite(AnnotationAtomicTest.class);
+        suite.addTestSuite(AnnotationNullAtomicTest.class);    
+        suite.addTestSuite(AnnotationDefaultValueTest.class);
+        suite.addTestSuite(DigesterAtomicTest.class);
+        suite.addTestSuite(DigesterNullAtomicTest.class);    
+        suite.addTestSuite(DigesterDefaultValueTest.class);
+
         //$JUnit-END$
 
         return suite;
