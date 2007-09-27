@@ -38,6 +38,6 @@ public class ImplementDescriptor {
 
 	public String toString() {
 		
-		return "Field Descriptor : " +  this.interfaceName;
+		return "Implement Descriptor : " +  this.interfaceName;
 	}    
 }
