@@ -75,9 +75,6 @@
         <profile>
             <id>jdk1.4</id>
             <build>
-                <finalName>
-                    ${artifactId}-jdk1.4
-                </finalName>
                 <plugins>
                     <plugin>
                         <inherited>true</inherited>
@@ -90,6 +87,13 @@
                             </excludes>
                             <target>1.4</target>
                             <source>1.4</source>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <configuration>
+                            <classifier>jdk1.4</classifier>
                         </configuration>
                     </plugin>
                 </plugins>
