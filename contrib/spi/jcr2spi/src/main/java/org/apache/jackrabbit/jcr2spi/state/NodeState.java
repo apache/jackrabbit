@@ -270,9 +270,10 @@ public class NodeState extends ItemState {
         /* process all parent states that are marked modified and eventually
            need their uniqueID or mixin-types being adjusted because that property
            has been added, modified or removed */
-        for (Iterator it = modParents.keySet().iterator(); it.hasNext();) {
-            NodeState parent = (NodeState) it.next();
-            List l = (List) modParents.get(parent);
+        for (Iterator it = modParents.entrySet().iterator(); it.hasNext();) {
+            Map.Entry entry = (Map.Entry) it.next();
+            NodeState parent = (NodeState) entry.getKey();
+            List l = (List) entry.getValue();
             adjustNodeState(parent, (PropertyState[]) l.toArray(new PropertyState[l.size()]));
         }
 
