@@ -184,9 +184,10 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
             ensureReadOnlyMap();
             activeListeners = readOnlySubscriptions;
         }
-        for (Iterator it = activeListeners.keySet().iterator(); it.hasNext(); ) {
-            EventListener listener = (EventListener) it.next();
-            EventFilter filter = (EventFilter) activeListeners.get(listener);
+        for (Iterator it = activeListeners.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry entry = (Map.Entry) it.next();
+            EventListener listener = (EventListener) entry.getKey();
+            EventFilter filter = (EventFilter) entry.getValue();
             FilteredEventIterator eventIter = new FilteredEventIterator(eventBundle, filter, nsResolver);
             if (eventIter.hasNext()) {
                 try {

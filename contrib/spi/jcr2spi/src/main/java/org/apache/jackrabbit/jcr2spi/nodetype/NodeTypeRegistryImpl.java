@@ -518,10 +518,10 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
     }
 
     private void internalRegister(Map defMap) {
-        Iterator it = defMap.keySet().iterator();
-        while (it.hasNext()) {
-            QNodeTypeDefinition ntd = (QNodeTypeDefinition)it.next();
-            internalRegister(ntd, (EffectiveNodeTypeImpl)defMap.get(ntd));
+        for (Iterator it = defMap.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry entry = (Map.Entry)it.next();
+            QNodeTypeDefinition ntd = (QNodeTypeDefinition)entry.getKey();
+            internalRegister(ntd, (EffectiveNodeTypeImpl)entry.getValue());
         }
     }
 

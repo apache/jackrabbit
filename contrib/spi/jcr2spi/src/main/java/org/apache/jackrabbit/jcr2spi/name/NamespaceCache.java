@@ -188,10 +188,9 @@ public class NamespaceCache {
         prefixToURI.clear();
         prefixToURI.putAll(namespaces);
         uriToPrefix.clear();
-        for (Iterator it = namespaces.keySet().iterator(); it.hasNext(); ) {
-            String prefix = (String) it.next();
-            String uri = (String) namespaces.get(prefix);
-            uriToPrefix.put(uri, prefix);
+        for (Iterator it = namespaces.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry entry = (Map.Entry) it.next();
+            uriToPrefix.put(entry.getKey(), entry.getValue());
         }
     }
 

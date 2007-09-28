@@ -174,7 +174,7 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
                 i = (Integer) nameIndex.get(name);
                 if (i == null) {
                     int idx = nameIndex.size();
-                    i = new Integer(idx);
+                    i = Integer.valueOf(idx);
                     nameIndex.put(name, i);
                     if (idx >= names.length) {
                         QName[] newNames = new QName[names.length*2];
