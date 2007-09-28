@@ -215,7 +215,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
                 Iterator iter = pdCache.values().iterator();
                 while (iter.hasNext()) {
                     PropertyDefinition pd = (PropertyDefinition) iter.next();
-                    if (name.equals(pd.getDeclaringNodeType())) {
+                    if (name.equals(pd.getDeclaringNodeType().getName())) {
                         iter.remove();
                     }
                 }
@@ -224,7 +224,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
                 Iterator iter = ndCache.values().iterator();
                 while (iter.hasNext()) {
                     NodeDefinition nd = (NodeDefinition) iter.next();
-                    if (name.equals(nd.getDeclaringNodeType())) {
+                    if (name.equals(nd.getDeclaringNodeType().getName())) {
                         iter.remove();
                     }
                 }
@@ -252,7 +252,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
                 Iterator iter = pdCache.values().iterator();
                 while (iter.hasNext()) {
                     PropertyDefinition pd = (PropertyDefinition) iter.next();
-                    if (name.equals(pd.getDeclaringNodeType())) {
+                    if (name.equals(pd.getDeclaringNodeType().getName())) {
                         iter.remove();
                     }
                 }
@@ -261,7 +261,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
                 Iterator iter = ndCache.values().iterator();
                 while (iter.hasNext()) {
                     NodeDefinition nd = (NodeDefinition) iter.next();
-                    if (name.equals(nd.getDeclaringNodeType())) {
+                    if (name.equals(nd.getDeclaringNodeType().getName())) {
                         iter.remove();
                     }
                 }

@@ -558,7 +558,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     public boolean canAccess(String workspaceName) throws NoSuchWorkspaceException, RepositoryException {
         String[] wspNames = getWorkspaceNames();
         for (int i = 0; i < wspNames.length; i++) {
-            if (wspNames[i].equals(wspNames)) {
+            if (wspNames[i].equals(workspaceName)) {
                 return true;
             }
         }
