@@ -123,7 +123,7 @@ class LockImpl implements Lock {
      */
     public boolean isLockOwningSession() {
         try {
-            return info.getLockHolder().equals(node.getSession());
+            return node.getSession().equals(info.getLockHolder());
         } catch (RepositoryException e) {
             return false;
         }
