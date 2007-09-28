@@ -45,14 +45,6 @@ public class XMLSessionInfo implements SessionInfo {
     }
 
     /* (non-Javadoc)
-     * @see org.apache.jackrabbit.spi.SessionInfo#getLastEventBundleId()
-     */
-    public String getLastEventBundleId() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /* (non-Javadoc)
      * @see org.apache.jackrabbit.spi.SessionInfo#getLockTokens()
      */
     public String[] getLockTokens() {
@@ -67,13 +59,4 @@ public class XMLSessionInfo implements SessionInfo {
         // TODO Auto-generated method stub
 
     }
-
-    /* (non-Javadoc)
-     * @see org.apache.jackrabbit.spi.SessionInfo#setLastEventBundleId(java.lang.String)
-     */
-    public void setLastEventBundleId(String eventBundleId) {
-        // TODO Auto-generated method stub
-
-    }
-
 }

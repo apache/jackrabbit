@@ -48,15 +48,4 @@ public interface RemoteSessionInfo extends Remote {
      * Remote version of {@link org.apache.jackrabbit.spi.SessionInfo#removeLockToken(String)}.
      */
     public void removeLockToken(String lockToken) throws RemoteException;
-
-    /**
-     * Remote version of {@link org.apache.jackrabbit.spi.SessionInfo#getLastEventBundleId()}.
-     */
-    public String getLastEventBundleId() throws RemoteException;
-
-    /**
-     * Remote version of {@link org.apache.jackrabbit.spi.SessionInfo#setLastEventBundleId(String)}.
-     */
-    public void setLastEventBundleId(String eventBundleId) throws RemoteException;
-
 }

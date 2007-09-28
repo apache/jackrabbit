@@ -36,8 +36,6 @@ public class SessionInfoImpl implements SessionInfo {
 
     private final Set lockTokens = new HashSet();
 
-    private String lastEventBundleId;
-
     private String lastBatchId;
 
     /**
@@ -85,20 +83,6 @@ public class SessionInfoImpl implements SessionInfo {
      */
     public void removeLockToken(String lockToken) {
         lockTokens.remove(lockToken);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public String getLastEventBundleId() {
-        return lastEventBundleId;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public void setLastEventBundleId(String eventBundleId) {
-        lastEventBundleId = eventBundleId;
     }
 
     //--------------------------------------------------------------------------
