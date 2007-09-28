@@ -244,7 +244,7 @@ class RowIteratorImpl implements RowIterator {
                 // create the map first
                 Map tmp = new HashMap();
                 for (int i = 0; i < columnNames.length; i++) {
-                    tmp.put(columnNames[i], Integer.valueOf(i));
+                    tmp.put(columnNames[i], new Integer(i));
                 }
                 propertyMap = tmp;
             }
