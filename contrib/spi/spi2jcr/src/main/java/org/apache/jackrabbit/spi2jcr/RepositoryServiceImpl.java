@@ -258,7 +258,9 @@ public class RepositoryServiceImpl implements RepositoryService {
      */
     public NodeId getRootId(SessionInfo sessionInfo)
             throws RepositoryException {
-        return getIdFactory().createNodeId((String) null, Path.ROOT);
+        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        return idFactory.createNodeId(sInfo.getSession().getRootNode(),
+                sInfo.getNamespaceResolver());
     }
 
     /**
