@@ -190,7 +190,7 @@ public class NamespaceCache {
         uriToPrefix.clear();
         for (Iterator it = namespaces.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry entry = (Map.Entry) it.next();
-            uriToPrefix.put(entry.getKey(), entry.getValue());
+            uriToPrefix.put(entry.getValue(), entry.getKey());
         }
     }
 
