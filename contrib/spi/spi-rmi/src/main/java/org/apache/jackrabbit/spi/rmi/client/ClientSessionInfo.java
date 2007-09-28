@@ -107,28 +107,4 @@ class ClientSessionInfo implements SessionInfo {
             throw new RemoteRuntimeException(e);
         }
     }
-
-    /**
-     * {@inheritDoc}
-     * @throws RemoteRuntimeException if an RMI error occurs.
-     */
-    public String getLastEventBundleId() {
-        try {
-            return remoteSessionInfo.getLastEventBundleId();
-        } catch (RemoteException e) {
-            throw new RemoteRuntimeException(e);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     * @throws RemoteRuntimeException if an RMI error occurs.
-     */
-    public void setLastEventBundleId(String eventBundleId) {
-        try {
-            remoteSessionInfo.setLastEventBundleId(eventBundleId);
-        } catch (RemoteException e) {
-            throw new RemoteRuntimeException(e);
-        }
-    }
 }

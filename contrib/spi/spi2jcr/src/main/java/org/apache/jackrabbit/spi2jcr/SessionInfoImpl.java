@@ -45,11 +45,6 @@ class SessionInfoImpl implements SessionInfo {
     private final NamespaceResolver resolver;
 
     /**
-     * The bundle id of the last retrieved events.
-     */
-    private String lastEventBundleId;
-
-    /**
      * A copy of the credentials that were used to obtain the JCR session.
      */
     private Credentials credentials;
@@ -152,19 +147,5 @@ class SessionInfoImpl implements SessionInfo {
      */
     public void removeLockToken(String lockToken) {
         session.removeLockToken(lockToken);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public String getLastEventBundleId() {
-        return lastEventBundleId;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public void setLastEventBundleId(String eventBundleId) {
-        lastEventBundleId = eventBundleId;
     }
 }

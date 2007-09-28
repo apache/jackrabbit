@@ -69,13 +69,4 @@ class ServerSessionInfo extends ServerObject implements RemoteSessionInfo {
     public void removeLockToken(String lockToken) throws RemoteException {
         sessionInfo.removeLockToken(lockToken);
     }
-
-    public String getLastEventBundleId() throws RemoteException {
-        return sessionInfo.getLastEventBundleId();
-    }
-
-    public void setLastEventBundleId(String eventBundleId)
-            throws RemoteException {
-        sessionInfo.setLastEventBundleId(eventBundleId);
-    }
 }

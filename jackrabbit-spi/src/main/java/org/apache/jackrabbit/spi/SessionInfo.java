@@ -26,11 +26,6 @@ package org.apache.jackrabbit.spi;
  * In addition the SessionInfo acts as primary container for
  * lock tokens. They will assert that a given SessionInfo is able to execute
  * operations on the RepositoryService that are affected by existing locks.<p/>
- *
- * Finally the SessionInfo holds an identifier of the last {@link EventBundle}
- * that has been retrieved by this <code>SessionInfo</code>. This allows the
- * <code>SessionInfo</code> to indicate the latest known modification to
- * the RepositoryService upon retrieval of subsequent {@link EventBundle}s.
  */
 public interface SessionInfo {
 
@@ -79,32 +74,4 @@ public interface SessionInfo {
      * @param lockToken to be removed.
      */
     public void removeLockToken(String lockToken);
-
-    /**
-     * Returns the identifier of the last {@link EventBundle} delivered using
-     * this <code>SessionInfo</code>. When a <code>SessionInfo</code> is
-     * initially aquired the returned event identifier is set to the last
-     * <code>EventBundle</code> created by the SPI implementation previously to
-     * the call to {@link RepositoryService#obtain(javax.jcr.Credentials, String)
-     * RepositoryService.obtain()}. If there was no previous event <code>null</code>
-     * is returned. Thus a <code>null</code> value will effectively return all
-     * events that occurred since the start of the SPI server.
-     * <p/>
-     * For implementations, that do not support observation this method will
-     * always return <code>null</code>.
-     *
-     * @return the identifier of the last {@link EventBundle} delivered using
-     * this <code>SessionInfo</code>.
-     */
-    public String getLastEventBundleId();
-
-    /**
-     * Sets the identifier of the last {@link EventBundle} delivered using this
-     * <code>SessionInfo</code>. This identifier will be used to retrieve the
-     * subsequent event bundles when calling {@link RepositoryService#getEvents(SessionInfo, long, EventFilter[])}.
-     *
-     * @param eventBundleId the identifier of the last {@link EventBundle}
-     *                      delivered using this <code>SessionInfo</code>.
-     */
-    public void setLastEventBundleId(String eventBundleId);
 }
