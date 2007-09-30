@@ -111,18 +111,22 @@ public class RemoveVersionTest extends AbstractVersionTest {
     public void testRemoveVersionAdjustPredecessorSet() throws RepositoryException {
 
         // retrieve predecessors to test and remove the version
-        List predecList = new ArrayList(Arrays.asList(version.getPredecessors()));
+        List predecPaths = new ArrayList();
+        Version[] predec = version.getPredecessors();
+        for (int i = 0; i < predec.length; i++) {
+            predecPaths.add(predec[i].getPath());
+        }
         vHistory.removeVersion(version.getName());
 
         // new predecessors of the additional version
         Version[] predec2 = version2.getPredecessors();
         for (int i = 0; i < predec2.length; i++) {
-            if (!predecList.remove(predec2[i])) {
+            if (!predecPaths.remove(predec2[i].getPath())) {
                 fail("All predecessors of the removed version must be made predecessors of it's original successor version.");
             }
         }
 
-        if (!predecList.isEmpty()) {
+        if (!predecPaths.isEmpty()) {
             fail("All predecessors of the removed version must be made predecessors of it's original successor version.");
         }
     }
@@ -140,8 +144,12 @@ public class RemoveVersionTest extends AbstractVersionTest {
         vHistory.removeVersion(version.getName());
 
         for (int i = 0; i < predec.length; i++) {
-            List successorList = Arrays.asList(predec[i].getSuccessors());
-            if (!successorList.contains(version2)) {
+            boolean isContained = false;
+            Version[] succ = predec[i].getSuccessors();
+            for (int j = 0; j < succ.length; j++) {
+                isContained |= succ[j].isSame(version2);
+            }
+            if (!isContained) {
                 fail("Removing a version must make all it's successor version to successors of the removed version's predecessors.");
             }
         }

@@ -44,7 +44,7 @@ public class VersionGraphTest extends AbstractVersionTest {
         Version rV = versionableNode.getVersionHistory().getRootVersion();
         Version bV = versionableNode.getBaseVersion();
 
-        assertEquals("After creation of a versionable node the node's baseVersion must point to the rootVersion in the version history.", rV, bV);
+        assertTrue("After creation of a versionable node the node's baseVersion must point to the rootVersion in the version history.", rV.isSame(bV));
     }
 
     /**
