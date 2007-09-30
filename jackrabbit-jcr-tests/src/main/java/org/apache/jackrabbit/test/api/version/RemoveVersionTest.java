@@ -27,7 +27,6 @@ import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
