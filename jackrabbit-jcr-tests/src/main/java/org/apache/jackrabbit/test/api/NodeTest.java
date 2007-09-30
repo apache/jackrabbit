@@ -744,13 +744,13 @@ public class NodeTest extends AbstractJCRTest {
         // save the new node
         defaultRootNode.save();
 
-        // accuire the same node with session 2
+        // acquire the same node with session 2
         Node testNode2 = (Node) superuser.getItem(testNode1.getPath());
 
         // check if they have the same property
-        assertEquals("Two references of same node have different properties", testNode1.getProperty(propertyName1), testNode2.getProperty(propertyName1));
+        assertTrue("Two references of same node have different properties", testNode1.getProperty(propertyName1).isSame(testNode2.getProperty(propertyName1)));
         // check if they have the same child
-        assertEquals("Two references of same node have different children", testNode1.getNode(nodeName1), testNode2.getNode(nodeName1));
+        assertTrue("Two references of same node have different children", testNode1.getNode(nodeName1).isSame(testNode2.getNode(nodeName1)));
         // check state methods
         assertEquals("Two references of same node have different State for Node.isCheckedOut()", testNode1.isCheckedOut(), testNode2.isCheckedOut());
         assertEquals("Two references of same node have different State for Node.isLocked()", testNode1.isLocked(), testNode2.isLocked());
@@ -759,7 +759,7 @@ public class NodeTest extends AbstractJCRTest {
         assertEquals("Two references of same node have different State for Node.isNode()", testNode1.isNode(), testNode2.isNode());
         assertEquals("Two references of same node have different State for Node.isNodeType()", testNode1.isNodeType(testNodeType), testNode2.isNodeType(testNodeType));
         assertTrue("Two references of same node should return true for Node1.isSame(Node2)", testNode1.isSame(testNode2));
-        assertEquals("Two references of same node have different Definitions", testNode1.getDefinition(), testNode2.getDefinition());
+        assertEquals("Two references of same node have different Definitions", testNode1.getDefinition().getName(), testNode2.getDefinition().getName());
     }
 
     /**
