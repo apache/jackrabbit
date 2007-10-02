@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 1.3.1
+Release Notes -- Apache Jackrabbit -- Version 1.3.2
 
 Introduction
 ------------
@@ -10,7 +10,7 @@ content, full text search, versioning, transactions, observation, and
 more. Typical applications that use content repositories include content
 management, document management, and records management systems.
 
-Apache Jackrabbit 1.3.1 is patch release with bug fixes for issues like
+Apache Jackrabbit 1.3.2 is patch release with bug fixes for issues like
 correctly reporting the number of access controlled query results and proper
 cleanup after indexing PDF documents.
 
@@ -68,65 +68,65 @@ Release Contents
 The release consists of a single source archive and a number of
 pre-compiled binary component archives.
 
-    * Jackrabbit source code (jackrabbit-1.3.1-src.jar)
+    * Jackrabbit source code (jackrabbit-1.3.2-src.jar)
 
-        The main source archive contains a "jackrabbit-1.3.1-src" directory
+        The main source archive contains a "jackrabbit-1.3.2-src" directory
         with the full released source code and build environment. Use the
         following commands (or the equivalent in your system) to build all
         the released components with Maven 2:
 
-          $ jar xf jackrabbit-1.3.1-src.jar
-          $ cd jackrabbit-1.3.1-src
+          $ jar xf jackrabbit-1.3.2-src.jar
+          $ cd jackrabbit-1.3.2-src
           $ mvn install
 
 The components contained in the released source archive are listed below
 (with the pre-compiled binary archives in parenthesis):
 
-    * Jackrabbit API (jackrabbit-api-1.3.1.jar)
+    * Jackrabbit API (jackrabbit-api-1.3.2.jar)
 
         Interface extensions that Apache Jackrabbit supports in
         addition to the standard JCR API.
 
-    * Jackrabbit JCR Commons (jackrabbit-jcr-commons-1.3.1.jar)
+    * Jackrabbit JCR Commons (jackrabbit-jcr-commons-1.3.2.jar)
 
         General-purpose classes for use with the JCR API.
 
-    * Jackrabbit JCR Tests (jackrabbit-jcr-tests-1.3.1.jar)
+    * Jackrabbit JCR Tests (jackrabbit-jcr-tests-1.3.2.jar)
 
         Set of JCR API test cases designed for testing the compliance
         of an implementation. Note that this is not the official JCR TCK!
 
-    * Jackrabbit Core (jackrabbit-core-1.3.1.jar)
+    * Jackrabbit Core (jackrabbit-core-1.3.2.jar)
 
         Core of the Apache Jackrabbit content repository implementation.
 
-    * Jackrabbit Text Extractors (jackrabbit-text-extractors-1.3.1.jar)
+    * Jackrabbit Text Extractors (jackrabbit-text-extractors-1.3.2.jar)
 
         Full text extraction for for Jackrabbit. Includes support for
         example for Adobe PDF and MS Excel, PowerPoint and word files.
 
-    * Jackrabbit JCR-RMI (jackrabbit-jcr-rmi-1.3.1.jar)
+    * Jackrabbit JCR-RMI (jackrabbit-jcr-rmi-1.3.2.jar)
 
         RMI network layer for the JCR API.
 
-    * Jackrabbit WebDAV Library (jackrabbit-webdav-1.3.1.jar)
+    * Jackrabbit WebDAV Library (jackrabbit-webdav-1.3.2.jar)
 
         Interfaces and common utility classes used for building a
         WebDAV server or client.
 
-    * Jackrabbit JCR Server (jackrabbit-jcr-server-1.3.1.jar)
+    * Jackrabbit JCR Server (jackrabbit-jcr-server-1.3.2.jar)
 
         WebDAV servlet implementations based on JCR.
 
-    * Jackrabbit Repository Classloader (jackrabbit-classloader-1.3.1.jar)
+    * Jackrabbit Repository Classloader (jackrabbit-classloader-1.3.2.jar)
 
         Java classloader for loading classes from JCR content repositories.
 
-    * Jackrabbit Web Application (jackrabbit-webapp-1.3.1.war)
+    * Jackrabbit Web Application (jackrabbit-webapp-1.3.2.war)
 
         Deployable Jackrabbit installation with WebDAV support for JCR.
 
-    * Jackrabbit JCA Resource Adapter (jackrabbit-jca-1.3.1.rar)
+    * Jackrabbit JCA Resource Adapter (jackrabbit-jca-1.3.2.rar)
 
         J2EE Connector Architecture (JCA) resource adapter for Jackrabbit.
 
