@@ -18,7 +18,11 @@ package org.apache.jackrabbit.ocm.testmodel.auto;
 
 import java.util.List;
 
-public interface Folder  extends CmsObject{
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
+@Node(isInterface=true, jcrType="ocm:folder", extend=CmsObject.class)
+public interface Folder  extends CmsObject
+{
 
 	public List getChildren();
 

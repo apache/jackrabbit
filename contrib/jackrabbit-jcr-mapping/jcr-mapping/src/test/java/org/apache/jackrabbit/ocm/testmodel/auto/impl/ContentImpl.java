@@ -16,18 +16,16 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.auto.impl;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 import org.apache.jackrabbit.ocm.testmodel.auto.Content;
 
-
-
-
-
 /**
- * Content object
+ * Content implementation
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  * 
  */
+@Node(jcrType="ocm:contentimpl",  isAbstract=true, extend=CmsObjectImpl.class, discriminator=false)
 public abstract class ContentImpl  extends CmsObjectImpl implements Content
 {
 }

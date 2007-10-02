@@ -16,6 +16,10 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.auto;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
+
+@Node(isInterface=true, jcrType="ocm:content", extend=CmsObject.class)
 public interface Content extends CmsObject {
 
 }

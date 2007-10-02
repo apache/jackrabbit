@@ -16,18 +16,21 @@
  */
 package org.apache.jackrabbit.ocm.mapper.impl.annotation;
 
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Used when you wish to specify JCR super types for a class
+ * This annotation allow to defined the implement descriptor on the class 
+ * level
  * 
- * @author Philip Dodds
+ * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  * 
  */
 @Retention(RetentionPolicy.RUNTIME)
-public @interface SuperType {
-
-    String name() default "nt:base";
-
+@Target({ElementType.TYPE})
+public @interface Implement 
+{
+    Class interfaceName();    
 }

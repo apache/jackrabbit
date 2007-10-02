@@ -28,6 +28,14 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.AnnotationMapperImpl;
 import org.apache.jackrabbit.ocm.repository.RepositoryUtil;
 import org.apache.jackrabbit.ocm.testmodel.Atomic;
 import org.apache.jackrabbit.ocm.testmodel.Default;
+import org.apache.jackrabbit.ocm.testmodel.auto.CmsObject;
+import org.apache.jackrabbit.ocm.testmodel.auto.Content;
+import org.apache.jackrabbit.ocm.testmodel.auto.Document;
+import org.apache.jackrabbit.ocm.testmodel.auto.Folder;
+import org.apache.jackrabbit.ocm.testmodel.auto.impl.CmsObjectImpl;
+import org.apache.jackrabbit.ocm.testmodel.auto.impl.ContentImpl;
+import org.apache.jackrabbit.ocm.testmodel.auto.impl.DocumentImpl;
+import org.apache.jackrabbit.ocm.testmodel.auto.impl.FolderImpl;
 
 /**
  * Base class for testcases. Provides priviledged access to the jcr test
@@ -65,8 +73,6 @@ public abstract class AnnotationTestBase extends AbstractTestBase
 		
 		Mapper mapper = new AnnotationMapperImpl(classes);
 		ocm = new ObjectContentManagerImpl(session, mapper);
-		
-		
 		
 	}
 

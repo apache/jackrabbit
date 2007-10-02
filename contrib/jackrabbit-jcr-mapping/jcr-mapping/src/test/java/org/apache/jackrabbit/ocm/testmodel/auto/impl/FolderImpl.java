@@ -19,21 +19,26 @@ package org.apache.jackrabbit.ocm.testmodel.auto.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Collection;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Implement;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 import org.apache.jackrabbit.ocm.testmodel.auto.CmsObject;
 import org.apache.jackrabbit.ocm.testmodel.auto.Folder;
 
-
-
-
 /**
- * CMS Folder Test
+ * Forlder implementation
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
- * @version $Id: Folder.java,v 1.1 2004/12/22 20:36:59 christophe Exp $
+ * 
  */
+@Node(jcrType="ocm:folderimpl", extend=CmsObjectImpl.class ,discriminator=false)
+@Implement(interfaceName=Folder.class)
 public class FolderImpl extends CmsObjectImpl implements Folder 
 {
-
+    @Collection(proxy=true, autoUpdate=false, autoInsert=false, autoRetrieve=false, 
+    		    elementClassName=CmsObjectImpl.class,  
+    			collectionConverter=NTCollectionConverterImpl.class)
     protected List children = new ArrayList();
 
 	/**

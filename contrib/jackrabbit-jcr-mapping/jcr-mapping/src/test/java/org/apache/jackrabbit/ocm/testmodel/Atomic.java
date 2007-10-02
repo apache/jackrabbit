@@ -19,7 +19,6 @@ package org.apache.jackrabbit.ocm.testmodel;
 import java.io.InputStream;
 import java.sql.Timestamp;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 
 import org.apache.jackrabbit.ocm.manager.atomic.Int2BooleanTypeConverterImpl;
@@ -36,31 +35,36 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
  * @version $Id: Exp $
  */
 @Node
-public class Atomic
-{
+public class Atomic 
+{	
+	@Field(path=true) protected String path;
+	@Field private String string;
+	@Field private Boolean booleanObject;
+	@Field private boolean booleanPrimitive;
+	@Field private Integer integerObject;
+	@Field private int intPrimitive;
+	@Field private byte[] byteArray;
+	@Field private Calendar calendar;
+	@Field private Date date;
+	@Field private Double doubleObject;
+	@Field private double doublePrimitive;
+	@Field private InputStream inputStream;
+	@Field private Timestamp timestamp;
 	
-	private String path;
-    private String string;
-    private Boolean booleanObject;
-    private boolean booleanPrimitive;
-    private Integer integerObject;
-    private int intPrimitive;
-    private byte[] byteArray;
-    private Calendar calendar;
-    private Date date;
-    private Double doubleObject;
-    private double doublePrimitive;
-    private InputStream inputStream;
-    private Timestamp timestamp;
-    private boolean int2boolean;
-    private Collection multiValue;
+	@Field (converter = Int2BooleanTypeConverterImpl.class) 
+	private boolean int2boolean;
     
+	@Field (converter = NameTypeConverterImpl.class)
     private String namedProperty;
+    
+    @Field (converter = PathTypeConverterImpl.class)
     private String pathProperty; // used to refer another node
+    
+    @Field (converter = UndefinedTypeConverterImpl.class)
     private Object undefinedProperty;
     
     
-    @Field(path=true)
+    
     public String getPath() {
 		return path;
 	}
@@ -68,7 +72,7 @@ public class Atomic
 		this.path = path;
 	}
 	
-	@Field
+	
 	public Boolean getBooleanObject()
     {
         return booleanObject;
@@ -79,7 +83,7 @@ public class Atomic
         this.booleanObject = booleanObject;
     }
     
-    @Field
+    
     public boolean isBooleanPrimitive()
     {
         return booleanPrimitive;
@@ -90,7 +94,7 @@ public class Atomic
         this.booleanPrimitive = booleanPrimitive;
     }
     
-    @Field
+    
     public Integer getIntegerObject()
     {
         return integerObject;
@@ -101,7 +105,7 @@ public class Atomic
         this.integerObject = integerObject;
     }
     
-    @Field
+    
     public int getIntPrimitive()
     {
         return intPrimitive;
@@ -112,7 +116,7 @@ public class Atomic
         this.intPrimitive = intPrimitive;
     }
     
-    @Field
+    
     public String getString()
     {
         return string;
@@ -122,7 +126,7 @@ public class Atomic
         this.string = string;
     }
     
-    @Field
+    
     public byte[] getByteArray()
     {
         return byteArray;
@@ -133,7 +137,7 @@ public class Atomic
         this.byteArray = byteArray;
     }
     
-    @Field
+    
     public Calendar getCalendar()
     {
         return calendar;
@@ -145,7 +149,7 @@ public class Atomic
         this.calendar = calandar;
     }
     
-    @Field
+    
     public Date getDate()
     {
         return date;
@@ -156,7 +160,7 @@ public class Atomic
         this.date = date;
     }
     
-    @Field
+    
     public Double getDoubleObject()
     {
         return doubleObject;
@@ -167,7 +171,7 @@ public class Atomic
         this.doubleObject = doubleObject;
     }
     
-    @Field
+    
     public double getDoublePrimitive()
     {
         return doublePrimitive;
@@ -178,7 +182,7 @@ public class Atomic
         this.doublePrimitive = doublePrimitive;
     }
     
-    @Field
+    
     public InputStream getInputStream()
     {
         return inputStream;
@@ -188,7 +192,7 @@ public class Atomic
         this.inputStream = inputStream;
     }
     
-    @Field
+    
     public Timestamp getTimestamp()
     {
         return timestamp;
@@ -198,8 +202,7 @@ public class Atomic
     {
         this.timestamp = timestamp;
     }
-        
-    @Field (converter = Int2BooleanTypeConverterImpl.class)
+            
 	public boolean isInt2boolean() 
 	{
 		return int2boolean;
@@ -211,18 +214,6 @@ public class Atomic
 	}
 	
 	
-	public Collection getMultiValue()
-	{
-		return multiValue;
-	}
-	
-	
-	public void setMultiValue(Collection multiValue)
-	{
-		this.multiValue = multiValue;
-	}
-	
-	@Field (converter = NameTypeConverterImpl.class)
 	public String getNamedProperty() {
 		return namedProperty;
 	}
@@ -232,8 +223,7 @@ public class Atomic
 	{
 		this.namedProperty = namedProperty;
 	}
-	
-	@Field (converter = PathTypeConverterImpl.class)
+		
 	public String getPathProperty() 
 	{
 		return pathProperty;
@@ -244,7 +234,7 @@ public class Atomic
 		this.pathProperty = pathProperty;
 	}
 	
-	@Field (converter = UndefinedTypeConverterImpl.class)
+	
 	public Object getUndefinedProperty() 
 	{
 		return undefinedProperty;
