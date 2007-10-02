@@ -19,6 +19,7 @@ package org.apache.jackrabbit.test;
 import junit.framework.TestResult;
 
 import javax.jcr.Node;
+import javax.jcr.PropertyType;
 import javax.jcr.Session;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -30,6 +31,7 @@ import javax.jcr.Value;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.PropertyDefinition;
 
 import java.util.StringTokenizer;
 import java.util.Random;
@@ -583,6 +585,56 @@ public abstract class AbstractJCRTest extends JUnitTest {
         if (! canSetIt) {
             throw new NotExecutableException("configured property name " + propertyName + " can not be set on node " + node.getPath());
         }
+    }
+
+    private boolean canSetProperty(NodeType nodeType, String propertyName, int propertyType, boolean isMultiple) {
+        PropertyDefinition propDefs[] = nodeType.getPropertyDefinitions();
+
+        for (int i = 0; i < propDefs.length; i++) {
+            if (propDefs[i].getName().equals(propertyName) || propDefs[i].getName().equals("*")) {
+                if ((propDefs[i].getRequiredType() == propertyType || propDefs[i].getRequiredType() == PropertyType.UNDEFINED)
+                    && propDefs[i].isMultiple() == isMultiple) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private boolean canSetProperty(Node node, String propertyName, int propertyType, boolean isMultiple) throws RepositoryException {
+
+        if (canSetProperty(node.getPrimaryNodeType(), propertyName, propertyType, isMultiple)) {
+            return true;
+        }
+        else {
+            NodeType mixins[] = node.getMixinNodeTypes();
+            boolean canSetIt = false;
+            for (int i = 0; i < mixins.length && !canSetIt; i++) {
+                canSetIt |= canSetProperty(mixins[i], propertyName, propertyType, isMultiple);
+            }
+            return canSetIt;
+        }
+    }
+
+    /**
+     * Checks that the repository can set the property to the required type, otherwise aborts with
+     * {@link NotExecutableException}.
+     * @throws NotExecutableException when setting the property to the required
+     * type is not supported
+     */
+    protected void ensureCanSetProperty(Node node, String propertyName, int propertyType, boolean isMultiple) throws NotExecutableException, RepositoryException {
+
+        if (! canSetProperty(node, propertyName, propertyType, isMultiple)) {
+            throw new NotExecutableException("configured property name " + propertyName + " can not be set on node " + node.getPath());
+        }
+    }
+
+    /**
+     * Checks whether the node already has the specified mixin node type
+     */
+    protected boolean needsMixin(Node node, String mixin) throws RepositoryException {
+        return ! node.getSession().getWorkspace().getNodeTypeManager().getNodeType(node.getPrimaryNodeType().getName()).isNodeType(mixin);
     }
 
     /**
