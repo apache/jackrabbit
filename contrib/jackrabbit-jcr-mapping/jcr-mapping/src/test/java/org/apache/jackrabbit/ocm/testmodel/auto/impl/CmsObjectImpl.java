@@ -16,6 +16,10 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.auto.impl;
 
+import org.apache.jackrabbit.ocm.manager.beanconverter.impl.ParentBeanConverterImpl;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Bean;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 import org.apache.jackrabbit.ocm.testmodel.auto.CmsObject;
 import org.apache.jackrabbit.ocm.testmodel.auto.Folder;
 
@@ -28,18 +32,22 @@ import org.apache.jackrabbit.ocm.testmodel.auto.Folder;
  * 
  * 
  */
-public class CmsObjectImpl implements CmsObject
+@Node(jcrType="ocm:cmsobjectimpl", discriminator=false, isAbstract=true)
+public abstract class CmsObjectImpl implements CmsObject
 {
     
-    protected String path;        
-    protected String name;
+	@Field(path=true) protected String path;
+    
+    @Field(jcrName="ocm:name", id=true) protected String name;
+  
+    @Bean(converter=ParentBeanConverterImpl.class)
     protected Folder parentFolder;
     
 
     /**
      * 
      * @see org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject#getName()
-     */
+     */    
 	public String getName() {
 		return name;
 	}
@@ -56,6 +64,7 @@ public class CmsObjectImpl implements CmsObject
 	 * 
 	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject#getPath()
 	 */
+	
 	public String getPath() {
 		return path;
 	}
@@ -70,6 +79,7 @@ public class CmsObjectImpl implements CmsObject
 	 * 
 	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject#getParentFolder()
 	 */
+	
 	public Folder getParentFolder() {
 		return parentFolder;
 	}

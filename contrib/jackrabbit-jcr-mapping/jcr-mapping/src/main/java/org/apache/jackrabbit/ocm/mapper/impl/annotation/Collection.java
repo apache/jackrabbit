@@ -16,8 +16,10 @@
  */
 package org.apache.jackrabbit.ocm.mapper.impl.annotation;
 
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.DefaultCollectionConverterImpl;
 
@@ -28,32 +30,35 @@ import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.DefaultCollect
  * 
  */
 @Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD, ElementType.METHOD })
 public @interface Collection {
 
-	Class converter() default DefaultCollectionConverterImpl.class;
+	String jcrName() default "";
 
-    String jcrName() default ""; 
-    
-    boolean sameNameSiblings() default false;
-
-    boolean autoCreate() default false;
-
-    boolean protect() default false;
-
-    String onParentVersion() default "COPY";
-
-    boolean mandatory() default false;
-
+	boolean proxy() default false;
+	
+	boolean autoRetrieve() default true;
+	
+	boolean autoUpdate() default true;
+	
     boolean autoInsert() default true;
 
-    boolean autoRetrieve() default true;
-
-    boolean autoUpdate() default true;
-
-    Class type();    
+    // Use Object.class as default value 
+    // because it is not possible to have a default null value in annotation field
+    Class elementClassName() default Object.class;      
     
-    boolean proxy() default false;
-    
-    
+	Class collectionConverter() default DefaultCollectionConverterImpl.class;
 
+    String jcrType() default "";
+    
+    boolean jcrAutoCreated() default false; 
+    
+    boolean jcrMandatory() default false; 
+    
+    String jcrOnParentVersion() default "COPY";
+    
+    boolean jcrProtected() default false;
+        
+    boolean jcrSameNameSiblings() default false;    
+    
 }

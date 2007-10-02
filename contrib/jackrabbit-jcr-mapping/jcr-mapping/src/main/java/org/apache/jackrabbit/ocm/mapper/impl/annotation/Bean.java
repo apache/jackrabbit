@@ -16,8 +16,10 @@
  */
 package org.apache.jackrabbit.ocm.mapper.impl.annotation;
 
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 import org.apache.jackrabbit.ocm.manager.beanconverter.impl.DefaultBeanConverterImpl;
 
@@ -27,6 +29,7 @@ import org.apache.jackrabbit.ocm.manager.beanconverter.impl.DefaultBeanConverter
  * 
  */
 @Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD, ElementType.METHOD })
 public @interface Bean {
 
 	String jcrName() default "";

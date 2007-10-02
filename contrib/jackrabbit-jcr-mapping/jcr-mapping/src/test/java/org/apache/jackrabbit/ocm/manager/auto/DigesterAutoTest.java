@@ -43,14 +43,14 @@ import org.apache.jackrabbit.ocm.testmodel.auto.impl.FolderImpl;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerAutoTest extends DigesterTestBase {
-	private final static Log log = LogFactory.getLog(ObjectContentManagerAutoTest.class);
+public class DigesterAutoTest extends DigesterTestBase {
+	private final static Log log = LogFactory.getLog(DigesterAutoTest.class);
 
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public ObjectContentManagerAutoTest(String testName) throws Exception {
+	public DigesterAutoTest(String testName) throws Exception {
 		super(testName);
 
 	}
@@ -58,7 +58,7 @@ public class ObjectContentManagerAutoTest extends DigesterTestBase {
 	public static Test suite() {
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(new TestSuite(
-				ObjectContentManagerAutoTest.class));
+				DigesterAutoTest.class));
 	}
 
 	public void tearDown() throws Exception {
