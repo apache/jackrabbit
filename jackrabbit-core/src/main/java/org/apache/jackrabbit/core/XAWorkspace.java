@@ -21,18 +21,10 @@ import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.state.XAItemStateManager;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 
-import javax.jcr.NoSuchWorkspaceException;
-
 /**
  * Workspace extension that works in an XA environment.
  */
 public class XAWorkspace extends WorkspaceImpl {
-
-    /**
-     * the name of the workspace info attribute in the transaction context
-     */
-    private static final String ATTR_NAME_WORKSPACE_INFO =
-            RepositoryImpl.WorkspaceInfo.class.getName();
 
     /**
      * Protected constructor.
@@ -55,86 +47,4 @@ public class XAWorkspace extends WorkspaceImpl {
     protected LocalItemStateManager createItemStateManager(SharedItemStateManager shared) {
         return new XAItemStateManager(shared, this, rep.getItemStateCacheFactory());
     }
-
-    /**
-     * Returns an internal XAResource that is used at the beginning of the
-     * resources chain in {@link XASessionImpl#init()}. This resource will lock
-     * the workspace on <code>prepare</code>.
-     *
-     * @return an internal XAResource
-     */
-    protected InternalXAResource getXAResourceBegin() {
-        return new InternalXAResource() {
-            public void associate(TransactionContext tx) {
-            }
-
-            public void beforeOperation(TransactionContext tx) {
-            }
-
-            public void prepare(TransactionContext tx)
-                    throws TransactionException {
-                try {
-                    RepositoryImpl.WorkspaceInfo wspInfo =
-                            rep.getWorkspaceInfo(wspConfig.getName());
-                    wspInfo.lockAcquire();
-                    tx.setAttribute(ATTR_NAME_WORKSPACE_INFO, wspInfo);
-                } catch (NoSuchWorkspaceException e) {
-                    throw new TransactionException("Error while preparing for transaction", e);
-                }
-            }
-
-            public void commit(TransactionContext tx) {
-            }
-
-            public void rollback(TransactionContext tx) {
-            }
-
-            public void afterOperation(TransactionContext tx) {
-            }
-        };
-    }
-
-    /**
-     * Returns an internal XAResource that is used at the end of the
-     * resources chain in {@link XASessionImpl#init()}. This resource will unlock
-     * the workspace on <code>commit</code> or on <code>rollback</code>.
-     *
-     * @return an internal XAResource
-     */
-    protected InternalXAResource getXAResourceEnd() {
-        return new InternalXAResource() {
-            public void associate(TransactionContext tx) {
-            }
-
-            public void beforeOperation(TransactionContext tx) {
-            }
-
-            public void prepare(TransactionContext tx) {
-            }
-
-            public void commit(TransactionContext tx) {
-                RepositoryImpl.WorkspaceInfo wspInfo =
-                        (RepositoryImpl.WorkspaceInfo)
-                                tx.getAttribute(ATTR_NAME_WORKSPACE_INFO);
-                if (wspInfo != null) {
-                    wspInfo.lockRelease();
-                    tx.removeAttribute(ATTR_NAME_WORKSPACE_INFO);
-                }
-            }
-
-            public void rollback(TransactionContext tx) {
-                RepositoryImpl.WorkspaceInfo wspInfo =
-                        (RepositoryImpl.WorkspaceInfo)
-                                tx.getAttribute(ATTR_NAME_WORKSPACE_INFO);
-                if (wspInfo != null) {
-                    wspInfo.lockRelease();
-                    tx.removeAttribute(ATTR_NAME_WORKSPACE_INFO);
-                }
-            }
-
-            public void afterOperation(TransactionContext tx) {
-            }
-        };
-    }
-
 }
