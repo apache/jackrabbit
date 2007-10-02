@@ -54,7 +54,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.jcr.PropertyType;
-import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.version.Version;
@@ -100,9 +99,9 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
     private final FileSystem fs;
 
     /**
-     * the shared state manager for the version storage
+     * the version state manager for the version storage
      */
-    private SharedItemStateManager sharedStateMgr;
+    private VersionItemStateManager sharedStateMgr;
 
     /**
      * the virtual item state provider that exposes the version storage
@@ -158,7 +157,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
                 cl.added(pt);
                 pMgr.store(cl);
             }
-            sharedStateMgr = createSharedStateManager(pMgr, rootId, ntReg, cacheFactory);
+            sharedStateMgr = createItemStateManager(pMgr, rootId, ntReg, cacheFactory);
 
             stateMgr = new LocalItemStateManager(sharedStateMgr, escFactory, cacheFactory);
             stateMgr.addListener(this);
@@ -167,7 +166,8 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
             historyRoot = new NodeStateEx(stateMgr, ntReg, nodeState, QName.JCR_VERSIONSTORAGE);
 
             // create the virtual item state provider
-            versProvider = new VersionItemStateProvider(this, sharedStateMgr);
+            versProvider = new VersionItemStateProvider(
+                    getHistoryRootId(), sharedStateMgr);
 
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
@@ -405,47 +405,15 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
     }
 
     /**
-     * Sets and stored the node references from external nodes.
-     * @param references
-     * @return <code>true</code> if the references could be set.
-     */
-    public boolean setNodeReferences(NodeReferences references) {
-        acquireWriteLock();
-        try {
-            // filter out version storage intern ones
-            NodeReferences refs = new NodeReferences(references.getId());
-            Iterator iter = references.getReferences().iterator();
-            while (iter.hasNext()) {
-                PropertyId id = (PropertyId) iter.next();
-                if (!hasItem(id.getParentId())) {
-                    refs.addReference(id);
-                }
-            }
-
-            ChangeLog log = new ChangeLog();
-            log.modified(refs);
-            pMgr.store(log);
-            return true;
-        } catch (ItemStateException e) {
-            log.error("Error while setting references: " + e.toString());
-            return false;
-        } finally {
-            releaseWriteLock();
-        }
-    }
-
-    /**
      * {@inheritDoc}
      */
     protected List getItemReferences(InternalVersionItem item) {
-        acquireReadLock();
         try {
-            NodeReferences refs = pMgr.load(new NodeReferencesId(item.getId()));
+            NodeReferences refs = stateMgr.getNodeReferences(
+                    new NodeReferencesId(item.getId()));
             return refs.getReferences();
         } catch (ItemStateException e) {
             return Collections.EMPTY_LIST;
-        } finally {
-            releaseReadLock();
         }
     }
 
@@ -466,7 +434,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
     }
 
     /**
-     * Creates a <code>SharedItemStateManager</code> or derivative.
+     * Creates a <code>VersionItemStateManager</code> or derivative.
      *
      * @param pMgr          persistence manager
      * @param rootId        root node id
@@ -475,12 +443,11 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      * @return item state manager
      * @throws ItemStateException if an error occurs
      */
-    protected SharedItemStateManager createSharedStateManager(PersistenceManager pMgr,
-                                                              NodeId rootId,
-                                                              NodeTypeRegistry ntReg,
-                                                              ItemStateCacheFactory cacheFactory)
+    protected VersionItemStateManager createItemStateManager(PersistenceManager pMgr,
+                                                             NodeId rootId,
+                                                             NodeTypeRegistry ntReg,
+                                                             ItemStateCacheFactory cacheFactory)
             throws ItemStateException {
-
         return new VersionItemStateManager(pMgr, rootId, ntReg, cacheFactory);
     }
 
@@ -533,39 +500,6 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
     }
 
     //--------------------------------------------------------< inner classes >
-    /**
-     * Spezialized SharedItemStateManager that filters out NodeReferences to
-     * non-versioning states.
-     */
-    protected class VersionItemStateManager extends SharedItemStateManager {
-
-        public VersionItemStateManager(PersistenceManager persistMgr,
-                                       NodeId rootNodeId,
-                                       NodeTypeRegistry ntReg,
-                                       ItemStateCacheFactory cacheFactory)
-                throws ItemStateException {
-            super(persistMgr, rootNodeId, ntReg, false, cacheFactory);
-        }
-
-        protected void checkReferentialIntegrity(ChangeLog changes)
-                throws ReferentialIntegrityException, ItemStateException {
-            // only store VV-type references and NV-type references
-
-            // check whether targets of modified node references exist
-            for (Iterator iter = changes.modifiedRefs(); iter.hasNext();) {
-                NodeReferences refs = (NodeReferences) iter.next();
-                NodeId id = refs.getTargetId();
-                // no need to check existence of target if there are no references
-                if (refs.hasReferences()) {
-                    if (!changes.has(id) && !hasItemState(id)) {
-                        // remove references
-                        iter.remove();
-                    }
-                }
-            }
-        }
-
-    }
 
     public static final class DynamicESCFactory implements EventStateCollectionFactory {
 
