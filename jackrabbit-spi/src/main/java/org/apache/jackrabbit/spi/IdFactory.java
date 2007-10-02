@@ -21,6 +21,13 @@ import org.apache.jackrabbit.name.Path;
 
 /**
  * <code>IdFactory</code> defines methods to construct new <code>ItemId</code>s.
+ * This factory is intended to build <code>ItemId</code>s from the parameters
+ * passed to the various create methods and should not make an attempt to
+ * apply additional logic such as e.g. roundtrips to the server or resolution of
+ * <code>Path</code>s. Similarly the SPI implementation namely the
+ * {@link RepositoryService} must be able to deal with the various formats of
+ * an <code>ItemId</code>, since a caller may not (yet) be aware of the uniqueID
+ * part of an ItemId. 
  */
 public interface IdFactory {
 
