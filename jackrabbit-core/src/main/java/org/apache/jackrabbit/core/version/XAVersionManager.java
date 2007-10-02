@@ -462,9 +462,6 @@ public class XAVersionManager extends AbstractVersionManager
      * Delegate the call to our XA item state manager.
      */
     public void prepare(TransactionContext tx) throws TransactionException {
-        vMgr.acquireWriteLock();
-        vMgr.getSharedStateMgr().setNoLockHack(true);
-        vmgrLocked = true;
         ((XAItemStateManager) stateMgr).prepare(tx);
     }
 
@@ -476,12 +473,8 @@ public class XAVersionManager extends AbstractVersionManager
      */
     public void commit(TransactionContext tx) throws TransactionException {
         ((XAItemStateManager) stateMgr).commit(tx);
-        vMgr.getSharedStateMgr().setNoLockHack(false);
-
         Map xaItems = (Map) tx.getAttribute(ITEMS_ATTRIBUTE_NAME);
         vMgr.itemsUpdated(xaItems.values());
-        vMgr.releaseWriteLock();
-        vmgrLocked = false;
     }
 
     /**
@@ -491,11 +484,6 @@ public class XAVersionManager extends AbstractVersionManager
      */
     public void rollback(TransactionContext tx) {
         ((XAItemStateManager) stateMgr).rollback(tx);
-        if (vmgrLocked) {
-            vMgr.getSharedStateMgr().setNoLockHack(false);
-            vMgr.releaseWriteLock();
-            vmgrLocked = false;
-        }
     }
 
     /**
@@ -505,6 +493,80 @@ public class XAVersionManager extends AbstractVersionManager
      */
     public void afterOperation(TransactionContext tx) {
         ((XAItemStateManager) stateMgr).afterOperation(tx);
+    }
+
+    /**
+     * Returns an {@link InternalXAResource} that acquires a write lock on the
+     * version manager in {@link InternalXAResource#prepare(TransactionContext)}
+     * if there are any version related items involved in this transaction.
+     *
+     * @return an internal XA resource.
+     */
+    public InternalXAResource getXAResourceBegin() {
+        return new InternalXAResource() {
+            public void associate(TransactionContext tx) {
+            }
+
+            public void beforeOperation(TransactionContext tx) {
+            }
+
+            public void prepare(TransactionContext tx) {
+                Map vItems = (Map) tx.getAttribute(ITEMS_ATTRIBUTE_NAME);
+                if (!vItems.isEmpty()) {
+                    vMgr.acquireWriteLock();
+                    vMgr.getSharedStateMgr().setNoLockHack(true);
+                    vmgrLocked = true;
+                }
+            }
+
+            public void commit(TransactionContext tx) {
+            }
+
+            public void rollback(TransactionContext tx) {
+            }
+
+            public void afterOperation(TransactionContext tx) {
+            }
+        };
+    }
+
+    /**
+     * Returns an {@link InternalXAResource} that releases the write lock on the
+     * version manager in {@link InternalXAResource#commit(TransactionContext)}
+     * or {@link InternalXAResource#rollback(TransactionContext)}.
+     *
+     * @return an internal XA resource.
+     */
+    public InternalXAResource getXAResourceEnd() {
+        return new InternalXAResource() {
+            public void associate(TransactionContext tx) {
+            }
+
+            public void beforeOperation(TransactionContext tx) {
+            }
+
+            public void prepare(TransactionContext tx) {
+            }
+
+            public void commit(TransactionContext tx) {
+                internalReleaseWriteLock();
+            }
+
+            public void rollback(TransactionContext tx) {
+                internalReleaseWriteLock();
+            }
+
+            public void afterOperation(TransactionContext tx) {
+            }
+
+            private void internalReleaseWriteLock() {
+                if (vmgrLocked) {
+                    vMgr.getSharedStateMgr().setNoLockHack(false);
+                    vMgr.releaseWriteLock();
+                    vmgrLocked = false;
+                }
+            }
+        };
     }
 
     //-------------------------------------------------------< implementation >
