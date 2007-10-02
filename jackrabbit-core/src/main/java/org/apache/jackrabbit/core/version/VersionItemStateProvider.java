@@ -25,7 +25,6 @@ import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
-import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
@@ -39,11 +38,6 @@ import javax.jcr.RepositoryException;
 class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateListener {
 
     /**
-     * The version manager
-     */
-    private final VersionManagerImpl vMgr;
-
-    /**
      * The root node UUID for the version storage
      */
     private final NodeId historyRootId;
@@ -51,7 +45,7 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
     /**
      * The item state manager directly on the version persistence mgr
      */
-    private final SharedItemStateManager stateMgr;
+    private final VersionItemStateManager stateMgr;
 
     /**
      * Map of returned items. this is kept for invalidating
@@ -59,13 +53,13 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
     private ReferenceMap items = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
 
     /**
-     * Creates a bew vesuion manager
+     * Creates a new version manager
      *
      */
-    public VersionItemStateProvider(VersionManagerImpl vMgr, SharedItemStateManager stateMgr) {
-        this.vMgr = vMgr;
+    public VersionItemStateProvider(NodeId historyRootId,
+                                    VersionItemStateManager stateMgr) {
+        this.historyRootId = historyRootId;
         this.stateMgr = stateMgr;
-        this.historyRootId = vMgr.getHistoryRootId();
 
         stateMgr.addListener(this);
     }
@@ -122,7 +116,7 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
      * @inheritDoc
      */
     public boolean setNodeReferences(NodeReferences refs) {
-        return vMgr.setNodeReferences(refs);
+        return stateMgr.setNodeReferences(refs);
     }
 
     /**
