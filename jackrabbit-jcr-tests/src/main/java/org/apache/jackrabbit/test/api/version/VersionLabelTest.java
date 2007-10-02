@@ -260,7 +260,7 @@ public class VersionLabelTest extends AbstractVersionTest {
         vHistory.addVersionLabel(rootVersion.getName(), versionLabel, true);
         Version v = vHistory.getVersionByLabel(versionLabel);
 
-        assertEquals("VersionHistory.getVersionByLabel(String) must retrieve the particular version that was specified in addVersionLabel call.", v, rootVersion);
+        assertTrue("VersionHistory.getVersionByLabel(String) must retrieve the particular version that was specified in addVersionLabel call.", v.isSame(rootVersion));
     }
 
     /**

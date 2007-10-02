@@ -123,7 +123,7 @@ public class VersionHistoryTest extends AbstractVersionTest {
             v = it.nextVersion();
             break;
         }
-        assertEquals("The version that is autocreated on version history creation must be the root version", rootVersion, v);
+        assertTrue("The version that is autocreated on version history creation must be the root version", rootVersion.isSame(v));
     }
 
     /**
@@ -177,7 +177,7 @@ public class VersionHistoryTest extends AbstractVersionTest {
         Version v = versionableNode.checkin();
         Version v2 = vHistory.getVersion(v.getName());
 
-        assertEquals("VersionHistory.getVersion(String versionName) must return the version that is identified by the versionName specified, if versionName is the name of a version created by Node.checkin().", v, v2);
+        assertTrue("VersionHistory.getVersion(String versionName) must return the version that is identified by the versionName specified, if versionName is the name of a version created by Node.checkin().", v.isSame(v2));
     }
 
     /**
