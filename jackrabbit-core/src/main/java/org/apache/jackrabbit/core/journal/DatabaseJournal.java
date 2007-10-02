@@ -71,6 +71,11 @@ public class DatabaseJournal extends AbstractJournal {
     private static final String DEFAULT_DDL_NAME = "default.ddl";
 
     /**
+     * Default journal table name, used to check schema completeness.
+     */
+    private static final String DEFAULT_JOURNAL_TABLE = "JOURNAL";
+
+    /**
      * Default reconnect delay in milliseconds.
      */
     private static final long DEFAULT_RECONNECT_DELAY_MS = 10000;
@@ -94,11 +99,6 @@ public class DatabaseJournal extends AbstractJournal {
      * Schema name, bean property.
      */
     private String schema;
-
-    /**
-     * Schema object prefix, bean property.
-     */
-    protected String schemaObjectPrefix;
 
     /**
      * User name, bean property.
@@ -151,6 +151,31 @@ public class DatabaseJournal extends AbstractJournal {
     private long reconnectTimeMs;
 
     /**
+     * SQL statement returning all revisions within a range.
+     */
+    protected String selectRevisionsStmtSQL;
+
+    /**
+     * SQL statement updating the global revision.
+     */
+    protected String updateGlobalStmtSQL;
+
+    /**
+     * SQL statement returning the global revision.
+     */
+    protected String selectGlobalStmtSQL;
+
+    /**
+     * SQL statement appending a new record.
+     */
+    protected String insertRevisionStmtSQL;
+
+    /**
+     * Schema object prefix, bean property.
+     */
+    protected String schemaObjectPrefix;
+
+    /**
      * {@inheritDoc}
      */
     public void init(String id, NamespaceResolver resolver)
@@ -172,6 +197,7 @@ public class DatabaseJournal extends AbstractJournal {
             connection = getConnection();
             connection.setAutoCommit(true);
             checkSchema();
+            buildSQLStatements();
             prepareStatements();
         } catch (Exception e) {
             String msg = "Unable to create connection.";
@@ -541,23 +567,7 @@ public class DatabaseJournal extends AbstractJournal {
      * @throws Exception if an error occurs
      */
     private void checkSchema() throws Exception {
-        DatabaseMetaData metaData = connection.getMetaData();
-        String tableName = schemaObjectPrefix + "JOURNAL";
-        if (metaData.storesLowerCaseIdentifiers()) {
-            tableName = tableName.toLowerCase();
-        } else if (metaData.storesUpperCaseIdentifiers()) {
-            tableName = tableName.toUpperCase();
-        }
-
-        ResultSet rs = metaData.getTables(null, null, tableName, null);
-        boolean schemaExists;
-        try {
-            schemaExists = rs.next();
-        } finally {
-            rs.close();
-        }
-
-        if (!schemaExists) {
+        if (!schemaExists(connection.getMetaData())) {
             // read ddl from resources
             InputStream in = DatabaseJournal.class.getResourceAsStream(schema + ".ddl");
             if (in == null) {
@@ -593,6 +603,33 @@ public class DatabaseJournal extends AbstractJournal {
     }
 
     /**
+     * Checks whether the required table(s) exist in the schema. May be
+     * overridden by subclasses to allow different table names.
+     *
+     * @param metaData database meta data
+     * @return <code>true</code> if the schema exists
+     * @throws SQLException if an SQL error occurs
+     */
+    protected boolean schemaExists(DatabaseMetaData metaData)
+            throws SQLException {
+
+        String tableName = schemaObjectPrefix + DEFAULT_JOURNAL_TABLE;
+        if (metaData.storesLowerCaseIdentifiers()) {
+            tableName = tableName.toLowerCase();
+        } else if (metaData.storesUpperCaseIdentifiers()) {
+            tableName = tableName.toUpperCase();
+        }
+
+        ResultSet rs = metaData.getTables(null, null, tableName, null);
+
+        try {
+            return rs.next();
+        } finally {
+            rs.close();
+        }
+    }
+
+    /**
      * Creates an SQL statement for schema creation by variable substitution.
      *
      * @param sql a SQL string which may contain variables to substitute
@@ -603,25 +640,36 @@ public class DatabaseJournal extends AbstractJournal {
     }
 
     /**
-     * Builds and prepares the SQL statements.
+     * Builds the SQL statements. May be overridden by subclasses to allow
+     * different table and/or column names.
+     */
+    protected void buildSQLStatements() {
+        selectRevisionsStmtSQL =
+                "select REVISION_ID, JOURNAL_ID, PRODUCER_ID, REVISION_DATA " +
+                "from " + schemaObjectPrefix + "JOURNAL " +
+                "where REVISION_ID > ?";
+        updateGlobalStmtSQL =
+                "update " + schemaObjectPrefix + "GLOBAL_REVISION " +
+                "set revision_id = revision_id + 1";
+        selectGlobalStmtSQL =
+                "select revision_id " +
+                "from " + schemaObjectPrefix + "GLOBAL_REVISION";
+        insertRevisionStmtSQL =
+                "insert into " + schemaObjectPrefix + "JOURNAL" +
+                "(REVISION_ID, JOURNAL_ID, PRODUCER_ID, REVISION_DATA) " +
+                "values (?,?,?,?)";
+    }
+
+    /**
+     * Prepares the SQL statements.
      *
      * @throws SQLException if an error occurs
      */
     private void prepareStatements() throws SQLException {
-        selectRevisionsStmt = connection.prepareStatement(
-                "select REVISION_ID, JOURNAL_ID, PRODUCER_ID, REVISION_DATA " +
-                "from " + schemaObjectPrefix + "JOURNAL " +
-                "where REVISION_ID > ?");
-        updateGlobalStmt = connection.prepareStatement(
-                "update " + schemaObjectPrefix + "GLOBAL_REVISION " +
-                "set revision_id = revision_id + 1");
-        selectGlobalStmt = connection.prepareStatement(
-                "select revision_id " +
-                "from " + schemaObjectPrefix + "GLOBAL_REVISION");
-        insertRevisionStmt = connection.prepareStatement(
-                "insert into " + schemaObjectPrefix + "JOURNAL" +
-                "(REVISION_ID, JOURNAL_ID, PRODUCER_ID, REVISION_DATA) " +
-                "values (?,?,?,?)");
+        selectRevisionsStmt = connection.prepareStatement(selectRevisionsStmtSQL);
+        updateGlobalStmt = connection.prepareStatement(updateGlobalStmtSQL);
+        selectGlobalStmt = connection.prepareStatement(selectGlobalStmtSQL);
+        insertRevisionStmt = connection.prepareStatement(insertRevisionStmtSQL);
     }
 
     /**
