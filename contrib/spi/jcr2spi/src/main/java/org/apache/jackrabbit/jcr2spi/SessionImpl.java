@@ -304,7 +304,7 @@ public class SessionImpl implements Session, ManagerProvider {
         Path destPath = getQPath(destAbsPath);
 
         // all validation is performed by Move Operation and state-manager
-        Operation op = Move.create(srcPath, destPath, getHierarchyManager(), getNamespaceResolver());
+        Operation op = Move.create(srcPath, destPath, getHierarchyManager(), getNamespaceResolver(), true);
         itemStateManager.execute(op);
     }
 

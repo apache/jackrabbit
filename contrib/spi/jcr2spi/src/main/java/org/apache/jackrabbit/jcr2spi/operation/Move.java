@@ -123,7 +123,9 @@ public class Move extends AbstractOperation {
 
     //------------------------------------------------------------< Factory >---
     public static Operation create(Path srcPath, Path destPath,
-                                   HierarchyManager hierMgr, NamespaceResolver nsResolver)
+                                   HierarchyManager hierMgr,
+                                   NamespaceResolver nsResolver,
+                                   boolean sessionMove)
         throws ItemExistsException, NoSuchNodeTypeException, RepositoryException {
         // src must not be ancestor of destination
         try {
@@ -158,21 +160,24 @@ public class Move extends AbstractOperation {
         NodeState destParentState = getNodeState(destPath.getAncestor(1), hierMgr, nsResolver);
         QName destName = destElement.getName();
 
-        // lazy check for existing items at destination. since the hierarchy
-        // may not be complete it is possible that an conflict is only detected
-        // upon saving the 'move'.
+        // for session-move perform a lazy check for existing items at destination.
+        // since the hierarchy may not be complete it is possible that an conflict
+        // is only detected upon saving the 'move'.
         NodeEntry destEntry = (NodeEntry) destParentState.getHierarchyEntry();
-        if (destEntry.hasPropertyEntry(destName)) {
-            throw new ItemExistsException("Move destination already exists (Property).");
-        } else if (destEntry.hasNodeEntry(destName)) {
-            NodeEntry existing = destEntry.getNodeEntry(destName, Path.INDEX_DEFAULT);
-            if (existing != null) {
-                try {
-                    if (!existing.getNodeState().getDefinition().allowsSameNameSiblings()) {
-                        throw new ItemExistsException("Node existing at move destination does not allow same name siblings.");
+        if (sessionMove) {
+            if (destEntry.hasPropertyEntry(destName)) {
+                throw new ItemExistsException("Move destination already exists (Property).");
+            }
+            if (destEntry.hasNodeEntry(destName)) {
+                NodeEntry existing = destEntry.getNodeEntry(destName, Path.INDEX_DEFAULT);
+                if (existing != null) {
+                    try {
+                        if (!existing.getNodeState().getDefinition().allowsSameNameSiblings()) {
+                            throw new ItemExistsException("Node existing at move destination does not allow same name siblings.");
+                        }
+                    } catch (ItemNotFoundException e) {
+                        // existing apparent not valid any more -> probably no conflict
                     }
-                } catch (ItemNotFoundException e) {
-                    // existing apparent not valid any more -> probably no conflict
                 }
             }
         }
