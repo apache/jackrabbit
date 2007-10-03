@@ -57,7 +57,7 @@ public class ReorderTest extends AbstractJCRTest {
         return path.substring(path.lastIndexOf('/')+1);
     }
 
-    private static void testOrder(Node parent, Node[] children) throws RepositoryException {
+    protected static void testOrder(Node parent, Node[] children) throws RepositoryException {
         NodeIterator it = parent.getNodes();
         int i = 0;
         while (it.hasNext()) {
