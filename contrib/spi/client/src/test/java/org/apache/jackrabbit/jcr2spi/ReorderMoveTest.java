@@ -39,7 +39,7 @@ public class ReorderMoveTest extends AbstractJCRTest {
         testRootNode.save();
     }
 
-   private Node[] createOrderableChildren(boolean sns, boolean doSave) throws RepositoryException {
+   private Node[] createOrderableChildren(boolean sns) throws RepositoryException {
         String[] childNames;
         if (sns) {
             childNames = new String[] {nodeName2, nodeName2, nodeName2, nodeName2};
@@ -52,9 +52,7 @@ public class ReorderMoveTest extends AbstractJCRTest {
         children[2] = srcParent.addNode(childNames[2], testNodeType);
         children[3] = srcParent.addNode(childNames[3], testNodeType);
 
-        if (doSave) {
-            testRootNode.save();
-        }
+        testRootNode.save();
         return children;
    }
 
@@ -82,7 +80,7 @@ public class ReorderMoveTest extends AbstractJCRTest {
      * Move a orderable child node and reorder the remaining nodes.
      */
     public void testMoveAndReorder() throws RepositoryException {
-        Node[] children = createOrderableChildren(false, true);
+        Node[] children = createOrderableChildren(false);
         String oldName = children[2].getName();
         // move
         testRootNode.getSession().move(children[2].getPath(), destPath);
@@ -99,7 +97,7 @@ public class ReorderMoveTest extends AbstractJCRTest {
      * Move a orderable SNS-node and reorder the remaining nodes at source-parent.
      */
     public void testMoveAndReorderSNS() throws RepositoryException {
-        Node[] children = createOrderableChildren(true, true);
+        Node[] children = createOrderableChildren(true);
         String snsName = children[0].getName();
 
         // move
@@ -126,7 +124,7 @@ public class ReorderMoveTest extends AbstractJCRTest {
      * away. Test the ordering of the remaining siblings.
      */
     public void testReorderAndMove() throws RepositoryException {
-        Node[] children = createOrderableChildren(false, true);
+        Node[] children = createOrderableChildren(false);
 
         // reorder first
         srcParent.orderBefore(getRelPath(children[0]), null);
@@ -145,7 +143,7 @@ public class ReorderMoveTest extends AbstractJCRTest {
      * away. Test the ordering of the remaining siblings.
      */
     public void testReorderAndMoveSNS() throws RepositoryException {
-        Node[] children = createOrderableChildren(true, true);
+        Node[] children = createOrderableChildren(true);
 
         // reorder first
         srcParent.orderBefore(getRelPath(children[0]), null);
@@ -163,7 +161,7 @@ public class ReorderMoveTest extends AbstractJCRTest {
      * Any attempt reorder a moved node at its original position must fail.
      */
     public void testReorderMovedNode() throws RepositoryException {
-        Node[] children = createOrderableChildren(false, true);
+        Node[] children = createOrderableChildren(false);
 
         String relPath = getRelPath(children[2]);
         testRootNode.getSession().move(children[2].getPath(), destPath);
@@ -182,7 +180,7 @@ public class ReorderMoveTest extends AbstractJCRTest {
      * hierarchy.
      */
     public void testRevertMoveAndReorderSNS() throws RepositoryException {
-        Node[] children = createOrderableChildren(true, true);
+        Node[] children = createOrderableChildren(true);
         // move then reorder
         testRootNode.getSession().move(children[2].getPath(), destPath);
         srcParent.orderBefore(getRelPath(children[1]), null);
@@ -199,7 +197,7 @@ public class ReorderMoveTest extends AbstractJCRTest {
      * hierarchy.
      */
     public void testRevertReorderAndMoveSNS() throws RepositoryException {
-        Node[] children = createOrderableChildren(true, true);
+        Node[] children = createOrderableChildren(true);
         // reorder then move
         srcParent.orderBefore(getRelPath(children[1]), null);
         srcParent.orderBefore(getRelPath(children[3]), getRelPath(children[2]));
@@ -216,7 +214,7 @@ public class ReorderMoveTest extends AbstractJCRTest {
      * hierarchy.
      */
     public void testRevertMoveReorderedSNS() throws RepositoryException {
-        Node[] children = createOrderableChildren(true, true);
+        Node[] children = createOrderableChildren(true);
         // reorder then move
         srcParent.orderBefore(getRelPath(children[1]), null);
         srcParent.orderBefore(getRelPath(children[3]), getRelPath(children[2]));
