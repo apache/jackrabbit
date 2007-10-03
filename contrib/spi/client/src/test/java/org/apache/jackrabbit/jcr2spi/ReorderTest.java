@@ -33,11 +33,11 @@ public class ReorderTest extends AbstractJCRTest {
         if (!testRootNode.getPrimaryNodeType().hasOrderableChildNodes()) {
             throw new NotExecutableException("Test node does not have orderable children.");
         }
+        NodeIterator it = testRootNode.getNodes();
+        if (it.hasNext()) {
+            throw new NotExecutableException("Test node already contains child nodes");
+        }
         createOrderableChildren();
-    }
-
-    protected void tearDown() throws Exception {
-        super.tearDown();
     }
 
     protected void createOrderableChildren() throws RepositoryException, LockException, ConstraintViolationException, NoSuchNodeTypeException, ItemExistsException, VersionException, NotExecutableException {
@@ -63,10 +63,14 @@ public class ReorderTest extends AbstractJCRTest {
         while (it.hasNext()) {
             Node child = it.nextNode();
             if (i >= children.length) {
-                fail("Reorder removed a child node.");
+                fail("Reorder added a child node.");
             }
             assertTrue("Wrong order of children: " + child + " is not the same as " + children[i], child.isSame(children[i]));
             i++;
+        }
+
+        if (i < children.length-1) {
+            fail("Reorder removed a child node.");
         }
     }
 
