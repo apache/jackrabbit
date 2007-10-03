@@ -61,7 +61,6 @@ public class TestAll extends TestCase {
         suite.addTestSuite(RemoveNodeTest.class);
         suite.addTestSuite(RemovePropertyTest.class);
         suite.addTestSuite(RemoveReferenceableNodeTest.class);
-        suite.addTestSuite(RemoveReferenceableTest.class);
         suite.addTestSuite(RemoveSNSTest.class);
 
         // rename
