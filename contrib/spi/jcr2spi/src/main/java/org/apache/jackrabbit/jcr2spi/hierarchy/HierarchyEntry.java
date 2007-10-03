@@ -95,9 +95,9 @@ public interface HierarchyEntry {
      * or if the corresponding state has been removed in the mean time.
      *
      * @return the referenced <code>ItemState</code>.
-     * @throws NoSuchItemStateException if the <code>ItemState</code> does not
+     * @throws ItemNotFoundException if the <code>ItemState</code> does not
      * exist anymore.
-     * @throws ItemStateException If an error occurs while retrieving the
+     * @throws RepositoryException If an error occurs while retrieving the
      * <code>ItemState</code>.
      */
     public ItemState getItemState() throws ItemNotFoundException, RepositoryException;
