@@ -742,8 +742,7 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
                             e.getMixinTypeNames(), e.getUserID());
                     events.add(serEvent);
                 }
-                serBundles[i] = new EventBundleImpl(events,
-                        bundles[i].isLocal(), bundles[i].getBundleId());
+                serBundles[i] = new EventBundleImpl(events, bundles[i].isLocal());
             }
             return serBundles;
         } catch (RepositoryException e) {

@@ -24,7 +24,6 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.commons.EventImpl;
 import org.apache.jackrabbit.spi.commons.EventBundleImpl;
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
@@ -132,8 +131,7 @@ class EventSubscription implements EventListener {
                     }
                 }
             }
-            bundles[i] = new EventBundleImpl(filteredEvents,
-                    bundles[i].isLocal(), bundles[i].getBundleId());
+            bundles[i] = new EventBundleImpl(filteredEvents, bundles[i].isLocal());
         }
         return bundles;
     }
@@ -186,8 +184,7 @@ class EventSubscription implements EventListener {
                 log.warn("Unable to create SPI Event: " + ex);
             }
         }
-        String bundleId = UUID.randomUUID().toString();
-        EventBundle bundle = new EventBundleImpl(spiEvents, isLocal, bundleId);
+        EventBundle bundle = new EventBundleImpl(spiEvents, isLocal);
         synchronized (eventBundles) {
             eventBundles.add(bundle);
             eventBundles.notify();

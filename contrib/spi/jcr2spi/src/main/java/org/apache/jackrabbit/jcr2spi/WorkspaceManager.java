@@ -615,7 +615,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         if (log.isDebugEnabled()) {
             log.debug("received {} event bundles.", new Integer(eventBundles.length));
             for (int i = 0; i < eventBundles.length; i++) {
-                log.debug("BundleId: {}", eventBundles[i].getBundleId());
                 log.debug("IsLocal:  {}", Boolean.valueOf(eventBundles[i].isLocal()));
                 for (Iterator it = eventBundles[i].getEvents(); it.hasNext(); ) {
                     Event e = (Event) it.next();

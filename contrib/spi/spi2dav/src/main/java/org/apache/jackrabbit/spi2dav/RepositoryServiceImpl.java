@@ -1594,8 +1594,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     }
                     bundles.add(new EventBundleImpl(
                             buildEventList(bundleElement, sessionInfo),
-                            isLocal,
-                            null)); // TODO: bundle id is missing
+                            isLocal));
                 }
                 events = (EventBundle[]) bundles.toArray(new EventBundle[bundles.size()]);
             }

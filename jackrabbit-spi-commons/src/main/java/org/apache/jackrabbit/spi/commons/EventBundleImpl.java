@@ -33,11 +33,6 @@ public class EventBundleImpl implements EventBundle, Serializable {
     private final boolean isLocal;
 
     /**
-     * The bundle id.
-     */
-    private final String bundleId;
-
-    /**
      * The events in this bundle.
      */
     private final Collection events;
@@ -47,12 +42,10 @@ public class EventBundleImpl implements EventBundle, Serializable {
      *
      * @param events   the events for this bundle.
      * @param isLocal  if this events were created due to a local change.
-     * @param bundleId the bundle id.
      */
-    public EventBundleImpl(Collection events, boolean isLocal, String bundleId) {
+    public EventBundleImpl(Collection events, boolean isLocal) {
         this.events = events;
         this.isLocal = isLocal;
-        this.bundleId = bundleId;
     }
 
     /**
@@ -60,13 +53,6 @@ public class EventBundleImpl implements EventBundle, Serializable {
      */
     public Iterator getEvents() {
         return events.iterator();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String getBundleId() {
-        return bundleId;
     }
 
     /**

@@ -34,13 +34,6 @@ public interface EventBundle {
     public Iterator getEvents();
 
     /**
-     * Returns the identifier for this <code>EventBundle</code>.
-     *
-     * @return the identifier for this <code>EventBundle</code>.
-     */
-    public String getBundleId();
-
-    /**
      * Returns <code>true</code> if this event bundle is associated with a
      * change that was initiated by a local session info. Event bundles for
      * external changes will aways return <code>false</code>.
