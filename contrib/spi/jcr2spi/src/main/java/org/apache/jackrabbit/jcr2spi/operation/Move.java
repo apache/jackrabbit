@@ -53,7 +53,9 @@ public class Move extends AbstractOperation {
     private final NodeState srcParentState;
     private final NodeState destParentState;
 
-    private Move(NodeState srcNodeState, NodeState srcParentState, NodeState destParentState, QName destName) {
+    private final boolean sessionMove;
+
+    private Move(NodeState srcNodeState, NodeState srcParentState, NodeState destParentState, QName destName, boolean sessionMove) {
         this.srcId = (NodeId) srcNodeState.getId();
         this.destParentId = destParentState.getNodeId();
         this.destName = destName;
@@ -61,7 +63,9 @@ public class Move extends AbstractOperation {
         this.srcState = srcNodeState;
         this.srcParentState = srcParentState;
         this.destParentState = destParentState;
-        
+
+        this.sessionMove = sessionMove;
+
         addAffectedItemState(srcNodeState);
         addAffectedItemState(srcParentState);
         addAffectedItemState(destParentState);
@@ -84,6 +88,9 @@ public class Move extends AbstractOperation {
      * @see Operation#persisted()
      */
     public void persisted() {
+        if (sessionMove) {
+            throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
+        }
         // non-recursive invalidation
         try {
             srcState.getNodeEntry().move(destName, destParentState.getNodeEntry(), false);
@@ -164,25 +171,25 @@ public class Move extends AbstractOperation {
         // since the hierarchy may not be complete it is possible that an conflict
         // is only detected upon saving the 'move'.
         NodeEntry destEntry = (NodeEntry) destParentState.getHierarchyEntry();
-        if (sessionMove) {
-            if (destEntry.hasPropertyEntry(destName)) {
-                throw new ItemExistsException("Move destination already exists (Property).");
-            }
-            if (destEntry.hasNodeEntry(destName)) {
-                NodeEntry existing = destEntry.getNodeEntry(destName, Path.INDEX_DEFAULT);
-                if (existing != null) {
-                    try {
-                        if (!existing.getNodeState().getDefinition().allowsSameNameSiblings()) {
-                            throw new ItemExistsException("Node existing at move destination does not allow same name siblings.");
-                        }
-                    } catch (ItemNotFoundException e) {
-                        // existing apparent not valid any more -> probably no conflict
+        if (destEntry.hasPropertyEntry(destName) && sessionMove) {
+            throw new ItemExistsException("Move destination already exists (Property).");
+        }
+        // force childnodeentries list to be present before the move is executed
+        // on the hierarchy entry.
+        if (destEntry.hasNodeEntry(destName)) {
+            NodeEntry existing = destEntry.getNodeEntry(destName, Path.INDEX_DEFAULT);
+            if (existing != null && sessionMove) {
+                try {
+                    if (!existing.getNodeState().getDefinition().allowsSameNameSiblings()) {
+                        throw new ItemExistsException("Node existing at move destination does not allow same name siblings.");
                     }
+                } catch (ItemNotFoundException e) {
+                    // existing apparent not valid any more -> probably no conflict
                 }
             }
         }
 
-        Move move = new Move(srcState, srcParentState, destParentState, destName);
+        Move move = new Move(srcState, srcParentState, destParentState, destName, sessionMove);
         return move;
     }
 }
