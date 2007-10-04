@@ -29,7 +29,7 @@
   <groupId>org.apache.jackrabbit</groupId>
   <artifactId>jackrabbit</artifactId>
   <name>Apache Jackrabbit</name>
-  <version>1.3.2</version>
+  <version>1.3.3</version>
   <packaging>pom</packaging>
   <!--
     Keep the description on a single line. Otherwise Maven might generate
