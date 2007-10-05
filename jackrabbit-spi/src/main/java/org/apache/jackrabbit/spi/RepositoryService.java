@@ -766,7 +766,7 @@ public interface RepositoryService {
 
     //--------------------------------------------------------< Observation >---
     /**
-     * Creates an event filter. If the repository supportes observation, the
+     * Creates an event filter. If the repository supports observation, the
      * filter created is based on the parameters available in {@link
      * javax.jcr.observation.ObservationManager#addEventListener}.<p/>
      * Note, that an SPI implementation may support observation even if
