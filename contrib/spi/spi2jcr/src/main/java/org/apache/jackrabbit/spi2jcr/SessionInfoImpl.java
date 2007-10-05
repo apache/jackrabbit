@@ -17,9 +17,11 @@
 package org.apache.jackrabbit.spi2jcr;
 
 import org.apache.jackrabbit.spi.SessionInfo;
-import org.apache.jackrabbit.name.SessionNamespaceResolver;
+import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.apache.jackrabbit.name.NamespaceResolver;
 
+import javax.jcr.NamespaceException;
+import javax.jcr.NamespaceRegistry;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import javax.jcr.Credentials;
@@ -55,11 +57,36 @@ class SessionInfoImpl implements SessionInfo {
      * @param session     the JCR session.
      * @param credentials a copy of the credentials that were used to obtain the
      *                    JCR session.
+     * @throws RepositoryException 
      */
-    SessionInfoImpl(Session session, Credentials credentials) {
+    SessionInfoImpl(Session session, Credentials credentials) throws RepositoryException {
         this.session = session;
-        this.resolver = new SessionNamespaceResolver(session);
         this.credentials = credentials;
+        
+        final NamespaceRegistry nsReg = session.getWorkspace().getNamespaceRegistry();
+       
+        this.resolver = new AbstractNamespaceResolver() {
+            public String getPrefix(String uri) throws NamespaceException {
+                try {
+                    return nsReg.getPrefix(uri);
+                }
+                catch (RepositoryException e) {
+                    // should never get here...
+                    throw new NamespaceException("internal error: failed to resolve namespace uri", e);
+                }
+            }
+
+            public String getURI(String prefix) throws NamespaceException {
+                try {
+                    return nsReg.getURI(prefix);
+                }
+                catch (RepositoryException e) {
+                    // should never get here...
+                    throw new NamespaceException("internal error: failed to resolve namespace prefix", e);
+                }
+            }
+        };
+        
     }
 
     /**
