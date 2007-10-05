@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.lock.LockException;
-import javax.transaction.Status;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +39,13 @@ class XAEnvironment {
      * Logger instance for this class
      */
     private static final Logger log = LoggerFactory.getLogger(XAEnvironment.class);
+
+    private static final int STATUS_PREPARING = 1;
+    private static final int STATUS_PREPARED = 2;
+    private static final int STATUS_COMMITTING = 3;
+    private static final int STATUS_COMMITTED = 4;
+    private static final int STATUS_ROLLING_BACK = 5;
+    private static final int STATUS_ROLLED_BACK = 6;
 
     /**
      * Global lock manager.
@@ -256,7 +262,7 @@ class XAEnvironment {
      * unlock operations.
      */
     public void prepare() throws TransactionException {
-        status = Status.STATUS_PREPARING;
+        status = STATUS_PREPARING;
         if (!operations.isEmpty()) {
             lockMgr.beginUpdate();
 
@@ -285,7 +291,7 @@ class XAEnvironment {
                 }
             }
         }
-        status = Status.STATUS_PREPARED;
+        status = STATUS_PREPARED;
     }
 
     /**
@@ -295,14 +301,14 @@ class XAEnvironment {
     public void commit() {
         int oldStatus = status;
 
-        status = Status.STATUS_COMMITTING;
-        if (oldStatus == Status.STATUS_PREPARED) {
+        status = STATUS_COMMITTING;
+        if (oldStatus == STATUS_PREPARED) {
             if (!operations.isEmpty()) {
                 lockMgr.endUpdate();
                 reset();
             }
         }
-        status = Status.STATUS_COMMITTED;
+        status = STATUS_COMMITTED;
     }
 
     /**
@@ -312,8 +318,8 @@ class XAEnvironment {
     public void rollback() {
         int oldStatus = status;
 
-        status = Status.STATUS_ROLLING_BACK;
-        if (oldStatus == Status.STATUS_PREPARED) {
+        status = STATUS_ROLLING_BACK;
+        if (oldStatus == STATUS_PREPARED) {
             if (!operations.isEmpty()) {
                 while (opIndex > 0) {
                     try {
@@ -328,7 +334,7 @@ class XAEnvironment {
                 reset();
             }
         }
-        status = Status.STATUS_ROLLEDBACK;
+        status = STATUS_ROLLED_BACK;
     }
 
     /**
@@ -429,8 +435,8 @@ class XAEnvironment {
          * associated lock information is subject to change.
          */
         public boolean mayChange() {
-            if (status != Status.STATUS_COMMITTED
-                    && status != Status.STATUS_ROLLEDBACK) {
+            if (status != STATUS_COMMITTED
+                    && status != STATUS_ROLLED_BACK) {
                 return true;
             }
             return super.mayChange();
