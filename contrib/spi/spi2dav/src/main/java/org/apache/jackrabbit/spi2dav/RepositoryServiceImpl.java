@@ -761,20 +761,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 throw new ItemNotFoundException("No node for id " + nodeId);
             }
 
-            NodeId parentId = getParentId(propSet, sessionInfo);
-            NodeId id = uriResolver.buildNodeId(parentId, nodeResponse, sessionInfo.getWorkspaceName());
-
             NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
-            NodeInfoImpl nInfo = new NodeInfoImpl(id, parentId, propSet, resolver);
-            if (propSet.contains(ItemResourceConstants.JCR_REFERENCES)) {
-                HrefProperty refProp = new HrefProperty(propSet.get(ItemResourceConstants.JCR_REFERENCES));
-                Iterator hrefIter = refProp.getHrefs().iterator();
-                while(hrefIter.hasNext()) {
-                    String propertyHref = hrefIter.next().toString();
-                    PropertyId propertyId = uriResolver.getPropertyId(propertyHref, sessionInfo);
-                    nInfo.addReference(propertyId);
-                }
-            }
+            NodeId parentId = getParentId(propSet, sessionInfo);
+
+            NodeInfoImpl nInfo = buildNodeInfo(nodeResponse, parentId, propSet, sessionInfo, resolver);
+
             for (Iterator it = childResponses.iterator(); it.hasNext();) {
                 MultiStatusResponse resp = (MultiStatusResponse) it.next();
                 DavPropertySet childProps = resp.getProperties(DavServletResponse.SC_OK);
@@ -805,106 +796,30 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * @see RepositoryService#getItemInfos(SessionInfo, NodeId)
      */
     public Iterator getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException {
-        // set of properties to be retrieved
-        DavPropertyNameSet nameSet = new DavPropertyNameSet();
-        nameSet.add(ItemResourceConstants.JCR_NAME);
-        nameSet.add(ItemResourceConstants.JCR_INDEX);
-        nameSet.add(ItemResourceConstants.JCR_PARENT);
-        nameSet.add(ItemResourceConstants.JCR_PRIMARYNODETYPE);
-        nameSet.add(ItemResourceConstants.JCR_MIXINNODETYPES);
-        nameSet.add(ItemResourceConstants.JCR_REFERENCES);
-        nameSet.add(ItemResourceConstants.JCR_UUID);
-        nameSet.add(ItemResourceConstants.JCR_PATH);
-        nameSet.add(DavPropertyName.RESOURCETYPE);
+        // TODO: implement batch read properly:
+        // currently: missing 'value/values' property PropertyInfo cannot be built
+        // currently: missing prop-names with child-NodeInfo
+        List l = new ArrayList();
+        l.add(getNodeInfo(sessionInfo, nodeId));
+        return l.iterator();
+    }
 
-        DavMethodBase method = null;
-        try {
-            String uri = getItemUri(nodeId, sessionInfo);
-            method = new PropFindMethod(uri, nameSet, DEPTH_1);
-            getClient(sessionInfo).executeMethod(method);
-            method.checkSuccess();
-
-            MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();
-            if (responses.length < 1) {
-                throw new ItemNotFoundException("Unable to retrieve the node with id " + nodeId);
-            }
-
-            MultiStatusResponse nodeResponse = null;
-            List childResponses = new ArrayList();
-            for (int i = 0; i < responses.length; i++) {
-                if (isSameResource(uri, responses[i])) {
-                    nodeResponse = responses[i];
-                } else {
-                    childResponses.add(responses[i]);
-                }
-            }
-
-            if (nodeResponse == null) {
-                throw new ItemNotFoundException("Unable to retrieve the node " + nodeId);
-            }
-
-            DavPropertySet propSet = nodeResponse.getProperties(DavServletResponse.SC_OK);
-            Object type = propSet.get(DavPropertyName.RESOURCETYPE).getValue();
-            if (type == null) {
-                // the given id points to a Property instead of a Node
-                throw new ItemNotFoundException("No node for id " + nodeId);
-            }
-
-            NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
-
-            NodeId parentId = getParentId(propSet, sessionInfo);
-            NodeId id = uriResolver.buildNodeId(parentId, nodeResponse, sessionInfo.getWorkspaceName());
-            NodeInfoImpl nInfo = new NodeInfoImpl(id, parentId, propSet, resolver);
-            if (propSet.contains(ItemResourceConstants.JCR_REFERENCES)) {
-                HrefProperty refProp = new HrefProperty(propSet.get(ItemResourceConstants.JCR_REFERENCES));
-                Iterator hrefIter = refProp.getHrefs().iterator();
-                while(hrefIter.hasNext()) {
-                    String propertyHref = hrefIter.next().toString();
-                    PropertyId propertyId = uriResolver.getPropertyId(propertyHref, sessionInfo);
-                    nInfo.addReference(propertyId);
-                }
-            }
-
-            List infos = new ArrayList(responses.length);
-            infos.add(nInfo);
-
-            for (Iterator it = childResponses.iterator(); it.hasNext();) {
-                MultiStatusResponse resp = (MultiStatusResponse) it.next();
-                DavPropertySet childProps = resp.getProperties(DavServletResponse.SC_OK);
-                if (childProps.contains(DavPropertyName.RESOURCETYPE) &&
-                    childProps.get(DavPropertyName.RESOURCETYPE).getValue() != null) {
-                    // any other resource type than default (empty) is represented by a node item
-                    parentId = getParentId(childProps, sessionInfo);
-                    id = uriResolver.buildNodeId(parentId, resp, sessionInfo.getWorkspaceName());
-                    nInfo = new NodeInfoImpl(id, parentId, childProps, resolver);
-                    if (childProps.contains(ItemResourceConstants.JCR_REFERENCES)) {
-                        HrefProperty refProp = new HrefProperty(childProps.get(ItemResourceConstants.JCR_REFERENCES));
-                        Iterator hrefIter = refProp.getHrefs().iterator();
-                        while(hrefIter.hasNext()) {
-                            String propertyHref = hrefIter.next().toString();
-                            PropertyId propertyId = uriResolver.getPropertyId(propertyHref, sessionInfo);
-                            nInfo.addReference(propertyId);
-                        }
-                    }
-                    infos.add(nInfo);
-                } else {
-                    PropertyId childId = uriResolver.buildPropertyId(nInfo.getId(), resp, sessionInfo.getWorkspaceName());
-                    nInfo.addPropertyId(childId);
-                    // TODO: due to missing 'value/values' property PropertyInfo cannot be built
-                }
-            }
-            return infos.iterator();
-        } catch (IOException e) {
-            throw new RepositoryException(e);
-        } catch (DavException e) {
-            throw ExceptionConverter.generate(e);
-        } catch (MalformedPathException e) {
-            throw new RepositoryException(e);
-        } finally {
-            if (method != null) {
-                method.releaseConnection();
+    private NodeInfoImpl buildNodeInfo(MultiStatusResponse nodeResponse,
+                                       NodeId parentId, DavPropertySet propSet,
+                                       SessionInfo sessionInfo,
+                                       NamespaceResolver resolver) throws MalformedPathException, RepositoryException {
+        NodeId id = uriResolver.buildNodeId(parentId, nodeResponse, sessionInfo.getWorkspaceName());
+        NodeInfoImpl nInfo = new NodeInfoImpl(id, parentId, propSet, resolver);
+        if (propSet.contains(ItemResourceConstants.JCR_REFERENCES)) {
+            HrefProperty refProp = new HrefProperty(propSet.get(ItemResourceConstants.JCR_REFERENCES));
+            Iterator hrefIter = refProp.getHrefs().iterator();
+            while(hrefIter.hasNext()) {
+                String propertyHref = hrefIter.next().toString();
+                PropertyId propertyId = uriResolver.getPropertyId(propertyHref, sessionInfo);
+                nInfo.addReference(propertyId);
             }
         }
+        return nInfo;
     }
 
     /**
@@ -986,7 +901,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         PropFindMethod method = null;
         try {
             String uri = getItemUri(propertyId, sessionInfo);
-            method = new PropFindMethod(uri, nameSet, DEPTH_1);
+            method = new PropFindMethod(uri, nameSet, DEPTH_0);
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
 
