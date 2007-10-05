@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.util.Timer;
 
 import javax.transaction.xa.XAException;
-import javax.transaction.Status;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,6 +38,13 @@ public class TransactionContext extends Timer.Task {
      * Logger instance.
      */
     private static final Logger log = LoggerFactory.getLogger(TransactionContext.class);
+
+    private static final int STATUS_PREPARING = 1;
+    private static final int STATUS_PREPARED = 2;
+    private static final int STATUS_COMMITTING = 3;
+    private static final int STATUS_COMMITTED = 4;
+    private static final int STATUS_ROLLING_BACK = 5;
+    private static final int STATUS_ROLLED_BACK = 6;
 
     /**
      * Create a global timer for all transaction contexts.
@@ -123,7 +129,7 @@ public class TransactionContext extends Timer.Task {
      * @throws XAException if an error occurs
      */
     public synchronized void prepare() throws XAException {
-        status = Status.STATUS_PREPARING;
+        status = STATUS_PREPARING;
         beforeOperation();
 
         TransactionException txe = null;
@@ -137,7 +143,7 @@ public class TransactionContext extends Timer.Task {
         }
 
         afterOperation();
-        status = Status.STATUS_PREPARED;
+        status = STATUS_PREPARED;
 
         if (txe != null) {
             // force immediate rollback on error.
@@ -163,10 +169,10 @@ public class TransactionContext extends Timer.Task {
      * @throws XAException if an error occurs
      */
     public synchronized void commit() throws XAException {
-        if (status == Status.STATUS_ROLLEDBACK) {
+        if (status == STATUS_ROLLED_BACK) {
             throw new XAException(XAException.XA_RBTIMEOUT);
         }
-        status = Status.STATUS_COMMITTING;
+        status = STATUS_COMMITTING;
         beforeOperation();
 
         TransactionException txe = null;
@@ -187,7 +193,7 @@ public class TransactionContext extends Timer.Task {
             }
         }
         afterOperation();
-        status = Status.STATUS_COMMITTED;
+        status = STATUS_COMMITTED;
 
         // cancel the rollback task
         cancel();
@@ -205,10 +211,10 @@ public class TransactionContext extends Timer.Task {
      * @throws XAException if an error occurs
      */
     public synchronized void rollback() throws XAException {
-        if (status == Status.STATUS_ROLLEDBACK) {
+        if (status == STATUS_ROLLED_BACK) {
             throw new XAException(XAException.XA_RBTIMEOUT);
         }
-        status = Status.STATUS_ROLLING_BACK;
+        status = STATUS_ROLLING_BACK;
         beforeOperation();
 
         int errors = 0;
@@ -222,7 +228,7 @@ public class TransactionContext extends Timer.Task {
             }
         }
         afterOperation();
-        status = Status.STATUS_ROLLEDBACK;
+        status = STATUS_ROLLED_BACK;
 
         // cancel the rollback task
         cancel();
@@ -238,7 +244,7 @@ public class TransactionContext extends Timer.Task {
      */
     public void run() {
         synchronized (this) {
-            if (status == Status.STATUS_PREPARED) {
+            if (status == STATUS_PREPARED) {
                 try {
                     rollback();
                 } catch (XAException e) {
