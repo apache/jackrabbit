@@ -16,15 +16,19 @@
  */
 package org.apache.jackrabbit.ocm.testmodel;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
 /**
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart Christophe </a>
  * @version $Id: Exp $
  */
+@Node
 public class B
 {
-     private String b1;
-     private String b2;
+     @Field private String b1;
+     @Field private String b2;
      private A a;
      
      

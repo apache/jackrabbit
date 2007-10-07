@@ -47,16 +47,16 @@ import org.apache.jackrabbit.ocm.testmodel.Paragraph;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerSameNameSiblingTest extends DigesterTestBase
+public class AnnotationSameNameSiblingTest extends DigesterTestBase
 {
-	private final static Log log = LogFactory.getLog(ObjectContentManagerSameNameSiblingTest.class);
+	private final static Log log = LogFactory.getLog(AnnotationSameNameSiblingTest.class);
 	private Date date = new Date();
 	
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public ObjectContentManagerSameNameSiblingTest(String testName) throws Exception
+	public AnnotationSameNameSiblingTest(String testName) throws Exception
 	{
 		super(testName);
 		
@@ -66,7 +66,7 @@ public class ObjectContentManagerSameNameSiblingTest extends DigesterTestBase
 	{
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(
-                new TestSuite(ObjectContentManagerSameNameSiblingTest.class));
+                new TestSuite(AnnotationSameNameSiblingTest.class));
 	}
 
 	public void tearDown() throws Exception 

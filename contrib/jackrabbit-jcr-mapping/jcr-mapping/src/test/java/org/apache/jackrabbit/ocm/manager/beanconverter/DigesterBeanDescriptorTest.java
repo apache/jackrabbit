@@ -43,17 +43,17 @@ import org.apache.jackrabbit.ocm.testmodel.Paragraph;
  * 
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
-public class BeanDescriptorTest extends DigesterTestBase {
+public class DigesterBeanDescriptorTest extends DigesterTestBase {
 
     
-    public BeanDescriptorTest(String testname) {
+    public DigesterBeanDescriptorTest(String testname) {
         super(testname);
     }
 
     public static Test suite() {
 
         // All methods starting with "test" will be executed in the test suite.
-        return new RepositoryLifecycleTestSetup(new TestSuite(BeanDescriptorTest.class));
+        return new RepositoryLifecycleTestSetup(new TestSuite(DigesterBeanDescriptorTest.class));
     }
     
     
@@ -62,8 +62,6 @@ public class BeanDescriptorTest extends DigesterTestBase {
      */
     protected void setUp() throws Exception {
         super.setUp();
-
-        clean();
     }
 
     
@@ -71,24 +69,11 @@ public class BeanDescriptorTest extends DigesterTestBase {
      * @see org.apache.jackrabbit.ocm.DigesterTestBase#tearDown()
      */
     public void tearDown() throws Exception {
-        clean();
+        this.cleanUpRepisotory();
+        FakeBeanConverter.cleanUpLog();
         super.tearDown();
     }
 
-    private void clean() throws Exception {
-        if(getSession().itemExists("/someD")) 
-        {
-            getSession().getItem("/someD").remove();
-            getSession().save();
-        }
-        
-        if (getObjectContentManager().objectExists("/test"))
-        {
-            getObjectContentManager().remove("/test");
-            getObjectContentManager().save();
-        }           
-
-    }
     
     public void testBasic() throws Exception 
     {

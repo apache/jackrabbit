@@ -37,15 +37,15 @@ import org.apache.jackrabbit.ocm.testmodel.Discriminator;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerTest extends DigesterTestBase
+public class DigesterSimpleTest extends DigesterTestBase
 {
-    private final static Log log = LogFactory.getLog(ObjectContentManagerTest.class);
+    private final static Log log = LogFactory.getLog(DigesterSimpleTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public ObjectContentManagerTest(String testName)  throws Exception
+    public DigesterSimpleTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -54,7 +54,7 @@ public class ObjectContentManagerTest extends DigesterTestBase
     {
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(
-                new TestSuite(ObjectContentManagerTest.class));
+                new TestSuite(DigesterSimpleTest.class));
     }
 
 

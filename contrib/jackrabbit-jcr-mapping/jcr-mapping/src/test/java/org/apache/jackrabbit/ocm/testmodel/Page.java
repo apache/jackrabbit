@@ -17,18 +17,26 @@
 package org.apache.jackrabbit.ocm.testmodel;
 
 import java.util.ArrayList;
-import java.util.Collection;
+
+
+import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Collection;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 
 /** 
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  * 
  */
+@Node(jcrType="ocm:page", discriminator=false)
 public class Page
 {
-	String path;
-    String title;
-    Collection paragraphs;
+	@Field(path=true) String path;
+    @Field(jcrName="ocm:title") String title;
+    
+    @Collection(elementClassName=Paragraph.class, collectionConverter=NTCollectionConverterImpl.class) 
+    java.util.Collection paragraphs;
     
     public String getPath()
     {
@@ -41,14 +49,14 @@ public class Page
 	/**
      * @return Returns the paragraphs.
      */
-    public Collection getParagraphs()
+    public java.util.Collection getParagraphs()
     {
         return paragraphs;
     }
     /**
      * @param paragraphs The paragraphs to set.
      */
-    public void setParagraphs(Collection paragraphs)
+    public void setParagraphs(java.util.Collection paragraphs)
     {
         this.paragraphs = paragraphs;
     }

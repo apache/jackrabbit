@@ -16,14 +16,20 @@
  */
 package org.apache.jackrabbit.ocm.testmodel;
 
+import org.apache.jackrabbit.ocm.manager.beanconverter.impl.InlineBeanConverterImpl;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Bean;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
 
 /**
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
+@Node
 public class D {
-    private String path;
-    private String d1;
-    private B b1;
+    @Field(path=true) private String path;
+    @Field private String d1;
+    @Bean(converter=InlineBeanConverterImpl.class)private B b1;
 
     /**
      * @return Returns the dB.

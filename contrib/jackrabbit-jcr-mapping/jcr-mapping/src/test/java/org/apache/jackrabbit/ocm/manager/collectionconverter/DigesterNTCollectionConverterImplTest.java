@@ -37,15 +37,15 @@ import org.apache.jackrabbit.ocm.testmodel.Paragraph;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class NTCollectionConverterImplTest extends DigesterTestBase
+public class DigesterNTCollectionConverterImplTest extends DigesterTestBase
 {
-    private final static Log log = LogFactory.getLog(NTCollectionConverterImplTest.class);
+    private final static Log log = LogFactory.getLog(DigesterNTCollectionConverterImplTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public NTCollectionConverterImplTest(String testName)  throws Exception
+    public DigesterNTCollectionConverterImplTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -54,7 +54,7 @@ public class NTCollectionConverterImplTest extends DigesterTestBase
     {
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(
-                new TestSuite(NTCollectionConverterImplTest.class));
+                new TestSuite(DigesterNTCollectionConverterImplTest.class));
     }
     
     
@@ -63,11 +63,7 @@ public class NTCollectionConverterImplTest extends DigesterTestBase
      */
     public void tearDown() throws Exception
     {
-        if (getObjectContentManager().objectExists("/test"))
-        {
-            getObjectContentManager().remove("/test");
-            getObjectContentManager().save();
-        }        
+    	this.cleanUpRepisotory();          
     	
         super.tearDown();
     }       

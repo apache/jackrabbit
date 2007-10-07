@@ -16,15 +16,19 @@
  */
 package org.apache.jackrabbit.ocm.testmodel;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
 
 /**
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
+@Node
 public class DFull {
-    private String path;
-    private String d1;
-    private String b1;
-    private String b2;
+    @Field(path=true) private String path;
+    @Field private String d1;
+    @Field private String b1;
+    @Field private String b2;
 
     /**
      * @return Returns the b1.

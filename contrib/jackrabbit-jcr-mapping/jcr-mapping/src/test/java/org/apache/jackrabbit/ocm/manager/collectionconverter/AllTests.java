@@ -36,13 +36,21 @@ public class AllTests {
     public static Test buildSuite() {
         TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.manager.collectionconverter");
         //$JUnit-BEGIN$
-        suite.addTestSuite(ArrayListTest.class);
-        suite.addTestSuite(DefaultCollectionConverterImplTest.class);        
-        suite.addTestSuite(HashMapTest.class);        
-        suite.addTestSuite(MultiValueCollectionConverterImplTest.class);
-        suite.addTestSuite(NTCollectionConverterImplTest.class);
-        suite.addTestSuite(ResidualPropertiesCollectionConverterImplTest.class);
-        suite.addTestSuite(ResidualNodesCollectionConverterImplTest.class);
+        suite.addTestSuite(AnnotationArrayListTest.class);
+        suite.addTestSuite(AnnotationDefaultCollectionConverterImplTest.class);
+        suite.addTestSuite(AnnotationHashMapTest.class);
+        suite.addTestSuite(AnnotationMultiValueCollectionConverterImplTest.class);
+        suite.addTestSuite(AnnotationNTCollectionConverterImplTest.class);
+        suite.addTestSuite(AnnotationResidualNodesCollectionConverterImplTest.class);
+        suite.addTestSuite(AnnotationResidualPropertiesCollectionConverterImplTest.class);
+        suite.addTestSuite(DigesterArrayListTest.class);        
+        suite.addTestSuite(DigesterDefaultCollectionConverterImplTest.class);                
+        suite.addTestSuite(DigesterHashMapTest.class);
+        suite.addTestSuite(DigesterMultiValueCollectionConverterImplTest.class);                                
+        suite.addTestSuite(DigesterNTCollectionConverterImplTest.class);
+        suite.addTestSuite(DigesterResidualNodesCollectionConverterImplTest.class);
+        suite.addTestSuite(DigesterResidualPropertiesCollectionConverterImplTest.class);
+        
         //$JUnit-END$
 
         return suite;

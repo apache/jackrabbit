@@ -49,6 +49,10 @@ public @interface Collection {
     
 	Class collectionConverter() default DefaultCollectionConverterImpl.class;
 
+	// Use Object.class as default value 
+    // because it is not possible to have a default null value in annotation field	
+	Class collectionClassName() default Object.class; 
+
     String jcrType() default "";
     
     boolean jcrAutoCreated() default false; 

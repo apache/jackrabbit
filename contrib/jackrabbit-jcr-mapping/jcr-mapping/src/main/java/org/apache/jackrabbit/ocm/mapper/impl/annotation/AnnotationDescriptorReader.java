@@ -32,7 +32,6 @@ import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.FieldDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.ImplementDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.MappingDescriptor;
-import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
 
 /**
  * Helper class that reads the xml mapping file and load all class descriptors into memory (object graph)
@@ -77,7 +76,7 @@ public class AnnotationDescriptorReader implements DescriptorReader
 		}
 		else
 		{
-			throw  new InitMapperException("The persistent class " + clazz.getName() + " has not @Node annotation");
+			throw  new InitMapperException("The annotation @Node is not defined for the persistent class " + clazz.getName());
 		}
 	
 		
@@ -199,15 +198,7 @@ public class AnnotationDescriptorReader implements DescriptorReader
 			                             String fieldName, String collectionClassName, Collection collectionAnnotation) {
 		
 		Class targetClass = collectionAnnotation.elementClassName();
-		CollectionDescriptor collectionDescriptor = new CollectionDescriptor();
-		ClassDescriptor classDescriptor = mappingDescriptor.getClassDescriptorByName(targetClass.getName());
-
-		//TODO : This check can be done later by AbstractMapperImpl
-		if (classDescriptor == null)
-			throw new InitMapperException(
-					"Unable to reference class "
-							+ targetClass.getName()
-							+ " as a child node since it has not been registered, ordering perhaps?");
+		CollectionDescriptor collectionDescriptor = new CollectionDescriptor();	
 		
 		collectionDescriptor.setFieldName(fieldName);
 		
@@ -235,10 +226,17 @@ public class AnnotationDescriptorReader implements DescriptorReader
 		{
 		    collectionDescriptor.setElementClassName(targetClass.getName());
 		}
+
+		if (! collectionAnnotation.collectionClassName().equals(Object.class))
+		{
+			collectionDescriptor.setCollectionClassName(collectionAnnotation.collectionClassName().getName());
+		}
 		
 		collectionDescriptor.setCollectionConverter(collectionAnnotation.collectionConverter().getName());
-		
-		collectionDescriptor.setJcrType(annotationNode.jcrType());
+		if (annotationNode != null)
+		{
+		    collectionDescriptor.setJcrType(annotationNode.jcrType());
+		}
 		collectionDescriptor.setJcrSameNameSiblings(collectionAnnotation.jcrSameNameSiblings());
 		collectionDescriptor.setJcrAutoCreated(collectionAnnotation.jcrAutoCreated());
 		collectionDescriptor.setJcrProtected(collectionAnnotation.jcrProtected());

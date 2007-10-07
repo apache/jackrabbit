@@ -586,7 +586,8 @@ public class ObjectConverterImpl implements ObjectConverter {
 			throw new JcrMappingException(
 					"Class of type: "
 							+ object.getClass().getName()
-							+ " has no path mapping. Maybe attribute path=\"true\" for a field element of this class in jcrmapping.xml is missing?");
+							+ " has no path mapping. Maybe attribute path=\"true\" for a field element of this class in mapping descriptor is missing " +
+							  " or maybe it is defined in an ancestor class which has no mapping descriptor.");
 		}
 		String pathField = pathFieldDescriptor.getFieldName();
 

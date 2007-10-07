@@ -16,17 +16,25 @@
  */
 package org.apache.jackrabbit.ocm.testmodel;
 
+import org.apache.jackrabbit.ocm.manager.beanconverter.impl.ParentBeanConverterImpl;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Bean;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
 /** 
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  * 
  */
+@Node(jcrType="ocm:paragraph", discriminator=false)
 public class Paragraph
 {
-    private String path;
-	private String text;
-    // Simple reference to the page containing this pararaph - cannot be updated
-	private Page page; 
+    @Field(path=true) private String path;
+	@Field(jcrName="ocm:text") private String text;
+	
+    // The converter ParentBeanConverterImpl can be used to have a simple reference 
+	// to the page containing this pararaph (parent node) - cannot be updated
+	@Bean(proxy=true, converter=ParentBeanConverterImpl.class) private Page page; 
 	
     public String getPath() 
     {

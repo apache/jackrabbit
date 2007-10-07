@@ -16,15 +16,20 @@
  */
 package org.apache.jackrabbit.ocm.testmodel;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
 /**
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart Christophe </a>
  * @version $Id: Exp $
  */
+@Node(jcrType="ocm:C", discriminator=false)
 public class C
 {
-     private String id;
-     private String name;
+	
+	@Field(jcrName="ocm:id", id=true) private String id;
+    @Field(jcrName="ocm:name") private String name;
      
     /**
      * @return Returns the id.

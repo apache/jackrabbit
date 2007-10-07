@@ -16,35 +16,33 @@
  */
 package org.apache.jackrabbit.ocm.manager.collectionconverter;
 
-import java.util.Arrays;
-import java.util.List;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.ocm.AnnotationTestBase;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManagedHashMap;
+import org.apache.jackrabbit.ocm.testmodel.Paragraph;
 import org.apache.jackrabbit.ocm.testmodel.Residual;
 
 /**
- * Test ResidualPropertiesCollectionConverterImpl
+ * Test ResidualNodesCollectionConverterImpl
  *
  * @author <a href="mailto:fmeschbe[at]apache[dot]com">Felix Meschberger</a>
  * 
  */
-public class ResidualPropertiesCollectionConverterImplTest extends DigesterTestBase
+public class AnnotationResidualNodesCollectionConverterImplTest extends AnnotationTestBase
 {
-    private final static Log log = LogFactory.getLog(ResidualPropertiesCollectionConverterImplTest.class);
+    private final static Log log = LogFactory.getLog(AnnotationResidualNodesCollectionConverterImplTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public ResidualPropertiesCollectionConverterImplTest(String testName)  throws Exception
+    public AnnotationResidualNodesCollectionConverterImplTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -52,7 +50,7 @@ public class ResidualPropertiesCollectionConverterImplTest extends DigesterTestB
     public static Test suite()
     {
         // All methods starting with "test" will be executed in the test suite.
-        return new RepositoryLifecycleTestSetup(new TestSuite(ResidualPropertiesCollectionConverterImplTest.class));
+        return new RepositoryLifecycleTestSetup(new TestSuite(AnnotationResidualNodesCollectionConverterImplTest.class));
     }
 
     
@@ -61,28 +59,23 @@ public class ResidualPropertiesCollectionConverterImplTest extends DigesterTestB
      */
     public void tearDown() throws Exception
     {
-        if (getObjectContentManager().objectExists("/test"))
-        {
-            getObjectContentManager().remove("/test");
-            getObjectContentManager().save();
-        }        
+    	this.cleanUpRepisotory();          
     	
         super.tearDown();
     }    
 
-    public void testResidualProperties()
+    public void testResidualNodes()
     {
         try
         {
         	ObjectContentManager ocm = getObjectContentManager();
 
             // --------------------------------------------------------------------------------
-            // Create and store an object graph in the repository with a null hashmap
+            // Create and store an object graph in the repository with null values
             // --------------------------------------------------------------------------------
 
-            Residual residual = new Residual.ResidualProperties();
+            Residual residual = new Residual.ResidualNodes();
             residual.setPath("/test");
-                        
             ocm.insert(residual);
             ocm.save();
 
@@ -91,21 +84,19 @@ public class ResidualPropertiesCollectionConverterImplTest extends DigesterTestB
             // --------------------------------------------------------------------------------           
             residual = (Residual) ocm.getObject( "/test");
             assertNotNull("Object is null", residual);
-            assertNull("Hashmap is not null", residual.getElements());
+            assertNull("Map is not null", residual.getElements());
             
             // --------------------------------------------------------------------------------
             // Update an object graph in the repository
             // --------------------------------------------------------------------------------
-
-            residual = new Residual.ResidualProperties();
+            residual = new Residual.ResidualNodes();
             residual.setPath("/test");
             
             ManagedHashMap map = new ManagedHashMap();
-            map.put("value1", "Value1");
-            map.put("value2", "Value2");
-            map.put("value3", "Value3");
-            map.put("value4", "Value4");
-            map.put("value5", Arrays.asList(new String[]{ "Value5-1", "Value5-2" }));
+            map.put("value1", new Paragraph("Value1"));
+            map.put("value2", new Paragraph("Value2"));
+            map.put("value3", new Paragraph("Value3"));
+            map.put("value4", new Paragraph("Value4"));
             residual.setElements(map);
             
             ocm.update(residual);
@@ -116,23 +107,19 @@ public class ResidualPropertiesCollectionConverterImplTest extends DigesterTestB
             // --------------------------------------------------------------------------------           
             residual = (Residual) ocm.getObject( "/test");
             assertNotNull("Object is null", residual);
-            assertTrue("Incorrect number of values", residual.getElements().size() == 5);            
-            assertTrue("Incorrect collection element", residual.getElements().get("value2").equals("Value2"));
-            assertNotNull("Missing collection element", residual.getElements().get("value5"));
-            assertTrue("Incorrect collection element type", (residual.getElements().get("value5") instanceof List));
-            assertEquals("Incorrect collection element list size", ((List) residual.getElements().get("value5")).size(), 2);
-            assertEquals("Incorrect collection element list value", ((List) residual.getElements().get("value5")).get(0), "Value5-1");
+            assertTrue("Incorrect number of values", residual.getElements().size() == 4);            
+            assertTrue("Incorrect collection element type", (residual.getElements().get("value2") instanceof Paragraph));
+            assertEquals("Incorrect collection element text", ((Paragraph) residual.getElements().get("value2")).getText(), "Value2");
             
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
             map = new ManagedHashMap();
-            map.put("value11", "Value11");
-            map.put("value12", "Value12");
-            map.put("value13", "Value13");
-            map.put("value14", "Value14");
-            map.put("value15", "Value15");
-            map.put("value16", Arrays.asList(new String[]{ "Value16-1", "Value16-2" }));
+            map.put("value11", new Paragraph("Value11"));
+            map.put("value12", new Paragraph("Value12"));
+            map.put("value13", new Paragraph("Value13"));
+            map.put("value14", new Paragraph("Value14"));
+            map.put("value15", new Paragraph("Value15"));
             residual.setElements(map);
             
             ocm.update(residual);
@@ -144,14 +131,10 @@ public class ResidualPropertiesCollectionConverterImplTest extends DigesterTestB
 
             residual = (Residual) ocm.getObject( "/test");
             assertNotNull("Object is null", residual);
-            assertTrue("Incorrect number of values", residual.getElements().size() == 6);
+            assertTrue("Incorrect number of values", residual.getElements().size() == 5);
             assertNull("Unexpected collection element", residual.getElements().get("value2"));
-            assertNull("Unexpected collection element", residual.getElements().get("value5"));
-            assertTrue("Incorrect collection element", residual.getElements().get("value15").equals("Value15"));
-            assertNotNull("Missing collection element", residual.getElements().get("value16"));
-            assertTrue("Incorrect collection element type", (residual.getElements().get("value16") instanceof List));
-            assertEquals("Incorrect collection element list size", ((List) residual.getElements().get("value16")).size(), 2);
-            assertEquals("Incorrect collection element list value", ((List) residual.getElements().get("value16")).get(0), "Value16-1");
+            assertTrue("Incorrect collection element type", (residual.getElements().get("value15") instanceof Paragraph));
+            assertEquals("Incorrect collection element text", ((Paragraph) residual.getElements().get("value15")).getText(), "Value15");
         }
         catch (Exception e)
         {

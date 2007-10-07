@@ -16,7 +16,12 @@
  */
 package org.apache.jackrabbit.ocm.testmodel;
 
-import java.util.Collection;
+
+
+import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.MultiValueCollectionConverterImpl;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Collection;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 
 /**
  * 
@@ -26,15 +31,18 @@ import java.util.Collection;
  *         Christophe </a>
  * @version $Id: Exp $
  */
+@Node
 public class MultiValue
 {
-	private String path;
+	@Field(path=true) private String path;
 	
-	private String name;
+	@Field private String name;
 	
-	private Collection multiValues;
+	@Collection(elementClassName=String.class,  collectionConverter=MultiValueCollectionConverterImpl.class) 
+	private java.util.Collection multiValues;
 
-	private Collection nullMultiValues;
+	@Collection(elementClassName=String.class,  collectionConverter=MultiValueCollectionConverterImpl.class)
+	private java.util.Collection nullMultiValues;
 
 	
 	
@@ -65,7 +73,7 @@ public class MultiValue
 	/**
 	 * @return Returns the multiValues.
 	 */
-	public Collection getMultiValues()
+	public java.util.Collection getMultiValues()
 	{
 		return multiValues;
 	}
@@ -74,7 +82,7 @@ public class MultiValue
 	 * @param multiValues
 	 *            The multiValues to set.
 	 */
-	public void setMultiValues(Collection multiValues)
+	public void setMultiValues(java.util.Collection multiValues)
 	{
 		this.multiValues = multiValues;
 	}
@@ -82,7 +90,7 @@ public class MultiValue
 	/**
 	 * @return Returns the nullMultiValues.
 	 */
-	public Collection getNullMultiValues()
+	public java.util.Collection getNullMultiValues()
 	{
 		return nullMultiValues;
 	}
@@ -91,7 +99,7 @@ public class MultiValue
 	 * @param nullMultiValues
 	 *            The nullMultiValues to set.
 	 */
-	public void setNullMultiValues(Collection nullMultiValues)
+	public void setNullMultiValues(java.util.Collection nullMultiValues)
 	{
 		this.nullMultiValues = nullMultiValues;
 	}
