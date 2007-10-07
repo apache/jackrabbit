@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.ocm.manager.collectionconverter;
 
-import java.util.ArrayList;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -26,22 +24,25 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
-import org.apache.jackrabbit.ocm.testmodel.collection.ArrayListElement;
-import org.apache.jackrabbit.ocm.testmodel.collection.Element;
-import org.apache.jackrabbit.ocm.testmodel.collection.Main;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManagedHashMap;
+import org.apache.jackrabbit.ocm.testmodel.Paragraph;
+import org.apache.jackrabbit.ocm.testmodel.Residual;
 
 /**
- * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
+ * Test ResidualNodesCollectionConverterImpl
+ *
+ * @author <a href="mailto:fmeschbe[at]apache[dot]com">Felix Meschberger</a>
+ * 
  */
-public class ArrayListTest extends DigesterTestBase
+public class DigesterResidualNodesCollectionConverterImplTest extends DigesterTestBase
 {
-    private final static Log log = LogFactory.getLog(ArrayListTest.class);
+    private final static Log log = LogFactory.getLog(DigesterResidualNodesCollectionConverterImplTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public ArrayListTest(String testName)  throws Exception
+    public DigesterResidualNodesCollectionConverterImplTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -49,7 +50,7 @@ public class ArrayListTest extends DigesterTestBase
     public static Test suite()
     {
         // All methods starting with "test" will be executed in the test suite.
-        return new RepositoryLifecycleTestSetup(new TestSuite(ArrayListTest.class));
+        return new RepositoryLifecycleTestSetup(new TestSuite(DigesterResidualNodesCollectionConverterImplTest.class));
     }
 
     
@@ -58,102 +59,82 @@ public class ArrayListTest extends DigesterTestBase
      */
     public void tearDown() throws Exception
     {
-        if (getObjectContentManager().objectExists("/test"))
-        {
-            getObjectContentManager().remove("/test");
-            getObjectContentManager().save();
-        }        
+    	this.cleanUpRepisotory();          
     	
         super.tearDown();
     }    
-    
-    public void testArrayList()
+
+    public void testResidualNodes()
     {
         try
         {
         	ObjectContentManager ocm = getObjectContentManager();
-        	
 
             // --------------------------------------------------------------------------------
-            // Create and store an object graph in the repository
-        	// with a null value for the arraylist
+            // Create and store an object graph in the repository with null values
             // --------------------------------------------------------------------------------
 
-            Main main = new Main();
-            main.setPath("/test");
-            main.setText("Main text");
+            Residual residual = new Residual.ResidualNodes();
+            residual.setPath("/test");
+            ocm.insert(residual);
+            ocm.save();
+
+            // --------------------------------------------------------------------------------
+            // Get the object
+            // --------------------------------------------------------------------------------           
+            residual = (Residual) ocm.getObject( "/test");
+            assertNotNull("Object is null", residual);
+            assertNull("Map is not null", residual.getElements());
             
-            ocm.insert(main);
+            // --------------------------------------------------------------------------------
+            // Update an object graph in the repository
+            // --------------------------------------------------------------------------------
+            residual = new Residual.ResidualNodes();
+            residual.setPath("/test");
+            
+            ManagedHashMap map = new ManagedHashMap();
+            map.put("value1", new Paragraph("Value1"));
+            map.put("value2", new Paragraph("Value2"));
+            map.put("value3", new Paragraph("Value3"));
+            map.put("value4", new Paragraph("Value4"));
+            residual.setElements(map);
+            
+            ocm.update(residual);
             ocm.save();
             
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            main = (Main) ocm.getObject( "/test");
-            ArrayList arrayList = main.getList();
-            assertNull("main.getList is not null", arrayList ); 
+            residual = (Residual) ocm.getObject( "/test");
+            assertNotNull("Object is null", residual);
+            assertTrue("Incorrect number of values", residual.getElements().size() == 4);            
+            assertTrue("Incorrect collection element type", (residual.getElements().get("value2") instanceof Paragraph));
+            assertEquals("Incorrect collection element text", ((Paragraph) residual.getElements().get("value2")).getText(), "Value2");
             
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
+            map = new ManagedHashMap();
+            map.put("value11", new Paragraph("Value11"));
+            map.put("value12", new Paragraph("Value12"));
+            map.put("value13", new Paragraph("Value13"));
+            map.put("value14", new Paragraph("Value14"));
+            map.put("value15", new Paragraph("Value15"));
+            residual.setElements(map);
             
-            ArrayListElement arrayListElement = new ArrayListElement();
-            Element e1 = new Element();
-            e1.setId("e1");
-            e1.setText("Element 1");
-            arrayListElement.add(e1);
-            
-            Element e2 = new Element();
-            e2.setId("e2");
-            e2.setText("Element 2");
-            arrayListElement.add(e2);
-            
-            main.setList(arrayListElement);
-            ocm.update(main);
+            ocm.update(residual);
             ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------           
-            main = (Main) ocm.getObject( "/test");
-            arrayList = main.getList();
-            assertNotNull("main.getList is null", arrayList ); 
-            Element[] elements = (Element[]) arrayList.toArray(new Element[arrayList.size()]);
-            assertTrue("Incorrect para element", elements[0].getText().equals("Element 1"));
-            
-            // --------------------------------------------------------------------------------
-            // Update the object
-            // --------------------------------------------------------------------------------
-            arrayListElement = new ArrayListElement();
-            e1 = new Element();
-            e1.setId("e1");
-            e1.setText("Element 1");
-            arrayListElement.add(e1);
-            
-            e2 = new Element();
-            e2.setId("e3");
-            e2.setText("Element 3");
-            arrayListElement.add(e2);
-            
-            Element e3 = new Element();
-            e3.setId("e4");
-            e3.setText("Element 4");
-            arrayListElement.add(e3);
-            
-            main.setList(arrayListElement);            
-            
-            ocm.update(main);
-            ocm.save();
 
-            // --------------------------------------------------------------------------------
-            // Get the object
-            // --------------------------------------------------------------------------------           
-            main = (Main) ocm.getObject( "/test");
-            arrayList = main.getList();
-            assertNotNull("main.getList() is null", arrayList ); 
-            elements = (Element[]) arrayList.toArray(new Element[arrayList.size()]);
-            assertTrue("Incorrect element", elements[2].getText().equals("Element 4"));
-            
+            residual = (Residual) ocm.getObject( "/test");
+            assertNotNull("Object is null", residual);
+            assertTrue("Incorrect number of values", residual.getElements().size() == 5);
+            assertNull("Unexpected collection element", residual.getElements().get("value2"));
+            assertTrue("Incorrect collection element type", (residual.getElements().get("value15") instanceof Paragraph));
+            assertEquals("Incorrect collection element text", ((Paragraph) residual.getElements().get("value15")).getText(), "Value15");
         }
         catch (Exception e)
         {
@@ -162,7 +143,6 @@ public class ArrayListTest extends DigesterTestBase
         }
         
     }
-
 
    
 }

@@ -24,6 +24,7 @@ import junit.framework.TestSuite;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.ocm.AnnotationTestBase;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
@@ -35,15 +36,15 @@ import org.apache.jackrabbit.ocm.testmodel.C;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class DefaultCollectionConverterImplTest extends DigesterTestBase
+public class AnnotationDefaultCollectionConverterImplTest extends AnnotationTestBase
 {
-    private final static Log log = LogFactory.getLog(DefaultCollectionConverterImplTest.class);
+    private final static Log log = LogFactory.getLog(AnnotationDefaultCollectionConverterImplTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public DefaultCollectionConverterImplTest(String testName)  throws Exception
+    public AnnotationDefaultCollectionConverterImplTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -51,7 +52,7 @@ public class DefaultCollectionConverterImplTest extends DigesterTestBase
     public static Test suite()
     {
         // All methods starting with "test" will be executed in the test suite.
-        return new RepositoryLifecycleTestSetup(new TestSuite(DefaultCollectionConverterImplTest.class));
+        return new RepositoryLifecycleTestSetup(new TestSuite(AnnotationDefaultCollectionConverterImplTest.class));
     }
 
     
@@ -60,11 +61,7 @@ public class DefaultCollectionConverterImplTest extends DigesterTestBase
      */
     public void tearDown() throws Exception
     {
-        if (getObjectContentManager().objectExists("/test"))
-        {
-            getObjectContentManager().remove("/test");
-            getObjectContentManager().save();
-        }        
+    	this.cleanUpRepisotory();          
     	
         super.tearDown();
     }

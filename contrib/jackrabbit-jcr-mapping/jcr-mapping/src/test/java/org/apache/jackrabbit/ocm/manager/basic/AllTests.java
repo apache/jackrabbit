@@ -36,11 +36,18 @@ public class AllTests {
     public static Test buildSuite() {
         TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.manager.basic");
         //$JUnit-BEGIN$
-        suite.addTestSuite(ObjectContentManagerAvoidRecursiveLoopTest.class);
-        suite.addTestSuite(ObjectContentManagerCopyMoveTest.class);
-        suite.addTestSuite(ObjectContentManagerRemoveTest.class);
-        suite.addTestSuite(ObjectContentManagerSameNameSiblingTest.class);
-        suite.addTestSuite(ObjectContentManagerTest.class);        
+        suite.addTestSuite(DigesterAvoidRecursiveLoopTest.class);
+        suite.addTestSuite(DigesterCopyMoveTest.class);
+        suite.addTestSuite(DigesterRemoveTest.class);
+        suite.addTestSuite(DigesterSameNameSiblingTest.class);
+        suite.addTestSuite(DigesterSimpleTest.class);
+        
+        suite.addTestSuite(AnnotationAvoidRecursiveLoopTest.class);
+        suite.addTestSuite(AnnotationCopyMoveTest.class);
+        suite.addTestSuite(AnnotationRemoveTest.class);
+        suite.addTestSuite(AnnotationSameNameSiblingTest.class);
+        suite.addTestSuite(AnnotationSimpleTest.class);        
+
         //$JUnit-END$
 
         return suite;

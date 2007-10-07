@@ -17,23 +17,30 @@
 package org.apache.jackrabbit.ocm.testmodel.crossreference;
 
 import java.util.ArrayList;
-import java.util.Collection;
 
-import org.apache.jackrabbit.ocm.testmodel.C;
+
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Bean;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Collection;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
 
 /**
  *
- * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart Christophe </a>
- * @version $Id: Exp $
+ * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
+ * 
  */
+@Node(jcrType="nt:unstructured", jcrMixinTypes="mix:referenceable")
 public class A
-{
-	private String path; 
-	private String uuid; 
-    private String a1;
-    private String a2;
-    private B b;    
-    private Collection collection;
+{	
+	@Field(path=true) private String path; 
+	@Field(uuid=true) private String uuid; 
+    @Field private String a1;
+    @Field private String a2;
+    @Bean private B b;
+    
+    @Collection(elementClassName=B.class) 
+    java.util.Collection collection;
      
     
     public String getPath() {
@@ -100,7 +107,7 @@ public class A
     /**
      * @return Returns the collection.
      */
-    public Collection getCollection()
+    public java.util.Collection getCollection()
     {
         return collection;
     }
@@ -108,7 +115,7 @@ public class A
     /**
      * @param collection The collection to set.
      */
-    public void setCollection(Collection collection)
+    public void setCollection(java.util.Collection collection)
     {
         this.collection = collection;
     }

@@ -41,15 +41,15 @@ import org.apache.jackrabbit.ocm.testmodel.Atomic;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerRemoveTest extends DigesterTestBase
+public class DigesterRemoveTest extends DigesterTestBase
 {
-	private final static Log log = LogFactory.getLog(ObjectContentManagerRemoveTest.class);
+	private final static Log log = LogFactory.getLog(DigesterRemoveTest.class);
 	private Date date = new Date();
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public ObjectContentManagerRemoveTest(String testName) throws Exception
+	public DigesterRemoveTest(String testName) throws Exception
 	{
 		super(testName);
 
@@ -59,7 +59,7 @@ public class ObjectContentManagerRemoveTest extends DigesterTestBase
 	{
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(
-                new TestSuite(ObjectContentManagerRemoveTest.class));
+                new TestSuite(DigesterRemoveTest.class));
 	}
 
     /**

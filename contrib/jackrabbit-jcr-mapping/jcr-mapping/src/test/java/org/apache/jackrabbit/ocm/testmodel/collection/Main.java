@@ -16,17 +16,25 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.collection;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Collection;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
 
 /**
  *
- * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart Christophe </a>
+ * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  * @version $Id: Exp $
  */
+@Node
 public class Main
 {
-	private String path;
-    private String text;
+	@Field(path=true) private String path;
+    @Field private String text;
+    @Collection (elementClassName=Element.class, collectionClassName=HashMapElement.class) 
     private HashMapElement hashMap;
+    
+    @Collection (elementClassName=Element.class, collectionClassName=ArrayListElement.class)
     private ArrayListElement list;
     
     public String getPath() {

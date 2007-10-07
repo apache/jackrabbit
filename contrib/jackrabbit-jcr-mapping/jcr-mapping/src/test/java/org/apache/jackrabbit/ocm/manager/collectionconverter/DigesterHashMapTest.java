@@ -33,15 +33,15 @@ import org.apache.jackrabbit.ocm.testmodel.collection.Main;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class HashMapTest extends DigesterTestBase
+public class DigesterHashMapTest extends DigesterTestBase
 {
-    private final static Log log = LogFactory.getLog(HashMapTest.class);
+    private final static Log log = LogFactory.getLog(DigesterHashMapTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public HashMapTest(String testName)  throws Exception
+    public DigesterHashMapTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -49,7 +49,7 @@ public class HashMapTest extends DigesterTestBase
     public static Test suite()
     {
         // All methods starting with "test" will be executed in the test suite.
-        return new RepositoryLifecycleTestSetup(new TestSuite(HashMapTest.class));
+        return new RepositoryLifecycleTestSetup(new TestSuite(DigesterHashMapTest.class));
     }
 
     
@@ -58,11 +58,7 @@ public class HashMapTest extends DigesterTestBase
      */
     public void tearDown() throws Exception
     {
-        if (getObjectContentManager().objectExists("/test"))
-        {
-            getObjectContentManager().remove("/test");
-            getObjectContentManager().save();
-        }        
+    	this.cleanUpRepisotory();          
     	
         super.tearDown();
     }    

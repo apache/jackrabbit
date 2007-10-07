@@ -40,15 +40,15 @@ import org.apache.jackrabbit.ocm.testmodel.C;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerCopyMoveTest extends DigesterTestBase
+public class AnnotationCopyMoveTest extends DigesterTestBase
 {
-	private final static Log log = LogFactory.getLog(ObjectContentManagerCopyMoveTest.class);
+	private final static Log log = LogFactory.getLog(AnnotationCopyMoveTest.class);
 	
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public ObjectContentManagerCopyMoveTest(String testName) throws Exception
+	public AnnotationCopyMoveTest(String testName) throws Exception
 	{
 		super(testName);
 
@@ -58,7 +58,7 @@ public class ObjectContentManagerCopyMoveTest extends DigesterTestBase
 	{
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(
-                new TestSuite(ObjectContentManagerCopyMoveTest.class));
+                new TestSuite(AnnotationCopyMoveTest.class));
 	}
 
     /**

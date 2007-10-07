@@ -38,8 +38,10 @@ import org.apache.jackrabbit.ocm.mapper.model.MappingDescriptor;
  *
  * Abstract class for {@link org.apache.jackrabbit.ocm.mapper.Mapper}
  *
- * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart Christophe </a>
+ * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  * 
+ * TODO : Add more reference tests. For exemple, the mapper has to check if the class used for the elements
+ *        of a collectiondescriptor exists. For performance reasone, we can defined some optional validations.
  */
 public abstract class AbstractMapperImpl implements Mapper {
     protected static final Log log = LogFactory.getLog(AbstractMapperImpl.class);

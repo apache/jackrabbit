@@ -17,24 +17,30 @@
 package org.apache.jackrabbit.ocm.testmodel;
 
 import java.util.ArrayList;
-import java.util.Collection;
+
+
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Bean;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Collection;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 
 /**
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart Christophe </a>
  * @version $Id: Exp $
  */
+@Node(jcrMixinTypes="mix:lockable" )
 public class A
 {
-	private String path; 
-    private String a1;
-    private String a2;
-    private B b;
+	@Field(path=true) private String path; 
+    @Field private String a1;
+    @Field private String a2;
+    @Bean private B b;
+    
     private B emptyB;
-    private Collection collection;
-    private Collection emptyCollection; 
-    
-    
+
+    @Collection(elementClassName=C.class, jcrType="ocm:C") private java.util.Collection collection;	
+    @Collection(elementClassName=C.class) private java.util.Collection emptyCollection; 
     
     public String getPath() {
 		return path;
@@ -89,7 +95,7 @@ public class A
     /**
      * @return Returns the collection.
      */
-    public Collection getCollection()
+    public java.util.Collection getCollection()
     {
         return collection;
     }
@@ -97,7 +103,7 @@ public class A
     /**
      * @param collection The collection to set.
      */
-    public void setCollection(Collection collection)
+    public void setCollection(java.util.Collection collection)
     {
         this.collection = collection;
     }
@@ -111,11 +117,11 @@ public class A
        
        collection.add(c);   
     }
-    public Collection getEmptyCollection()
+    public java.util.Collection getEmptyCollection()
     {
         return emptyCollection;
     }
-    public void setEmptyCollection(Collection emptyCollection)
+    public void setEmptyCollection(java.util.Collection emptyCollection)
     {
         this.emptyCollection = emptyCollection;
     }

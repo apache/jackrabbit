@@ -44,6 +44,11 @@ public class FakeBeanConverter extends AbstractBeanConverterImpl implements Bean
 		 
 		 
 	}
+    
+    public static void cleanUpLog()
+    {
+    	log.clear();
+    }
 
 	public static List getLog() {
         return log;

@@ -26,8 +26,8 @@ import junit.framework.TestSuite;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.DigesterTestBase;
+import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl;
 import org.apache.jackrabbit.ocm.repository.RepositoryUtil;
@@ -42,15 +42,15 @@ import org.apache.jackrabbit.ocm.testmodel.crossreference.B;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com>Christophe Lombart</a>
  */
-public class ObjectContentManagerAvoidRecursiveLoopTest extends DigesterTestBase
+public class DigesterAvoidRecursiveLoopTest extends DigesterTestBase
 {
-    private final static Log log = LogFactory.getLog(ObjectContentManagerAvoidRecursiveLoopTest.class);
+    private final static Log log = LogFactory.getLog(DigesterAvoidRecursiveLoopTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public ObjectContentManagerAvoidRecursiveLoopTest(String testName)  throws Exception
+    public DigesterAvoidRecursiveLoopTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -59,7 +59,7 @@ public class ObjectContentManagerAvoidRecursiveLoopTest extends DigesterTestBase
     {
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(
-                new TestSuite(ObjectContentManagerAvoidRecursiveLoopTest.class));
+                new TestSuite(DigesterAvoidRecursiveLoopTest.class));
     }
 
 
