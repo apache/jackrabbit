@@ -75,28 +75,20 @@ public class RepositoryServiceLogger implements RepositoryService {
         this.log = log;
     }
 
-    public IdFactory getIdFactory() {
-        try {
-            return (IdFactory) execute(new Callable() {
-                public Object call() {
-                    return service.getIdFactory();
-                }
-            }, "getIdFactory()", new Object[]{});
-        } catch (RepositoryException e) {
-            throw new InternalError();
-        }
+    public IdFactory getIdFactory() throws RepositoryException {
+        return (IdFactory) execute(new Callable() {
+            public Object call() throws RepositoryException {
+                return service.getIdFactory();
+            }
+        }, "getIdFactory()", new Object[]{});
     }
 
-    public QValueFactory getQValueFactory() {
-        try {
-            return (QValueFactory) execute(new Callable() {
-                public Object call() {
-                    return service.getQValueFactory();
-                }
-            }, "getQValueFactory()", new Object[]{});
-        } catch (RepositoryException e) {
-            throw new InternalError();
-        }
+    public QValueFactory getQValueFactory() throws RepositoryException {
+        return (QValueFactory) execute(new Callable() {
+            public Object call() throws RepositoryException {
+                return service.getQValueFactory();
+            }
+        }, "getQValueFactory()", new Object[]{});
     }
 
     public Map getRepositoryDescriptors() throws RepositoryException {
