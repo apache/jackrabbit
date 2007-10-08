@@ -112,7 +112,7 @@ public class LockingTest extends AbstractObservationTest {
     private Node createLockable(String nodeName, String nodeType)
             throws RepositoryException {
         Node n = testRootNode.addNode(nodeName, nodeType);
-        if (!n.isNodeType(mixLockable)) {
+        if (needsMixin(n, mixLockable)) {
             n.addMixin(mixLockable);
         }
         return n;
