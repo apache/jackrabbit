@@ -315,10 +315,8 @@ public class LockManagerImpl implements LockManager, SessionListener {
     private LockState buildLockState(NodeState nodeState) throws RepositoryException {
         NodeId nId = nodeState.getNodeId();
         NodeState lockHoldingState = null;
-        LockInfo lockInfo;
-        try {
-            lockInfo = wspManager.getLockInfo(nId);
-        } catch (LockException e) {
+        LockInfo lockInfo = wspManager.getLockInfo(nId);
+        if (lockInfo == null) {
             // no lock present
             return null;
         }
@@ -438,10 +436,9 @@ public class LockManagerImpl implements LockManager, SessionListener {
      * lock info.
      *
      * @param lt
-     * @throws LockException
      * @throws RepositoryException
      */
-    private void notifyTokenAdded(String lt) throws LockException, RepositoryException {
+    private void notifyTokenAdded(String lt) throws RepositoryException {
         LockTokenListener[] listeners = (LockTokenListener[]) lockMap.values().toArray(new LockTokenListener[lockMap.size()]);
         for (int i = 0; i < listeners.length; i++) {
             listeners[i].lockTokenAdded(lt);
@@ -453,10 +450,9 @@ public class LockManagerImpl implements LockManager, SessionListener {
      * removed lock token and allow them to reload their lock info, if necessary.
      *
      * @param lt
-     * @throws LockException
      * @throws RepositoryException
      */
-    private void notifyTokenRemoved(String lt) throws LockException, RepositoryException {
+    private void notifyTokenRemoved(String lt) throws RepositoryException {
         LockTokenListener[] listeners = (LockTokenListener[]) lockMap.values().toArray(new LockTokenListener[lockMap.size()]);
         for (int i = 0; i < listeners.length; i++) {
             listeners[i].lockTokenRemoved(lt);
@@ -507,12 +503,15 @@ public class LockManagerImpl implements LockManager, SessionListener {
         /**
          * Reload the lockInfo from the server.
          *
-         * @throws LockException
          * @throws RepositoryException
          */
-        private void reloadLockInfo() throws LockException, RepositoryException {
+        private void reloadLockInfo() throws RepositoryException {
             NodeId nId = lockHoldingState.getNodeEntry().getWorkspaceId();
             lockInfo = wspManager.getLockInfo(nId);
+            if (lockInfo == null) {
+                // lock has been released on the server
+                unlocked();
+            }
         }
 
         /**
@@ -697,11 +696,10 @@ public class LockManagerImpl implements LockManager, SessionListener {
          * from the server.
          *
          * @param lockToken
-         * @throws LockException
          * @throws RepositoryException
          * @see LockTokenListener#lockTokenAdded(String)
          */
-        public void lockTokenAdded(String lockToken) throws LockException, RepositoryException {
+        public void lockTokenAdded(String lockToken) throws RepositoryException {
             if (getLockToken() == null) {
                 // could be that this affects this lock and session became
                 // lock holder -> releoad info to assert.
@@ -713,10 +711,9 @@ public class LockManagerImpl implements LockManager, SessionListener {
          *
          * @param lockToken
          * @throws LockException
-         * @throws RepositoryException
          * @see LockTokenListener#lockTokenRemoved(String)
          */
-        public void lockTokenRemoved(String lockToken) throws LockException, RepositoryException {
+        public void lockTokenRemoved(String lockToken) throws RepositoryException {
             // reload lock info, if session gave away its lock-holder status
             // for this lock.
             if (lockToken.equals(getLockToken())) {
@@ -740,8 +737,6 @@ public class LockManagerImpl implements LockManager, SessionListener {
             if (reloadInfo) {
                 try {
                     lockState.reloadLockInfo();
-                } catch (LockException e) {
-                    lockState.unlocked();
                 } catch (RepositoryException e) {
                     // may occur if session has been logged out. rather throw?
                     log.warn("Unable to determine lock status.", e.getMessage());
@@ -768,7 +763,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
          * @throws LockException
          * @throws RepositoryException
          */
-        void lockTokenAdded(String lockToken) throws LockException, RepositoryException;
+        void lockTokenAdded(String lockToken) throws RepositoryException;
 
         /**
          *
@@ -776,6 +771,6 @@ public class LockManagerImpl implements LockManager, SessionListener {
          * @throws LockException
          * @throws RepositoryException
          */
-        void lockTokenRemoved(String lockToken) throws LockException, RepositoryException;
+        void lockTokenRemoved(String lockToken) throws RepositoryException;
     }
 }

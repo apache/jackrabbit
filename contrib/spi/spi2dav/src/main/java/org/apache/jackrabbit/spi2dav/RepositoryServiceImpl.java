@@ -1037,7 +1037,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#getLockInfo(SessionInfo, NodeId)
      */
-    public LockInfo getLockInfo(SessionInfo sessionInfo, NodeId nodeId) throws LockException, RepositoryException {
+    public LockInfo getLockInfo(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         // set of Dav-properties to be retrieved
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
         nameSet.add(DavPropertyName.LOCKDISCOVERY);
@@ -1065,7 +1065,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 NodeId parentId = getParentId(ps, sessionInfo);
                 return retrieveLockInfo(ld, sessionInfo, nodeId, parentId);
             }  else {
-                throw new LockException("No Lock present on node with id " + nodeId);
+                // no lock present
+                log.debug("No Lock present on node with id " + nodeId);
+                return null;
             }
         } catch (IOException e) {
             throw new RepositoryException(e);

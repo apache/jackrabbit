@@ -559,10 +559,15 @@ public class RepositoryServiceImpl implements RepositoryService {
      * {@inheritDoc}
      */
     public LockInfo getLockInfo(SessionInfo sessionInfo, NodeId nodeId)
-            throws LockException, RepositoryException {
+            throws RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        return new LockInfoImpl(getNode(nodeId, sInfo).getLock(), idFactory,
-                sInfo.getNamespaceResolver());
+        try {
+            Lock lock = getNode(nodeId, sInfo).getLock();
+            return new LockInfoImpl(lock, idFactory, sInfo.getNamespaceResolver());
+        } catch (LockException e) {
+            // no lock present on this node.
+            return null;
+        }
     }
 
     /**

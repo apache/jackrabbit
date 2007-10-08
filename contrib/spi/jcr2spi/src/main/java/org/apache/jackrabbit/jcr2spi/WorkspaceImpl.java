@@ -415,7 +415,6 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         // NOTE: wspManager has already been disposed upon SessionItemStateManager.dispose()
     }
 
-
     IdFactory getIdFactory() {
         return wspManager.getIdFactory();
     }
