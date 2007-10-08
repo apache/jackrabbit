@@ -127,6 +127,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     private final HierarchyManager hierarchyManager;
     private final CacheBehaviour cacheBehaviour;
 
+    private final IdFactory idFactory;
     private final NamespaceRegistryImpl nsRegistry;
     private final NodeTypeRegistryImpl ntRegistry;
     private final ItemDefinitionProvider definitionProvider;
@@ -158,6 +159,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         this.sessionInfo = sessionInfo;
         this.cacheBehaviour = cacheBehaviour;
 
+        idFactory = service.getIdFactory();
         nsRegistry = createNamespaceRegistry(NamespaceCache.getInstance(service));
         ntRegistry = createNodeTypeRegistry(nsRegistry);
         changeFeed = createChangeFeed(pollTimeout, enableObservation);
@@ -165,7 +167,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
         TransientItemStateFactory stateFactory = createItemStateFactory();
         this.isf = stateFactory;
-        this.hierarchyManager = createHierarchyManager(stateFactory, service.getIdFactory());
+        this.hierarchyManager = createHierarchyManager(stateFactory, idFactory);
         createHierarchyListener(hierarchyManager);
     }
 
@@ -182,7 +184,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     }
 
     public EffectiveNodeTypeProvider getEffectiveNodeTypeProvider() {
-        return (NodeTypeRegistryImpl) ntRegistry;
+        return ntRegistry;
     }
 
     public HierarchyManager getHierarchyManager() {
@@ -194,14 +196,14 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     }
 
     public IdFactory getIdFactory() {
-        return service.getIdFactory();
+        return idFactory;
     }
 
     public ItemStateFactory getItemStateFactory() {
         return isf;
     }
 
-    public LockInfo getLockInfo(NodeId nodeId) throws LockException, RepositoryException {
+    public LockInfo getLockInfo(NodeId nodeId) throws RepositoryException {
         return service.getLockInfo(sessionInfo, nodeId);
     }
 
@@ -515,7 +517,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         // identified by the resulting id.
         // the server must be able to deal with paths and with proper ids anyway.
         // TODO: 'createNodeId' is basically wrong since isGranted is unspecific for any item.
-        ItemId id = getIdFactory().createNodeId((NodeId) parentState.getWorkspaceId(), relPath);
+        ItemId id = idFactory.createNodeId((NodeId) parentState.getWorkspaceId(), relPath);
         return service.isGranted(sessionInfo, id, actions);
     }
 
@@ -841,7 +843,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                 NodeId targetId;
                 Path relPath = operation.getRelativePath();
                 if (relPath != null) {
-                    targetId = getIdFactory().createNodeId(nId, relPath);
+                    targetId = idFactory.createNodeId(nId, relPath);
                 } else {
                     targetId = nId;
                 }
