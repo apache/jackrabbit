@@ -320,7 +320,7 @@ public class RepositoryServiceLogger implements RepositoryService {
 
     public LockInfo getLockInfo(final SessionInfo sessionInfo,
                                 final NodeId nodeId)
-            throws LockException, RepositoryException {
+            throws RepositoryException {
         return (LockInfo) execute(new Callable() {
             public Object call() throws RepositoryException {
                 return service.getLockInfo(sessionInfo, nodeId);
@@ -332,7 +332,7 @@ public class RepositoryServiceLogger implements RepositoryService {
                          final NodeId nodeId,
                          final boolean b,
                          final boolean b1)
-            throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException {
+            throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, RepositoryException {
         return (LockInfo) execute(new Callable() {
             public Object call() throws RepositoryException {
                 return service.lock(sessionInfo, nodeId, b, b1);
@@ -342,7 +342,7 @@ public class RepositoryServiceLogger implements RepositoryService {
     }
 
     public void refreshLock(final SessionInfo sessionInfo, final NodeId nodeId)
-            throws LockException, RepositoryException {
+            throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, RepositoryException {
         execute(new Callable() {
             public Object call() throws RepositoryException {
                 service.refreshLock(sessionInfo, nodeId);
@@ -352,7 +352,7 @@ public class RepositoryServiceLogger implements RepositoryService {
     }
 
     public void unlock(final SessionInfo sessionInfo, final NodeId nodeId)
-            throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException {
+            throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, RepositoryException {
         execute(new Callable() {
             public Object call() throws RepositoryException {
                 service.unlock(sessionInfo, nodeId);
