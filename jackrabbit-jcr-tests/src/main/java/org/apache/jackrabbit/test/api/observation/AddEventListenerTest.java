@@ -189,7 +189,7 @@ public class AddEventListenerTest extends AbstractObservationTest {
     private Node createReferenceable(String nodeName, String nodeType)
             throws RepositoryException {
         Node n = testRootNode.addNode(nodeName, nodeType);
-        if (!n.isNodeType(mixReferenceable)) {
+        if (needsMixin(n, mixReferenceable)) {
             n.addMixin(mixReferenceable);
             // some implementations may require a save after addMixin()
             testRootNode.save();
