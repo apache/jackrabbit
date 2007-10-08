@@ -39,7 +39,6 @@ import javax.jcr.ValueFormatException;
 import javax.jcr.Node;
 import javax.jcr.LoginException;
 import javax.jcr.ReferentialIntegrityException;
-import javax.jcr.Item;
 import javax.jcr.query.InvalidQueryException;
 import java.util.Map;
 import java.util.Iterator;
@@ -83,15 +82,17 @@ public interface RepositoryService {
      * Return the <code>IdFactory</code>.
      *
      * @return The <code>IdFactory</code>.
+     * @throws RepositoryException If an error occurs.
      */
-    public IdFactory getIdFactory();
+    public IdFactory getIdFactory() throws RepositoryException;
 
     /**
      * Return the <code>QValueFactory</code> defined with this SPI implementation.
      *
      * @return The <code>QValueFactory</code>.
+     * @throws RepositoryException If an error occurs.
      */
-    public QValueFactory getQValueFactory();
+    public QValueFactory getQValueFactory() throws RepositoryException;
 
     //--------------------------------------------------------------------------
     /**
@@ -159,7 +160,7 @@ public interface RepositoryService {
      * will not be used any more.
      *
      * @param sessionInfo
-     * @throws RepositoryException
+     * @throws javax.jcr.RepositoryException
      */
     public void dispose(SessionInfo sessionInfo) throws RepositoryException;
 
@@ -201,7 +202,7 @@ public interface RepositoryService {
      *
      * @param sessionInfo
      * @return The <code>NodeId</code> of the root <code>Node</code>.
-     * @throws RepositoryException
+     * @throws javax.jcr.RepositoryException
      */
     public NodeId getRootId(SessionInfo sessionInfo) throws RepositoryException;
 
@@ -216,7 +217,7 @@ public interface RepositoryService {
      * @param nodeId
      * @return The node definition applicable to the <code>Node</code> identified
      * by the given id.
-     * @throws RepositoryException
+     * @throws javax.jcr.RepositoryException
      */
     public QNodeDefinition getNodeDefinition(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException;
 
@@ -230,7 +231,7 @@ public interface RepositoryService {
      * @param propertyId
      * @return The property definition applicable for the <code>Property</code>
      * identified by the given id.
-     * @throws RepositoryException
+     * @throws javax.jcr.RepositoryException
      */
     public QPropertyDefinition getPropertyDefinition(SessionInfo sessionInfo, PropertyId propertyId) throws RepositoryException;
 
@@ -342,8 +343,8 @@ public interface RepositoryService {
      * @return A Batch indicating the start of a set of transient modifications
      * that will be execute at once upon {@link #submit(Batch)}.
      * @throws RepositoryException
-     * @see Item#save()
-     * @see Session#save()
+     * @see javax.jcr.Item#save()
+     * @see javax.jcr.Session#save()
      * @see Batch
      */
     public Batch createBatch(SessionInfo sessionInfo, ItemId itemId) throws RepositoryException;
@@ -488,16 +489,19 @@ public interface RepositoryService {
 
     //------------------------------------------------------------< Locking >---
     /**
-     * Retrieve available lock information for the given <code>NodeId</code>.
+     * Returns the lock information that applies to <code>Node</code> identified
+     * by the given <code>NodeId</code> or <code>null</code>. If the implementation
+     * does not support locking at all, this method always returns <code>null</code>.
      *
      * @param sessionInfo
      * @param nodeId
-     * @return
-     * @throws LockException
-     * @throws RepositoryException
+     * @return The lock information for the Node identified by the given
+     * <code>nodeId</code> or <code>null</code> if no lock applies to that Node.
+     * @throws javax.jcr.AccessDeniedException
+     * @throws javax.jcr.RepositoryException If some other error occurs.
      * @see Node#getLock()
      */
-    public LockInfo getLockInfo(SessionInfo sessionInfo, NodeId nodeId) throws LockException, RepositoryException;
+    public LockInfo getLockInfo(SessionInfo sessionInfo, NodeId nodeId) throws AccessDeniedException, RepositoryException;
 
     /**
      * Create a lock on the <code>Node</code> identified by the given id.
@@ -506,15 +510,17 @@ public interface RepositoryService {
      * @param nodeId
      * @param deep
      * @param sessionScoped
-     * @return returns the <code>LockInfo</code> associated with this lock.
-     * @throws javax.jcr.UnsupportedRepositoryOperationException
-     * @throws javax.jcr.lock.LockException
+     * @return The <code>LockInfo</code> associated with the new lock
+     * that has been created.
+     * @throws javax.jcr.UnsupportedRepositoryOperationException If this SPI
+     * implementation does not support locking at all.
+     * @throws javax.jcr.lock.LockException If the Node identified by the given
+     * id cannot be locked due to an existing lock or due to missing mixin type.
      * @throws javax.jcr.AccessDeniedException
-     * @throws javax.jcr.InvalidItemStateException
-     * @throws javax.jcr.RepositoryException
+     * @throws javax.jcr.RepositoryException If another error occurs.
      * @see javax.jcr.Node#lock(boolean, boolean)
      */
-    public LockInfo lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException;
+    public LockInfo lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, RepositoryException;
 
     /**
      * Explicit refresh of an existing lock. Existing locks should be refreshed
@@ -522,11 +528,16 @@ public interface RepositoryService {
      *
      * @param sessionInfo
      * @param nodeId
-     * @throws javax.jcr.lock.LockException
-     * @throws javax.jcr.RepositoryException
-     * @see javax.jcr.lock.Lock#refresh()
+     * @throws javax.jcr.UnsupportedRepositoryOperationException If this SPI
+     * implementation does not support locking at all.
+     * @throws javax.jcr.lock.LockException If the Node identified by the given
+     * id is not locked (any more) or if the <code>SessionInfo</code> does not
+     * contain the token associated with the lock to be refreshed.
+     * @throws javax.jcr.AccessDeniedException
+     * @throws javax.jcr.RepositoryException If another error occurs.
+     * @see javax.jcr.lock.Lock
      */
-    public void refreshLock(SessionInfo sessionInfo, NodeId nodeId) throws LockException, RepositoryException;
+    public void refreshLock(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, RepositoryException;
 
     /**
      * Releases the lock on the <code>Node</code> identified by the given
@@ -536,14 +547,16 @@ public interface RepositoryService {
      *
      * @param sessionInfo
      * @param nodeId
-     * @throws javax.jcr.UnsupportedRepositoryOperationException
-     * @throws javax.jcr.lock.LockException
+     * @throws javax.jcr.UnsupportedRepositoryOperationException If this SPI
+     * implementation does not support locking at all.
+     * @throws javax.jcr.lock.LockException If the Node identified by the given
+     * id is not locked or if the <code>SessionInfo</code> does not contain the
+     * token associated with the lock to be released.
      * @throws javax.jcr.AccessDeniedException
-     * @throws javax.jcr.InvalidItemStateException
-     * @throws javax.jcr.RepositoryException
+     * @throws javax.jcr.RepositoryException If another error occurs.
      * @see javax.jcr.Node#unlock()
      */
-    public void unlock(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException;
+    public void unlock(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, RepositoryException;
 
     //---------------------------------------------------------< Versioning >---
     /**
