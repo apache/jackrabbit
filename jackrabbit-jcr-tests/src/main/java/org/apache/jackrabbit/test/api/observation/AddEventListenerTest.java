@@ -51,7 +51,7 @@ public class AddEventListenerTest extends AbstractObservationTest {
         EventResult listener = new EventResult(log);
         obsMgr.addEventListener(listener, Event.NODE_ADDED, testRoot + "/" + nodeName1, true, null, null, false);
         Node n = testRootNode.addNode(nodeName1, testNodeType);
-        n.addNode(nodeName2);
+        n.addNode(nodeName2, testNodeType);
         testRootNode.save();
         Event[] events = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
         obsMgr.removeEventListener(listener);
@@ -66,7 +66,7 @@ public class AddEventListenerTest extends AbstractObservationTest {
         EventResult listener = new EventResult(log);
         obsMgr.addEventListener(listener, Event.NODE_ADDED, testRoot + "/" + nodeName1, false, null, null, false);
         Node n = testRootNode.addNode(nodeName1, testNodeType);
-        n.addNode(nodeName2);
+        n.addNode(nodeName2, testNodeType);
         testRootNode.save();
         Event[] events = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
         obsMgr.removeEventListener(listener);

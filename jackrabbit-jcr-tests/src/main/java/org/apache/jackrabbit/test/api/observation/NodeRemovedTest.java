@@ -60,7 +60,7 @@ public class NodeRemovedTest extends AbstractObservationTest {
         EventResult result = new EventResult(log);
         addEventListener(result, Event.NODE_REMOVED);
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.addNode(nodeName2);
+        n1.addNode(nodeName2, testNodeType);
         testRootNode.save();
         n1.remove();
         testRootNode.save();
