@@ -43,7 +43,7 @@ public class PropertyRemovedTest extends AbstractObservationTest {
      * triggered when a property is removed.
      */
     public void testSinglePropertyRemoved() throws RepositoryException {
-        Node node = testRootNode.addNode(nodeName1);
+        Node node = testRootNode.addNode(nodeName1, testNodeType);
         Property prop1 = node.setProperty(propertyName1, "foo");
         node.setProperty(propertyName2, "bar");
         testRootNode.save();
@@ -61,7 +61,7 @@ public class PropertyRemovedTest extends AbstractObservationTest {
      * triggered when multiple properties are removed.
      */
     public void testMultiPropertyRemoved() throws RepositoryException {
-        Node node = testRootNode.addNode(nodeName1);
+        Node node = testRootNode.addNode(nodeName1, testNodeType);
         Property prop1 = node.setProperty(propertyName1, "foo");
         Property prop2 = node.setProperty(propertyName2, "bar");
         testRootNode.save();
