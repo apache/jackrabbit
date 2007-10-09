@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.HashMap;
 import java.io.PrintStream;
 
 import javax.jcr.ItemNotFoundException;
@@ -381,8 +382,11 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
         synchronized (cacheMonitor) {
             LRUEntry entry = (LRUEntry) idCache.get(state.getNodeId());
             if (entry != null) {
-                PathMap.Element element = entry.getElement();
-                Iterator iter = element.getChildren();
+                PathMap.Element parent = entry.getElement();
+                HashMap newChildrenOrder = new HashMap();
+                boolean orderChanged = false;
+
+                Iterator iter = parent.getChildren();
                 while (iter.hasNext()) {
                     PathMap.Element child = (PathMap.Element) iter.next();
                     LRUEntry childEntry = (LRUEntry) child.get();
@@ -405,14 +409,24 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                         remove(child);
                         continue;
                     }
-                    if (!cne.getName().equals(child.getName()) ||
-                            cne.getIndex() != child.getNormalizedIndex()) {
-                        /* Child still exists but at a different position */
-                        element.move(child.getPathElement(),
-                                Path.PathElement.create(cne.getName(), cne.getIndex()));
-                        continue;
+
+                    /**
+                     * Put all children into map of new children order - regardless
+                     * whether their position changed or not - as we might need
+                     * to reorder them later on.
+                     */
+                    Path.PathElement newNameIndex = Path.PathElement.create(
+                            cne.getName(), cne.getIndex());
+                    newChildrenOrder.put(newNameIndex, child);
+
+                    if (!newNameIndex.equals(child.getPathElement())) {
+                        orderChanged = true;
                     }
-                    /* At this point the child's position is still valid */
+                }
+
+                if (orderChanged) {
+                    /* If at least one child changed its position, reorder */
+                    parent.setChildren(newChildrenOrder);
                 }
             }
         }
