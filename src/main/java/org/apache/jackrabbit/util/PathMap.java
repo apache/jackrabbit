@@ -353,23 +353,31 @@ public class PathMap {
         }
 
         /**
-         * Move a child of this element to a different location inside the
-         * same parent.
+         * Sets a new list of children of this element.
          *
-         * @param oldNameIndex old name/index 
-         * @param newNameIndex new name/index
-         * @return <code>true</code> if the element was successfully moved;
-         *         otherwise <code>false</code>
+         * @param children map of children; keys are of type
+         *                 <code>Path.PathElement</code> and values
+         *                 are of type <code>Element</code>
          */
-        public boolean move(Path.PathElement oldNameIndex, 
-                            Path.PathElement newNameIndex) {
-            
-            Element child = remove(oldNameIndex, false, false);
-            if (child != null) {
-                put(newNameIndex, child);
-                return true;
+        public void setChildren(Map children) {
+            // Remove all children without removing the element itself
+            this.children = null;
+            childrenCount = 0;
+
+            // Now add back all items
+            Iterator entries = children.entrySet().iterator();
+            while (entries.hasNext()) {
+                Map.Entry entry = (Map.Entry) entries.next();
+
+                Path.PathElement nameIndex = (Path.PathElement) entry.getKey();
+                Element element = (Element) entry.getValue();
+                put(nameIndex, element);
             }
-            return false;
+
+            // Special case: if map was empty, handle like removeAll()
+            if (childrenCount == 0 && obj == null && parent != null) {
+                parent.remove(getPathElement(), false, true);
+            }
         }
 
         /**
