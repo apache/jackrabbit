@@ -22,8 +22,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
 
+import javax.jcr.Credentials;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -48,8 +50,8 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         }
         
         deleteMyNodes();
-        runGC(session);
-        runGC(session);
+        runGC(session, true);
+        runGC(session, true);
         
         root.addNode("node1");
         Node node2 = root.addNode("node2");
@@ -61,16 +63,18 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         
         n.remove();
         session.save();
+        Thread.sleep(1000);
         
         GarbageCollector gc = new GarbageCollector(this, 0);
-        gc.setTestDelay(100);
+        gc.setTestDelay(1000);
         
         LOG.debug("scanning...");
         gc.scan(session);
         int count = listIdentifiers(gc);
-        LOG.debug("stop scanning...");
+        LOG.debug("stop scanning; currently " + count + " identifiers");
         gc.stopScan();
         LOG.debug("deleting...");
+        ((FileDataStore) gc.getDataStore()).clearInUse();
         assertTrue(gc.deleteUnused() > 0);
         int count2 = listIdentifiers(gc);
         assertEquals(count - 1, count2);
@@ -78,11 +82,14 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         deleteMyNodes();
     }
     
-    private void runGC(Session session) throws RepositoryException, IOException {
+    private void runGC(Session session, boolean all) throws RepositoryException, IOException {
         GarbageCollector gc = new GarbageCollector(this, 0);
-        gc.setTestDelay(100);
+        gc.setTestDelay(1000);
         gc.scan(session);
         gc.stopScan();
+        if (all) {
+            ((FileDataStore) gc.getDataStore()).clearInUse();
+        }
         gc.deleteUnused();
     }
     
@@ -96,6 +103,47 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
             count++;
         }
         return count;
+    }
+    
+    public void testTransientObjects() throws Exception {
+        
+        Node root = testRootNode;
+        Session session = root.getSession();
+        
+        RepositoryImpl rep = (RepositoryImpl) session.getRepository();
+        if (rep.getDataStore() == null) {
+            LOG.info("testTransientObjects skipped. Data store is not used.");
+            return;
+        }
+        
+        deleteMyNodes();
+        runGC(session, true);
+        runGC(session, true);
+
+        Credentials cred = helper.getSuperuserCredentials();
+        Session s2 = helper.getRepository().login(cred);
+        root = s2.getRootNode();
+        Node node2 = root.addNode("node3");
+        Node n = node2.addNode("nodeWithBlob");
+        n.setProperty("test", new RandomInputStream(10, 10000));
+        Thread.sleep(1000);
+
+        runGC(session, false);
+
+        s2.save();
+        
+        InputStream in = n.getProperty("test").getStream();
+        InputStream in2 = new RandomInputStream(10, 10000);
+        while (true) {
+            int a = in.read();
+            int b = in2.read();
+            assertEquals(a, b);
+            if (a < 0) {
+                break;
+            }
+        }
+        
+        deleteMyNodes();
     }
 
     public void afterScanning(Node n) throws RepositoryException {
