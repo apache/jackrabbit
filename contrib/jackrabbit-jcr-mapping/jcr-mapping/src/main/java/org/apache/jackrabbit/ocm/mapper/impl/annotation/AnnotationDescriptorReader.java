@@ -70,7 +70,8 @@ public class AnnotationDescriptorReader implements DescriptorReader
 		Node nodeAnnotation =  (Node) clazz.getAnnotation(Node.class);
 		if (nodeAnnotation != null)
 		{
-			classDescriptor = createClassDescriptor(clazz, nodeAnnotation);			
+			classDescriptor = createClassDescriptor(clazz, nodeAnnotation);	
+			addImplementDescriptor(classDescriptor, clazz);
 			addAttributeDescriptors(mappingDescriptor, classDescriptor, clazz);
 			return classDescriptor;
 		}
@@ -88,6 +89,7 @@ public class AnnotationDescriptorReader implements DescriptorReader
 		ClassDescriptor classDescriptor = new ClassDescriptor();
 		classDescriptor.setClassName(clazz.getName());
 		classDescriptor.setJcrType(nodeAnnotation.jcrType());
+		classDescriptor.setDiscriminator(nodeAnnotation.discriminator());
 		if (nodeAnnotation.jcrSuperTypes() != null && ! nodeAnnotation.jcrSuperTypes().equals(""))
 		{
 		     classDescriptor.setJcrSuperTypes(nodeAnnotation.jcrSuperTypes());
