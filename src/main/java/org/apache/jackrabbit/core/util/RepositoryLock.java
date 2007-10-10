@@ -51,7 +51,7 @@ public class RepositoryLock {
     /**
      * Logger instance.
      */
-    private static final Logger log =
+    private static final Logger LOG =
         LoggerFactory.getLogger(RepositoryLock.class);
 
     /**
@@ -63,6 +63,11 @@ public class RepositoryLock {
      * The lock file within the given directory.
      */
     private final File file;
+    
+    /**
+     * The random access file.
+     */
+    private RandomAccessFile randomAccessFile;
 
     /**
      * Unique identifier (canonical path name) of the locked directory.
@@ -108,12 +113,26 @@ public class RepositoryLock {
      */
     public void acquire() throws RepositoryException {
         if (file.exists()) {
-            log.warn("Existing lock file " + file + " detected."
+            LOG.warn("Existing lock file " + file + " detected."
                     + " Repository was not shut down properly.");
         }
-
         try {
-            lock = new RandomAccessFile(file, "rw").getChannel().tryLock();
+            tryLock();
+        } catch (RepositoryException e) {
+            closeRandomAccessFile();
+            throw e;
+        }
+    }
+    
+    /**
+     * Try to lock the random access file.
+     * 
+     * @throws RepositoryException
+     */
+    private void tryLock() throws RepositoryException {
+        try {
+            randomAccessFile = new RandomAccessFile(file, "rw");
+            lock = randomAccessFile.getChannel().tryLock();
         } catch (IOException e) {
             throw new RepositoryException(
                     "Unable to create or lock file " + file, e);
@@ -150,11 +169,25 @@ public class RepositoryLock {
                 try {
                     System.setProperty(identifier, identifier);
                 } catch (SecurityException e) {
-                    log.warn("Unable to set system property: " + identifier, e);
+                    LOG.warn("Unable to set system property: " + identifier, e);
                 }
             }
         }
     }
+    
+    /**
+     * Close the random access file if it is open, and set it to null.
+     */
+    private void closeRandomAccessFile() {
+        if (randomAccessFile != null) {
+            try {
+                randomAccessFile.close();
+            } catch (IOException e) {
+                LOG.warn("Unable to close the random access file " + file, e);
+            }
+            randomAccessFile = null;
+        }
+    }    
 
     /**
      * Releases repository lock.
@@ -169,10 +202,11 @@ public class RepositoryLock {
                 // ignore
             }
             lock = null;
+            closeRandomAccessFile();
         }
 
         if (!file.delete()) {
-            log.error("Unable to release repository lock");
+            LOG.warn("Unable to delete repository lock file");
         }
 
         // JCR-933: see #acquire()
@@ -180,9 +214,9 @@ public class RepositoryLock {
             try {
                 System.getProperties().remove(identifier);
             } catch (SecurityException e) {
-                log.error("Unable to clear system property: " + identifier, e);
+                LOG.error("Unable to clear system property: " + identifier, e);
             }
         }
     }
-
+    
 }
