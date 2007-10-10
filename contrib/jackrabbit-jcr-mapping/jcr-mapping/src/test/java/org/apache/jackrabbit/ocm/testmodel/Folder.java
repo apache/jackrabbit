@@ -17,36 +17,29 @@
 package org.apache.jackrabbit.ocm.testmodel;
 
 import java.util.ArrayList;
-import java.util.Collection;
+
+
+import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Collection;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 /**
  * Java class used to map the jcr node type nt:folder
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  *
  */
+@Node(jcrType="nt:folder", extend=HierarchyNode.class )
 public class Folder extends HierarchyNode
 {
-    private String path;
-    
-    private Collection children;   // = a collection of HierarchyNodes 
+    @Collection(autoUpdate=false, elementClassName=HierarchyNode.class , collectionConverter=NTCollectionConverterImpl.class)
+    private java.util.Collection children; 
+   
 
-    
-	public String getPath() 
-	{
-		return path;
-	}
-
-	public void setPath(String path) 
-	{
-		this.path = path;
-	}
-
-
-	public Collection getChildren() 
+	public java.util.Collection getChildren() 
 	{
 		return children;
 	}
 
-	public void setChildren(Collection children) 
+	public void setChildren(java.util.Collection children) 
 	{
 		this.children = children;
 	}

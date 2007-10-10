@@ -16,8 +16,10 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.interfaces;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 import org.apache.jackrabbit.ocm.testmodel.inheritance.impl.DocumentStream;
 
+@Node(isInterface=true, extend= Content.class, jcrType="ocm:document", discriminator=false )
 public interface Document extends Content {
 
 

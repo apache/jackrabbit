@@ -16,10 +16,14 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.inheritance;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
+@Node(isAbstract=true)
 public class Ancestor
 {
-	protected String path;
-	protected String ancestorField;
+	@Field(path=true)protected String path;
+	@Field protected String ancestorField;
 	protected String discriminator;
 	
 	public String getPath() {

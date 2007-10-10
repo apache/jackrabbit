@@ -16,24 +16,26 @@
  */
 package org.apache.jackrabbit.ocm.testmodel;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
 
 /**
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  * 
  */
+@Node(jcrType="ocm:propertytest")
 public class PropertyTest
 {
-	private String path;
-	private String requiredProp;
-	private String requiredWithConstraintsProp;
-	private String autoCreatedProp;
-	private String autoCreatedWithConstraintsProp;
-	private String mandatoryProp;
-	private String mandatoryWithConstaintsProp; 
-	private String protectedWithDefaultValueProp;
-	
-	
+	@Field(path=true) private String path;
+	@Field(jcrName="ocm:requiredProp") private String requiredProp;
+	@Field(jcrName="ocm:requiredWithConstraintsProp", jcrValueConstraints="abc,def,ghi") private String requiredWithConstraintsProp;
+	@Field(jcrName="ocm:autoCreatedProp", jcrDefaultValue="aaa") private String autoCreatedProp;
+	@Field(jcrName="ocm:autoCreatedWithConstraintsProp", jcrDefaultValue="ccc", jcrValueConstraints="bbb,ccc,ddd") private String autoCreatedWithConstraintsProp;
+	@Field(jcrName="ocm:mandatoryProp", jcrMandatory=true) private String mandatoryProp;
+	@Field(jcrName="ocm:mandatoryWithConstaintsProp", jcrMandatory=true, jcrValueConstraints="xx,yy") private String mandatoryWithConstaintsProp; 
+	@Field(jcrName="ocm:protectedWithDefaultValueProp", jcrProtected=true) private String protectedWithDefaultValueProp;
 	
 	public String getPath() {
 		return path;

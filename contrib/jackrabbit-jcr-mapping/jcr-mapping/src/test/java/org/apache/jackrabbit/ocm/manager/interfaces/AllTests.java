@@ -36,8 +36,10 @@ public class AllTests {
     public static Test buildSuite() {
         TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.manager.interfaces");
         //$JUnit-BEGIN$
-        suite.addTestSuite(ObjectContentManagerInterfaceConcreteClassTest.class);
-        suite.addTestSuite(ObjectContentManagerInterfaceHierarchyTest.class);        
+        suite.addTestSuite(AnnotationConcreteClassTest.class);
+        suite.addTestSuite(DigesterConcreteClassTest.class);
+        suite.addTestSuite(AnnotationInterfaceHierarchyTest.class);
+        suite.addTestSuite(DigesterInterfaceHierarchyTest.class);        
         //$JUnit-END$
 
         return suite;

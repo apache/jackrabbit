@@ -24,8 +24,8 @@ import junit.framework.TestSuite;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.ocm.AnnotationTestBase;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.lock.Lock;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.testmodel.A;
@@ -38,15 +38,15 @@ import org.apache.jackrabbit.ocm.testmodel.Lockable;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerLockTest extends DigesterTestBase
+public class AnnotationLockTest extends AnnotationTestBase
 {
-    private final static Log log = LogFactory.getLog(ObjectContentManagerLockTest.class);
+    private final static Log log = LogFactory.getLog(AnnotationLockTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public ObjectContentManagerLockTest(String testName)  throws Exception
+    public AnnotationLockTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -55,7 +55,7 @@ public class ObjectContentManagerLockTest extends DigesterTestBase
     {
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(
-                new TestSuite(ObjectContentManagerLockTest.class));
+                new TestSuite(AnnotationLockTest.class));
     }
 
 

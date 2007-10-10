@@ -14,12 +14,16 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.inheritance.impl;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
 /**
  * Simple extension to the DocumentImpl class
  */
+@Node(jcrType="ocm:documentextimpl", extend=DocumentImpl.class, discriminator=false)
 public class DocumentExtImpl extends DocumentImpl {
 
-    private String extInfo;
+    @Field(jcrName="ocm:extinfo") private String extInfo;
 
     public String getExtInfo() {
         return extInfo;

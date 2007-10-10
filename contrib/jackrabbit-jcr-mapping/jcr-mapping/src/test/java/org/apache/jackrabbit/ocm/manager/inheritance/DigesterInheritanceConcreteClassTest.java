@@ -45,14 +45,14 @@ import org.apache.jackrabbit.ocm.testmodel.interfaces.Folder;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerInheritanceConcreteClassTest extends DigesterTestBase {
-	private final static Log log = LogFactory.getLog(ObjectContentManagerInheritanceConcreteClassTest.class);
+public class DigesterInheritanceConcreteClassTest extends DigesterTestBase {
+	private final static Log log = LogFactory.getLog(DigesterInheritanceConcreteClassTest.class);
 
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public ObjectContentManagerInheritanceConcreteClassTest(String testName) throws Exception {
+	public DigesterInheritanceConcreteClassTest(String testName) throws Exception {
 		super(testName);
 
 	}
@@ -60,7 +60,7 @@ public class ObjectContentManagerInheritanceConcreteClassTest extends DigesterTe
 	public static Test suite() {
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(new TestSuite(
-				ObjectContentManagerInheritanceConcreteClassTest.class));
+				DigesterInheritanceConcreteClassTest.class));
 	}
 
 	public void tearDown() throws Exception {

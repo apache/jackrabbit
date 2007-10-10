@@ -22,24 +22,27 @@ import java.io.InputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 
 
 
 /**
- * Content object
+ * Document Steam
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  * 
  */
+@Node(jcrType="ocm:documentstream", discriminator=false)
 public class DocumentStream 
 {
     protected final static Log log = LogFactory.getLog(DocumentStream.class);
       
-    protected byte[] content;
+    @Field(jcrName="ocm:binarycontent") protected byte[] content;
     
-    protected String encoding;
+    @Field(jcrName="ocm:encoding") protected String encoding;
     
-    protected String path;
+    @Field(path=true) protected String path;
 
 
     /**

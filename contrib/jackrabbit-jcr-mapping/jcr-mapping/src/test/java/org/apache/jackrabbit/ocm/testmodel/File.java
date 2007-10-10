@@ -16,17 +16,20 @@
  */
 package org.apache.jackrabbit.ocm.testmodel;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Bean;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
 /**
  * Java class used to map the jcr node type nt:file
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  *
  */
+@Node(jcrType="nt:file", extend=HierarchyNode.class)
 public class File  extends HierarchyNode
 {
 
-    private Resource resource;
-    private String path;
-
+    @Bean(jcrName="jcr:content") private Resource resource;
+    
 	public Resource getResource() 
 	{
 		return resource;
@@ -37,16 +40,5 @@ public class File  extends HierarchyNode
 		this.resource = resource;
 	}
 
-	public String getPath() 
-	{
-		return path;
-	}
-
-	public void setPath(String path) 
-	{
-		this.path = path;
-	}
-
-	
     
 }

@@ -36,8 +36,10 @@ public class AllTests {
     public static Test buildSuite() {
         TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.manager.inheritance");
         //$JUnit-BEGIN$
-        suite.addTestSuite(ObjectContentManagerInheritanceConcreteClassTest.class);
-        suite.addTestSuite(ObjectContentManagerInheritanceHierarchyTest.class);        
+        suite.addTestSuite(AnnotationInheritanceConcreteClassTest.class);
+        suite.addTestSuite(AnnotationInheritanceHierarchyTest.class);
+        suite.addTestSuite(DigesterInheritanceConcreteClassTest.class);
+        suite.addTestSuite(DigesterInheritanceHierarchyTest.class);        
         //$JUnit-END$
 
         return suite;

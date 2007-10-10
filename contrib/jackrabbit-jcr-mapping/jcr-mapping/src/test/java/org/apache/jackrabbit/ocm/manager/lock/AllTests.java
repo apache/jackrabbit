@@ -36,7 +36,8 @@ public class AllTests {
     public static Test buildSuite() {
         TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.manager.basic");
         //$JUnit-BEGIN$
-        suite.addTestSuite(ObjectContentManagerLockTest.class);
+        suite.addTestSuite(DigesterLockTest.class);
+        suite.addTestSuite(AnnotationLockTest.class);
         //$JUnit-END$
 
         return suite;

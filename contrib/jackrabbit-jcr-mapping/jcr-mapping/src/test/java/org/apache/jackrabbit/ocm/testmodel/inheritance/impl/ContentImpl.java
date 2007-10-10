@@ -16,11 +16,9 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.inheritance.impl;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Implement;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 import org.apache.jackrabbit.ocm.testmodel.interfaces.Content;
-
-
-
-
 
 /**
  * Content object
@@ -28,6 +26,8 @@ import org.apache.jackrabbit.ocm.testmodel.interfaces.Content;
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  * 
  */
+@Node(jcrType="ocm:contentimpl", isAbstract=true, extend=CmsObjectImpl.class, discriminator=false )
+@Implement(interfaceName=Content.class)
 public abstract class ContentImpl  extends CmsObjectImpl implements Content
 {
 }

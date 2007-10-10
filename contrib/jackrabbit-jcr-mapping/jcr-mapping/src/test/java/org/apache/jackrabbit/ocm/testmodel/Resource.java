@@ -23,13 +23,17 @@ import java.util.Calendar;
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  *
  */
+
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
+@Node(jcrType="nt:resource")
 public class Resource
 {
 
-    private String mimeType;
-    private String encoding;
-    private InputStream data;
-    private Calendar lastModified;
+    @Field( jcrName="jcr:mimeType") private String mimeType;    
+    @Field( jcrName="jcr:data") private InputStream data;
+    @Field( jcrName="jcr:lastModified") private Calendar lastModified;
     
     public InputStream getData()
     {
@@ -39,14 +43,7 @@ public class Resource
     {
         this.data = data;
     }
-    public String getEncoding()
-    {
-        return encoding;
-    }
-    public void setEncoding(String encoding)
-    {
-        this.encoding = encoding;
-    }
+
     public Calendar getLastModified()
     {
         return lastModified;

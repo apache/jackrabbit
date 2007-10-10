@@ -16,17 +16,23 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.proxy;
 
-import java.util.Collection;
 
+
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Bean;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Collection;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
+@Node
 public class Main 
 {
 
-	private String path;
-	private Detail proxyDetail;
-	private Detail nullDetail; 
-    private Detail detail;
-    private Collection proxyCollection;
-    private Collection nullProxyCollection;
+	@Field(path=true) private String path;
+	@Bean(proxy=true) private Detail proxyDetail;
+	@Bean(proxy=true) private Detail nullDetail; 
+    @Bean private Detail detail;
+    @Collection(proxy=true, elementClassName=Detail.class) private java.util.Collection proxyCollection;
+    @Collection(proxy=true, elementClassName=Detail.class) private java.util.Collection nullProxyCollection;
 
      
 	public String getPath() {
@@ -61,19 +67,19 @@ public class Main
 		this.nullDetail = nullDetail;
 	}
 
-	public Collection getProxyCollection() {
+	public java.util.Collection getProxyCollection() {
 		return proxyCollection;
 	}
 
-	public void setProxyCollection(Collection proxyCollection) {
+	public void setProxyCollection(java.util.Collection proxyCollection) {
 		this.proxyCollection = proxyCollection;
 	}
 
-	public Collection getNullProxyCollection() {
+	public java.util.Collection getNullProxyCollection() {
 		return nullProxyCollection;
 	}
 
-	public void setNullProxyCollection(Collection nullProxyCollection) {
+	public void setNullProxyCollection(java.util.Collection nullProxyCollection) {
 		this.nullProxyCollection = nullProxyCollection;
 	}
 	
