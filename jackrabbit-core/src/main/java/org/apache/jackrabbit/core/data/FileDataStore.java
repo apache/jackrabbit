@@ -21,11 +21,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.ref.WeakReference;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.WeakHashMap;
 
 /**
  * Simple file-based data store. Data records are stored as normal files
@@ -88,6 +90,11 @@ public class FileDataStore implements DataStore {
      * The minimum size of an object that should be stored in this data store.
      */
     private int minRecordLength = DEFAULT_MIN_RECORD_LENGTH;
+    
+    /**
+     * All data identifiers that are currently in use are in this set until they are garbage collected.
+     */
+    private WeakHashMap inUse = new WeakHashMap();
 
     /**
      * Creates a uninitialized data store.
@@ -127,7 +134,12 @@ public class FileDataStore implements DataStore {
                 file.setLastModified(System.currentTimeMillis());
             }
         }
+        usesIdentifier(identifier);
         return new FileDataRecord(identifier, file);
+    }
+    
+    private void usesIdentifier(DataIdentifier identifier) {
+        inUse.put(identifier, new WeakReference(identifier));
     }
 
     /**
@@ -164,6 +176,7 @@ public class FileDataStore implements DataStore {
             // Check if the same record already exists, or
             // move the temporary file in place if needed
             DataIdentifier identifier = new DataIdentifier(digest.digest());
+            usesIdentifier(identifier);
             File file = getFile(identifier);
             File parent = file.getParentFile();
             if (!parent.isDirectory()) {
@@ -208,6 +221,7 @@ public class FileDataStore implements DataStore {
      * @return identified file
      */
     private File getFile(DataIdentifier identifier) {
+        usesIdentifier(identifier);
         String string = identifier.toString();
         File file = directory;
         file = new File(file, string.substring(0, 2));
@@ -249,8 +263,11 @@ public class FileDataStore implements DataStore {
         int count = 0;
         if (file.isFile() && file.exists() && file.canWrite()) {
             if (file.lastModified() < min) {
-                file.delete();
-                count++;
+                DataIdentifier id = new DataIdentifier(file.getName());
+                if (!inUse.containsKey(id)) {
+                    file.delete();
+                    count++;
+                }
             }
         } else if (file.isDirectory()) {
             File[] list = file.listFiles();
@@ -289,6 +306,14 @@ public class FileDataStore implements DataStore {
             }
         }
         return identifiers.iterator();
+    }
+    
+    /**
+     * Clear the in-use list. This is only used for testing to make the the garbage collection
+     * think that objects are no longer in use.
+     */
+    public void clearInUse() {
+        inUse.clear();
     }
 
     /**
