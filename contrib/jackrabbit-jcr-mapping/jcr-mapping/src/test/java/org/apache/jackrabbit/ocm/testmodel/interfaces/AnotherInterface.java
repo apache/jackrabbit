@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.interfaces;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
+@Node(isInterface=true)
 public interface AnotherInterface
 {
 

@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.interfaces;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
+@Node(isInterface=true, jcrType="ocm:cmsobject", discriminator=false )
 public interface CmsObject {
 
 	public String getName();

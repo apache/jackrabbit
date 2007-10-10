@@ -16,18 +16,22 @@
  */
 package org.apache.jackrabbit.ocm.testmodel;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
 
 /**
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  * 
  */
+@Node(jcrType="ocm:TestLockable") 
 public class Lockable
 {
-	private String path; 
-    private String a1;
-    private String a2;
-    private String lockOwner;
+	@Field(path=true) private String path; 
+    @Field(jcrName="ocm:a1") private String a1;
+    @Field(jcrName="ocm:a2") private String a2;
+    @Field(jcrName="jcr:lockOwner") private String lockOwner;
     
     
     public String getPath() {

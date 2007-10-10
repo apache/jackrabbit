@@ -23,14 +23,13 @@ import junit.framework.TestSuite;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.DigesterTestBase;
+import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.query.Filter;
 import org.apache.jackrabbit.ocm.query.Query;
 import org.apache.jackrabbit.ocm.query.QueryManager;
 import org.apache.jackrabbit.ocm.testmodel.Atomic;
-import org.apache.jackrabbit.ocm.testmodel.inheritance.impl.CmsObjectImpl;
 import org.apache.jackrabbit.ocm.testmodel.inheritance.impl.DocumentImpl;
 import org.apache.jackrabbit.ocm.testmodel.inheritance.impl.DocumentStream;
 import org.apache.jackrabbit.ocm.testmodel.inheritance.impl.FolderImpl;
@@ -44,14 +43,14 @@ import org.apache.jackrabbit.ocm.testmodel.interfaces.Folder;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerInterfaceConcreteClassTest extends DigesterTestBase {
-	private final static Log log = LogFactory.getLog(ObjectContentManagerInterfaceConcreteClassTest.class);
+public class DigesterConcreteClassTest extends DigesterTestBase {
+	private final static Log log = LogFactory.getLog(DigesterConcreteClassTest.class);
 
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public ObjectContentManagerInterfaceConcreteClassTest(String testName) throws Exception {
+	public DigesterConcreteClassTest(String testName) throws Exception {
 		super(testName);
 
 	}
@@ -59,7 +58,7 @@ public class ObjectContentManagerInterfaceConcreteClassTest extends DigesterTest
 	public static Test suite() {
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(new TestSuite(
-				ObjectContentManagerInterfaceConcreteClassTest.class));
+				DigesterConcreteClassTest.class));
 	}
 
 	public void tearDown() throws Exception {

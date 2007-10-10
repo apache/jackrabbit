@@ -16,6 +16,11 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.inheritance.impl;
 
+import org.apache.jackrabbit.ocm.manager.beanconverter.impl.ParentBeanConverterImpl;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Bean;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Implement;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 import org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject;
 import org.apache.jackrabbit.ocm.testmodel.interfaces.Folder;
 
@@ -28,13 +33,14 @@ import org.apache.jackrabbit.ocm.testmodel.interfaces.Folder;
  * 
  * 
  */
+@Node(jcrType="ocm:cmsobjectimpl", discriminator=false, isAbstract=true)
+@Implement(interfaceName=CmsObject.class)
 public class CmsObjectImpl implements CmsObject
 {
     
-    protected String path;        
-    protected String name;
-    protected Folder parentFolder;
-    
+    @Field(path=true) protected String path;        
+    @Field(jcrName="ocm:name", id=true) protected String name;
+    @Bean(converter=ParentBeanConverterImpl.class) protected Folder parentFolder;
 
     /**
      * 

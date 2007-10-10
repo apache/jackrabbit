@@ -16,11 +16,17 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.inheritance;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Implement;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 import org.apache.jackrabbit.ocm.testmodel.interfaces.Interface;
 
-public class AnotherDescendant extends Ancestor implements Interface{
+@Node(extend=Ancestor.class)
+@Implement(interfaceName=Interface.class)
+public class AnotherDescendant extends Ancestor implements Interface
+{
 
-	protected String anotherDescendantField;
+	@Field protected String anotherDescendantField;
 
 	public String getAnotherDescendantField() {
 		return anotherDescendantField;

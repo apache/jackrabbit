@@ -23,8 +23,8 @@ import junit.framework.TestSuite;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.ocm.AnnotationTestBase;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.query.Filter;
 import org.apache.jackrabbit.ocm.query.Query;
@@ -40,14 +40,14 @@ import org.apache.jackrabbit.ocm.testmodel.inheritance.SubDescendant;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerInheritanceHierarchyTest extends DigesterTestBase {
-	private final static Log log = LogFactory.getLog(ObjectContentManagerInheritanceHierarchyTest.class);
+public class AnnotationInheritanceHierarchyTest extends AnnotationTestBase {
+	private final static Log log = LogFactory.getLog(AnnotationInheritanceHierarchyTest.class);
 
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public ObjectContentManagerInheritanceHierarchyTest(String testName) throws Exception {
+	public AnnotationInheritanceHierarchyTest(String testName) throws Exception {
 		super(testName);
 
 	}
@@ -55,7 +55,7 @@ public class ObjectContentManagerInheritanceHierarchyTest extends DigesterTestBa
 	public static Test suite() {
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(new TestSuite(
-				ObjectContentManagerInheritanceHierarchyTest.class));
+				AnnotationInheritanceHierarchyTest.class));
 	}
 
 	public void tearDown() throws Exception {

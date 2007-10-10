@@ -18,14 +18,30 @@ package org.apache.jackrabbit.ocm.testmodel;
 
 import java.util.Calendar;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
 /**
  * Java class used to map the jcr node type nt:hierarchyNode
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  *
  */
+@Node(jcrType="nt:hierarchyNode")
 public class HierarchyNode
 {	
-	private Calendar creationDate;
+	@Field(path=true) private String path;
+	@Field(jcrName="jcr:created") private Calendar creationDate;
+	
+	
+	public String getPath() 
+	{
+		return path;
+	}
+
+	public void setPath(String path) 
+	{
+		this.path = path;
+	}
 	
 	public Calendar getCreationDate() 
 	{

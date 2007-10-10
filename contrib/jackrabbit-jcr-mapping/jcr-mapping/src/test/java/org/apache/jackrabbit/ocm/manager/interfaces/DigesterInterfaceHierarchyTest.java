@@ -41,14 +41,14 @@ import org.apache.jackrabbit.ocm.testmodel.interfaces.Interface;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerInterfaceHierarchyTest extends DigesterTestBase {
-	private final static Log log = LogFactory.getLog(ObjectContentManagerInterfaceHierarchyTest.class);
+public class DigesterInterfaceHierarchyTest extends DigesterTestBase {
+	private final static Log log = LogFactory.getLog(DigesterInterfaceHierarchyTest.class);
 
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public ObjectContentManagerInterfaceHierarchyTest(String testName) throws Exception {
+	public DigesterInterfaceHierarchyTest(String testName) throws Exception {
 		super(testName);
 
 	}
@@ -56,7 +56,7 @@ public class ObjectContentManagerInterfaceHierarchyTest extends DigesterTestBase
 	public static Test suite() {
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(new TestSuite(
-				ObjectContentManagerInterfaceHierarchyTest.class));
+				DigesterInterfaceHierarchyTest.class));
 	}
 
 	public void tearDown() throws Exception {

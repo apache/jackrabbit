@@ -34,22 +34,35 @@ import org.apache.jackrabbit.ocm.testmodel.D;
 import org.apache.jackrabbit.ocm.testmodel.DFull;
 import org.apache.jackrabbit.ocm.testmodel.Default;
 import org.apache.jackrabbit.ocm.testmodel.E;
+import org.apache.jackrabbit.ocm.testmodel.File;
+import org.apache.jackrabbit.ocm.testmodel.HierarchyNode;
+import org.apache.jackrabbit.ocm.testmodel.Lockable;
 import org.apache.jackrabbit.ocm.testmodel.MultiValue;
 import org.apache.jackrabbit.ocm.testmodel.Page;
 import org.apache.jackrabbit.ocm.testmodel.Paragraph;
+import org.apache.jackrabbit.ocm.testmodel.PropertyTest;
 import org.apache.jackrabbit.ocm.testmodel.Residual;
+import org.apache.jackrabbit.ocm.testmodel.Resource;
 import org.apache.jackrabbit.ocm.testmodel.Residual.ResidualNodes;
 import org.apache.jackrabbit.ocm.testmodel.Residual.ResidualProperties;
-import org.apache.jackrabbit.ocm.testmodel.auto.CmsObject;
-import org.apache.jackrabbit.ocm.testmodel.auto.Content;
-import org.apache.jackrabbit.ocm.testmodel.auto.Document;
-import org.apache.jackrabbit.ocm.testmodel.auto.Folder;
-import org.apache.jackrabbit.ocm.testmodel.auto.impl.CmsObjectImpl;
-import org.apache.jackrabbit.ocm.testmodel.auto.impl.ContentImpl;
-import org.apache.jackrabbit.ocm.testmodel.auto.impl.DocumentImpl;
-import org.apache.jackrabbit.ocm.testmodel.auto.impl.FolderImpl;
 import org.apache.jackrabbit.ocm.testmodel.collection.Element;
 import org.apache.jackrabbit.ocm.testmodel.collection.Main;
+import org.apache.jackrabbit.ocm.testmodel.inheritance.Ancestor;
+import org.apache.jackrabbit.ocm.testmodel.inheritance.AnotherDescendant;
+import org.apache.jackrabbit.ocm.testmodel.inheritance.Descendant;
+import org.apache.jackrabbit.ocm.testmodel.inheritance.SubDescendant;
+import org.apache.jackrabbit.ocm.testmodel.inheritance.impl.CmsObjectImpl;
+import org.apache.jackrabbit.ocm.testmodel.inheritance.impl.ContentImpl;
+import org.apache.jackrabbit.ocm.testmodel.inheritance.impl.DocumentExtImpl;
+import org.apache.jackrabbit.ocm.testmodel.inheritance.impl.DocumentImpl;
+import org.apache.jackrabbit.ocm.testmodel.inheritance.impl.DocumentStream;
+import org.apache.jackrabbit.ocm.testmodel.inheritance.impl.FolderImpl;
+import org.apache.jackrabbit.ocm.testmodel.interfaces.AnotherInterface;
+import org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject;
+import org.apache.jackrabbit.ocm.testmodel.interfaces.Content;
+import org.apache.jackrabbit.ocm.testmodel.interfaces.Document;
+import org.apache.jackrabbit.ocm.testmodel.interfaces.Folder;
+import org.apache.jackrabbit.ocm.testmodel.interfaces.Interface;
 
 /**
  * Base class for testcases. Provides priviledged access to the jcr test
@@ -102,6 +115,40 @@ public abstract class AnnotationTestBase extends AbstractTestBase
 		classes.add(Residual.class); 
 		classes.add(ResidualProperties.class);
 		classes.add(ResidualNodes.class);
+		
+		classes.add(CmsObject.class);
+		classes.add(Content.class);
+		classes.add(Document.class);
+		classes.add(Folder.class);
+		classes.add(CmsObjectImpl.class);
+		classes.add(ContentImpl.class);
+		classes.add(DocumentImpl.class);
+		classes.add(DocumentExtImpl.class);
+		classes.add(DocumentStream.class);
+		classes.add(FolderImpl.class);
+		
+		classes.add(Ancestor.class);
+		classes.add(Descendant.class);
+		classes.add(AnotherDescendant.class);
+		classes.add(SubDescendant.class);
+		classes.add(Interface.class);
+		classes.add(AnotherInterface.class);
+		
+		classes.add(HierarchyNode.class);
+		classes.add(File.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.Folder.class);
+		classes.add(Resource.class);
+		classes.add(PropertyTest.class);
+		
+		classes.add(Lockable.class);
+		
+		classes.add(org.apache.jackrabbit.ocm.testmodel.proxy.Main.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.proxy.Detail.class);
+		
+		classes.add(org.apache.jackrabbit.ocm.testmodel.proxy.NTMain.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.proxy.NTDetail.class);
+		
+		
 		Mapper mapper = new AnnotationMapperImpl(classes);
 		ocm = new ObjectContentManagerImpl(session, mapper);
 		

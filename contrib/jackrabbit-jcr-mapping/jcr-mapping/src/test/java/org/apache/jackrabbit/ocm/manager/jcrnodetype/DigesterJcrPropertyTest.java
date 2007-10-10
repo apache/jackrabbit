@@ -31,21 +31,21 @@ import org.apache.jackrabbit.ocm.testmodel.PropertyTest;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerJcrPropertyTest extends DigesterTestBase {
-	private final static Log log = LogFactory.getLog(ObjectContentManagerJcrPropertyTest.class);
+public class DigesterJcrPropertyTest extends DigesterTestBase {
+	private final static Log log = LogFactory.getLog(DigesterJcrPropertyTest.class);
 
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public ObjectContentManagerJcrPropertyTest(String testName) throws Exception {
+	public DigesterJcrPropertyTest(String testName) throws Exception {
 		super(testName);
 
 	}
 
 	public static Test suite() {
 		// All methods starting with "test" will be executed in the test suite.
-		return new RepositoryLifecycleTestSetup(new TestSuite(ObjectContentManagerJcrPropertyTest.class));
+		return new RepositoryLifecycleTestSetup(new TestSuite(DigesterJcrPropertyTest.class));
 	}
 
 	public void tearDown() throws Exception {

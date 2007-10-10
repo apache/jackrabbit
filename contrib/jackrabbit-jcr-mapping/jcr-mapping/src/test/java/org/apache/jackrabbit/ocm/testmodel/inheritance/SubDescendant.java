@@ -16,9 +16,15 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.inheritance;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
+
+@Node(extend=Descendant.class)
+
 public class SubDescendant extends Descendant {
 
-	protected String subDescendantField;
+	@Field protected String subDescendantField;
 
 	public String getSubDescendantField() {
 		return subDescendantField;

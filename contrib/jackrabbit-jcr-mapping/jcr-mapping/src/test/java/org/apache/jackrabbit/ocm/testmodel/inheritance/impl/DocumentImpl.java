@@ -19,6 +19,10 @@ package org.apache.jackrabbit.ocm.testmodel.inheritance.impl;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Bean;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Implement;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 import org.apache.jackrabbit.ocm.testmodel.interfaces.Document;
 
 /**
@@ -27,14 +31,16 @@ import org.apache.jackrabbit.ocm.testmodel.interfaces.Document;
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  * 
  */
+@Node(jcrType="ocm:documentimpl", extend=ContentImpl.class, discriminator=false)
+@Implement(interfaceName=Document.class)
 public class DocumentImpl extends ContentImpl implements Document
 {
     protected final static Log log =  LogFactory.getLog(DocumentImpl.class);
     
-    protected long size;
-    protected String contentType;   
+    @Field(jcrName="ocm:size") protected long size;
+    @Field(jcrName="ocm:contenttype") protected String contentType;   
         
-    protected DocumentStream documentStream;
+    @Bean(jcrName="ocm:documentstream", proxy=true) protected DocumentStream documentStream;
 
 
     /**

@@ -10,7 +10,7 @@
 	
 	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Folder"  jcrType="nt:folder"
 	                  extend="org.apache.jackrabbit.ocm.testmodel.HierarchyNode" >
-		<field-descriptor fieldName="path" path="true" />
+
 		<collection-descriptor fieldName="children" proxy="false" autoUpdate="false" 
 		                       elementClassName="org.apache.jackrabbit.ocm.testmodel.HierarchyNode" 
 		                       collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl" />
@@ -20,13 +20,11 @@
 	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.File"  jcrType="nt:file" 
 	                  extend="org.apache.jackrabbit.ocm.testmodel.HierarchyNode" >
 	                  
-		<field-descriptor fieldName="path" path="true" />
 		<bean-descriptor  fieldName="resource"  jcrName="jcr:content" />
 	</class-descriptor>
 		
     <class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Resource"  jcrType="nt:resource">
-		<field-descriptor fieldName="mimeType" jcrName="jcr:mimeType"/>	
-		<!-- field-descriptor fieldName="encoding" jcrName="jcr:encoding"/ -->	
+		<field-descriptor fieldName="mimeType" jcrName="jcr:mimeType"/>			
 		<field-descriptor fieldName="data" jcrName="jcr:data"/>	
 		<field-descriptor fieldName="lastModified" jcrName="jcr:lastModified"/>	
 	</class-descriptor>	

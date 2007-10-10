@@ -37,14 +37,14 @@ import org.apache.jackrabbit.ocm.testmodel.Resource;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerJcrNodeTypeTest extends DigesterTestBase {
-	private final static Log log = LogFactory.getLog(ObjectContentManagerJcrNodeTypeTest.class);
+public class DigesterJcrNodeTypeTest extends DigesterTestBase {
+	private final static Log log = LogFactory.getLog(DigesterJcrNodeTypeTest.class);
 
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public ObjectContentManagerJcrNodeTypeTest(String testName) throws Exception {
+	public DigesterJcrNodeTypeTest(String testName) throws Exception {
 		super(testName);
 
 	}
@@ -52,7 +52,7 @@ public class ObjectContentManagerJcrNodeTypeTest extends DigesterTestBase {
 	public static Test suite() {
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(new TestSuite(
-				ObjectContentManagerJcrNodeTypeTest.class));
+				DigesterJcrNodeTypeTest.class));
 	}
 
 	public void tearDown() throws Exception {

@@ -36,8 +36,10 @@ public class AllTests {
     public static Test buildSuite() {
         TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.manager.jcrnodetype");
         //$JUnit-BEGIN$
-        suite.addTestSuite(ObjectContentManagerJcrNodeTypeTest.class);                
-        suite.addTestSuite(ObjectContentManagerJcrPropertyTest.class);
+        suite.addTestSuite(AnnotationJcrNodeTypeTest.class);
+        suite.addTestSuite(DigesterJcrNodeTypeTest.class);                
+        suite.addTestSuite(AnnotationJcrPropertyTest.class);
+        suite.addTestSuite(DigesterJcrPropertyTest.class);
         //$JUnit-END$
 
         return suite;

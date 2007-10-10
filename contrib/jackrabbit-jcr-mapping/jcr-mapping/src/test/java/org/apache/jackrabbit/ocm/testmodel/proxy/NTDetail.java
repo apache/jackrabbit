@@ -16,10 +16,14 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.proxy;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
+@Node(jcrType="ocm:ntdetail")
 public class NTDetail 
 {
-    private String path;
-	private String field;
+    @Field(path=true) private String path;
+	@Field(jcrName="ocm:field") private String field;
 
     
 	public String getPath() {

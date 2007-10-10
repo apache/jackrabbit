@@ -16,10 +16,14 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.proxy;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
+@Node
 public class Detail 
 {
-    private String path;
-	private String field;
+    @Field(path=true) private String path;
+	@Field private String field;
 
     
 	public String getPath() {

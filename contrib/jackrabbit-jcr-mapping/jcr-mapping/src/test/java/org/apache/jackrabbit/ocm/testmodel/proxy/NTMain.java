@@ -16,17 +16,20 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.proxy;
 
-import java.util.Collection;
 
+
+import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Collection;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
+@Node(jcrType="ocm:ntmain")
 public class NTMain 
 {
 
-	private String path;
-	//private Detail proxyDetail;
-    private Collection proxyCollection;
+	@Field(path=true) private String path;
+    @Collection(proxy=true, elementClassName=NTDetail.class,collectionConverter=NTCollectionConverterImpl.class)  private java.util.Collection proxyCollection;
 
-
-     
 	public String getPath() {
 		return path;
 	}
@@ -35,11 +38,11 @@ public class NTMain
 		this.path = path;
 	}
 
-	public Collection getProxyCollection() {
+	public java.util.Collection getProxyCollection() {
 		return proxyCollection;
 	}
 
-	public void setProxyCollection(Collection proxyCollection) {
+	public void setProxyCollection(java.util.Collection proxyCollection) {
 		this.proxyCollection = proxyCollection;
 	}
 

@@ -37,14 +37,14 @@ import org.apache.jackrabbit.ocm.testmodel.proxy.NTMain;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class ProxyTest extends DigesterTestBase {
-	private final static Log log = LogFactory.getLog(ProxyTest.class);
+public class DigesterProxyTest extends DigesterTestBase {
+	private final static Log log = LogFactory.getLog(DigesterProxyTest.class);
 
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public ProxyTest(String testName) throws Exception {
+	public DigesterProxyTest(String testName) throws Exception {
 		super(testName);
 
 	}
@@ -52,7 +52,7 @@ public class ProxyTest extends DigesterTestBase {
 	public static Test suite() {
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(new TestSuite(
-				ProxyTest.class));
+				DigesterProxyTest.class));
 	}
 
 	public void tearDown() throws Exception {
