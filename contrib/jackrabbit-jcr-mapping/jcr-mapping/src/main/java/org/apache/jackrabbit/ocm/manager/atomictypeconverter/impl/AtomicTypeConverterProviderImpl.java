@@ -70,7 +70,7 @@ public class AtomicTypeConverterProviderImpl implements AtomicTypeConverterProvi
         }
         Class converterClass= (Class) m_converters.get(clazz);
         if(null == converterClass) {
-            throw new IncorrectAtomicTypeException("No registered converter for class '" + clazz + "'");
+            throw new IncorrectAtomicTypeException("No registered converter for a field based on the class :'" + clazz + "'");
         }
         
         try {
