@@ -27,8 +27,8 @@ import junit.framework.TestSuite;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.ocm.AnnotationTestBase;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.query.Filter;
 import org.apache.jackrabbit.ocm.query.Query;
@@ -38,18 +38,18 @@ import org.apache.jackrabbit.ocm.testmodel.Atomic;
 /**
  * Test Query on atomic fields
  *
- * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
+ * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerAtomicQueryTest extends DigesterTestBase
+public class AnnotationAtomicQueryTest extends AnnotationTestBase
 {
-	private final static Log log = LogFactory.getLog(ObjectContentManagerAtomicQueryTest.class);
+	private final static Log log = LogFactory.getLog(AnnotationAtomicQueryTest.class);
 	private Date date = new Date();
 	
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public ObjectContentManagerAtomicQueryTest(String testName) throws Exception
+	public AnnotationAtomicQueryTest(String testName) throws Exception
 	{
 		super(testName);
 		
@@ -58,7 +58,7 @@ public class ObjectContentManagerAtomicQueryTest extends DigesterTestBase
 	public static Test suite()
 	{
 		// All methods starting with "test" will be executed in the test suite.
-		return new RepositoryLifecycleTestSetup(new TestSuite(ObjectContentManagerAtomicQueryTest.class));
+		return new RepositoryLifecycleTestSetup(new TestSuite(AnnotationAtomicQueryTest.class));
 	}
 	
     

@@ -16,16 +16,20 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.uuid;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
 
 /**
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  * @version $Id: Exp $
  */
+@Node(extend=Ancestor.class, jcrMixinTypes="mix:referenceable") 	                  
 public class Descendant extends Ancestor
 {
 
-    private String stringData;
+    @Field private String stringData;
 
     
 	public String getStringData() {

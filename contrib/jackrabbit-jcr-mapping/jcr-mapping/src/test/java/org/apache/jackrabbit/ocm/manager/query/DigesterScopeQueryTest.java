@@ -45,15 +45,15 @@ import org.apache.jackrabbit.ocm.testmodel.Paragraph;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerScopeQueryTest extends DigesterTestBase
+public class DigesterScopeQueryTest extends DigesterTestBase
 {
-    private final static Log log = LogFactory.getLog(ObjectContentManagerScopeQueryTest.class);
+    private final static Log log = LogFactory.getLog(DigesterScopeQueryTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public ObjectContentManagerScopeQueryTest(String testName)  throws Exception
+    public DigesterScopeQueryTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -62,7 +62,7 @@ public class ObjectContentManagerScopeQueryTest extends DigesterTestBase
     {
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(
-                new TestSuite(ObjectContentManagerScopeQueryTest.class));
+                new TestSuite(DigesterScopeQueryTest.class));
     }
 
     /**
@@ -79,11 +79,7 @@ public class ObjectContentManagerScopeQueryTest extends DigesterTestBase
     
     public void tearDown() throws Exception
     {
-        if (getObjectContentManager().objectExists("/test"))
-        {
-            getObjectContentManager().remove("/test");            
-        }    
-        getObjectContentManager().save();
+    	cleanUpRepisotory();
         super.tearDown();
     }	
     

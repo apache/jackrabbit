@@ -36,7 +36,8 @@ public class AllTests {
     public static Test buildSuite() {
         TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.jcr.manager.uuid");
         //$JUnit-BEGIN$
-        suite.addTestSuite(ObjectContentManagerUuidTest.class);
+        suite.addTestSuite(AnnotationUuidTest.class);
+        suite.addTestSuite(DigesterUuidTest.class);
         
         //$JUnit-END$
 

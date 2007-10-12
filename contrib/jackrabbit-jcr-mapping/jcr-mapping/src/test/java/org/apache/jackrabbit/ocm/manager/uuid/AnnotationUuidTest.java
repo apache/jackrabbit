@@ -24,8 +24,8 @@ import junit.framework.TestSuite;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.ocm.AnnotationTestBase;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.testmodel.uuid.A;
 import org.apache.jackrabbit.ocm.testmodel.uuid.B;
@@ -38,15 +38,15 @@ import org.apache.jackrabbit.ocm.testmodel.uuid.Descendant;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerUuidTest extends DigesterTestBase
+public class AnnotationUuidTest extends AnnotationTestBase
 {
-    private final static Log log = LogFactory.getLog(ObjectContentManagerUuidTest.class);
+    private final static Log log = LogFactory.getLog(AnnotationUuidTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public ObjectContentManagerUuidTest(String testName)  throws Exception
+    public AnnotationUuidTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -55,7 +55,7 @@ public class ObjectContentManagerUuidTest extends DigesterTestBase
     {
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(
-                new TestSuite(ObjectContentManagerUuidTest.class));
+                new TestSuite(AnnotationUuidTest.class));
     }
 
 
@@ -64,30 +64,7 @@ public class ObjectContentManagerUuidTest extends DigesterTestBase
      */
     public void tearDown() throws Exception
     {
-    	if (getObjectContentManager().objectExists("/testB"))
-    	{
-    	   getObjectContentManager().remove("/testB");
-    	   getObjectContentManager().save();
-    	}
-    	
-    	if (getObjectContentManager().objectExists("/testB2"))
-    	{
-    	   getObjectContentManager().remove("/testB2");
-    	   getObjectContentManager().save();
-    	}
-    	
-    	if (getObjectContentManager().objectExists("/test"))
-    	{
-    	   getObjectContentManager().remove("/test");
-    	   getObjectContentManager().save();
-    	}
-    	
-    	if (getObjectContentManager().objectExists("/descendant"))
-    	{
-    	   getObjectContentManager().remove("/descendant");
-    	   getObjectContentManager().save();
-    	}
-    	
+    	cleanUpRepisotory();    	
         super.tearDown();
     }
     

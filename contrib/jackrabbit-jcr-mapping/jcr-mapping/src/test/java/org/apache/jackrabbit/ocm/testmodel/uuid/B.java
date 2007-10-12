@@ -16,7 +16,13 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.uuid;
 
-import java.util.Collection;
+
+
+import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.ReferenceTypeConverterImpl;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ReferenceCollectionConverterImpl;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Collection;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 
 
 /**
@@ -24,11 +30,12 @@ import java.util.Collection;
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  * @version $Id: Exp $
  */
+@Node
 public class B
 {
-	private String path; 
-    private String reference2A; // This String attribute is mapped to a reference/uuid jcr property
-    private Collection multiReferences; // a collection of references (uuid)
+	@Field(path=true) private String path; 
+    @Field(converter=ReferenceTypeConverterImpl.class) private String reference2A; // This String attribute is mapped to a reference/uuid jcr property
+    @Collection(collectionConverter=ReferenceCollectionConverterImpl.class ) private java.util.Collection multiReferences; // a collection of references (uuid)
     
     public String getPath() 
     {
@@ -50,11 +57,11 @@ public class B
 		this.reference2A = reference2A;
 	}
 
-	public Collection getMultiReferences() {
+	public java.util.Collection getMultiReferences() {
 		return multiReferences;
 	}
 
-	public void setMultiReferences(Collection multiReferences) {
+	public void setMultiReferences(java.util.Collection multiReferences) {
 		this.multiReferences = multiReferences;
 	}
 

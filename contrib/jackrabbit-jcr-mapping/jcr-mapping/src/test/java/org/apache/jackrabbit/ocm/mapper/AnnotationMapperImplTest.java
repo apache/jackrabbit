@@ -16,14 +16,16 @@
  */
 package org.apache.jackrabbit.ocm.mapper;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
-import org.apache.jackrabbit.ocm.mapper.impl.digester.DigesterMapperImpl;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.AnnotationMapperImpl;
 import org.apache.jackrabbit.ocm.mapper.model.BeanDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
@@ -44,16 +46,16 @@ import org.apache.jackrabbit.ocm.testmodel.interfaces.Interface;
 import org.apache.jackrabbit.ocm.testmodel.proxy.Main;
 
 /**
- * Test Digester Mapper
+ * Test Annotation Mapper
  *
- * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
+ * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class DigesterMapperImplTest extends TestCase {
+public class AnnotationMapperImplTest extends TestCase {
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public DigesterMapperImplTest(String testName) {
+	public AnnotationMapperImplTest(String testName) {
 		super(testName);
 	}
 
@@ -69,8 +71,7 @@ public class DigesterMapperImplTest extends TestCase {
 	public void testMapper() {
 		try {
 
-			Mapper mapper = new DigesterMapperImpl(
-					"./src/test/test-config/jcrmapping-testdigester.xml");
+			Mapper mapper = getMapper();
 					
 			assertNotNull("Mapper is null", mapper);
 
@@ -78,7 +79,7 @@ public class DigesterMapperImplTest extends TestCase {
 			assertNotNull("ClassDescriptor is null", classDescriptor);
 			assertTrue("Invalid classname", classDescriptor.getClassName().equals(A.class.getName()));
 			assertTrue("Invalid path field", classDescriptor.getPathFieldDescriptor().getFieldName().equals("path"));
-			assertEquals("Invalid mixins", "mixin:a", classDescriptor.getJcrMixinTypes()[0]);
+			assertEquals("Invalid mixins", "mix:lockable", classDescriptor.getJcrMixinTypes()[0]);
 
 			FieldDescriptor fieldDescriptor = classDescriptor	.getFieldDescriptor("a1");
 			assertNotNull("FieldDescriptor is null", fieldDescriptor);
@@ -99,6 +100,7 @@ public class DigesterMapperImplTest extends TestCase {
 		}
 	}
 
+
 	/**
 	 * Simple test mapper
 	 *
@@ -106,8 +108,7 @@ public class DigesterMapperImplTest extends TestCase {
 	public void testUuid() {
 		try {
 
-			Mapper mapper = new DigesterMapperImpl(
-					"./src/test/test-config/jcrmapping-testdigester.xml");
+			Mapper mapper = getMapper();
 					
 			assertNotNull("Mapper is null", mapper);
 
@@ -128,7 +129,7 @@ public class DigesterMapperImplTest extends TestCase {
 	public void testDiscriminatorSetting() {
 		try {
 
-			Mapper mapper = new DigesterMapperImpl("./src/test/test-config/jcrmapping-testdigester.xml");
+			Mapper mapper = getMapper();
 
 			assertNotNull("Mapper is null", mapper);
 
@@ -149,11 +150,7 @@ public class DigesterMapperImplTest extends TestCase {
 	public void testMapperOptionalProperties() {
 		try {
 
-			String[] files = { "./src/test/test-config/jcrmapping.xml",
-					           "./src/test/test-config/jcrmapping-jcrnodetypes.xml"};			
-
-			Mapper mapper = new DigesterMapperImpl(files);
-			
+			Mapper mapper = getMapper();			
 			
 			assertNotNull("Mapper is null", mapper);
 
@@ -234,13 +231,8 @@ public class DigesterMapperImplTest extends TestCase {
 	 */
 	public void testMapperNtHierarchy() {
 		try {
-			String[] files = { "./src/test/test-config/jcrmapping.xml",
-					"./src/test/test-config/jcrmapping-atomic.xml",
-					"./src/test/test-config/jcrmapping-beandescriptor.xml",
-					"./src/test/test-config/jcrmapping-inheritance.xml" };			
+			Mapper mapper = getMapper();
 			
-			Mapper mapper = new DigesterMapperImpl(files);
-
 			assertNotNull("Mapper is null", mapper);
 
 			ClassDescriptor classDescriptor = mapper
@@ -330,14 +322,8 @@ public class DigesterMapperImplTest extends TestCase {
 	 */	
 	public void testMapperNtConcreteClass() {
 		try {
-			String[] files = { "./src/test/test-config/jcrmapping.xml",
-					"./src/test/test-config/jcrmapping-atomic.xml",
-					"./src/test/test-config/jcrmapping-beandescriptor.xml",
-					"./src/test/test-config/jcrmapping-inheritance.xml" };
-			//      		String[] files = {  "./src/test/test-config/jcrmapping-inheritance.xml"};
-
-			Mapper mapper = new DigesterMapperImpl(files);
-
+			Mapper mapper = getMapper();
+			
 			assertNotNull("Mapper is null", mapper);
 
 			ClassDescriptor classDescriptor = mapper.getClassDescriptorByClass(CmsObjectImpl.class);
@@ -396,9 +382,7 @@ public class DigesterMapperImplTest extends TestCase {
 	 */
 	public void testInterfaceWithDiscriminator() {
 		try {
-			String[] files = {"./src/test/test-config/jcrmapping-inheritance.xml"};
-			Mapper mapper = new DigesterMapperImpl(files);
-
+			Mapper mapper = getMapper();
 			assertNotNull("Mapper is null", mapper);
 			ClassDescriptor classDescriptor = mapper.getClassDescriptorByClass(Interface.class);
 			assertNotNull("Classdescriptor is null", classDescriptor);
@@ -436,9 +420,7 @@ public class DigesterMapperImplTest extends TestCase {
 	public void testInterfaceWithoutDiscriminator() 
 	{
 		try {
-			String[] files = {"./src/test/test-config/jcrmapping-inheritance.xml"};
-			Mapper mapper = new DigesterMapperImpl(files);
-
+			Mapper mapper = getMapper();
 			assertNotNull("Mapper is null", mapper);
 			ClassDescriptor classDescriptor = mapper.getClassDescriptorByClass(CmsObject.class);
 			assertNotNull("Classdescriptor is null", classDescriptor);
@@ -487,9 +469,7 @@ public class DigesterMapperImplTest extends TestCase {
 	 */
 	public void testProxy() {
 		try {
-			String[] files = { "./src/test/test-config/jcrmapping-proxy.xml" };
-
-			Mapper mapper = new DigesterMapperImpl(files);
+			Mapper mapper = getMapper();
 			assertNotNull("Mapper is null", mapper);
 
 			ClassDescriptor classDescriptor = mapper.getClassDescriptorByClass(Main.class);
@@ -502,6 +482,28 @@ public class DigesterMapperImplTest extends TestCase {
 			e.printStackTrace();
 			fail("Impossible to retrieve the converter " + e);
 		}
+	}
+	
+	private Mapper getMapper() 
+	{
+		List<Class> classes = new ArrayList<Class>();
+		classes.add( org.apache.jackrabbit.ocm.testmodel.A.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.B.class);
+		classes.add( org.apache.jackrabbit.ocm.testmodel.C.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.PropertyTest.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.inheritance.Ancestor.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.inheritance.AnotherDescendant.class);
+		classes.add( org.apache.jackrabbit.ocm.testmodel.inheritance.Descendant.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.inheritance.SubDescendant.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.inheritance.impl.CmsObjectImpl.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.inheritance.impl.DocumentImpl.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.interfaces.Document.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.interfaces.Interface.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.proxy.Main.class);
+		
+		Mapper mapper = new AnnotationMapperImpl(classes);
+		return mapper;
 	}
 	
 }

@@ -36,11 +36,16 @@ public class AllTests {
     public static Test buildSuite() {
         TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.manager.query");
         //$JUnit-BEGIN$
-        suite.addTestSuite(ObjectContentManagerAtomicQueryTest.class);
-        suite.addTestSuite(ObjectContentManagerIteratorQueryTest.class);
-        suite.addTestSuite(ObjectContentManagerMultiValueQueryTest.class);
-        suite.addTestSuite(ObjectContentManagerScopeQueryTest.class);
-        suite.addTestSuite(ObjectContentManagerSimpleQueryTest.class);
+        suite.addTestSuite(AnnotationAtomicQueryTest.class);
+        suite.addTestSuite(AnnotationIteratorQueryTest.class);
+        suite.addTestSuite(AnnotationMultiValueQueryTest.class);
+        suite.addTestSuite(AnnotationScopeQueryTest.class);
+        suite.addTestSuite(AnnotationSimpleQueryTest.class);
+        suite.addTestSuite(DigesterAtomicQueryTest.class);
+        suite.addTestSuite(DigesterIteratorQueryTest.class);
+        suite.addTestSuite(DigesterMultiValueQueryTest.class);
+        suite.addTestSuite(DigesterScopeQueryTest.class);
+        suite.addTestSuite(DigesterSimpleQueryTest.class);
         
         //$JUnit-END$
 

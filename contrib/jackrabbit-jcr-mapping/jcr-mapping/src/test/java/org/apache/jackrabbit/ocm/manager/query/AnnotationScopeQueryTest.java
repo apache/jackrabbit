@@ -18,7 +18,6 @@ package org.apache.jackrabbit.ocm.manager.query;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -29,6 +28,7 @@ import junit.framework.TestSuite;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.ocm.AnnotationTestBase;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
@@ -42,19 +42,19 @@ import org.apache.jackrabbit.ocm.testmodel.Paragraph;
 
 
 /**
- * Test Object Iterator
+ * Test QueryManagerImpl Query methods
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerIteratorQueryTest extends DigesterTestBase
+public class AnnotationScopeQueryTest extends AnnotationTestBase
 {
-    private final static Log log = LogFactory.getLog(ObjectContentManagerIteratorQueryTest.class);
+    private final static Log log = LogFactory.getLog(AnnotationScopeQueryTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public ObjectContentManagerIteratorQueryTest(String testName)  throws Exception
+    public AnnotationScopeQueryTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -63,7 +63,7 @@ public class ObjectContentManagerIteratorQueryTest extends DigesterTestBase
     {
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(
-                new TestSuite(ObjectContentManagerIteratorQueryTest.class));
+                new TestSuite(AnnotationScopeQueryTest.class));
     }
 
     /**
@@ -73,17 +73,14 @@ public class ObjectContentManagerIteratorQueryTest extends DigesterTestBase
     {
         super.setUp();
 		this.importData();
+		//this.importDocument("data.xml", "/");
         
+		
     }
     
     public void tearDown() throws Exception
     {
-        if (getObjectContentManager().objectExists("/test"))
-        {
-            getObjectContentManager().remove("/test");
-            
-        }    
-        getObjectContentManager().save();
+    	cleanUpRepisotory();
         super.tearDown();
     }	
     
@@ -97,24 +94,64 @@ public class ObjectContentManagerIteratorQueryTest extends DigesterTestBase
     	try
     	{
     		
-    		  // No scope    		  
-    	      QueryManager queryManager = this.getQueryManager();
-    	      Filter filter = queryManager.createFilter(Page.class);        	      
-    	      Query query = queryManager.createQuery(filter);    	      
+              	      
     	      ObjectContentManager ocm = this.getObjectContentManager();
-    	      
-    	      long  start = System.currentTimeMillis();
-    	      Iterator iterator = ocm.getObjectIterator(query);
-    	      System.out.println("getObject takes : " + (System.currentTimeMillis() - start));
-    	          	      
-    	      start = System.currentTimeMillis();
+    	      // Search on subtree (test/node1)
+    	      QueryManager queryManager = this.getQueryManager();
+    	      Filter filter = queryManager.createFilter(Paragraph.class);    
+    	      filter.setScope("/test/node1//");
+    	      Query query = queryManager.createQuery(filter);    	      
+    	      ocm = this.getObjectContentManager();
     	      Collection result = ocm.getObjects(query);
-    	      System.out.println("getObject takes : " + (System.currentTimeMillis() - start));   
+    	      assertTrue("Invalid number of objects - should be = 8", result.size() == 8);
     	      
-    	      start = System.currentTimeMillis();
-    	      iterator = ocm.getObjectIterator(query);
-    	      System.out.println("getObject takes : " + (System.currentTimeMillis() - start));       	      
+    	      
+    	      queryManager = this.getQueryManager();
+    	      filter = queryManager.createFilter(Paragraph.class);    
+    	      filter.setScope("/test//");
+    	      query = queryManager.createQuery(filter);    	      
+    	      ocm = this.getObjectContentManager();
+    	      result = ocm.getObjects(query);
+    	      assertTrue("Invalid number of objects - should be = 16", result.size() == 16);
+    	      
+    	      // Test on children 
+    	      queryManager = this.getQueryManager();
+    	      filter = queryManager.createFilter(Paragraph.class);    
+    	      filter.setScope("/test/");
+    	      query = queryManager.createQuery(filter);    	      
+    	      ocm = this.getObjectContentManager();
+    	      result = ocm.getObjects(query);
+    	      assertTrue("Invalid number of objects - should be = 0", result.size() == 0);
+    	      
+              // Search on scope and properties
+    	      queryManager = this.getQueryManager();
+    	      filter = queryManager.createFilter(Paragraph.class);    
+    	      filter.setScope("/test//");
+    	      filter.addEqualTo("text", "Para 1");
+    	      query = queryManager.createQuery(filter);    	      
+    	      ocm = this.getObjectContentManager();
+    	      result = ocm.getObjects(query);
+    	      assertTrue("Invalid number of objects - should be = 3", result.size() == 3);
 
+    	      
+    	      queryManager = this.getQueryManager();
+    	      filter = queryManager.createFilter(Paragraph.class);    
+    	      filter.setScope("/test//");
+    	      filter.addContains("text", "another");
+    	      query = queryManager.createQuery(filter);    	      
+    	      ocm = this.getObjectContentManager();
+    	      result = ocm.getObjects(query);
+    	      assertTrue("Invalid number of objects - should be = 4", result.size() == 4);
+    	      
+    	      queryManager = this.getQueryManager();
+    	      filter = queryManager.createFilter(Page.class);    
+    	      filter.setScope("/test/node1/");    	      
+    	      query = queryManager.createQuery(filter);    	      
+    	      ocm = this.getObjectContentManager();
+    	      result = ocm.getObjects(query);
+    	      assertTrue("Invalid number of objects - should be = 2", result.size() == 2);
+    	      assertTrue ("Invalid object in the collection" , this.contains(result, "/test/node1/page1", Page.class));
+    	      assertTrue ("Invalid object in the collection" , this.contains(result, "/test/node1/page2", Page.class));
     	      
         }
         catch (Exception e)
@@ -132,11 +169,6 @@ public class ObjectContentManagerIteratorQueryTest extends DigesterTestBase
     	try
 		{
     		ObjectContentManager ocm = getObjectContentManager();
-    		
-        	if (ocm.objectExists("/test"))
-            {
-                ocm.remove("/test");
-            }
         	
 			ObjectContentManagerImpl ocmImpl = (ObjectContentManagerImpl) ocm;
 			
@@ -145,8 +177,6 @@ public class ObjectContentManagerIteratorQueryTest extends DigesterTestBase
 			root.addNode("test");
 			root.addNode("test/node1");
 			root.addNode("test/node2");
-			
-			root.save();
 			
 			Page page = new Page();
 			page.setPath("/test/node1/page1");
@@ -189,7 +219,7 @@ public class ObjectContentManagerIteratorQueryTest extends DigesterTestBase
 			paragraphs.add(new Paragraph("Another Para"));
 			page.setParagraphs(paragraphs);
 			
-			ocm.insert(page);
+			ocm.insert( page);
 
 			page = new Page();
 			page.setPath("/test/node2/page2");
@@ -204,10 +234,8 @@ public class ObjectContentManagerIteratorQueryTest extends DigesterTestBase
 			page.setParagraphs(paragraphs);
 			
 			ocm.insert(page);
-			
 			ocm.save();
 			
-
 			
 		}
 		catch (RepositoryException e)

@@ -36,8 +36,8 @@ public class AllTests {
     public static Test buildSuite() {
         TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.manager.version");
         //$JUnit-BEGIN$
-        suite.addTestSuite(ObjectContentManagerBasicVersionningTest.class);
-       
+        suite.addTestSuite(AnnotationBasicVersionningTest.class);
+        suite.addTestSuite(DigesterBasicVersionningTest.class);
         
         //$JUnit-END$
 

@@ -36,7 +36,8 @@ public class AllTests {
     public static Test buildSuite() {
         TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.querymanager");
         //$JUnit-BEGIN$
-        suite.addTestSuite(QueryManagerTest.class);
+        suite.addTestSuite(AnnotationQueryManagerTest.class);
+        suite.addTestSuite(DigesterQueryManagerTest.class);
        
         
         //$JUnit-END$
