@@ -8,8 +8,8 @@ import junit.framework.TestSuite;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.ocm.AnnotationTestBase;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.testmodel.Page;
 import org.apache.jackrabbit.ocm.testmodel.Paragraph;
@@ -21,16 +21,15 @@ import org.apache.jackrabbit.ocm.version.VersionIterator;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerBasicVersionningTest extends DigesterTestBase
+public class AnnotationBasicVersionningTest extends AnnotationTestBase
 {
-	private final static Log log = LogFactory.getLog(ObjectContentManagerBasicVersionningTest.class);
-	private Date date = new Date();
-	
+	private final static Log log = LogFactory.getLog(AnnotationBasicVersionningTest.class);
+		
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
 	 */
-	public ObjectContentManagerBasicVersionningTest(String testName) throws Exception
+	public AnnotationBasicVersionningTest(String testName) throws Exception
 	{
 		super(testName);
 		
@@ -40,15 +39,12 @@ public class ObjectContentManagerBasicVersionningTest extends DigesterTestBase
 	{
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(
-                new TestSuite(ObjectContentManagerBasicVersionningTest.class));
+                new TestSuite(AnnotationBasicVersionningTest.class));
 	}
 
     public void tearDown() throws Exception
     {
-    	ObjectContentManager ocm = getObjectContentManager();
-	    ocm.remove("/page");
-    	ocm.save();
-       
+        cleanUpRepisotory();       
         super.tearDown();
     }	
 

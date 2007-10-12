@@ -41,15 +41,15 @@ import org.apache.jackrabbit.ocm.testmodel.MultiValue;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerMultiValueQueryTest extends DigesterTestBase
+public class DigesterMultiValueQueryTest extends DigesterTestBase
 {
-    private final static Log log = LogFactory.getLog(ObjectContentManagerMultiValueQueryTest.class);
+    private final static Log log = LogFactory.getLog(DigesterMultiValueQueryTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public ObjectContentManagerMultiValueQueryTest(String testName)  throws Exception
+    public DigesterMultiValueQueryTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -58,7 +58,7 @@ public class ObjectContentManagerMultiValueQueryTest extends DigesterTestBase
     {
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(
-                new TestSuite(ObjectContentManagerMultiValueQueryTest.class));
+                new TestSuite(DigesterMultiValueQueryTest.class));
     }
 
     /**
@@ -73,12 +73,7 @@ public class ObjectContentManagerMultiValueQueryTest extends DigesterTestBase
     
     public void tearDown() throws Exception
     {
-        if (getObjectContentManager().objectExists("/test"))
-        {
-            getObjectContentManager().remove("/test");
-            
-        }    
-        getObjectContentManager().save();
+    	cleanUpRepisotory();
         super.tearDown();
     }	
     

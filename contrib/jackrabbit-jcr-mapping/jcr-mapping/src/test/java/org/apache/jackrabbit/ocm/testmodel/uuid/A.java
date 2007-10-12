@@ -16,17 +16,21 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.uuid;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
 
 /**
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  * @version $Id: Exp $
  */
+@Node(jcrMixinTypes="mix:referenceable")
 public class A
 {
-	private String path; 
-	private String uuid;
-    private String stringData;
+	@Field(path=true) private String path; 
+	@Field(uuid=true) private String uuid;
+    @Field private String stringData;
 
     
     public String getPath() 

@@ -32,17 +32,17 @@ import org.apache.jackrabbit.ocm.testmodel.C;
 /**
  * Test QueryManagerImpl methods
  *
- * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
+ * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class QueryManagerTest extends DigesterTestBase
+public class DigesterQueryManagerTest extends DigesterTestBase
 {
-    private final static Log log = LogFactory.getLog(QueryManagerTest.class);
+    private final static Log log = LogFactory.getLog(DigesterQueryManagerTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public QueryManagerTest(String testName)  throws Exception
+    public DigesterQueryManagerTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -51,7 +51,7 @@ public class QueryManagerTest extends DigesterTestBase
     {
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(
-                new TestSuite(QueryManagerTest.class));
+                new TestSuite(DigesterQueryManagerTest.class));
     }
 
     public void testBuildExpression1()

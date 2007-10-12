@@ -24,6 +24,7 @@ import junit.framework.TestSuite;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.ocm.AnnotationTestBase;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
@@ -40,15 +41,15 @@ import org.apache.jackrabbit.ocm.testmodel.Paragraph;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class ObjectContentManagerSimpleQueryTest extends DigesterTestBase
+public class AnnotationSimpleQueryTest extends AnnotationTestBase
 {
-    private final static Log log = LogFactory.getLog(ObjectContentManagerSimpleQueryTest.class);
+    private final static Log log = LogFactory.getLog(AnnotationSimpleQueryTest.class);
 
     /**
      * <p>Defines the test case name for junit.</p>
      * @param testName The test case name.
      */
-    public ObjectContentManagerSimpleQueryTest(String testName)  throws Exception
+    public AnnotationSimpleQueryTest(String testName)  throws Exception
     {
         super(testName);
     }
@@ -57,7 +58,7 @@ public class ObjectContentManagerSimpleQueryTest extends DigesterTestBase
     {
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(
-                new TestSuite(ObjectContentManagerSimpleQueryTest.class));
+                new TestSuite(AnnotationSimpleQueryTest.class));
     }
 
     /**
@@ -74,9 +75,7 @@ public class ObjectContentManagerSimpleQueryTest extends DigesterTestBase
      */
     public void tearDown() throws Exception
     {
-    	getObjectContentManager().remove("/test");
-    	getObjectContentManager().save();
-    	
+    	cleanUpRepisotory();
         super.tearDown();
     }
     

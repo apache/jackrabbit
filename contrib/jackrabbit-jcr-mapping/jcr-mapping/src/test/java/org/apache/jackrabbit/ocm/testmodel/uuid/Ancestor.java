@@ -16,16 +16,20 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.uuid;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
 
 /**
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  * @version $Id: Exp $
  */
+@Node(isAbstract=true, jcrMixinTypes="mix:referenceable")
 public class Ancestor
 {
-	private String path; 
-	private String uuid;
+	@Field(path=true) private String path; 
+	@Field(uuid=true) private String uuid;
     
     
     public String getPath() 
