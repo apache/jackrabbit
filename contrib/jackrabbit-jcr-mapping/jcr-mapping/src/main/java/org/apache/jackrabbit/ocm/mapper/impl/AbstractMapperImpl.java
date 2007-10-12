@@ -63,7 +63,7 @@ public abstract class AbstractMapperImpl implements Mapper {
 
             if (!errors.isEmpty()) 
             {
-                throw new InitMapperException("Mapping files contain errors."
+                throw new InitMapperException("Mapping descriptors contain errors."
                         + getErrorMessage(errors));
             }
         }
