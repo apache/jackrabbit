@@ -866,17 +866,20 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * Persists the custom node type definitions contained in the given
      * <code>store</code>.
      *
-     * @param store The {@link NodeTypeDefStore} containing the definitons to
+     * @param store The {@link NodeTypeDefStore} containing the definitions to
      *              be persisted.
-     * @throws RepositoryException If an error occurrs while persisting the
+     * @throws RepositoryException If an error occurs while persisting the
      *                             custom node type definitions.
      */
     protected void persistCustomNodeTypeDefs(NodeTypeDefStore store)
             throws RepositoryException {
-        OutputStream out = null;
         try {
-            out = customNodeTypesResource.getOutputStream();
-            store.store(out, nsReg);
+            OutputStream out = customNodeTypesResource.getOutputStream();
+            try {
+                store.store(out, nsReg);
+            } finally {
+                out.close();
+            }
         } catch (IOException ioe) {
             String error =
                     "internal error: failed to persist custom node type definitions to "
@@ -889,14 +892,6 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                     + customNodeTypesResource.getPath();
             log.debug(error);
             throw new RepositoryException(error, fse);
-        } finally {
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (IOException ioe) {
-                    // ignore
-                }
-            }
         }
     }
 
