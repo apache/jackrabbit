@@ -170,8 +170,7 @@ public class MemoryFileSystem implements FileSystem {
     }
 
     public boolean isFile(String path) throws FileSystemException {
-        assertExistence(path);
-        return !getEntry(path).isFolder();
+        return exists(path) && !getEntry(path).isFolder();
     }
 
     private MemoryFileSystemEntry getEntry(String path) {
@@ -187,8 +186,7 @@ public class MemoryFileSystem implements FileSystem {
         if (path.equals("/")) {
             return true;
         } else {
-            assertExistence(path);
-            return getEntry(path).isFolder();
+            return exists(path) && getEntry(path).isFolder();
         }
     }
 
