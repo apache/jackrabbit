@@ -47,7 +47,7 @@ public class NodeAddedTest extends AbstractObservationTest {
         testRootNode.save();
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(result);
-        checkNodeAdded(events, new String[]{nodeName1});
+        checkNodeAdded(events, new String[]{nodeName1}, null);
     }
 
     /**
@@ -62,7 +62,7 @@ public class NodeAddedTest extends AbstractObservationTest {
         testRootNode.save();
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(result);
-        checkNodeAdded(events, new String[]{nodeName1, nodeName2});
+        checkNodeAdded(events, new String[]{nodeName1, nodeName2}, null);
     }
 
     /**
@@ -77,7 +77,7 @@ public class NodeAddedTest extends AbstractObservationTest {
         testRootNode.save();
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(result);
-        checkNodeAdded(events, new String[]{nodeName1, nodeName1 + "/" + nodeName2});
+        checkNodeAdded(events, new String[]{nodeName1, nodeName1 + "/" + nodeName2}, null);
     }
 
     /**
@@ -92,6 +92,6 @@ public class NodeAddedTest extends AbstractObservationTest {
         testRootNode.save();
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(result);
-        checkNodeAdded(events, new String[]{nodeName1});
+        checkNodeAdded(events, new String[]{nodeName1}, null);
     }
 }

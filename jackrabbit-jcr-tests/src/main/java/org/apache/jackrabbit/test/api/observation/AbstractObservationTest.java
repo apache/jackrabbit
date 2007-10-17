@@ -25,7 +25,9 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.observation.EventListenerIterator;
+
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
@@ -125,14 +127,16 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
      * relative to {@link #testRoot}.
      *
      * @param events   the <code>Event</code>s.
-     * @param relPaths paths to child nodes added relative to {@link
-     *                 #testRoot}.
+     * @param requiredRelPaths paths to child nodes added relative to {@link
+     *                 #testRoot} (required events).
+     * @param optionalRelPaths paths to child nodes added relative to {@link
+     *                 #testRoot} (optional events).
      * @throws RepositoryException if an error occurs while retrieving the nodes
      *                             from event instances.
      */
-    protected void checkNodeAdded(Event[] events, String[] relPaths)
+    protected void checkNodeAdded(Event[] events, String[] requiredRelPaths, String[] optionalRelPaths)
             throws RepositoryException {
-        checkNodes(events, relPaths, Event.NODE_ADDED);
+        checkNodes(events, requiredRelPaths, optionalRelPaths, Event.NODE_ADDED);
     }
 
     /**
@@ -140,14 +144,16 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
      * relative to {@link #testRoot}.
      *
      * @param events   the <code>Event</code>s.
-     * @param relPaths paths to child nodes added relative to {@link
-     *                 #testRoot}.
+     * @param requiredRelPaths paths to child nodes added relative to {@link
+     *                 #testRoot} (required events).
+     * @param optionalRelPaths paths to child nodes added relative to {@link
+     *                 #testRoot} (optional events).
      * @throws RepositoryException if an error occurs while retrieving the nodes
      *                             from event instances.
      */
-    protected void checkNodeRemoved(Event[] events, String[] relPaths)
+    protected void checkNodeRemoved(Event[] events, String[] requiredRelPaths, String[] optionalRelPaths)
             throws RepositoryException {
-        checkNodes(events, relPaths, Event.NODE_REMOVED);
+        checkNodes(events, requiredRelPaths, optionalRelPaths, Event.NODE_REMOVED);
     }
 
     /**
@@ -162,7 +168,7 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
      */
     protected void checkPropertyAdded(Event[] events, String[] relPaths)
             throws RepositoryException {
-        checkNodes(events, relPaths, Event.PROPERTY_ADDED);
+        checkNodes(events, relPaths, null, Event.PROPERTY_ADDED);
     }
 
     /**
@@ -177,7 +183,7 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
      */
     protected void checkPropertyChanged(Event[] events, String[] relPaths)
             throws RepositoryException {
-        checkNodes(events, relPaths, Event.PROPERTY_CHANGED);
+        checkNodes(events, relPaths, null, Event.PROPERTY_CHANGED);
     }
 
     /**
@@ -192,7 +198,7 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
      */
     protected void checkPropertyRemoved(Event[] events, String[] relPaths)
             throws RepositoryException {
-        checkNodes(events, relPaths, Event.PROPERTY_REMOVED);
+        checkNodes(events, relPaths, null, Event.PROPERTY_REMOVED);
     }
 
     /**
@@ -200,24 +206,38 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
      * relative to {@link #testRoot}.
      *
      * @param events    the <code>Event</code>s.
-     * @param relPaths  paths to item events relative to {@link #testRoot}.
+     * @param requiredRelPaths  paths to required item events relative to {@link #testRoot}.
+     * @param optionalRelPaths  paths to optional item events relative to {@link #testRoot}.
      * @param eventType the type of event to check.
      * @throws RepositoryException if an error occurs while retrieving the nodes
      *                             from event instances.
      */
-    private void checkNodes(Event[] events, String[] relPaths, long eventType)
+    private void checkNodes(Event[] events, String[] requiredRelPaths, String[] optionalRelPaths, long eventType)
             throws RepositoryException {
-        assertEquals("Number of events wrong", relPaths.length, events.length);
         Set paths = new HashSet();
         for (int i = 0; i < events.length; i++) {
             assertEquals("Wrong event type", eventType, events[i].getType());
             String path = events[i].getPath();
             paths.add(path);
         }
-        for (int i = 0; i < relPaths.length; i++) {
-            String expected = testRoot + "/" + relPaths[i];
+        // check all required paths are there
+        for (int i = 0; i < requiredRelPaths.length; i++) {
+            String expected = testRoot + "/" + requiredRelPaths[i];
             assertTrue("Path " + expected + " not found in events.",
                     paths.contains(expected));
+            paths.remove(expected);
+        }
+        // check what remains in the set is indeed optional
+        Set optional = new HashSet();
+        if (optionalRelPaths != null) {
+            for (int i = 0; i < optionalRelPaths.length; i++) {
+                optional.add(testRoot + "/" + optionalRelPaths[i]);
+            }
+        }
+        for (Iterator it = paths.iterator(); it.hasNext(); ) {
+            String path = (String)it.next();
+            assertTrue("Path " + path + " not expected in events.",
+                    optional.contains(path));
         }
     }
 }

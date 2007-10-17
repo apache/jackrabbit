@@ -97,11 +97,11 @@ public class NodeReorderTest extends AbstractObservationTest {
             }
         }
         if (reorderEnd) {
-            checkNodeAdded(added, new String[]{nodeName2});
-            checkNodeRemoved(removed, new String[]{nodeName2});
+            checkNodeAdded(added, new String[]{nodeName2}, null);
+            checkNodeRemoved(removed, new String[]{nodeName2}, null);
         } else {
-            checkNodeAdded(added, new String[]{nodeName3});
-            checkNodeRemoved(removed, new String[]{nodeName3});
+            checkNodeAdded(added, new String[]{nodeName3}, null);
+            checkNodeRemoved(removed, new String[]{nodeName3}, null);
         }
     }
 
@@ -164,11 +164,11 @@ public class NodeReorderTest extends AbstractObservationTest {
             }
         }
         if (reorderEnd) {
-            checkNodeAdded(added, new String[]{nodeName1 + "[3]"});
-            checkNodeRemoved(removed, new String[]{nodeName1 + "[2]"});
+            checkNodeAdded(added, new String[]{nodeName1 + "[3]"}, null);
+            checkNodeRemoved(removed, new String[]{nodeName1 + "[2]"}, null);
         } else {
-            checkNodeAdded(added, new String[]{nodeName1 + "[2]"});
-            checkNodeRemoved(removed, new String[]{nodeName1 + "[3]"});
+            checkNodeAdded(added, new String[]{nodeName1 + "[2]"}, null);
+            checkNodeRemoved(removed, new String[]{nodeName1 + "[3]"}, null);
         }
     }
 
@@ -238,11 +238,11 @@ public class NodeReorderTest extends AbstractObservationTest {
             }
         }
         if (reorderEnd) {
-            checkNodeAdded(added, new String[]{nodeName1 + "[3]"});
-            checkNodeRemoved(removed, new String[]{nodeName1 + "[2]", nodeName3});
+            checkNodeAdded(added, new String[]{nodeName1 + "[3]"}, null);
+            checkNodeRemoved(removed, new String[]{nodeName1 + "[2]", nodeName3}, null);
         } else {
-            checkNodeAdded(added, new String[]{nodeName1 + "[2]"});
-            checkNodeRemoved(removed, new String[]{nodeName1 + "[3]", nodeName3});
+            checkNodeAdded(added, new String[]{nodeName1 + "[2]"}, null);
+            checkNodeRemoved(removed, new String[]{nodeName1 + "[3]", nodeName3}, null);
         }
     }
 }

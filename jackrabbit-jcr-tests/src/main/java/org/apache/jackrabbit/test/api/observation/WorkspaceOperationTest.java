@@ -51,7 +51,7 @@ public class WorkspaceOperationTest extends AbstractObservationTest {
         superuser.getWorkspace().copy(testRoot + "/" + nodeName1, testRoot + "/" + nodeName3);
         Event[] events = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(listener);
-        checkNodeAdded(events, new String[]{nodeName3, nodeName3 + "/" + nodeName2});
+        checkNodeAdded(events, new String[]{nodeName3, nodeName3 + "/" + nodeName2}, null);
     }
 
     /**
@@ -72,8 +72,8 @@ public class WorkspaceOperationTest extends AbstractObservationTest {
         Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(addNodeListener);
         removeEventListener(removeNodeListener);
-        checkNodeAdded(added, new String[]{nodeName3});
-        checkNodeRemoved(removed, new String[]{nodeName1});
+        checkNodeAdded(added, new String[]{nodeName3}, new String[]{nodeName3 + "/" + nodeName2});
+        checkNodeRemoved(removed, new String[]{nodeName1}, new String[]{nodeName1 + "/" + nodeName2});
     }
 
     /**
@@ -95,8 +95,8 @@ public class WorkspaceOperationTest extends AbstractObservationTest {
         Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(addNodeListener);
         removeEventListener(removeNodeListener);
-        checkNodeAdded(added, new String[]{nodeName3 + "/" + nodeName4});
-        checkNodeRemoved(removed, new String[]{nodeName1});
+        checkNodeAdded(added, new String[]{nodeName3 + "/" + nodeName4}, new String[]{nodeName3 + "/" + nodeName4 + "/" + nodeName2});
+        checkNodeRemoved(removed, new String[]{nodeName1}, new String[]{nodeName1 + "/" + nodeName2});
     }
 
 }
