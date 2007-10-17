@@ -108,13 +108,14 @@ public interface FileSystem {
      * Tests whether the file system entry denoted by this path exists.
      *
      * @param path the path of a file system entry.
-     * @return true if the file system entry at path is a file; false otherwise.
+     * @return true if the file system entry at path exists; false otherwise.
      * @throws FileSystemException
      */
     boolean exists(String path) throws FileSystemException;
 
     /**
-     * Tests whether the file system entry denoted by this path is a file.
+     * Tests whether the file system entry denoted by this path exists and
+     * is a file.
      *
      * @param path the path of a file system entry.
      * @return true if the file system entry at path is a file; false otherwise.
@@ -123,7 +124,8 @@ public interface FileSystem {
     boolean isFile(String path) throws FileSystemException;
 
     /**
-     * Tests whether the file system entry denoted by this path is a folder.
+     * Tests whether the file system entry denoted by this path exists and
+     * is a folder.
      *
      * @param path the path of a file system entry.
      * @return true if the file system entry at path is a folder; false otherwise.
