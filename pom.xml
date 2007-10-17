@@ -119,6 +119,23 @@
           </links>
         </configuration>
       </plugin>
+      <!-- JCR-988: IDE plugins -->
+      <plugin>
+        <!-- http://maven.apache.org/plugins/maven-idea-plugin/ -->
+        <artifactId>maven-idea-plugin</artifactId>
+        <version>2.0</version>
+        <configuration>
+          <downloadSources>true</downloadSources>
+          <jdkLevel>1.4</jdkLevel>
+        </configuration>
+      </plugin>
+      <plugin>
+        <!-- http://maven.apache.org/plugins/maven-eclipse-plugin/ -->
+        <artifactId>maven-eclipse-plugin</artifactId>
+        <configuration>
+          <downloadSources>true</downloadSources>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
