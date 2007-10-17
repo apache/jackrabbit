@@ -92,11 +92,19 @@ public class MemoryFileSystem implements FileSystem {
     }
 
     public void deleteFolder(String folderPath) throws FileSystemException {
-        assertExistence(folderPath);
-        if (hasChildren(folderPath)) {
-            throw new FileSystemException(folderPath + " not empty");
+        assertIsFolder(folderPath);
+        Set allNames = entries.keySet();
+        Set selectedNames = new HashSet();
+        for (Iterator iter = allNames.iterator(); iter.hasNext();) {
+            String name = (String) iter.next();
+            if (name.startsWith(folderPath)) {
+                selectedNames.add(name);
+            }
         }
-        entries.remove(folderPath);
+        for (Iterator iter = selectedNames.iterator(); iter.hasNext();) {
+            String name = (String) iter.next();
+            entries.remove(name);
+        }
     }
 
     public boolean exists(String path) throws FileSystemException {
@@ -203,7 +211,7 @@ public class MemoryFileSystem implements FileSystem {
         for (Iterator iter = allNames.iterator(); iter.hasNext();) {
             String name = (String) iter.next();
             if (name.matches(folderPath + "/[^/]*") && !name.equals("/")) {
-                selectedNames.add(name);
+                selectedNames.add(name.substring(folderPath.length() + 1));
             }
         }
         return (String[]) selectedNames.toArray(new String[0]);
@@ -218,16 +226,17 @@ public class MemoryFileSystem implements FileSystem {
     }
 
     private String[] listInternal(String folderPath, boolean isFolder) {
-        String[] entryPaths = list(folderPath);
-        Set resultEntryPaths = new HashSet();
-        for (int i = 0; i < entryPaths.length; i++) {
-            String entryPath = entryPaths[i];
-            MemoryFileSystemEntry entry = getEntry(entryPath);
-            if (entry.isFolder() == isFolder) {
-                resultEntryPaths.add(entryPath);
+        String[] names = list(folderPath);
+        if (folderPath.equals("/")) {
+            folderPath = "";
+        }
+        Set result = new HashSet();
+        for (int i = 0; i < names.length; i++) {
+            if (getEntry(folderPath + "/" + names[i]).isFolder() == isFolder) {
+                result.add(names[i]);
             }
         }
-        return (String[]) resultEntryPaths.toArray(new String[0]);
+        return (String[]) result.toArray(new String[0]);
     }
 
     public void move(String srcPath, String destPath) {

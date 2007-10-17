@@ -141,9 +141,10 @@ public abstract class AbstractFileSystemTest extends TestCase {
         fs.createFolder("/folder/subfolder");
         try {
             fs.deleteFolder("/folder");
-            fail("FileSystemException expected");
+            assertFalse(fs.exists("/folder"));
+            assertFalse(fs.exists("/folder/subfolder"));
         } catch (FileSystemException e) {
-            // ok
+            fail("unexpected FileSystemException");
         }
     }
 
@@ -161,18 +162,20 @@ public abstract class AbstractFileSystemTest extends TestCase {
         String[] entries = fs.list("/");
         assertEquals(2, entries.length);
         Arrays.sort(entries);
-        assertEquals(entries[0], "/file");
-        assertEquals(entries[1], "/folder");
+        System.out.println(entries[0]);
+        System.out.println(entries[1]);
+        assertEquals(entries[0], "file");
+        assertEquals(entries[1], "folder");
 
         entries = fs.list("/folder");
         assertEquals(2, entries.length);
         Arrays.sort(entries);
-        assertEquals(entries[0], "/folder/file");
-        assertEquals(entries[1], "/folder/subfolder");
+        assertEquals(entries[0], "file");
+        assertEquals(entries[1], "subfolder");
 
         entries = fs.listFiles("/folder");
         assertEquals(1, entries.length);
-        assertEquals(entries[0], "/folder/file");
+        assertEquals(entries[0], "file");
     }
 
 }
