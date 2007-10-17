@@ -68,8 +68,8 @@ public class NodeMovedTest extends AbstractObservationTest {
         Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(addNodeListener);
         removeEventListener(removeNodeListener);
-        checkNodeAdded(added, new String[]{nodeName3});
-        checkNodeRemoved(removed, new String[]{nodeName1});
+        checkNodeAdded(added, new String[]{nodeName3}, new String[]{nodeName3 + "/" + nodeName2});
+        checkNodeRemoved(removed, new String[]{nodeName1}, new String[]{nodeName1 + "/" + nodeName2});
     }
 
     /**
@@ -102,8 +102,8 @@ public class NodeMovedTest extends AbstractObservationTest {
         Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(addNodeListener);
         removeEventListener(removeNodeListener);
-        checkNodeAdded(added, new String[]{nodeName2});
-        checkNodeRemoved(removed, new String[]{nodeName1 + "/" + nodeName2});
+        checkNodeAdded(added, new String[]{nodeName2}, null);
+        checkNodeRemoved(removed, new String[]{nodeName1 + "/" + nodeName2}, null);
     }
 
     /**
@@ -140,7 +140,7 @@ public class NodeMovedTest extends AbstractObservationTest {
         Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(addNodeListener);
         removeEventListener(removeNodeListener);
-        checkNodeAdded(added, new String[]{nodeName3 + "/" + nodeName2});
-        checkNodeRemoved(removed, new String[]{nodeName1 + "/" + nodeName2, nodeName1});
+        checkNodeAdded(added, new String[]{nodeName3 + "/" + nodeName2}, null);
+        checkNodeRemoved(removed, new String[]{nodeName1 + "/" + nodeName2, nodeName1}, null);
     }
 }

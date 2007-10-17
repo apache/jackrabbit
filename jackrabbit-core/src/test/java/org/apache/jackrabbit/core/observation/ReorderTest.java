@@ -87,7 +87,7 @@ public class ReorderTest extends AbstractObservationTest {
         // not deterministic, there exist various re-order seqences. the minimal
         // is:
         // nodename1[2] has been reordered to the end + nodeName3 has been removed
-        checkNodeAdded(added, new String[]{nodeName1 + "[4]"});
-        checkNodeRemoved(removed, new String[]{nodeName1 + "[2]", nodeName3});
+        checkNodeAdded(added, new String[]{nodeName1 + "[4]"}, null);
+        checkNodeRemoved(removed, new String[]{nodeName1 + "[2]", nodeName3}, null);
     }
 }
