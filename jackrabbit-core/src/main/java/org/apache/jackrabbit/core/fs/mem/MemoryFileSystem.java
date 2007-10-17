@@ -237,9 +237,33 @@ public class MemoryFileSystem implements FileSystem {
         return (String[]) result.toArray(new String[0]);
     }
 
-    public void move(String srcPath, String destPath) {
-        Object src = entries.remove(srcPath);
-        entries.put(destPath, src);
+    public void move(String srcPath, String destPath)
+            throws FileSystemException {
+        assertExistence(srcPath);
+        if (exists(destPath)) {
+            throw new FileSystemException("Destination exists: " + destPath);
+        }
+
+        Map moves = new HashMap();
+        moves.put(srcPath, destPath);
+        if (getEntry(srcPath).isFolder()) {
+            srcPath = srcPath + "/";
+            Iterator iterator= entries.keySet().iterator();
+            while (iterator.hasNext()) {
+                String name = (String) iterator.next();
+                if (name.startsWith(srcPath)) {
+                    moves.put(
+                            name,
+                            destPath + "/" + name.substring(srcPath.length()));
+                }
+            }
+        }
+
+        Iterator iterator = moves.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) iterator.next();
+            entries.put(entry.getValue(), entries.remove(entry.getKey()));
+        }
     }
 
     public void touch(String filePath) throws FileSystemException {
