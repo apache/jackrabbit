@@ -14,30 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.identifier;
+package org.apache.jackrabbit.name;
 
-import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.name.PathFactoryImpl;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 /**
- * <code>IdFactoryImpl</code>...
+ * Test suite that includes all testcases for the Core module.
  */
-public final class IdFactoryImpl extends AbstractIdFactory {
+public class TestAll extends TestCase {
 
-    private static IdFactory INSTANCE;
+    /**
+     * Returns a <code>Test</code> suite that executes all tests inside this
+     * package.
+     *
+     * @return a <code>Test</code> suite that executes all tests inside this
+     *         package.
+     */
+    public static Test suite() {
+        TestSuite suite = new TestSuite("name tests");
 
-    private IdFactoryImpl() {
-    }
+        suite.addTestSuite(NameFactoryTest.class);
+        // TODO: add PathFactory test
+        suite.addTestSuite(PathBuilderTest.class);
 
-    public static IdFactory getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new IdFactoryImpl();
-        }
-        return IdFactoryImpl.INSTANCE;
-    }
-
-    protected PathFactory getPathFactory() {
-        return PathFactoryImpl.getInstance();
+        return suite;
     }
 }

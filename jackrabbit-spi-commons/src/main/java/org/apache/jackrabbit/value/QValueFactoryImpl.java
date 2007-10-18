@@ -16,10 +16,14 @@
  */
 package org.apache.jackrabbit.value;
 
+import org.apache.jackrabbit.name.PathFactoryImpl;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.jackrabbit.util.ISO8601;
 
@@ -47,13 +51,16 @@ import java.io.ObjectOutputStream;
  */
 public final class QValueFactoryImpl implements QValueFactory {
 
-    private static final QValueFactory instance = new QValueFactoryImpl();
+    private static final QValueFactory INSTANCE = new QValueFactoryImpl();
+
+    private static final PathFactory PATH_FACTORY = PathFactoryImpl.getInstance();
+    private static final NameFactory NAME_FACTORY = NameFactoryImpl.getInstance();
 
     private QValueFactoryImpl() {
     }
 
     public static QValueFactory getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
     //------------------------------------------------------< QValueFactory >---
@@ -74,9 +81,9 @@ public final class QValueFactoryImpl implements QValueFactory {
             case PropertyType.LONG:
                 return new QValueImpl(Long.valueOf(value));
             case PropertyType.PATH:
-                return new QValueImpl(Path.valueOf(value));
+                return new QValueImpl(PATH_FACTORY.create(value));
             case PropertyType.NAME:
-                return new QValueImpl(QName.valueOf(value));
+                return new QValueImpl(NAME_FACTORY.create(value));
             case PropertyType.STRING:
             case PropertyType.REFERENCE:
                 return new QValueImpl(value, type);
@@ -99,9 +106,9 @@ public final class QValueFactoryImpl implements QValueFactory {
     }
 
     /**
-     * @see QValueFactory#create(QName)
+     * @see QValueFactory#create(Name)
      */
-    public QValue create(QName value) {
+    public QValue create(Name value) {
         if (value == null) {
             throw new IllegalArgumentException("Cannot create QValue from null value.");
         }
@@ -191,7 +198,7 @@ public final class QValueFactoryImpl implements QValueFactory {
             type = PropertyType.BOOLEAN;
         }
 
-        private QValueImpl(QName value) {
+        private QValueImpl(Name value) {
             val = value;
             type = PropertyType.NAME;
         }
@@ -236,13 +243,13 @@ public final class QValueFactoryImpl implements QValueFactory {
         }
 
         /**
-         * @see QValue#getQName()
+         * @see QValue#getName()
          */
-        public QName getQName() throws RepositoryException {
+        public Name getName() throws RepositoryException {
             if (type == PropertyType.NAME) {
-                return (QName) val;
+                return (Name) val;
             } else {
-                return QName.valueOf(getString());
+                return NAME_FACTORY.create(getString());
             }
         }
 
@@ -264,7 +271,7 @@ public final class QValueFactoryImpl implements QValueFactory {
             if (type == PropertyType.PATH) {
                 return (Path) val;
             } else {
-                return Path.valueOf(getString());
+                return PATH_FACTORY.create(getString());
             }
         }
 
@@ -592,9 +599,9 @@ public final class QValueFactoryImpl implements QValueFactory {
         }
 
         /**
-         * @see QValue#getQName()
+         * @see QValue#getName()
          */
-        public QName getQName() throws RepositoryException {
+        public Name getName() throws RepositoryException {
             throw new UnsupportedOperationException();
         }
 

@@ -19,8 +19,8 @@ package org.apache.jackrabbit.spi.commons;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 
 import java.io.Serializable;
 
@@ -54,12 +54,12 @@ public class EventImpl implements Event, Serializable {
     /**
      * The name of the primary node type of the 'associated' node of this event.
      */
-    private final QName primaryNodeTypeName;
+    private final Name primaryNodeTypeName;
 
     /**
      * The names of the mixin types of the 'associated' node of this event.
      */
-    private final QName[] mixinTypeNames;
+    private final Name[] mixinTypeNames;
 
     /**
      * The user ID connected with this event.
@@ -70,7 +70,7 @@ public class EventImpl implements Event, Serializable {
      * Creates a new serializable event.
      */
     public EventImpl(int type, Path path, ItemId itemId, NodeId parentId,
-                     QName primaryNodeTypeName, QName[] mixinTypeNames,
+                     Name primaryNodeTypeName, Name[] mixinTypeNames,
                      String userId) {
         this.type = type;
         this.path = path;
@@ -91,7 +91,7 @@ public class EventImpl implements Event, Serializable {
     /**
      * {@inheritDoc}
      */
-    public Path getQPath() {
+    public Path getPath() {
         return path;
     }
 
@@ -112,15 +112,15 @@ public class EventImpl implements Event, Serializable {
     /**
      * {@inheritDoc}
      */
-    public QName getPrimaryNodeTypeName() {
+    public Name getPrimaryNodeTypeName() {
         return primaryNodeTypeName;
     }
 
     /**
      * {@inheritDoc}
      */
-    public QName[] getMixinTypeNames() {
-        QName[] mixins = new QName[mixinTypeNames.length];
+    public Name[] getMixinTypeNames() {
+        Name[] mixins = new Name[mixinTypeNames.length];
         System.arraycopy(mixinTypeNames, 0, mixins, 0, mixinTypeNames.length);
         return mixins;
     }

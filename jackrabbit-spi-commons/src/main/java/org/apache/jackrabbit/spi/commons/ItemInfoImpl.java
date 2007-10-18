@@ -18,8 +18,8 @@ package org.apache.jackrabbit.spi.commons;
 
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 
 import java.io.Serializable;
 
@@ -38,7 +38,7 @@ public abstract class ItemInfoImpl implements ItemInfo, Serializable {
     /**
      * The name of this item info.
      */
-    private final QName name;
+    private final Name name;
 
     /**
      * The path of this item info.
@@ -59,7 +59,7 @@ public abstract class ItemInfoImpl implements ItemInfo, Serializable {
      * @param path     the path to this item.
      * @param isNode   if this item is a node.
      */
-    public ItemInfoImpl(NodeId parentId, QName name, Path path, boolean isNode) {
+    public ItemInfoImpl(NodeId parentId, Name name, Path path, boolean isNode) {
         this.parentId = parentId;
         this.name = name;
         this.path = path;
@@ -76,7 +76,7 @@ public abstract class ItemInfoImpl implements ItemInfo, Serializable {
     /**
      * {@inheritDoc}
      */
-    public QName getQName() {
+    public Name getName() {
         return name;
     }
 

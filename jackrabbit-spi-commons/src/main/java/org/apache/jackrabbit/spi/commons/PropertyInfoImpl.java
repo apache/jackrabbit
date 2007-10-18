@@ -21,8 +21,8 @@ import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 
 import java.io.Serializable;
 
@@ -67,8 +67,8 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
             parentId = idFactory.createNodeId(
                     parentId.getUniqueID(), parentId.getPath());
             PropertyId propId = idFactory.createPropertyId(
-                    parentId, propertyInfo.getId().getQName());
-            return new PropertyInfoImpl(parentId, propertyInfo.getQName(),
+                    parentId, propertyInfo.getId().getName());
+            return new PropertyInfoImpl(parentId, propertyInfo.getName(),
                     propertyInfo.getPath(), propId, propertyInfo.getType(),
                     propertyInfo.isMultiValued(), propertyInfo.getValues());
         }
@@ -85,7 +85,7 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
      * @param isMultiValued whether this property is multi-valued.
      * @param values        the values.
      */
-    public PropertyInfoImpl(NodeId parentId, QName name, Path path,
+    public PropertyInfoImpl(NodeId parentId, Name name, Path path,
                             PropertyId id, int type, boolean isMultiValued,
                             QValue[] values) {
         super(parentId, name, path, false);

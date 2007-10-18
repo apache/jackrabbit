@@ -14,30 +14,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.identifier;
+package org.apache.jackrabbit.conversion;
 
-import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.name.PathFactoryImpl;
+import javax.jcr.NamespaceException;
+
+import org.apache.jackrabbit.namespace.NamespaceResolver;
 
 /**
- * <code>IdFactoryImpl</code>...
+ * Dummy namespace resolver for use in unit testing. This namespace resolver
+ * maps each valid XML prefix string to the same string as the namespace URI
+ * and vice versa.
  */
-public final class IdFactoryImpl extends AbstractIdFactory {
+class DummyNamespaceResolver implements NamespaceResolver {
 
-    private static IdFactory INSTANCE;
-
-    private IdFactoryImpl() {
+    /**
+     * Returns the given prefix.
+     *
+     * @param prefix namespace prefix
+     * @return the given prefix
+     */
+    public String getURI(String prefix) throws NamespaceException {
+        return prefix;
     }
 
-    public static IdFactory getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new IdFactoryImpl();
-        }
-        return IdFactoryImpl.INSTANCE;
-    }
-
-    protected PathFactory getPathFactory() {
-        return PathFactoryImpl.getInstance();
+    /**
+     * Returns the given namespace URI as the corresponding prefix.
+     *
+     * @param uri namespace URI
+     * @return the given URI
+     */
+    public String getPrefix(String uri) {
+        return uri;
     }
 }

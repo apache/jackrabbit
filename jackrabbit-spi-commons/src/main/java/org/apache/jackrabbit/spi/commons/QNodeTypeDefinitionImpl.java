@@ -19,7 +19,9 @@ package org.apache.jackrabbit.spi.commons;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.name.NameFactoryImpl;
 
 import javax.jcr.PropertyType;
 import java.util.Collection;
@@ -36,12 +38,12 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
     /**
      * The name of the node definition.
      */
-    private final QName name;
+    private final Name name;
 
     /**
      * The names of the declared super types of this node type definition.
      */
-    private final QName[] supertypes;
+    private final Name[] supertypes;
 
     /**
      * Indicates whether this is a mixin node type definition.
@@ -56,7 +58,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
     /**
      * The name of the primary item or <code>null</code> if none is defined.
      */
-    private final QName primaryItemName;
+    private final Name primaryItemName;
 
     /**
      * The list of property definitions.
@@ -69,7 +71,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
     private final QNodeDefinition[] childNodeDefs;
 
     /**
-     * Unmodifiable collection of dependent node type <code>QName</code>s.
+     * Unmodifiable collection of dependent node type <code>Name</code>s.
      * @see #getDependencies()
      */
     private transient Collection dependencies;
@@ -80,7 +82,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
      * @param nt the qualified node type definition.
      */
     public QNodeTypeDefinitionImpl(QNodeTypeDefinition nt) {
-        this(nt.getQName(), nt.getSupertypes(), nt.isMixin(),
+        this(nt.getName(), nt.getSupertypes(), nt.isMixin(),
                 nt.hasOrderableChildNodes(), nt.getPrimaryItemName(),
                 nt.getPropertyDefs(), nt.getChildNodeDefs());
     }
@@ -98,11 +100,11 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
      * @param declaredPropDefs       the declared property definitions.
      * @param declaredNodeDefs       the declared child node definitions.
      */
-    public QNodeTypeDefinitionImpl(QName name,
-                                   QName[] supertypes,
+    public QNodeTypeDefinitionImpl(Name name,
+                                   Name[] supertypes,
                                    boolean isMixin,
                                    boolean hasOrderableChildNodes,
-                                   QName primaryItemName,
+                                   Name primaryItemName,
                                    QPropertyDefinition[] declaredPropDefs,
                                    QNodeDefinition[] declaredNodeDefs) {
         this.name = name;
@@ -117,15 +119,15 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
     /**
      * {@inheritDoc}
      */
-    public QName getQName() {
+    public Name getName() {
         return name;
     }
 
     /**
      * {@inheritDoc}
      */
-    public QName[] getSupertypes() {
-        QName[] sTypes = new QName[supertypes.length];
+    public Name[] getSupertypes() {
+        Name[] sTypes = new Name[supertypes.length];
         System.arraycopy(supertypes, 0, sTypes, 0, supertypes.length);
         return sTypes;
     }
@@ -147,7 +149,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
     /**
      * {@inheritDoc}
      */
-    public QName getPrimaryItemName() {
+    public Name getPrimaryItemName() {
         return primaryItemName;
     }
 
@@ -182,12 +184,12 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
             // child node definitions
             for (int i = 0; i < childNodeDefs.length; i++) {
                 // default primary type
-                QName ntName = childNodeDefs[i].getDefaultPrimaryType();
+                Name ntName = childNodeDefs[i].getDefaultPrimaryType();
                 if (ntName != null && !name.equals(ntName)) {
                     deps.add(ntName);
                 }
                 // required primary type
-                QName[] ntNames = childNodeDefs[i].getRequiredPrimaryTypes();
+                Name[] ntNames = childNodeDefs[i].getRequiredPrimaryTypes();
                 for (int j = 0; j < ntNames.length; j++) {
                     if (ntNames[j] != null && !name.equals(ntNames[j])) {
                         deps.add(ntNames[j]);
@@ -201,7 +203,8 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
                     String[] ca = propertyDefs[i].getValueConstraints();
                     if (ca != null) {
                         for (int j = 0; j < ca.length; j++) {
-                            QName ntName = QName.valueOf(ca[j]);
+                            NameFactory factory = NameFactoryImpl.getInstance();
+                            Name ntName = factory.create(ca[j]);
                             if (!name.equals(ntName)) {
                                 deps.add(ntName);
                             }
