@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.spi.commons;
 
 import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import java.util.Arrays;
 import java.util.TreeSet;
@@ -25,19 +25,17 @@ import java.util.TreeSet;
 /**
  * <code>QNodeDefinitionImpl</code> implements a <code>QNodeDefinition</code>.
  */
-public class QNodeDefinitionImpl
-        extends QItemDefinitionImpl
-        implements QNodeDefinition {
+public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDefinition {
 
     /**
      * The name of the default primary type.
      */
-    private final QName defaultPrimaryType;
+    private final Name defaultPrimaryType;
 
     /**
      * The names of the required primary types.
      */
-    private final QName[] requiredPrimaryTypes;
+    private final Name[] requiredPrimaryTypes;
 
     /**
      * The 'allowsSameNameSiblings' flag.
@@ -50,7 +48,7 @@ public class QNodeDefinitionImpl
      * @param nodeDef some other node definition.
      */
     public QNodeDefinitionImpl(QNodeDefinition nodeDef) {
-        this(nodeDef.getQName(), nodeDef.getDeclaringNodeType(),
+        this(nodeDef.getName(), nodeDef.getDeclaringNodeType(),
                 nodeDef.isAutoCreated(), nodeDef.isMandatory(),
                 nodeDef.getOnParentVersion(), nodeDef.isProtected(),
                 nodeDef.getDefaultPrimaryType(),
@@ -68,11 +66,11 @@ public class QNodeDefinitionImpl
      * @param onParentVersion   the on parent version behaviour.
      * @param isProtected       if this item is protected.
      */
-    public QNodeDefinitionImpl(QName name, QName declaringNodeType,
-                        boolean isAutoCreated, boolean isMandatory,
-                        int onParentVersion, boolean isProtected,
-                        QName defaultPrimaryType, QName[] requiredPrimaryTypes,
-                        boolean allowsSameNameSiblings) {
+    public QNodeDefinitionImpl(Name name, Name declaringNodeType,
+                               boolean isAutoCreated, boolean isMandatory,
+                               int onParentVersion, boolean isProtected,
+                               Name defaultPrimaryType, Name[] requiredPrimaryTypes,
+                               boolean allowsSameNameSiblings) {
         super(name, declaringNodeType, isAutoCreated, isMandatory,
                 onParentVersion, isProtected);
         this.defaultPrimaryType = defaultPrimaryType;
@@ -84,14 +82,14 @@ public class QNodeDefinitionImpl
     /**
      * {@inheritDoc}
      */
-    public QName getDefaultPrimaryType() {
+    public Name getDefaultPrimaryType() {
         return defaultPrimaryType;
     }
 
     /**
      * {@inheritDoc}
      */
-    public QName[] getRequiredPrimaryTypes() {
+    public Name[] getRequiredPrimaryTypes() {
         return requiredPrimaryTypes;
     }
 
@@ -155,12 +153,12 @@ public class QNodeDefinitionImpl
             if (definesResidual()) {
                 sb.append('*');
             } else {
-                sb.append(getQName().toString());
+                sb.append(getName().toString());
             }
             sb.append('/');
             // set of required node type names, sorted in ascending order
             TreeSet set = new TreeSet();
-            QName[] names = getRequiredPrimaryTypes();
+            Name[] names = getRequiredPrimaryTypes();
             for (int i = 0; i < names.length; i++) {
                 set.add(names[i]);
             }

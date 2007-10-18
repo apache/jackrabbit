@@ -20,8 +20,8 @@ import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.util.IteratorHelper;
 
 import java.util.List;
@@ -48,12 +48,12 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     /**
      * The name of the primary node type.
      */
-    private final QName primaryTypeName;
+    private final Name primaryTypeName;
 
     /**
      * The names of assigned mixins.
      */
-    private final QName[] mixinNames;
+    private final Name[] mixinNames;
 
     /**
      * The list of {@link PropertyId}s that reference this node info.
@@ -82,7 +82,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
                 NodeId parentId = refs[i].getParentId();
                 parentId = idFactory.createNodeId(
                         parentId.getUniqueID(), parentId.getPath());
-                serRefs.add(idFactory.createPropertyId(parentId, refs[i].getQName()));
+                serRefs.add(idFactory.createPropertyId(parentId, refs[i].getName()));
             }
             NodeId parentId = null;
             if (nodeInfo.getParentId() != null) {
@@ -92,7 +92,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
             }
             NodeId nodeId = nodeInfo.getId();
             nodeId = idFactory.createNodeId(nodeId.getUniqueID(), nodeId.getPath());
-            return new NodeInfoImpl(parentId, nodeInfo.getQName(),
+            return new NodeInfoImpl(parentId, nodeInfo.getName(),
                     nodeInfo.getPath(), nodeId,
                     nodeInfo.getIndex(), nodeInfo.getNodetype(),
                     nodeInfo.getMixins(), serRefs.iterator(),
@@ -103,7 +103,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
                             idFactory.createNodeId(
                                     parentId.getUniqueID(), parentId.getPath());
                             return idFactory.createPropertyId(
-                                    parentId, propId.getQName());
+                                    parentId, propId.getName());
                         }
                     });
         }
@@ -123,8 +123,8 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
      * @param references      the references to this node.
      * @param propertyIds     the properties of this node.
      */
-    public NodeInfoImpl(NodeId parentId, QName name, Path path, NodeId id,
-                         int index, QName primaryTypeName, QName[] mixinNames,
+    public NodeInfoImpl(NodeId parentId, Name name, Path path, NodeId id,
+                         int index, Name primaryTypeName, Name[] mixinNames,
                          Iterator references, Iterator propertyIds) {
         super(parentId, name, path, true);
         this.id = id;
@@ -160,15 +160,15 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     /**
      * {@inheritDoc}
      */
-    public QName getNodetype() {
+    public Name getNodetype() {
         return primaryTypeName;
     }
 
     /**
      * {@inheritDoc}
      */
-    public QName[] getMixins() {
-        QName[] ret = new QName[mixinNames.length];
+    public Name[] getMixins() {
+        Name[] ret = new Name[mixinNames.length];
         System.arraycopy(mixinNames, 0, ret, 0, mixinNames.length);
         return ret;
     }

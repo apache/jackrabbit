@@ -20,10 +20,11 @@ import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
 
+import javax.jcr.RepositoryException;
 import java.io.Serializable;
 
 /**
@@ -32,13 +33,20 @@ import java.io.Serializable;
 public abstract class AbstractIdFactory implements IdFactory {
 
     /**
+     * Subclassed need to define a PathFactory used to create IDs
+     *
+     * @return a implementation of <code>PathFactory</code>.
+     */
+    protected abstract PathFactory getPathFactory();
+
+    /**
      * {@inheritDoc}
      * @see IdFactory#createNodeId(NodeId, Path)
      */
     public NodeId createNodeId(NodeId parentId, Path path) {
         try {
             return new NodeIdImpl(parentId, path);
-        } catch (MalformedPathException e) {
+        } catch (RepositoryException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
     }
@@ -61,18 +69,18 @@ public abstract class AbstractIdFactory implements IdFactory {
 
     /**
      * {@inheritDoc}
-     * @see IdFactory#createPropertyId(NodeId, QName)
+     * @see IdFactory#createPropertyId(NodeId,Name)
      */
-    public PropertyId createPropertyId(NodeId parentId, QName propertyName) {
+    public PropertyId createPropertyId(NodeId parentId, Name propertyName) {
         try {
             return new PropertyIdImpl(parentId, propertyName);
-        } catch (MalformedPathException e) {
+        } catch (RepositoryException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
     }
 
     //------------------------------------------------------< Inner classes >---
-    private static abstract class ItemIdImpl implements ItemId, Serializable {
+    private abstract class ItemIdImpl implements ItemId, Serializable {
 
         private final String uniqueID;
         private final Path path;
@@ -87,16 +95,16 @@ public abstract class AbstractIdFactory implements IdFactory {
             this.path = path;
         }
 
-        private ItemIdImpl(NodeId parentId, QName name) throws MalformedPathException {
+        private ItemIdImpl(NodeId parentId, Name name) throws RepositoryException {
             if (parentId == null || name == null) {
                 throw new IllegalArgumentException("Invalid ItemIdImpl: parentId and name must not be null.");
             }
             this.uniqueID = parentId.getUniqueID();
             Path parentPath = parentId.getPath();
             if (parentPath != null) {
-                this.path = Path.create(parentPath, name, true);
+                this.path = getPathFactory().create(parentPath, name, true);
             } else {
-                this.path = Path.create(name, Path.INDEX_UNDEFINED);
+                this.path = getPathFactory().create(name);
             }
         }
 
@@ -164,7 +172,7 @@ public abstract class AbstractIdFactory implements IdFactory {
         }
     }
 
-    private static class NodeIdImpl extends ItemIdImpl implements NodeId {
+    private class NodeIdImpl extends ItemIdImpl implements NodeId {
 
         public NodeIdImpl(String uniqueID) {
             super(uniqueID, null);
@@ -174,8 +182,8 @@ public abstract class AbstractIdFactory implements IdFactory {
             super(uniqueID, path);
         }
 
-        public NodeIdImpl(NodeId parentId, Path path) throws MalformedPathException {
-            super(parentId.getUniqueID(), (parentId.getPath() != null) ? Path.create(parentId.getPath(), path, true) : path);
+        public NodeIdImpl(NodeId parentId, Path path) throws RepositoryException {
+            super(parentId.getUniqueID(), (parentId.getPath() != null) ? getPathFactory().create(parentId.getPath(), path, true) : path);
         }
 
         public boolean denotesNode() {
@@ -193,11 +201,11 @@ public abstract class AbstractIdFactory implements IdFactory {
         }
     }
 
-    private static class PropertyIdImpl extends ItemIdImpl implements PropertyId {
+    private class PropertyIdImpl extends ItemIdImpl implements PropertyId {
 
         private final NodeId parentId;
 
-        private PropertyIdImpl(NodeId parentId, QName name) throws MalformedPathException {
+        private PropertyIdImpl(NodeId parentId, Name name) throws RepositoryException {
             super(parentId, name);
             this.parentId = parentId;
         }
@@ -210,7 +218,7 @@ public abstract class AbstractIdFactory implements IdFactory {
             return parentId;
         }
 
-        public QName getQName() {
+        public Name getName() {
             return getPath().getNameElement().getName();
         }
 

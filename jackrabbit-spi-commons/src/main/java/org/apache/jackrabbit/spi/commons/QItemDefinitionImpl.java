@@ -16,10 +16,11 @@
  */
 package org.apache.jackrabbit.spi.commons;
 
-import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameFactoryImpl;
 
 import java.io.Serializable;
 
@@ -32,18 +33,19 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, Serializab
 
     /**
      * The special wildcard name used as the name of residual item definitions.
+     * TODO don't rely on specific factory impl
      */
-    public static final QName ANY_NAME = new QName("", "*");
+    public static final Name ANY_NAME = NameFactoryImpl.getInstance().create("", "*");
 
     /**
      * The name of the child item.
      */
-    private final QName name;
+    private final Name name;
 
     /**
      * The name of the declaring node type.
      */
-    private final QName declaringNodeType;
+    private final Name declaringNodeType;
 
     /**
      * The 'autoCreated' flag.
@@ -80,7 +82,7 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, Serializab
      * @param onParentVersion   the on parent version behaviour.
      * @param isProtected       if this item is protected.
      */
-    QItemDefinitionImpl(QName name, QName declaringNodeType,
+    QItemDefinitionImpl(Name name, Name declaringNodeType,
                         boolean isAutoCreated, boolean isMandatory,
                         int onParentVersion, boolean isProtected) {
         this.name = name;
@@ -95,14 +97,14 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, Serializab
     /**
      * {@inheritDoc}
      */
-    public QName getDeclaringNodeType() {
+    public Name getDeclaringNodeType() {
         return declaringNodeType;
     }
 
     /**
      * {@inheritDoc}
      */
-    public QName getQName() {
+    public Name getName() {
         return name;
     }
 
@@ -138,7 +140,7 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, Serializab
      * {@inheritDoc}
      */
     public boolean definesResidual() {
-        return name.equals(ANY_NAME);
+        return Name.NS_DEFAULT_URI.equals(name.getNamespaceURI()) && "*".equals(name.getLocalName());
     }
 
     //-------------------------------------------< java.lang.Object overrides >
@@ -161,7 +163,7 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, Serializab
             return (declaringNodeType == null
                     ? other.getDeclaringNodeType() == null
                     : declaringNodeType.equals(other.getDeclaringNodeType()))
-                    && (name == null ? other.getQName() == null : name.equals(other.getQName()))
+                    && (name == null ? other.getName() == null : name.equals(other.getName()))
                     && autoCreated == other.isAutoCreated()
                     && onParentVersion == other.getOnParentVersion()
                     && writeProtected == other.isProtected()

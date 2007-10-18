@@ -14,30 +14,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.identifier;
+package org.apache.jackrabbit.conversion;
 
-import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.name.PathFactoryImpl;
+import javax.jcr.RepositoryException;
 
 /**
- * <code>IdFactoryImpl</code>...
+ * Base class for exceptions about malformed or otherwise
+ * invalid JCR names and paths.
  */
-public final class IdFactoryImpl extends AbstractIdFactory {
+public class NameException extends RepositoryException {
 
-    private static IdFactory INSTANCE;
-
-    private IdFactoryImpl() {
+    /**
+     * Creates a NameException with the given error message.
+     *
+     * @param message error message
+     */
+    public NameException(String message) {
+        super(message);
     }
 
-    public static IdFactory getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new IdFactoryImpl();
-        }
-        return IdFactoryImpl.INSTANCE;
+    /**
+     * Creates a NameException with the given error message and
+     * root cause exception.
+     *
+     * @param message   error message
+     * @param rootCause root cause exception
+     */
+    public NameException(String message, Throwable rootCause) {
+        super(message, rootCause);
     }
 
-    protected PathFactory getPathFactory() {
-        return PathFactoryImpl.getInstance();
-    }
 }

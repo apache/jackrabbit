@@ -54,6 +54,26 @@
         </includes>
       </resource>
     </resources>
+    <plugins>
+      <!-- Use Java 1.4 everywhere -->
+      <plugin>
+        <inherited>true</inherited>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <target>1.4</target>
+          <source>1.4</source>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <includes>
+            <include>**/TestAll.java</include>
+          </includes>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
 
   <dependencies>

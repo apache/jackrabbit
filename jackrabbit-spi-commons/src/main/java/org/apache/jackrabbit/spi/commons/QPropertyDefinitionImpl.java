@@ -18,7 +18,7 @@ package org.apache.jackrabbit.spi.commons;
 
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import java.util.Arrays;
 
@@ -56,7 +56,7 @@ public class QPropertyDefinitionImpl
      * @param propDef some other property definition.
      */
     public QPropertyDefinitionImpl(QPropertyDefinition propDef) {
-        this(propDef.getQName(), propDef.getDeclaringNodeType(),
+        this(propDef.getName(), propDef.getDeclaringNodeType(),
                 propDef.isAutoCreated(), propDef.isMandatory(),
                 propDef.getOnParentVersion(), propDef.isProtected(),
                 propDef.getDefaultValues(), propDef.isMultiple(),
@@ -81,7 +81,7 @@ public class QPropertyDefinitionImpl
      * @throws NullPointerException if <code>valueConstraints</code> is
      *                              <code>null</code>.
      */
-    public QPropertyDefinitionImpl(QName name, QName declaringNodeType,
+    public QPropertyDefinitionImpl(Name name, Name declaringNodeType,
                                    boolean isAutoCreated, boolean isMandatory,
                                    int onParentVersion, boolean isProtected,
                                    QValue[] defaultValues, boolean isMultiple,
@@ -176,7 +176,7 @@ public class QPropertyDefinitionImpl
             if (definesResidual()) {
                 sb.append('*');
             } else {
-                sb.append(getQName().toString());
+                sb.append(getName().toString());
             }
             sb.append('/');
             sb.append(getRequiredType());

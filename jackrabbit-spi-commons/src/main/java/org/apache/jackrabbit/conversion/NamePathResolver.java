@@ -14,30 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.identifier;
-
-import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.name.PathFactoryImpl;
+package org.apache.jackrabbit.conversion;
 
 /**
- * <code>IdFactoryImpl</code>...
+ * Combined name and path resolver. Can be used instead of the component
+ * name and path resolver interfaces when a single dependency for both
+ * name and path resolution is needed.
  */
-public final class IdFactoryImpl extends AbstractIdFactory {
-
-    private static IdFactory INSTANCE;
-
-    private IdFactoryImpl() {
-    }
-
-    public static IdFactory getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new IdFactoryImpl();
-        }
-        return IdFactoryImpl.INSTANCE;
-    }
-
-    protected PathFactory getPathFactory() {
-        return PathFactoryImpl.getInstance();
-    }
+public interface NamePathResolver extends NameResolver, PathResolver {
 }

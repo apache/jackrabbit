@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.spi.commons;
 
 import org.apache.jackrabbit.spi.ChildInfo;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import java.io.Serializable;
 
@@ -29,7 +29,7 @@ public class ChildInfoImpl implements ChildInfo, Serializable {
     /**
      * The name of this child info.
      */
-    private final QName name;
+    private final Name name;
 
     /**
      * The unique id for this child info or <code>null</code> if it does not
@@ -49,7 +49,7 @@ public class ChildInfoImpl implements ChildInfo, Serializable {
      * @param uniqueId the unique id of the child node or <code>null</code>.
      * @param index    the index of the child node.
      */
-    public ChildInfoImpl(QName name, String uniqueId, int index) {
+    public ChildInfoImpl(Name name, String uniqueId, int index) {
         this.name = name;
         this.uniqueId = uniqueId;
         this.index = index;
@@ -58,7 +58,7 @@ public class ChildInfoImpl implements ChildInfo, Serializable {
     /**
      * {@inheritDoc}
      */
-    public QName getName() {
+    public Name getName() {
         return name;
     }
 

@@ -21,7 +21,7 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
@@ -83,19 +83,19 @@ public class SerializableBatch implements Batch, Serializable {
     //----------------------------< Batch >-------------------------------------
 
     public void addNode(NodeId parentId,
-                        QName nodeName,
-                        QName nodetypeName,
+                        Name nodeName,
+                        Name nodetypeName,
                         String uuid) {
         recording.add(new AddNode(parentId, nodeName, nodetypeName, uuid));
     }
 
-    public void addProperty(NodeId parentId, QName propertyName, QValue value) {
+    public void addProperty(NodeId parentId, Name propertyName, QValue value) {
         recording.add(new AddProperty(parentId, propertyName,
                 new QValue[]{value}, false));
     }
 
     public void addProperty(NodeId parentId,
-                            QName propertyName,
+                            Name propertyName,
                             QValue[] values) {
         recording.add(new AddProperty(parentId, propertyName, values, true));
     }
@@ -118,13 +118,13 @@ public class SerializableBatch implements Batch, Serializable {
         recording.add(new ReorderNodes(parentId, srcNodeId, beforeNodeId));
     }
 
-    public void setMixins(NodeId nodeId, QName[] mixinNodeTypeIds) {
+    public void setMixins(NodeId nodeId, Name[] mixinNodeTypeIds) {
         recording.add(new SetMixins(nodeId, mixinNodeTypeIds));
     }
 
     public void move(NodeId srcNodeId,
                      NodeId destParentNodeId,
-                     QName destName) {
+                     Name destName) {
         recording.add(new Move(srcNodeId, destParentNodeId, destName));
     }
 
@@ -146,13 +146,13 @@ public class SerializableBatch implements Batch, Serializable {
 
         private final NodeId parentId;
 
-        private final QName nodeName;
+        private final Name nodeName;
 
-        private final QName nodetypeName;
+        private final Name nodetypeName;
 
         private final String uuid;
 
-        AddNode(NodeId parentId, QName nodeName, QName nodetypeName, String uuid) {
+        AddNode(NodeId parentId, Name nodeName, Name nodetypeName, String uuid) {
             this.parentId = parentId;
             this.nodeName = nodeName;
             this.nodetypeName = nodetypeName;
@@ -171,13 +171,13 @@ public class SerializableBatch implements Batch, Serializable {
 
         private final NodeId parentId;
 
-        private final QName propertyName;
+        private final Name propertyName;
 
         private final QValue[] values;
 
         private final boolean isMultiValued;
 
-        AddProperty(NodeId parentId, QName propertyName,
+        AddProperty(NodeId parentId, Name propertyName,
                     QValue[] values, boolean isMultiValued) {
             this.parentId = parentId;
             this.propertyName = propertyName;
@@ -265,9 +265,9 @@ public class SerializableBatch implements Batch, Serializable {
 
         private final NodeId nodeId;
 
-        private final QName[] mixinNodeTypeIds;
+        private final Name[] mixinNodeTypeIds;
 
-        SetMixins(NodeId nodeId, QName[] mixinNodeTypeIds) {
+        SetMixins(NodeId nodeId, Name[] mixinNodeTypeIds) {
             this.nodeId = nodeId;
             this.mixinNodeTypeIds = mixinNodeTypeIds;
         }
@@ -286,9 +286,9 @@ public class SerializableBatch implements Batch, Serializable {
 
         private final NodeId destParentNodeId;
 
-        private final QName destName;
+        private final Name destName;
 
-        Move(NodeId srcNodeId, NodeId destParentNodeId, QName destName) {
+        Move(NodeId srcNodeId, NodeId destParentNodeId, Name destName) {
             this.srcNodeId = srcNodeId;
             this.destParentNodeId = destParentNodeId;
             this.destName = destName;

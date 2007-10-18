@@ -19,10 +19,9 @@ package org.apache.jackrabbit.spi.commons;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.spi.Path;
 
-import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Arrays;
@@ -54,7 +53,7 @@ public class EventFilterImpl implements EventFilter, Serializable {
      * @param absPath       filter events that are below this path.
      * @param isDeep        whether this filter is applied deep.
      * @param uuids         the jcr:uuid of the nodes this filter allows.
-     * @param nodeTypeNames the QNames of the already resolved node types this
+     * @param nodeTypeNames the Names of the already resolved node types this
      *                      filter allows.
      * @param noLocal       whether this filter accepts local events or not.
      */
@@ -120,9 +119,9 @@ public class EventFilterImpl implements EventFilter, Serializable {
             // node where the property belongs to.
             Path eventPath;
             if (type == Event.NODE_ADDED || type == Event.NODE_REMOVED) {
-                eventPath = event.getQPath();
+                eventPath = event.getPath();
             } else {
-                eventPath = event.getQPath().getAncestor(1);
+                eventPath = event.getPath().getAncestor(1);
             }
 
             boolean match = eventPath.equals(absPath);
@@ -130,9 +129,7 @@ public class EventFilterImpl implements EventFilter, Serializable {
                 match = eventPath.isDescendantOf(absPath);
             }
             return match;
-        } catch (MalformedPathException e) {
-            // should never get here
-        } catch (PathNotFoundException e) {
+        } catch (RepositoryException e) {
             // should never get here
         }
         // if we get here an exception occurred while checking for the path
