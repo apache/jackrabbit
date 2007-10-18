@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
 
 import javax.jcr.RepositoryException;
 
@@ -57,27 +57,27 @@ public interface Importer {
 
     //--------------------------------------------------------< inner classes >
     static class NodeInfo {
-        private final QName name;
-        private final QName nodeTypeName;
-        private final QName[] mixinNames;
+        private final Name name;
+        private final Name nodeTypeName;
+        private final Name[] mixinNames;
         private String uuid;
 
-        public NodeInfo(QName name, QName nodeTypeName, QName[] mixinNames, String uuid) {
+        public NodeInfo(Name name, Name nodeTypeName, Name[] mixinNames, String uuid) {
             this.name = name;
             this.nodeTypeName = nodeTypeName;
             this.mixinNames = mixinNames;
             this.uuid = uuid;
         }
 
-        public QName getName() {
+        public Name getName() {
             return name;
         }
 
-        public QName getNodeTypeName() {
+        public Name getNodeTypeName() {
             return nodeTypeName;
         }
 
-        public QName[] getMixinNames() {
+        public Name[] getMixinNames() {
             return mixinNames;
         }
 
@@ -91,17 +91,17 @@ public interface Importer {
     }
 
     static class PropInfo {
-        private final QName name;
+        private final Name name;
         private final int type;
         private final TextValue[] values;
 
-        public PropInfo(QName name, int type, TextValue[] values) {
+        public PropInfo(Name name, int type, TextValue[] values) {
             this.name = name;
             this.type = type;
             this.values = values;
         }
 
-        public QName getName() {
+        public Name getName() {
             return name;
         }
 

@@ -16,11 +16,15 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.nodetype.InvalidNodeTypeDefException;
+import org.apache.jackrabbit.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.name.NameFactoryImpl;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -67,7 +71,7 @@ class DefinitionValidator {
         Map tmpMap = new HashMap(validatedDefs);
         for (Iterator it = ntDefs.iterator(); it.hasNext();) {
             QNodeTypeDefinition ntd = (QNodeTypeDefinition) it.next();
-            tmpMap.put(ntd.getQName(), ntd);
+            tmpMap.put(ntd.getName(), ntd);
         }
 
         // map of nodetype definitions and effective nodetypes to be registered
@@ -101,7 +105,7 @@ class DefinitionValidator {
             msg.append("the following node types could not be registered because of unresolvable dependencies: ");
             Iterator iterator = list.iterator();
             while (iterator.hasNext()) {
-                msg.append(((QNodeTypeDefinition) iterator.next()).getQName());
+                msg.append(((QNodeTypeDefinition) iterator.next()).getName());
                 msg.append(" ");
             }
             log.error(msg.toString());
@@ -132,7 +136,7 @@ class DefinitionValidator {
          */
         EffectiveNodeTypeImpl ent = null;
 
-        QName name = ntDef.getQName();
+        Name name = ntDef.getName();
         if (name == null) {
             String msg = "no name specified";
             log.debug(msg);
@@ -141,7 +145,7 @@ class DefinitionValidator {
         checkNamespace(name);
 
         // validate supertypes
-        QName[] supertypes = ntDef.getSupertypes();
+        Name[] supertypes = ntDef.getSupertypes();
         if (supertypes.length > 0) {
             for (int i = 0; i < supertypes.length; i++) {
                 checkNamespace(supertypes[i]);
@@ -187,8 +191,8 @@ class DefinitionValidator {
             try {
                 EffectiveNodeType est = entProvider.getEffectiveNodeType(supertypes, validatedDefs);
                 // make sure that all primary types except nt:base extend from nt:base
-                if (!ntDef.isMixin() && !QName.NT_BASE.equals(ntDef.getQName())
-                        && !est.includesNodeType(QName.NT_BASE)) {
+                if (!ntDef.isMixin() && !NameConstants.NT_BASE.equals(ntDef.getName())
+                        && !est.includesNodeType(NameConstants.NT_BASE)) {
                     String msg = "[" + name + "] all primary node types except"
                         + " nt:base itself must be (directly or indirectly) derived from nt:base";
                     log.debug(msg);
@@ -205,7 +209,7 @@ class DefinitionValidator {
             }
         } else {
             // no supertypes specified: has to be either a mixin type or nt:base
-            if (!ntDef.isMixin() && !QName.NT_BASE.equals(ntDef.getQName())) {
+            if (!ntDef.isMixin() && !NameConstants.NT_BASE.equals(ntDef.getName())) {
                 String msg = "[" + name
                         + "] all primary node types except nt:base itself must be (directly or indirectly) derived from nt:base";
                 log.debug(msg);
@@ -224,20 +228,20 @@ class DefinitionValidator {
              * make sure declaring node type matches name of node type definition
              */
             if (!name.equals(pd.getDeclaringNodeType())) {
-                String msg = "[" + name + "#" + pd.getQName() + "] invalid declaring node type specified";
+                String msg = "[" + name + "#" + pd.getName() + "] invalid declaring node type specified";
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg);
             }
-            checkNamespace(pd.getQName());
+            checkNamespace(pd.getName());
             // check that auto-created properties specify a name
             if (pd.definesResidual() && pd.isAutoCreated()) {
-                String msg = "[" + name + "#" + pd.getQName() + "] auto-created properties must specify a name";
+                String msg = "[" + name + "#" + pd.getName() + "] auto-created properties must specify a name";
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg);
             }
             // check that auto-created properties specify a type
             if (pd.getRequiredType() == PropertyType.UNDEFINED && pd.isAutoCreated()) {
-                String msg = "[" + name + "#" + pd.getQName() + "] auto-created properties must specify a type";
+                String msg = "[" + name + "#" + pd.getName() + "] auto-created properties must specify a type";
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg);
             }
@@ -263,10 +267,11 @@ class DefinitionValidator {
 
                 if (pd.getRequiredType() == PropertyType.REFERENCE) {
                     for (int j = 0; j < constraints.length; j++) {
-                        QName ntName = QName.valueOf(constraints[j]);
+                        // TODO improve. don't rely on a specific factory impl
+                        Name ntName = NameFactoryImpl.getInstance().create(constraints[j]);
                         /* compare to given ntd map and not registered nts only */
                         if (!name.equals(ntName) && !validatedDefs.containsKey(ntName)) {
-                            String msg = "[" + name + "#" + pd.getQName()
+                            String msg = "[" + name + "#" + pd.getName()
                                     + "] invalid REFERENCE value constraint '"
                                     + ntName + "' (unknown node type)";
                             log.debug(msg);
@@ -283,15 +288,15 @@ class DefinitionValidator {
             QNodeDefinition cnd = cnda[i];
             /* make sure declaring node type matches name of node type definition */
             if (!name.equals(cnd.getDeclaringNodeType())) {
-                String msg = "[" + name + "#" + cnd.getQName()
+                String msg = "[" + name + "#" + cnd.getName()
                         + "] invalid declaring node type specified";
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg);
             }
-            checkNamespace(cnd.getQName());
+            checkNamespace(cnd.getName());
             // check that auto-created child-nodes specify a name
             if (cnd.definesResidual() && cnd.isAutoCreated()) {
-                String msg = "[" + name + "#" + cnd.getQName()
+                String msg = "[" + name + "#" + cnd.getName()
                         + "] auto-created child-nodes must specify a name";
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg);
@@ -299,13 +304,13 @@ class DefinitionValidator {
             // check that auto-created child-nodes specify a default primary type
             if (cnd.getDefaultPrimaryType() == null
                     && cnd.isAutoCreated()) {
-                String msg = "[" + name + "#" + cnd.getQName()
+                String msg = "[" + name + "#" + cnd.getName()
                         + "] auto-created child-nodes must specify a default primary type";
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg);
             }
             // check default primary type
-            QName dpt = cnd.getDefaultPrimaryType();
+            Name dpt = cnd.getDefaultPrimaryType();
             checkNamespace(dpt);
             boolean referenceToSelf = false;
             EffectiveNodeType defaultENT = null;
@@ -319,7 +324,7 @@ class DefinitionValidator {
                  * exception: the node type just being registered
                  */
                 if (!name.equals(dpt) && !validatedDefs.containsKey(dpt)) {
-                    String msg = "[" + name + "#" + cnd.getQName()
+                    String msg = "[" + name + "#" + cnd.getName()
                             + "] invalid default primary type '" + dpt + "'";
                     log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg);
@@ -330,7 +335,7 @@ class DefinitionValidator {
                  */
                 try {
                     if (!referenceToSelf) {
-                        defaultENT = entProvider.getEffectiveNodeType(new QName[] {dpt}, validatedDefs);
+                        defaultENT = entProvider.getEffectiveNodeType(new Name[] {dpt}, validatedDefs);
                     } else {
                         /**
                          * the default primary type is identical with the node
@@ -351,12 +356,12 @@ class DefinitionValidator {
                         checkForCircularNodeAutoCreation(defaultENT, definingNTs, validatedDefs);
                     }
                 } catch (NodeTypeConflictException ntce) {
-                    String msg = "[" + name + "#" + cnd.getQName()
+                    String msg = "[" + name + "#" + cnd.getName()
                             + "] failed to validate default primary type";
                     log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg, ntce);
                 } catch (NoSuchNodeTypeException nsnte) {
-                    String msg = "[" + name + "#" + cnd.getQName()
+                    String msg = "[" + name + "#" + cnd.getName()
                             + "] failed to validate default primary type";
                     log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg, nsnte);
@@ -364,10 +369,10 @@ class DefinitionValidator {
             }
 
             // check required primary types
-            QName[] reqTypes = cnd.getRequiredPrimaryTypes();
+            Name[] reqTypes = cnd.getRequiredPrimaryTypes();
             if (reqTypes != null && reqTypes.length > 0) {
                 for (int n = 0; n < reqTypes.length; n++) {
-                    QName rpt = reqTypes[n];
+                    Name rpt = reqTypes[n];
                     checkNamespace(rpt);
                     referenceToSelf = false;
                     /**
@@ -382,7 +387,7 @@ class DefinitionValidator {
                      * notable exception: the node type just being registered
                      */
                     if (!name.equals(rpt) && !validatedDefs.containsKey(rpt)) {
-                        String msg = "[" + name + "#" + cnd.getQName()
+                        String msg = "[" + name + "#" + cnd.getName()
                                 + "] invalid required primary type: " + rpt;
                         log.debug(msg);
                         throw new InvalidNodeTypeDefException(msg);
@@ -392,7 +397,7 @@ class DefinitionValidator {
                      * primary type constraint
                      */
                     if (defaultENT != null && !defaultENT.includesNodeType(rpt)) {
-                        String msg = "[" + name + "#" + cnd.getQName()
+                        String msg = "[" + name + "#" + cnd.getName()
                                 + "] default primary type does not satisfy required primary type constraint "
                                 + rpt;
                         log.debug(msg);
@@ -404,7 +409,7 @@ class DefinitionValidator {
                      */
                     try {
                         if (!referenceToSelf) {
-                            entProvider.getEffectiveNodeType(new QName[] {rpt}, validatedDefs);
+                            entProvider.getEffectiveNodeType(new Name[] {rpt}, validatedDefs);
                         } else {
                             /**
                              * the required primary type is identical with the
@@ -416,12 +421,12 @@ class DefinitionValidator {
                             }
                         }
                     } catch (NodeTypeConflictException ntce) {
-                        String msg = "[" + name + "#" + cnd.getQName()
+                        String msg = "[" + name + "#" + cnd.getName()
                                 + "] failed to validate required primary type constraint";
                         log.debug(msg);
                         throw new InvalidNodeTypeDefException(msg, ntce);
                     } catch (NoSuchNodeTypeException nsnte) {
-                        String msg = "[" + name + "#" + cnd.getQName()
+                        String msg = "[" + name + "#" + cnd.getName()
                                 + "] failed to validate required primary type constraint";
                         log.debug(msg);
                         throw new InvalidNodeTypeDefException(msg, nsnte);
@@ -459,10 +464,10 @@ class DefinitionValidator {
      * @throws InvalidNodeTypeDefException
      * @throws RepositoryException
      */
-    private void checkForCircularInheritance(QName[] supertypes, Stack inheritanceChain, Map ntdMap)
+    private void checkForCircularInheritance(Name[] supertypes, Stack inheritanceChain, Map ntdMap)
         throws InvalidNodeTypeDefException, RepositoryException {
         for (int i = 0; i < supertypes.length; i++) {
-            QName stName = supertypes[i];
+            Name stName = supertypes[i];
             int pos = inheritanceChain.lastIndexOf(stName);
             if (pos >= 0) {
                 StringBuffer buf = new StringBuffer();
@@ -479,7 +484,7 @@ class DefinitionValidator {
             }
 
             if (ntdMap.containsKey(stName)) {
-                QName[] sta = ((QNodeTypeDefinition)ntdMap.get(stName)).getSupertypes();
+                Name[] sta = ((QNodeTypeDefinition)ntdMap.get(stName)).getSupertypes();
                 if (sta.length > 0) {
                     // check recursively
                     inheritanceChain.push(stName);
@@ -504,9 +509,9 @@ class DefinitionValidator {
         throws InvalidNodeTypeDefException {
         // check for circularity through default node types of auto-created child nodes
         // (node type 'a' defines auto-created child node with default node type 'a')
-        QName[] childNodeNTs = childNodeENT.getAllNodeTypes();
+        Name[] childNodeNTs = childNodeENT.getAllNodeTypes();
         for (int i = 0; i < childNodeNTs.length; i++) {
-            QName nt = childNodeNTs[i];
+            Name nt = childNodeNTs[i];
             int pos = definingParentNTs.lastIndexOf(nt);
             if (pos >= 0) {
                 StringBuffer buf = new StringBuffer();
@@ -528,22 +533,22 @@ class DefinitionValidator {
 
         QNodeDefinition[] nodeDefs = childNodeENT.getAutoCreateQNodeDefinitions();
         for (int i = 0; i < nodeDefs.length; i++) {
-            QName dnt = nodeDefs[i].getDefaultPrimaryType();
-            QName definingNT = nodeDefs[i].getDeclaringNodeType();
+            Name dnt = nodeDefs[i].getDefaultPrimaryType();
+            Name definingNT = nodeDefs[i].getDeclaringNodeType();
             try {
                 if (dnt != null) {
                     // check recursively
                     definingParentNTs.push(definingNT);
-                    EffectiveNodeType ent = entProvider.getEffectiveNodeType(new QName[] {dnt}, ntdMap);
+                    EffectiveNodeType ent = entProvider.getEffectiveNodeType(new Name[] {dnt}, ntdMap);
                     checkForCircularNodeAutoCreation(ent, definingParentNTs, ntdMap);
                     definingParentNTs.pop();
                 }
             } catch (NoSuchNodeTypeException e) {
-                String msg = definingNT + " defines invalid default node type for child node " + nodeDefs[i].getQName();
+                String msg = definingNT + " defines invalid default node type for child node " + nodeDefs[i].getName();
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg, e);
             } catch (NodeTypeConflictException e) {
-                String msg = definingNT + " defines invalid default node type for child node " + nodeDefs[i].getQName();
+                String msg = definingNT + " defines invalid default node type for child node " + nodeDefs[i].getName();
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg, e);
             }
@@ -551,13 +556,13 @@ class DefinitionValidator {
     }
 
     /**
-     * Utility method for verifying that the namespace of a <code>QName</code>
+     * Utility method for verifying that the namespace of a <code>Name</code>
      * is registered; a <code>null</code> argument is silently ignored.
      * @param name name whose namespace is to be checked
      * @throws RepositoryException if the namespace of the given name is not
      *                             registered or if an unspecified error occured
      */
-    private void checkNamespace(QName name) throws RepositoryException {
+    private void checkNamespace(Name name) throws RepositoryException {
         if (name != null) {
             // make sure namespace uri denotes a registered namespace
             nsRegistry.getPrefix(name.getNamespaceURI());

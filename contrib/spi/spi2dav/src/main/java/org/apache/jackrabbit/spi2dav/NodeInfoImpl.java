@@ -20,15 +20,14 @@ import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeProperty;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DavProperty;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -46,18 +45,18 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     private static Logger log = LoggerFactory.getLogger(NodeInfoImpl.class);
 
     private final NodeId id;
-    private final QName qName;
+    private final Name qName;
     private final int index;
 
-    private final QName primaryNodeTypeName;
-    private final QName[] mixinNodeTypeNames;
+    private final Name primaryNodeTypeName;
+    private final Name[] mixinNodeTypeNames;
 
     private final List references = new ArrayList();
     private final List propertyIds = new ArrayList();
 
     public NodeInfoImpl(NodeId id, NodeId parentId, DavPropertySet propSet,
-                        NamespaceResolver nsResolver) throws RepositoryException, MalformedPathException {
-        super(parentId, propSet, nsResolver);
+                        NamePathResolver resolver) throws RepositoryException, NameException {
+        super(parentId, propSet, resolver);
 
         // set id
         this.id = id;
@@ -71,17 +70,17 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
                 // note, that unescaping is not required.
                 String jcrName = nameProp.getValue().toString();
                 try {
-                    qName = NameFormat.parse(jcrName, nsResolver);
+                    qName = resolver.getQName(jcrName);
                 } catch (NameException e) {
                     throw new RepositoryException("Unable to build ItemInfo object, invalid name found: " + jcrName);
                 }
             } else {
                 // root
-                qName = QName.ROOT;
+                qName = NameConstants.ROOT;
             }
         } else {
-            Path.PathElement el = id.getPath().getNameElement();
-            qName = (Path.ROOT_ELEMENT == el) ? QName.ROOT : el.getName();
+            Path.Element el = id.getPath().getNameElement();
+            qName = (el.denotesRoot()) ? NameConstants.ROOT : el.getName();
         }
 
         DavProperty indexProp = propSet.get(ItemResourceConstants.JCR_INDEX);
@@ -97,7 +96,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
                 Iterator it = new NodeTypeProperty(propSet.get(ItemResourceConstants.JCR_PRIMARYNODETYPE)).getNodeTypeNames().iterator();
                 if (it.hasNext()) {
                     String jcrName = it.next().toString();
-                    primaryNodeTypeName = NameFormat.parse(jcrName, nsResolver);
+                    primaryNodeTypeName = resolver.getQName(jcrName);
                 } else {
                     throw new RepositoryException("Missing primary nodetype for node " + id + ".");
                 }
@@ -106,16 +105,16 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
             }
             if (propSet.contains(ItemResourceConstants.JCR_MIXINNODETYPES)) {
                 Set mixinNames = new NodeTypeProperty(propSet.get(ItemResourceConstants.JCR_MIXINNODETYPES)).getNodeTypeNames();
-                mixinNodeTypeNames = new QName[mixinNames.size()];
+                mixinNodeTypeNames = new Name[mixinNames.size()];
                 Iterator it = mixinNames.iterator();
                 int i = 0;
                 while(it.hasNext()) {
                     String jcrName = it.next().toString();
-                    mixinNodeTypeNames[i] = NameFormat.parse(jcrName, nsResolver);
+                    mixinNodeTypeNames[i] = resolver.getQName(jcrName);
                     i++;
                 }
             } else {
-                mixinNodeTypeNames = QName.EMPTY_ARRAY;
+                mixinNodeTypeNames = Name.EMPTY_ARRAY;
             }
         } catch (NameException e) {
             throw new RepositoryException("Error while resolving nodetype names: " + e.getMessage());
@@ -127,7 +126,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
         return true;
     }
 
-    public QName getQName() {
+    public Name getName() {
         return qName;
     }
 
@@ -140,11 +139,11 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
         return index;
     }
 
-    public QName getNodetype() {
+    public Name getNodetype() {
         return primaryNodeTypeName;
     }
 
-    public QName[] getMixins() {
+    public Name[] getMixins() {
         return mixinNodeTypeNames;
     }
 

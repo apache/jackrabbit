@@ -18,7 +18,7 @@ package org.apache.jackrabbit.jcr2spi.hierarchy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import java.util.Map;
 import java.util.Iterator;
@@ -48,16 +48,16 @@ public class ChildPropertyEntriesImpl implements ChildPropertyEntries {
     }
 
     /**
-     * @see ChildPropertyEntries#contains(QName)
+     * @see ChildPropertyEntries#contains(Name)
      */
-    public boolean contains(QName propertyName) {
+    public boolean contains(Name propertyName) {
         return properties.containsKey(propertyName);
     }
 
     /**
-     * @see ChildPropertyEntries#get(QName)
+     * @see ChildPropertyEntries#get(Name)
      */
-    public PropertyEntry get(QName propertyName) {
+    public PropertyEntry get(Name propertyName) {
         Object ref = properties.get(propertyName);
         if (ref == null) {
             // no entry exists with the given name
@@ -80,7 +80,7 @@ public class ChildPropertyEntriesImpl implements ChildPropertyEntries {
         synchronized (properties) {
             Set entries = new HashSet(properties.size());
             for (Iterator it = getPropertyNames().iterator(); it.hasNext();) {
-                QName propName = (QName) it.next();
+                Name propName = (Name) it.next();
                 entries.add(get(propName));
             }
             return Collections.unmodifiableCollection(entries);
@@ -99,7 +99,7 @@ public class ChildPropertyEntriesImpl implements ChildPropertyEntries {
      */
     public void add(PropertyEntry propertyEntry) {
         Reference ref = new WeakReference(propertyEntry);
-        properties.put(propertyEntry.getQName(), ref);
+        properties.put(propertyEntry.getName(), ref);
     }
 
     /**
@@ -115,9 +115,9 @@ public class ChildPropertyEntriesImpl implements ChildPropertyEntries {
     }
 
     /**
-     * @see ChildPropertyEntries#remove(QName)
+     * @see ChildPropertyEntries#remove(Name)
      */
-    public boolean remove(QName propertyName) {
+    public boolean remove(Name propertyName) {
         return properties.remove(propertyName) != null;
     }
 }

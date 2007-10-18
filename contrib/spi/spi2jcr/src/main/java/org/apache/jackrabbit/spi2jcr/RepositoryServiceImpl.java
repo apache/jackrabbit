@@ -33,14 +33,18 @@ import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.EventFilterImpl;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathFormat;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.NameException;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.name.PathFactoryImpl;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.name.PathBuilder;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.MalformedPathException;
 import org.apache.jackrabbit.value.QValueFactoryImpl;
 import org.apache.jackrabbit.value.ValueFormat;
 import org.apache.jackrabbit.JcrConstants;
@@ -157,6 +161,20 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
+    public NameFactory getNameFactory() {
+        return NameFactoryImpl.getInstance();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public PathFactory getPathFactory() {
+        return PathFactoryImpl.getInstance();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public QValueFactory getQValueFactory() {
         return QValueFactoryImpl.getInstance();
     }
@@ -183,7 +201,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     public SessionInfo obtain(Credentials credentials, String workspaceName)
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
         Credentials duplicate = SessionInfoImpl.duplicateCredentials(credentials);
-        return new SessionInfoImpl(repository.login(credentials, workspaceName), duplicate);
+        return new SessionInfoImpl(repository.login(credentials, workspaceName), duplicate, getNameFactory(), getPathFactory());
     }
 
     /**
@@ -193,7 +211,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         Session s = repository.login(sInfo.getCredentials(), workspaceName);
-        return new SessionInfoImpl(s, sInfo.getCredentials());
+        return new SessionInfoImpl(s, sInfo.getCredentials(), getNameFactory(), getPathFactory());
     }
 
     /**
@@ -202,7 +220,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     public SessionInfo impersonate(SessionInfo sessionInfo, Credentials credentials) throws LoginException, RepositoryException {
         Credentials duplicate = SessionInfoImpl.duplicateCredentials(credentials);
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        return new SessionInfoImpl(sInfo.getSession().impersonate(credentials), duplicate);
+        return new SessionInfoImpl(sInfo.getSession().impersonate(credentials), duplicate, getNameFactory(), getPathFactory());
     }
 
     /**
@@ -258,9 +276,10 @@ public class RepositoryServiceImpl implements RepositoryService {
      */
     public NodeId getRootId(SessionInfo sessionInfo)
             throws RepositoryException {
+
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         return idFactory.createNodeId(sInfo.getSession().getRootNode(),
-                sInfo.getNamespaceResolver());
+                sInfo.getNamePathResolver());
     }
 
     /**
@@ -272,8 +291,8 @@ public class RepositoryServiceImpl implements RepositoryService {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         try {
             return new QNodeDefinitionImpl(getNode(nodeId, sInfo).getDefinition(),
-                    sInfo.getNamespaceResolver());
-        } catch (NameException e) {
+                    sInfo.getNamePathResolver());
+        } catch (org.apache.jackrabbit.conversion.NameException e) {
             throw new RepositoryException(e);
         }
     }
@@ -288,7 +307,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         try {
             return new QPropertyDefinitionImpl(
                     getProperty(propertyId, sInfo).getDefinition(),
-                    sInfo.getNamespaceResolver(),
+                    sInfo.getNamePathResolver(),
                     getQValueFactory());
         } catch (NameException e) {
             throw new RepositoryException(e);
@@ -323,8 +342,8 @@ public class RepositoryServiceImpl implements RepositoryService {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         Node node = getNode(nodeId, sInfo);
         try {
-            return new NodeInfoImpl(node, idFactory, sInfo.getNamespaceResolver());
-        } catch (NameException e) {
+            return new NodeInfoImpl(node, idFactory, sInfo.getNamePathResolver());
+        } catch (org.apache.jackrabbit.conversion.NameException e) {
             throw new RepositoryException(e);
         }
     }
@@ -336,9 +355,9 @@ public class RepositoryServiceImpl implements RepositoryService {
             throws ItemNotFoundException, RepositoryException {
         final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         Node node = getNode(nodeId, sInfo);
-        QName ntName = null;
+        Name ntName = null;
         try {
-            ntName = NameFormat.parse(node.getProperty(JcrConstants.JCR_PRIMARYTYPE).getString(), sInfo.getNamespaceResolver());
+            ntName = sInfo.getNamePathResolver().getQName(node.getProperty(JcrConstants.JCR_PRIMARYTYPE).getString());
         } catch (NameException e) {
             // ignore. should never occur
         }
@@ -346,8 +365,8 @@ public class RepositoryServiceImpl implements RepositoryService {
         if (depth == BatchReadConfig.DEPTH_DEFAULT) {
             NodeInfo info;
             try {
-                info = new NodeInfoImpl(node, idFactory, sInfo.getNamespaceResolver());
-            } catch (NameException e) {
+                info = new NodeInfoImpl(node, idFactory, sInfo.getNamePathResolver());
+            } catch (org.apache.jackrabbit.conversion.NameException e) {
                 throw new RepositoryException(e);
             }
             return Collections.singletonList(info).iterator();
@@ -356,15 +375,15 @@ public class RepositoryServiceImpl implements RepositoryService {
             ItemVisitor visitor = new TraversingItemVisitor(false, depth) {
                 protected void entering(Property property, int i) throws RepositoryException {
                     try {
-                        itemInfos.add(new PropertyInfoImpl(property, idFactory, sInfo.getNamespaceResolver(), getQValueFactory()));
-                    } catch (NameException e) {
+                        itemInfos.add(new PropertyInfoImpl(property, idFactory, sInfo.getNamePathResolver(), getQValueFactory()));
+                    } catch (org.apache.jackrabbit.conversion.NameException e) {
                         throw new RepositoryException(e);
                     }
                 }
                 protected void entering(Node node, int i) throws RepositoryException {
                     try {
-                        itemInfos.add(new NodeInfoImpl(node, idFactory, sInfo.getNamespaceResolver()));
-                    } catch (NameException e) {
+                        itemInfos.add(new NodeInfoImpl(node, idFactory, sInfo.getNamePathResolver()));
+                    } catch (org.apache.jackrabbit.conversion.NameException e) {
                         throw new RepositoryException(e);
                     }
                 }
@@ -391,9 +410,9 @@ public class RepositoryServiceImpl implements RepositoryService {
         try {
             while (children.hasNext()) {
                 childInfos.add(new ChildInfoImpl(children.nextNode(),
-                        sInfo.getNamespaceResolver()));
+                        sInfo.getNamePathResolver()));
             }
-        } catch (NameException e) {
+        } catch (org.apache.jackrabbit.conversion.NameException e) {
             throw new RepositoryException(e);
         }
         return childInfos.iterator();
@@ -408,8 +427,8 @@ public class RepositoryServiceImpl implements RepositoryService {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         try {
             return new PropertyInfoImpl(getProperty(propertyId, sInfo), idFactory,
-                    sInfo.getNamespaceResolver(), getQValueFactory());
-        } catch (NameException e) {
+                    sInfo.getNamePathResolver(), getQValueFactory());
+        } catch (org.apache.jackrabbit.conversion.NameException e) {
             throw new RepositoryException(e);
         }
     }
@@ -461,20 +480,16 @@ public class RepositoryServiceImpl implements RepositoryService {
     public void move(final SessionInfo sessionInfo,
                      final NodeId srcNodeId,
                      final NodeId destParentNodeId,
-                     final QName destName) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+                     final Name destName) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
         final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         executeWithLocalEvents(new Callable() {
             public Object run() throws RepositoryException {
                 String srcPath = pathForId(srcNodeId, sInfo);
                 StringBuffer destPath = new StringBuffer(pathForId(destParentNodeId, sInfo));
-                try {
-                    if (destPath.length() > 1) {
-                        destPath.append("/");
-                    }
-                    destPath.append(NameFormat.format(destName, sInfo.getNamespaceResolver()));
-                } catch (NoPrefixDeclaredException e) {
-                    throw new RepositoryException(e.getMessage(), e);
+                if (destPath.length() > 1) {
+                    destPath.append("/");
                 }
+                destPath.append(sInfo.getNamePathResolver().getJCRName(destName));
                 sInfo.getSession().getWorkspace().move(srcPath, destPath.toString());
                 return null;
             }
@@ -488,7 +503,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                      final String srcWorkspaceName,
                      final NodeId srcNodeId,
                      final NodeId destParentNodeId,
-                     final QName destName) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
+                     final Name destName) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
         final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         executeWithLocalEvents(new Callable() {
             public Object run() throws RepositoryException {
@@ -535,7 +550,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                       final String srcWorkspaceName,
                       final NodeId srcNodeId,
                       final NodeId destParentNodeId,
-                      final QName destName,
+                      final Name destName,
                       final boolean removeExisting) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
         final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         executeWithLocalEvents(new Callable() {
@@ -563,7 +578,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         try {
             Lock lock = getNode(nodeId, sInfo).getLock();
-            return new LockInfoImpl(lock, idFactory, sInfo.getNamespaceResolver());
+            return new LockInfoImpl(lock, idFactory, sInfo.getNamePathResolver());
         } catch (LockException e) {
             // no lock present on this node.
             return null;
@@ -583,7 +598,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             public Object run() throws RepositoryException {
                 Node n = getNode(nodeId, sInfo);
                 Lock lock = n.lock(deep, sessionScoped);
-                return new LockInfoImpl(lock, idFactory, sInfo.getNamespaceResolver());
+                return new LockInfoImpl(lock, idFactory, sInfo.getNamePathResolver());
             }
         }, sInfo);
     }
@@ -675,35 +690,29 @@ public class RepositoryServiceImpl implements RepositoryService {
                     Node n = getNode(nodeId, sInfo);
                     n.restore(v, removeExisting);
                 } else {
-                    try {
-                        // restore with rel-Path part
-                        Node n = null;
-                        Path relPath = null;
-                        Path path = nodeId.getPath();
-                        if (nodeId.getUniqueID() != null) {
-                            n = getNode(idFactory.createNodeId(nodeId.getUniqueID()), sInfo);
-                            relPath = (path.isAbsolute()) ? Path.ROOT.computeRelativePath(nodeId.getPath()) : path;
-                        } else {
-                            int degree = 0;
-                            while (degree < path.getLength()) {
-                                Path ancestorPath = path.getAncestor(degree);
-                                NodeId parentId = idFactory.createNodeId(nodeId.getUniqueID(), ancestorPath);
-                                if (exists(sessionInfo, parentId)) {
-                                    n = getNode(parentId, sInfo);
-                                    relPath = ancestorPath.computeRelativePath(path);
-                                }
-                                degree++;
+                    // restore with rel-Path part
+                    Node n = null;
+                    Path relPath = null;
+                    Path path = nodeId.getPath();
+                    if (nodeId.getUniqueID() != null) {
+                        n = getNode(idFactory.createNodeId(nodeId.getUniqueID()), sInfo);
+                        relPath = (path.isAbsolute()) ? getPathFactory().getRootPath().computeRelativePath(nodeId.getPath()) : path;
+                    } else {
+                        int degree = 0;
+                        while (degree < path.getLength()) {
+                            Path ancestorPath = path.getAncestor(degree);
+                            NodeId parentId = idFactory.createNodeId(nodeId.getUniqueID(), ancestorPath);
+                            if (exists(sessionInfo, parentId)) {
+                                n = getNode(parentId, sInfo);
+                                relPath = ancestorPath.computeRelativePath(path);
                             }
+                            degree++;
                         }
-                        if (n == null) {
-                            throw new PathNotFoundException("Path not found " + nodeId);
-                        } else {
-                            n.restore(v, PathFormat.format(relPath, sInfo.getNamespaceResolver()), removeExisting);
-                        }
-                    } catch (MalformedPathException e) {
-                        throw new RepositoryException(e);
-                    } catch (NoPrefixDeclaredException e) {
-                        throw new RepositoryException(e);
+                    }
+                    if (n == null) {
+                        throw new PathNotFoundException("Path not found " + nodeId);
+                    } else {
+                        n.restore(v, sInfo.getNamePathResolver().getJCRPath(relPath), removeExisting);
                     }
                 }
                 return null;
@@ -752,7 +761,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                 List ids = new ArrayList();
                 while (it.hasNext()) {
                     ids.add(idFactory.createNodeId(it.nextNode(),
-                            sInfo.getNamespaceResolver()));
+                            sInfo.getNamePathResolver()));
                 }
                 return ids.iterator();
             }
@@ -773,30 +782,27 @@ public class RepositoryServiceImpl implements RepositoryService {
                 Node node = getNode(nodeId, sInfo);
                 Version version = null;
                 boolean cancel;
-                try {
-                    List l = Arrays.asList(mergeFailedIds);
-                    Property mergeFailed = node.getProperty(NameFormat.format(QName.JCR_MERGEFAILED, sInfo.getNamespaceResolver()));
-                    Value[] values = mergeFailed.getValues();
-                    for (int i = 0; i < values.length; i++) {
-                        String uuid = values[i].getString();
-                        if (!l.contains(idFactory.createNodeId(uuid))) {
-                            version = (Version) sInfo.getSession().getNodeByUUID(uuid);
-                            break;
-                        }
+                NamePathResolver resolver = sInfo.getNamePathResolver();
+                List l = Arrays.asList(mergeFailedIds);
+                Property mergeFailed = node.getProperty(resolver.getJCRName(NameConstants.JCR_MERGEFAILED));
+                Value[] values = mergeFailed.getValues();
+                for (int i = 0; i < values.length; i++) {
+                    String uuid = values[i].getString();
+                    if (!l.contains(idFactory.createNodeId(uuid))) {
+                        version = (Version) sInfo.getSession().getNodeByUUID(uuid);
+                        break;
                     }
-
-                    l =  new ArrayList(predecessorIds.length);
-                    l.addAll(Arrays.asList(predecessorIds));
-                    Property predecessors = node.getProperty(NameFormat.format(QName.JCR_PREDECESSORS, sInfo.getNamespaceResolver()));
-                    values = predecessors.getValues();
-                    for (int i = 0; i < values.length; i++) {
-                        NodeId vId = idFactory.createNodeId(values[i].getString());
-                        l.remove(vId);
-                    }
-                    cancel = l.isEmpty();
-                } catch (NoPrefixDeclaredException e) {
-                    throw new RepositoryException (e);
                 }
+
+                l = new ArrayList(predecessorIds.length);
+                l.addAll(Arrays.asList(predecessorIds));
+                Property predecessors = node.getProperty(resolver.getJCRName(NameConstants.JCR_PREDECESSORS));
+                values = predecessors.getValues();
+                for (int i = 0; i < values.length; i++) {
+                    NodeId vId = idFactory.createNodeId(values[i].getString());
+                    l.remove(vId);
+                }
+                cancel = l.isEmpty();
                 if (cancel) {
                     node.cancelMerge(version);
                 } else {
@@ -813,17 +819,13 @@ public class RepositoryServiceImpl implements RepositoryService {
     public void addVersionLabel(final SessionInfo sessionInfo,
                                 final NodeId versionHistoryId,
                                 final NodeId versionId,
-                                final QName label,
+                                final Name label,
                                 final boolean moveLabel) throws VersionException, RepositoryException {
         final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         executeWithLocalEvents(new Callable() {
             public Object run() throws RepositoryException {
                 String jcrLabel;
-                try {
-                    jcrLabel = NameFormat.format(label, sInfo.getNamespaceResolver());
-                } catch (NoPrefixDeclaredException e) {
-                    throw new RepositoryException(e.getMessage(), e);
-                }
+                jcrLabel = sInfo.getNamePathResolver().getJCRName(label);
                 Node version = getNode(versionId, sInfo);
                 Node vHistory = getNode(versionHistoryId, sInfo);
                 if (vHistory instanceof VersionHistory) {
@@ -843,16 +845,12 @@ public class RepositoryServiceImpl implements RepositoryService {
     public void removeVersionLabel(final SessionInfo sessionInfo,
                                    final NodeId versionHistoryId,
                                    final NodeId versionId,
-                                   final QName label) throws VersionException, RepositoryException {
+                                   final Name label) throws VersionException, RepositoryException {
         final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         executeWithLocalEvents(new Callable() {
             public Object run() throws RepositoryException {
                 String jcrLabel;
-                try {
-                    jcrLabel = NameFormat.format(label, sInfo.getNamespaceResolver());
-                } catch (NoPrefixDeclaredException e) {
-                    throw new RepositoryException(e.getMessage(), e);
-                }
+                jcrLabel = sInfo.getNamePathResolver().getJCRName((label));
                 Node vHistory = getNode(versionHistoryId, sInfo);
                 if (vHistory instanceof VersionHistory) {
                     ((VersionHistory) vHistory).removeVersionLabel(jcrLabel);
@@ -896,7 +894,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         Query query = createQuery(sInfo.getSession(), statement,
                 language, namespaces);
         return new QueryInfoImpl(query.execute(), idFactory,
-                sInfo.getNamespaceResolver(), getQValueFactory());
+                sInfo.getNamePathResolver(), getQValueFactory());
     }
 
     /**
@@ -907,7 +905,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                                          Path absPath,
                                          boolean isDeep,
                                          String[] uuid,
-                                         QName[] nodeTypeName,
+                                         Name[] nodeTypeName,
                                          boolean noLocal)
             throws UnsupportedRepositoryOperationException, RepositoryException {
         // make sure there is an event subscription for this session info
@@ -995,9 +993,9 @@ public class RepositoryServiceImpl implements RepositoryService {
             for (NodeTypeIterator it = ntMgr.getAllNodeTypes(); it.hasNext(); ) {
                 NodeType nt = it.nextNodeType();
                 nodeTypes.add(new QNodeTypeDefinitionImpl(nt,
-                        sInfo.getNamespaceResolver(), getQValueFactory()));
+                        sInfo.getNamePathResolver(), getQValueFactory()));
             }
-        } catch (NameException e) {
+        } catch (org.apache.jackrabbit.conversion.NameException e) {
             throw new RepositoryException(e);
         }
         return nodeTypes.iterator();
@@ -1006,20 +1004,20 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, QName[] nodetypeNames) throws RepositoryException {
+    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, Name[] nodetypeNames) throws RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         NodeTypeManager ntMgr = sInfo.getSession().getWorkspace().getNodeTypeManager();
         List defs = new ArrayList();
         for (int i = 0; i < nodetypeNames.length; i++) {
             try {
-                String ntName = NameFormat.format(nodetypeNames[i], sInfo.getNamespaceResolver());
+                String ntName = sInfo.getNamePathResolver().getJCRName(nodetypeNames[i]);
                 NodeType nt = ntMgr.getNodeType(ntName);
-                defs.add(new QNodeTypeDefinitionImpl(nt, sInfo.getNamespaceResolver(), getQValueFactory()));
+                defs.add(new QNodeTypeDefinitionImpl(nt, sInfo.getNamePathResolver(), getQValueFactory()));
 
                 // in addition pack all supertypes into the return value
                 NodeType[] supertypes = nt.getSupertypes();
                 for (int st = 0; st < supertypes.length; st++) {
-                    defs.add(new QNodeTypeDefinitionImpl(supertypes[i], sInfo.getNamespaceResolver(), getQValueFactory()));
+                    defs.add(new QNodeTypeDefinitionImpl(supertypes[i], sInfo.getNamePathResolver(), getQValueFactory()));
                 }
             } catch (NameException e) {
                 throw new RepositoryException(e);
@@ -1065,8 +1063,8 @@ public class RepositoryServiceImpl implements RepositoryService {
         }
 
         public void addNode(final NodeId parentId,
-                            final QName nodeName,
-                            final QName nodetypeName,
+                            final Name nodeName,
+                            final Name nodetypeName,
                             final String uuid) throws RepositoryException {
             executeGuarded(new Callable() {
                 public Object run() throws RepositoryException {
@@ -1096,7 +1094,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         }
 
         public void addProperty(final NodeId parentId,
-                                final QName propertyName,
+                                final Name propertyName,
                                 final QValue value)
                 throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
             executeGuarded(new Callable() {
@@ -1104,7 +1102,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                     Session s = sInfo.getSession();
                     Node parent = getParent(parentId, sInfo);
                     Value jcrValue = ValueFormat.getJCRValue(value,
-                            sInfo.getNamespaceResolver(), s.getValueFactory());
+                            sInfo.getNamePathResolver(), s.getValueFactory());
                     parent.setProperty(getJcrName(propertyName), jcrValue);
                     return null;
                 }
@@ -1112,7 +1110,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         }
 
         public void addProperty(final NodeId parentId,
-                                final QName propertyName,
+                                final Name propertyName,
                                 final QValue[] values) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
             executeGuarded(new Callable() {
                 public Object run() throws RepositoryException {
@@ -1121,7 +1119,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                     Value[] jcrValues = new Value[values.length];
                     for (int i = 0; i < jcrValues.length; i++) {
                         jcrValues[i] = ValueFormat.getJCRValue(values[i],
-                                sInfo.getNamespaceResolver(), s.getValueFactory());
+                                sInfo.getNamePathResolver(), s.getValueFactory());
                     }
                     n.setProperty(getJcrName(propertyName), jcrValues);
                     return null;
@@ -1135,7 +1133,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                 public Object run() throws RepositoryException {
                     Session s = sInfo.getSession();
                     Value jcrValue = ValueFormat.getJCRValue(value,
-                            sInfo.getNamespaceResolver(), s.getValueFactory());
+                            sInfo.getNamePathResolver(), s.getValueFactory());
                     getProperty(propertyId, sInfo).setValue(jcrValue);
                     return null;
                 }
@@ -1150,7 +1148,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                     Value[] jcrValues = new Value[values.length];
                     for (int i = 0; i < jcrValues.length; i++) {
                         jcrValues[i] = ValueFormat.getJCRValue(values[i],
-                                sInfo.getNamespaceResolver(), s.getValueFactory());
+                                sInfo.getNamePathResolver(), s.getValueFactory());
                     }
                     getProperty(propertyId, sInfo).setValue(jcrValues);
                     return null;
@@ -1182,28 +1180,25 @@ public class RepositoryServiceImpl implements RepositoryService {
             });
         }
 
-        private NodeId calcRemoveNodeId(ItemId itemId) {
+        private NodeId calcRemoveNodeId(ItemId itemId) throws MalformedPathException {
             NodeId nodeId = (NodeId) itemId;
-            try {
-                Path p = itemId.getPath();
-                if (p != null) {
-                    removedNodeIds.add(itemId);
-                    int index = p.getNameElement().getNormalizedIndex();
-                    if (index > Path.INDEX_DEFAULT && !removedNodeIds.isEmpty()) {
-                        Path.PathElement[] elems = p.getElements();
-                        Path.PathBuilder pb = new Path.PathBuilder();
-                        for (int i = 0; i <= elems.length - 2; i++) {
-                            pb.addLast(elems[i]);
-                        }
-                        pb.addLast(p.getNameElement().getName(), index - 1);
-                        NodeId prevSibling = idFactory.createNodeId(itemId.getUniqueID(), pb.getPath());
-                        if (removedNodeIds.contains(prevSibling)) {
-                            nodeId = prevSibling;
-                        }
+            Path p = itemId.getPath();
+            if (p != null) {
+                removedNodeIds.add(itemId);
+                int index = p.getNameElement().getNormalizedIndex();
+                if (index > Path.INDEX_DEFAULT && !removedNodeIds.isEmpty()) {
+                    Path.Element[] elems = p.getElements();
+                    PathBuilder pb = new PathBuilder();
+                    for (int i = 0; i <= elems.length - 2; i++) {
+                        pb.addLast(elems[i]);
+                    }
+                    pb.addLast(p.getNameElement().getName(), index - 1);
+
+                    NodeId prevSibling = idFactory.createNodeId(itemId.getUniqueID(), pb.getPath());
+                    if (removedNodeIds.contains(prevSibling)) {
+                        nodeId = prevSibling;
                     }
                 }
-            } catch (MalformedPathException e) {
-                // ignore
             }
             return nodeId;
         }
@@ -1238,7 +1233,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         }
 
         public void setMixins(final NodeId nodeId,
-                              final QName[] mixinNodeTypeIds)
+                              final Name[] mixinNodeTypeIds)
                 throws RepositoryException {
             executeGuarded(new Callable() {
                 public Object run() throws RepositoryException {
@@ -1268,7 +1263,7 @@ public class RepositoryServiceImpl implements RepositoryService {
 
         public void move(final NodeId srcNodeId,
                          final NodeId destParentNodeId,
-                         final QName destName) throws RepositoryException {
+                         final Name destName) throws RepositoryException {
             executeGuarded(new Callable() {
                 public Object run() throws RepositoryException {
                     String srcPath = pathForId(srcNodeId, sInfo);
@@ -1300,15 +1295,11 @@ public class RepositoryServiceImpl implements RepositoryService {
             }
         }
 
-        private String getJcrName(QName name) throws RepositoryException {
+        private String getJcrName(Name name) throws RepositoryException {
             if (name == null) {
                 return null;
             }
-            try {
-                return NameFormat.format(name, sInfo.getNamespaceResolver());
-            } catch (NoPrefixDeclaredException e) {
-                throw new RepositoryException(e.getMessage(), e);
-            }
+            return sInfo.getNamePathResolver().getJCRName((name));
         }
 
         private String createXMLFragment(String nodeName, String ntName, String uuid) {
@@ -1360,16 +1351,12 @@ public class RepositoryServiceImpl implements RepositoryService {
         }
     }
 
-    private String getDestinationPath(NodeId destParentNodeId, QName destName, SessionInfoImpl sessionInfo) throws RepositoryException {
+    private String getDestinationPath(NodeId destParentNodeId, Name destName, SessionInfoImpl sessionInfo) throws RepositoryException {
         StringBuffer destPath = new StringBuffer(pathForId(destParentNodeId, sessionInfo));
-        try {
-            if (destPath.length() > 1) {
-                destPath.append("/");
-            }
-            destPath.append(NameFormat.format(destName, sessionInfo.getNamespaceResolver()));
-        } catch (NoPrefixDeclaredException e) {
-            throw new RepositoryException(e.getMessage(), e);
+        if (destPath.length() > 1) {
+            destPath.append("/");
         }
+        destPath.append(sessionInfo.getNamePathResolver().getJCRName(destName));
         return destPath.toString();
     }
 
@@ -1388,23 +1375,18 @@ public class RepositoryServiceImpl implements RepositoryService {
             return path.toString();
         }
 
-        try {
-            if (id.getPath().isAbsolute()) {
-                if (path.length() == 1) {
-                    // root path ends with slash
-                    path.setLength(0);
-                }
-            } else {
-                // path is relative
-                if (path.length() > 1) {
-                    path.append("/");
-                }
+        if (id.getPath().isAbsolute()) {
+            if (path.length() == 1) {
+                // root path ends with slash
+                path.setLength(0);
             }
-            path.append(PathFormat.format(id.getPath(),
-                    sessionInfo.getNamespaceResolver()));
-        } catch (NoPrefixDeclaredException e) {
-            throw new RepositoryException(e.getMessage());
+        } else {
+            // path is relative
+            if (path.length() > 1) {
+                path.append("/");
+            }
         }
+        path.append(sessionInfo.getNamePathResolver().getJCRPath(id.getPath()));
         return path.toString();
     }
 
@@ -1431,11 +1413,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             return n;
         }
         String jcrPath;
-        try {
-            jcrPath = PathFormat.format(path, sessionInfo.getNamespaceResolver());
-        } catch (NoPrefixDeclaredException e) {
-            throw new RepositoryException(e.getMessage(), e);
-        }
+        jcrPath = sessionInfo.getNamePathResolver().getJCRPath(path);
         if (path.isAbsolute()) {
             jcrPath = jcrPath.substring(1, jcrPath.length());
         }
@@ -1451,12 +1429,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             n = session.getRootNode();
         }
         Path path = id.getPath();
-        String jcrPath;
-        try {
-            jcrPath = PathFormat.format(path, sessionInfo.getNamespaceResolver());
-        } catch (NoPrefixDeclaredException e) {
-            throw new RepositoryException(e.getMessage(), e);
-        }
+        String jcrPath = sessionInfo.getNamePathResolver().getJCRPath(path);
         if (path.isAbsolute()) {
             jcrPath = jcrPath.substring(1, jcrPath.length());
         }

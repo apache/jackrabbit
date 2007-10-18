@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
 import org.apache.jackrabbit.jcr2spi.state.Status;
@@ -41,7 +41,7 @@ public interface HierarchyEntry {
     /**
      * @return the name of this hierarchy entry.
      */
-    public QName getQName();
+    public Name getName();
 
     /**
      * @return the path of this hierarchy entry.

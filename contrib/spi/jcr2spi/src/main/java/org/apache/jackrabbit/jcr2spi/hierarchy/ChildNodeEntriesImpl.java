@@ -18,8 +18,8 @@ package org.apache.jackrabbit.jcr2spi.hierarchy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.jcr2spi.state.Status;
@@ -172,16 +172,16 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
     }
 
     /**
-     * @see ChildNodeEntries#get(QName)
+     * @see ChildNodeEntries#get(Name)
      */
-    public List get(QName nodeName) {
+    public List get(Name nodeName) {
         return entriesByName.getList(nodeName);
     }
 
     /**
-     * @see ChildNodeEntries#get(QName, int)
+     * @see ChildNodeEntries#get(Name, int)
      */
-    public NodeEntry get(QName nodeName, int index) {
+    public NodeEntry get(Name nodeName, int index) {
         if (index < Path.INDEX_DEFAULT) {
             throw new IllegalArgumentException("index is 1-based");
         }
@@ -189,9 +189,9 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
     }
 
     /**
-     * @see ChildNodeEntries#get(QName, String)
+     * @see ChildNodeEntries#get(Name, String)
      */
-    public NodeEntry get(QName nodeName, String uniqueID) {
+    public NodeEntry get(Name nodeName, String uniqueID) {
         if (uniqueID == null || nodeName == null) {
             throw new IllegalArgumentException();
         }
@@ -253,7 +253,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
      * @return
      */
     private LinkedEntries.LinkNode internalAdd(NodeEntry entry, int index) {
-        QName nodeName = entry.getQName();
+        Name nodeName = entry.getName();
 
         // retrieve ev. sibling node with same index. if index is 'undefined'
         // the existing entry is always null and no reordering occurs.
@@ -295,7 +295,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
                 throw new NoSuchElementException();
             }
             LinkedEntries.LinkNode insertLN = internalAdd(entry, Path.INDEX_UNDEFINED);
-            reorder(entry.getQName(), insertLN, beforeLN);
+            reorder(entry.getName(), insertLN, beforeLN);
         } else {
             // 'before' is null -> simply append new entry at the end
             add(entry);
@@ -312,7 +312,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
     public synchronized NodeEntry remove(NodeEntry childEntry) {
         LinkedEntries.LinkNode ln = entries.removeNodeEntry(childEntry);
         if (ln != null) {
-            entriesByName.remove(childEntry.getQName(), ln);
+            entriesByName.remove(childEntry.getName(), ln);
             return childEntry;
         } else {
             return null;
@@ -348,7 +348,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
 
         NodeEntry previousBefore = insertLN.getNextLinkNode().getNodeEntry();
         if (previousBefore != beforeEntry) {
-            reorder(insertEntry.getQName(), insertLN, beforeLN);
+            reorder(insertEntry.getName(), insertLN, beforeLN);
         }
         return previousBefore;
     }
@@ -359,7 +359,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
      * @param insertLN
      * @param beforeLN
      */
-    private void reorder(QName insertName, LinkedEntries.LinkNode insertLN, LinkedEntries.LinkNode beforeLN) {
+    private void reorder(Name insertName, LinkedEntries.LinkNode insertLN, LinkedEntries.LinkNode beforeLN) {
         // reorder named map
         if (entriesByName.containsSiblings(insertName)) {
             int position;
@@ -375,7 +375,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
                     LinkedEntries.LinkNode ln = (LinkedEntries.LinkNode) it.next();
                     if (ln == beforeLN) {
                         break;
-                    } else if (ln != insertLN && ln.getNodeEntry().getQName().equals(insertName)) {
+                    } else if (ln != insertLN && ln.getNodeEntry().getName().equals(insertName)) {
                         position++;
                     } // else: ln == inserLN OR no SNS -> not relevant for position count
                 }
@@ -495,7 +495,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
          */
         private final class LinkNode extends Node {
 
-            private final QName qName;
+            private final Name qName;
 
             protected LinkNode() {
                 super();
@@ -504,7 +504,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
 
             protected LinkNode(Object value) {
                 super(new WeakReference(value));
-                qName = ((NodeEntry) value).getQName();
+                qName = ((NodeEntry) value).getName();
             }
 
             protected void setValue(Object value) {
@@ -582,7 +582,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
 
     //--------------------------------------------------------------------------
     /**
-     * Mapping of QName to LinkNode OR List of LinkNode(s) in case of SNSiblings.
+     * Mapping of Name to LinkNode OR List of LinkNode(s) in case of SNSiblings.
      */
     private static class NameMap {
 
@@ -595,7 +595,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
          * @param qName
          * @return
          */
-        public boolean containsSiblings(QName qName) {
+        public boolean containsSiblings(Name qName) {
             return snsMap.containsKey(qName);
         }
 
@@ -607,7 +607,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
          * @return a single <code>NodeEntry</code> or a <code>List</code> of
          * NodeEntry objects.
          */
-        private Object get(QName qName) {
+        private Object get(Name qName) {
             Object val = nameMap.get(qName);
             if (val != null) {
                 return ((LinkedEntries.LinkNode) val).getNodeEntry();
@@ -633,7 +633,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
          * @param qName
          * @return
          */
-        public List getList(QName qName) {
+        public List getList(Name qName) {
             Object obj = get(qName);
             if (obj == null) {
                 return Collections.EMPTY_LIST;
@@ -646,7 +646,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             }
         }
 
-        public NodeEntry getNodeEntry(QName qName, int index) {
+        public NodeEntry getNodeEntry(Name qName, int index) {
             Object obj = get(qName);
             if (obj == null) {
                 return null;
@@ -663,7 +663,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             return null;
         }
 
-        public LinkedEntries.LinkNode getLinkNode(QName qName, int index) {
+        public LinkedEntries.LinkNode getLinkNode(Name qName, int index) {
             if (index < Path.INDEX_DEFAULT) {
                 throw new IllegalArgumentException("Illegal index " + index);
             }
@@ -679,7 +679,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             }
         }
 
-        public void put(QName qName, LinkedEntries.LinkNode value) {
+        public void put(Name qName, LinkedEntries.LinkNode value) {
             // if 'nameMap' already contains a single entry -> move it to snsMap
             LinkedEntries.LinkNode single = (LinkedEntries.LinkNode) nameMap.remove(qName);
             List l;
@@ -699,7 +699,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             }
         }
 
-        public LinkedEntries.LinkNode remove(QName qName, LinkedEntries.LinkNode value) {
+        public LinkedEntries.LinkNode remove(Name qName, LinkedEntries.LinkNode value) {
             Object rm = nameMap.remove(qName);
             if (rm == null) {
                 List l = (List) snsMap.get(qName);
@@ -710,7 +710,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             return ((LinkedEntries.LinkNode) rm);
         }
 
-        public void reorder(QName qName, LinkedEntries.LinkNode insertValue, int position) {
+        public void reorder(Name qName, LinkedEntries.LinkNode insertValue, int position) {
             List sns = (List) snsMap.get(qName);
             if (sns == null) {
                 // no same name siblings -> no special handling required

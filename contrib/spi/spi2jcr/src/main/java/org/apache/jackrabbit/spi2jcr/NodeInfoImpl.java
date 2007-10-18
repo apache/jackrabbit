@@ -16,17 +16,15 @@
  */
 package org.apache.jackrabbit.spi2jcr;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.UnknownPrefixException;
-import org.apache.jackrabbit.name.PathFormat;
-import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.PropertyIterator;
+import javax.jcr.NamespaceException;
 import javax.jcr.nodetype.NodeType;
 import java.util.List;
 import java.util.ArrayList;
@@ -43,22 +41,22 @@ class NodeInfoImpl extends org.apache.jackrabbit.spi.commons.NodeInfoImpl {
      *
      * @param node       the JCR node.
      * @param idFactory  the id factory.
-     * @param nsResolver the namespace resolver in use.
+     * @param resolver
      * @throws RepositoryException if an error occurs while reading from
      *                             <code>node</code>.
      */
     public NodeInfoImpl(Node node,
                         IdFactoryImpl idFactory,
-                        NamespaceResolver nsResolver)
-            throws RepositoryException, IllegalNameException, UnknownPrefixException, MalformedPathException {
-        super(node.getName().length() == 0 ? null : idFactory.createNodeId(node.getParent(), nsResolver),
-                node.getName().length() == 0 ? QName.ROOT : NameFormat.parse(node.getName(), nsResolver),
-                PathFormat.parse(node.getPath(), nsResolver),
-                idFactory.createNodeId(node, nsResolver), node.getIndex(),
-                NameFormat.parse(node.getPrimaryNodeType().getName(), nsResolver),
-                getNodeTypeNames(node.getMixinNodeTypes(), nsResolver),
-                getPropertyIds(node.getReferences(), nsResolver, idFactory),
-                getPropertyIds(node.getProperties(), nsResolver, idFactory));
+                        NamePathResolver resolver)
+            throws RepositoryException, NameException {
+        super(node.getName().length() == 0 ? null : idFactory.createNodeId(node.getParent(), resolver),
+                node.getName().length() == 0 ? NameConstants.ROOT : resolver.getQName(node.getName()),
+                resolver.getQPath(node.getPath()),
+                idFactory.createNodeId(node, resolver), node.getIndex(),
+                resolver.getQName(node.getPrimaryNodeType().getName()),
+                getNodeTypeNames(node.getMixinNodeTypes(), resolver),
+                getPropertyIds(node.getReferences(), resolver, idFactory),
+                getPropertyIds(node.getProperties(), resolver, idFactory));
     }
 
     /**
@@ -66,18 +64,18 @@ class NodeInfoImpl extends org.apache.jackrabbit.spi.commons.NodeInfoImpl {
      * resolver to parse the names.
      *
      * @param nt         the node types
-     * @param nsResolver the namespace resolver.
+     * @param resolver
      * @return the qualified names of the node types.
-     * @throws IllegalNameException   if a node type returns an illegal name.
-     * @throws UnknownPrefixException if the nameo of a node type contains a
-     *                                prefix that is not known to <code>nsResolver</code>.
+     * @throws NameException   if a node type returns an illegal name.
+     * @throws NamespaceException if the name of a node type contains a
+     *                            prefix that is not known to <code>resolver</code>.
      */
-    private static QName[] getNodeTypeNames(NodeType[] nt,
-                                     NamespaceResolver nsResolver)
-            throws IllegalNameException, UnknownPrefixException {
-        QName[] names = new QName[nt.length];
+    private static Name[] getNodeTypeNames(NodeType[] nt,
+                                           NamePathResolver resolver)
+            throws NameException, NamespaceException {
+        Name[] names = new Name[nt.length];
         for (int i = 0; i < nt.length; i++) {
-            QName ntName = NameFormat.parse(nt[i].getName(), nsResolver);
+            Name ntName = resolver.getQName(nt[i].getName());
             names[i] = ntName;
         }
         return names;
@@ -87,19 +85,19 @@ class NodeInfoImpl extends org.apache.jackrabbit.spi.commons.NodeInfoImpl {
      * Returns property ids for the passed JCR properties.
      *
      * @param props      the JCR properties.
-     * @param nsResolver the namespace resolver.
+     * @param resolver
      * @param idFactory  the id factory.
      * @return the property ids for the passed JCR properties.
      * @throws RepositoryException if an error occurs while reading from the
      *                             properties.
      */
     private static Iterator getPropertyIds(PropertyIterator props,
-                                              NamespaceResolver nsResolver,
+                                              NamePathResolver resolver,
                                               IdFactoryImpl idFactory)
             throws RepositoryException {
         List references = new ArrayList();
         while (props.hasNext()) {
-            references.add(idFactory.createPropertyId(props.nextProperty(), nsResolver));
+            references.add(idFactory.createPropertyId(props.nextProperty(), resolver));
         }
         return references.iterator();
     }

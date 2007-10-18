@@ -16,18 +16,10 @@
  */
 package org.apache.jackrabbit.jcr2spi.name;
 
-import org.apache.jackrabbit.name.AbstractNamespaceResolver;
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.UnknownPrefixException;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameCache;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.CachingNameResolver;
-import org.apache.jackrabbit.name.ParsingNameResolver;
-import org.apache.jackrabbit.name.NameResolver;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NamespaceListener;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.namespace.NamespaceListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,11 +33,10 @@ import javax.jcr.RepositoryException;
  * NamespaceRegistry.
  */
 public class NamespaceRegistryImpl extends AbstractNamespaceResolver
-    implements NamespaceRegistry, NameCache {
+    implements NamespaceRegistry {
 
     private static Logger log = LoggerFactory.getLogger(NamespaceRegistryImpl.class);
 
-    private final NameResolver resolver;
     private final NamespaceStorage storage;
     private final NamespaceCache nsCache;
 
@@ -53,15 +44,16 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
      * Create a new <code>NamespaceRegistryImpl</code>.
      *
      * @param storage
+     * @param pathFactory
      */
     public NamespaceRegistryImpl(NamespaceStorage storage,
-                                 NamespaceCache nsCache) {
+                                 NamespaceCache nsCache,
+                                 NameFactory nameFactory, PathFactory pathFactory) {
         // listener support in AbstractNamespaceResolver is not needed
         // because we delegate listeners to NamespaceCache
         super(false);
         this.storage = storage;
         this.nsCache = nsCache;
-        this.resolver = new CachingNameResolver(new ParsingNameResolver(this));
     }
 
     //--------------------------------------------------< NamespaceRegistry >---
@@ -95,7 +87,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
 
     /**
      * @see javax.jcr.NamespaceRegistry#getURI(String)
-     * @see org.apache.jackrabbit.name.NamespaceResolver#getURI(String)
+     * @see org.apache.jackrabbit.namespace.NamespaceResolver#getURI(String)
      */
     public String getURI(String prefix) throws NamespaceException {
         // try to load the uri
@@ -109,7 +101,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
 
     /**
      * @see javax.jcr.NamespaceRegistry#getPrefix(String)
-     * @see org.apache.jackrabbit.name.NamespaceResolver#getPrefix(String)
+     * @see org.apache.jackrabbit.namespace.NamespaceResolver#getPrefix(String)
      */
     public String getPrefix(String uri) throws NamespaceException {
         // try to load the prefix
@@ -119,60 +111,6 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
             log.debug("Internal error while loading registered namespaces.");
             throw new NamespaceException(uri + ": is not a registered namespace uri.");
         }
-    }
-
-    /**
-     * @see org.apache.jackrabbit.name.NamespaceResolver#getQName(String)
-     * @deprecated
-     */
-    public QName getQName(String name)
-            throws IllegalNameException, UnknownPrefixException {
-        return NameFormat.parse(name, this);
-    }
-
-    /**
-     * @see org.apache.jackrabbit.name.NamespaceResolver#getJCRName(QName)
-     * @deprecated
-     */
-    public String getJCRName(QName name) throws NoPrefixDeclaredException {
-        return NameFormat.format(name, this);
-    }
-
-    //----------------------------------------------------------< NameCache >---
-    /**
-     * {@inheritDoc}
-     */
-    public QName retrieveName(String jcrName) {
-        try {
-            return resolver.getQName(jcrName);
-        } catch (NameException e) {
-            return null;
-        } catch (NamespaceException e) {
-            return null;
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String retrieveName(QName name) {
-        try {
-            return resolver.getJCRName(name);
-        } catch (NamespaceException e) {
-            return null;
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void cacheName(String jcrName, QName name) {
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void evictAllNames() {
     }
 
     //-----------------------< AbstractNamespaceResolver >----------------------

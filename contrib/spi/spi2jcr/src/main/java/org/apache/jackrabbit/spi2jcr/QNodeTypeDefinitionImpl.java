@@ -19,16 +19,16 @@ package org.apache.jackrabbit.spi2jcr;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.conversion.IllegalNameException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.NameException;
 
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceException;
 
 /**
  * <code>QNodeTypeDefinitionImpl</code> implements a qualified node type
@@ -42,26 +42,27 @@ class QNodeTypeDefinitionImpl
      * <code>NodeType</code>.
      *
      * @param nt            the JCR node type.
-     * @param nsResolver    the namespace resolver in use.
+     * @param resolver
      * @param qValueFactory the QValue factory.
-     * @throws RepositoryException    if an error occurs while reading from
-     *                                <code>nt</code>.
-     * @throws IllegalNameException   if <code>nt</code> contains an illegal
+     *
+     * @throws NameException   if <code>nt</code> contains an illegal
      *                                name.
-     * @throws UnknownPrefixException if <code>nt</code> contains a name with an
+     * @throws NamespaceException if <code>nt</code> contains a name with an
      *                                namespace prefix that is unknown to
      *                                <code>nsResolver</code>.
+     * @throws RepositoryException    if an error occurs while reading from
+     *                                <code>nt</code>.
      */
     public QNodeTypeDefinitionImpl(NodeType nt,
-                                   NamespaceResolver nsResolver,
+                                   NamePathResolver resolver,
                                    QValueFactory qValueFactory)
-            throws RepositoryException, IllegalNameException, UnknownPrefixException {
-        super(NameFormat.parse(nt.getName(), nsResolver),
-                getNodeTypeNames(nt.getDeclaredSupertypes(), nsResolver),
+            throws NamespaceException, RepositoryException, NameException {
+        super(resolver.getQName(nt.getName()),
+                getNodeTypeNames(nt.getDeclaredSupertypes(), resolver),
                 nt.isMixin(), nt.hasOrderableChildNodes(),
-                nt.getPrimaryItemName() != null ? NameFormat.parse(nt.getPrimaryItemName(), nsResolver) : null,
-                getQPropertyDefinitions(nt.getDeclaredPropertyDefinitions(), nsResolver, qValueFactory),
-                getQNodeDefinitions(nt.getDeclaredChildNodeDefinitions(), nsResolver));
+                nt.getPrimaryItemName() != null ? resolver.getQName(nt.getPrimaryItemName()) : null,
+                getQPropertyDefinitions(nt.getDeclaredPropertyDefinitions(), resolver, qValueFactory),
+                getQNodeDefinitions(nt.getDeclaredChildNodeDefinitions(), resolver));
     }
 
     /**
@@ -69,18 +70,18 @@ class QNodeTypeDefinitionImpl
      * resolver to parse the names.
      *
      * @param nt         the node types
-     * @param nsResolver the namespace resolver.
+     * @param resolver
      * @return the qualified names of the node types.
      * @throws IllegalNameException   if a node type returns an illegal name.
-     * @throws UnknownPrefixException if the nameo of a node type contains a
-     *                                prefix that is not known to <code>nsResolver</code>.
+     * @throws NamespaceException if the name of a node type contains a
+     *                            prefix that is not known to <code>rResolver</code>.
      */
-    private static QName[] getNodeTypeNames(NodeType[] nt,
-                                     NamespaceResolver nsResolver)
-            throws IllegalNameException, UnknownPrefixException {
-        QName[] names = new QName[nt.length];
+    private static Name[] getNodeTypeNames(NodeType[] nt,
+                                           NamePathResolver resolver)
+            throws NameException, NamespaceException {
+        Name[] names = new Name[nt.length];
         for (int i = 0; i < nt.length; i++) {
-            QName ntName = NameFormat.parse(nt[i].getName(), nsResolver);
+            Name ntName = resolver.getQName(nt[i].getName());
             names[i] = ntName;
         }
         return names;
@@ -90,46 +91,41 @@ class QNodeTypeDefinitionImpl
      * Returns qualified property definitions for JCR property definitions.
      *
      * @param propDefs   the JCR property definitions.
-     * @param nsResolver the namespace resolver.
+     * @param resolver
      * @param factory    the value factory.
      * @return qualified property definitions.
      * @throws RepositoryException    if an error occurs while converting the
      *                                definitions.
-     * @throws IllegalNameException   if a property definition contains an
-     *                                illegal name.
-     * @throws UnknownPrefixException if the name of a property definition
-     *                                contains a namespace prefix that is now
-     *                                known to <code>nsResolver</code>.
      */
     private static QPropertyDefinition[] getQPropertyDefinitions(
             PropertyDefinition[] propDefs,
-            NamespaceResolver nsResolver,
-            QValueFactory factory) throws RepositoryException, IllegalNameException, UnknownPrefixException {
+            NamePathResolver resolver,
+            QValueFactory factory) throws RepositoryException, NameException {
         QPropertyDefinition[] propertyDefs = new QPropertyDefinition[propDefs.length];
         for (int i = 0; i < propDefs.length; i++) {
-            propertyDefs[i] = new QPropertyDefinitionImpl(propDefs[i], nsResolver, factory);
+            propertyDefs[i] = new QPropertyDefinitionImpl(propDefs[i], resolver, factory);
         }
         return propertyDefs;
     }
-    
+
     /**
      * Returns qualified node definitions for JCR node definitions.
      *
-     * @param nodeDefs   the JCR node definitions.
-     * @param nsResolver the namespace resolver.
+     * @param nodeDefs the JCR node definitions.
+     * @param resolver the name and path resolver.
      * @return qualified node definitions.
      * @throws IllegalNameException   if the node definition contains an illegal
      *                                name.
-     * @throws UnknownPrefixException if the name of a node definition contains
+     * @throws NamespaceException if the name of a node definition contains
      *                                a namespace prefix that is now known to
      *                                <code>nsResolver</code>.
      */
-    private static QNodeDefinition[] getQNodeDefinitions(
-            NodeDefinition[] nodeDefs,
-            NamespaceResolver nsResolver) throws IllegalNameException, UnknownPrefixException {
+    private static QNodeDefinition[] getQNodeDefinitions (NodeDefinition[] nodeDefs,
+                                                          NamePathResolver resolver)
+            throws NameException, NamespaceException {
         QNodeDefinition[] childNodeDefs = new QNodeDefinition[nodeDefs.length];
         for (int i = 0; i < nodeDefs.length; i++) {
-            childNodeDefs[i] = new QNodeDefinitionImpl(nodeDefs[i], nsResolver);
+            childNodeDefs[i] = new QNodeDefinitionImpl(nodeDefs[i], resolver);
         }
         return childNodeDefs;
     }

@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.apache.jackrabbit.jcr2spi.lock.LockManager;
@@ -24,6 +24,7 @@ import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.spi.QValueFactory;
+import org.apache.jackrabbit.conversion.NameResolver;
 
 import javax.jcr.ValueFactory;
 import javax.jcr.RepositoryException;
@@ -32,6 +33,12 @@ import javax.jcr.RepositoryException;
  * <code>ManagerProvider</code>...
  */
 public interface ManagerProvider {
+
+    public org.apache.jackrabbit.conversion.NamePathResolver getNamePathResolver();
+
+    public NameResolver getNameResolver();
+
+    public org.apache.jackrabbit.conversion.PathResolver getPathResolver();
 
     public NamespaceResolver getNamespaceResolver();
 

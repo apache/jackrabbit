@@ -21,9 +21,9 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.SerializableBatch;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteSessionInfo;
-import org.apache.jackrabbit.name.QName;
 
 /**
  * <code>ClientBatch</code> implements a SPI {@link Batch} which wraps a
@@ -64,8 +64,8 @@ class ClientBatch implements Batch {
      * {@inheritDoc}
      */
     public void addNode(NodeId parentId,
-                        QName nodeName,
-                        QName nodetypeName,
+                        Name nodeName,
+                        Name nodetypeName,
                         String uuid) {
         batch.addNode(parentId, nodeName, nodetypeName, uuid);
     }
@@ -73,7 +73,7 @@ class ClientBatch implements Batch {
     /**
      * {@inheritDoc}
      */
-    public void addProperty(NodeId parentId, QName propertyName, QValue value) {
+    public void addProperty(NodeId parentId, Name propertyName, QValue value) {
         batch.addProperty(parentId, propertyName, value);
     }
 
@@ -81,7 +81,7 @@ class ClientBatch implements Batch {
      * {@inheritDoc}
      */
     public void addProperty(NodeId parentId,
-                            QName propertyName,
+                            Name propertyName,
                             QValue[] values) {
         batch.addProperty(parentId, propertyName, values);
     }
@@ -119,7 +119,7 @@ class ClientBatch implements Batch {
     /**
      * {@inheritDoc}
      */
-    public void setMixins(NodeId nodeId, QName[] mixinNodeTypeIds) {
+    public void setMixins(NodeId nodeId, Name[] mixinNodeTypeIds) {
         batch.setMixins(nodeId, mixinNodeTypeIds);
     }
 
@@ -128,7 +128,7 @@ class ClientBatch implements Batch {
      */
     public void move(NodeId srcNodeId,
                      NodeId destParentNodeId,
-                     QName destName) {
+                     Name destName) {
         batch.move(srcNodeId, destParentNodeId, destName);
     }
 }

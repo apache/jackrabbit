@@ -18,7 +18,7 @@ package org.apache.jackrabbit.spi2dav;
 
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.observation.ObservationConstants;

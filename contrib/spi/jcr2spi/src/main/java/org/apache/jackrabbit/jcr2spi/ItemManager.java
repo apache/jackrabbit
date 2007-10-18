@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 

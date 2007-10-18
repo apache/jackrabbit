@@ -33,7 +33,7 @@ import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameConstants;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -292,7 +292,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
      */
     private NodeState getLockHoldingState(NodeState nodeState) {
         NodeEntry entry = nodeState.getNodeEntry();
-        while (!entry.hasPropertyEntry(QName.JCR_LOCKISDEEP)) {
+        while (!entry.hasPropertyEntry(NameConstants.JCR_LOCKISDEEP)) {
             NodeEntry parent = entry.getParent();
             if (parent == null) {
                 // reached root state without finding a locked node
@@ -540,7 +540,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
         private void startListening() {
             if (cacheBehaviour == CacheBehaviour.OBSERVATION) {
                 try {
-                    PropertyState ps = lockHoldingState.getPropertyState(QName.JCR_LOCKISDEEP);
+                    PropertyState ps = lockHoldingState.getPropertyState(NameConstants.JCR_LOCKISDEEP);
                     ps.addListener(this);
                 } catch (RepositoryException e) {
                     log.warn("Internal error", e);
@@ -551,8 +551,8 @@ public class LockManagerImpl implements LockManager, SessionListener {
         private void stopListening() {
             if (cacheBehaviour == CacheBehaviour.OBSERVATION) {
                 try {
-                    if (lockHoldingState.hasPropertyName(QName.JCR_LOCKISDEEP)) {
-                        PropertyState ps = lockHoldingState.getPropertyState(QName.JCR_LOCKISDEEP);
+                    if (lockHoldingState.hasPropertyName(NameConstants.JCR_LOCKISDEEP)) {
+                        PropertyState ps = lockHoldingState.getPropertyState(NameConstants.JCR_LOCKISDEEP);
                         ps.removeListener(this);
                     }
                 } catch (ItemNotFoundException e) {

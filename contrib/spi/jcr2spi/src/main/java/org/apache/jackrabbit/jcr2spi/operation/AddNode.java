@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -40,11 +40,11 @@ public class AddNode extends AbstractOperation {
 
     private final NodeId parentId;
     private final NodeState parentState;
-    private final QName nodeName;
-    private final QName nodeTypeName;
+    private final Name nodeName;
+    private final Name nodeTypeName;
     private final String uuid;
 
-    private AddNode(NodeState parentState, QName nodeName, QName nodeTypeName, String uuid) {
+    private AddNode(NodeState parentState, Name nodeName, Name nodeTypeName, String uuid) {
         this.parentId = parentState.getNodeId();
         this.parentState = parentState;
         this.nodeName = nodeName;
@@ -80,11 +80,11 @@ public class AddNode extends AbstractOperation {
         return parentState;
     }
 
-    public QName getNodeName() {
+    public Name getNodeName() {
         return nodeName;
     }
 
-    public QName getNodeTypeName() {
+    public Name getNodeTypeName() {
         return nodeTypeName;
     }
 
@@ -94,8 +94,8 @@ public class AddNode extends AbstractOperation {
 
     //------------------------------------------------------------< Factory >---
 
-    public static Operation create(NodeState parentState, QName nodeName,
-                                   QName nodeTypeName, String uuid) {
+    public static Operation create(NodeState parentState, Name nodeName,
+                                   Name nodeTypeName, String uuid) {
         AddNode an = new AddNode(parentState, nodeName, nodeTypeName, uuid);
         return an;
     }

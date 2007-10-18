@@ -26,7 +26,7 @@ import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
@@ -85,10 +85,8 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
              */
             EffectiveNodeType ent = entProvider.getEffectiveNodeType(nodeState.getParent().getNodeTypeNames());
             EffectiveNodeType entTarget = getEffectiveNodeType(nodeState.getNodeTypeName());
-            definition = getQNodeDefinition(ent, entTarget, nodeState.getQName());
+            definition = getQNodeDefinition(ent, entTarget, nodeState.getName());
         } catch (RepositoryException e) {
-            definition = service.getNodeDefinition(sessionInfo, nodeState.getNodeEntry().getWorkspaceId());
-        } catch (NodeTypeConflictException e) {
             definition = service.getNodeDefinition(sessionInfo, nodeState.getNodeEntry().getWorkspaceId());
         }
         return definition;
@@ -97,7 +95,7 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
    /**
      * @inheritDoc
      */
-    public QNodeDefinition getQNodeDefinition(NodeState parentState, QName name, QName nodeTypeName)
+    public QNodeDefinition getQNodeDefinition(NodeState parentState, Name name, Name nodeTypeName)
             throws NoSuchNodeTypeException, ConstraintViolationException {
        EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentState);
        EffectiveNodeType entTarget = getEffectiveNodeType(nodeTypeName);
@@ -107,7 +105,7 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
     /**
      * @inheritDoc
      */
-    public QNodeDefinition getQNodeDefinition(EffectiveNodeType ent, QName name, QName nodeTypeName) throws NoSuchNodeTypeException, ConstraintViolationException {
+    public QNodeDefinition getQNodeDefinition(EffectiveNodeType ent, Name name, Name nodeTypeName) throws NoSuchNodeTypeException, ConstraintViolationException {
         EffectiveNodeType entTarget = getEffectiveNodeType(nodeTypeName);
         return getQNodeDefinition(ent, entTarget, name);
     }
@@ -129,10 +127,8 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
              evaluated upon creating the workspace state.
              */
             EffectiveNodeType ent = entProvider.getEffectiveNodeType(propertyState.getParent().getNodeTypeNames());
-            definition = getQPropertyDefinition(ent, propertyState.getQName(), propertyState.getType(), propertyState.isMultiValued(), true);
+            definition = getQPropertyDefinition(ent, propertyState.getName(), propertyState.getType(), propertyState.isMultiValued(), true);
         } catch (RepositoryException e) {
-            definition = service.getPropertyDefinition(sessionInfo, ((PropertyEntry) propertyState.getHierarchyEntry()).getWorkspaceId());
-        } catch (NodeTypeConflictException e) {
             definition = service.getPropertyDefinition(sessionInfo, ((PropertyEntry) propertyState.getHierarchyEntry()).getWorkspaceId());
         }
         return definition;
@@ -141,7 +137,7 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
     /**
      * @inheritDoc
      */
-    public QPropertyDefinition getQPropertyDefinition(QName ntName, QName propName,
+    public QPropertyDefinition getQPropertyDefinition(Name ntName, Name propName,
                                                       int type, boolean multiValued)
             throws ConstraintViolationException, NoSuchNodeTypeException {
         EffectiveNodeType ent = entProvider.getEffectiveNodeType(ntName);
@@ -152,7 +148,7 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
      * @inheritDoc
      */
     public QPropertyDefinition getQPropertyDefinition(NodeState parentState,
-                                                      QName name, int type,
+                                                      Name name, int type,
                                                       boolean multiValued)
             throws ConstraintViolationException, NoSuchNodeTypeException {
         EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentState);
@@ -163,14 +159,14 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
      * @inheritDoc
      */
     public QPropertyDefinition getQPropertyDefinition(NodeState parentState,
-                                                      QName name, int type)
+                                                      Name name, int type)
             throws ConstraintViolationException, NoSuchNodeTypeException {
         EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentState);
         return getQPropertyDefinition(ent, name, type);
     }
 
     //--------------------------------------------------------------------------
-    private EffectiveNodeType getEffectiveNodeType(QName ntName) throws NoSuchNodeTypeException {
+    private EffectiveNodeType getEffectiveNodeType(Name ntName) throws NoSuchNodeTypeException {
         if (ntName != null) {
             return entProvider.getEffectiveNodeType(ntName);
         } else {
@@ -188,7 +184,7 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
      */
     static QNodeDefinition getQNodeDefinition(EffectiveNodeType ent,
                                               EffectiveNodeType entTarget,
-                                              QName name)
+                                              Name name)
             throws ConstraintViolationException {
 
         // try named node definitions first
@@ -247,7 +243,7 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
      * @throws ConstraintViolationException
      */
     private static QPropertyDefinition getQPropertyDefinition(EffectiveNodeType ent,
-                                                              QName name, int type,
+                                                              Name name, int type,
                                                               boolean multiValued, boolean throwWhenAmbiguous)
            throws ConstraintViolationException {
         // try named property definitions first
@@ -278,7 +274,7 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
      * @throws ConstraintViolationException
      */
     private static QPropertyDefinition getQPropertyDefinition(EffectiveNodeType ent,
-                                                              QName name, int type)
+                                                              Name name, int type)
             throws ConstraintViolationException {
         // try named property definitions first
         QPropertyDefinition[] defs = ent.getNamedQPropertyDefinitions(name);

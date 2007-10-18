@@ -32,15 +32,20 @@ import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.NodeInfo;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteRepositoryService;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteSessionInfo;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteIterator;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteQueryInfo;
 import org.apache.jackrabbit.spi.rmi.common.SerializableInputStream;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+
 import org.apache.jackrabbit.value.QValueFactoryImpl;
 import org.apache.jackrabbit.identifier.IdFactoryImpl;
+import org.apache.jackrabbit.name.PathFactoryImpl;
+import org.apache.jackrabbit.name.NameFactoryImpl;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Credentials;
@@ -103,6 +108,14 @@ public class ClientRepositoryService implements RepositoryService {
      */
     public IdFactory getIdFactory() {
         return idFactory;
+    }
+
+    public NameFactory getNameFactory() {
+        return NameFactoryImpl.getInstance();
+    }
+
+    public PathFactory getPathFactory() {
+        return PathFactoryImpl.getInstance();
     }
 
     /**
@@ -346,7 +359,7 @@ public class ClientRepositoryService implements RepositoryService {
     public void move(SessionInfo sessionInfo,
                      NodeId srcNodeId,
                      NodeId destParentNodeId,
-                     QName destName) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+                     Name destName) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
         try {
             remoteService.move(getRemoteSessionInfo(sessionInfo), srcNodeId,
                     destParentNodeId, destName);
@@ -362,7 +375,7 @@ public class ClientRepositoryService implements RepositoryService {
                      String srcWorkspaceName,
                      NodeId srcNodeId,
                      NodeId destParentNodeId,
-                     QName destName) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
+                     Name destName) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
         try {
             remoteService.copy(getRemoteSessionInfo(sessionInfo),
                     srcWorkspaceName, srcNodeId, destParentNodeId, destName);
@@ -393,7 +406,7 @@ public class ClientRepositoryService implements RepositoryService {
                       String srcWorkspaceName,
                       NodeId srcNodeId,
                       NodeId destParentNodeId,
-                      QName destName,
+                      Name destName,
                       boolean removeExisting) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
         try {
             remoteService.clone(getRemoteSessionInfo(sessionInfo),
@@ -562,7 +575,7 @@ public class ClientRepositoryService implements RepositoryService {
     public void addVersionLabel(SessionInfo sessionInfo,
                                 NodeId versionHistoryId,
                                 NodeId versionId,
-                                QName label,
+                                Name label,
                                 boolean moveLabel) throws VersionException, RepositoryException {
         try {
             remoteService.addVersionLabel(getRemoteSessionInfo(sessionInfo),
@@ -578,7 +591,7 @@ public class ClientRepositoryService implements RepositoryService {
     public void removeVersionLabel(SessionInfo sessionInfo,
                                    NodeId versionHistoryId,
                                    NodeId versionId,
-                                   QName label) throws VersionException, RepositoryException {
+                                   Name label) throws VersionException, RepositoryException {
         try {
             remoteService.removeVersionLabel(getRemoteSessionInfo(sessionInfo), versionHistoryId, versionId, label);
         } catch (RemoteException e) {
@@ -645,7 +658,7 @@ public class ClientRepositoryService implements RepositoryService {
                                          Path absPath,
                                          boolean isDeep,
                                          String[] uuid,
-                                         QName[] nodeTypeName,
+                                         Name[] nodeTypeName,
                                          boolean noLocal)
             throws UnsupportedRepositoryOperationException, RepositoryException {
         try {
@@ -752,7 +765,7 @@ public class ClientRepositoryService implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, QName[] nodetypeNames) throws RepositoryException {
+    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, Name[] nodetypeNames) throws RepositoryException {
         try {
             RemoteIterator it = remoteService.getQNodeTypeDefinitions(getRemoteSessionInfo(sessionInfo), nodetypeNames);
             return new ClientIterator(it);

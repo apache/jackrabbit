@@ -20,20 +20,16 @@ import org.apache.jackrabbit.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFormat;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathFormat;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeReferences;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
 import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
@@ -50,6 +46,7 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,12 +92,12 @@ public class NodeImpl extends ItemImpl implements Node {
 
     private static Logger log = LoggerFactory.getLogger(NodeImpl.class);
 
-    private QName primaryTypeName;
+    private Name primaryTypeName;
 
     protected NodeImpl(ItemManager itemMgr, SessionImpl session,
                        NodeState state, ItemLifeCycleListener[] listeners) {
         super(itemMgr, session, state, listeners);
-        QName nodeTypeName = state.getNodeTypeName();
+        Name nodeTypeName = state.getNodeTypeName();
         // make sure the nodetype name is valid
         if (session.getNodeTypeManager().hasNodeType(nodeTypeName)) {
             primaryTypeName = nodeTypeName;
@@ -108,7 +105,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // should not occur. Since nodetypes are defined by the 'server'
             // its not possible to determine a fallback nodetype that is
             // always available.
-            throw new IllegalArgumentException("Unknown nodetype " + LogUtil.saveGetJCRName(nodeTypeName, session.getNamespaceResolver()));
+            throw new IllegalArgumentException("Unknown nodetype " + LogUtil.saveGetJCRName(nodeTypeName, session.getNameResolver()));
         }
     }
 
@@ -118,15 +115,8 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public String getName() throws RepositoryException {
         checkStatus();
-        QName qName = getQName();
-        try {
-            return NameFormat.format(getQName(), session.getNamespaceResolver());
-        } catch (NoPrefixDeclaredException e) {
-            // should never get here...
-            String msg = "Internal error while resolving qualified name " + qName.toString();
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
+        Name qName = getQName();
+        return session.getNameResolver().getJCRName(getQName());
     }
 
     /**
@@ -177,7 +167,7 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             Item parent = itemMgr.getItem(parentPath);
             if (!parent.isNode()) {
-                String msg = "Cannot add a node to property " + LogUtil.safeGetJCRPath(parentPath, session.getNamespaceResolver());
+                String msg = "Cannot add a node to property " + LogUtil.safeGetJCRPath(parentPath, session.getPathResolver());
                 log.debug(msg);
                 throw new ConstraintViolationException(msg);
             } else if (!(parent instanceof NodeImpl)) {
@@ -193,8 +183,8 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // 2. get qualified names for node and nt
-        QName nodeName = nodePath.getNameElement().getName();
-        QName ntName = (primaryNodeTypeName == null) ? null : getQName(primaryNodeTypeName);
+        Name nodeName = nodePath.getNameElement().getName();
+        Name ntName = (primaryNodeTypeName == null) ? null : getQName(primaryNodeTypeName);
 
         // 3. create new node (including validation checks)
         return parentNode.createNode(nodeName, ntName);
@@ -224,8 +214,8 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new ItemNotFoundException("Node " + safeGetJCRPath() + " has no child node with name " + destChildRelPath);
         }
 
-        Path.PathElement srcName = getReorderPath(srcChildRelPath).getNameElement();
-        Path.PathElement beforeName = (destChildRelPath == null) ? null : getReorderPath(destChildRelPath).getNameElement();
+        Path.Element srcName = getReorderPath(srcChildRelPath).getNameElement();
+        Path.Element beforeName = (destChildRelPath == null) ? null : getReorderPath(destChildRelPath).getNameElement();
 
         Operation op = ReorderNodes.create(getNodeState(), srcName, beforeName);
         session.getSessionItemStateManager().execute(op);
@@ -248,11 +238,11 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property setProperty(String name, Value value, int type) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
         checkIsWritable();
-        QName propQName = getQName(name);
+        Name propName = getQName(name);
         Property prop;
-        if (hasProperty(propQName)) {
+        if (hasProperty(propName)) {
             // property already exists: pass call to property
-            prop = getProperty(propQName);
+            prop = getProperty(propName);
             Value v = (type == PropertyType.UNDEFINED) ? value : ValueHelper.convert(value, type, session.getValueFactory());
             prop.setValue(v);
         } else {
@@ -261,7 +251,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 throw new ItemNotFoundException("Cannot remove a non-existing property.");
             } else {
                 // new property to be added
-                prop = createProperty(propQName, value, type);
+                prop = createProperty(propName, value, type);
             }
         }
         return prop;
@@ -286,7 +276,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property setProperty(String name, Value[] values, int type) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
         checkIsWritable();
-        QName propName = getQName(name);
+        Name propName = getQName(name);
         Property prop;
         if (hasProperty(propName)) {
             // property already exists: pass call to property
@@ -398,7 +388,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (value == null) {
             v = null;
         } else {
-            PropertyImpl.checkValidReference(value, PropertyType.REFERENCE, session.getNamespaceResolver());
+            PropertyImpl.checkValidReference(value, PropertyType.REFERENCE, session.getNameResolver());
             v = session.getValueFactory().createValue(value);
         }
         return setProperty(name, v, PropertyType.REFERENCE);
@@ -522,7 +512,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public String getUUID() throws UnsupportedRepositoryOperationException, RepositoryException {
         checkStatus();
         String uuid = getNodeState().getUniqueID();
-        if (uuid == null || !isNodeType(QName.MIX_REFERENCEABLE)) {
+        if (uuid == null || !isNodeType(NameConstants.MIX_REFERENCEABLE)) {
             throw new UnsupportedRepositoryOperationException();
         }
         // Node is referenceable -> NodeId must contain a UUID part
@@ -580,7 +570,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param propertyName
      * @return
      */
-    private boolean hasProperty(QName propertyName) {
+    private boolean hasProperty(Name propertyName) {
         return getNodeEntry().hasPropertyEntry(propertyName);
     }
 
@@ -613,7 +603,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public NodeType[] getMixinNodeTypes() throws RepositoryException {
         checkStatus();
-        QName[] mixinNames = getNodeState().getMixinTypeNames();
+        Name[] mixinNames = getNodeState().getMixinTypeNames();
         NodeType[] nta = new NodeType[mixinNames.length];
         for (int i = 0; i < mixinNames.length; i++) {
             nta[i] = session.getNodeTypeManager().getNodeType(mixinNames[i]);
@@ -627,14 +617,10 @@ public class NodeImpl extends ItemImpl implements Node {
     public boolean isNodeType(String nodeTypeName) throws RepositoryException {
         checkStatus();
         // try shortcut first (avoids parsing of name)
-        try {
-            if (NameFormat.format(primaryTypeName, session.getNamespaceResolver()).equals(nodeTypeName)) {
-                return true;
-            }
-        } catch (NoPrefixDeclaredException npde) {
-            throw new RepositoryException("Invalid node type name: " + nodeTypeName, npde);
+        if (session.getNameResolver().getJCRName(primaryTypeName).equals(nodeTypeName)) {
+            return true;
         }
-        // parse to QName and check against effective nodetype
+        // parse to Name and check against effective nodetype
         return isNodeType(getQName(nodeTypeName));
     }
 
@@ -644,7 +630,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public void addMixin(String mixinName) throws NoSuchNodeTypeException,
         VersionException, ConstraintViolationException, LockException, RepositoryException {
         checkIsWritable();
-        QName mixinQName = getQName(mixinName);
+        Name mixinQName = getQName(mixinName);
         try {
             if (!canAddMixin(mixinQName)) {
                 throw new ConstraintViolationException("Cannot add '" + mixinName + "' mixin type.");
@@ -661,7 +647,7 @@ public class NodeImpl extends ItemImpl implements Node {
         } else {
             mixinValue.add(mixinQName);
             // perform the operation
-            Operation op = SetMixin.create(getNodeState(), (QName[]) mixinValue.toArray(new QName[mixinValue.size()]));
+            Operation op = SetMixin.create(getNodeState(), (Name[]) mixinValue.toArray(new Name[mixinValue.size()]));
             session.getSessionItemStateManager().execute(op);
         }
     }
@@ -672,7 +658,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public void removeMixin(String mixinName) throws NoSuchNodeTypeException,
         VersionException, ConstraintViolationException, LockException, RepositoryException {
         checkIsWritable();
-        QName ntName = getQName(mixinName);
+        Name ntName = getQName(mixinName);
         List mixinValue = getMixinTypes();
         // remove name of target mixin
         if (!mixinValue.remove(ntName)) {
@@ -682,10 +668,10 @@ public class NodeImpl extends ItemImpl implements Node {
         // mix:referenceable needs additional assertion: the mixin cannot be
         // removed, if any references are left to this node.
         NodeTypeImpl mixin = session.getNodeTypeManager().getNodeType(ntName);
-        if (mixin.isNodeType(QName.MIX_REFERENCEABLE)) {
+        if (mixin.isNodeType(NameConstants.MIX_REFERENCEABLE)) {
             // build effective node type of remaining mixin's & primary type
             EffectiveNodeType entRemaining;
-            QName[] allRemaining = (QName[]) mixinValue.toArray(new QName[mixinValue.size() + 1]);
+            Name[] allRemaining = (Name[]) mixinValue.toArray(new Name[mixinValue.size() + 1]);
             allRemaining[mixinValue.size()] = primaryTypeName;
             try {
                 entRemaining = session.getEffectiveNodeTypeProvider().getEffectiveNodeType(allRemaining);
@@ -693,7 +679,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 throw new ConstraintViolationException(e);
             }
 
-            if (!entRemaining.includesNodeType(QName.MIX_REFERENCEABLE)) {
+            if (!entRemaining.includesNodeType(NameConstants.MIX_REFERENCEABLE)) {
                 PropertyIterator iter = getReferences();
                 if (iter.hasNext()) {
                     throw new ConstraintViolationException("Mixin type " + mixinName + " can not be removed: the node is being referenced through at least one property of type REFERENCE");
@@ -702,7 +688,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // delegate to operation
-        QName[] mixins = (QName[]) mixinValue.toArray(new QName[mixinValue.size()]);
+        Name[] mixins = (Name[]) mixinValue.toArray(new Name[mixinValue.size()]);
         Operation op = SetMixin.create(getNodeState(), mixins);
         session.getSessionItemStateManager().execute(op);
     }
@@ -717,13 +703,13 @@ public class NodeImpl extends ItemImpl implements Node {
      * @return
      */
     private List getMixinTypes() {
-        QName[] mixinValue;
+        Name[] mixinValue;
         if (getNodeState().getStatus() == Status.EXISTING) {
             // jcr:mixinTypes must correspond to the mixins present on the nodestate.
             mixinValue = getNodeState().getMixinTypeNames();
         } else {
             try {
-                PropertyEntry pe = getNodeEntry().getPropertyEntry(QName.JCR_MIXINTYPES);
+                PropertyEntry pe = getNodeEntry().getPropertyEntry(NameConstants.JCR_MIXINTYPES);
                 if (pe != null) {
                     // prop entry exists (and ev. has been transiently mod.)
                     // -> retrieve mixin types from prop
@@ -735,7 +721,7 @@ public class NodeImpl extends ItemImpl implements Node {
             } catch (RepositoryException e) {
                 // should never occur
                 log.warn("Internal error", e);
-                mixinValue = new QName[0];
+                mixinValue = new Name[0];
             }
         }
         List l = new ArrayList();
@@ -849,8 +835,8 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // check if version is in mergeFailed list
         boolean isConflicting = false;
-        if (hasProperty(QName.JCR_MERGEFAILED)) {
-            Value[] vals = getProperty(QName.JCR_MERGEFAILED).getValues();
+        if (hasProperty(NameConstants.JCR_MERGEFAILED)) {
+            Value[] vals = getProperty(NameConstants.JCR_MERGEFAILED).getValues();
             for (int i = 0; i < vals.length && !isConflicting; i++) {
                 isConflicting = vals[i].getString().equals(version.getUUID());
             }
@@ -921,7 +907,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // search nearest ancestor that is referenceable
             NodeImpl referenceableNode = this;
             while (referenceableNode.getDepth() != Path.ROOT_DEPTH
-                && !referenceableNode.isNodeType(QName.MIX_REFERENCEABLE)) {
+                && !referenceableNode.isNodeType(NameConstants.MIX_REFERENCEABLE)) {
                 referenceableNode = (NodeImpl) referenceableNode.getParent();
             }
 
@@ -943,7 +929,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 } else {
                     Path p = referenceableNode.getQPath().computeRelativePath(getQPath());
                     // use prefix mappings of srcSession
-                    String relPath = PathFormat.format(p, session.getNamespaceResolver());
+                    String relPath = session.getPathResolver().getJCRPath(p);
                     if (!correspNode.hasNode(relPath)) {
                         throw new ItemNotFoundException("No corresponding path found in workspace " + workspaceName + "(" + safeGetJCRPath() + ")");
                     } else {
@@ -952,11 +938,6 @@ public class NodeImpl extends ItemImpl implements Node {
                 }
             }
             return correspondingPath;
-        } catch (NameException e) {
-            // should never get here...
-            String msg = "Internal error: failed to determine relative path";
-            log.error(msg, e);
-            throw new RepositoryException(msg, e);
         } finally {
             if (srcSession != null) {
                 // we don't need the other session anymore, logout
@@ -1012,15 +993,10 @@ public class NodeImpl extends ItemImpl implements Node {
             if (itemMgr.itemExists(parentPath)) {
                 Item parent = itemMgr.getItem(parentPath);
                 if (parent.isNode()) {
-                    try {
-                        Path relQPath = parentPath.computeRelativePath(nPath);
-                        NodeImpl parentNode = ((NodeImpl)parent);
-                        // call the restore
-                        restore(parentNode, relQPath, version, removeExisting);
-                    } catch (MalformedPathException e) {
-                        // should not occur
-                        throw new RepositoryException(e);
-                    }
+                    Path relQPath = parentPath.computeRelativePath(nPath);
+                    NodeImpl parentNode = ((NodeImpl)parent);
+                    // call the restore
+                    restore(parentNode, relQPath, version, removeExisting);
                 } else {
                     // the item at parentParentPath is Property
                     throw new ConstraintViolationException("Cannot restore to a parent presenting a property (relative path = '" + relPath + "'");
@@ -1085,7 +1061,7 @@ public class NodeImpl extends ItemImpl implements Node {
             if (!targetNode.isCheckedOut()) {
                 throw new VersionException("Parent " + targetNode.safeGetJCRPath()
                     + " for non-existing restore target '"
-                    + LogUtil.safeGetJCRPath(relQPath, session.getNamespaceResolver())
+                    + LogUtil.safeGetJCRPath(relQPath, session.getPathResolver())
                     + "' must be checked out.");
             }
             targetNode.checkIsLocked();
@@ -1101,7 +1077,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public VersionHistory getVersionHistory() throws UnsupportedRepositoryOperationException, RepositoryException {
         checkIsVersionable();
-        return (VersionHistory) getProperty(QName.JCR_VERSIONHISTORY).getNode();
+        return (VersionHistory) getProperty(NameConstants.JCR_VERSIONHISTORY).getNode();
     }
 
     /**
@@ -1109,7 +1085,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Version getBaseVersion() throws UnsupportedRepositoryOperationException, RepositoryException {
         checkIsVersionable();
-        return (Version) getProperty(QName.JCR_BASEVERSION).getNode();
+        return (Version) getProperty(NameConstants.JCR_BASEVERSION).getNode();
     }
 
     /**
@@ -1147,7 +1123,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public boolean holdsLock() throws RepositoryException {
         // lock can be inherited from a parent > do not check for node being lockable.
         checkStatus();
-        if (isNew() || !isNodeType(QName.MIX_LOCKABLE)) {
+        if (isNew() || !isNodeType(NameConstants.MIX_LOCKABLE)) {
             // a node that is new or not lockable never holds a lock
             return false;
         } else {
@@ -1172,13 +1148,13 @@ public class NodeImpl extends ItemImpl implements Node {
      * @return
      * @throws RepositoryException
      */
-    boolean isNodeType(QName qName) throws RepositoryException {
+    boolean isNodeType(Name qName) throws RepositoryException {
         // first do trivial checks without using type hierarchy
         if (qName.equals(primaryTypeName)) {
             return true;
         }
         // check if contained in mixin types
-        QName[] mixins = getNodeState().getMixinTypeNames();
+        Name[] mixins = getNodeState().getMixinTypeNames();
         for (int i = 0; i < mixins.length; i++) {
             if (mixins[i].equals(qName)) {
                 return true;
@@ -1201,15 +1177,15 @@ public class NodeImpl extends ItemImpl implements Node {
 
     //-----------------------------------------------------------< ItemImpl >---
     /**
-     * @see ItemImpl#getQName()
+     * @see ItemImpl#getName()
      */
-    QName getQName() throws RepositoryException {
+    Name getQName() throws RepositoryException {
         if (getNodeState().isRoot()) {
             // shortcut. the given state represents the root or an orphaned node
-            return QName.ROOT;
+            return NameConstants.ROOT;
         }
 
-        return getNodeState().getQName();
+        return getNodeState().getName();
     }
 
 
@@ -1252,7 +1228,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     private void checkIsLockable() throws UnsupportedRepositoryOperationException, RepositoryException {
         checkStatus();
-        if (!isNodeType(QName.MIX_LOCKABLE)) {
+        if (!isNodeType(NameConstants.MIX_LOCKABLE)) {
             String msg = "Unable to perform locking operation on non-lockable node: " + getPath();
             log.debug(msg);
             throw new LockException(msg);
@@ -1282,7 +1258,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     private void checkIsVersionable() throws UnsupportedRepositoryOperationException, RepositoryException {
         checkStatus();
-        if (!isNodeType(QName.MIX_VERSIONABLE)) {
+        if (!isNodeType(NameConstants.MIX_VERSIONABLE)) {
             String msg = "Unable to perform versioning operation on non versionable node: " + getPath();
             log.debug(msg);
             throw new UnsupportedRepositoryOperationException(msg);
@@ -1305,7 +1281,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws LockException
      * @throws RepositoryException
      */
-    private synchronized Node createNode(QName nodeName, QName nodeTypeName)
+    private synchronized Node createNode(Name nodeName, Name nodeTypeName)
         throws ItemExistsException, NoSuchNodeTypeException, VersionException,
         ConstraintViolationException, LockException, RepositoryException {
 
@@ -1340,7 +1316,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException
      */
     // TODO: protected due to usage within VersionImpl, VersionHistoryImpl (check for alternatives)
-    protected Property getProperty(QName qName) throws PathNotFoundException, RepositoryException {
+    protected Property getProperty(Name qName) throws PathNotFoundException, RepositoryException {
         checkStatus();
         try {
             PropertyEntry pEntry = getNodeEntry().getPropertyEntry(qName, true);
@@ -1364,7 +1340,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * could be found.
      * @throws RepositoryException if another error occurs.
      */
-    private Property createProperty(QName qName, Value value, int type)
+    private Property createProperty(Name qName, Value value, int type)
             throws ConstraintViolationException, RepositoryException {
         QPropertyDefinition def = getApplicablePropertyDefinition(qName, type, false);
         int targetType = def.getRequiredType();
@@ -1373,11 +1349,11 @@ public class NodeImpl extends ItemImpl implements Node {
         }
         QValue qvs;
         if (targetType == PropertyType.UNDEFINED) {
-            qvs = ValueFormat.getQValue(value, session.getNamespaceResolver(), session.getQValueFactory());
+            qvs = ValueFormat.getQValue(value, session.getNamePathResolver(), session.getQValueFactory());
             targetType = qvs.getType();
         } else {
             Value targetValue = ValueHelper.convert(value, targetType, session.getValueFactory());
-            qvs = ValueFormat.getQValue(targetValue, session.getNamespaceResolver(), session.getQValueFactory());
+            qvs = ValueFormat.getQValue(targetValue, session.getNamePathResolver(), session.getQValueFactory());
         }
         return createProperty(qName, targetType, def, new QValue[] {qvs});
     }
@@ -1392,7 +1368,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws ConstraintViolationException
      * @throws RepositoryException
      */
-    private Property createProperty(QName qName, Value[] values, int type)
+    private Property createProperty(Name qName, Value[] values, int type)
         throws ConstraintViolationException, RepositoryException {
         QPropertyDefinition def = getApplicablePropertyDefinition(qName, type, true);
         int targetType = def.getRequiredType();
@@ -1417,7 +1393,7 @@ public class NodeImpl extends ItemImpl implements Node {
             }
         }
         Value[] targetValues = ValueHelper.convert(values, targetType, session.getValueFactory());
-        QValue[] qvs = ValueFormat.getQValues(targetValues, session.getNamespaceResolver(), session.getQValueFactory());
+        QValue[] qvs = ValueFormat.getQValues(targetValues, session.getNamePathResolver(), session.getQValueFactory());
         return createProperty(qName, targetType, def, qvs);
     }
 
@@ -1432,7 +1408,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws ConstraintViolationException
      * @throws RepositoryException
      */
-    private Property createProperty(QName qName, int type, QPropertyDefinition def,
+    private Property createProperty(Name qName, int type, QPropertyDefinition def,
                                     QValue[] qvs)
         throws ConstraintViolationException, RepositoryException {
         Operation op = AddProperty.create(getNodeState(), qName, type, def, qvs);
@@ -1446,17 +1422,17 @@ public class NodeImpl extends ItemImpl implements Node {
      * @return
      * @throws RepositoryException
      */
-    private QName getQName(String jcrName) throws RepositoryException {
-        QName qName;
+    private Name getQName(String jcrName) throws RepositoryException {
+        Name qName;
         try {
-            qName = NameFormat.parse(jcrName, session.getNamespaceResolver());
+            qName = session.getNameResolver().getQName(jcrName);
         } catch (NameException upe) {
             throw new RepositoryException("invalid name: "+ jcrName, upe);
         }
         return qName;
     }
 
-    private boolean canAddMixin(QName mixinName) throws NoSuchNodeTypeException,
+    private boolean canAddMixin(Name mixinName) throws NoSuchNodeTypeException,
         NodeTypeConflictException {
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
 
@@ -1473,7 +1449,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // get list of existing nodetypes
-        QName[] existingNts = getNodeState().getNodeTypeNames();
+        Name[] existingNts = getNodeState().getNodeTypeNames();
         // build effective node type representing primary type including existing mixin's
         EffectiveNodeType entExisting = session.getEffectiveNodeTypeProvider().getEffectiveNodeType(existingNts);
 
@@ -1485,7 +1461,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // second, build new effective node type for nts including the new mixin
         // types, detecting eventual incompatibilities
-        QName[] resultingNts = new QName[existingNts.length + 1];
+        Name[] resultingNts = new Name[existingNts.length + 1];
         System.arraycopy(existingNts, 0, resultingNts, 0, existingNts.length);
         resultingNts[existingNts.length] = mixinName;
         session.getEffectiveNodeTypeProvider().getEffectiveNodeType(resultingNts);
@@ -1516,12 +1492,12 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     private Path getReorderPath(String relativePath) throws RepositoryException {
         try {
-            Path p = PathFormat.parse(relativePath, session.getNamespaceResolver());
+            Path p = session.getPathResolver().getQPath(relativePath);
             if (p.isAbsolute() || p.getLength() != 1 || p.getDepth() != 1) {
                 throw new RepositoryException("Invalid relative path: " + relativePath);
             }
             return p;
-        } catch (MalformedPathException e) {
+        } catch (NameException e) {
             String msg = "Invalid relative path: " + relativePath;
             log.debug(msg);
             throw new RepositoryException(msg, e);
@@ -1536,9 +1512,9 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     private Path getQPath(String relativePath) throws RepositoryException {
         try {
-            Path p = PathFormat.parse(relativePath, session.getNamespaceResolver());
+            Path p = session.getPathResolver().getQPath(relativePath);
             return getQPath(p);
-        } catch (MalformedPathException e) {
+        } catch (NameException e) {
             String msg = "Invalid relative path: " + relativePath;
             log.debug(msg);
             throw new RepositoryException(msg, e);
@@ -1552,17 +1528,11 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException
      */
     private Path getQPath(Path relativePath) throws RepositoryException {
-        try {
-            // shortcut
-            if (relativePath.getLength() == 1 && relativePath.getNameElement() == Path.CURRENT_ELEMENT) {
-                return getQPath();
-            }
-            return Path.create(getQPath(), relativePath, true);
-        } catch (MalformedPathException e) {
-            String msg = "Invalid relative path: " + relativePath;
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
+        // shortcut
+        if (relativePath.getLength() == 1 && relativePath.getNameElement() == session.getPathFactory().getCurrentElement()) {
+            return getQPath();
         }
+        return session.getPathFactory().create(getQPath(), relativePath, true);
     }
 
     /**
@@ -1580,13 +1550,13 @@ public class NodeImpl extends ItemImpl implements Node {
     private NodeEntry resolveRelativeNodePath(String relPath) throws RepositoryException {
         NodeEntry targetEntry = null;
         try {
-            Path rp = PathFormat.parse(relPath, session.getNamespaceResolver());
+            Path rp = session.getPathResolver().getQPath(relPath);
             // shortcut
             if (rp.getLength() == 1) {
-                Path.PathElement pe = rp.getNameElement();
-                if (pe == Path.CURRENT_ELEMENT) {
+                Path.Element pe = rp.getNameElement();
+                if (pe.denotesCurrent()) {
                     targetEntry = getNodeEntry();
-                } else if (pe == Path.PARENT_ELEMENT) {
+                } else if (pe.denotesParent()) {
                     targetEntry = getNodeEntry().getParent();
                 } else {
                     // try to get child entry + force loading of not known yet
@@ -1602,7 +1572,7 @@ public class NodeImpl extends ItemImpl implements Node {
             }
         } catch (PathNotFoundException e) {
             // item does not exist -> ignore and return null
-        } catch (MalformedPathException e) {
+        } catch (org.apache.jackrabbit.conversion.NameException e) {
             String msg = "Invalid relative path: " + relPath;
             log.debug(msg);
             throw new RepositoryException(msg, e);
@@ -1625,12 +1595,12 @@ public class NodeImpl extends ItemImpl implements Node {
     private PropertyEntry resolveRelativePropertyPath(String relPath) throws RepositoryException {
         PropertyEntry targetEntry = null;
         try {
-            Path rp = PathFormat.parse(relPath, session.getNamespaceResolver());
+            Path rp = session.getPathResolver().getQPath(relPath);
             if (rp.getLength() == 1 && rp.getNameElement().denotesName()) {
                 // a single path element must always denote a name. '.' and '..'
                 // will never point to a property. If the NodeEntry does not
                 // contain such a pe, the targetEntry is 'null;
-                QName propName = rp.getNameElement().getName();
+                Name propName = rp.getNameElement().getName();
                 // check if property entry exists
                 targetEntry = getNodeEntry().getPropertyEntry(propName, true);
             } else {
@@ -1645,7 +1615,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     // ignore -> return null;
                 }
             }
-        } catch (MalformedPathException e) {
+        } catch (org.apache.jackrabbit.conversion.NameException e) {
             String msg = "failed to resolve property path " + relPath + " relative to " + safeGetJCRPath();
             log.debug(msg);
             throw new RepositoryException(msg, e);
@@ -1665,7 +1635,7 @@ public class NodeImpl extends ItemImpl implements Node {
      *                                      could be found
      * @throws RepositoryException          if another error occurs
      */
-    private QPropertyDefinition getApplicablePropertyDefinition(QName propertyName,
+    private QPropertyDefinition getApplicablePropertyDefinition(Name propertyName,
                                                                 int type,
                                                                 boolean multiValued)
             throws ConstraintViolationException, RepositoryException {

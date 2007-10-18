@@ -18,12 +18,13 @@ package org.apache.jackrabbit.jcr2spi.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.name.NameConstants;
 
 import javax.jcr.RepositoryException;
 
@@ -39,20 +40,20 @@ public class StateUtility {
      * @param ps
      * @return
      * @throws IllegalArgumentException if the name of the PropertyState is NOT
-     * {@link QName#JCR_MIXINTYPES}
+     * {@link NameConstants#JCR_MIXINTYPES}
      */
-    public static QName[] getMixinNames(PropertyState ps) {
-        if (!QName.JCR_MIXINTYPES.equals(ps.getQName())) {
+    public static Name[] getMixinNames(PropertyState ps) {
+        if (!NameConstants.JCR_MIXINTYPES.equals(ps.getName())) {
             throw new IllegalArgumentException();
         }
         if (ps.getStatus() == Status.REMOVED) {
-            return QName.EMPTY_ARRAY;
+            return Name.EMPTY_ARRAY;
         } else {
             QValue[] values = ps.getValues();
-            QName[] newMixins = new QName[values.length];
+            Name[] newMixins = new Name[values.length];
             for (int i = 0; i < values.length; i++) {
                 try {
-                    newMixins[i] = values[i].getQName();
+                    newMixins[i] = values[i].getName();
                 } catch (RepositoryException e) {
                     // ignore: should never occur.
                 }
@@ -62,8 +63,8 @@ public class StateUtility {
     }
 
 
-    public static boolean isUuidOrMixin(QName propName) {
-        return QName.JCR_UUID.equals(propName) || QName.JCR_MIXINTYPES.equals(propName);
+    public static boolean isUuidOrMixin(Name propName) {
+        return NameConstants.JCR_UUID.equals(propName) || NameConstants.JCR_MIXINTYPES.equals(propName);
     }
 
     public static boolean isMovedState(NodeState state) {

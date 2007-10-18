@@ -18,16 +18,15 @@ package org.apache.jackrabbit.jcr2spi.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathFormat;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.conversion.PathResolver;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceException;
 
 /**
  * <code>LogUtil</code>...
@@ -41,13 +40,13 @@ public class LogUtil {
      * error messages etc.
      *
      * @param qPath path to convert
-     * @param nsResolver
+     * @param pathResolver
      * @return JCR path
      */
-    public static String safeGetJCRPath(Path qPath, NamespaceResolver nsResolver) {
+    public static String safeGetJCRPath(Path qPath, PathResolver pathResolver) {
         try {
-            return PathFormat.format(qPath, nsResolver);
-        } catch (NoPrefixDeclaredException npde) {
+            return pathResolver.getJCRPath(qPath);
+        } catch (NamespaceException e) {
             log.error("failed to convert " + qPath + " to JCR path.");
             // return string representation of internal path as a fallback
             return qPath.toString();
@@ -59,12 +58,12 @@ public class LogUtil {
      * error messages etc.
      *
      * @param itemState
-     * @param nsResolver
+     * @param pathResolver
      * @return JCR path
      */
-    public static String safeGetJCRPath(ItemState itemState, NamespaceResolver nsResolver) {
+    public static String safeGetJCRPath(ItemState itemState, PathResolver pathResolver) {
         try {
-            return safeGetJCRPath(itemState.getHierarchyEntry().getPath(), nsResolver);
+            return safeGetJCRPath(itemState.getHierarchyEntry().getPath(), pathResolver);
         } catch (RepositoryException e) {
             ItemId id = itemState.getId();
             log.error("failed to convert " + id + " to JCR path.");
@@ -73,18 +72,18 @@ public class LogUtil {
     }
 
     /**
-     * Failsafe conversion of a <code>QName</code> to a JCR name for use in
+     * Failsafe conversion of a <code>Name</code> to a JCR name for use in
      * error messages etc.
      *
      * @param qName
-     * @param nsResolver
-     * @return JCR name or String representation of the given <code>QName</code>
+     * @param nameResolver
+     * @return JCR name or String representation of the given <code>Name</code>
      * in case the resolution fails.
      */
-    public static String saveGetJCRName(QName qName, NamespaceResolver nsResolver) {
+    public static String saveGetJCRName(Name qName, NameResolver nameResolver) {
         try {
-            return NameFormat.format(qName, nsResolver);
-        } catch (NoPrefixDeclaredException e) {
+            return nameResolver.getJCRName(qName);
+        } catch (NamespaceException e) {
             log.error("failed to convert " + qName + " to JCR name.");
             return qName.toString();
         }

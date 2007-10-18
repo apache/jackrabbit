@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -46,11 +46,11 @@ public interface NodeTypeStorage {
      * @throws NoSuchNodeTypeException
      * @throws RepositoryException
      */
-    public Iterator getDefinitions(QName[] nodeTypeNames) throws NoSuchNodeTypeException, RepositoryException;
+    public Iterator getDefinitions(Name[] nodeTypeNames) throws NoSuchNodeTypeException, RepositoryException;
 
     public void registerNodeTypes(QNodeTypeDefinition[] nodeTypeDefs) throws NoSuchNodeTypeException, RepositoryException;
 
     public void reregisterNodeTypes(QNodeTypeDefinition[] nodeTypeDefs) throws NoSuchNodeTypeException, RepositoryException;
 
-    public void unregisterNodeTypes(QName[] nodeTypeNames) throws NoSuchNodeTypeException, RepositoryException;
+    public void unregisterNodeTypes(Name[] nodeTypeNames) throws NoSuchNodeTypeException, RepositoryException;
 }

@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
@@ -46,7 +45,13 @@ import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.conversion.PathResolver;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.xml.sax.ContentHandler;
@@ -233,7 +238,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         Path srcPath = session.getQPath(srcAbsPath);
         Path destPath = session.getQPath(destAbsPath);
 
-        Operation op = Move.create(srcPath, destPath, getHierarchyManager(), getNamespaceResolver(), false);
+        Operation op = Move.create(srcPath, destPath, getHierarchyManager(), getPathResolver(), false);
         getUpdatableItemStateManager().execute(op);
     }
 
@@ -257,7 +262,8 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         session.checkIsAlive();
         if (qManager == null) {
             qManager = new QueryManagerImpl(session, session.getLocalNamespaceMappings(),
-                session.getItemManager(), session.getHierarchyManager(), wspManager);
+                    session.getNamePathResolver(), session.getItemManager(),
+                    session.getHierarchyManager(), wspManager);
         }
         return qManager;
     }
@@ -286,7 +292,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         session.checkIsAlive();
 
         if (obsManager == null) {
-            obsManager = createObservationManager(getNamespaceResolver(), getNodeTypeRegistry());
+            obsManager = createObservationManager(getNamePathResolver(), getNodeTypeRegistry());
         }
         return obsManager;
     }
@@ -350,6 +356,27 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     }
 
     //----------------------------------------------------< ManagerProvider >---
+    /**
+     * @see ManagerProvider#getNamePathResolver()
+     */
+    public org.apache.jackrabbit.conversion.NamePathResolver getNamePathResolver() {
+        return session.getNamePathResolver();
+    }
+
+    /**
+     * @see ManagerProvider#getNameResolver()
+     */
+    public NameResolver getNameResolver() {
+        return session.getNameResolver();
+    }
+
+    /**
+     * @see ManagerProvider#getPathResolver()
+     */
+    public PathResolver getPathResolver() {
+        return session.getPathResolver();
+    }
+
     /**
      * @see ManagerProvider#getNamespaceResolver()
      */
@@ -415,7 +442,15 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         // NOTE: wspManager has already been disposed upon SessionItemStateManager.dispose()
     }
 
-    IdFactory getIdFactory() {
+    NameFactory getNameFactory() throws RepositoryException {
+        return wspManager.getNameFactory();
+    }
+
+    PathFactory getPathFactory() throws RepositoryException {
+        return wspManager.getPathFactory();
+    }
+
+    IdFactory getIdFactory() throws RepositoryException {
         return wspManager.getIdFactory();
     }
 
@@ -493,7 +528,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      *
      * @return a new <code>ObservationManager</code> instance
      */
-    protected ObservationManager createObservationManager(NamespaceResolver nsResolver, NodeTypeRegistry ntRegistry) {
-        return new ObservationManagerImpl(wspManager, nsResolver, ntRegistry);
+    protected ObservationManager createObservationManager(NamePathResolver resolver, NodeTypeRegistry ntRegistry) {
+        return new ObservationManagerImpl(wspManager, resolver, ntRegistry);
     }
 }

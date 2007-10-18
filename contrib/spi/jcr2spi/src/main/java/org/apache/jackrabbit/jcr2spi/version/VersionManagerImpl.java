@@ -37,10 +37,11 @@ import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.version.VersionException;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.name.NameConstants;
 
 import java.util.Iterator;
 
@@ -87,7 +88,7 @@ public class VersionManagerImpl implements VersionManager {
             // entry might even not be accessible, the check may not detect
             // a checked-in parent. ok, as long as the 'server' finds out upon
             // save or upon executing the workspace operation.
-            while (!nodeEntry.hasPropertyEntry(QName.JCR_ISCHECKEDOUT)) {
+            while (!nodeEntry.hasPropertyEntry(NameConstants.JCR_ISCHECKEDOUT)) {
                 NodeEntry parent = nodeEntry.getParent();
                 if (parent == null) {
                     // reached root state without finding a jcr:isCheckedOut property
@@ -95,7 +96,7 @@ public class VersionManagerImpl implements VersionManager {
                 }
                 nodeEntry = parent;
             }
-            PropertyState propState = nodeEntry.getPropertyEntry(QName.JCR_ISCHECKEDOUT).getPropertyState();
+            PropertyState propState = nodeEntry.getPropertyEntry(NameConstants.JCR_ISCHECKEDOUT).getPropertyState();
             Boolean b = Boolean.valueOf(propState.getValue().getString());
             return b.booleanValue();
         } catch (ItemNotFoundException e) {
@@ -117,12 +118,12 @@ public class VersionManagerImpl implements VersionManager {
         workspaceManager.execute(op);
     }
 
-    public void addVersionLabel(NodeState versionHistoryState, NodeState versionState, QName qLabel, boolean moveLabel) throws RepositoryException {
+    public void addVersionLabel(NodeState versionHistoryState, NodeState versionState, Name qLabel, boolean moveLabel) throws RepositoryException {
         Operation op = AddLabel.create(versionHistoryState, versionState, qLabel, moveLabel);
         workspaceManager.execute(op);
     }
 
-    public void removeVersionLabel(NodeState versionHistoryState, NodeState versionState, QName qLabel) throws RepositoryException {
+    public void removeVersionLabel(NodeState versionHistoryState, NodeState versionState, Name qLabel) throws RepositoryException {
         Operation op = RemoveLabel.create(versionHistoryState, versionState, qLabel);
         workspaceManager.execute(op);
     }
@@ -147,7 +148,7 @@ public class VersionManagerImpl implements VersionManager {
                                      boolean done) throws RepositoryException {
         NodeId vId = versionState.getNodeId();
 
-        PropertyState mergeFailedState = nodeState.getPropertyState(QName.JCR_MERGEFAILED);
+        PropertyState mergeFailedState = nodeState.getPropertyState(NameConstants.JCR_MERGEFAILED);
         QValue[] vs = mergeFailedState.getValues();
 
         NodeId[] mergeFailedIds = new NodeId[vs.length - 1];
@@ -161,7 +162,7 @@ public class VersionManagerImpl implements VersionManager {
             // part of 'jcr:mergefailed' any more
         }
 
-        PropertyState predecessorState = nodeState.getPropertyState(QName.JCR_PREDECESSORS);
+        PropertyState predecessorState = nodeState.getPropertyState(NameConstants.JCR_PREDECESSORS);
         vs = predecessorState.getValues();
 
         int noOfPredecessors = (done) ? vs.length + 1 : vs.length;
@@ -180,8 +181,8 @@ public class VersionManagerImpl implements VersionManager {
     }
 
     public NodeEntry getVersionableNodeEntry(NodeState versionState) throws RepositoryException {
-        NodeState ns = versionState.getChildNodeState(QName.JCR_FROZENNODE, Path.INDEX_DEFAULT);
-        PropertyState ps = ns.getPropertyState(QName.JCR_FROZENUUID);
+        NodeState ns = versionState.getChildNodeState(NameConstants.JCR_FROZENNODE, Path.INDEX_DEFAULT);
+        PropertyState ps = ns.getPropertyState(NameConstants.JCR_FROZENUUID);
         String uniqueID = ps.getValue().getString();
 
         NodeId versionableId = workspaceManager.getIdFactory().createNodeId(uniqueID);
@@ -189,7 +190,7 @@ public class VersionManagerImpl implements VersionManager {
     }
 
     public NodeEntry getVersionHistoryEntry(NodeState versionableState) throws RepositoryException {
-        PropertyState ps = versionableState.getPropertyState(QName.JCR_VERSIONHISTORY);
+        PropertyState ps = versionableState.getPropertyState(NameConstants.JCR_VERSIONHISTORY);
         String uniqueID = ps.getValue().getString();
         NodeId vhId = workspaceManager.getIdFactory().createNodeId(uniqueID);
         return (NodeEntry) workspaceManager.getHierarchyManager().getHierarchyEntry(vhId);

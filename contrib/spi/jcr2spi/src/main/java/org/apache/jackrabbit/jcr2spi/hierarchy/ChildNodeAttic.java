@@ -18,7 +18,7 @@ package org.apache.jackrabbit.jcr2spi.hierarchy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import java.util.Set;
 import java.util.HashSet;
@@ -38,7 +38,7 @@ class ChildNodeAttic {
     ChildNodeAttic() {
     }
 
-    boolean contains(QName name, int index) {
+    boolean contains(Name name, int index) {
         for (Iterator it = attic.iterator(); it.hasNext();) {
             NodeEntryImpl ne = (NodeEntryImpl) it.next();
             if (ne.matches(name, index)) {
@@ -48,7 +48,7 @@ class ChildNodeAttic {
         return false;
     }
 
-    List get(QName name) {
+    List get(Name name) {
         List l = new ArrayList();
         for (Iterator it = attic.iterator(); it.hasNext();) {
             NodeEntryImpl ne = (NodeEntryImpl) it.next();
@@ -65,7 +65,7 @@ class ChildNodeAttic {
      * @param index The original index of the NodeEntry before it has been moved.
      * @return
      */
-    NodeEntry get(QName name, int index) {
+    NodeEntry get(Name name, int index) {
         for (Iterator it = attic.iterator(); it.hasNext();) {
             NodeEntryImpl ne = (NodeEntryImpl) it.next();
             if (ne.matches(name, index)) {

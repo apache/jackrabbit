@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.RepositoryService;
 
@@ -42,7 +42,7 @@ public class NodeTypeCache {
     private static final Map CACHES_PER_SERVICE = new WeakHashMap();
 
     /**
-     * Maps node type QNames to QNodeTypeDefinition
+     * Maps node type Names to QNodeTypeDefinition
      */
     private final Map nodeTypes = new HashMap();
 
@@ -91,7 +91,7 @@ public class NodeTypeCache {
         Map allNts = new HashMap();
         for (Iterator it = storage.getAllDefinitions(); it.hasNext(); ) {
             QNodeTypeDefinition def = (QNodeTypeDefinition) it.next();
-            allNts.put(def.getQName(), def);
+            allNts.put(def.getName(), def);
         }
         // update the cache
         synchronized (nodeTypes) {
@@ -111,7 +111,7 @@ public class NodeTypeCache {
      * @throws javax.jcr.nodetype.NoSuchNodeTypeException
      * @throws RepositoryException
      */
-    public Iterator getDefinitions(NodeTypeStorage storage, QName[] nodeTypeNames)
+    public Iterator getDefinitions(NodeTypeStorage storage, Name[] nodeTypeNames)
             throws NoSuchNodeTypeException, RepositoryException {
         List nts = new ArrayList();
         List missing = null;
@@ -129,13 +129,13 @@ public class NodeTypeCache {
             }
         }
         if (missing != null) {
-            QName[] ntNames = (QName[]) missing.toArray(new QName[missing.size()]);
+            Name[] ntNames = (Name[]) missing.toArray(new Name[missing.size()]);
             Iterator it = storage.getDefinitions(ntNames);
             synchronized (nodeTypes) {
                 while (it.hasNext()) {
                     QNodeTypeDefinition def = (QNodeTypeDefinition) it.next();
                     nts.add(def);
-                    nodeTypes.put(def.getQName(), def);
+                    nodeTypes.put(def.getName(), def);
                 }
             }
         }
@@ -155,7 +155,7 @@ public class NodeTypeCache {
     }
 
     public void unregisterNodeTypes(NodeTypeStorage storage,
-                                    QName[] nodeTypeNames)
+                                    Name[] nodeTypeNames)
             throws NoSuchNodeTypeException, RepositoryException {
         throw new UnsupportedOperationException("NodeType registration not yet defined by the SPI");
     }
@@ -173,7 +173,7 @@ public class NodeTypeCache {
             public Iterator getAllDefinitions() throws RepositoryException {
                 return NodeTypeCache.this.getAllDefinitions(storage);
             }
-            public Iterator getDefinitions(QName[] nodeTypeNames)
+            public Iterator getDefinitions(Name[] nodeTypeNames)
                     throws NoSuchNodeTypeException, RepositoryException {
                 return NodeTypeCache.this.getDefinitions(storage, nodeTypeNames);
             }
@@ -185,7 +185,7 @@ public class NodeTypeCache {
                     throws NoSuchNodeTypeException, RepositoryException {
                 NodeTypeCache.this.reregisterNodeTypes(storage, nodeTypeDefs);
             }
-            public void unregisterNodeTypes(QName[] nodeTypeNames)
+            public void unregisterNodeTypes(Name[] nodeTypeNames)
                     throws NoSuchNodeTypeException, RepositoryException {
                 NodeTypeCache.this.unregisterNodeTypes(storage, nodeTypeNames);
             }

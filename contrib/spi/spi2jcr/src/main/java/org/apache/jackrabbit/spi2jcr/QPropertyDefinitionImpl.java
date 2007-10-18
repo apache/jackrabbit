@@ -18,10 +18,8 @@ package org.apache.jackrabbit.spi2jcr;
 
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.NameException;
 import org.apache.jackrabbit.value.ValueFormat;
 
 import javax.jcr.nodetype.PropertyDefinition;
@@ -41,43 +39,43 @@ class QPropertyDefinitionImpl
      * <code>propDef</code>.
      *
      * @param propDef       the JCR property definition.
-     * @param nsResolver    the namespace resolver in use.
+     * @param resolver
      * @param qValueFactory the QValue factory.
      * @throws RepositoryException if an error occurs while reading from
      *                             <code>propDef</code>.
      */
     QPropertyDefinitionImpl(PropertyDefinition propDef,
-                            NamespaceResolver nsResolver,
+                            NamePathResolver resolver,
                             QValueFactory qValueFactory)
-            throws RepositoryException, IllegalNameException, UnknownPrefixException {
-        super(propDef.getName().equals(ANY_NAME.getLocalName()) ? ANY_NAME : NameFormat.parse(propDef.getName(), nsResolver),
-                NameFormat.parse(propDef.getDeclaringNodeType().getName(), nsResolver),
+            throws RepositoryException, NameException {
+        super(propDef.getName().equals(ANY_NAME.getLocalName()) ? ANY_NAME : resolver.getQName(propDef.getName()),
+                resolver.getQName(propDef.getDeclaringNodeType().getName()),
                 propDef.isAutoCreated(), propDef.isMandatory(),
                 propDef.getOnParentVersion(), propDef.isProtected(),
-                convertValues(propDef.getDefaultValues(), nsResolver, qValueFactory),
+                convertValues(propDef.getDefaultValues(), resolver, qValueFactory),
                 propDef.isMultiple(), propDef.getRequiredType(),
-                convertConstraints(propDef.getValueConstraints(), nsResolver, qValueFactory, propDef.getRequiredType()));
+                convertConstraints(propDef.getValueConstraints(), resolver, qValueFactory, propDef.getRequiredType()));
     }
 
     /**
      * Convers JCR {@link Value}s to {@link QValue}s.
      *
      * @param values     the JCR values.
-     * @param nsResolver the namespace resolver.
+     * @param resolver
      * @param factory    the QValue factory.
      * @return the converted values.
      * @throws RepositoryException if an error occurs while converting the
      *                             values.
      */
     private static QValue[] convertValues(Value[] values,
-                                          NamespaceResolver nsResolver,
+                                          NamePathResolver resolver,
                                           QValueFactory factory)
             throws RepositoryException {
         QValue[] defaultValues = null;
         if (values != null) {
             defaultValues = new QValue[values.length];
             for (int i = 0; i < values.length; i++) {
-                defaultValues[i] = ValueFormat.getQValue(values[i], nsResolver, factory);
+                defaultValues[i] = ValueFormat.getQValue(values[i], resolver, factory);
             }
         }
         return defaultValues;
@@ -89,7 +87,7 @@ class QPropertyDefinitionImpl
      *
      * @param constraints  the constraint strings from the JCR property
      *                     definition.
-     * @param nsResolver   the namespace resolver.
+     * @param resolver
      * @param factory      the QValueFactory.
      * @param requiredType the required type of the property definition.
      * @return SPI formatted constraint strings.
@@ -97,7 +95,7 @@ class QPropertyDefinitionImpl
      *                             constraint strings.
      */
     private static String[] convertConstraints(String[] constraints,
-                                               NamespaceResolver nsResolver,
+                                               NamePathResolver resolver,
                                                QValueFactory factory, 
                                                int requiredType)
             throws RepositoryException {
@@ -107,7 +105,7 @@ class QPropertyDefinitionImpl
             int type = requiredType == PropertyType.REFERENCE ? PropertyType.NAME : requiredType;
             for (int i = 0; i < constraints.length; i++) {
                 constraints[i] = ValueFormat.getQValue(
-                        constraints[i], type, nsResolver, factory).getString();
+                        constraints[i], type, resolver, factory).getString();
             }
         }
         return constraints;

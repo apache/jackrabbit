@@ -16,9 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.ItemId;
@@ -26,6 +25,7 @@ import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
@@ -33,6 +33,8 @@ import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateLifeCycleListener;
 import org.apache.jackrabbit.jcr2spi.util.StateUtility;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.name.PathBuilder;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +83,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
     /**
      * Map of properties.<br>
-     * Key = {@link QName} of property,<br>
+     * Key = {@link Name} of property,<br>
      * Value = {@link PropertyEntry}.
      */
     private final ChildPropertyEntries properties;
@@ -112,7 +114,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @param name      the name of the child node.
      * @param factory   the entry factory.
      */
-    private NodeEntryImpl(NodeEntryImpl parent, QName name, String uniqueID, EntryFactory factory) {
+    private NodeEntryImpl(NodeEntryImpl parent, Name name, String uniqueID, EntryFactory factory) {
         super(parent, name, factory);
         this.uniqueID = uniqueID; // NOTE: don't use setUniqueID (for mod only)
 
@@ -129,7 +131,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @return
      */
     static NodeEntry createRootEntry(EntryFactory factory) {
-        return new NodeEntryImpl(null, QName.ROOT, null, factory);
+        return new NodeEntryImpl(null, NameConstants.ROOT, null, factory);
     }
 
     /**
@@ -140,7 +142,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @param factory
      * @return
      */
-    static NodeEntry createNodeEntry(NodeEntryImpl parent, QName name, String uniqueId, EntryFactory factory) {
+    static NodeEntry createNodeEntry(NodeEntryImpl parent, Name name, String uniqueId, EntryFactory factory) {
         return new NodeEntryImpl(parent, name, uniqueId, factory);
     }
 
@@ -291,11 +293,13 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         if (uniqueID != null) {
             return idFactory.createNodeId(uniqueID);
         } else {
+            PathFactory pf = factory.getPathFactory();
             if (parent == null) {
                 // root node
-                return idFactory.createNodeId((String) null, Path.ROOT);
+                return idFactory.createNodeId((String) null, pf.getRootPath());
             } else {
-                return idFactory.createNodeId(parent.getId(), Path.create(getQName(), getIndex()));
+                Path p = pf.create(getName(), getIndex());
+                return idFactory.createNodeId(parent.getId(), p);
             }
         }
     }
@@ -309,8 +313,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             // uniqueID and root-node -> internal id is always the same as getId().
             return getId();
         } else {
+            PathFactory pf = factory.getPathFactory();
             NodeId parentId = (revertInfo != null) ? revertInfo.oldParent.getWorkspaceId() : parent.getWorkspaceId();
-            return idFactory.createNodeId(parentId, Path.create(getWorkspaceQName(), getWorkspaceIndex()));
+            return idFactory.createNodeId(parentId, pf.create(getWorkspaceName(), getWorkspaceIndex()));
         }
     }
 
@@ -372,9 +377,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      */
     public HierarchyEntry getDeepEntry(Path path) throws PathNotFoundException, RepositoryException {
         NodeEntryImpl entry = this;
-        Path.PathElement[] elems = path.getElements();
+        Path.Element[] elems = path.getElements();
         for (int i = 0; i < elems.length; i++) {
-            Path.PathElement elem = elems[i];
+            Path.Element elem = (Path.Element) elems[i];
             // check for root element
             if (elem.denotesRoot()) {
                 if (getParent() != null) {
@@ -384,7 +389,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             }
 
             int index = elem.getNormalizedIndex();
-            QName name = elem.getName();
+            Name name = elem.getName();
 
             // first try to resolve to known node or property entry
             NodeEntry cne = (entry.childNodeEntries == null) ? null : entry.getNodeEntry(name, index, false);
@@ -414,20 +419,14 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 * 2) if the NameElement does not have SNS-index => try Property
                 * 3) else throw
                 */
-                Path remainingPath;
-                try {
-                    Path.PathBuilder pb = new Path.PathBuilder();
-                    for (int j = i; j < elems.length; j++) {
-                        pb.addLast(elems[j]);
-                    }
-                    remainingPath = pb.getPath();
-                } catch (MalformedPathException e) {
-                    // should not get here
-                    throw new RepositoryException("Invalid path");
+                PathBuilder pb = new PathBuilder(factory.getPathFactory());
+                for (int j = i; j < elems.length; j++) {
+                    pb.addLast(elems[j]);
                 }
+                Path remainingPath = pb.getPath();
 
                 NodeId parentId = entry.getId();
-                IdFactory idFactory = entry.factory.getIdFactory();
+                IdFactory idFactory = factory.getIdFactory();
 
                 NodeId nodeId = idFactory.createNodeId(parentId, remainingPath);
                 NodeEntry ne = entry.loadNodeEntry(nodeId);
@@ -458,7 +457,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     public HierarchyEntry lookupDeepEntry(Path workspacePath) {
         NodeEntryImpl entry = this;
         for (int i = 0; i < workspacePath.getLength(); i++) {
-            Path.PathElement elem = workspacePath.getElement(i);
+            Path.Element elem = workspacePath.getElements()[i];
             // check for root element
             if (elem.denotesRoot()) {
                 if (getParent() != null) {
@@ -469,7 +468,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             }
 
             int index = elem.getNormalizedIndex();
-            QName childName = elem.getName();
+            Name childName = elem.getName();
 
             // first try to resolve node
             NodeEntry cne = entry.lookupNodeEntry(null, childName, index);
@@ -487,9 +486,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
     /**
      * @inheritDoc
-     * @see NodeEntry#hasNodeEntry(QName)
+     * @see NodeEntry#hasNodeEntry(Name)
      */
-    public synchronized boolean hasNodeEntry(QName nodeName) {
+    public synchronized boolean hasNodeEntry(Name nodeName) {
         try {
             List namedEntries = childNodeEntries().get(nodeName);
             if (namedEntries.isEmpty()) {
@@ -505,9 +504,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
     /**
      * @inheritDoc
-     * @see NodeEntry#hasNodeEntry(QName, int)
+     * @see NodeEntry#hasNodeEntry(Name, int)
      */
-    public synchronized boolean hasNodeEntry(QName nodeName, int index) {
+    public synchronized boolean hasNodeEntry(Name nodeName, int index) {
         try {
             return getNodeEntry(nodeName, index) != null;
         } catch (RepositoryException e) {
@@ -518,17 +517,17 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
     /**
      * @inheritDoc
-     * @see NodeEntry#getNodeEntry(QName, int)
+     * @see NodeEntry#getNodeEntry(Name, int)
      */
-    public synchronized NodeEntry getNodeEntry(QName nodeName, int index) throws RepositoryException {
+    public synchronized NodeEntry getNodeEntry(Name nodeName, int index) throws RepositoryException {
         return getNodeEntry(nodeName, index, false);
     }
 
     /**
      * @inheritDoc
-     * @see NodeEntry#getNodeEntry(QName, int, boolean)
+     * @see NodeEntry#getNodeEntry(Name, int, boolean)
      */
-    public NodeEntry getNodeEntry(QName nodeName, int index, boolean loadIfNotFound) throws RepositoryException {
+    public NodeEntry getNodeEntry(Name nodeName, int index, boolean loadIfNotFound) throws RepositoryException {
         // TODO: avoid loading the child-infos if childNodeEntries == null
         List entries = childNodeEntries().get(nodeName);
         NodeEntry cne = null;
@@ -542,9 +541,11 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 }
             }
         } else if (loadIfNotFound
-                && !containsAtticChild(entries, nodeName, index) 
+                && !containsAtticChild(entries, nodeName, index)
                 && Status.NEW != getStatus()) {
-            NodeId cId = factory.getIdFactory().createNodeId(getId(), Path.create(nodeName, index));
+
+            PathFactory pf = factory.getPathFactory();
+            NodeId cId = factory.getIdFactory().createNodeId(getId(), pf.create(nodeName, index));
             cne = loadNodeEntry(cId);
         }
         return cne;
@@ -566,9 +567,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     }
 
     /**
-     * @see NodeEntry#getNodeEntries(QName)
+     * @see NodeEntry#getNodeEntries(Name)
      */
-    public synchronized List getNodeEntries(QName nodeName) throws RepositoryException {
+    public synchronized List getNodeEntries(Name nodeName) throws RepositoryException {
         List namedEntries = childNodeEntries().get(nodeName);
         if (namedEntries.isEmpty()) {
             return Collections.EMPTY_LIST;
@@ -589,18 +590,18 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
     /**
      * @inheritDoc
-     * @see NodeEntry#addNodeEntry(QName, String, int)
+     * @see NodeEntry#addNodeEntry(Name, String, int)
      */
-    public NodeEntry addNodeEntry(QName nodeName, String uniqueID, int index) throws RepositoryException {
+    public NodeEntry addNodeEntry(Name nodeName, String uniqueID, int index) throws RepositoryException {
         return internalAddNodeEntry(nodeName, uniqueID, index, childNodeEntries());
     }
 
     /**
      * @inheritDoc
-     * @see NodeEntry#addNewNodeEntry(QName, String, QName, QNodeDefinition)
+     * @see NodeEntry#addNewNodeEntry(Name, String, Name, QNodeDefinition)
      */
-    public NodeState addNewNodeEntry(QName nodeName, String uniqueID,
-                                     QName primaryNodeType, QNodeDefinition definition) throws RepositoryException {
+    public NodeState addNewNodeEntry(Name nodeName, String uniqueID,
+                                     Name primaryNodeType, QNodeDefinition definition) throws RepositoryException {
         NodeEntry entry = internalAddNodeEntry(nodeName, uniqueID, Path.INDEX_UNDEFINED, childNodeEntries());
         NodeState state = factory.getItemStateFactory().createNewNodeState(entry, primaryNodeType, definition);
         if (!entry.isAvailable()) {
@@ -617,8 +618,8 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @param childEntries
      * @return
      */
-    private NodeEntry internalAddNodeEntry(QName nodeName, String uniqueID,
-                                               int index, ChildNodeEntries childEntries) {
+    private NodeEntry internalAddNodeEntry(Name nodeName, String uniqueID,
+                                           int index, ChildNodeEntries childEntries) {
         NodeEntry entry = factory.createNodeEntry(this, nodeName, uniqueID);
         childEntries.add(entry, index);
         return entry;
@@ -626,18 +627,18 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
     /**
      * @inheritDoc
-     * @see NodeEntry#hasPropertyEntry(QName)
+     * @see NodeEntry#hasPropertyEntry(Name)
      */
-    public synchronized boolean hasPropertyEntry(QName propName) {
+    public synchronized boolean hasPropertyEntry(Name propName) {
         PropertyEntry entry = properties.get(propName);
         return EntryValidation.isValidPropertyEntry(entry);
     }
 
     /**
      * @inheritDoc
-     * @see NodeEntry#getPropertyEntry(QName)
+     * @see NodeEntry#getPropertyEntry(Name)
      */
-    public synchronized PropertyEntry getPropertyEntry(QName propName) {
+    public synchronized PropertyEntry getPropertyEntry(Name propName) {
         PropertyEntry entry = properties.get(propName);
         if (EntryValidation.isValidPropertyEntry(entry)) {
             return entry;
@@ -648,9 +649,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
     /**
      * @inheritDoc
-     * @see NodeEntry#getPropertyEntry(QName, boolean)
+     * @see NodeEntry#getPropertyEntry(Name, boolean)
      */
-    public PropertyEntry getPropertyEntry(QName propName, boolean loadIfNotFound) throws RepositoryException {
+    public PropertyEntry getPropertyEntry(Name propName, boolean loadIfNotFound) throws RepositoryException {
         PropertyEntry entry = properties.get(propName);
         if (entry == null && loadIfNotFound && Status.NEW != getStatus()) {
             PropertyId propId = factory.getIdFactory().createPropertyId(getId(), propName);
@@ -687,9 +688,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
     /**
      * @inheritDoc
-     * @see NodeEntry#addPropertyEntry(QName)
+     * @see NodeEntry#addPropertyEntry(Name)
      */
-    public PropertyEntry addPropertyEntry(QName propName) throws ItemExistsException {
+    public PropertyEntry addPropertyEntry(Name propName) throws ItemExistsException {
         // TODO: check for existing prop.
         return internalAddPropertyEntry(propName);
     }
@@ -701,7 +702,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @param propName
      * @return
      */
-    private PropertyEntry internalAddPropertyEntry(QName propName) {
+    private PropertyEntry internalAddPropertyEntry(Name propName) {
         PropertyEntry entry = factory.createPropertyEntry(this, propName);
         properties.add(entry);
 
@@ -724,7 +725,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
         // add all entries that are missing
         for (Iterator it = propNames.iterator(); it.hasNext();) {
-            QName propName = (QName) it.next();
+            Name propName = (Name) it.next();
             if (!properties.contains(propName)) {
                 addPropertyEntry(propName);
             }
@@ -736,7 +737,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         ItemState state = internalGetItemState();
         if (containsExtra && (state == null || state.getStatus() == Status.INVALIDATED)) {
             for (Iterator it = diff.iterator(); it.hasNext();) {
-                QName propName = (QName) it.next();
+                Name propName = (Name) it.next();
                 PropertyEntry pEntry = properties.get(propName);
                 if (pEntry != null) {
                     pEntry.remove();
@@ -747,9 +748,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
     /**
      * @inheritDoc
-     * @see NodeEntry#addNewPropertyEntry(QName, QPropertyDefinition)
+     * @see NodeEntry#addNewPropertyEntry(Name, QPropertyDefinition)
      */
-    public PropertyState addNewPropertyEntry(QName propName, QPropertyDefinition definition)
+    public PropertyState addNewPropertyEntry(Name propName, QPropertyDefinition definition)
             throws ItemExistsException, RepositoryException {
         // check for an existing property
         PropertyEntry existing = properties.get(propName);
@@ -793,7 +794,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     /**
      * @param propName
      */
-    void internalRemovePropertyEntry(QName propName) {
+    void internalRemovePropertyEntry(Name propName) {
         if (!properties.remove(propName)) {
             propertiesInAttic.remove(propName);
         }
@@ -821,9 +822,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     }
 
    /**
-    * @see NodeEntry#move(QName, NodeEntry, boolean)
+    * @see NodeEntry#move(Name, NodeEntry, boolean)
     */
-   public NodeEntry move(QName newName, NodeEntry newParent, boolean transientMove) throws RepositoryException {
+   public NodeEntry move(Name newName, NodeEntry newParent, boolean transientMove) throws RepositoryException {
        if (parent == null) {
            // the root may never be moved
            throw new RepositoryException("Root cannot be moved.");
@@ -840,7 +841,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
        NodeEntryImpl entry = (NodeEntryImpl) parent.childNodeEntries().remove(this);
        if (entry != this) {
            // should never occur
-           String msg = "Internal error. Attempt to move NodeEntry (" + getQName() + ") which is not connected to its parent.";
+           String msg = "Internal error. Attempt to move NodeEntry (" + getName() + ") which is not connected to its parent.";
            log.error(msg);
            throw new RepositoryException(msg);
        }
@@ -864,7 +865,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @see NodeEntry#refresh(Event)
      */
     public void refresh(Event childEvent) {
-        QName eventName = childEvent.getQPath().getNameElement().getName();
+        Name eventName = childEvent.getPath().getNameElement().getName();
         switch (childEvent.getType()) {
             case Event.NODE_ADDED:
                 if (childNodeEntries == null) {
@@ -872,7 +873,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                     return;
                 }
 
-                int index = childEvent.getQPath().getNameElement().getNormalizedIndex();
+                int index = childEvent.getPath().getNameElement().getNormalizedIndex();
                 String uniqueChildID = null;
                 if (childEvent.getItemId().getPath() == null) {
                     uniqueChildID = childEvent.getItemId().getUniqueID();
@@ -902,7 +903,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             case Event.PROPERTY_ADDED:
                 // create a new property reference if it has not been
                 // added by some earlier 'add' event
-                HierarchyEntry child = lookupEntry(childEvent.getItemId(), childEvent.getQPath());
+                HierarchyEntry child = lookupEntry(childEvent.getItemId(), childEvent.getPath());
                 if (child == null) {
                     internalAddPropertyEntry(eventName);
                 } else {
@@ -912,14 +913,14 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
             case Event.NODE_REMOVED:
             case Event.PROPERTY_REMOVED:
-                child = lookupEntry(childEvent.getItemId(), childEvent.getQPath());
+                child = lookupEntry(childEvent.getItemId(), childEvent.getPath());
                 if (child != null) {
                     child.remove();
                 } // else: child-Entry has not been loaded yet -> ignore
                 break;
 
             case Event.PROPERTY_CHANGED:
-                child = lookupEntry(childEvent.getItemId(), childEvent.getQPath());
+                child = lookupEntry(childEvent.getItemId(), childEvent.getPath());
                 if (child == null) {
                     // prop-Entry has not been loaded yet -> add propEntry
                     internalAddPropertyEntry(eventName);
@@ -955,29 +956,26 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @see HierarchyEntryImpl#buildPath(boolean)
      */
     Path buildPath(boolean wspPath) throws RepositoryException {
+        PathFactory pf = factory.getPathFactory();
         // shortcut for root state
         if (parent == null) {
-            return Path.ROOT;
+            return pf.getRootPath();
         }
         // build path otherwise
-        try {
-            Path.PathBuilder builder = new Path.PathBuilder();
-            buildPath(builder, this, wspPath);
-            return builder.getPath();
-        } catch (MalformedPathException e) {
-            String msg = "Failed to build path of " + this;
-            throw new RepositoryException(msg, e);
-        }
+        PathBuilder builder = new PathBuilder(pf);
+        buildPath(builder, this, wspPath);
+        return builder.getPath();
     }
 
     /**
      * Adds the path element of an item id to the path currently being built.
      * On exit, <code>builder</code> contains the path of this entry.
      *
-     * @param builder builder currently being used
-     * @param hEntry HierarchyEntry of the state the path should be built for.
+     * @param builder
+     * @param nEntry NodeEntryImpl of the state the path should be built for.
+     * @param wspPath true if the workspace path should be built
      */
-    private static void buildPath(Path.PathBuilder builder, NodeEntryImpl nEntry, boolean wspPath) throws RepositoryException {
+    private static void buildPath(PathBuilder builder, NodeEntryImpl nEntry, boolean wspPath) throws RepositoryException {
         NodeEntryImpl parentEntry = (wspPath && nEntry.revertInfo != null) ? nEntry.revertInfo.oldParent : nEntry.parent;
         // shortcut for root state
         if (parentEntry == null) {
@@ -989,18 +987,14 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         buildPath(builder, parentEntry, wspPath);
 
         int index = (wspPath) ? nEntry.getWorkspaceIndex() : nEntry.getIndex();
-        QName name = (wspPath) ? nEntry.getWorkspaceQName() : nEntry.getQName();
+        Name name = (wspPath) ? nEntry.getWorkspaceName() : nEntry.getName();
         // add to path
         if (index == Path.INDEX_UNDEFINED) {
             throw new RepositoryException("Invalid index " + index + " with nodeEntry " + nEntry);
         }
 
         // TODO: check again. special treatment for default index for consistency with PathFormat.parse
-        if (index == Path.INDEX_DEFAULT) {
-            builder.addLast(name);
-        } else {
-            builder.addLast(name, index);
-        }
+        builder.addLast(name, index);
     }
 
     //-----------------------------------------------< private || protected >---
@@ -1012,7 +1006,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         if (propertyEntry.getParent() != this) {
             throw new IllegalArgumentException("Internal error: Parent mismatch.");
         }
-        QName propName = propertyEntry.getQName();
+        Name propName = propertyEntry.getName();
         if (propertiesInAttic.containsKey(propName)) {
             properties.add((PropertyEntry) propertiesInAttic.remove(propName));
         } // else: propEntry has never been moved to the attic (see 'addPropertyEntry')
@@ -1024,8 +1018,8 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @param oldIndex
      * @return
      */
-    boolean matches(QName oldName, int oldIndex) {
-        return getWorkspaceQName().equals(oldName) && getWorkspaceIndex() == oldIndex;
+    boolean matches(Name oldName, int oldIndex) {
+        return getWorkspaceName().equals(oldName) && getWorkspaceIndex() == oldIndex;
     }
 
     /**
@@ -1033,16 +1027,16 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @param oldName
      * @return
      */
-    boolean matches(QName oldName) {
-        return getWorkspaceQName().equals(oldName);
+    boolean matches(Name oldName) {
+        return getWorkspaceName().equals(oldName);
     }
 
 
-    private QName getWorkspaceQName() {
+    private Name getWorkspaceName() {
         if (revertInfo != null) {
             return revertInfo.oldName;
         } else {
-            return getQName();
+            return getName();
         }
     }
 
@@ -1095,7 +1089,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @return
      */
     private HierarchyEntry lookupEntry(ItemId eventId, Path eventPath) {
-        QName childName = eventPath.getNameElement().getName();
+        Name childName = eventPath.getNameElement().getName();
         HierarchyEntry child;
         if (eventId.denotesNode()) {
             String uniqueChildID = (eventId.getPath() == null) ? eventId.getUniqueID() : null;
@@ -1109,7 +1103,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         return (child == null || child.getStatus() == Status.NEW) ? null : child;
     }
 
-    private NodeEntry lookupNodeEntry(String uniqueChildId, QName childName, int index) {
+    private NodeEntry lookupNodeEntry(String uniqueChildId, Name childName, int index) {
         NodeEntry child = null;
         if (uniqueChildId != null) {
             child = childNodeAttic.get(uniqueChildId);
@@ -1126,7 +1120,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         return child;
     }
 
-    private PropertyEntry lookupPropertyEntry(QName childName) {
+    private PropertyEntry lookupPropertyEntry(Name childName) {
         // for external prop-removal the attic must be consulted first
         // in order not access a NEW prop shadowing a transiently removed
         // property with the same name.
@@ -1139,16 +1133,16 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
     /**
      * Deals with modified jcr:uuid and jcr:mixinTypes property.
-     * See {@link #notifyUUIDorMIXINRemoved(QName)}
+     * See {@link #notifyUUIDorMIXINRemoved(Name)}
      *
      * @param child
      */
     private void notifyUUIDorMIXINModified(PropertyEntry child) {
         try {
-            if (QName.JCR_UUID.equals(child.getQName())) {
+            if (NameConstants.JCR_UUID.equals(child.getName())) {
                 PropertyState ps = child.getPropertyState();
                 setUniqueID(ps.getValue().getString());
-            } else if (QName.JCR_MIXINTYPES.equals(child.getQName())) {
+            } else if (NameConstants.JCR_MIXINTYPES.equals(child.getName())) {
                 NodeState state = (NodeState) internalGetItemState();
                 if (state != null) {
                     PropertyState ps = child.getPropertyState();
@@ -1156,9 +1150,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 } // nodestate not yet loaded -> ignore change
             }
         } catch (ItemNotFoundException e) {
-            log.debug("Property with name " + child.getQName() + " does not exist (anymore)");
+            log.debug("Property with name " + child.getName() + " does not exist (anymore)");
         } catch (RepositoryException e) {
-            log.debug("Unable to access child property " + child.getQName(), e.getMessage());
+            log.debug("Unable to access child property " + child.getName(), e.getMessage());
         }
     }
 
@@ -1168,13 +1162,13 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      *
      * @param propName
      */
-    private void notifyUUIDorMIXINRemoved(QName propName) {
-        if (QName.JCR_UUID.equals(propName)) {
+    private void notifyUUIDorMIXINRemoved(Name propName) {
+        if (NameConstants.JCR_UUID.equals(propName)) {
             setUniqueID(null);
-        } else if (QName.JCR_MIXINTYPES.equals(propName)) {
+        } else if (NameConstants.JCR_MIXINTYPES.equals(propName)) {
             NodeState state = (NodeState) internalGetItemState();
             if (state != null) {
-                state.setMixinTypeNames(QName.EMPTY_ARRAY);
+                state.setMixinTypeNames(Name.EMPTY_ARRAY);
             }
         }
     }
@@ -1205,9 +1199,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * with this NodeEntry. NOTE, that if the childNodeEntries have not been
      * loaded yet, no attempt is made to do so.
      *
-     * @param createNewList if true, both properties and childNodeEntries are
-     * copied to new list, since recursive calls may call this node state to
-     * inform the removal of a child entry.
      * @param includeAttic
      * @return
      */
@@ -1239,7 +1230,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * this <code>NodeEntry</code>.
      */
     private int getChildIndex(NodeEntry cne) throws ItemNotFoundException, RepositoryException {
-        List sns = childNodeEntries().get(cne.getQName());
+        List sns = childNodeEntries().get(cne.getName());
         // index is one based
         int index = Path.INDEX_DEFAULT;
         for (Iterator it = sns.iterator(); it.hasNext(); ) {
@@ -1267,7 +1258,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @param childIndex
      * @return
      */
-    private boolean containsAtticChild(List siblings, QName childName, int childIndex) {
+    private boolean containsAtticChild(List siblings, Name childName, int childIndex) {
         // check if a matching entry exists in the attic
         if (childNodeAttic.contains(childName, childIndex)) {
             return true;
@@ -1368,12 +1359,12 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     private class RevertInfo implements ItemStateLifeCycleListener {
 
         private NodeEntryImpl oldParent;
-        private QName oldName;
+        private Name oldName;
         private int oldIndex;
 
         private Map reorderedChildren;
 
-        private RevertInfo(NodeEntryImpl oldParent, QName oldName, int oldIndex) {
+        private RevertInfo(NodeEntryImpl oldParent, Name oldName, int oldIndex) {
             this.oldParent = oldParent;
             this.oldName = oldName;
             this.oldIndex = oldIndex;
@@ -1397,7 +1388,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 // must be disposed manually
                 for (Iterator it = reorderedChildren.keySet().iterator(); it.hasNext();) {
                     NodeEntry ne = (NodeEntry) it.next();
-                    List sns = childNodeEntries.get(ne.getQName());
+                    List sns = childNodeEntries.get(ne.getName());
                     if (sns.size() > 1) {
                         for (Iterator snsIt = sns.iterator(); snsIt.hasNext();) {
                             NodeEntryImpl sibling = (NodeEntryImpl) snsIt.next();
@@ -1413,7 +1404,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         }
 
         private boolean isMoved() {
-            return oldParent != getParent() || !getQName().equals(oldName);
+            return oldParent != getParent() || !getName().equals(oldName);
         }
 
         private void reordered(NodeEntry insertEntry, NodeEntry previousBefore) {

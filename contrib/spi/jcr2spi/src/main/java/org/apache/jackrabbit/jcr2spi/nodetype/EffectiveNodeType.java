@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 
@@ -28,11 +28,11 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
  */
 public interface EffectiveNodeType {
 
-    public QName[] getAllNodeTypes();
+    public Name[] getAllNodeTypes();
 
-    public QName[] getInheritedNodeTypes();
+    public Name[] getInheritedNodeTypes();
 
-    public QName[] getMergedNodeTypes();
+    public Name[] getMergedNodeTypes();
 
     /**
      * Determines whether this effective node type representation includes
@@ -42,7 +42,7 @@ public interface EffectiveNodeType {
      * @return <code>true</code> if the given node type is included, otherwise
      *         <code>false</code>
      */
-    public boolean includesNodeType(QName nodeTypeName);
+    public boolean includesNodeType(Name nodeTypeName);
 
     /**
      * Determines whether this effective node type representation includes
@@ -52,7 +52,7 @@ public interface EffectiveNodeType {
      * @return <code>true</code> if all of the given node types are included,
      *         otherwise <code>false</code>
      */
-    public boolean includesNodeTypes(QName[] nodeTypeNames);
+    public boolean includesNodeTypes(Name[] nodeTypeNames);
 
     public QNodeDefinition[] getAllQNodeDefinitions();
 
@@ -66,9 +66,9 @@ public interface EffectiveNodeType {
 
     public QPropertyDefinition[] getMandatoryQPropertyDefinitions();
 
-    public QNodeDefinition[] getNamedQNodeDefinitions(QName name);
+    public QNodeDefinition[] getNamedQNodeDefinitions(Name name);
 
-    public QPropertyDefinition[] getNamedQPropertyDefinitions(QName name);
+    public QPropertyDefinition[] getNamedQPropertyDefinitions(Name name);
 
     public QNodeDefinition[] getUnnamedQNodeDefinitions();
 
@@ -79,7 +79,7 @@ public interface EffectiveNodeType {
      * @param definitionProvider
      * @throws ConstraintViolationException
      */
-    public void checkAddNodeConstraints(QName name, ItemDefinitionProvider definitionProvider)
+    public void checkAddNodeConstraints(Name name, ItemDefinitionProvider definitionProvider)
             throws ConstraintViolationException;
 
     /**
@@ -89,12 +89,12 @@ public interface EffectiveNodeType {
      * @throws ConstraintViolationException
      * @throws NoSuchNodeTypeException
      */
-    public void checkAddNodeConstraints(QName name, QName nodeTypeName, ItemDefinitionProvider definitionProvider)
+    public void checkAddNodeConstraints(Name name, Name nodeTypeName, ItemDefinitionProvider definitionProvider)
             throws ConstraintViolationException, NoSuchNodeTypeException;
 
     /**
      * @param name
      * @throws ConstraintViolationException
      */
-    public void checkRemoveItemConstraints(QName name) throws ConstraintViolationException;
+    public void checkRemoveItemConstraints(Name name) throws ConstraintViolationException;
 }

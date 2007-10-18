@@ -18,11 +18,11 @@ package org.apache.jackrabbit.spi2jcr;
 
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.NameException;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.IteratorHelper;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +58,7 @@ class QueryInfoImpl implements QueryInfo {
     /**
      * The namespace resolver.
      */
-    private final NamespaceResolver nsResolver;
+    private final NamePathResolver resolver;
 
     /**
      * The QValue factory.
@@ -68,7 +68,7 @@ class QueryInfoImpl implements QueryInfo {
     /**
      * The names of the columns in the query result.
      */
-    private final QName[] columnNames;
+    private final Name[] columnNames;
 
     /**
      * The resolved name of the jcr:score column.
@@ -85,28 +85,28 @@ class QueryInfoImpl implements QueryInfo {
      *
      * @param result        the JCR query result.
      * @param idFactory     the id factory.
-     * @param nsResolver    the namespace resolver in use.
+     * @param resolver
      * @param qValueFactory the QValue factory.
      * @throws RepositoryException if an error occurs while reading from
      *                             <code>result</code>.
      */
     public QueryInfoImpl(QueryResult result,
                          IdFactoryImpl idFactory,
-                         NamespaceResolver nsResolver,
+                         NamePathResolver resolver,
                          QValueFactory qValueFactory)
             throws RepositoryException {
         this.result = result;
         this.idFactory = idFactory;
-        this.nsResolver = nsResolver;
+        this.resolver = resolver;
         this.qValueFactory = qValueFactory;
         String[] jcrNames = result.getColumnNames();
-        this.columnNames = new QName[jcrNames.length];
+        this.columnNames = new Name[jcrNames.length];
         try {
             for (int i = 0; i < jcrNames.length; i++) {
-                columnNames[i] = NameFormat.parse(jcrNames[i], nsResolver);
+                columnNames[i] = resolver.getQName(jcrNames[i]);
             }
-            this.scoreName = NameFormat.format(QName.JCR_SCORE, nsResolver);
-            this.pathName = NameFormat.format(QName.JCR_PATH, nsResolver);
+            this.scoreName = resolver.getJCRName(NameConstants.JCR_SCORE);
+            this.pathName = resolver.getJCRName(NameConstants.JCR_PATH);
         } catch (NameException e) {
             throw new RepositoryException(e.getMessage(), e);
         }
@@ -137,7 +137,7 @@ class QueryInfoImpl implements QueryInfo {
                 try {
                     Row row = rows.nextRow();
                     return new QueryResultRowImpl(row, columnJcrNames, scoreName,
-                            pathName, idFactory, nsResolver, qValueFactory);
+                            pathName, idFactory, resolver, qValueFactory);
                 } catch (RepositoryException e) {
                     log.warn("Exception when creating QueryResultRowImpl: " +
                             e.getMessage(), e);
@@ -150,8 +150,8 @@ class QueryInfoImpl implements QueryInfo {
     /**
      * {@inheritDoc}
      */
-    public QName[] getColumnNames() {
-        QName[] names = new QName[columnNames.length];
+    public Name[] getColumnNames() {
+        Name[] names = new Name[columnNames.length];
         System.arraycopy(columnNames, 0, names, 0, columnNames.length);
         return names;
     }

@@ -16,10 +16,11 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.value.ValueFormat;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.nodetype.InvalidConstraintException;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -31,7 +32,7 @@ import javax.jcr.nodetype.PropertyDefinition;
 /**
  * This class implements the <code>PropertyDefinition</code> interface.
  * All method calls are delegated to the wrapped {@link QPropertyDefinition},
- * performing the translation from <code>QName</code>s to JCR names
+ * performing the translation from <code>Name</code>s to JCR names
  * (and vice versa) where necessary.
  */
 public class PropertyDefinitionImpl extends ItemDefinitionImpl implements PropertyDefinition {
@@ -48,11 +49,11 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
      *
      * @param propDef    property definition
      * @param ntMgr      node type manager
-     * @param nsResolver namespace resolver
+     * @param resolver
      */
     PropertyDefinitionImpl(QPropertyDefinition propDef, NodeTypeManagerImpl ntMgr,
-                           NamespaceResolver nsResolver, ValueFactory valueFactory) {
-        super(propDef, ntMgr, nsResolver);
+                           NamePathResolver resolver, ValueFactory valueFactory) {
+        super(propDef, ntMgr, resolver);
         this.valueFactory = valueFactory;
     }
 
@@ -70,7 +71,7 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
         Value[] values = new Value[defVals.length];
         for (int i = 0; i < defVals.length; i++) {
             try {
-                values[i] = ValueFormat.getJCRValue(defVals[i], nsResolver, valueFactory);
+                values[i] = ValueFormat.getJCRValue(defVals[i], resolver, valueFactory);
             } catch (RepositoryException e) {
                 // should never get here
                 String propName = (getName() == null) ? "[null]" : getName();
@@ -101,7 +102,7 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
             String[] vca = new String[constraints.length];
             for (int i = 0; i < constraints.length; i++) {
                 ValueConstraint constr = ValueConstraint.create(pd.getRequiredType(), constraints[i]);
-                vca[i] = constr.getDefinition(nsResolver);
+                vca[i] = constr.getDefinition(resolver);
             }
             return vca;
         } catch (InvalidConstraintException e) {

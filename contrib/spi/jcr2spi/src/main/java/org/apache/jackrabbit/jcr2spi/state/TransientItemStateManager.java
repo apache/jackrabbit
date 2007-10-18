@@ -18,7 +18,7 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
@@ -35,9 +35,9 @@ import java.util.Iterator;
  * {@link ItemState}s and also provides methods to create new item states.
  * While all other modifications can be invoked on the item state instances itself,
  * creating a new node state is done using
- * {@link #createNewNodeState(QName, String, QName, QNodeDefinition, NodeState)}
+ * {@link #createNewNodeState(Name, String, Name, QNodeDefinition, NodeState)}
  * and
- * {@link #createNewPropertyState(QName, NodeState, QPropertyDefinition, QValue[], int)}.
+ * {@link #createNewPropertyState(Name, NodeState, QPropertyDefinition, QValue[], int)}.
  */
 public class TransientItemStateManager implements ItemStateCreationListener {
 
@@ -96,7 +96,7 @@ public class TransientItemStateManager implements ItemStateCreationListener {
      * @param parent       the parent of the new node state.
      * @return a new transient {@link NodeState}.
      */
-    NodeState createNewNodeState(QName nodeName, String uniqueID, QName nodeTypeName,
+    NodeState createNewNodeState(Name nodeName, String uniqueID, Name nodeTypeName,
                                  QNodeDefinition definition, NodeState parent)
             throws RepositoryException {
         NodeState nodeState = ((NodeEntry) parent.getHierarchyEntry()).addNewNodeEntry(nodeName, uniqueID, nodeTypeName, definition);
@@ -118,7 +118,7 @@ public class TransientItemStateManager implements ItemStateCreationListener {
      * @throws ConstraintViolationException
      * @throws RepositoryException
      */
-    PropertyState createNewPropertyState(QName propName, NodeState parent,
+    PropertyState createNewPropertyState(Name propName, NodeState parent,
                                          QPropertyDefinition definition,
                                          QValue[] values, int propertyType)
         throws ItemExistsException, ConstraintViolationException, RepositoryException {

@@ -16,9 +16,10 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.name.NameConstants;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -29,7 +30,7 @@ import javax.jcr.nodetype.NodeType;
 /**
  * This class implements the <code>NodeDefinition</code> interface.
  * All method calls are delegated to the wrapped {@link QNodeDefinition},
- * performing the translation from <code>QName</code>s to JCR names
+ * performing the translation from <code>Name</code>s to JCR names
  * where necessary.
  */
 public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefinition {
@@ -44,11 +45,11 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
      *
      * @param nodeDef    child node definition
      * @param ntMgr      node type manager
-     * @param nsResolver namespace resolver
+     * @param resolver
      */
     NodeDefinitionImpl(QNodeDefinition nodeDef, NodeTypeManagerImpl ntMgr,
-                NamespaceResolver nsResolver) {
-        super(nodeDef, ntMgr, nsResolver);
+                       NamePathResolver resolver) {
+        super(nodeDef, ntMgr, resolver);
     }
 
     //-------------------------------------------------------< NodeDefinition >
@@ -56,7 +57,7 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
      * {@inheritDoc}
      */
     public NodeType getDefaultPrimaryType() {
-        QName ntName = ((QNodeDefinition) itemDef).getDefaultPrimaryType();
+        Name ntName = ((QNodeDefinition) itemDef).getDefaultPrimaryType();
         if (ntName == null) {
             return null;
         }
@@ -73,11 +74,11 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
      * {@inheritDoc}
      */
     public NodeType[] getRequiredPrimaryTypes() {
-        QName[] ntNames = ((QNodeDefinition) itemDef).getRequiredPrimaryTypes();
+        Name[] ntNames = ((QNodeDefinition) itemDef).getRequiredPrimaryTypes();
         try {
             if (ntNames == null || ntNames.length == 0) {
                 // return "nt:base"
-                return new NodeType[] { ntMgr.getNodeType(QName.NT_BASE) };
+                return new NodeType[] { ntMgr.getNodeType(NameConstants.NT_BASE) };
             } else {
                 NodeType[] nodeTypes = new NodeType[ntNames.length];
                 for (int i = 0; i < ntNames.length; i++) {

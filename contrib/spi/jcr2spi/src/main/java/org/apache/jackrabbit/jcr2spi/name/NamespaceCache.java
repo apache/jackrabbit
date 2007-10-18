@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi.name;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NamespaceListener;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.namespace.NamespaceListener;
 import org.apache.jackrabbit.util.XMLChar;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.slf4j.Logger;
@@ -51,34 +51,34 @@ public class NamespaceCache {
 
     static {
         // reserved prefixes
-        RESERVED_PREFIXES.add(QName.NS_XML_PREFIX);
-        RESERVED_PREFIXES.add(QName.NS_XMLNS_PREFIX);
+        RESERVED_PREFIXES.add(Name.NS_XML_PREFIX);
+        RESERVED_PREFIXES.add(Name.NS_XMLNS_PREFIX);
         // predefined (e.g. built-in) prefixes
-        RESERVED_PREFIXES.add(QName.NS_REP_PREFIX);
-        RESERVED_PREFIXES.add(QName.NS_JCR_PREFIX);
-        RESERVED_PREFIXES.add(QName.NS_NT_PREFIX);
-        RESERVED_PREFIXES.add(QName.NS_MIX_PREFIX);
-        RESERVED_PREFIXES.add(QName.NS_SV_PREFIX);
-        RESERVED_PREFIXES.add(QName.NS_EMPTY_PREFIX);
+        RESERVED_PREFIXES.add(Name.NS_REP_PREFIX);
+        RESERVED_PREFIXES.add(Name.NS_JCR_PREFIX);
+        RESERVED_PREFIXES.add(Name.NS_NT_PREFIX);
+        RESERVED_PREFIXES.add(Name.NS_MIX_PREFIX);
+        RESERVED_PREFIXES.add(Name.NS_SV_PREFIX);
+        RESERVED_PREFIXES.add(Name.NS_EMPTY_PREFIX);
         // reserved namespace URI's
-        RESERVED_URIS.add(QName.NS_XML_URI);
-        RESERVED_URIS.add(QName.NS_XMLNS_URI);
+        RESERVED_URIS.add(Name.NS_XML_URI);
+        RESERVED_URIS.add(Name.NS_XMLNS_URI);
         // predefined (e.g. built-in) namespace URI's
-        RESERVED_URIS.add(QName.NS_REP_URI);
-        RESERVED_URIS.add(QName.NS_JCR_URI);
-        RESERVED_URIS.add(QName.NS_NT_URI);
-        RESERVED_URIS.add(QName.NS_MIX_URI);
-        RESERVED_URIS.add(QName.NS_SV_URI);
-        RESERVED_URIS.add(QName.NS_DEFAULT_URI);
+        RESERVED_URIS.add(Name.NS_REP_URI);
+        RESERVED_URIS.add(Name.NS_JCR_URI);
+        RESERVED_URIS.add(Name.NS_NT_URI);
+        RESERVED_URIS.add(Name.NS_MIX_URI);
+        RESERVED_URIS.add(Name.NS_SV_URI);
+        RESERVED_URIS.add(Name.NS_DEFAULT_URI);
         // reserved and predefined namespaces
-        RESERVED_NAMESPACES.put(QName.NS_XML_PREFIX, QName.NS_XML_URI);
-        RESERVED_NAMESPACES.put(QName.NS_XMLNS_PREFIX, QName.NS_XMLNS_URI);
-        RESERVED_NAMESPACES.put(QName.NS_REP_PREFIX, QName.NS_REP_URI);
-        RESERVED_NAMESPACES.put(QName.NS_JCR_PREFIX, QName.NS_JCR_URI);
-        RESERVED_NAMESPACES.put(QName.NS_NT_PREFIX, QName.NS_NT_URI);
-        RESERVED_NAMESPACES.put(QName.NS_MIX_PREFIX, QName.NS_MIX_URI);
-        RESERVED_NAMESPACES.put(QName.NS_SV_PREFIX, QName.NS_SV_URI);
-        RESERVED_NAMESPACES.put(QName.NS_EMPTY_PREFIX, QName.NS_DEFAULT_URI);
+        RESERVED_NAMESPACES.put(Name.NS_XML_PREFIX, Name.NS_XML_URI);
+        RESERVED_NAMESPACES.put(Name.NS_XMLNS_PREFIX, Name.NS_XMLNS_URI);
+        RESERVED_NAMESPACES.put(Name.NS_REP_PREFIX, Name.NS_REP_URI);
+        RESERVED_NAMESPACES.put(Name.NS_JCR_PREFIX, Name.NS_JCR_URI);
+        RESERVED_NAMESPACES.put(Name.NS_NT_PREFIX, Name.NS_NT_URI);
+        RESERVED_NAMESPACES.put(Name.NS_MIX_PREFIX, Name.NS_MIX_URI);
+        RESERVED_NAMESPACES.put(Name.NS_SV_PREFIX, Name.NS_SV_URI);
+        RESERVED_NAMESPACES.put(Name.NS_EMPTY_PREFIX, Name.NS_DEFAULT_URI);
     }
 
     private final Set listeners = new HashSet();
@@ -220,7 +220,7 @@ public class NamespaceCache {
         if (prefix == null || uri == null) {
             throw new IllegalArgumentException("prefix/uri can not be null");
         }
-        if (QName.NS_EMPTY_PREFIX.equals(prefix) || QName.NS_DEFAULT_URI.equals(uri)) {
+        if (Name.NS_EMPTY_PREFIX.equals(prefix) || Name.NS_DEFAULT_URI.equals(uri)) {
             throw new NamespaceException("default namespace is reserved and can not be changed");
         }
         if (RESERVED_URIS.contains(uri)) {
@@ -232,7 +232,7 @@ public class NamespaceCache {
                 + prefix + " -> " + uri + ": reserved prefix");
         }
         // special case: prefixes xml*
-        if (prefix.toLowerCase().startsWith(QName.NS_XML_PREFIX)) {
+        if (prefix.toLowerCase().startsWith(Name.NS_XML_PREFIX)) {
             throw new NamespaceException("failed to register namespace "
                 + prefix + " -> " + uri + ": reserved prefix");
         }

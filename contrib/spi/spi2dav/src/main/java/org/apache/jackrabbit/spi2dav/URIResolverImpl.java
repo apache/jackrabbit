@@ -18,18 +18,14 @@ package org.apache.jackrabbit.spi2dav;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathFormat;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
@@ -45,6 +41,7 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
+import org.apache.jackrabbit.name.NameConstants;
 import org.apache.commons.httpclient.URI;
 import org.w3c.dom.Document;
 
@@ -63,7 +60,7 @@ class URIResolverImpl implements URIResolver {
 
     private final URI repositoryUri;
     private final RepositoryServiceImpl service;
-    private final NamespaceResolver nsResolver;
+    private final NamePathResolver resolver;
     private final Document domFactory;
 
     // TODO: to-be-fixed. uri/id-caches don't get updated
@@ -71,10 +68,10 @@ class URIResolverImpl implements URIResolver {
     private final Map idURICaches = new HashMap();
 
     URIResolverImpl(URI repositoryUri, RepositoryServiceImpl service,
-                    NamespaceResolver nsResolver, Document domFactory) {
+                    NamePathResolver resolver, Document domFactory) {
         this.repositoryUri = repositoryUri;
         this.service = service;
-        this.nsResolver = nsResolver;
+        this.resolver = resolver;
         this.domFactory = domFactory;
     }
 
@@ -158,15 +155,11 @@ class URIResolverImpl implements URIResolver {
             }
             // resolve relative-path part unless it denotes the root-item
             if (path != null && !path.denotesRoot()) {
-                try {
-                    String jcrPath = PathFormat.format(path, nsResolver);
-                    if (!path.isAbsolute() && !uriBuffer.toString().endsWith("/")) {
-                        uriBuffer.append("/");
-                    }
-                    uriBuffer.append(Text.escapePath(jcrPath));
-                } catch (NoPrefixDeclaredException e) {
-                    throw new RepositoryException(e);
+                String jcrPath = resolver.getJCRPath(path);
+                if (!path.isAbsolute() && !uriBuffer.toString().endsWith("/")) {
+                    uriBuffer.append("/");
                 }
+                uriBuffer.append(Text.escapePath(jcrPath));
             }
             String itemUri = uriBuffer.toString();
             if (!cache.containsItemId(itemId)) {
@@ -187,12 +180,12 @@ class URIResolverImpl implements URIResolver {
         if (uniqueID != null) {
             nodeId = service.getIdFactory().createNodeId(uniqueID);
         } else {
-            QName qName = service.getQName(propSet, nsResolver);
-            if (qName == QName.ROOT) {
-                nodeId = service.getIdFactory().createNodeId((String) null, Path.ROOT);
+            Name qName = service.getQName(propSet, resolver);
+            if (NameConstants.ROOT.equals(qName)) {
+                nodeId = service.getIdFactory().createNodeId((String) null, service.getPathFactory().getRootPath());
             } else {
                 int index = service.getIndex(propSet);
-                nodeId = service.getIdFactory().createNodeId(parentId, Path.create(qName, index));
+                nodeId = service.getIdFactory().createNodeId(parentId, service.getPathFactory().create(qName, index));
             }
         }
         // cache
@@ -212,7 +205,7 @@ class URIResolverImpl implements URIResolver {
 
         try {
             DavPropertySet propSet = response.getProperties(DavServletResponse.SC_OK);
-            QName name = NameFormat.parse(propSet.get(ItemResourceConstants.JCR_NAME).getValue().toString(), nsResolver);
+            Name name = resolver.getQName(propSet.get(ItemResourceConstants.JCR_NAME).getValue().toString());
             PropertyId propertyId = service.getIdFactory().createPropertyId(parentId, name);
 
             cache.add(response.getHref(), propertyId);
@@ -242,8 +235,8 @@ class URIResolverImpl implements URIResolver {
             jcrPath = uri;
         }
         try {
-            return PathFormat.parse(Text.unescape(jcrPath), nsResolver);
-        } catch (MalformedPathException e) {
+            return resolver.getQPath(Text.unescape(jcrPath));
+        } catch (NameException e) {
             throw new RepositoryException(e);
         }
     }
@@ -316,7 +309,8 @@ class URIResolverImpl implements URIResolver {
         NodeId parentId = getNodeId(parentUri, sessionInfo);
         // build property id
         try {
-            PropertyId propertyId = service.getIdFactory().createPropertyId(parentId, NameFormat.parse(propName, nsResolver));
+            Name name = resolver.getQName(propName);
+            PropertyId propertyId = service.getIdFactory().createPropertyId(parentId, name);
             cache.add(uri, propertyId);
 
             return propertyId;

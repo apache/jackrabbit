@@ -18,15 +18,16 @@ package org.apache.jackrabbit.spi2dav;
 
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathFormat;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.NameException;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+
+import javax.jcr.NamespaceException;
 
 /**
  * <code>ItemInfoImpl</code>...
@@ -38,14 +39,14 @@ abstract class ItemInfoImpl implements ItemInfo {
     private final NodeId parentId;
     private final Path path;
 
-    public ItemInfoImpl(NodeId parentId, DavPropertySet propSet, NamespaceResolver nsResolver)
-        throws MalformedPathException {
+    public ItemInfoImpl(NodeId parentId, DavPropertySet propSet, NamePathResolver resolver)
+            throws NameException, NamespaceException {
         // set parentId
         this.parentId = parentId;
 
         DavProperty pathProp = propSet.get(ItemResourceConstants.JCR_PATH);
         String jcrPath = pathProp.getValue().toString();
-        path = PathFormat.parse(jcrPath, nsResolver);
+        path = resolver.getQPath(jcrPath);
 
     }
 

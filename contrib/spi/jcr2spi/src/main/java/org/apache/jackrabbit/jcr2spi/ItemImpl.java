@@ -27,10 +27,8 @@ import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -95,14 +93,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      */
     public String getPath() throws RepositoryException {
         checkStatus();
-        try {
-            return PathFormat.format(getQPath(), session.getNamespaceResolver());
-        } catch (NoPrefixDeclaredException npde) {
-            // should never get here...
-            String msg = "Internal error: encountered unregistered namespace";
-            log.debug(msg);
-            throw new RepositoryException(msg, npde);
-        }
+        return session.getPathResolver().getJCRPath(getQPath());
     }
 
     /**
@@ -504,13 +495,13 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
     //------------------------------------< Implementation specific methods >---
     /**
      * Same as <code>{@link Item#getName()}</code> except that
-     * this method returns a <code>QName</code> instead of a
+     * this method returns a <code>Name</code> instead of a
      * <code>String</code>.
      *
-     * @return the name of this item as <code>QName</code>
+     * @return the name of this item as <code>Name</code>
      * @throws RepositoryException if an error occurs.
      */
-    abstract QName getQName() throws RepositoryException;
+    abstract Name getQName() throws RepositoryException;
 
     /**
      * Returns the primary path to this <code>Item</code>.
@@ -537,6 +528,6 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      * @return JCR path
      */
     String safeGetJCRPath() {
-        return LogUtil.safeGetJCRPath(getItemState(), session.getNamespaceResolver());
+        return LogUtil.safeGetJCRPath(getItemState(), session.getPathResolver());
     }
 }

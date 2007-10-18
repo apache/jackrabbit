@@ -32,8 +32,10 @@ import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.PathFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Credentials;
@@ -73,6 +75,22 @@ public class RepositoryServiceLogger implements RepositoryService {
     public RepositoryServiceLogger(RepositoryService rs, Writer log) {
         this.service = rs;
         this.log = log;
+    }
+
+    public NameFactory getNameFactory() throws RepositoryException {
+        return (NameFactory) execute(new Callable() {
+            public Object call() throws RepositoryException {
+                return service.getNameFactory();
+            }
+        }, "getNameFactory()", new Object[]{});
+    }
+
+    public PathFactory getPathFactory() throws RepositoryException {
+        return (PathFactory) execute(new Callable() {
+            public Object call() throws RepositoryException {
+                return service.getPathFactory();
+            }
+        }, "PathFactory()", new Object[]{});
     }
 
     public IdFactory getIdFactory() throws RepositoryException {
@@ -267,13 +285,13 @@ public class RepositoryServiceLogger implements RepositoryService {
     public void move(final SessionInfo sessionInfo,
                      final NodeId nodeId,
                      final NodeId nodeId1,
-                     final QName name) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+                     final Name name) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
         execute(new Callable() {
             public Object call() throws RepositoryException {
                 service.move(sessionInfo, nodeId, nodeId1, name);
                 return null;
             }
-        }, "move(SessionInfo,NodeId,NodeId,QName)",
+        }, "move(SessionInfo,NodeId,NodeId,Name)",
                 new Object[]{nodeId, nodeId1, name});
     }
 
@@ -281,13 +299,13 @@ public class RepositoryServiceLogger implements RepositoryService {
                      final String s,
                      final NodeId nodeId,
                      final NodeId nodeId1,
-                     final QName name) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
+                     final Name name) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
         execute(new Callable() {
             public Object call() throws RepositoryException {
                 service.copy(sessionInfo, s, nodeId, nodeId1, name);
                 return null;
             }
-        }, "copy(SessionInfo,String,NodeId,NodeId,QName)",
+        }, "copy(SessionInfo,String,NodeId,NodeId,Name)",
                 new Object[]{s, nodeId, nodeId1, name});
     }
 
@@ -307,14 +325,14 @@ public class RepositoryServiceLogger implements RepositoryService {
                       final String s,
                       final NodeId nodeId,
                       final NodeId nodeId1,
-                      final QName name,
+                      final Name name,
                       final boolean b) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
         execute(new Callable() {
             public Object call() throws RepositoryException {
                 service.clone(sessionInfo, s, nodeId, nodeId1, name, b);
                 return null;
             }
-        }, "clone(SessionInfo,String,NodeId,NodeId,QName,boolean)",
+        }, "clone(SessionInfo,String,NodeId,NodeId,Name,boolean)",
                 new Object[]{s, nodeId, nodeId1, name, new Boolean(b)});
     }
 
@@ -449,27 +467,27 @@ public class RepositoryServiceLogger implements RepositoryService {
     public void addVersionLabel(final SessionInfo sessionInfo,
                                 final NodeId nodeId,
                                 final NodeId nodeId1,
-                                final QName name,
+                                final Name name,
                                 final boolean b) throws VersionException, RepositoryException {
         execute(new Callable() {
             public Object call() throws RepositoryException {
                 service.addVersionLabel(sessionInfo, nodeId, nodeId1, name, b);
                 return null;
             }
-        }, "addVersionLabel(SessionInfo,NodeId,NodeId,QName,boolean)",
+        }, "addVersionLabel(SessionInfo,NodeId,NodeId,Name,boolean)",
                 new Object[]{nodeId, nodeId1, name, new Boolean(b)});
     }
 
     public void removeVersionLabel(final SessionInfo sessionInfo,
                                    final NodeId nodeId,
                                    final NodeId nodeId1,
-                                   final QName name) throws VersionException, RepositoryException {
+                                   final Name name) throws VersionException, RepositoryException {
         execute(new Callable() {
             public Object call() throws RepositoryException {
                 service.removeVersionLabel(sessionInfo, nodeId, nodeId1, name);
                 return null;
             }
-        }, "removeVersionLabel(SessionInfo,NodeId,NodeId,QName)",
+        }, "removeVersionLabel(SessionInfo,NodeId,NodeId,Name)",
                 new Object[]{nodeId, nodeId1, name});
     }
 
@@ -512,14 +530,14 @@ public class RepositoryServiceLogger implements RepositoryService {
                                          final Path path,
                                          final boolean b,
                                          final String[] strings,
-                                         final QName[] qNames,
+                                         final Name[] qNames,
                                          final boolean b1)
             throws UnsupportedRepositoryOperationException, RepositoryException {
         return (EventFilter) execute(new Callable() {
             public Object call() throws RepositoryException {
                 return service.createEventFilter(sessionInfo, i, path, b, strings, qNames, b1);
             }
-        }, "createEventFilter(SessionInfo,int,Path,boolean,String[],QName[],boolean)",
+        }, "createEventFilter(SessionInfo,int,Path,boolean,String[],Name[],boolean)",
                 new Object[]{new Integer(i), path, new Boolean(b), strings, qNames, new Boolean(b1)});
     }
 
@@ -605,13 +623,13 @@ public class RepositoryServiceLogger implements RepositoryService {
     }
 
     public Iterator getQNodeTypeDefinitions(
-            final SessionInfo sessionInfo,final QName[] ntNames)
+            final SessionInfo sessionInfo,final Name[] ntNames)
             throws RepositoryException {
         return (Iterator) execute(new Callable() {
             public Object call() throws RepositoryException {
                 return service.getQNodeTypeDefinitions(sessionInfo, ntNames);
             }
-        }, "getQNodeTypeDefinitions(SessionInfo,QName[])", new Object[]{ntNames});
+        }, "getQNodeTypeDefinitions(SessionInfo,Name[])", new Object[]{ntNames});
     }
 
     private Object execute(Callable callable, String methodName, Object[] args)

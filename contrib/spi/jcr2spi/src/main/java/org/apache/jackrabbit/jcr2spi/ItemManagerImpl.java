@@ -27,8 +27,9 @@ import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.version.VersionHistoryImpl;
 import org.apache.jackrabbit.jcr2spi.version.VersionImpl;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.name.NameConstants;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -145,7 +146,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         try {
             return getItem(itemEntry);
         } catch (ItemNotFoundException infe) {
-            throw new PathNotFoundException(LogUtil.safeGetJCRPath(path, session.getNamespaceResolver()));
+            throw new PathNotFoundException(LogUtil.safeGetJCRPath(path, session.getPathResolver()));
         }
     }
 
@@ -328,7 +329,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
             } else {
                 ps.print("- ");
             }
-            ps.println(state + "\t" + LogUtil.safeGetJCRPath(state, session.getNamespaceResolver()) + " (" + item + ")");
+            ps.println(state + "\t" + LogUtil.safeGetJCRPath(state, session.getPathResolver()) + " (" + item + ")");
         }
     }
 
@@ -344,11 +345,11 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
 
         // check special nodes
-        QName ntName = state.getNodeTypeName();
-        if (QName.NT_VERSION.equals(ntName)) {
+        Name ntName = state.getNodeTypeName();
+        if (NameConstants.NT_VERSION.equals(ntName)) {
             // version
             return new VersionImpl(this, session, state, listeners);
-        } else if (QName.NT_VERSIONHISTORY.equals(ntName)) {
+        } else if (NameConstants.NT_VERSIONHISTORY.equals(ntName)) {
             // version-history
             return new VersionHistoryImpl(this, session, state, listeners);
         } else {

@@ -16,14 +16,13 @@
  */
 package org.apache.jackrabbit.spi2jcr;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.NamespaceException;
 
 /**
  * <code>QNodeDefinitionImpl</code> implements a <code>QNodeDefinition</code>.
@@ -35,22 +34,22 @@ class QNodeDefinitionImpl
      * Creates a new qualified node definition based on a JCR NodeDefinition.
      *
      * @param nodeDef    the node definition.
-     * @param nsResolver the namespace resolver in use.
-     * @throws IllegalNameException   if <code>nodeDef</code> contains an
+     * @param resolver
+     * @throws NameException   if <code>nodeDef</code> contains an
      *                                illegal name.
-     * @throws UnknownPrefixException if <code>nodeDef</code> contains a name
+     * @throws NamespaceException if <code>nodeDef</code> contains a name
      *                                with an namespace prefix that is unknown
-     *                                to <code>nsResolver</code>.
+     *                                to <code>resolver</code>.
      */
     QNodeDefinitionImpl(NodeDefinition nodeDef,
-                        NamespaceResolver nsResolver)
-            throws IllegalNameException, UnknownPrefixException {
-        super(nodeDef.getName().equals(ANY_NAME.getLocalName()) ? ANY_NAME : NameFormat.parse(nodeDef.getName(), nsResolver),
-                nodeDef.getDeclaringNodeType() != null ? NameFormat.parse(nodeDef.getDeclaringNodeType().getName(), nsResolver) : null,
+                        NamePathResolver resolver)
+            throws NameException, NamespaceException {
+        super(nodeDef.getName().equals(ANY_NAME.getLocalName()) ? ANY_NAME : resolver.getQName(nodeDef.getName()),
+                nodeDef.getDeclaringNodeType() != null ? resolver.getQName(nodeDef.getDeclaringNodeType().getName()) : null,
                 nodeDef.isAutoCreated(), nodeDef.isMandatory(),
                 nodeDef.getOnParentVersion(), nodeDef.isProtected(),
-                nodeDef.getDefaultPrimaryType() != null ? NameFormat.parse(nodeDef.getDefaultPrimaryType().getName(), nsResolver) : null,
-                getNodeTypeNames(nodeDef.getRequiredPrimaryTypes(), nsResolver),
+                nodeDef.getDefaultPrimaryType() != null ? resolver.getQName(nodeDef.getDefaultPrimaryType().getName()) : null,
+                getNodeTypeNames(nodeDef.getRequiredPrimaryTypes(), resolver),
                 nodeDef.allowsSameNameSiblings());
     }
 
@@ -59,18 +58,18 @@ class QNodeDefinitionImpl
      * resolver to parse the names.
      *
      * @param nt         the node types
-     * @param nsResolver the namespace resolver.
+     * @param resolver
      * @return the qualified names of the node types.
-     * @throws IllegalNameException   if a node type returns an illegal name.
-     * @throws UnknownPrefixException if the nameo of a node type contains a
-     *                                prefix that is not known to <code>nsResolver</code>.
+     * @throws NameException   if a node type returns an illegal name.
+     * @throws NamespaceException if the name of a node type contains a
+     *                            prefix that is not known to <code>resolver</code>.
      */
-    private static QName[] getNodeTypeNames(NodeType[] nt,
-                                     NamespaceResolver nsResolver)
-            throws IllegalNameException, UnknownPrefixException {
-        QName[] names = new QName[nt.length];
+    private static Name[] getNodeTypeNames(NodeType[] nt,
+                                           NamePathResolver resolver)
+            throws NameException, NamespaceException {
+        Name[] names = new Name[nt.length];
         for (int i = 0; i < nt.length; i++) {
-            QName ntName = NameFormat.parse(nt[i].getName(), nsResolver);
+            Name ntName = resolver.getQName(nt[i].getName());
             names[i] = ntName;
         }
         return names;

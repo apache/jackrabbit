@@ -20,11 +20,10 @@ import org.apache.jackrabbit.spi.QueryResultRow;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.name.PathFormat;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.value.ValueFormat;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.NameException;
 
 import javax.jcr.query.Row;
 import javax.jcr.RepositoryException;
@@ -59,7 +58,7 @@ class QueryResultRowImpl implements QueryResultRow {
      * @param scoreName     the name of the jcr:score column.
      * @param pathName      the name of the jcr:path column
      * @param idFactory     the id factory.
-     * @param nsResolver    the namespace resolver in use.
+     * @param resolver
      * @param qValueFactory the QValue factory.
      * @throws RepositoryException if an error occurs while reading from
      *                             <code>row</code>.
@@ -69,13 +68,13 @@ class QueryResultRowImpl implements QueryResultRow {
                               String scoreName,
                               String pathName,
                               IdFactoryImpl idFactory,
-                              NamespaceResolver nsResolver,
+                              NamePathResolver resolver,
                               QValueFactory qValueFactory) throws RepositoryException {
         String jcrPath = row.getValue(pathName).getString();
         Path path;
         try {
-            path = PathFormat.parse(jcrPath, nsResolver);
-        } catch (MalformedPathException e) {
+            path = resolver.getQPath(jcrPath);
+        } catch (NameException e) {
             throw new RepositoryException(e.getMessage(), e);
         }
         this.nodeId = idFactory.createNodeId((String) null, path);
@@ -86,7 +85,7 @@ class QueryResultRowImpl implements QueryResultRow {
             if (v == null) {
                 values[i] = null;
             } else {
-                values[i] = ValueFormat.getQValue(v, nsResolver, qValueFactory);
+                values[i] = ValueFormat.getQValue(v, resolver, qValueFactory);
             }
         }
     }

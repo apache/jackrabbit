@@ -30,7 +30,7 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.jcr2spi.operation.AddNode;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
@@ -38,8 +38,7 @@ import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
 import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.Base64;
 import org.apache.jackrabbit.util.TransientFileFactory;
 import org.slf4j.LoggerFactory;
@@ -56,8 +55,8 @@ import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.name.NameConstants;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.NodeId;
@@ -65,6 +64,7 @@ import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFormat;
 import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -130,7 +130,7 @@ public class SessionImporter implements Importer, SessionListener {
         try {
             ItemState itemState = session.getHierarchyManager().getItemState(parentPath);
             if (!itemState.isNode()) {
-                throw new PathNotFoundException(LogUtil.safeGetJCRPath(parentPath, session.getNamespaceResolver()));
+                throw new PathNotFoundException(LogUtil.safeGetJCRPath(parentPath, session.getPathResolver()));
             }
             importTarget = (NodeState) itemState;
 
@@ -142,7 +142,7 @@ public class SessionImporter implements Importer, SessionListener {
             parents = new Stack();
             parents.push(importTarget);
         } catch (ItemNotFoundException e) {
-            throw new PathNotFoundException(LogUtil.safeGetJCRPath(parentPath, session.getNamespaceResolver()));
+            throw new PathNotFoundException(LogUtil.safeGetJCRPath(parentPath, session.getPathResolver()));
         }
     }
 
@@ -190,14 +190,14 @@ public class SessionImporter implements Importer, SessionListener {
                    if (def.isProtected() && entExisting.includesNodeType(nodeInfo.getNodeTypeName())) {
                        // skip protected node
                        parents.push(null); // push null onto stack for skipped node
-                       log.debug("skipping protected node " + LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver()));
+                       log.debug("skipping protected node " + LogUtil.safeGetJCRPath(existing, session.getPathResolver()));
                        return;
                    }
                    if (def.isAutoCreated() && entExisting.includesNodeType(nodeInfo.getNodeTypeName())) {
                        // this node has already been auto-created, no need to create it
                        nodeState = existing;
                    } else {
-                       throw new ItemExistsException(LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver()));
+                       throw new ItemExistsException(LogUtil.safeGetJCRPath(existing, session.getPathResolver()));
                    }
                }
            } catch (ItemNotFoundException e) {
@@ -347,17 +347,10 @@ public class SessionImporter implements Importer, SessionListener {
                 // make sure conflicting node is not importTarget or an ancestor thereof
                 Path p0 = importTarget.getQPath();
                 Path p1 = conflicting.getPath();
-                try {
-                    if (p1.equals(p0) || p1.isAncestorOf(p0)) {
-                        msg = "cannot remove ancestor node";
-                        log.debug(msg);
-                        throw new ConstraintViolationException(msg);
-                    }
-                } catch (MalformedPathException e) {
-                    // should never get here...
-                    msg = "internal error: failed to determine degree of relationship";
-                    log.error(msg, e);
-                    throw new RepositoryException(msg, e);
+                if (p1.equals(p0) || p1.isAncestorOf(p0)) {
+                    msg = "cannot remove ancestor node";
+                    log.debug(msg);
+                    throw new ConstraintViolationException(msg);
                 }
                 // do remove conflicting (recursive) including validation check
                 try {
@@ -419,9 +412,9 @@ public class SessionImporter implements Importer, SessionListener {
                 // assume this property has been imported as well;
                 // rename conflicting property
                 // TODO: use better reversible escaping scheme to create unique name
-                QName newName = new QName(nodeInfo.getName().getNamespaceURI(), nodeInfo.getName().getLocalName() + "_");
+                Name newName = session.getNameFactory().create(nodeInfo.getName().getNamespaceURI(), nodeInfo.getName().getLocalName() + "_");
                 if (parent.hasPropertyName(newName)) {
-                    newName = new QName(newName.getNamespaceURI(), newName.getLocalName() + "_");
+                    newName = session.getNameFactory().create(newName.getNamespaceURI(), newName.getLocalName() + "_");
                 }
                 // since name changes, need to find new applicable definition
                 QPropertyDefinition propDef;
@@ -452,7 +445,7 @@ public class SessionImporter implements Importer, SessionListener {
             log.debug("Skipping protected nodeState (" + nodeInfo.getName() + ")");
             return null;
         } else {
-            QName ntName = nodeInfo.getNodeTypeName();
+            Name ntName = nodeInfo.getNodeTypeName();
             if (ntName == null) {
                 // use default node type
                 ntName = def.getDefaultPrimaryType();
@@ -485,8 +478,8 @@ public class SessionImporter implements Importer, SessionListener {
      * @throws RepositoryException
      * @throws ConstraintViolationException
      */
-    private void importProperty(PropInfo pi, NodeState parentState, NamespaceResolver nsResolver) throws RepositoryException, ConstraintViolationException {
-        QName propName = pi.getName();
+    private void importProperty(PropInfo pi, NodeState parentState, org.apache.jackrabbit.namespace.NamespaceResolver nsResolver) throws RepositoryException, ConstraintViolationException {
+        Name propName = pi.getName();
         TextValue[] tva = pi.getValues();
         int infoType = pi.getType();
 
@@ -502,7 +495,7 @@ public class SessionImporter implements Importer, SessionListener {
                 def = existing.getDefinition();
                 if (def.isProtected()) {
                     // skip protected property
-                    log.debug("skipping protected property " + LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver()));
+                    log.debug("skipping protected property " + LogUtil.safeGetJCRPath(existing, session.getPathResolver()));
                     return;
                 }
                 if (def.isAutoCreated()
@@ -511,7 +504,7 @@ public class SessionImporter implements Importer, SessionListener {
                     // this property has already been auto-created, no need to create it
                     propState = existing;
                 } else {
-                    throw new ItemExistsException(LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver()));
+                    throw new ItemExistsException(LogUtil.safeGetJCRPath(existing, session.getPathResolver()));
                 }
             } catch (ItemNotFoundException e) {
                 // property apperently doesn't exist any more
@@ -574,7 +567,7 @@ public class SessionImporter implements Importer, SessionListener {
      * @return
      * @throws RepositoryException
      */
-    private QValue[] getPropertyValues(PropInfo propertyInfo, int targetType, boolean isMultiple, NamespaceResolver nsResolver) throws RepositoryException {
+    private QValue[] getPropertyValues(PropInfo propertyInfo, int targetType, boolean isMultiple, org.apache.jackrabbit.namespace.NamespaceResolver nsResolver) throws RepositoryException {
         TextValue[] tva = propertyInfo.getValues();
         // check multi-valued characteristic
         if ((tva.length == 0 || tva.length > 1) && !isMultiple) {
@@ -596,7 +589,7 @@ public class SessionImporter implements Importer, SessionListener {
      * @return
      * @throws RepositoryException
      */
-    private QValue buildQValue(TextValue tv, int targetType, NamespaceResolver nsResolver) throws RepositoryException {
+    private QValue buildQValue(TextValue tv, int targetType, org.apache.jackrabbit.namespace.NamespaceResolver nsResolver) throws RepositoryException {
         QValue iv;
         try {
             switch (targetType) {
@@ -628,7 +621,7 @@ public class SessionImporter implements Importer, SessionListener {
                 default:
                     // build iv using namespace context of xml document
                     Value v = ValueHelper.convert(tv.retrieve(), targetType, session.getValueFactory());
-                    iv = ValueFormat.getQValue(v, nsResolver, session.getQValueFactory());
+                    iv = ValueFormat.getQValue(v, session.getNamePathResolver(), session.getQValueFactory());
                     break;
             }
             return iv;
@@ -650,14 +643,14 @@ public class SessionImporter implements Importer, SessionListener {
         List l = new ArrayList();
         l.add(nodeInfo.getNodeTypeName());
         l.addAll(Arrays.asList(nodeInfo.getMixinNames()));
-        if (l.contains(QName.MIX_REFERENCEABLE)) {
+        if (l.contains(NameConstants.MIX_REFERENCEABLE)) {
             // shortcut
             return;
         }
-        QName[] ntNames = (QName[]) l.toArray(new QName[l.size()]);
+        Name[] ntNames = (Name[]) l.toArray(new Name[l.size()]);
         try {
             EffectiveNodeType ent = session.getEffectiveNodeTypeProvider().getEffectiveNodeType(ntNames);
-            if (!ent.includesNodeType(QName.MIX_REFERENCEABLE)) {
+            if (!ent.includesNodeType(NameConstants.MIX_REFERENCEABLE)) {
                 throw new ConstraintViolationException("XML defines jcr:uuid without defining import node to be referenceable.");
             }
         } catch (NodeTypeConflictException e) {

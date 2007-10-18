@@ -25,7 +25,7 @@ import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.RepositoryException;
 import java.util.Collection;
@@ -54,7 +54,8 @@ public class HierarchyEventListener implements InternalEventListener {
             EventFilter filter = null;
             try {
                 // listen to all events except 'local' ones
-                filter = wspManager.createEventFilter(Event.ALL_TYPES, Path.ROOT, true, null, null, true);
+                Path root = wspManager.getPathFactory().getRootPath();
+                filter = wspManager.createEventFilter(Event.ALL_TYPES, root, true, null, null, true);
             } catch (RepositoryException e) {
                 // spi does not support observation, or another error occurred.
             }

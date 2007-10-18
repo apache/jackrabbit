@@ -18,8 +18,8 @@ package org.apache.jackrabbit.jcr2spi.hierarchy;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
@@ -70,7 +70,7 @@ public interface NodeEntry extends HierarchyEntry {
     /**
      * @return the index of this child node entry to suppport same-name siblings.
      * If the index of this entry cannot be determined
-     * {@link org.apache.jackrabbit.name.Path#INDEX_UNDEFINED} is returned.
+     * {@link org.apache.jackrabbit.spi.Path#INDEX_UNDEFINED} is returned.
      */
     public int getIndex();
 
@@ -112,34 +112,34 @@ public interface NodeEntry extends HierarchyEntry {
      * Determines if there is a valid <code>NodeEntry</code> with the
      * specified <code>nodeName</code>.
      *
-     * @param nodeName <code>QName</code> object specifying a node name
+     * @param nodeName <code>Name</code> object specifying a node name
      * @return <code>true</code> if there is a <code>NodeEntry</code> with
      * the specified <code>nodeName</code>.
      */
-    public boolean hasNodeEntry(QName nodeName);
+    public boolean hasNodeEntry(Name nodeName);
 
     /**
      * Determines if there is a valid <code>NodeEntry</code> with the
      * specified <code>name</code> and <code>index</code>.
      *
-     * @param nodeName  <code>QName</code> object specifying a node name.
+     * @param nodeName  <code>Name</code> object specifying a node name.
      * @param index 1-based index if there are same-name child node entries.
      * @return <code>true</code> if there is a <code>NodeEntry</code> with
      * the specified <code>name</code> and <code>index</code>.
      */
-    public boolean hasNodeEntry(QName nodeName, int index);
+    public boolean hasNodeEntry(Name nodeName, int index);
 
     /**
      * Returns the valid <code>NodeEntry</code> with the specified name
      * and index or <code>null</code> if there's no matching entry.
      *
-     * @param nodeName <code>QName</code> object specifying a node name.
+     * @param nodeName <code>Name</code> object specifying a node name.
      * @param index 1-based index if there are same-name child node entries.
      * @return The <code>NodeEntry</code> with the specified name and index
      * or <code>null</code> if there's no matching entry.
      * @throws RepositoryException If an unexpected error occurs.
      */
-    public NodeEntry getNodeEntry(QName nodeName, int index) throws RepositoryException;
+    public NodeEntry getNodeEntry(Name nodeName, int index) throws RepositoryException;
 
     /**
      * Returns the valid <code>NodeEntry</code> with the specified name
@@ -148,14 +148,14 @@ public interface NodeEntry extends HierarchyEntry {
      * sure, that it's list of child entries is up to date and eventually
      * try to load the node entry.
      *
-     * @param nodeName <code>QName</code> object specifying a node name.
+     * @param nodeName <code>Name</code> object specifying a node name.
      * @param index 1-based index if there are same-name child node entries.
      * @param loadIfNotFound
      * @return The <code>NodeEntry</code> with the specified name and index
      * or <code>null</code> if there's no matching entry.
      * @throws RepositoryException If an unexpected error occurs.
      */
-    public NodeEntry getNodeEntry(QName nodeName, int index, boolean loadIfNotFound) throws RepositoryException;
+    public NodeEntry getNodeEntry(Name nodeName, int index, boolean loadIfNotFound) throws RepositoryException;
 
     /**
      * Returns a unmodifiable iterator of <code>NodeEntry</code> objects
@@ -174,7 +174,7 @@ public interface NodeEntry extends HierarchyEntry {
      * @return list of <code>NodeEntry</code> objects
      * @throws RepositoryException If an unexpected error occurs.
      */
-    public List getNodeEntries(QName nodeName) throws RepositoryException;
+    public List getNodeEntries(Name nodeName) throws RepositoryException;
 
     /**
      * Adds a new child NodeEntry to this entry.
@@ -184,7 +184,7 @@ public interface NodeEntry extends HierarchyEntry {
      * @return the new <code>NodeEntry</code>
      * @throws RepositoryException If an unexpected error occurs.
      */
-    public NodeEntry addNodeEntry(QName nodeName, String uniqueID, int index) throws RepositoryException;
+    public NodeEntry addNodeEntry(Name nodeName, String uniqueID, int index) throws RepositoryException;
 
     /**
      * Adds a new, transient child <code>NodeEntry</code>
@@ -196,27 +196,27 @@ public interface NodeEntry extends HierarchyEntry {
      * @return
      * @throws RepositoryException If an error occurs.
      */
-    public NodeState addNewNodeEntry(QName nodeName, String uniqueID, QName primaryNodeType, QNodeDefinition definition) throws RepositoryException;
+    public NodeState addNewNodeEntry(Name nodeName, String uniqueID, Name primaryNodeType, QNodeDefinition definition) throws RepositoryException;
 
     /**
-     * Determines if there is a property entry with the specified <code>QName</code>.
+     * Determines if there is a property entry with the specified <code>Name</code>.
      *
-     * @param propName <code>QName</code> object specifying a property name
+     * @param propName <code>Name</code> object specifying a property name
      * @return <code>true</code> if there is a property entry with the specified
-     * <code>QName</code>.
+     * <code>Name</code>.
      */
-    public boolean hasPropertyEntry(QName propName);
+    public boolean hasPropertyEntry(Name propName);
 
     /**
      * Returns the valid <code>PropertyEntry</code> with the specified name
      * or <code>null</code> if no matching entry exists.
      *
-     * @param propName <code>QName</code> object specifying a property name.
+     * @param propName <code>Name</code> object specifying a property name.
      * @return The <code>PropertyEntry</code> with the specified name or
      * <code>null</code> if no matching entry exists.
      * @throws RepositoryException If an unexpected error occurs.
      */
-    public PropertyEntry getPropertyEntry(QName propName) throws RepositoryException;
+    public PropertyEntry getPropertyEntry(Name propName) throws RepositoryException;
 
     /**
      * Returns the valid <code>PropertyEntry</code> with the specified name
@@ -225,13 +225,13 @@ public interface NodeEntry extends HierarchyEntry {
      * sure, that it's list of property entries is up to date and eventually
      * try to load the property entry with the given name.
      *
-     * @param propName <code>QName</code> object specifying a property name.
+     * @param propName <code>Name</code> object specifying a property name.
      * @param loadIfNotFound
      * @return The <code>PropertyEntry</code> with the specified name or
      * <code>null</code> if no matching entry exists.
      * @throws RepositoryException If an unexpected error occurs.
      */
-    public PropertyEntry getPropertyEntry(QName propName,  boolean loadIfNotFound) throws RepositoryException;
+    public PropertyEntry getPropertyEntry(Name propName,  boolean loadIfNotFound) throws RepositoryException;
 
     /**
      * Returns an unmodifiable Iterator over those children that represent valid
@@ -243,7 +243,7 @@ public interface NodeEntry extends HierarchyEntry {
 
     /**
      * Add an existing <code>PropertyEntry</code> with the given name.
-     * Please note the difference to {@link #addNewPropertyEntry(QName, QPropertyDefinition)}
+     * Please note the difference to {@link #addNewPropertyEntry(Name, QPropertyDefinition)}
      * which adds a new, transient entry.
      *
      * @param propName
@@ -251,10 +251,10 @@ public interface NodeEntry extends HierarchyEntry {
      * @throws ItemExistsException if a child item exists with the given name
      * @throws RepositoryException if an unexpected error occurs.
      */
-    public PropertyEntry addPropertyEntry(QName propName) throws ItemExistsException, RepositoryException;
+    public PropertyEntry addPropertyEntry(Name propName) throws ItemExistsException, RepositoryException;
 
     /**
-     * Adds property entries for the given <code>QName</code>s. It depends on
+     * Adds property entries for the given <code>Name</code>s. It depends on
      * the status of this <code>NodeEntry</code>, how conflicts are resolved
      * and whether or not existing entries that are missing in the iterator
      * get removed.
@@ -274,7 +274,7 @@ public interface NodeEntry extends HierarchyEntry {
      * @throws ItemExistsException
      * @throws RepositoryException if an unexpected error occurs.
      */
-    public PropertyState addNewPropertyEntry(QName propName, QPropertyDefinition definition) throws ItemExistsException, RepositoryException;
+    public PropertyState addNewPropertyEntry(Name propName, QPropertyDefinition definition) throws ItemExistsException, RepositoryException;
 
     /**
      * Reorders this NodeEntry before the sibling entry specified by the given
@@ -300,7 +300,7 @@ public interface NodeEntry extends HierarchyEntry {
      * @throws RepositoryException If the entry to be moved is not a child of this
      * NodeEntry or if an unexpected error occurs.
      */
-    public NodeEntry move(QName newName, NodeEntry newParent, boolean transientMove) throws RepositoryException;
+    public NodeEntry move(Name newName, NodeEntry newParent, boolean transientMove) throws RepositoryException;
 
     /**
      * @return true if this <code>NodeEntry</code> is transiently moved.

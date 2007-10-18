@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
@@ -56,7 +56,7 @@ class FilteredEventIterator implements EventIterator {
     /**
      * The namespace resolver of the session that created this event iterator.
      */
-    private final NamespaceResolver nsResolver;
+    private final NamePathResolver resolver;
 
     /**
      * The next {@link javax.jcr.observation.Event} in this iterator
@@ -75,16 +75,15 @@ class FilteredEventIterator implements EventIterator {
      *                   bundle.
      * @param filter     only event that pass the filter will be dispatched to
      *                   the event listener.
-     * @param nsResolver the namespace resolver of the session that created this
-     *                   <code>FilteredEventIterator</code>.
+     * @param resolver
      */
     public FilteredEventIterator(EventBundle events,
                                  EventFilter filter,
-                                 NamespaceResolver nsResolver) {
+                                 NamePathResolver resolver) {
         this.actualEvents = events.getEvents();
         this.filter = filter;
         this.isLocal = events.isLocal();
-        this.nsResolver = nsResolver;
+        this.resolver = resolver;
         fetchNext();
     }
 
@@ -162,7 +161,7 @@ class FilteredEventIterator implements EventIterator {
         next = null;
         while (next == null && actualEvents.hasNext()) {
             event = (org.apache.jackrabbit.spi.Event) actualEvents.next();
-            next = filter.accept(event, isLocal) ? new EventImpl(nsResolver, event) : null;
+            next = filter.accept(event, isLocal) ? new EventImpl(resolver, event) : null;
         }
     }
 }

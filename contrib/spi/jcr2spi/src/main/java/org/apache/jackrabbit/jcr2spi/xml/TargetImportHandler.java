@@ -16,8 +16,9 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.util.TransientFileFactory;
+import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.SAXException;
 import org.slf4j.LoggerFactory;
@@ -44,10 +45,12 @@ abstract class TargetImportHandler extends DefaultHandler {
 
     protected final Importer importer;
     protected final NamespaceResolver nsContext;
+    protected final NameResolver nameResolver;
 
-    protected TargetImportHandler(Importer importer, NamespaceResolver nsContext) {
+    protected TargetImportHandler(Importer importer, NamespaceResolver nsContext, org.apache.jackrabbit.conversion.NameResolver nameResolver) {
         this.importer = importer;
         this.nsContext = nsContext;
+        this.nameResolver = nameResolver;
     }
 
     /**

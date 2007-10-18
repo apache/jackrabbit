@@ -23,7 +23,8 @@ import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.SessionImpl;
 import org.apache.jackrabbit.jcr2spi.ItemLifeCycleListener;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
 
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
@@ -65,7 +66,7 @@ public class VersionImpl extends NodeImpl implements Version {
      * @see Version#getCreated()
      */
     public Calendar getCreated() throws RepositoryException {
-        return getProperty(QName.JCR_CREATED).getDate();
+        return getProperty(NameConstants.JCR_CREATED).getDate();
     }
 
     /**
@@ -75,7 +76,7 @@ public class VersionImpl extends NodeImpl implements Version {
      * @see Version#getSuccessors()
      */
     public Version[] getSuccessors() throws RepositoryException {
-        return getVersions(QName.JCR_SUCCESSORS);
+        return getVersions(NameConstants.JCR_SUCCESSORS);
     }
 
     /**
@@ -85,7 +86,7 @@ public class VersionImpl extends NodeImpl implements Version {
      * @see Version#getPredecessors()
      */
     public Version[] getPredecessors() throws RepositoryException {
-        return getVersions(QName.JCR_PREDECESSORS);
+        return getVersions(NameConstants.JCR_PREDECESSORS);
     }
 
     //---------------------------------------------------------------< Item >---
@@ -141,7 +142,7 @@ public class VersionImpl extends NodeImpl implements Version {
      * @param propertyName
      * @return
      */
-    private Version[] getVersions(QName propertyName) throws RepositoryException {
+    private Version[] getVersions(Name propertyName) throws RepositoryException {
         Version[] versions;
         Value[] values = getProperty(propertyName).getValues();
         if (values != null) {

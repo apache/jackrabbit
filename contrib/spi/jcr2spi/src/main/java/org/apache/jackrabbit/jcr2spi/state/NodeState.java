@@ -21,11 +21,12 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.util.StateUtility;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.NodeInfo;
+import org.apache.jackrabbit.name.NameConstants;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -49,7 +50,7 @@ public class NodeState extends ItemState {
     /**
      * the name of this node's primary type
      */
-    private final QName nodeTypeName;
+    private final Name nodeTypeName;
 
     /**
      * Definition of this node state
@@ -59,7 +60,7 @@ public class NodeState extends ItemState {
     /**
      * the names of this node's mixin types
      */
-    private QName[] mixinTypeNames = QName.EMPTY_ARRAY;
+    private Name[] mixinTypeNames = Name.EMPTY_ARRAY;
 
     /**
      * Constructs a NEW NodeState
@@ -71,7 +72,7 @@ public class NodeState extends ItemState {
      * @param definition
      * @param definitionProvider
      */
-    protected NodeState(NodeEntry entry, QName nodeTypeName, QName[] mixinTypeNames,
+    protected NodeState(NodeEntry entry, Name nodeTypeName, Name[] mixinTypeNames,
                         ItemStateFactory isf, QNodeDefinition definition,
                         ItemDefinitionProvider definitionProvider) {
         super(Status.NEW, entry, isf, definitionProvider);
@@ -255,7 +256,7 @@ public class NodeState extends ItemState {
 
                 // if property state defines a modified jcr:mixinTypes the parent
                 // is listed as modified state and needs to be processed at the end.
-                if (QName.JCR_MIXINTYPES.equals(modState.getQName())) {
+                if (NameConstants.JCR_MIXINTYPES.equals(modState.getName())) {
                     try {
                         modifiedParent(modState.getParent(), modState, modParents);
                     } catch (RepositoryException e) {
@@ -332,7 +333,7 @@ public class NodeState extends ItemState {
      *
      * @return the name of this node's node type.
      */
-    public QName getNodeTypeName() {
+    public Name getNodeTypeName() {
         return nodeTypeName;
     }
 
@@ -341,7 +342,7 @@ public class NodeState extends ItemState {
      *
      * @return a set of the names of this node's mixin types.
      */
-    public QName[] getMixinTypeNames() {
+    public Name[] getMixinTypeNames() {
         return mixinTypeNames;
     }
 
@@ -351,7 +352,7 @@ public class NodeState extends ItemState {
      *
      * @param mixinTypeNames
      */
-    public void setMixinTypeNames(QName[] mixinTypeNames) {
+    public void setMixinTypeNames(Name[] mixinTypeNames) {
         if (mixinTypeNames != null) {
             this.mixinTypeNames = mixinTypeNames;
         }
@@ -363,10 +364,10 @@ public class NodeState extends ItemState {
      *
      * @return array of NodeType names
      */
-    public synchronized QName[] getNodeTypeNames() {
+    public synchronized Name[] getNodeTypeNames() {
         // mixin types
-        QName[] mixinNames = getMixinTypeNames();
-        QName[] types = new QName[mixinNames.length + 1];
+        Name[] mixinNames = getMixinTypeNames();
+        Name[] types = new Name[mixinNames.length + 1];
         System.arraycopy(mixinNames, 0, types, 0, mixinNames.length);
         // primary type
         types[types.length - 1] = getNodeTypeName();
@@ -402,12 +403,12 @@ public class NodeState extends ItemState {
      * Determines if there is a valid <code>NodeEntry</code> with the
      * specified <code>name</code> and <code>index</code>.
      *
-     * @param name  <code>QName</code> object specifying a node name.
+     * @param name  <code>Name</code> object specifying a node name.
      * @param index 1-based index if there are same-name child node entries.
      * @return <code>true</code> if there is a <code>NodeEntry</code> with
      * the specified <code>name</code> and <code>index</code>.
      */
-    public boolean hasChildNodeEntry(QName name, int index) {
+    public boolean hasChildNodeEntry(Name name, int index) {
         return getNodeEntry().hasNodeEntry(name, index);
     }
 
@@ -417,13 +418,13 @@ public class NodeState extends ItemState {
      * and index. Throws <code>ItemNotFoundException</code> if there's no
      * matching, valid entry.
      *
-     * @param nodeName <code>QName</code> object specifying a node name.
+     * @param nodeName <code>Name</code> object specifying a node name.
      * @param index 1-based index if there are same-name child node entries.
      * @return The <code>NodeState</code> with the specified name and index
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    public NodeState getChildNodeState(QName nodeName, int index) throws ItemNotFoundException, RepositoryException {
+    public NodeState getChildNodeState(Name nodeName, int index) throws ItemNotFoundException, RepositoryException {
         NodeEntry ne = getNodeEntry().getNodeEntry(nodeName, index, true);
         if (ne != null) {
             return ne.getNodeState();
@@ -436,11 +437,11 @@ public class NodeState extends ItemState {
     /**
      * Utility
      *
-     * @param propName <code>QName</code> object specifying a property name
+     * @param propName <code>Name</code> object specifying a property name
      * @return <code>true</code> if there is a valid property entry with the
-     * specified <code>QName</code>.
+     * specified <code>Name</code>.
      */
-    public boolean hasPropertyName(QName propName) {
+    public boolean hasPropertyName(Name propName) {
         return getNodeEntry().hasPropertyEntry(propName);
     }
 
@@ -455,10 +456,10 @@ public class NodeState extends ItemState {
      * @throws RepositoryException If an error occurs while retrieving the
      * property state.
      *
-     * @see NodeEntry#getPropertyEntry(QName, boolean)
+     * @see NodeEntry#getPropertyEntry(Name, boolean)
      * @see PropertyEntry#getPropertyState()
      */
-    public PropertyState getPropertyState(QName propertyName) throws ItemNotFoundException, RepositoryException {
+    public PropertyState getPropertyState(Name propertyName) throws ItemNotFoundException, RepositoryException {
         PropertyEntry pe = getNodeEntry().getPropertyEntry(propertyName, true);
         if (pe != null) {
             return pe.getPropertyState();
@@ -495,12 +496,12 @@ public class NodeState extends ItemState {
      *
      * @param newParent
      * @param childState
-     * @param newName <code>QName</code> object specifying the entry's new name
+     * @param newName <code>Name</code> object specifying the entry's new name
      * @throws RepositoryException if the given child state is not a child
      * of this node state.
      */
     synchronized void moveChildNodeEntry(NodeState newParent, NodeState childState,
-                                         QName newName, QNodeDefinition newDefinition)
+                                         Name newName, QNodeDefinition newDefinition)
         throws RepositoryException {
         // move child entry
         childState.getNodeEntry().move(newName, newParent.getNodeEntry(), true);
@@ -525,7 +526,7 @@ public class NodeState extends ItemState {
             l = new ArrayList(2);
             modParents.put(parent, l);
         }
-        if (childState != null && !childState.isNode() && StateUtility.isUuidOrMixin(childState.getQName())) {
+        if (childState != null && !childState.isNode() && StateUtility.isUuidOrMixin(childState.getName())) {
             l.add(childState);
         }
     }
@@ -538,15 +539,15 @@ public class NodeState extends ItemState {
     private static void adjustNodeState(NodeState parent, PropertyState[] props) {
         for (int i = 0; i < props.length; i++) {
             PropertyState propState = props[i];
-            if (QName.JCR_UUID.equals(propState.getQName())) {
+            if (NameConstants.JCR_UUID.equals(propState.getName())) {
                 if (propState.getStatus() == Status.REMOVED) {
                     parent.getNodeEntry().setUniqueID(null);
                 } else {
                     // retrieve uuid from persistent layer
                     propState.reload(false);
                 }
-            } else if (QName.JCR_MIXINTYPES.equals(propState.getQName())) {
-                QName[] mixins = StateUtility.getMixinNames(propState);
+            } else if (NameConstants.JCR_MIXINTYPES.equals(propState.getName())) {
+                Name[] mixins = StateUtility.getMixinNames(propState);
                 parent.setMixinTypeNames(mixins);
             } // else: ignore.
         }

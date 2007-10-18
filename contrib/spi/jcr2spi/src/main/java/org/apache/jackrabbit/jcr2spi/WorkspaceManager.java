@@ -65,8 +65,8 @@ import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEventListener;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManagerImpl;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.NodeId;
@@ -81,6 +81,8 @@ import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.Event;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.PathFactory;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -195,8 +197,16 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         return service.getWorkspaceNames(sessionInfo);
     }
 
-    public IdFactory getIdFactory() {
+    public IdFactory getIdFactory() throws RepositoryException {
         return idFactory;
+    }
+
+    public NameFactory getNameFactory() throws RepositoryException {
+        return service.getNameFactory();
+    }
+
+    public PathFactory getPathFactory() throws RepositoryException {
+        return service.getPathFactory();
     }
 
     public ItemStateFactory getItemStateFactory() {
@@ -336,7 +346,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      *          if this implementation does not support observation.
      */
     public EventFilter createEventFilter(int eventTypes, Path path, boolean isDeep,
-                                         String[] uuids, QName[] nodeTypes,
+                                         String[] uuids, Name[] nodeTypes,
                                          boolean noLocal)
         throws UnsupportedRepositoryOperationException, RepositoryException {
         return service.createEventFilter(sessionInfo, eventTypes, path, isDeep, uuids, nodeTypes, noLocal);
@@ -356,8 +366,8 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      *
      * @return
      */
-    private HierarchyManager createHierarchyManager(TransientItemStateFactory tisf, IdFactory idFactory) {
-        return new HierarchyManagerImpl(tisf, idFactory);
+    private HierarchyManager createHierarchyManager(TransientItemStateFactory tisf, IdFactory idFactory) throws RepositoryException {
+        return new HierarchyManagerImpl(tisf, idFactory, getPathFactory());
     }
 
     /**
@@ -374,8 +384,8 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @param nsCache the namespace cache.
      * @return
      */
-    private NamespaceRegistryImpl createNamespaceRegistry(NamespaceCache nsCache) {
-        return new NamespaceRegistryImpl(this, nsCache);
+    private NamespaceRegistryImpl createNamespaceRegistry(NamespaceCache nsCache) throws RepositoryException {
+        return new NamespaceRegistryImpl(this, nsCache, getNameFactory(), getPathFactory());
     }
 
     /**
@@ -388,7 +398,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             public Iterator getAllDefinitions() throws RepositoryException {
                 return service.getQNodeTypeDefinitions(sessionInfo);
             }
-            public Iterator getDefinitions(QName[] nodeTypeNames) throws NoSuchNodeTypeException, RepositoryException {
+            public Iterator getDefinitions(Name[] nodeTypeNames) throws NoSuchNodeTypeException, RepositoryException {
                 return service.getQNodeTypeDefinitions(sessionInfo, nodeTypeNames);
             }
             public void registerNodeTypes(QNodeTypeDefinition[] nodeTypeDefs) throws NoSuchNodeTypeException, RepositoryException {
@@ -397,7 +407,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             public void reregisterNodeTypes(QNodeTypeDefinition[] nodeTypeDefs) throws NoSuchNodeTypeException, RepositoryException {
                 throw new UnsupportedOperationException("NodeType registration not yet defined by the SPI");
             }
-            public void unregisterNodeTypes(QName[] nodeTypeNames) throws NoSuchNodeTypeException, RepositoryException {
+            public void unregisterNodeTypes(Name[] nodeTypeNames) throws NoSuchNodeTypeException, RepositoryException {
                 throw new UnsupportedOperationException("NodeType registration not yet defined by the SPI");
             }
         };
@@ -640,7 +650,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                         default:
                             type = "Unknown";
                     }
-                    log.debug("  {}; {}", e.getQPath(), type);
+                    log.debug("  {}; {}", e.getPath(), type);
                 }
             }
         }
@@ -722,7 +732,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
          */
         public void visit(AddProperty operation) throws RepositoryException {
             NodeId parentId = operation.getParentId();
-            QName propertyName = operation.getPropertyName();
+            Name propertyName = operation.getPropertyName();
             if (operation.isMultiValued()) {
                 batch.addProperty(parentId, propertyName, operation.getValues());
             } else {

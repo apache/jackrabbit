@@ -19,7 +19,7 @@ package org.apache.jackrabbit.jcr2spi.operation;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 
 import javax.jcr.RepositoryException;
@@ -38,13 +38,13 @@ public class AddProperty extends AbstractOperation {
 
     private final NodeId parentId;
     private final NodeState parentState;
-    private final QName propertyName;
+    private final Name propertyName;
     private final int propertyType;
     private final QValue[] values;
 
     private final QPropertyDefinition definition;
 
-    private AddProperty(NodeState parentState, QName propName, int propertyType, QValue[] values, QPropertyDefinition definition) {
+    private AddProperty(NodeState parentState, Name propName, int propertyType, QValue[] values, QPropertyDefinition definition) {
         this.parentId = parentState.getNodeId();
         this.parentState = parentState;
         this.propertyName = propName;
@@ -81,7 +81,7 @@ public class AddProperty extends AbstractOperation {
         return parentState;
     }
 
-    public QName getPropertyName() {
+    public Name getPropertyName() {
         return propertyName;
     }
 
@@ -111,7 +111,7 @@ public class AddProperty extends AbstractOperation {
      * @param values
      * @return
      */
-    public static Operation create(NodeState parentState, QName propName, int propertyType,
+    public static Operation create(NodeState parentState, Name propName, int propertyType,
                                    QPropertyDefinition def, QValue[] values) {
         AddProperty ap = new AddProperty(parentState, propName, propertyType, values, def);
         return ap;

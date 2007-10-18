@@ -21,7 +21,7 @@ import org.apache.jackrabbit.jcr2spi.operation.AddNode;
 import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameConstants;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -308,7 +308,7 @@ public class ChangeLog {
             if (op instanceof AddNode) {
                 AddNode operation = (AddNode) op;
                 if (operation.getParentState() == parent
-                        && operation.getNodeName().equals(state.getQName())) {
+                        && operation.getNodeName().equals(state.getName())) {
                     // TODO: this will not work for name name siblings!
                     it.remove();
                     break;
@@ -316,12 +316,12 @@ public class ChangeLog {
             } else if (op instanceof AddProperty) {
                 AddProperty operation = (AddProperty) op;
                 if (operation.getParentState() == parent
-                        && operation.getPropertyName().equals(state.getQName())) {
+                        && operation.getPropertyName().equals(state.getName())) {
                     it.remove();
                     break;
                 }
             } else if (op instanceof SetMixin &&
-                    QName.JCR_MIXINTYPES.equals(state.getQName()) &&
+                    NameConstants.JCR_MIXINTYPES.equals(state.getName()) &&
                     ((SetMixin)op).getNodeState() == parent) {
                 it.remove();
                 break;

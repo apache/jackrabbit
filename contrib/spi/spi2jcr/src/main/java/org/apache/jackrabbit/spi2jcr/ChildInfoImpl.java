@@ -16,14 +16,13 @@
  */
 package org.apache.jackrabbit.spi2jcr;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.NameException;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.NamespaceException;
 
 /**
  * <code>ChildInfoImpl</code> implements a <code>ChildInfo</code> and provides
@@ -35,17 +34,17 @@ class ChildInfoImpl extends org.apache.jackrabbit.spi.commons.ChildInfoImpl {
      * Creates a new <code>ChildInfoImpl</code> for <code>node</code>.
      *
      * @param node       the JCR node.
-     * @param nsResolver the namespace resolver in use.
+     * @param resolver
      * @throws RepositoryException    if an error occurs while reading from
      *                                <code>node</code>.
-     * @throws IllegalNameException   if the <code>node</code> name is illegal.
-     * @throws UnknownPrefixException if the name of the <code>node</code>
+     * @throws NameException   if the <code>node</code> name is illegal.
+     * @throws NamespaceException if the name of the <code>node</code>
      *                                contains a prefix not known to
      *                                <code>nsResolver</code>.
      */
-    public ChildInfoImpl(Node node, NamespaceResolver nsResolver)
-            throws RepositoryException, IllegalNameException, UnknownPrefixException {
-        super(NameFormat.parse(node.getName(), nsResolver),
+    public ChildInfoImpl(Node node, NamePathResolver resolver)
+            throws NamespaceException, NameException, RepositoryException {
+        super(resolver.getQName(node.getName()),
                 getUniqueId(node), node.getIndex());
     }
 

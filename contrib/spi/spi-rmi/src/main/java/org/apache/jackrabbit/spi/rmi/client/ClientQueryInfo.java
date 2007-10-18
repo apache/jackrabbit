@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.spi.rmi.client;
 
 import org.apache.jackrabbit.spi.QueryInfo;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.rmi.remote.RemoteQueryInfo;
-import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.RangeIterator;
 import java.rmi.RemoteException;
@@ -57,7 +57,7 @@ class ClientQueryInfo implements QueryInfo {
     /**
      * {@inheritDoc}
      */
-    public QName[] getColumnNames() {
+    public Name[] getColumnNames() {
         try {
             return queryInfo.getColumnNames();
         } catch (RemoteException e) {

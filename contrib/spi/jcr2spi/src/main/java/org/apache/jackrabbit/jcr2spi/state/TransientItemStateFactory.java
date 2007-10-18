@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.spi.QNodeDefinition;
@@ -38,7 +38,7 @@ public interface TransientItemStateFactory extends ItemStateFactory {
      * @return the created <code>NodeState</code>
      */
     public NodeState createNewNodeState(NodeEntry entry,
-                                        QName nodeTypeName,
+                                        Name nodeTypeName,
                                         QNodeDefinition definition);
 
     /**

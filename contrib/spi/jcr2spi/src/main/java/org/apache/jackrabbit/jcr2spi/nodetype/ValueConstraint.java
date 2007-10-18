@@ -16,25 +16,25 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.UnknownPrefixException;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.PathResolver;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.value.DateValue;
+import org.apache.jackrabbit.nodetype.InvalidConstraintException;
+import org.apache.jackrabbit.name.PathFactoryImpl;
+import org.apache.jackrabbit.name.NameFactoryImpl;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
+import javax.jcr.NamespaceException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.Calendar;
 import java.util.regex.Matcher;
@@ -72,8 +72,9 @@ public abstract class ValueConstraint {
      *
      * @return the definition of this constraint.
      * @see #getQualifiedDefinition()
+     * @param resolver
      */
-    public String getDefinition(NamespaceResolver nsResolver) {
+    public String getDefinition(NamePathResolver resolver) {
         return qualifiedDefinition;
     }
 
@@ -81,7 +82,7 @@ public abstract class ValueConstraint {
      * By default the qualified definition is the same as the JCR definition.
      *
      * @return the qualified definition String
-     * @see #getDefinition(NamespaceResolver)
+     * @see #getDefinition(NamePathResolver)
      */
     public String getQualifiedDefinition() {
         return qualifiedDefinition;
@@ -171,12 +172,12 @@ public abstract class ValueConstraint {
      *
      * @param type
      * @param definition
-     * @param nsResolver
+     * @param resolver
      * @return
      * @throws InvalidConstraintException
      */
     public static ValueConstraint create(int type, String definition,
-                                         NamespaceResolver nsResolver)
+                                         NamePathResolver resolver)
             throws InvalidConstraintException {
         if (definition == null) {
             throw new IllegalArgumentException("Illegal definition (null) for ValueConstraint.");
@@ -199,13 +200,13 @@ public abstract class ValueConstraint {
                 return new NumericConstraint(definition);
 
             case PropertyType.NAME:
-                return new NameConstraint(definition, nsResolver);
+                return new NameConstraint(definition, resolver);
 
             case PropertyType.PATH:
-                return new PathConstraint(definition, nsResolver);
+                return new PathConstraint(definition, resolver);
 
             case PropertyType.REFERENCE:
-                return new ReferenceConstraint(definition, nsResolver);
+                return new ReferenceConstraint(definition, resolver);
 
             default:
                 throw new IllegalArgumentException("Unknown/unsupported target type for constraint: " + PropertyType.nameFromValue(type));
@@ -621,6 +622,7 @@ class DateConstraint extends ValueConstraint {
  * <code>PathConstraint</code> ...
  */
 class PathConstraint extends ValueConstraint {
+
     final Path path;
     final boolean deep;
 
@@ -628,10 +630,11 @@ class PathConstraint extends ValueConstraint {
         super(qualifiedDefinition);
         // constraint format: qualified absolute or relative path with optional trailing wildcard
         deep = qualifiedDefinition.endsWith("*");
-        path = Path.valueOf(qualifiedDefinition);
+        // TODO improve. don't rely on a specific factory impl
+        path = PathFactoryImpl.getInstance().create(qualifiedDefinition);
     }
 
-    PathConstraint(String definition, NamespaceResolver nsResolver)
+    PathConstraint(String definition, PathResolver resolver)
             throws InvalidConstraintException {
         super(definition);
 
@@ -642,23 +645,28 @@ class PathConstraint extends ValueConstraint {
             definition = definition.substring(0, definition.length() - 1);
         }
         try {
-            path = PathFormat.parse(definition, nsResolver);
-        } catch (MalformedPathException mpe) {
+            path = resolver.getQPath(definition);
+        } catch (NameException e) {
             String msg = "Invalid path expression specified as value constraint: " + definition;
             log.debug(msg);
-            throw new InvalidConstraintException(msg, mpe);
+            throw new InvalidConstraintException(msg, e);
+        } catch (NamespaceException e) {
+            String msg = "Invalid path expression specified as value constraint: " + definition;
+            log.debug(msg);
+            throw new InvalidConstraintException(msg, e);
         }
     }
 
     /**
-     * Uses {@link PathFormat#format(Path, NamespaceResolver)} to convert the
+     * Uses {@link NamePathResolver#getJCRPath(Path)} to convert the
      * qualified <code>Path</code> into a JCR path.
      *
-     * @see ValueConstraint#getDefinition(NamespaceResolver)
+     * @see ValueConstraint#getDefinition(NamePathResolver)
+     * @param resolver
      */
-    public String getDefinition(NamespaceResolver nsResolver) {
+    public String getDefinition(NamePathResolver resolver) {
         try {
-            String p = PathFormat.format(path, nsResolver);
+            String p = resolver.getJCRPath(path);
             if (!deep) {
                 return p;
             } else if (path.denotesRoot()) {
@@ -666,7 +674,7 @@ class PathConstraint extends ValueConstraint {
             } else {
                 return p + "/*";
             }
-        } catch (NoPrefixDeclaredException npde) {
+        } catch (NamespaceException e) {
             // should never get here, return raw definition as fallback
             return getQualifiedDefinition();
         }
@@ -697,7 +705,7 @@ class PathConstraint extends ValueConstraint {
                 try {
                     p0 = path.getNormalizedPath();
                     p1 = p.getNormalizedPath();
-                } catch (MalformedPathException e) {
+                } catch (RepositoryException e) {
                     throw new ConstraintViolationException("path not valid: " + e);
                 }
                 if (deep) {
@@ -707,7 +715,7 @@ class PathConstraint extends ValueConstraint {
                                 + " does not satisfy the constraint '"
                                 + getQualifiedDefinition() + "'");
                         }
-                    } catch (MalformedPathException e) {
+                    } catch (RepositoryException e) {
                         // can't compare relative with absolute path
                         throw new ConstraintViolationException(p
                             + " does not satisfy the constraint '"
@@ -738,44 +746,45 @@ class PathConstraint extends ValueConstraint {
  */
 class NameConstraint extends ValueConstraint {
 
-    private final QName name;
+    private final Name name;
 
     NameConstraint(String qualifiedDefinition) {
         super(qualifiedDefinition);
         // constraint format: String representation of qualified name
-        name = QName.valueOf(qualifiedDefinition);
+        // TODO improve. don't rely on a specific factory impl
+        name = NameFactoryImpl.getInstance().create(qualifiedDefinition);
     }
 
-    NameConstraint(String definition, NamespaceResolver nsResolver)
+    NameConstraint(String definition, NameResolver resolver)
             throws InvalidConstraintException {
         super(definition);
         // constraint format: JCR name in prefix form
         try {
-            NameFormat.checkFormat(definition);
-            name = NameFormat.parse(definition, nsResolver);
-        } catch (IllegalNameException ine) {
+            name = resolver.getQName(definition);
+        } catch (NameException e) {
             String msg = "invalid name specified as value constraint: "
                     + definition;
             log.debug(msg);
-            throw new InvalidConstraintException(msg, ine);
-        } catch (NameException upe) {
+            throw new InvalidConstraintException(msg, e);
+        } catch (NamespaceException e) {
             String msg = "invalid name specified as value constraint: "
                     + definition;
             log.debug(msg);
-            throw new InvalidConstraintException(msg, upe);
+            throw new InvalidConstraintException(msg, e);
         }
     }
 
     /**
-     * Uses {@link NameFormat#format(QName, NamespaceResolver)} to convert the
-     * qualified <code>QName</code> into a JCR name.
+     * Uses {@link NamePathResolver#getJCRName(Name)} to convert the
+     * qualified <code>Name</code> into a JCR name.
      *
-     * @see ValueConstraint#getDefinition(NamespaceResolver)
+     * @see ValueConstraint#getDefinition(NamePathResolver)
+     * @param resolver
      */
-    public String getDefinition(NamespaceResolver nsResolver) {
+    public String getDefinition(NamePathResolver resolver) {
         try {
-            return NameFormat.format(name, nsResolver);
-        } catch (NoPrefixDeclaredException npde) {
+            return resolver.getJCRName(name);
+        } catch (NamespaceException e) {
             // should never get here, return raw definition as fallback
             return getQualifiedDefinition();
         }
@@ -800,7 +809,7 @@ class NameConstraint extends ValueConstraint {
         }
         switch (value.getType()) {
             case PropertyType.NAME:
-                QName n = value.getQName();
+                Name n = value.getName();
                 if (!name.equals(n)) {
                     throw new ConstraintViolationException(n
                             + " does not satisfy the constraint '"
@@ -823,43 +832,50 @@ class NameConstraint extends ValueConstraint {
  */
 class ReferenceConstraint extends ValueConstraint {
 
-    private final QName ntName;
+    private final Name ntName;
 
     ReferenceConstraint(String qualifiedDefinition) {
         super(qualifiedDefinition);
         // format: qualified node type name
-        ntName = QName.valueOf(qualifiedDefinition);
+        // TODO improve. don't rely on a specific factory impl
+        ntName = NameFactoryImpl.getInstance().create(qualifiedDefinition);
     }
 
-    ReferenceConstraint(String definition, NamespaceResolver nsResolver) throws InvalidConstraintException {
+    ReferenceConstraint(String definition, NamePathResolver resolver) throws InvalidConstraintException {
         super(definition);
 
         // format: node type name
         try {
-            ntName = NameFormat.parse(definition, nsResolver);
-        } catch (IllegalNameException ine) {
+            ntName = resolver.getQName(definition);
+        } catch (org.apache.jackrabbit.conversion.IllegalNameException ine) {
             String msg = "invalid node type name specified as value constraint: "
                     + definition;
             log.debug(msg);
             throw new InvalidConstraintException(msg, ine);
-        } catch (UnknownPrefixException upe) {
+        } catch (NameException e) {
             String msg = "invalid node type name specified as value constraint: "
                     + definition;
             log.debug(msg);
-            throw new InvalidConstraintException(msg, upe);
+            throw new InvalidConstraintException(msg, e);
+        } catch (NamespaceException e) {
+            String msg = "invalid node type name specified as value constraint: "
+                    + definition;
+            log.debug(msg);
+            throw new InvalidConstraintException(msg, e);
         }
     }
 
     /**
-     * Uses {@link NameFormat#format(QName, NamespaceResolver)} to convert the
+     * Uses {@link NamePathResolver#getJCRName(Name)} to convert the
      * qualified nodetype name into a JCR name.
      *
-     * @see ValueConstraint#getDefinition(NamespaceResolver)
+     * @see ValueConstraint#getDefinition(NamePathResolver)
+     * @param resolver
      */
-    public String getDefinition(NamespaceResolver nsResolver) {
+    public String getDefinition(NamePathResolver resolver) {
         try {
-            return NameFormat.format(ntName, nsResolver);
-        } catch (NoPrefixDeclaredException npde) {
+            return resolver.getJCRName(ntName);
+        } catch (NamespaceException npde) {
             // should never get here, return raw definition as fallback
             return getQualifiedDefinition();
         }

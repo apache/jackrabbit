@@ -22,7 +22,11 @@ import org.apache.jackrabbit.identifier.IdFactoryImpl;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.value.ValueFactoryImplEx;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.name.PathFactoryImpl;
 import org.apache.log4j.PropertyConfigurator;
 
 import javax.jcr.Repository;
@@ -68,7 +72,9 @@ public class JCR2SPIRepositoryStub extends RepositoryStub {
 
                 final IdFactory idFactory = IdFactoryImpl.getInstance();
                 final ValueFactory vFactory = ValueFactoryImplEx.getInstance();
-                final RepositoryServiceImpl webdavRepoService = new RepositoryServiceImpl(url, idFactory, vFactory);
+                final NameFactory nFactory = NameFactoryImpl.getInstance();
+                final PathFactory pFactory = PathFactoryImpl.getInstance();
+                final RepositoryServiceImpl webdavRepoService = new RepositoryServiceImpl(url, idFactory, nFactory, pFactory, vFactory);
 
                 RepositoryConfig config = new AbstractRepositoryConfig() {
                     public RepositoryService getRepositoryService() {

@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi.version;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 
@@ -97,7 +97,7 @@ public interface VersionManager {
      * @throws RepositoryException
      * @see javax.jcr.version.VersionHistory#addVersionLabel(String, String, boolean)
      */
-    public void addVersionLabel(NodeState versionHistoryState, NodeState versionState, QName qLabel, boolean moveLabel) throws VersionException, RepositoryException;
+    public void addVersionLabel(NodeState versionHistoryState, NodeState versionState, Name qLabel, boolean moveLabel) throws VersionException, RepositoryException;
 
     /**
      * @param versionHistoryState
@@ -107,7 +107,7 @@ public interface VersionManager {
      * @throws RepositoryException
      * @see javax.jcr.version.VersionHistory#removeVersionLabel(String)
      */
-    public void removeVersionLabel(NodeState versionHistoryState, NodeState versionState, QName qLabel) throws VersionException, RepositoryException;
+    public void removeVersionLabel(NodeState versionHistoryState, NodeState versionState, Name qLabel) throws VersionException, RepositoryException;
 
     /**
      * @param nodeState

@@ -18,12 +18,8 @@ package org.apache.jackrabbit.spi2jcr;
 
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.PathFormat;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.NameException;
 import org.apache.jackrabbit.value.ValueFormat;
 
 import javax.jcr.RepositoryException;
@@ -42,35 +38,35 @@ class PropertyInfoImpl
      *
      * @param property      the JCR property.
      * @param idFactory     the id factory.
-     * @param nsResolver    the namespace resolver in use.
+     * @param resolver
      * @param qValueFactory the QValue factory.
      * @throws RepositoryException if an error occurs while reading from
      *                             <code>property</code>.
      */
     public PropertyInfoImpl(Property property,
                             IdFactoryImpl idFactory,
-                            NamespaceResolver nsResolver,
+                            NamePathResolver resolver,
                             QValueFactory qValueFactory)
-            throws RepositoryException, MalformedPathException, IllegalNameException, UnknownPrefixException {
-        super(idFactory.createNodeId(property.getParent(), nsResolver),
-                NameFormat.parse(property.getName(), nsResolver),
-                PathFormat.parse(property.getPath(), nsResolver),
-                idFactory.createPropertyId(property, nsResolver),
+            throws RepositoryException, NameException {
+        super(idFactory.createNodeId(property.getParent(), resolver),
+                resolver.getQName(property.getName()),
+                resolver.getQPath(property.getPath()),
+                idFactory.createPropertyId(property, resolver),
                 property.getType(), property.getDefinition().isMultiple(),
-                getValues(property, nsResolver, qValueFactory)); // TODO: build QValues upon (first) usage only.
+                getValues(property, resolver, qValueFactory)); // TODO: build QValues upon (first) usage only.
     }
 
     /**
      * Returns the QValues for the <code>property</code>.
      *
      * @param property   the property.
-     * @param nsResolver the namespace resolver.
+     * @param resolver   the name and path resolver.
      * @param factory    the value factory.
      * @return the values of the property.
      * @throws RepositoryException if an error occurs while reading the values.
      */
     private static QValue[] getValues(Property property,
-                                      NamespaceResolver nsResolver,
+                                      NamePathResolver resolver,
                                       QValueFactory factory)
             throws RepositoryException {
         boolean isMultiValued = property.getDefinition().isMultiple();
@@ -79,12 +75,11 @@ class PropertyInfoImpl
             Value[] jcrValues = property.getValues();
             values = new QValue[jcrValues.length];
             for (int i = 0; i < jcrValues.length; i++) {
-                values[i] = ValueFormat.getQValue(jcrValues[i],
-                        nsResolver, factory);
+                values[i] = ValueFormat.getQValue(jcrValues[i], resolver, factory);
             }
         } else {
             values = new QValue[]{
-                ValueFormat.getQValue(property.getValue(), nsResolver, factory)};
+                ValueFormat.getQValue(property.getValue(), resolver, factory)};
         }
         return values;
     }

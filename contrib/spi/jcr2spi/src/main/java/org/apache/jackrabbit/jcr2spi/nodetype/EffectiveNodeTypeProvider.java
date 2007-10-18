@@ -16,8 +16,9 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.nodetype.NodeTypeConflictException;
 
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.ConstraintViolationException;
@@ -36,7 +37,7 @@ public interface EffectiveNodeTypeProvider {
      * @return
      * @throws NoSuchNodeTypeException
      */
-    public EffectiveNodeType getEffectiveNodeType(QName ntName)
+    public EffectiveNodeType getEffectiveNodeType(Name ntName)
             throws NoSuchNodeTypeException;
 
     /**
@@ -48,7 +49,7 @@ public interface EffectiveNodeTypeProvider {
      * @throws NodeTypeConflictException
      * @throws NoSuchNodeTypeException
      */
-    public EffectiveNodeType getEffectiveNodeType(QName[] ntNames)
+    public EffectiveNodeType getEffectiveNodeType(Name[] ntNames)
             throws NodeTypeConflictException, NoSuchNodeTypeException;
 
     /**
@@ -58,7 +59,7 @@ public interface EffectiveNodeTypeProvider {
      * @throws NodeTypeConflictException
      * @throws NoSuchNodeTypeException
      */
-    public EffectiveNodeType getEffectiveNodeType(QName[] ntNames, Map ntdMap)
+    public EffectiveNodeType getEffectiveNodeType(Name[] ntNames, Map ntdMap)
             throws NodeTypeConflictException, NoSuchNodeTypeException;
 
     /**

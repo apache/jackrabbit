@@ -20,13 +20,10 @@ import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.name.LocalNamespaceMappings;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathFormat;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.name.NameConstants;
 import org.apache.jackrabbit.spi.QueryInfo;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -56,6 +53,11 @@ public class QueryImpl implements Query {
      * The namespace mappings of the session that executes this query.
      */
     private final LocalNamespaceMappings nsResolver;
+
+    /**
+     * Name and Path resolver
+     */
+    private final NamePathResolver resolver;
 
     /**
      * The item manager of the session that executes this query.
@@ -93,6 +95,7 @@ public class QueryImpl implements Query {
      *
      * @param session          the session that created this query.
      * @param nsResolver       the namespace resolver to be used.
+     * @param resolver
      * @param itemMgr          the item manager of that session.
      * @param hierarchyManager the HierarchyManager of that session.
      * @param wspManager       the workspace manager that belongs to the
@@ -101,12 +104,13 @@ public class QueryImpl implements Query {
      * @param language         the language of the query statement.
      * @throws InvalidQueryException if the query is invalid.
      */
-    public QueryImpl(Session session, LocalNamespaceMappings nsResolver,
+    public QueryImpl(Session session, LocalNamespaceMappings nsResolver, NamePathResolver resolver,
                      ItemManager itemMgr, HierarchyManager hierarchyManager,
                      WorkspaceManager wspManager,
                      String statement, String language)
             throws InvalidQueryException, RepositoryException {
         this.session = session;
+        this.resolver = resolver;
         this.nsResolver = nsResolver;
         this.itemManager = itemMgr;
         this.hierarchyManager = hierarchyManager;
@@ -121,6 +125,7 @@ public class QueryImpl implements Query {
      *
      * @param session    the session that created this query.
      * @param nsResolver the namespace resolver to be used.
+     * @param resolver
      * @param itemMgr    the item manager of that session.
      * @param hierarchyManager
      * @param wspManager the workspace manager that belongs to the session.
@@ -129,32 +134,29 @@ public class QueryImpl implements Query {
      * @throws RepositoryException   if another error occurs while reading from
      *                               the node.
      */
-    public QueryImpl(Session session, LocalNamespaceMappings nsResolver,
+    public QueryImpl(Session session, LocalNamespaceMappings nsResolver, NamePathResolver resolver,
                      ItemManager itemMgr, HierarchyManager hierarchyManager,
                      WorkspaceManager wspManager, Node node)
         throws InvalidQueryException, RepositoryException {
 
         this.session = session;
+        this.resolver = resolver;
         this.nsResolver = nsResolver;
         this.itemManager = itemMgr;
         this.hierarchyManager = hierarchyManager;
         this.node = node;
         this.wspManager = wspManager;
 
-        try {
-            if (!node.isNodeType(NameFormat.format(QName.NT_QUERY, nsResolver))) {
-                throw new InvalidQueryException("Node is not of type nt:query");
-            }
-            if (node.getSession() != session) {
-                throw new InvalidQueryException("Node belongs to a different session.");
-            }
-            statement = node.getProperty(NameFormat.format(QName.JCR_STATEMENT, nsResolver)).getString();
-            language = node.getProperty(NameFormat.format(QName.JCR_LANGUAGE, nsResolver)).getString();
-            this.wspManager.checkQueryStatement(statement, language,
-                    nsResolver.getLocalNamespaceMappings());
-        } catch (NoPrefixDeclaredException e) {
-            throw new RepositoryException(e.getMessage(), e);
+        if (!node.isNodeType(resolver.getJCRName(NameConstants.NT_QUERY))) {
+            throw new InvalidQueryException("Node is not of type nt:query");
         }
+        if (node.getSession() != session) {
+            throw new InvalidQueryException("Node belongs to a different session.");
+        }
+        statement = node.getProperty(resolver.getJCRName(NameConstants.JCR_STATEMENT)).getString();
+        language = node.getProperty(resolver.getJCRName(NameConstants.JCR_LANGUAGE)).getString();
+        this.wspManager.checkQueryStatement(statement, language,
+                    nsResolver.getLocalNamespaceMappings());
     }
 
     /**
@@ -164,7 +166,7 @@ public class QueryImpl implements Query {
         QueryInfo qI = wspManager.executeQuery(statement, language,
                 nsResolver.getLocalNamespaceMappings());
         return new QueryResultImpl(itemManager, hierarchyManager,
-                qI, nsResolver, session.getValueFactory());
+                qI, resolver, session.getValueFactory());
     }
 
     /**
@@ -199,25 +201,23 @@ public class QueryImpl implements Query {
         LockException, UnsupportedRepositoryOperationException, RepositoryException {
 
         try {
-            Path p = PathFormat.parse(absPath, nsResolver).getNormalizedPath();
+            Path p = resolver.getQPath(absPath).getNormalizedPath();
             if (!p.isAbsolute()) {
                 throw new RepositoryException(absPath + " is not an absolute path");
             }
-            String jcrParent = PathFormat.format(p.getAncestor(1), nsResolver);
+            String jcrParent = resolver.getJCRPath(p.getAncestor(1));
             if (!session.itemExists(jcrParent)) {
                 throw new PathNotFoundException(jcrParent);
             }
-            String relPath = PathFormat.format(p, nsResolver).substring(1);
-            String ntName = NameFormat.format(QName.NT_QUERY, nsResolver);
+            String relPath = resolver.getJCRPath(p).substring(1);
+            String ntName = resolver.getJCRName(NameConstants.NT_QUERY);
             Node queryNode = session.getRootNode().addNode(relPath, ntName);
             // set properties
-            queryNode.setProperty(NameFormat.format(QName.JCR_LANGUAGE, nsResolver), language);
-            queryNode.setProperty(NameFormat.format(QName.JCR_STATEMENT, nsResolver), statement);
+            queryNode.setProperty(resolver.getJCRName(NameConstants.JCR_LANGUAGE), language);
+            queryNode.setProperty(resolver.getJCRName(NameConstants.JCR_STATEMENT), statement);
             node = queryNode;
             return node;
-        } catch (MalformedPathException e) {
-            throw new RepositoryException(e.getMessage(), e);
-        } catch (NoPrefixDeclaredException e) {
+        } catch (org.apache.jackrabbit.conversion.NameException e) {
             throw new RepositoryException(e.getMessage(), e);
         }
     }

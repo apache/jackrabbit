@@ -16,9 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.observation;
 
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.PathFormat;
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -39,7 +37,7 @@ final class EventImpl implements Event {
      * The session of the {@link javax.jcr.observation.EventListener} this
      * event will be delivered to.
      */
-    private final NamespaceResolver nsResolver;
+    private final NamePathResolver resolver;
 
     /**
      * The underlying SPI event.
@@ -55,13 +53,11 @@ final class EventImpl implements Event {
      * Creates a new {@link javax.jcr.observation.Event} instance based on an
      * {@link org.apache.jackrabbit.spi.Event SPI Event}.
      *
-     * @param nsResolver <code>NamespaceResolver</code> attached to the session
-     * of the registerd <code>EventListener</code>, where this <code>Event</code>
-     * will be delivered to.
+     * @param resolver
      * @param event   the underlying SPI <code>Event</code>.
      */
-    EventImpl(NamespaceResolver nsResolver, org.apache.jackrabbit.spi.Event event) {
-        this.nsResolver = nsResolver;
+    EventImpl(NamePathResolver resolver, org.apache.jackrabbit.spi.Event event) {
+        this.resolver = resolver;
         this.event = event;
     }
 
@@ -76,13 +72,7 @@ final class EventImpl implements Event {
      * {@inheritDoc}
      */
     public String getPath() throws RepositoryException {
-        try {
-            return PathFormat.format(event.getQPath(), nsResolver);
-        } catch (NoPrefixDeclaredException e) {
-            String msg = "internal error: encountered unregistered namespace in path";
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
+        return resolver.getJCRPath(event.getPath());
     }
 
     /**

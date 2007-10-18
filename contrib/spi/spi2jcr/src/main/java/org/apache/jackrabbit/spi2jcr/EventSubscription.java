@@ -22,15 +22,13 @@ import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.EventImpl;
 import org.apache.jackrabbit.spi.commons.EventBundleImpl;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathFormat;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -38,6 +36,7 @@ import javax.jcr.observation.EventListener;
 import javax.jcr.Session;
 import javax.jcr.Node;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.NamespaceException;
 import javax.jcr.nodetype.NodeType;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,12 +68,12 @@ class EventSubscription implements EventListener {
 
     private final SessionInfoImpl sessionInfo;
 
-    private final NamespaceResolver nsResolver;
+    private final NamePathResolver resolver;
 
     EventSubscription(IdFactory idFactory, SessionInfoImpl sessionInfo) {
         this.idFactory = idFactory;
         this.sessionInfo = sessionInfo;
-        this.nsResolver = sessionInfo.getNamespaceResolver();
+        this.resolver = sessionInfo.getNamePathResolver();
     }
 
     /**
@@ -145,7 +144,7 @@ class EventSubscription implements EventListener {
             try {
                 Session session = sessionInfo.getSession();
                 javax.jcr.observation.Event e = events.nextEvent();
-                Path p = PathFormat.parse(e.getPath(), nsResolver);
+                Path p = resolver.getQPath(e.getPath());
                 Path parent = p.getAncestor(1);
                 NodeId parentId = idFactory.createNodeId((String) null, parent);
                 ItemId itemId = null;
@@ -164,18 +163,16 @@ class EventSubscription implements EventListener {
                                 p.getNameElement().getName());
                         break;
                 }
-                QName nodeTypeName = null;
-                QName[] mixinTypes = new QName[0];
+                Name nodeTypeName = null;
+                Name[] mixinTypes = new Name[0];
                 if (node != null) {
                     try {
                         parentId = idFactory.createNodeId(node.getUUID(), null);
                     } catch (UnsupportedRepositoryOperationException ex) {
                         // not referenceable
                     }
-                    nodeTypeName = NameFormat.parse(
-                            node.getPrimaryNodeType().getName(), nsResolver);
-                    mixinTypes = getNodeTypeNames(
-                            node.getMixinNodeTypes(), nsResolver);
+                    nodeTypeName = resolver.getQName(node.getPrimaryNodeType().getName());
+                    mixinTypes = getNodeTypeNames(node.getMixinNodeTypes(), resolver);
                 }
                 Event spiEvent = new EventImpl(e.getType(), p, itemId, parentId,
                         nodeTypeName, mixinTypes, e.getUserID());
@@ -196,18 +193,17 @@ class EventSubscription implements EventListener {
      * resolver to parse the names.
      *
      * @param nt         the node types
-     * @param nsResolver the namespace resolver.
+     * @param resolver
      * @return the qualified names of the node types.
-     * @throws IllegalNameException   if a node type returns an illegal name.
-     * @throws UnknownPrefixException if the nameo of a node type contains a
-     *                                prefix that is not known to <code>nsResolver</code>.
+     * @throws NameException if a node type returns an illegal name.
+     * @throws NamespaceException if the name of a node type contains a
+     * prefix that is not known to <code>resolver</code>.
      */
-    private static QName[] getNodeTypeNames(NodeType[] nt,
-                                     NamespaceResolver nsResolver)
-            throws IllegalNameException, UnknownPrefixException {
-        QName[] names = new QName[nt.length];
+    private static Name[] getNodeTypeNames(NodeType[] nt, NameResolver resolver)
+            throws NameException, NamespaceException {
+        Name[] names = new Name[nt.length];
         for (int i = 0; i < nt.length; i++) {
-            QName ntName = NameFormat.parse(nt[i].getName(), nsResolver);
+            Name ntName = resolver.getQName(nt[i].getName());
             names[i] = ntName;
         }
         return names;

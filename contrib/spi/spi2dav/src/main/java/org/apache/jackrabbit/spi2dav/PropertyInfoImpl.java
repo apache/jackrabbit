@@ -20,15 +20,15 @@ import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.jcr.property.ValuesProperty;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.NameException;
 import org.apache.jackrabbit.value.ValueFormat;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
+import org.apache.jackrabbit.spi.Name;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -52,11 +52,11 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
     private QValue[] values;
 
     public PropertyInfoImpl(PropertyId id, NodeId parentId, DavPropertySet propSet,
-                            NamespaceResolver nsResolver, ValueFactory valueFactory,
+                            NamePathResolver resolver, ValueFactory valueFactory,
                             QValueFactory qValueFactory)
-        throws RepositoryException, DavException, IOException, MalformedPathException {
+            throws RepositoryException, DavException, IOException, NameException {
 
-        super(parentId, propSet, nsResolver);
+        super(parentId, propSet, resolver);
         // set id
         this.id = id;
 
@@ -76,7 +76,7 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
                 if (type == PropertyType.BINARY) {
                     qv = qValueFactory.create(jcrValue.getStream());
                 } else {
-                    qv = ValueFormat.getQValue(jcrValue, nsResolver, qValueFactory);
+                    qv = ValueFormat.getQValue(jcrValue, resolver, qValueFactory);
                 }
                 values = new QValue[] {qv};
             }
@@ -89,7 +89,7 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
                 if (type == PropertyType.BINARY) {
                     values[i] = qValueFactory.create(jcrValues[i].getStream());
                 } else {
-                    values[i] = ValueFormat.getQValue(jcrValues[i], nsResolver, qValueFactory);
+                    values[i] = ValueFormat.getQValue(jcrValues[i], resolver, qValueFactory);
                 }
             }
         }
@@ -100,8 +100,8 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
         return false;
     }
 
-    public QName getQName() {
-        return id.getQName();
+    public Name getName() {
+        return id.getName();
     }
 
     //-------------------------------------------------------< PropertyInfo >---

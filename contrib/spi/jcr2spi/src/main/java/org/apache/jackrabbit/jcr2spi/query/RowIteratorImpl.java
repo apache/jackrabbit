@@ -29,15 +29,12 @@ import javax.jcr.ValueFactory;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.UnknownPrefixException;
-import org.apache.jackrabbit.value.ValueFormat;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.QueryResultRow;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.value.ValueFormat;
 
 /**
  * Implements the {@link javax.jcr.query.RowIterator} interface returned by
@@ -53,12 +50,12 @@ class RowIteratorImpl implements RowIterator {
     /**
      * The column names.
      */
-    private final QName[] columnNames;
+    private final Name[] columnNames;
 
     /**
-     * The <code>NamespaceResolver</code> of the user <code>Session</code>.
+     * The <code>NamePathResolver</code> of the user <code>Session</code>.
      */
-    private final NamespaceResolver nsResolver;
+    private final org.apache.jackrabbit.conversion.NamePathResolver resolver;
 
     /**
      * The JCR value factory.
@@ -70,14 +67,14 @@ class RowIteratorImpl implements RowIterator {
      * nodes.
      *
      * @param queryInfo the query info.
-     * @param resolver  <code>NamespaceResolver</code> of the user
+     * @param nameResolver  <code>NameResolver</code> of the user
      *                  <code>Session</code>.
      * @param vFactory  the JCR value factory.
      */
-    RowIteratorImpl(QueryInfo queryInfo, NamespaceResolver resolver, ValueFactory vFactory) {
+    RowIteratorImpl(QueryInfo queryInfo, NamePathResolver resolver, ValueFactory vFactory) {
         this.rows = queryInfo.getRows();
         this.columnNames = queryInfo.getColumnNames();
-        this.nsResolver = resolver;
+        this.resolver = resolver;
         this.vFactory = vFactory;
     }
 
@@ -180,7 +177,7 @@ class RowIteratorImpl implements RowIterator {
         private Value[] values;
 
         /**
-         * Map of select property <code>QName</code>s. Key: QName, Value:
+         * Map of select property <code>Name</code>s. Key: Name, Value:
          * Integer, which refers to the array index in {@link #values}.
          */
         private Map propertyMap;
@@ -215,7 +212,7 @@ class RowIteratorImpl implements RowIterator {
                         tmp[i] = null;
                     } else {
                         tmp[i] = ValueFormat.getJCRValue(
-                                qVals[i], nsResolver, vFactory);
+                                qVals[i], resolver, vFactory);
                     }
                 }
                 values = tmp;
@@ -249,7 +246,7 @@ class RowIteratorImpl implements RowIterator {
                 propertyMap = tmp;
             }
             try {
-                QName prop = NameFormat.parse(propertyName, nsResolver);
+                Name prop = resolver.getQName(propertyName);
                 Integer idx = (Integer) propertyMap.get(prop);
                 if (idx == null) {
                     throw new ItemNotFoundException(propertyName);
@@ -259,9 +256,7 @@ class RowIteratorImpl implements RowIterator {
                     getValues();
                 }
                 return values[idx.intValue()];
-            } catch (IllegalNameException e) {
-                throw new RepositoryException(e.getMessage(), e);
-            } catch (UnknownPrefixException e) {
+            } catch (org.apache.jackrabbit.conversion.NameException e) {
                 throw new RepositoryException(e.getMessage(), e);
             }
         }
