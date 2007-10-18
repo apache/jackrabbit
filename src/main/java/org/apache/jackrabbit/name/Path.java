@@ -79,6 +79,10 @@ import java.io.Serializable;
  *                  ''', '"', '|' or any whitespace
  *                  character *)
  * </pre>
+ *
+ * @deprecated Use {@link org.apache.jackrabbit.spi.Path} and
+ * {@link org.apache.jackrabbit.spi.PathFactory} instead. A default implementation
+ * is provided by {@link org.apache.jackrabbit.name.PathFactoryImpl}.
  */
 public final class Path implements Serializable {
 

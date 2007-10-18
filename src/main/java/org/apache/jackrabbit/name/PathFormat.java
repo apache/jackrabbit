@@ -26,6 +26,8 @@ import java.util.regex.Pattern;
 /**
  * <code>PathFormat</code> formats a {@link Path} using a
  * {@link NamespaceResolver}.
+ *
+ * @deprecated Use {@link org.apache.jackrabbit.conversion.PathResolver} instead.
  */
 public class PathFormat {
 

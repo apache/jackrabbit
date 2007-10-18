@@ -21,6 +21,8 @@ import org.apache.jackrabbit.BaseException;
 /**
  * Base class for exceptions about malformed or otherwise
  * invalid JCR names and paths.
+ *
+ * @deprecated 
  */
 public class NameException extends BaseException {
 

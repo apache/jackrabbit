@@ -75,6 +75,8 @@ import javax.jcr.observation.ObservationManager;
  *     long nextValue = ((Long) ret).longValue();
  * }
  * </pre>
+ *
+ * @deprecated Use org.apache.jackrabbit.lock.Locked instead.
  */
 public abstract class Locked {
 

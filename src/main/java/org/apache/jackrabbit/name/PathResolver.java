@@ -20,6 +20,8 @@ import javax.jcr.NamespaceException;
 
 /**
  * Resolver for JCR paths.
+ *
+ * @deprecated Use {@link org.apache.jackrabbit.conversion.PathResolver} instead.
  */
 public interface PathResolver {
 

@@ -20,6 +20,8 @@ package org.apache.jackrabbit;
  * The abstract class <code>BaseException</code> serves as the base class
  * for all exceptions that are specific to this JCR implementation and that
  * are not derived from <code>javax.jcr.RepositoryException</code>.
+ *
+ * @deprecated
  */
 public abstract class BaseException extends Exception {
 
