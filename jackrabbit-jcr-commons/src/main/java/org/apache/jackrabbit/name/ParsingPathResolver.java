@@ -21,6 +21,8 @@ import javax.jcr.NamespaceException;
 /**
  * Path resolver that parsers and formats prefixed JCR paths.
  * A {@link NameResolver} is used for resolving the path element names.
+ *
+ * @deprecated Use {@link org.apache.jackrabbit.conversion.ParsingPathResolver}.
  */
 public class ParsingPathResolver implements PathResolver {
 

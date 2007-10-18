@@ -30,6 +30,8 @@ import java.util.Set;
  * A Simple Namespace Mapping table. Mappings can be added
  * and then the object can be used as a NamespaceResolver. Additionally, it can
  * be based on a underlying NamespaceResolver
+ *
+ * @deprecated Use org.apache.jackrabbit.namespace.NamespaceMapping instead.
  */
 public class NamespaceMapping extends AbstractNamespaceResolver {
 

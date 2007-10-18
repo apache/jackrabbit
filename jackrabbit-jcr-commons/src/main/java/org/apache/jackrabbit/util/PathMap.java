@@ -28,6 +28,8 @@ import java.util.Map;
 /**
  * Generic path map that associates information with the individual path elements
  * of a path.
+ *
+ * @deprecated Use {@link org.apache.jackrabbit.name.PathMap} instead.
  */
 public class PathMap {
 

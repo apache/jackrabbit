@@ -23,6 +23,9 @@ import javax.jcr.RepositoryException;
 import java.util.Map;
 import java.util.Iterator;
 
+/**
+ * @deprecated Use org.apache.jackrabbit.namespace.NamespaceAdder
+ */
 public class NamespaceAdder {
 
     private final NamespaceRegistry registry;

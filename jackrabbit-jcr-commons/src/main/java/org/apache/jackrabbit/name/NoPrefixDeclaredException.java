@@ -21,6 +21,8 @@ package org.apache.jackrabbit.name;
  * exception is thrown when trying to convert a qualified name whose namespace
  * prefix is not found into a JCR name string. The JCR name string can not be
  * created without the namespace prefix.
+ *
+ * @deprecated 
  */
 public class NoPrefixDeclaredException extends NameException {
 

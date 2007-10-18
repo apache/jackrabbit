@@ -23,6 +23,8 @@ import javax.jcr.Session;
 /**
  * helper class that exposes the <code>NamespaceResolver</code>
  * interface on a <code>Session</code>
+ *
+ * @deprecated Use {@link org.apache.jackrabbit.namespace.SessionNamespaceResolver} instead. 
  */
 public class SessionNamespaceResolver extends AbstractNamespaceResolver {
 

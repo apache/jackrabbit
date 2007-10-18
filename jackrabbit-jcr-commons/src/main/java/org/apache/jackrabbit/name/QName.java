@@ -64,6 +64,10 @@ import java.io.Serializable;
  * <p>
  * In addition to the prefixed JCR name format, a qualified name can also
  * be represented using the format "<code>{namespaceURI}localPart</code>".
+ *
+ * @deprecated Use {@link org.apache.jackrabbit.spi.Name} and
+ * {@link org.apache.jackrabbit.spi.NameFactory} instead. A default implementation
+ * is provided by {@link org.apache.jackrabbit.name.NameFactoryImpl}.
  */
 public final class QName implements Cloneable, Comparable, Serializable {
 
