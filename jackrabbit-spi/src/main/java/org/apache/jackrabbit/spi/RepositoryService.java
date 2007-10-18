@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.spi;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
-
 import javax.jcr.lock.LockException;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.Version;
@@ -57,7 +54,7 @@ import java.io.InputStream;
  *    void RepositoryService.copy(SessionInfo sessionInfo,
  *                                String srcWorkspaceName,
  *                                NodeId srcNodeId, NodeId destParentNodeId,
- *                                QName destName)
+ *                                Name destName)
  * </pre>
  * This method performs an immediate persistent copy of the node identified by
  * srcNodeId and that node's subtree to a position as child of the node
@@ -68,7 +65,7 @@ import java.io.InputStream;
  * If <code>srcWorkspaceName</code> differs from the workspace name present with
  * the SessionInfo, the copy is corresponds to a copy across workspaces.
  * The source and destination of the copy operation are specified by
- * {@link NodeId}s. The <code>QName</code> holds the new name in fully qualified
+ * {@link NodeId}s. The <code>Name</code> holds the new name in fully qualified
  * form. Taken together, this information is sufficient to completely specify
  * and authorize the copy operations.<p/>
  *
@@ -85,6 +82,22 @@ public interface RepositoryService {
      * @throws RepositoryException If an error occurs.
      */
     public IdFactory getIdFactory() throws RepositoryException;
+
+    /**
+     * Return the <code>NameFactory</code>.
+     *
+     * @return The <code>NameFactory</code>.
+     * @throws RepositoryException If an error occurs.
+     */
+    public NameFactory getNameFactory() throws RepositoryException;
+
+    /**
+     * Return the <code>PathFactory</code>.
+     *
+     * @return The <code>PathFactory</code>.
+     * @throws RepositoryException If an error occurs.
+     */
+    public PathFactory getPathFactory() throws RepositoryException;
 
     /**
      * Return the <code>QValueFactory</code> defined with this SPI implementation.
@@ -412,7 +425,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Workspace#move(String, String)
      */
-    public void move(SessionInfo sessionInfo, NodeId srcNodeId, NodeId destParentNodeId, QName destName) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
+    public void move(SessionInfo sessionInfo, NodeId srcNodeId, NodeId destParentNodeId, Name destName) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
      * Clone the subtree identified by the given <code>srcNodeId</code>
@@ -441,7 +454,7 @@ public interface RepositoryService {
      * @see javax.jcr.Workspace#copy(String, String)
      * @see javax.jcr.Workspace#copy(String, String, String)
      */
-    public void copy(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, QName destName) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException;
+    public void copy(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, Name destName) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException;
 
     //------------------------------------------------------< Update, Clone >---
     /**
@@ -485,7 +498,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Workspace#clone(String, String, String, boolean)
      */
-    public void clone(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, QName destName, boolean removeExisting) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException;
+    public void clone(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, Name destName, boolean removeExisting) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException;
 
     //------------------------------------------------------------< Locking >---
     /**
@@ -713,7 +726,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.version.VersionHistory#addVersionLabel(String, String, boolean)
      */
-    public void addVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, QName label, boolean moveLabel) throws VersionException, RepositoryException;
+    public void addVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, Name label, boolean moveLabel) throws VersionException, RepositoryException;
 
     /**
      * Remove the given version label in the persistent layer.
@@ -728,7 +741,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.version.VersionHistory#removeVersionLabel(String)
      */
-    public void removeVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, QName label) throws VersionException, RepositoryException;
+    public void removeVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, Name label) throws VersionException, RepositoryException;
 
     //----------------------------------------------------------< Searching >---
     /**
@@ -803,7 +816,7 @@ public interface RepositoryService {
      */
     public EventFilter createEventFilter(SessionInfo sessionInfo, int eventTypes,
                                          Path absPath, boolean isDeep,
-                                         String[] uuid, QName[] nodeTypeName,
+                                         String[] uuid, Name[] nodeTypeName,
                                          boolean noLocal)
             throws UnsupportedRepositoryOperationException, RepositoryException;
 
@@ -957,5 +970,5 @@ public interface RepositoryService {
      * @see javax.jcr.nodetype.NodeTypeManager#getPrimaryNodeTypes()
      * @see javax.jcr.nodetype.NodeTypeManager#getNodeType(String)
      */
-    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, QName[] nodetypeNames) throws RepositoryException;
+    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, Name[] nodetypeNames) throws RepositoryException;
 }

@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.spi;
 
-import org.apache.jackrabbit.name.QName;
-
 /**
  * <code>ChildInfo</code>...
  */
@@ -28,7 +26,7 @@ public interface ChildInfo {
      *
      * @return The name of the child <code>Node</code>.
      */
-    public QName getName();
+    public Name getName();
 
     /**
      * Returns the uniqueID of the child <code>Node</code> or <code>null</code>

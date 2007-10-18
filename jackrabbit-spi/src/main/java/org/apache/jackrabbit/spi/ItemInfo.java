@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.spi;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
-
 /**
  * The <code>ItemInfo</code> is the base interface of <code>{@link NodeInfo}</code>
  * and <code>{@link PropertyInfo}</code>.
@@ -34,11 +31,11 @@ public interface ItemInfo {
 
     /**
      * Returns the qualified representation of the item name. For the root node
-     * expected return value is {@link QName#ROOT}.
+     * expected return value is <code>{""}""</code>.
      *
      * @return the qualified representation of the item name.
      */
-    public QName getQName();
+    public Name getName();
 
     /**
      * Returns true if this <code>ItemInfo</code> denotes a node, false otherwise.

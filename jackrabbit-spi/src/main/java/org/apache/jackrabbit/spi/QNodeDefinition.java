@@ -16,13 +16,11 @@
  */
 package org.apache.jackrabbit.spi;
 
-import org.apache.jackrabbit.name.QName;
-
 import javax.jcr.nodetype.NodeDefinition;
 
 /**
  * <code>QNodeDefinition</code> is the qualified SPI representation of
- * a {@link NodeDefinition node definition}. It refers to <code>QName</code>s only
+ * a {@link NodeDefinition node definition}. It refers to <code>Name</code>s only
  * and is thus isolated from session-specific namespace mappings.
  *
  * @see javax.jcr.nodetype.NodeDefinition
@@ -39,14 +37,14 @@ public interface QNodeDefinition extends QItemDefinition {
      *
      * @return the name of the default primary type.
      */
-    public QName getDefaultPrimaryType();
+    public Name getDefaultPrimaryType();
 
     /**
      * Returns the array of names of the required primary types.
      *
      * @return the array of names of the required primary types.
      */
-    public QName[] getRequiredPrimaryTypes();
+    public Name[] getRequiredPrimaryTypes();
 
     /**
      * Reports whether this node can have same-name siblings.

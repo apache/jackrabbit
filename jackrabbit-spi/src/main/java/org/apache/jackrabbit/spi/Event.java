@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.spi;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
-
 /**
  * <code>Event</code> is similar to the regular JCR Event and adds additional
  * information about the affected item.
@@ -75,7 +72,7 @@ public interface Event {
      * @return the path of the affected item. E.g. the added/removed node or the
      *         property that was added/removed/changed.
      */
-    public Path getQPath();
+    public Path getPath();
 
     /**
      * @return the id of the affected item.
@@ -92,14 +89,14 @@ public interface Event {
      *         this event.
      * @see javax.jcr.observation.ObservationManager#addEventListener
      */
-    public QName getPrimaryNodeTypeName();
+    public Name getPrimaryNodeTypeName();
 
     /**
      * @return the names of the mixin types of the 'associated' node of this
      *         event.
      * @see javax.jcr.observation.ObservationManager#addEventListener
      */
-    public QName[] getMixinTypeNames();
+    public Name[] getMixinTypeNames();
 
     /**
      * Returns the user ID connected with this event. This is the string

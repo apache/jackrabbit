@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.spi;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
-
 /**
  * <code>IdFactory</code> defines methods to construct new <code>ItemId</code>s.
  * This factory is intended to build <code>ItemId</code>s from the parameters
@@ -39,7 +36,7 @@ public interface IdFactory {
      * @param propertyName
      * @return a new <code>PropertyId</code>.
      */
-    public PropertyId createPropertyId(NodeId parentId, QName propertyName);
+    public PropertyId createPropertyId(NodeId parentId, Name propertyName);
 
     /**
      * Creates a new <code>NodeId</code> from the given parent id and
