@@ -40,6 +40,8 @@ import java.util.HashMap;
  * The resulting NamespaceMapping implements NamespaceResolver
  * and can be used by tools (such as o.a.j.tools.nodetype.CompactNodeTypeDefWriter)
  * to resolve namespaces.
+ *
+ * @deprecated User org.apache.jackrabbit.namespace.NamespaceExtractor instead
  */
 public class NamespaceExtractor {
     private static Logger log = LoggerFactory.getLogger(NamespaceExtractor.class);

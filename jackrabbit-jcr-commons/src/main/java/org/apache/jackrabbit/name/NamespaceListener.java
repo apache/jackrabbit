@@ -18,6 +18,8 @@ package org.apache.jackrabbit.name;
 
 /**
  * Receives notifications when a namespace mapping changes.
+ *
+ * @deprecated Use {@link org.apache.jackrabbit.namespace.NamespaceListener} instead.
  */
 public interface NamespaceListener {
 

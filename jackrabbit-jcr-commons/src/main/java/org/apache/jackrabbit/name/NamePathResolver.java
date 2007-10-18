@@ -20,6 +20,8 @@ package org.apache.jackrabbit.name;
  * Combined name and path resolver. Can be used instead of the component
  * name and path resolver interfaces when a single dependency for both
  * name and path resolution is needed.
+ *
+ * @deprecated Use {@link org.apache.jackrabbit.conversion.NamePathResolver} instead.
  */
 public interface NamePathResolver extends NameResolver, PathResolver {
 }

@@ -22,6 +22,8 @@ import javax.jcr.NamespaceException;
  * Path resolver decorator that uses a generational cache to speed up
  * parsing and formatting of JCR paths. Uncached paths are resolved using
  * the underlying decorated path resolver.
+ *
+ * @deprecated Use {@link org.apache.jackrabbit.conversion.CachingPathResolver} instead.
  */
 public class CachingPathResolver implements PathResolver {
 

@@ -22,6 +22,8 @@ import javax.jcr.NamespaceException;
  * Name resolver decorator that uses a generational cache to speed up
  * parsing and formatting of JCR names. Uncached names are resolved using
  * the underlying decorated name resolver.
+ *
+ * @deprecated Use {@link org.apache.jackrabbit.conversion.CachingNameResolver} instead.
  */
 public class CachingNameResolver implements NameResolver {
 

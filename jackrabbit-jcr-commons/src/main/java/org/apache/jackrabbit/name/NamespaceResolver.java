@@ -25,6 +25,8 @@ import javax.jcr.NamespaceException;
  * methods. This interface is therefore used internally in many places where
  * the full namespace registry is either not available or some other mechanism
  * is used for resolving namespaces.
+ *
+ * @deprecated Use {@link org.apache.jackrabbit.name.NamespaceResolver} instead.
  */
 public interface NamespaceResolver {
 

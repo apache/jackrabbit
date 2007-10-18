@@ -27,6 +27,8 @@ import java.util.Map;
  * are used within two successive generations get promoted to the long term
  * cache. The entries within the long term cache are discarded only when the
  * size of the cache exceeds the given maximum cache size.
+ *
+ * @deprecated Use {@link org.apache.jackrabbit.conversion.GenerationalCache} instead.
  */
 class GenerationalCache {
 

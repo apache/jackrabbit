@@ -25,6 +25,8 @@ package org.apache.jackrabbit.name;
  * <p>
  * See the section 4.6 of the JCR 1.0 specification for details of the
  * JCR name syntax.
+ *
+ * @deprecated 
  */
 public class IllegalNameException extends NameException {
 
