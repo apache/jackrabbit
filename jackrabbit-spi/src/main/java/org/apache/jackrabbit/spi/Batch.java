@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.spi;
 
-import org.apache.jackrabbit.name.QName;
-
 import javax.jcr.ItemExistsException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.AccessDeniedException;
@@ -101,7 +99,7 @@ public interface Batch {
      * @see javax.jcr.Session#importXML(String, java.io.InputStream, int)
      * @see javax.jcr.query.Query#storeAsNode(String)
      */
-    public void addNode(NodeId parentId, QName nodeName, QName nodetypeName, String uuid) throws RepositoryException;
+    public void addNode(NodeId parentId, Name nodeName, Name nodetypeName, String uuid) throws RepositoryException;
 
     /**
      * Add a new property to the persistent layer.
@@ -130,7 +128,7 @@ public interface Batch {
      * @see javax.jcr.Session#importXML(String, java.io.InputStream, int)
      * @see javax.jcr.query.Query#storeAsNode(String)
      */
-    public void addProperty(NodeId parentId, QName propertyName, QValue value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
+    public void addProperty(NodeId parentId, Name propertyName, QValue value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
      * Add a new multi-valued property to the persistent layer.
@@ -153,7 +151,7 @@ public interface Batch {
      * @see javax.jcr.Node#setProperty(String, String[], int)
      * @see javax.jcr.Session#importXML(String, java.io.InputStream, int)
      */
-    public void addProperty(NodeId parentId, QName propertyName, QValue[] values) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
+    public void addProperty(NodeId parentId, Name propertyName, QValue[] values) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
      * Modify the value of an existing property.
@@ -232,7 +230,7 @@ public interface Batch {
      * given id.
      *
      * @param nodeId NodeId identifying the node to be modified.
-     * @param mixinNodeTypeIds The new set of mixin types. Compared to the
+     * @param mixinNodeTypeNames The new set of mixin types. Compared to the
      * previous values this may result in both adding and/or removing mixin types.
      * @throws javax.jcr.nodetype.NoSuchNodeTypeException
      * @throws javax.jcr.version.VersionException
@@ -244,7 +242,7 @@ public interface Batch {
      * @see javax.jcr.Node#addMixin(String)
      * @see javax.jcr.Node#removeMixin(String)
      */
-    public void setMixins(NodeId nodeId, QName[] mixinNodeTypeIds) throws RepositoryException;
+    public void setMixins(NodeId nodeId, Name[] mixinNodeTypeNames) throws RepositoryException;
 
     /**
      * Move the node identified by the given <code>srcNodeId</code> to the
@@ -264,5 +262,5 @@ public interface Batch {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Session#move(String, String)
      */
-    public void move(NodeId srcNodeId, NodeId destParentNodeId, QName destName) throws RepositoryException;
+    public void move(NodeId srcNodeId, NodeId destParentNodeId, Name destName) throws RepositoryException;
 }

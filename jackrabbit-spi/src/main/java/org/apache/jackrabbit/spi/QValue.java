@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.spi;
 
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
-
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
 import javax.jcr.Property;
@@ -27,7 +24,7 @@ import java.util.Calendar;
 
 /**
  * <code>QValue</code> is the qualified SPI representation of a
- * {@link javax.jcr.Value jcr value}. It therefore refers to <code>QName</code>s
+ * {@link javax.jcr.Value jcr value}. It therefore refers to <code>Name</code>s
  * and <code>Path</code>s only and is thus isolated from session-specific
  * namespace mappings.
  */
@@ -86,12 +83,12 @@ public interface QValue {
     public InputStream getStream() throws RepositoryException;
 
     /**
-     * Returns a <code>QName</code> representation of this value.
+     * Returns a <code>Name</code> representation of this value.
      *
-     * @return A <code>QName</code> representation of this value.
+     * @return A <code>Name</code> representation of this value.
      * @throws RepositoryException if an error occurs.
      */
-    public QName getQName() throws RepositoryException;
+    public Name getName() throws RepositoryException;
 
     /**
      * Returns a <code>Calendar</code> representation of this value.

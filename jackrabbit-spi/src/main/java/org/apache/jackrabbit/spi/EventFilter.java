@@ -22,7 +22,7 @@ import java.io.Serializable;
  * An <code>EventFilter</code> is applied to the events as generated on the
  * repository server. Event filter instances can be created with {@link
  * RepositoryService#createEventFilter(SessionInfo, int, 
- * org.apache.jackrabbit.name.Path, boolean, String[], org.apache.jackrabbit.name.QName[], boolean)}.
+ * Path, boolean, String[], Name[], boolean)}.
  * Some repository implementations may
  * also support event filters that are directly instantiated by the client.
  */

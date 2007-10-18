@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.spi;
 
-import org.apache.jackrabbit.name.Path;
-
 /**
  * An <code>ItemId</code> identifies an item using a combination of unique ID
  * and path. There are three basic forms of an ItemId. The following

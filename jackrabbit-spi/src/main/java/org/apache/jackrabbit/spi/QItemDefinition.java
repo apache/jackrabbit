@@ -16,13 +16,11 @@
  */
 package org.apache.jackrabbit.spi;
 
-import org.apache.jackrabbit.name.QName;
-
 import javax.jcr.nodetype.ItemDefinition;
 
 /**
  * <code>QItemDefinition</code> is the qualified SPI representation of
- * an {@link ItemDefinition item definition}. It refers to <code>QName</code>s
+ * an {@link ItemDefinition item definition}. It refers to <code>Name</code>s
  * only and is thus isolated from session-specific namespace mappings.
  *
  * @see javax.jcr.nodetype.ItemDefinition
@@ -39,14 +37,14 @@ public interface QItemDefinition {
      *
      * @return the name of the child item.
      */
-    public QName getQName();
+    public Name getName();
 
     /**
      * Gets the name of the declaring node type.
      *
      * @return the name of the declaring node type.
      */
-    public QName getDeclaringNodeType();
+    public Name getDeclaringNodeType();
 
     /**
      * Determines whether the item is 'autoCreated'.

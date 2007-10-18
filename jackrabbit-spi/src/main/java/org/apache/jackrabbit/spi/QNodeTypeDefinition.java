@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.spi;
 
-import org.apache.jackrabbit.name.QName;
-
 import java.util.Collection;
 
 import javax.jcr.nodetype.NodeType;
@@ -37,7 +35,7 @@ public interface QNodeTypeDefinition {
      *
      * @return the name of the node type or <code>null</code> if not set.
      */
-    public QName getQName();
+    public Name getName();
 
     /**
      * Returns an array containing the names of the supertypes. If no
@@ -49,7 +47,7 @@ public interface QNodeTypeDefinition {
      *
      * @return an array of supertype names
      */
-    public QName[] getSupertypes();
+    public Name[] getSupertypes();
 
     /**
      * Returns the value of the mixin flag.
@@ -71,7 +69,7 @@ public interface QNodeTypeDefinition {
      *
      * @return the name of the primary item or <code>null</code> if not set.
      */
-    public QName getPrimaryItemName();
+    public Name getPrimaryItemName();
 
     /**
      * Returns an array containing the property definitions or
@@ -92,7 +90,7 @@ public interface QNodeTypeDefinition {
     public QNodeDefinition[] getChildNodeDefs();
 
     /**
-     * Returns a collection of node type <code>QName</code>s that are being
+     * Returns a collection of node type <code>Name</code>s that are being
      * referenced by <i>this</i> node type definition (e.g. as supertypes, as
      * required/default primary types in child node definitions, as REFERENCE
      * value constraints in property definitions).
@@ -101,7 +99,7 @@ public interface QNodeTypeDefinition {
      * the declaring node type as the default primary type) are not considered
      * dependencies.
      *
-     * @return a collection of node type <code>QName</code>s
+     * @return a collection of node type <code>Name</code>s
      */
     public Collection getDependencies();
 }

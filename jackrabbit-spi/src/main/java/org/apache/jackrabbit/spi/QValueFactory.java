@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.spi;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
-
 import java.io.IOException;
 import java.io.File;
 import java.io.InputStream;
@@ -56,10 +53,10 @@ public interface QValueFactory {
     /**
      * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#NAME}.
      *
-     * @param value A non-null <code>QName</code>.
+     * @param value A non-null <code>Name</code>.
      * @return a new <code>QValue</code>.
      */
-    public QValue create(QName value);
+    public QValue create(Name value);
 
     /**
      * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#PATH}.

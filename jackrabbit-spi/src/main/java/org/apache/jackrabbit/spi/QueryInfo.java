@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.spi;
 
-import org.apache.jackrabbit.name.QName;
-
 import javax.jcr.RangeIterator;
 import java.util.Map;
 
@@ -41,9 +39,9 @@ public interface QueryInfo {
     public RangeIterator getRows();
 
     /**
-     * @return an array of QName representing the column names of the query
-     * result.
+     * @return an array of <code>Name</code>s representing the column names of
+     * the query result.
      * @see javax.jcr.query.QueryResult#getColumnNames()
      */
-    public QName[] getColumnNames();
+    public Name[] getColumnNames();
 }

@@ -41,7 +41,7 @@ public interface QueryResultRow {
      * Returns an array of <code>QValue</code>s.
      *
      * @return an array of <code>QValue</code>s representing the values present
-     * in this result row (missing values are returned as <code>null</code>).
+     * in this result row.
      * @see javax.jcr.query.Row#getValue(String)
      * @see javax.jcr.query.Row#getValues()
      */

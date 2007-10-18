@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.spi;
 
-import org.apache.jackrabbit.name.QName;
-
 import java.util.Iterator;
 
 /**
@@ -49,17 +47,17 @@ public interface NodeInfo extends ItemInfo {
     public int getIndex();
 
     /**
-     * @return QName representing the name of the primary nodetype.
+     * @return <code>Name</code> representing the name of the primary nodetype.
      */
-    public QName getNodetype();
+    public Name getNodetype();
 
     /**
-     * @return Array of QName representing the names of mixin nodetypes. This
-     * includes only explicitly assigned mixin nodetypes. It does not include
+     * @return Array of <code>Name</code>s representing the names of mixin nodetypes. 
+     * This includes only explicitly assigned mixin nodetypes. It does not include
      * mixin types inherited through the additon of supertypes to the primary
      * type hierarchy.
      */
-    public QName[] getMixins();
+    public Name[] getMixins();
 
     /**
      * @return {@link PropertyId Id}s of the properties that are referencing the
