@@ -39,6 +39,8 @@ import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.Batch;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.EventFilterImpl;
 import org.apache.jackrabbit.spi.commons.QPropertyDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.QNodeDefinitionImpl;
@@ -50,8 +52,6 @@ import org.apache.jackrabbit.spi.commons.NodeInfoImpl;
 import org.apache.jackrabbit.spi.commons.PropertyInfoImpl;
 import org.apache.jackrabbit.spi.commons.LockInfoImpl;
 import org.apache.jackrabbit.spi.commons.SerializableBatch;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.identifier.IdFactoryImpl;
 import org.apache.jackrabbit.util.IteratorHelper;
 
@@ -383,7 +383,7 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
     public void move(RemoteSessionInfo sessionInfo,
                      NodeId srcNodeId,
                      NodeId destParentNodeId,
-                     QName destName) throws RepositoryException, RemoteException {
+                     Name destName) throws RepositoryException, RemoteException {
         try {
             service.move(getSessionInfo(sessionInfo),
                     srcNodeId, destParentNodeId, destName);
@@ -399,7 +399,7 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
                      String srcWorkspaceName,
                      NodeId srcNodeId,
                      NodeId destParentNodeId,
-                     QName destName) throws RepositoryException, RemoteException {
+                     Name destName) throws RepositoryException, RemoteException {
         try {
             service.copy(getSessionInfo(sessionInfo), srcWorkspaceName,
                     srcNodeId, destParentNodeId, destName);
@@ -429,7 +429,7 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
                       String srcWorkspaceName,
                       NodeId srcNodeId,
                       NodeId destParentNodeId,
-                      QName destName,
+                      Name destName,
                       boolean removeExisting) throws RepositoryException, RemoteException {
         try {
             service.clone(getSessionInfo(sessionInfo), srcWorkspaceName,
@@ -612,7 +612,7 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
     public void addVersionLabel(RemoteSessionInfo sessionInfo,
                                 NodeId versionHistoryId,
                                 NodeId versionId,
-                                QName label,
+                                Name label,
                                 boolean moveLabel) throws RepositoryException, RemoteException {
         try {
             service.addVersionLabel(getSessionInfo(sessionInfo),
@@ -628,7 +628,7 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
     public void removeVersionLabel(RemoteSessionInfo sessionInfo,
                                    NodeId versionHistoryId,
                                    NodeId versionId,
-                                   QName label) throws RepositoryException, RemoteException {
+                                   Name label) throws RepositoryException, RemoteException {
         try {
             service.removeVersionLabel(getSessionInfo(sessionInfo),
                     versionHistoryId, versionId, label);
@@ -685,7 +685,7 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
                                          Path absPath,
                                          boolean isDeep,
                                          String[] uuid,
-                                         QName[] nodeTypeName,
+                                         Name[] nodeTypeName,
                                          boolean noLocal)
             throws RepositoryException, RemoteException {
         try {
@@ -734,10 +734,10 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
                         id = idFactory.createNodeId(nodeId.getUniqueID(), nodeId.getPath());
                     } else {
                         PropertyId propId = (PropertyId) e.getItemId();
-                        id = idFactory.createPropertyId(parentId, propId.getQName());
+                        id = idFactory.createPropertyId(parentId, propId.getName());
                     }
                     Event serEvent = new EventImpl(e.getType(),
-                            e.getQPath(), id, parentId,
+                            e.getPath(), id, parentId,
                             e.getPrimaryNodeTypeName(),
                             e.getMixinTypeNames(), e.getUserID());
                     events.add(serEvent);
@@ -829,7 +829,7 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
      * {@inheritDoc}
      */
     public RemoteIterator getQNodeTypeDefinitions(RemoteSessionInfo sessionInfo,
-                                                 QName[] ntNames)
+                                                 Name[] ntNames)
             throws RepositoryException, RemoteException {
         Iterator it = service.getQNodeTypeDefinitions(getSessionInfo(sessionInfo), ntNames);
         return getQNodeTypeDefinitionIterator(it);
@@ -893,10 +893,10 @@ public class ServerRepositoryService extends ServerObject implements RemoteRepos
             if (filters[i] instanceof EventFilterImpl) {
                 EventFilterImpl e = (EventFilterImpl) filters[i];
                 Set nodeTypeNames = e.getNodeTypeNames();
-                QName[] ntNames = null;
+                Name[] ntNames = null;
                 if (nodeTypeNames != null) {
-                    ntNames = (QName[]) nodeTypeNames.toArray(
-                            new QName[nodeTypeNames.size()]);
+                    ntNames = (Name[]) nodeTypeNames.toArray(
+                            new Name[nodeTypeNames.size()]);
                 }
                 filters[i] = service.createEventFilter(sInfo,
                         e.getEventTypes(), e.getAbsPath(), e.isDeep(),

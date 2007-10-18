@@ -23,7 +23,7 @@ import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.QueryResultRow;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.IteratorHelper;
 
 import java.rmi.RemoteException;
@@ -76,7 +76,7 @@ class ServerQueryInfo extends ServerObject implements RemoteQueryInfo {
     /**
      * {@inheritDoc}
      */
-    public QName[] getColumnNames() throws RemoteException {
+    public Name[] getColumnNames() throws RemoteException {
         return queryInfo.getColumnNames();
     }
 }

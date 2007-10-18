@@ -20,11 +20,10 @@ import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.conversion.PathResolver;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -47,7 +46,7 @@ public class Move extends AbstractOperation {
 
     private final NodeId srcId;
     private final NodeId destParentId;
-    private final QName destName;
+    private final Name destName;
 
     private final NodeState srcState;
     private final NodeState srcParentState;
@@ -55,7 +54,8 @@ public class Move extends AbstractOperation {
 
     private final boolean sessionMove;
 
-    private Move(NodeState srcNodeState, NodeState srcParentState, NodeState destParentState, QName destName, boolean sessionMove) {
+    private Move(NodeState srcNodeState, NodeState srcParentState, NodeState destParentState, Name destName, boolean sessionMove) {
+
         this.srcId = (NodeId) srcNodeState.getId();
         this.destParentId = destParentState.getNodeId();
         this.destName = destName;
@@ -124,48 +124,42 @@ public class Move extends AbstractOperation {
         return destParentState;
     }
 
-    public QName getDestinationName() {
+    public Name getDestinationName() {
         return destName;
     }
 
     //------------------------------------------------------------< Factory >---
     public static Operation create(Path srcPath, Path destPath,
                                    HierarchyManager hierMgr,
-                                   NamespaceResolver nsResolver,
-                                   boolean sessionMove)
+                                                    PathResolver resolver,
+                                                    boolean sessionMove)
         throws ItemExistsException, NoSuchNodeTypeException, RepositoryException {
         // src must not be ancestor of destination
-        try {
-            if (srcPath.isAncestorOf(destPath)) {
-                String msg = "Invalid destination path: cannot be descendant of source path (" + LogUtil.safeGetJCRPath(destPath, nsResolver) + "," + LogUtil.safeGetJCRPath(srcPath, nsResolver) + ")";
-                log.debug(msg);
-                throw new RepositoryException(msg);
-            }
-        } catch (MalformedPathException e) {
-            String msg = "Invalid destination path: cannot be descendant of source path (" +LogUtil.safeGetJCRPath(destPath, nsResolver) + "," + LogUtil.safeGetJCRPath(srcPath, nsResolver) + ")";
+        if (srcPath.isAncestorOf(destPath)) {
+            String msg = "Invalid destination path: cannot be descendant of source path (" + LogUtil.safeGetJCRPath(destPath, resolver) + "," + LogUtil.safeGetJCRPath(srcPath, resolver) + ")";
             log.debug(msg);
-            throw new RepositoryException(msg, e);
+            throw new RepositoryException(msg);
         }
-        Path.PathElement destElement = destPath.getNameElement();
+        Path.Element destElement = destPath.getNameElement();
         // destination must not contain an index
         int index = destElement.getIndex();
         if (index > Path.INDEX_UNDEFINED) {
             // subscript in name element
-            String msg = "Invalid destination path: subscript in name element is not allowed (" + LogUtil.safeGetJCRPath(destPath, nsResolver) + ")";
+            String msg = "Invalid destination path: subscript in name element is not allowed (" + LogUtil.safeGetJCRPath(destPath, resolver) + ")";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
         // root node cannot be moved:
-        if (Path.ROOT.equals(srcPath) || Path.ROOT.equals(destPath)) {
+        if (srcPath.denotesRoot() || destPath.denotesRoot()) {
             String msg = "Cannot move the root node.";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
 
-        NodeState srcState = getNodeState(srcPath, hierMgr, nsResolver);
-        NodeState srcParentState = getNodeState(srcPath.getAncestor(1), hierMgr, nsResolver);
-        NodeState destParentState = getNodeState(destPath.getAncestor(1), hierMgr, nsResolver);
-        QName destName = destElement.getName();
+        NodeState srcState = getNodeState(srcPath, hierMgr, resolver);
+        NodeState srcParentState = getNodeState(srcPath.getAncestor(1), hierMgr, resolver);
+        NodeState destParentState = getNodeState(destPath.getAncestor(1), hierMgr, resolver);
+        Name destName = destElement.getName();
 
         // for session-move perform a lazy check for existing items at destination.
         // since the hierarchy may not be complete it is possible that an conflict

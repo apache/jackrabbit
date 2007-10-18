@@ -16,11 +16,12 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.conversion.NameResolver;
 import org.apache.jackrabbit.util.ISO9075;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,7 @@ import org.slf4j.Logger;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceException;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -42,6 +44,7 @@ class DocViewImportHandler extends TargetImportHandler {
 
     private static Logger log = LoggerFactory.getLogger(DocViewImportHandler.class);
 
+    private final NameFactory nameFactory;
     /**
      * stack of NodeInfo instances; an instance is pushed onto the stack
      * in the startElement method and is popped from the stack in the
@@ -57,8 +60,10 @@ class DocViewImportHandler extends TargetImportHandler {
      * @param importer
      * @param nsContext
      */
-    DocViewImportHandler(Importer importer, NamespaceResolver nsContext) {
-        super(importer, nsContext);
+    DocViewImportHandler(Importer importer, NamespaceResolver nsContext,
+                         NameResolver nameResolver, NameFactory nameFactory) {
+        super(importer, nsContext, nameResolver);
+        this.nameFactory = nameFactory;
     }
 
     /**
@@ -125,12 +130,12 @@ class DocViewImportHandler extends TargetImportHandler {
                 }
 
                 Importer.NodeInfo node =
-                        new Importer.NodeInfo(QName.JCR_XMLTEXT, null, null, null);
+                        new Importer.NodeInfo(NameConstants.JCR_XMLTEXT, null, null, null);
                 Importer.TextValue[] values =
                         new Importer.TextValue[]{textHandler};
                 ArrayList props = new ArrayList();
                 Importer.PropInfo prop =
-                        new Importer.PropInfo(QName.JCR_XMLCHARACTERS, PropertyType.STRING, values);
+                        new Importer.PropInfo(NameConstants.JCR_XMLCHARACTERS, PropertyType.STRING, values);
                 props.add(prop);
                 // call Importer
                 importer.startNode(node, props, nsContext);
@@ -164,42 +169,41 @@ class DocViewImportHandler extends TargetImportHandler {
         processCharacters();
 
         try {
-            QName nodeName = new QName(namespaceURI, localName);
-            // decode node name
-            nodeName = ISO9075.decode(nodeName);
+            String dcdLocalName = ISO9075.decode(localName);
+            Name nodeName = nameFactory.create(namespaceURI, dcdLocalName);
 
             // properties
             String uuid = null;
-            QName nodeTypeName = null;
-            QName[] mixinTypes = null;
+            Name nodeTypeName = null;
+            Name[] mixinTypes = null;
 
             ArrayList props = new ArrayList(atts.getLength());
             for (int i = 0; i < atts.getLength(); i++) {
-                if (atts.getURI(i).equals(QName.NS_XMLNS_URI)) {
+                if (atts.getURI(i).equals(Name.NS_XMLNS_URI)) {
                     // skip namespace declarations reported as attributes
                     // see http://issues.apache.org/jira/browse/JCR-620#action_12448164
                     continue;
                 }
-                QName propName = new QName(atts.getURI(i), atts.getLocalName(i));
-                // decode property name
-                propName = ISO9075.decode(propName);
+
+                dcdLocalName = ISO9075.decode(atts.getLocalName(i));
+                Name propName = nameFactory.create(atts.getURI(i), dcdLocalName);
 
                 // attribute value
                 String attrValue = atts.getValue(i);
-                if (propName.equals(QName.JCR_PRIMARYTYPE)) {
+                if (propName.equals(NameConstants.JCR_PRIMARYTYPE)) {
                     // jcr:primaryType
                     if (attrValue.length() > 0) {
                         try {
-                            nodeTypeName = NameFormat.parse(attrValue, nsContext);
-                        } catch (NameException ne) {
+                            nodeTypeName = nameResolver.getQName(attrValue);
+                        } catch (org.apache.jackrabbit.conversion.NameException ne) {
                             throw new SAXException("illegal jcr:primaryType value: "
                                     + attrValue, ne);
                         }
                     }
-                } else if (propName.equals(QName.JCR_MIXINTYPES)) {
+                } else if (propName.equals(NameConstants.JCR_MIXINTYPES)) {
                     // jcr:mixinTypes
                     mixinTypes = parseNames(attrValue);
-                } else if (propName.equals(QName.JCR_UUID)) {
+                } else if (propName.equals(NameConstants.JCR_UUID)) {
                     // jcr:uuid
                     if (attrValue.length() > 0) {
                         uuid = attrValue;
@@ -230,20 +234,22 @@ class DocViewImportHandler extends TargetImportHandler {
      * Parses the given string as a list of JCR names. Any whitespace sequence
      * is supported as a names separator instead of just a single space to
      * be more liberal in what we accept. The current namespace context is
-     * used to convert the prefixed name strings to QNames.
+     * used to convert the prefixed name strings to Names.
      *
      * @param value string value
      * @return the parsed names
      * @throws SAXException if an invalid name was encountered
      */
-    private QName[] parseNames(String value) throws SAXException {
+    private Name[] parseNames(String value) throws SAXException {
         String[] names = value.split("\\p{Space}+");
-        QName[] qnames = new QName[names.length];
+        Name[] qnames = new Name[names.length];
         for (int i = 0; i < names.length; i++) {
             try {
-                qnames[i] = NameFormat.parse(names[i], nsContext);
-            } catch (NameException ne) {
+                qnames[i] = nameResolver.getQName(names[i]);
+            } catch (org.apache.jackrabbit.conversion.NameException ne) {
                 throw new SAXException("Invalid name: " + names[i], ne);
+            } catch (NamespaceException e) {
+                throw new SAXException("Invalid name: " + names[i], e);
             }
         }
         return qnames;

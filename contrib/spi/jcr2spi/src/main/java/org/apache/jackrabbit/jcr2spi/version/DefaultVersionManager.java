@@ -23,8 +23,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.version.VersionException;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 
@@ -58,11 +58,11 @@ public class DefaultVersionManager implements VersionManager {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
 
-    public void addVersionLabel(NodeState versionHistoryState, NodeState versionState, QName qLabel, boolean moveLabel) throws RepositoryException {
+    public void addVersionLabel(NodeState versionHistoryState, NodeState versionState, Name qLabel, boolean moveLabel) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
 
-    public void removeVersionLabel(NodeState versionHistoryState, NodeState versionState, QName qLabel) throws RepositoryException {
+    public void removeVersionLabel(NodeState versionHistoryState, NodeState versionState, Name qLabel) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
 

@@ -16,17 +16,17 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.UnknownPrefixException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.NameResolver;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
 import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -48,7 +48,7 @@ class SysViewImportHandler extends TargetImportHandler {
     /**
      * fields used temporarily while processing sv:property and sv:value elements
      */
-    private QName currentPropName;
+    private Name currentPropName;
     private int currentPropType = PropertyType.UNDEFINED;
     // list of AppendableValue objects
     private ArrayList currentPropValues = new ArrayList();
@@ -60,8 +60,8 @@ class SysViewImportHandler extends TargetImportHandler {
      * @param importer
      * @param nsContext
      */
-    SysViewImportHandler(Importer importer, NamespaceResolver nsContext) {
-        super(importer, nsContext);
+    SysViewImportHandler(Importer importer, org.apache.jackrabbit.namespace.NamespaceResolver nsContext, NameResolver nameResolver) {
+        super(importer, nsContext, nameResolver);
     }
 
     private void processNode(ImportState state, boolean start, boolean end)
@@ -69,9 +69,9 @@ class SysViewImportHandler extends TargetImportHandler {
         if (!start && !end) {
             return;
         }
-        QName[] mixins = null;
+        Name[] mixins = null;
         if (state.mixinNames != null) {
-            mixins = (QName[]) state.mixinNames.toArray(new QName[state.mixinNames.size()]);
+            mixins = (Name[]) state.mixinNames.toArray(new Name[state.mixinNames.size()]);
         }
         Importer.NodeInfo nodeInfo = new Importer.NodeInfo(state.nodeName, state.nodeTypeName, mixins, state.uuid);
 
@@ -104,7 +104,7 @@ class SysViewImportHandler extends TargetImportHandler {
                              String qName, Attributes atts)
             throws SAXException {
         // check namespace
-        if (!QName.NS_SV_URI.equals(namespaceURI)) {
+        if (!Name.NS_SV_URI.equals(namespaceURI)) {
             throw new SAXException(new InvalidSerializedDataException("invalid namespace for element in system view xml document: "
                     + namespaceURI));
         }
@@ -132,11 +132,11 @@ class SysViewImportHandler extends TargetImportHandler {
             // push new ImportState instance onto the stack
             ImportState state = new ImportState();
             try {
-                state.nodeName = NameFormat.parse(name, nsContext);
-            } catch (IllegalNameException ine) {
-                throw new SAXException(new InvalidSerializedDataException("illegal node name: " + name, ine));
-            } catch (UnknownPrefixException upe) {
-                throw new SAXException(new InvalidSerializedDataException("illegal node name: " + name, upe));
+                state.nodeName = nameResolver.getQName(name);
+            } catch (NameException e) {
+                throw new SAXException(new InvalidSerializedDataException("illegal node name: " + name, e));
+            } catch (NamespaceException e) {
+                throw new SAXException(new InvalidSerializedDataException("illegal node name: " + name, e));
             }
             stack.push(state);
         } else if (SysViewSAXEventGenerator.PROPERTY_ELEMENT.equals(localName)) {
@@ -152,11 +152,11 @@ class SysViewImportHandler extends TargetImportHandler {
                         "missing mandatory sv:name attribute of element sv:property"));
             }
             try {
-                currentPropName = NameFormat.parse(name, nsContext);
-            } catch (IllegalNameException ine) {
-                throw new SAXException(new InvalidSerializedDataException("illegal property name: " + name, ine));
-            } catch (UnknownPrefixException upe) {
-                throw new SAXException(new InvalidSerializedDataException("illegal property name: " + name, upe));
+                currentPropName = nameResolver.getQName(name);
+            } catch (org.apache.jackrabbit.conversion.NameException e) {
+                throw new SAXException(new InvalidSerializedDataException("illegal property name: " + name, e));
+            } catch (NamespaceException e) {
+                throw new SAXException(new InvalidSerializedDataException("illegal property name: " + name, e));
             }
             // property type (sv:type attribute)
             String type = atts.getValue(SysViewSAXEventGenerator.PREFIXED_TYPE_ATTRIBUTE);
@@ -235,20 +235,20 @@ class SysViewImportHandler extends TargetImportHandler {
 
             // check if all system properties (jcr:primaryType, jcr:uuid etc.)
             // have been collected and create node as necessary
-            if (currentPropName.equals(QName.JCR_PRIMARYTYPE)) {
+            if (currentPropName.equals(NameConstants.JCR_PRIMARYTYPE)) {
                 AppendableValue val = (AppendableValue) currentPropValues.get(0);
                 String s = null;
                 try {
                     s = val.retrieve();
-                    state.nodeTypeName = NameFormat.parse(s, nsContext);
+                    state.nodeTypeName = nameResolver.getQName(s);
                 } catch (IOException ioe) {
                     throw new SAXException("error while retrieving value", ioe);
-                } catch (IllegalNameException ine) {
-                    throw new SAXException(new InvalidSerializedDataException("illegal node type name: " + s, ine));
-                } catch (UnknownPrefixException upe) {
-                    throw new SAXException(new InvalidSerializedDataException("illegal node type name: " + s, upe));
+                } catch (org.apache.jackrabbit.conversion.NameException e) {
+                    throw new SAXException(new InvalidSerializedDataException("illegal node type name: " + s, e));
+                } catch (NamespaceException e) {
+                    throw new SAXException(new InvalidSerializedDataException("illegal node type name: " + s, e));
                 }
-            } else if (currentPropName.equals(QName.JCR_MIXINTYPES)) {
+            } else if (currentPropName.equals(NameConstants.JCR_MIXINTYPES)) {
                 if (state.mixinNames == null) {
                     state.mixinNames = new ArrayList(currentPropValues.size());
                 }
@@ -258,17 +258,17 @@ class SysViewImportHandler extends TargetImportHandler {
                     String s = null;
                     try {
                         s = val.retrieve();
-                        QName mixin = NameFormat.parse(s, nsContext);
+                        Name mixin = nameResolver.getQName(s);
                         state.mixinNames.add(mixin);
                     } catch (IOException ioe) {
                         throw new SAXException("error while retrieving value", ioe);
-                    } catch (IllegalNameException ine) {
-                        throw new SAXException(new InvalidSerializedDataException("illegal mixin type name: " + s, ine));
-                    } catch (UnknownPrefixException upe) {
-                        throw new SAXException(new InvalidSerializedDataException("illegal mixin type name: " + s, upe));
+                    } catch (org.apache.jackrabbit.conversion.NameException e) {
+                        throw new SAXException(new InvalidSerializedDataException("illegal mixin type name: " + s, e));
+                    } catch (NamespaceException e) {
+                        throw new SAXException(new InvalidSerializedDataException("illegal mixin type name: " + s, e));
                     }
                 }
-            } else if (currentPropName.equals(QName.JCR_UUID)) {
+            } else if (currentPropName.equals(NameConstants.JCR_UUID)) {
                 AppendableValue val = (AppendableValue) currentPropValues.get(0);
                 try {
                     state.uuid = val.retrieve();
@@ -297,11 +297,11 @@ class SysViewImportHandler extends TargetImportHandler {
         /**
          * name of current node
          */
-        QName nodeName;
+        Name nodeName;
         /**
          * primary type of current node
          */
-        QName nodeTypeName;
+        Name nodeTypeName;
         /**
          * list of mixin types of current node
          */

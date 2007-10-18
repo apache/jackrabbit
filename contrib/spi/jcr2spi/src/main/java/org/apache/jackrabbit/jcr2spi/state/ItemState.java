@@ -20,8 +20,8 @@ import org.apache.jackrabbit.util.WeakIdentityCollection;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
@@ -166,13 +166,13 @@ public abstract class ItemState {
 
     /**
      * Utility method:
-     * Returns the name of this state. Shortcut for calling 'getQName' on the
+     * Returns the name of this state. Shortcut for calling 'getName' on the
      * {@link ItemState#getHierarchyEntry() hierarchy entry}.
      *
      * @return name of this state
      */
-    public QName getQName() {
-        return getHierarchyEntry().getQName();
+    public Name getName() {
+        return getHierarchyEntry().getName();
     }
 
     /**

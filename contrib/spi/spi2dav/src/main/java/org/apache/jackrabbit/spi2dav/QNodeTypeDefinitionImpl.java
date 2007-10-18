@@ -20,14 +20,15 @@ import org.w3c.dom.Element;
 import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeConstants;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NameException;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QValueFactory;
+import org.apache.jackrabbit.spi.Name;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -47,11 +48,11 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
 
     private static Logger log = LoggerFactory.getLogger(QNodeTypeDefinitionImpl.class);
 
-    private final QName name;
-    private final QName[] supertypes;
+    private final Name name;
+    private final Name[] supertypes;
     private final boolean mixin;
     private final boolean orderableChildNodes;
-    private final QName primaryItemName;
+    private final Name primaryItemName;
     private final QPropertyDefinition[] propDefs;
     private final QNodeDefinition[] nodeDefs;
     private Set dependencies;
@@ -59,20 +60,20 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
     /**
      * Default constructor.
      */
-    public QNodeTypeDefinitionImpl(Element ntdElement, NamespaceResolver nsResolver,
+    public QNodeTypeDefinitionImpl(Element ntdElement, NamePathResolver resolver,
                                    QValueFactory qValueFactory)
         throws RepositoryException {
         // TODO: webdav-server currently sends jcr-names -> conversion needed
         // NOTE: the server should send the namespace-mappings as addition ns-defininitions
         try {
         if (ntdElement.hasAttribute(NAME_ATTRIBUTE)) {
-            name = NameFormat.parse(ntdElement.getAttribute(NAME_ATTRIBUTE), nsResolver);
+            name = resolver.getQName(ntdElement.getAttribute(NAME_ATTRIBUTE));
         } else {
             name = null;
         }
 
         if (ntdElement.hasAttribute(PRIMARYITEMNAME_ATTRIBUTE)) {
-            primaryItemName = NameFormat.parse(ntdElement.getAttribute(PRIMARYITEMNAME_ATTRIBUTE), nsResolver);
+            primaryItemName = resolver.getQName(ntdElement.getAttribute(PRIMARYITEMNAME_ATTRIBUTE));
         } else {
             primaryItemName = null;
         }
@@ -82,12 +83,12 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
             ElementIterator stIter = DomUtil.getChildren(child, SUPERTYPE_ELEMENT, null);
             List qNames = new ArrayList();
             while (stIter.hasNext()) {
-                QName st = NameFormat.parse(DomUtil.getTextTrim(stIter.nextElement()), nsResolver);
+                Name st = resolver.getQName(DomUtil.getTextTrim(stIter.nextElement()));
                 qNames.add(st);
             }
-            supertypes = (QName[]) qNames.toArray(new QName[qNames.size()]);
+            supertypes = (Name[]) qNames.toArray(new Name[qNames.size()]);
         } else {
-            supertypes = QName.EMPTY_ARRAY;
+            supertypes = Name.EMPTY_ARRAY;
         }
         if (ntdElement.hasAttribute(ISMIXIN_ATTRIBUTE)) {
             mixin = Boolean.valueOf(ntdElement.getAttribute(ISMIXIN_ATTRIBUTE)).booleanValue();
@@ -104,7 +105,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
         ElementIterator it = DomUtil.getChildren(ntdElement, CHILDNODEDEFINITION_ELEMENT, null);
         List itemDefs = new ArrayList();
         while (it.hasNext()) {
-            itemDefs.add(new QNodeDefinitionImpl(name, it.nextElement(), nsResolver));
+            itemDefs.add(new QNodeDefinitionImpl(name, it.nextElement(), resolver));
         }
         nodeDefs = (QNodeDefinition[]) itemDefs.toArray(new QNodeDefinition[itemDefs.size()]);
 
@@ -113,7 +114,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
         it = DomUtil.getChildren(ntdElement, PROPERTYDEFINITION_ELEMENT, null);
         itemDefs = new ArrayList();
         while (it.hasNext()) {
-            itemDefs.add(new QPropertyDefinitionImpl(name, it.nextElement(), nsResolver, qValueFactory));
+            itemDefs.add(new QPropertyDefinitionImpl(name, it.nextElement(), resolver, qValueFactory));
         }
         propDefs = (QPropertyDefinition[]) itemDefs.toArray(new QPropertyDefinition[itemDefs.size()]);
         } catch (NameException e) {
@@ -124,21 +125,21 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
 
     //------------------------------------------------< QNodeTypeDefinition >---
     /**
-     * @see QNodeTypeDefinition#getQName() 
+     * @see QNodeTypeDefinition#getName()
      */
-    public QName getQName() {
+    public Name getName() {
         return name;
     }
 
     /**
      * @see QNodeTypeDefinition#getSupertypes()
      */
-    public QName[] getSupertypes() {
+    public Name[] getSupertypes() {
         if (supertypes.length > 0
-                || isMixin() || QName.NT_BASE.equals(getQName())) {
+                || isMixin() || NameConstants.NT_BASE.equals(getName())) {
             return supertypes;
         } else {
-            return new QName[] { QName.NT_BASE };
+            return new Name[] { NameConstants.NT_BASE };
         }
     }
 
@@ -159,7 +160,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
     /**
      * @see QNodeTypeDefinition#getPrimaryItemName()
      */
-    public QName getPrimaryItemName() {
+    public Name getPrimaryItemName() {
         return primaryItemName;
     }
 
@@ -190,12 +191,12 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
             // child node definitions
             for (int i = 0; i < nodeDefs.length; i++) {
                 // default primary type
-                QName ntName = nodeDefs[i].getDefaultPrimaryType();
+                Name ntName = nodeDefs[i].getDefaultPrimaryType();
                 if (ntName != null && !name.equals(ntName)) {
                     dependencies.add(ntName);
                 }
                 // required primary type
-                QName[] ntNames = nodeDefs[i].getRequiredPrimaryTypes();
+                Name[] ntNames = nodeDefs[i].getRequiredPrimaryTypes();
                 for (int j = 0; j < ntNames.length; j++) {
                     if (ntNames[j] != null && !name.equals(ntNames[j])) {
                         dependencies.add(ntNames[j]);
@@ -209,7 +210,8 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
                     String[] ca = propDefs[i].getValueConstraints();
                     if (ca != null) {
                         for (int j = 0; j < ca.length; j++) {
-                            QName ntName = QName.valueOf(ca[j]);
+                            // TODO: don't rely on a specific factory
+                            Name ntName = NameFactoryImpl.getInstance().create(ca[j]);
                             if (!name.equals(ntName)) {
                                 dependencies.add(ntName);
                             }
@@ -231,7 +233,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
         }
         if (obj instanceof QNodeTypeDefinition) {
             QNodeTypeDefinition other = (QNodeTypeDefinition) obj;
-            return (name == null ? other.getQName() == null : name.equals(other.getQName()))
+            return (name == null ? other.getName() == null : name.equals(other.getName()))
                 && (primaryItemName == null ? other.getPrimaryItemName() == null : primaryItemName.equals(other.getPrimaryItemName()))
                 && Arrays.equals(supertypes, other.getSupertypes())
                 && mixin == other.isMixin()

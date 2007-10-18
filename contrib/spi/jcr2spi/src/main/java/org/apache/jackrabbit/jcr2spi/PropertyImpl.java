@@ -19,14 +19,13 @@ package org.apache.jackrabbit.jcr2spi;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.value.ValueFormat;
 import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.jackrabbit.conversion.NameResolver;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -66,15 +65,8 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public String getName() throws RepositoryException {
         checkStatus();
-        QName name = getQName();
-        try {
-            return NameFormat.format(name, session.getNamespaceResolver());
-        } catch (NoPrefixDeclaredException npde) {
-            // should never get here...
-            String msg = "Internal error: encountered unregistered namespace " + name.getNamespaceURI();
-            log.debug(msg);
-            throw new RepositoryException(msg, npde);
-        }
+        Name name = getQName();
+        return session.getNameResolver().getJCRName(name);
     }
 
     /**
@@ -140,7 +132,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         QValue[] qValues = null;
         if (values != null) {
             Value[] vs = ValueHelper.convert(values, targetType, session.getValueFactory());
-            qValues = ValueFormat.getQValues(vs, session.getNamespaceResolver(), session.getQValueFactory());
+            qValues = ValueFormat.getQValues(vs, session.getNamePathResolver(), session.getQValueFactory());
         }
         setInternalValues(qValues, targetType);
     }
@@ -176,7 +168,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                     if (reqType != PropertyType.STRING) {
                         // type conversion required
                         Value v = ValueHelper.convert(string, reqType, session.getValueFactory());
-                        qValue = ValueFormat.getQValue(v, session.getNamespaceResolver(), session.getQValueFactory());
+                        qValue = ValueFormat.getQValue(v, session.getNamePathResolver(), session.getQValueFactory());
                     } else {
                         // no type conversion required
                         qValue = session.getQValueFactory().create(string, PropertyType.STRING);
@@ -250,7 +242,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (value == null) {
             setInternalValues(null, reqType);
         } else {
-            checkValidReference(value, reqType, session.getNamespaceResolver());
+            checkValidReference(value, reqType, session.getNameResolver());
             QValue qValue = session.getQValueFactory().create(value.getUUID(), PropertyType.REFERENCE);
             setInternalValues(new QValue[]{qValue}, reqType);
         }
@@ -261,7 +253,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public Value getValue() throws ValueFormatException, RepositoryException {
         QValue value = getQValue();
-        return ValueFormat.getJCRValue(value, session.getNamespaceResolver(), session.getJcrValueFactory());
+        return ValueFormat.getJCRValue(value, session.getNamePathResolver(), session.getJcrValueFactory());
     }
 
     /**
@@ -271,7 +263,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         QValue[] qValues = getQValues();
         Value[] values = new Value[qValues.length];
         for (int i = 0; i < qValues.length; i++) {
-            values[i] = ValueFormat.getJCRValue(qValues[i], session.getNamespaceResolver(), session.getJcrValueFactory());
+            values[i] = ValueFormat.getJCRValue(qValues[i], session.getNamePathResolver(), session.getJcrValueFactory());
         }
         return values;
     }
@@ -360,7 +352,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         switch (value.getType()) {
             case PropertyType.NAME:
             case PropertyType.PATH:
-                Value jcrValue = ValueFormat.getJCRValue(value, session.getNamespaceResolver(), session.getJcrValueFactory());
+                Value jcrValue = ValueFormat.getJCRValue(value, session.getNamePathResolver(), session.getJcrValueFactory());
                 length = jcrValue.getString().length();
                 break;
             default:
@@ -389,14 +381,14 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     //-----------------------------------------------------------< ItemImpl >---
     /**
-     * Returns the QName defined with this <code>PropertyState</code>
+     * Returns the Name defined with this <code>PropertyState</code>
      *
      * @return
-     * @see PropertyState#getQName()
-     * @see ItemImpl#getQName()
+     * @see PropertyState#getName()
+     * @see ItemImpl#getName()
      */
-    QName getQName() {
-        return getPropertyState().getQName();
+    Name getQName() {
+        return getPropertyState().getName();
     }
 
     //------------------------------------------------------< check methods >---
@@ -492,10 +484,10 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (requiredType != value.getType()) {
             // type conversion required
             Value v = ValueHelper.convert(value, requiredType, session.getValueFactory());
-            qValue = ValueFormat.getQValue(v, session.getNamespaceResolver(), session.getQValueFactory());
+            qValue = ValueFormat.getQValue(v, session.getNamePathResolver(), session.getQValueFactory());
         } else {
             // no type conversion required
-            qValue = ValueFormat.getQValue(value, session.getNamespaceResolver(), session.getQValueFactory());
+            qValue = ValueFormat.getQValue(value, session.getNamePathResolver(), session.getQValueFactory());
         }
         setInternalValues(new QValue[]{qValue}, requiredType);
     }
@@ -535,15 +527,11 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @throws ValueFormatException
      * @throws RepositoryException
      */
-    static void checkValidReference(Node value, int propertyType, NamespaceResolver nsResolver) throws ValueFormatException, RepositoryException {
+    static void checkValidReference(Node value, int propertyType, NameResolver resolver) throws ValueFormatException, RepositoryException {
         if (propertyType == PropertyType.REFERENCE) {
-            try {
-                String jcrName = NameFormat.format(QName.MIX_REFERENCEABLE, nsResolver);
-                if (!value.isNodeType(jcrName)) {
-                    throw new ValueFormatException("Target node must be of node type mix:referenceable");
-                }
-            } catch (NoPrefixDeclaredException e) {
-                throw new RepositoryException(e);
+            String jcrName = resolver.getJCRName(NameConstants.MIX_REFERENCEABLE);
+            if (!value.isNodeType(jcrName)) {
+                throw new ValueFormatException("Target node must be of node type mix:referenceable");
             }
         } else {
             throw new ValueFormatException("Property must be of type REFERENCE.");

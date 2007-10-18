@@ -22,7 +22,7 @@ import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
@@ -53,12 +53,12 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
     //------------------------------------------< TransientItemStateFactory >---
     /**
      * @inheritDoc
-     * @see TransientItemStateFactory#createNewNodeState(NodeEntry , QName, QNodeDefinition)
+     * @see TransientItemStateFactory#createNewNodeState(NodeEntry , Name, QNodeDefinition)
      */
-    public NodeState createNewNodeState(NodeEntry entry, QName nodetypeName,
+    public NodeState createNewNodeState(NodeEntry entry, Name nodetypeName,
                                         QNodeDefinition definition) {
 
-        NodeState nodeState = new NodeState(entry, nodetypeName, QName.EMPTY_ARRAY, this, definition, defProvider);
+        NodeState nodeState = new NodeState(entry, nodetypeName, Name.EMPTY_ARRAY, this, definition, defProvider);
 
         // notify listeners that a node state has been created
         notifyCreated(nodeState);

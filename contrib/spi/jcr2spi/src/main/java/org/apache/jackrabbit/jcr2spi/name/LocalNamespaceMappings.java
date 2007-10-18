@@ -16,13 +16,11 @@
  */
 package org.apache.jackrabbit.jcr2spi.name;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.AbstractNamespaceResolver;
-import org.apache.jackrabbit.name.NamespaceListener;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameCache;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.jcr2spi.SessionImpl;
 import org.apache.jackrabbit.util.XMLChar;
+import org.apache.jackrabbit.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.namespace.NamespaceListener;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
@@ -42,12 +40,12 @@ import java.util.Map;
  * instance) and keeps track of local namespace mappings added by the session.
  * <p>
  * The namespace resolution methods required by the
- * {@link NamespaceResolver NamespaceResolver} are implemented by first
+ * {@link org.apache.jackrabbit.namespace.NamespaceResolver NamespaceResolver} are implemented by first
  * looking up the local namespace mapping and then backing to the
  * underlying namespace registry.
  */
 public class LocalNamespaceMappings extends AbstractNamespaceResolver
-    implements NamespaceListener, NameCache {
+    implements NamespaceListener {
 
     /** The underlying global and persistent namespace registry. */
     private final NamespaceRegistryImpl nsReg;
@@ -57,6 +55,9 @@ public class LocalNamespaceMappings extends AbstractNamespaceResolver
 
     /** URI to prefix mappings of local namespaces. */
     private final HashMap uriToPrefix = new HashMap();
+
+   // private final NameResolver nameResolver;
+   // private final PathResolver pathResolver;
 
     /**
      * Creates a local namespace manager with the given underlying
@@ -82,16 +83,16 @@ public class LocalNamespaceMappings extends AbstractNamespaceResolver
         if (prefix == null || uri == null) {
             throw new IllegalArgumentException("prefix/uri can not be null");
         }
-        if (QName.NS_EMPTY_PREFIX.equals(prefix)
-                || QName.NS_DEFAULT_URI.equals(uri)) {
+        if (Name.NS_EMPTY_PREFIX.equals(prefix)
+                || Name.NS_DEFAULT_URI.equals(uri)) {
             throw new NamespaceException("default namespace is reserved and can not be changed");
         }
         // special case: xml namespace
-        if (uri.equals(QName.NS_XML_URI)) {
+        if (uri.equals(Name.NS_XML_URI)) {
             throw new NamespaceException("xml namespace is reserved and can not be changed.");
         }
         // special case: prefixes xml*
-        if (prefix.toLowerCase().startsWith(QName.NS_XML_PREFIX)) {
+        if (prefix.toLowerCase().startsWith(Name.NS_XML_PREFIX)) {
             throw new NamespaceException("reserved prefix: " + prefix);
         }
         // check if the prefix is a valid XML prefix
@@ -165,46 +166,6 @@ public class LocalNamespaceMappings extends AbstractNamespaceResolver
      */
     public Map getLocalNamespaceMappings() {
         return new HashMap(prefixToURI);
-    }
-
-    //-------------------------------------------------------------< NameCache >
-
-    /**
-     * {@inheritDoc}
-     */
-    public QName retrieveName(String jcrName) {
-        if (prefixToURI.size() == 0) {
-            return nsReg.retrieveName(jcrName);
-        }
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String retrieveName(QName name) {
-        if (prefixToURI.size() == 0
-                || !uriToPrefix.containsKey(name.getNamespaceURI())) {
-            return nsReg.retrieveName(name);
-        }
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void cacheName(String jcrName, QName name) {
-        if (prefixToURI.size() == 0
-                || !uriToPrefix.containsKey(name.getNamespaceURI())) {
-            nsReg.cacheName(jcrName, name);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void evictAllNames() {
-        nsReg.evictAllNames();
     }
 
     //--------------------------------------------------< NamespaceResolver >---

@@ -16,9 +16,10 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.name.NameConstants;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -33,9 +34,9 @@ public class SetMixin extends AbstractOperation {
 
     private final NodeId nodeId;
     private final NodeState nodeState;
-    private final QName[] mixinNames;
+    private final Name[] mixinNames;
 
-    private SetMixin(NodeState nodeState, QName[] mixinNames) {
+    private SetMixin(NodeState nodeState, Name[] mixinNames) {
         this.nodeState = nodeState;
         this.nodeId = nodeState.getNodeId();
         this.mixinNames = mixinNames;
@@ -45,7 +46,7 @@ public class SetMixin extends AbstractOperation {
         // add the jcr:mixinTypes property state as affected if it already exists
         // and therefore gets modified by this operation.
         try {
-            addAffectedItemState(nodeState.getPropertyState(QName.JCR_MIXINTYPES));
+            addAffectedItemState(nodeState.getPropertyState(NameConstants.JCR_MIXINTYPES));
         } catch (RepositoryException e) {
             // jcr:mixinTypes does not exist -> ignore
         }
@@ -79,13 +80,13 @@ public class SetMixin extends AbstractOperation {
         return nodeId;
     }
     
-    public QName[] getMixinNames() {
+    public Name[] getMixinNames() {
         return mixinNames;
     }
 
     //------------------------------------------------------------< Factory >---
 
-    public static Operation create(NodeState nodeState, QName[] mixinNames) {
+    public static Operation create(NodeState nodeState, Name[] mixinNames) {
         SetMixin sm = new SetMixin(nodeState, mixinNames);
         return sm;
     }

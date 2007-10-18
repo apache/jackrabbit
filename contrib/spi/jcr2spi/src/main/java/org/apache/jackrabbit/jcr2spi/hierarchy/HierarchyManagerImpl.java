@@ -18,10 +18,11 @@ package org.apache.jackrabbit.jcr2spi.hierarchy;
 
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.TransientItemStateFactory;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.PathFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,9 +42,9 @@ public class HierarchyManagerImpl implements HierarchyManager {
     private final UniqueIdResolver uniqueIdResolver;
     private final IdFactory idFactory;
 
-    public HierarchyManagerImpl(TransientItemStateFactory isf, IdFactory idFactory) {
+    public HierarchyManagerImpl(TransientItemStateFactory isf, IdFactory idFactory, PathFactory pathFactory) {
         uniqueIdResolver = new UniqueIdResolver(isf);
-        rootEntry = new EntryFactory(isf, idFactory, uniqueIdResolver).createRootEntry();
+        rootEntry = new EntryFactory(isf, idFactory, uniqueIdResolver, pathFactory).createRootEntry();
         this.idFactory = idFactory;
     }
 

@@ -20,7 +20,7 @@ import org.apache.jackrabbit.test.RepositoryStubException;
 import org.apache.jackrabbit.spi2jcr.RepositoryServiceImpl;
 import org.apache.jackrabbit.spi2jcr.BatchReadConfig;
 import org.apache.jackrabbit.spi.RepositoryService;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameConstants;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
@@ -80,8 +80,8 @@ public class JCR2SPI2JCRRepositoryStub extends DefaultRepositoryStub {
 
         // TODO: make configurable
         BatchReadConfig brconfig = new BatchReadConfig();
-        brconfig.setDepth(QName.NT_FILE, BatchReadConfig.DEPTH_INFINITE);
-        brconfig.setDepth(QName.NT_RESOURCE, BatchReadConfig.DEPTH_INFINITE);
+        brconfig.setDepth(NameConstants.NT_FILE, BatchReadConfig.DEPTH_INFINITE);
+        brconfig.setDepth(NameConstants.NT_RESOURCE, BatchReadConfig.DEPTH_INFINITE);
 
         return new RepositoryServiceImpl(jackrabbitRepo, brconfig);
     }

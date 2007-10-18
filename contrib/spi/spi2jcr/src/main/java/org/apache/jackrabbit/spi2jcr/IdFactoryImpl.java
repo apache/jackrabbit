@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.spi2jcr;
 
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathFactoryImpl;
+import org.apache.jackrabbit.name.PathBuilder;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.NameException;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.NameException;
 import org.apache.jackrabbit.identifier.AbstractIdFactory;
 
 import javax.jcr.Node;
@@ -45,18 +45,21 @@ class IdFactoryImpl extends AbstractIdFactory {
         return INSTANCE;
     }
 
+    protected PathFactory getPathFactory() {
+        return PathFactoryImpl.getInstance();
+    }
     /**
      * Creates a <code>NodeId</code> for the given <code>node</code>.
      *
      * @param node       the JCR Node.
-     * @param nsResolver the namespace resolver in use.
+     * @param resolver
      * @return the <code>NodeId</code> for <code>node</code>.
      * @throws RepositoryException if an error occurs while reading from
      *                             <code>node</code>.
      */
-    public NodeId createNodeId(Node node, NamespaceResolver nsResolver)
+    public NodeId createNodeId(Node node, NamePathResolver resolver)
             throws RepositoryException {
-        Path.PathBuilder builder = new Path.PathBuilder();
+        PathBuilder builder = new PathBuilder();
         int pathElements = 0;
         String uniqueId = null;
         while (uniqueId == null) {
@@ -68,12 +71,12 @@ class IdFactoryImpl extends AbstractIdFactory {
                 String jcrName = node.getName();
                 if (jcrName.equals("")) {
                     // root node
-                    builder.addFirst(QName.ROOT);
+                    builder.addRoot();
                     break;
                 } else {
-                    QName name;
+                    Name name;
                     try {
-                        name = NameFormat.parse(node.getName(), nsResolver);
+                        name = resolver.getQName(node.getName());
                     } catch (NameException ex) {
                        throw new RepositoryException(ex.getMessage(), ex);
                     }
@@ -87,11 +90,7 @@ class IdFactoryImpl extends AbstractIdFactory {
             }
         }
         if (pathElements > 0) {
-            try {
-                return createNodeId(uniqueId, builder.getPath());
-            } catch (MalformedPathException e) {
-                throw new RepositoryException(e.getMessage(), e);
-            }
+            return createNodeId(uniqueId, builder.getPath());
         } else {
             return createNodeId(uniqueId);
         }
@@ -101,20 +100,20 @@ class IdFactoryImpl extends AbstractIdFactory {
      * Creates a <code>PropertyId</code> for the given <code>property</code>.
      *
      * @param property   the JCR Property.
-     * @param nsResolver the namespace resolver in use.
+     * @param resolver
      * @return the <code>PropertyId</code> for <code>property</code>.
      * @throws RepositoryException if an error occurs while reading from
      *                             <code>property</code>.
      */
     public PropertyId createPropertyId(Property property,
-                                       NamespaceResolver nsResolver)
+                                       NamePathResolver resolver)
             throws RepositoryException {
         Node parent = property.getParent();
-        NodeId nodeId = createNodeId(parent, nsResolver);
+        NodeId nodeId = createNodeId(parent, resolver);
         String jcrName = property.getName();
-        QName name;
+        Name name;
         try {
-            name = NameFormat.parse(jcrName, nsResolver);
+            name = resolver.getQName(jcrName);
         } catch (NameException e) {
             throw new RepositoryException(e.getMessage(), e);
         }

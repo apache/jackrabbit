@@ -28,8 +28,8 @@ import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.commons.SerializableBatch;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
@@ -265,12 +265,12 @@ public interface RemoteRepositoryService extends Remote {
      * @param destName
      * @throws javax.jcr.RepositoryException
      * @throws RemoteException if an error occurs.
-     * @see org.apache.jackrabbit.spi.RepositoryService#move(org.apache.jackrabbit.spi.SessionInfo, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.name.QName)
+     * @see org.apache.jackrabbit.spi.RepositoryService#move(org.apache.jackrabbit.spi.SessionInfo, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.spi.Name)
      */
     public void move(RemoteSessionInfo sessionInfo,
                      NodeId srcNodeId,
                      NodeId destParentNodeId,
-                     QName destName)
+                     Name destName)
             throws RepositoryException, RemoteException;
 
     /**
@@ -281,13 +281,13 @@ public interface RemoteRepositoryService extends Remote {
      * @param destName
      * @throws javax.jcr.RepositoryException
      * @throws RemoteException if an error occurs.
-     * @see org.apache.jackrabbit.spi.RepositoryService#copy(org.apache.jackrabbit.spi.SessionInfo, String, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.name.QName)
+     * @see org.apache.jackrabbit.spi.RepositoryService#copy(org.apache.jackrabbit.spi.SessionInfo, String, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.spi.Name)
      */
     public void copy(RemoteSessionInfo sessionInfo,
                      String srcWorkspaceName,
                      NodeId srcNodeId,
                      NodeId destParentNodeId,
-                     QName destName)
+                     Name destName)
             throws RepositoryException, RemoteException;
 
     /**
@@ -312,13 +312,13 @@ public interface RemoteRepositoryService extends Remote {
      * @param removeExisting
      * @throws javax.jcr.RepositoryException
      * @throws RemoteException if an error occurs.
-     * @see org.apache.jackrabbit.spi.RepositoryService#clone(org.apache.jackrabbit.spi.SessionInfo, String, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.name.QName, boolean)
+     * @see org.apache.jackrabbit.spi.RepositoryService#clone(org.apache.jackrabbit.spi.SessionInfo, String, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.spi.Name, boolean)
      */
     public void clone(RemoteSessionInfo sessionInfo,
                       String srcWorkspaceName,
                       NodeId srcNodeId,
                       NodeId destParentNodeId,
-                      QName destName,
+                      Name destName,
                       boolean removeExisting)
             throws RepositoryException, RemoteException;
 
@@ -479,12 +479,12 @@ public interface RemoteRepositoryService extends Remote {
      * @param moveLabel
      * @throws javax.jcr.RepositoryException
      * @throws RemoteException if an error occurs.
-     * @see org.apache.jackrabbit.spi.RepositoryService#addVersionLabel(org.apache.jackrabbit.spi.SessionInfo, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.name.QName, boolean)
+     * @see org.apache.jackrabbit.spi.RepositoryService#addVersionLabel(org.apache.jackrabbit.spi.SessionInfo, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.spi.Name, boolean)
      */
     public void addVersionLabel(RemoteSessionInfo sessionInfo,
                                 NodeId versionHistoryId,
                                 NodeId versionId,
-                                QName label,
+                                Name label,
                                 boolean moveLabel)
             throws RepositoryException, RemoteException;
 
@@ -494,12 +494,12 @@ public interface RemoteRepositoryService extends Remote {
      * @param label
      * @throws javax.jcr.RepositoryException
      * @throws RemoteException if an error occurs.
-     * @see org.apache.jackrabbit.spi.RepositoryService#removeVersionLabel(org.apache.jackrabbit.spi.SessionInfo, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.name.QName)
+     * @see org.apache.jackrabbit.spi.RepositoryService#removeVersionLabel(org.apache.jackrabbit.spi.SessionInfo, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.spi.NodeId, org.apache.jackrabbit.spi.Name)
      */
     public void removeVersionLabel(RemoteSessionInfo sessionInfo,
                                    NodeId versionHistoryId,
                                    NodeId versionId,
-                                   QName label)
+                                   Name label)
             throws RepositoryException, RemoteException;
 
     /**
@@ -564,11 +564,11 @@ public interface RemoteRepositoryService extends Remote {
      * @throws RepositoryException if an error occurs while creating the
      * EventFilter.
      * @throws RemoteException if an error occurs.
-     * @see org.apache.jackrabbit.spi.RepositoryService#createEventFilter(org.apache.jackrabbit.spi.SessionInfo, int, org.apache.jackrabbit.name.Path, boolean, String[], org.apache.jackrabbit.name.QName[], boolean)
+     * @see org.apache.jackrabbit.spi.RepositoryService#createEventFilter(org.apache.jackrabbit.spi.SessionInfo, int, org.apache.jackrabbit.spi.Path, boolean, String[], org.apache.jackrabbit.spi.Name[], boolean)
      */
     public EventFilter createEventFilter(RemoteSessionInfo sessionInfo, int eventTypes,
                                          Path absPath, boolean isDeep,
-                                         String[] uuid, QName[] nodeTypeName,
+                                         String[] uuid, Name[] nodeTypeName,
                                          boolean noLocal)
             throws RepositoryException, RemoteException;
 
@@ -680,7 +680,7 @@ public interface RemoteRepositoryService extends Remote {
      * @return
      * @throws javax.jcr.RepositoryException
      * @throws RemoteException if an error occurs.
-     * @see org.apache.jackrabbit.spi.RepositoryService#getQNodeTypeDefinition(org.apache.jackrabbit.spi.SessionInfo, QName)
+     * @see org.apache.jackrabbit.spi.RepositoryService#getQNodeTypeDefinition(org.apache.jackrabbit.spi.SessionInfo, Name)
      */
-    public RemoteIterator getQNodeTypeDefinitions(RemoteSessionInfo sessionInfo, QName[] ntNames) throws RepositoryException, RemoteException;
+    public RemoteIterator getQNodeTypeDefinitions(RemoteSessionInfo sessionInfo, Name[] ntNames) throws RepositoryException, RemoteException;
 }

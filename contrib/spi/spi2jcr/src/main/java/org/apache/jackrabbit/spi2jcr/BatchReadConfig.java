@@ -13,7 +13,7 @@
  */
 package org.apache.jackrabbit.spi2jcr;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -42,7 +42,7 @@ public class BatchReadConfig {
      * in this configuration, the default depth {@link #DEPTH_DEFAULT 0} will
      * be returned.
      */
-    public int getDepth(QName ntName) {
+    public int getDepth(Name ntName) {
         if (depthMap.containsKey(ntName)) {
             return ((Integer) (depthMap.get(ntName))).intValue();
         } else {
@@ -56,7 +56,7 @@ public class BatchReadConfig {
      * @param ntName
      * @param depth
      */
-    public void setDepth(QName ntName, int depth) {
+    public void setDepth(Name ntName, int depth) {
         if (ntName == null || depth < DEPTH_INFINITE) {
             throw new IllegalArgumentException();
         }

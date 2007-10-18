@@ -17,13 +17,14 @@
 package org.apache.jackrabbit.spi2dav;
 
 import org.w3c.dom.Element;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.name.NameConstants;
 import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeConstants;
 
 import javax.jcr.version.OnParentVersionAction;
@@ -39,17 +40,17 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, NodeTypeCo
     /**
      * The special wildcard name used as the name of residual item definitions.
      */
-    public static final QName ANY_NAME = new QName("", "*");
+    public static final Name ANY_NAME = NameFactoryImpl.getInstance().create("", "*");
 
     /**
      * The name of the child item.
      */
-    private final QName name;
+    private final Name name;
 
     /**
      * The name of the declaring node type.
      */
-    private final QName declaringNodeType;
+    private final Name declaringNodeType;
 
     /**
      * The 'autoCreated' flag.
@@ -80,15 +81,15 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, NodeTypeCo
      *
      * @param declaringNodeType
      * @param itemDefElement
-     * @param nsResolver
+     * @param resolver
      * @throws RepositoryException
      */
-    QItemDefinitionImpl(QName declaringNodeType, Element itemDefElement, NamespaceResolver nsResolver)
+    QItemDefinitionImpl(Name declaringNodeType, Element itemDefElement, NamePathResolver resolver)
         throws RepositoryException {
         try {
             String attr = itemDefElement.getAttribute(DECLARINGNODETYPE_ATTRIBUTE);
             if (attr != null) {
-                QName dnt = NameFormat.parse(attr, nsResolver);
+                Name dnt = resolver.getQName(attr);
                 if (declaringNodeType != null && !declaringNodeType.equals(dnt)) {
                     throw new RepositoryException("Declaring nodetype mismatch: In element = '" + dnt + "', Declaring nodetype = '" + declaringNodeType + "'");
                 }
@@ -100,9 +101,9 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, NodeTypeCo
             if (itemDefElement.hasAttribute(NAME_ATTRIBUTE)) {
                 String nAttr = itemDefElement.getAttribute(NAME_ATTRIBUTE);
                 if (nAttr.length() > 0) {
-                    name = (isAnyName(nAttr)) ? ANY_NAME : NameFormat.parse(nAttr, nsResolver);
+                    name = (isAnyName(nAttr)) ? ANY_NAME : resolver.getQName(nAttr);
                 } else {
-                    name = QName.ROOT;
+                    name = NameConstants.ROOT;
                 }
             } else {
                 // TODO: check if correct..
@@ -139,14 +140,14 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, NodeTypeCo
     /**
      * {@inheritDoc}
      */
-    public QName getDeclaringNodeType() {
+    public Name getDeclaringNodeType() {
         return declaringNodeType;
     }
 
     /**
      * {@inheritDoc}
      */
-    public QName getQName() {
+    public Name getName() {
         return name;
     }
 
@@ -205,7 +206,7 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, NodeTypeCo
             return (declaringNodeType == null
                     ? other.getDeclaringNodeType() == null
                     : declaringNodeType.equals(other.getDeclaringNodeType()))
-                    && (name == null ? other.getQName() == null : name.equals(other.getQName()))
+                    && (name == null ? other.getName() == null : name.equals(other.getName()))
                     && autoCreated == other.isAutoCreated()
                     && onParentVersion == other.getOnParentVersion()
                     && writeProtected == other.isProtected()

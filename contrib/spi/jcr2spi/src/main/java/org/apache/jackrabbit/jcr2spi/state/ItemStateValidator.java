@@ -36,9 +36,9 @@ import javax.jcr.version.VersionException;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QItemDefinition;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
 
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -92,14 +92,16 @@ public class ItemStateValidator {
      * manager provider
      */
     private final ManagerProvider mgrProvider;
+    private final PathFactory pathFactory;
 
     /**
      * Creates a new <code>ItemStateValidator</code> instance.
      *
      * @param mgrProvider manager provider
      */
-    public ItemStateValidator(ManagerProvider mgrProvider) {
+    public ItemStateValidator(ManagerProvider mgrProvider, PathFactory pathFactory) {
         this.mgrProvider = mgrProvider;
+        this.pathFactory = pathFactory;
     }
 
     /**
@@ -125,7 +127,7 @@ public class ItemStateValidator {
         QNodeDefinition def = nodeState.getDefinition();
 
         // check if primary type satisfies the 'required node types' constraint
-        QName[] requiredPrimaryTypes = def.getRequiredPrimaryTypes();
+        Name[] requiredPrimaryTypes = def.getRequiredPrimaryTypes();
         for (int i = 0; i < requiredPrimaryTypes.length; i++) {
             if (!entPrimary.includesNodeType(requiredPrimaryTypes[i])) {
                 String msg = safeGetJCRPath(nodeState)
@@ -141,9 +143,9 @@ public class ItemStateValidator {
         QPropertyDefinition[] pda = entPrimaryAndMixins.getMandatoryQPropertyDefinitions();
         for (int i = 0; i < pda.length; i++) {
             QPropertyDefinition pd = pda[i];
-            if (!nodeState.hasPropertyName(pd.getQName())) {
+            if (!nodeState.hasPropertyName(pd.getName())) {
                 String msg = safeGetJCRPath(nodeState)
-                        + ": mandatory property " + pd.getQName()
+                        + ": mandatory property " + pd.getName()
                         + " does not exist";
                 log.debug(msg);
                 throw new ConstraintViolationException(msg);
@@ -153,9 +155,9 @@ public class ItemStateValidator {
         QNodeDefinition[] cnda = entPrimaryAndMixins.getMandatoryQNodeDefinitions();
         for (int i = 0; i < cnda.length; i++) {
             QNodeDefinition cnd = cnda[i];
-            if (!nodeState.getNodeEntry().hasNodeEntry(cnd.getQName())) {
+            if (!nodeState.getNodeEntry().hasNodeEntry(cnd.getName())) {
                 String msg = safeGetJCRPath(nodeState)
-                        + ": mandatory child node " + cnd.getQName()
+                        + ": mandatory child node " + cnd.getName()
                         + " does not exist";
                 log.debug(msg);
                 throw new ConstraintViolationException(msg);
@@ -170,10 +172,10 @@ public class ItemStateValidator {
      *
      * @param itemState
      * @return JCR path
-     * @see LogUtil#safeGetJCRPath(ItemState,NamespaceResolver)
+     * @see LogUtil#safeGetJCRPath(ItemState,org.apache.jackrabbit.conversion.PathResolver)
      */
     private String safeGetJCRPath(ItemState itemState) {
-        return LogUtil.safeGetJCRPath(itemState, mgrProvider.getNamespaceResolver());
+        return LogUtil.safeGetJCRPath(itemState, mgrProvider.getPathResolver());
     }
 
     //------------------------------------------------------< check methods >---
@@ -247,7 +249,7 @@ public class ItemStateValidator {
 
         NodeState parent = propState.getParent();
         QPropertyDefinition def = propState.getDefinition();
-        checkWriteProperty(parent, propState.getQName(), def, options);
+        checkWriteProperty(parent, propState.getName(), def, options);
     }
 
     /**
@@ -279,7 +281,7 @@ public class ItemStateValidator {
      * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    public void checkAddProperty(NodeState parentState, QName propertyName, QPropertyDefinition definition, int options)
+    public void checkAddProperty(NodeState parentState, Name propertyName, QPropertyDefinition definition, int options)
         throws ConstraintViolationException, AccessDeniedException,
         VersionException, LockException, ItemNotFoundException,
         ItemExistsException, PathNotFoundException, RepositoryException {
@@ -302,7 +304,7 @@ public class ItemStateValidator {
      * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    private void checkWriteProperty(NodeState parentState, QName propertyName, QPropertyDefinition definition, int options)
+    private void checkWriteProperty(NodeState parentState, Name propertyName, QPropertyDefinition definition, int options)
         throws ConstraintViolationException, AccessDeniedException,
         VersionException, LockException, ItemNotFoundException,
         ItemExistsException, PathNotFoundException, RepositoryException {
@@ -312,7 +314,7 @@ public class ItemStateValidator {
         // access restriction on prop.
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
             // make sure current session is granted write access on new prop
-            Path relPath = Path.create(propertyName, Path.INDEX_UNDEFINED);
+            Path relPath = pathFactory.create(propertyName);
             if (!mgrProvider.getAccessManager().isGranted(parentState, relPath, new String[] {AccessManager.SET_PROPERTY_ACTION})) {
                 throw new AccessDeniedException(safeGetJCRPath(parentState) + ": not allowed to create property with name " + propertyName);
             }
@@ -360,8 +362,8 @@ public class ItemStateValidator {
      * @throws ItemExistsException
      * @throws RepositoryException
      */
-    public void checkAddNode(NodeState parentState, QName nodeName,
-                             QName nodeTypeName, int options)
+    public void checkAddNode(NodeState parentState, Name nodeName,
+                             Name nodeTypeName, int options)
             throws ConstraintViolationException, AccessDeniedException,
             VersionException, LockException, ItemNotFoundException,
             ItemExistsException, RepositoryException {
@@ -371,7 +373,7 @@ public class ItemStateValidator {
         // access restrictions on new node
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
             // make sure current session is granted write access on parent node
-            Path relPath = Path.create(nodeName, Path.INDEX_UNDEFINED);
+            Path relPath = pathFactory.create(nodeName);
             if (!mgrProvider.getAccessManager().isGranted(parentState, relPath, new String[] {AccessManager.ADD_NODE_ACTION})) {
                 throw new AccessDeniedException(safeGetJCRPath(parentState) + ": not allowed to add child node '" + nodeName +"'");
             }
@@ -545,7 +547,7 @@ public class ItemStateValidator {
      * @throws ItemExistsException
      * @throws RepositoryException
      */
-    private void checkCollision(NodeState parentState, QName propertyName) throws ItemExistsException, RepositoryException {
+    private void checkCollision(NodeState parentState, Name propertyName) throws ItemExistsException, RepositoryException {
         NodeEntry parentEntry = (NodeEntry) parentState.getHierarchyEntry();
         // check for name collisions with existing child nodes
         if (parentEntry.hasNodeEntry(propertyName)) {
@@ -558,7 +560,7 @@ public class ItemStateValidator {
         if (pe != null) {
             try {
                 pe.getPropertyState();
-                throw new ItemExistsException("Property '" + pe.getQName() + "' already exists.");
+                throw new ItemExistsException("Property '" + pe.getName() + "' already exists.");
             } catch (ItemNotFoundException e) {
                 // apparently conflicting entry does not exist any more
                 // ignore and return
@@ -575,7 +577,7 @@ public class ItemStateValidator {
      * @throws ConstraintViolationException
      * @throws NoSuchNodeTypeException
      */
-    private void checkCollision(NodeState parentState, QName nodeName, QName nodeTypeName) throws RepositoryException, ConstraintViolationException, NoSuchNodeTypeException {
+    private void checkCollision(NodeState parentState, Name nodeName, Name nodeTypeName) throws RepositoryException, ConstraintViolationException, NoSuchNodeTypeException {
         if (parentState.hasPropertyName(nodeName)) {
             // there's already a property with that name
             throw new ItemExistsException("cannot add child node '"

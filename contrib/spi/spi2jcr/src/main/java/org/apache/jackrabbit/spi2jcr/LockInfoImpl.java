@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.spi2jcr;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.lock.Lock;
@@ -32,17 +32,17 @@ class LockInfoImpl extends org.apache.jackrabbit.spi.commons.LockInfoImpl {
      *
      * @param lock       the lock.
      * @param idFactory  the id factory.
-     * @param nsResolver the namespace resolver in use.
+     * @param resolver
      * @throws RepositoryException if an error occurs while reading from
      *                             <code>node</code> or if <code>node</code> is
      *                             not locked.
      */
     public LockInfoImpl(Lock lock,
                         IdFactoryImpl idFactory,
-                        NamespaceResolver nsResolver)
+                        NamePathResolver resolver)
             throws RepositoryException {
         super(lock.getLockToken(), lock.getLockOwner(),
                 lock.isDeep(), lock.isSessionScoped(),
-                idFactory.createNodeId(lock.getNode(), nsResolver));
+                idFactory.createNodeId(lock.getNode(), resolver));
     }
 }

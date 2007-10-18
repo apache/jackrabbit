@@ -41,18 +41,21 @@ import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.name.LocalNamespaceMappings;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathFormat;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.name.NameConstants;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.XASessionInfo;
 import org.apache.jackrabbit.spi.QValueFactory;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.PathResolver;
+import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.conversion.DefaultNamePathResolver;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -118,6 +121,7 @@ public class SessionImpl implements Session, ManagerProvider {
     private final SessionInfo sessionInfo;
 
     private final LocalNamespaceMappings nsMappings;
+    private final NamePathResolver npResolver;
     private final NodeTypeManagerImpl ntManager;
 
     private final SessionItemStateManager itemStateManager;
@@ -136,10 +140,11 @@ public class SessionImpl implements Session, ManagerProvider {
 
         // build local name-mapping
         nsMappings = new LocalNamespaceMappings(workspace.getNamespaceRegistryImpl());
+        npResolver = new DefaultNamePathResolver(nsMappings, true);
 
         // build nodetype manager
         ntManager = new NodeTypeManagerImpl(workspace.getNodeTypeRegistry(), this, getJcrValueFactory());
-        validator = new ItemStateValidator(this);
+        validator = new ItemStateValidator(this, getPathFactory());
 
         itemStateManager = createSessionItemStateManager(workspace.getUpdatableItemStateManager(), workspace.getItemStateFactory());
         itemManager = createItemManager(getHierarchyManager());
@@ -220,18 +225,13 @@ public class SessionImpl implements Session, ManagerProvider {
     public Node getNodeByUUID(String uuid) throws ItemNotFoundException, RepositoryException {
         // sanity check performed by getNodeById
         Node node = getNodeById(getIdFactory().createNodeId(uuid));
-        if (node instanceof NodeImpl && ((NodeImpl)node).isNodeType(QName.MIX_REFERENCEABLE)) {
+        if (node instanceof NodeImpl && ((NodeImpl)node).isNodeType(NameConstants.MIX_REFERENCEABLE)) {
             return node;
         } else {
             // fall back
-            try {
-                String mixReferenceable = NameFormat.format(QName.MIX_REFERENCEABLE, getNamespaceResolver());
-                if (node.isNodeType(mixReferenceable)) {
-                    return node;
-                }
-            } catch (NoPrefixDeclaredException e) {
-                // should not occur.
-                throw new RepositoryException(e);
+            String mixReferenceable = getNameResolver().getJCRName(NameConstants.MIX_REFERENCEABLE);
+            if (node.isNodeType(mixReferenceable)) {
+                return node;
             }
             // there is a node with that uuid but the node does not expose it
             throw new ItemNotFoundException(uuid);
@@ -274,8 +274,6 @@ public class SessionImpl implements Session, ManagerProvider {
             return getItemManager().getItem(qPath.getNormalizedPath());
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(absPath);
-        } catch (MalformedPathException e) {
-            throw new RepositoryException(e);
         }
     }
 
@@ -284,12 +282,8 @@ public class SessionImpl implements Session, ManagerProvider {
      */
     public boolean itemExists(String absPath) throws RepositoryException {
         checkIsAlive();
-        try {
-            Path qPath = getQPath(absPath);
-            return getItemManager().itemExists(qPath.getNormalizedPath());
-        } catch (MalformedPathException e) {
-            throw new RepositoryException(e);
-        }
+        Path qPath = getQPath(absPath);
+        return getItemManager().itemExists(qPath.getNormalizedPath());
     }
 
     /**
@@ -304,7 +298,7 @@ public class SessionImpl implements Session, ManagerProvider {
         Path destPath = getQPath(destAbsPath);
 
         // all validation is performed by Move Operation and state-manager
-        Operation op = Move.create(srcPath, destPath, getHierarchyManager(), getNamespaceResolver(), true);
+        Operation op = Move.create(srcPath, destPath, getHierarchyManager(), getPathResolver(), true);
         itemStateManager.execute(op);
     }
 
@@ -371,13 +365,8 @@ public class SessionImpl implements Session, ManagerProvider {
                 }
             }
             // parentState is the nearest existing nodeState or the root state.
-            try {
-                Path relPath = parentPath.computeRelativePath(targetPath);
-                isGranted = getAccessManager().isGranted(parentState, relPath, actionsArr);
-            } catch (MalformedPathException e) {
-                // should not occurs
-                throw new RepositoryException(e);
-            }
+            Path relPath = parentPath.computeRelativePath(targetPath);
+            isGranted = getAccessManager().isGranted(parentState, relPath, actionsArr);
         }
 
         if (!isGranted) {
@@ -396,7 +385,7 @@ public class SessionImpl implements Session, ManagerProvider {
         // NOTE: check if path corresponds to Node and is writable is performed
         // within the SessionImporter.
         Importer importer = new SessionImporter(parentPath, this, itemStateManager, uuidBehavior);
-        return new ImportHandler(importer, getNamespaceResolver(), workspace.getNamespaceRegistry());
+        return new ImportHandler(importer, getNamespaceResolver(), workspace.getNamespaceRegistry(), getNameFactory());
     }
 
     /**
@@ -650,6 +639,25 @@ public class SessionImpl implements Session, ManagerProvider {
     }
 
     //---------------------------------------------------< ManagerProvider > ---
+
+    public NamePathResolver getNamePathResolver() {
+        return npResolver;
+    }
+
+    /**
+     * @see ManagerProvider#getNameResolver()
+     */
+    public NameResolver getNameResolver() {
+        return npResolver;
+    }
+
+    /**
+     * @see ManagerProvider#getPathResolver()
+     */
+    public PathResolver getPathResolver() {
+        return npResolver;
+    }
+
     /**
      * @see ManagerProvider#getNamespaceResolver()
      */
@@ -729,8 +737,16 @@ public class SessionImpl implements Session, ManagerProvider {
     }
 
     // TODO public for SessionImport only. review
-    public IdFactory getIdFactory() {
+    public IdFactory getIdFactory() throws RepositoryException {
         return workspace.getIdFactory();
+    }
+
+    public NameFactory getNameFactory() throws RepositoryException {
+        return workspace.getNameFactory();
+    }
+
+    PathFactory getPathFactory() throws RepositoryException {
+        return workspace.getPathFactory();
     }
 
     /**
@@ -773,12 +789,12 @@ public class SessionImpl implements Session, ManagerProvider {
      */
     Path getQPath(String absPath) throws RepositoryException {
         try {
-            Path p = PathFormat.parse(absPath, getNamespaceResolver());
+            Path p = getPathResolver().getQPath(absPath);
             if (!p.isAbsolute()) {
                 throw new RepositoryException("Not an absolute path: " + absPath);
             }
             return p;
-        } catch (MalformedPathException mpe) {
+        } catch (NameException mpe) {
             String msg = "Invalid path: " + absPath;
             log.debug(msg);
             throw new RepositoryException(msg, mpe);
@@ -791,7 +807,7 @@ public class SessionImpl implements Session, ManagerProvider {
      * was obtained from a different session, the 'corresponding' version
      * state for this session is retrieved.
      *
-     * @param node
+     * @param version
      * @return
      */
     NodeState getVersionState(Version version) throws RepositoryException {

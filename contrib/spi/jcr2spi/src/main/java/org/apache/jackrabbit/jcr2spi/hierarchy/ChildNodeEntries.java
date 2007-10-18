@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.ChildInfo;
 
 import javax.jcr.ItemNotFoundException;
@@ -74,7 +74,7 @@ public interface ChildNodeEntries {
      * @param nodeName the child node name.
      * @return same name sibling nodes with the given <code>nodeName</code>.
      */
-    List get(QName nodeName);
+    List get(Name nodeName);
 
     /**
      * Returns the <code>NodeEntry</code> with the given
@@ -86,7 +86,7 @@ public interface ChildNodeEntries {
      * @return the <code>NodeEntry</code> or <code>null</code> if there
      * is no such <code>NodeEntry</code>.
      */
-    NodeEntry get(QName nodeName, int index);
+    NodeEntry get(Name nodeName, int index);
 
     /**
      * Return the <code>NodeEntry</code> that matches the given nodeName and
@@ -97,7 +97,7 @@ public interface ChildNodeEntries {
      * @return
      * @throws IllegalArgumentException if the given uniqueID is null.
      */
-    NodeEntry get(QName nodeName, String uniqueID);
+    NodeEntry get(Name nodeName, String uniqueID);
 
     /**
      * Find the matching NodeEntry for the given <code>ChildInfo</code>. Returns

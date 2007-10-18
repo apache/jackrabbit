@@ -18,11 +18,9 @@ package org.apache.jackrabbit.jcr2spi.query;
 
 import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QueryInfo;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -58,9 +56,9 @@ class QueryResultImpl implements QueryResult {
     private final QueryInfo queryInfo;
 
     /**
-     * The namespace nsResolver of the session executing the query
+     * The namespace nameResolver of the session executing the query
      */
-    private final NamespaceResolver nsResolver;
+    private final NamePathResolver resolver;
 
     /**
      * The JCR value factory.
@@ -74,17 +72,16 @@ class QueryResultImpl implements QueryResult {
      * @param hierarchyMgr the HierarchyManager of the session executing the
      *                     query.
      * @param queryInfo    the spi query result.
-     * @param nsResolver   the namespace nsResolver of the session executing the
-     *                     query.
+     * @param resolver
      * @param valueFactory the JCR value factory.
      */
     QueryResultImpl(ItemManager itemMgr, HierarchyManager hierarchyMgr,
-                    QueryInfo queryInfo, NamespaceResolver nsResolver,
+                    QueryInfo queryInfo, NamePathResolver resolver,
                     ValueFactory valueFactory) {
         this.itemMgr = itemMgr;
         this.hierarchyMgr = hierarchyMgr;
         this.queryInfo = queryInfo;
-        this.nsResolver = nsResolver;
+        this.resolver = resolver;
         this.valueFactory = valueFactory;
     }
 
@@ -92,19 +89,12 @@ class QueryResultImpl implements QueryResult {
      * {@inheritDoc}
      */
     public String[] getColumnNames() throws RepositoryException {
-        try {
-            QName[] names = queryInfo.getColumnNames();
-            String[] propNames = new String[names.length];
-            for (int i = 0; i < names.length; i++) {
-                propNames[i] = NameFormat.format(names[i], nsResolver);
-            }
-            return propNames;
-        } catch (NoPrefixDeclaredException npde) {
-            String msg = "encountered invalid property name";
-            log.debug(msg);
-            throw new RepositoryException(msg, npde);
-
+        Name[] names = queryInfo.getColumnNames();
+        String[] propNames = new String[names.length];
+        for (int i = 0; i < names.length; i++) {
+            propNames[i] = resolver.getJCRName(names[i]);
         }
+        return propNames;
     }
 
     /**
@@ -118,7 +108,7 @@ class QueryResultImpl implements QueryResult {
      * {@inheritDoc}
      */
     public RowIterator getRows() throws RepositoryException {
-        return new RowIteratorImpl(queryInfo, nsResolver, valueFactory);
+        return new RowIteratorImpl(queryInfo, resolver, valueFactory);
     }
 
     /**

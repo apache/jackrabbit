@@ -17,11 +17,11 @@
 package org.apache.jackrabbit.spi2dav;
 
 import org.w3c.dom.Element;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NameException;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 
@@ -40,12 +40,12 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
     /**
      * The name of the default primary type.
      */
-    private final QName defaultPrimaryType;
+    private final Name defaultPrimaryType;
 
     /**
      * The names of the required primary types.
      */
-    private final QName[] requiredPrimaryTypes;
+    private final Name[] requiredPrimaryTypes;
 
     /**
      * The 'allowsSameNameSiblings' flag.
@@ -57,18 +57,18 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
      *
      * @param declaringNodeType
      * @param ndefElement
-     * @param nsResolver
+     * @param resolver
      * @throws RepositoryException
      */
-    QNodeDefinitionImpl(QName declaringNodeType, Element ndefElement, NamespaceResolver nsResolver)
+    QNodeDefinitionImpl(Name declaringNodeType, Element ndefElement, NamePathResolver resolver)
         throws RepositoryException  {
-        super(declaringNodeType, ndefElement, nsResolver);
+        super(declaringNodeType, ndefElement, resolver);
         // TODO: webdav server sends jcr names -> nsResolver required. improve this.
         // NOTE: the server should send the namespace-mappings as addition ns-defininitions
         try {
 
             if (ndefElement.hasAttribute(DEFAULTPRIMARYTYPE_ATTRIBUTE)) {
-                defaultPrimaryType = NameFormat.parse(ndefElement.getAttribute(DEFAULTPRIMARYTYPE_ATTRIBUTE), nsResolver);
+                defaultPrimaryType = resolver.getQName(ndefElement.getAttribute(DEFAULTPRIMARYTYPE_ATTRIBUTE));
             } else {
                 defaultPrimaryType = null;
             }
@@ -78,11 +78,11 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
                 List qNames = new ArrayList();
                 ElementIterator it = DomUtil.getChildren(reqPrimaryTypes, REQUIREDPRIMARYTYPE_ELEMENT, null);
                 while (it.hasNext()) {
-                    qNames.add(NameFormat.parse(DomUtil.getTextTrim(it.nextElement()), nsResolver));
+                    qNames.add(resolver.getQName(DomUtil.getTextTrim(it.nextElement())));
                 }
-                requiredPrimaryTypes = (QName[]) qNames.toArray(new QName[qNames.size()]);
+                requiredPrimaryTypes = (Name[]) qNames.toArray(new Name[qNames.size()]);
             } else {
-                requiredPrimaryTypes = new QName[] { QName.NT_BASE };
+                requiredPrimaryTypes = new Name[] { NameConstants.NT_BASE };
             }
 
             if (ndefElement.hasAttribute(SAMENAMESIBLINGS_ATTRIBUTE)) {
@@ -99,14 +99,14 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
     /**
      * {@inheritDoc}
      */
-    public QName getDefaultPrimaryType() {
+    public Name getDefaultPrimaryType() {
         return defaultPrimaryType;
     }
 
     /**
      * {@inheritDoc}
      */
-    public QName[] getRequiredPrimaryTypes() {
+    public Name[] getRequiredPrimaryTypes() {
         return requiredPrimaryTypes;
     }
 
@@ -170,12 +170,12 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
             if (definesResidual()) {
                 sb.append('*');
             } else {
-                sb.append(getQName().toString());
+                sb.append(getName().toString());
             }
             sb.append('/');
             // set of required node type names, sorted in ascending order
             TreeSet set = new TreeSet();
-            QName[] names = getRequiredPrimaryTypes();
+            Name[] names = getRequiredPrimaryTypes();
             for (int i = 0; i < names.length; i++) {
                 set.add(names[i]);
             }

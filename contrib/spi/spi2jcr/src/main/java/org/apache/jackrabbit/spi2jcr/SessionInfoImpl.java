@@ -17,8 +17,16 @@
 package org.apache.jackrabbit.spi2jcr;
 
 import org.apache.jackrabbit.spi.SessionInfo;
-import org.apache.jackrabbit.name.AbstractNamespaceResolver;
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.ParsingNameResolver;
+import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.conversion.PathResolver;
+import org.apache.jackrabbit.conversion.ParsingPathResolver;
+import org.apache.jackrabbit.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.namespace.AbstractNamespaceResolver;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
@@ -44,7 +52,7 @@ class SessionInfoImpl implements SessionInfo {
     /**
      * The namespace resolver for this session info.
      */
-    private final NamespaceResolver resolver;
+    private final NamePathResolver resolver;
 
     /**
      * A copy of the credentials that were used to obtain the JCR session.
@@ -56,16 +64,17 @@ class SessionInfoImpl implements SessionInfo {
      *
      * @param session     the JCR session.
      * @param credentials a copy of the credentials that were used to obtain the
-     *                    JCR session.
+     * @param nameFactory
+     * @param pathFactory
      * @throws RepositoryException 
      */
-    SessionInfoImpl(Session session, Credentials credentials) throws RepositoryException {
+    SessionInfoImpl(Session session, Credentials credentials,
+                    NameFactory nameFactory, PathFactory pathFactory) throws RepositoryException {
         this.session = session;
         this.credentials = credentials;
         
         final NamespaceRegistry nsReg = session.getWorkspace().getNamespaceRegistry();
-       
-        this.resolver = new AbstractNamespaceResolver() {
+        final NamespaceResolver nsResolver = new AbstractNamespaceResolver() {
             public String getPrefix(String uri) throws NamespaceException {
                 try {
                     return nsReg.getPrefix(uri);
@@ -86,7 +95,11 @@ class SessionInfoImpl implements SessionInfo {
                 }
             }
         };
-        
+
+        final NameResolver nResolver = new ParsingNameResolver(nameFactory, nsResolver);
+        final PathResolver pResolver = new ParsingPathResolver(pathFactory, nResolver);
+
+        this.resolver = new DefaultNamePathResolver(nResolver, pResolver);
     }
 
     /**
@@ -99,7 +112,7 @@ class SessionInfoImpl implements SessionInfo {
     /**
      * @return the namespace resolver for this session info.
      */
-    NamespaceResolver getNamespaceResolver() {
+    NamePathResolver getNamePathResolver() {
         return resolver;
     }
 

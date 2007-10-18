@@ -25,16 +25,14 @@ import javax.jcr.ValueFactory;
 import javax.jcr.Value;
 import javax.jcr.RangeIterator;
 
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameConstants;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.QueryResultRow;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatus;
@@ -43,6 +41,8 @@ import org.apache.jackrabbit.webdav.jcr.search.SearchResultProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.value.ValueFormat;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.NameException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,24 +58,24 @@ public class QueryInfoImpl implements QueryInfo {
 
     private static final double UNDEFINED_SCORE = -1;
 
-    private final QName[] columnNames;
+    private final Name[] columnNames;
     private int scoreIndex = -1;
     private final Map results = new LinkedHashMap();
 
     public QueryInfoImpl(MultiStatus ms, SessionInfo sessionInfo, URIResolver uriResolver,
-                         NamespaceResolver nsResolver, ValueFactory valueFactory,
+                         NamePathResolver resolver, ValueFactory valueFactory,
                          QValueFactory qValueFactory)
         throws RepositoryException {
 
         String responseDescription = ms.getResponseDescription();
         if (responseDescription != null) {
             String[] cn = responseDescription.split(" ");
-            this.columnNames = new QName[cn.length];
+            this.columnNames = new Name[cn.length];
             for (int i = 0; i < cn.length; i++) {
                 String jcrColumnNames = ISO9075.decode(cn[i]);
                 try {
-                    columnNames[i] = NameFormat.parse(jcrColumnNames, nsResolver);
-                    if (QName.JCR_SCORE.equals(columnNames[i])) {
+                    columnNames[i] = resolver.getQName(jcrColumnNames);
+                    if (NameConstants.JCR_SCORE.equals(columnNames[i])) {
                         scoreIndex = i;
                     }
                 } catch (NameException e) {
@@ -98,7 +98,7 @@ public class QueryInfoImpl implements QueryInfo {
             QValue[] qValues = new QValue[values.length];
             for (int j = 0; j < values.length; j++) {
                 try {
-                    qValues[j] = (values[j] == null) ?  null : ValueFormat.getQValue(values[j], nsResolver, qValueFactory);
+                    qValues[j] = (values[j] == null) ?  null : ValueFormat.getQValue(values[j], resolver, qValueFactory);
                 } catch (RepositoryException e) {
                     // should not occur
                     log.error("Malformed value: " + values[j].toString());
@@ -120,7 +120,7 @@ public class QueryInfoImpl implements QueryInfo {
     /**
      * @see QueryInfo#getColumnNames()
      */
-    public QName[] getColumnNames() {
+    public Name[] getColumnNames() {
         return columnNames;
     }
 

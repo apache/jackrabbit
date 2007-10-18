@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
 import org.apache.jackrabbit.jcr2spi.state.Status;
@@ -45,7 +45,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     /**
      * The name of the target item state.
      */
-    protected QName name;
+    protected Name name;
 
     /**
      * Hard reference to the parent <code>NodeEntry</code>.
@@ -66,7 +66,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
      * @param name   the name of the child item.
      * @param factory
      */
-    HierarchyEntryImpl(NodeEntryImpl parent, QName name, EntryFactory factory) {
+    HierarchyEntryImpl(NodeEntryImpl parent, Name name, EntryFactory factory) {
         this.parent = parent;
         this.name = name;
         this.factory = factory;
@@ -153,9 +153,9 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     //-----------------------------------------------------< HierarchyEntry >---
     /**
      * @inheritDoc
-     * @see HierarchyEntry#getQName()
+     * @see HierarchyEntry#getName()
      */
-    public QName getQName() {
+    public Name getName() {
         return name;
     }
 

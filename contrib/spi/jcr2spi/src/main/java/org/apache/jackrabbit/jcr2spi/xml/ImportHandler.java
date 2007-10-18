@@ -16,12 +16,14 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.AbstractNamespaceResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.conversion.ParsingNameResolver;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
-import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -56,13 +58,14 @@ public class ImportHandler extends DefaultHandler {
     private final Importer importer;
     private final NamespaceRegistry nsReg;
     private final NamespaceResolver nsResolver;
+    private final NameFactory nameFactory;
 
-    private Locator locator;
     private ContentHandler targetHandler;
     private boolean systemViewXML;
     private boolean initialized;
 
     private final NamespaceContext nsContext;
+    private final NameResolver nameResolver;
 
     /**
      * this flag is used to determine whether a namespace context needs to be
@@ -74,12 +77,14 @@ public class ImportHandler extends DefaultHandler {
     protected boolean nsContextStarted;
 
     public ImportHandler(Importer importer, NamespaceResolver nsResolver,
-                         NamespaceRegistry nsReg) {
+                         NamespaceRegistry nsReg, NameFactory nameFactory) {
         this.importer = importer;
         this.nsResolver = nsResolver;
         this.nsReg = nsReg;
+        this.nameFactory = nameFactory;
 
         nsContext = new NamespaceContext();
+        nameResolver = new ParsingNameResolver(nameFactory, nsContext);
     }
 
     //---------------------------------------------------------< ErrorHandler >
@@ -220,12 +225,12 @@ public class ImportHandler extends DefaultHandler {
         if (!initialized) {
             // the namespace of the first element determines the type of XML
             // (system view/document view)
-            systemViewXML = QName.NS_SV_URI.equals(namespaceURI);
+            systemViewXML = Name.NS_SV_URI.equals(namespaceURI);
 
             if (systemViewXML) {
-                targetHandler = new SysViewImportHandler(importer, nsContext);
+                targetHandler = new SysViewImportHandler(importer, nsContext, nameResolver);
             } else {
-                targetHandler = new DocViewImportHandler(importer, nsContext);
+                targetHandler = new DocViewImportHandler(importer, nsContext, nameResolver, nameFactory);
             }
             targetHandler.startDocument();
             initialized = true;
@@ -253,13 +258,6 @@ public class ImportHandler extends DefaultHandler {
 
         // delegate to target handler
         targetHandler.endElement(namespaceURI, localName, qName);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setDocumentLocator(Locator locator) {
-        this.locator = locator;
     }
 
     //--------------------------------------------------------< inner classes >
@@ -293,7 +291,7 @@ public class ImportHandler extends DefaultHandler {
         }
 
         boolean declarePrefix(String prefix, String uri) {
-            if (QName.NS_DEFAULT_URI.equals(uri)) {
+            if (Name.NS_DEFAULT_URI.equals(uri)) {
                 uri = DUMMY_DEFAULT_URI;
             }
             return nsContext.declarePrefix(prefix, uri);
@@ -308,7 +306,7 @@ public class ImportHandler extends DefaultHandler {
             if (uri == null) {
                 throw new NamespaceException("unknown prefix");
             } else if (DUMMY_DEFAULT_URI.equals(uri)) {
-                return QName.NS_DEFAULT_URI;
+                return Name.NS_DEFAULT_URI;
             } else {
                 return uri;
             }
@@ -318,7 +316,7 @@ public class ImportHandler extends DefaultHandler {
          * {@inheritDoc}
          */
         public String getPrefix(String uri) throws NamespaceException {
-            if (QName.NS_DEFAULT_URI.equals(uri)) {
+            if (Name.NS_DEFAULT_URI.equals(uri)) {
                 uri = DUMMY_DEFAULT_URI;
             }
             String prefix = nsContext.getPrefix(uri);
@@ -328,8 +326,8 @@ public class ImportHandler extends DefaultHandler {
                  * (default) prefix; we have to do a reverse-lookup to check
                  * whether it's the current default namespace
                  */
-                if (uri.equals(nsContext.getURI(QName.NS_EMPTY_PREFIX))) {
-                    return QName.NS_EMPTY_PREFIX;
+                if (uri.equals(nsContext.getURI(Name.NS_EMPTY_PREFIX))) {
+                    return Name.NS_EMPTY_PREFIX;
                 }
                 throw new NamespaceException("unknown uri");
             }

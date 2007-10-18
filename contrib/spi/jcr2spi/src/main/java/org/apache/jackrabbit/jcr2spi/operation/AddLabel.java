@@ -18,11 +18,12 @@ package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.name.NameConstants;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -41,10 +42,10 @@ public class AddLabel extends AbstractOperation {
 
     private final NodeState versionHistoryState;
     private final NodeState versionState;
-    private final QName label;
+    private final Name label;
     private final boolean moveLabel;
 
-    private AddLabel(NodeState versionHistoryState, NodeState versionState, QName label, boolean moveLabel) {
+    private AddLabel(NodeState versionHistoryState, NodeState versionState, Name label, boolean moveLabel) {
         this.versionHistoryState = versionHistoryState;
         this.versionState = versionState;
         this.label = label;
@@ -78,7 +79,7 @@ public class AddLabel extends AbstractOperation {
     public void persisted() {
         try {
             NodeEntry vhEntry = (NodeEntry) versionHistoryState.getHierarchyEntry();
-            NodeEntry lnEntry = vhEntry.getNodeEntry(QName.JCR_VERSIONLABELS, Path.INDEX_DEFAULT);
+            NodeEntry lnEntry = vhEntry.getNodeEntry(NameConstants.JCR_VERSIONLABELS, Path.INDEX_DEFAULT);
             if (lnEntry != null) {
                 lnEntry.invalidate(moveLabel);
             }
@@ -95,7 +96,7 @@ public class AddLabel extends AbstractOperation {
         return versionState.getNodeEntry().getWorkspaceId();
     }
 
-    public QName getLabel() {
+    public Name getLabel() {
         return label;
     }
 
@@ -112,7 +113,7 @@ public class AddLabel extends AbstractOperation {
      * @param moveLabel
      * @return
      */
-    public static Operation create(NodeState versionHistoryState, NodeState versionState, QName label, boolean moveLabel) {
+    public static Operation create(NodeState versionHistoryState, NodeState versionState, Name label, boolean moveLabel) {
         return new AddLabel(versionHistoryState, versionState, label, moveLabel);
     }
 }

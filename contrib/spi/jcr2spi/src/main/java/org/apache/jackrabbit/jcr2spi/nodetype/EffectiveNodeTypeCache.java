@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 
 /**
@@ -61,14 +61,14 @@ public interface EffectiveNodeTypeCache extends Cloneable, Dumpable {
      * @param ntNames the array of node type names for the effective node type
      * @return the key to an effective node type.
      */
-    Key getKey(QName[] ntNames);
+    Key getKey(Name[] ntNames);
 
     /**
      * Removes all effective node types that are aggregated with the node type
      * of the given name.
      * @param name the name of the node type.
      */
-    void invalidate(QName name);
+    void invalidate(Name name);
 
     /**
      * {@inheritDoc}
@@ -101,7 +101,7 @@ public interface EffectiveNodeTypeCache extends Cloneable, Dumpable {
          * Returns the node type names of this key.
          * @return the node type names of this key.
          */
-        QName[] getNames();
+        Name[] getNames();
 
         /**
          * Checks if the <code>otherKey</code> is contained in this one. I.e. if

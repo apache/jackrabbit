@@ -99,16 +99,17 @@ import org.apache.jackrabbit.webdav.jcr.property.ValuesProperty;
 import org.apache.jackrabbit.webdav.jcr.property.NamespacesProperty;
 import org.apache.jackrabbit.webdav.jcr.observation.SubscriptionImpl;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.UnknownPrefixException;
-import org.apache.jackrabbit.name.AbstractNamespaceResolver;
-import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.ParsingNameResolver;
+import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.conversion.PathResolver;
+import org.apache.jackrabbit.conversion.ParsingPathResolver;
+import org.apache.jackrabbit.conversion.IllegalNameException;
+import org.apache.jackrabbit.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
@@ -130,6 +131,10 @@ import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.NodeInfo;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.EventFilterImpl;
 import org.apache.jackrabbit.spi.commons.EventBundleImpl;
 import org.apache.jackrabbit.spi.commons.ChildInfoImpl;
@@ -198,6 +203,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private static final SubscriptionInfo S_INFO = new SubscriptionInfo(ALL_EVENTS, true, DavConstants.INFINITE_TIMEOUT);
 
     private final IdFactory idFactory;
+    private final NameFactory nameFactory;
+    private final PathFactory pathFactory;
     private final ValueFactory valueFactory;
 
     private final Document domFactory;
@@ -212,7 +219,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     private Map descriptors;
 
-    public RepositoryServiceImpl(String uri, IdFactory idFactory, ValueFactory valueFactory) throws RepositoryException {
+    public RepositoryServiceImpl(String uri, IdFactory idFactory,
+                                 NameFactory nameFactory,
+                                 PathFactory pathFactory,
+                                 ValueFactory valueFactory) throws RepositoryException {
         if (uri == null || "".equals(uri)) {
             throw new RepositoryException("Invalid repository uri '" + uri + "'.");
         }
@@ -220,6 +230,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw new RepositoryException("IdFactory and ValueFactory may not be null.");
         }
         this.idFactory = idFactory;
+        this.nameFactory = nameFactory;
+        this.pathFactory = pathFactory;
         this.valueFactory = valueFactory;
 
         try {
@@ -234,7 +246,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             hostConfig.setHost(repositoryUri);
 
             nsCache = new NamespaceCache();
-            uriResolver = new URIResolverImpl(repositoryUri, this, nsCache, domFactory);
+            uriResolver = new URIResolverImpl(repositoryUri, this, new NamePathResolverImpl(nsCache), domFactory);
 
         } catch (URIException e) {
             throw new RepositoryException(e);
@@ -314,14 +326,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return uriResolver.getItemUri(itemId, sessionInfo.getWorkspaceName(), sessionInfo);
     }
 
-    private String getItemUri(NodeId parentId, QName childName, SessionInfo sessionInfo) throws RepositoryException {
+    private String getItemUri(NodeId parentId, Name childName, SessionInfo sessionInfo) throws RepositoryException {
         String parentUri = uriResolver.getItemUri(parentId, sessionInfo.getWorkspaceName(), sessionInfo);
-        try {
-            NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
-            return parentUri + "/" + Text.escape(NameFormat.format(childName, resolver));
-        } catch (NoPrefixDeclaredException e) {
-            throw new RepositoryException(e);
-        }
+        NamePathResolver resolver = new NamePathResolverImpl(sessionInfo);
+        return parentUri + "/" + Text.escape(resolver.getJCRName(childName));
     }
 
     private NodeId getParentId(DavPropertySet propSet, SessionInfo sessionInfo)
@@ -345,19 +353,19 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    QName getQName(DavPropertySet propSet, NamespaceResolver nsResolver) throws RepositoryException {
+    Name getQName(DavPropertySet propSet, NamePathResolver resolver) throws RepositoryException {
         DavProperty nameProp = propSet.get(ItemResourceConstants.JCR_NAME);
         if (nameProp != null && nameProp.getValue() != null) {
             // not root node. Note that 'unespacing' is not required since
             // the jcr:name property does not provide the value in escaped form.
             String jcrName = nameProp.getValue().toString();
             try {
-                return NameFormat.parse(jcrName, nsResolver);
-            } catch (NameException e) {
+                return resolver.getQName(jcrName);
+            } catch (org.apache.jackrabbit.conversion.NameException e) {
                 throw new RepositoryException(e);
             }
         } else {
-            return QName.ROOT;
+            return NameConstants.ROOT;
         }
     }
 
@@ -402,6 +410,20 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      */
     public IdFactory getIdFactory() {
         return idFactory;
+    }
+
+    /**
+     * @see RepositoryService#getNameFactory()
+     */
+    public NameFactory getNameFactory() {
+        return nameFactory;
+    }
+
+    /**
+     * @see RepositoryService#getPathFactory()
+     */
+    public PathFactory getPathFactory() {
+        return pathFactory;
     }
 
     public QValueFactory getQValueFactory() {
@@ -657,7 +679,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 throw new RepositoryException("Internal error: requested node definition and got property definition.");
             }
 
-            NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
+            NamePathResolver resolver = new NamePathResolverImpl(sessionInfo);
 
             // build the definition
             QItemDefinition definition = null;
@@ -761,7 +783,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 throw new ItemNotFoundException("No node for id " + nodeId);
             }
 
-            NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
+            NamePathResolver resolver = new NamePathResolverImpl(sessionInfo);
             NodeId parentId = getParentId(propSet, sessionInfo);
 
             NodeInfoImpl nInfo = buildNodeInfo(nodeResponse, parentId, propSet, sessionInfo, resolver);
@@ -783,7 +805,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw new RepositoryException(e);
         } catch (DavException e) {
             throw ExceptionConverter.generate(e);
-        } catch (MalformedPathException e) {
+        } catch (NameException e) {
             throw new RepositoryException(e);
         } finally {
             if (method != null) {
@@ -807,7 +829,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private NodeInfoImpl buildNodeInfo(MultiStatusResponse nodeResponse,
                                        NodeId parentId, DavPropertySet propSet,
                                        SessionInfo sessionInfo,
-                                       NamespaceResolver resolver) throws MalformedPathException, RepositoryException {
+                                       NamePathResolver resolver) throws NameException, RepositoryException {
         NodeId id = uriResolver.buildNodeId(parentId, nodeResponse, sessionInfo.getWorkspaceName());
         NodeInfoImpl nInfo = new NodeInfoImpl(id, parentId, propSet, resolver);
         if (propSet.contains(ItemResourceConstants.JCR_REFERENCES)) {
@@ -853,7 +875,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 return Collections.EMPTY_LIST.iterator();
             }
 
-            NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
+            NamePathResolver resolver = new NamePathResolverImpl(sessionInfo);
 
             List childEntries = new ArrayList();
             for (int i = 0; i < responses.length; i++) {
@@ -863,7 +885,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     if (childProps.contains(DavPropertyName.RESOURCETYPE) &&
                         childProps.get(DavPropertyName.RESOURCETYPE).getValue() != null) {
 
-                        QName qName = getQName(childProps, resolver);
+                        Name qName = getQName(childProps, resolver);
                         int index = getIndex(childProps);
                         String uuid = getUniqueID(childProps);
 
@@ -914,7 +936,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             NodeId parentId = getParentId(propSet, sessionInfo);
             PropertyId id = uriResolver.buildPropertyId(parentId, responses[0], sessionInfo.getWorkspaceName());
 
-            NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
+            NamePathResolver resolver = new NamePathResolverImpl(sessionInfo);
             PropertyInfo pInfo = new PropertyInfoImpl(id, parentId, propSet,
                     resolver, valueFactory, getQValueFactory());
             return pInfo;
@@ -922,7 +944,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw new RepositoryException(e);
         } catch (DavException e) {
             throw ExceptionConverter.generate(e);
-        } catch (MalformedPathException e) {
+        } catch (NameException e) {
             throw new RepositoryException(e);
         } finally {
             if (method != null) {
@@ -988,7 +1010,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      */
     public void importXml(SessionInfo sessionInfo, NodeId parentId, InputStream xmlStream, int uuidBehaviour) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
         // TODO: improve. currently random name is built instead of retrieving name of new resource from top-level xml element within stream
-        QName nodeName = new QName(QName.NS_DEFAULT_URI, UUID.randomUUID().toString());
+        Name nodeName = getNameFactory().create(Name.NS_DEFAULT_URI, UUID.randomUUID().toString());
         String uri = getItemUri(parentId, nodeName, sessionInfo);
         MkColMethod method = new MkColMethod(uri);
         method.addRequestHeader(ItemResourceConstants.IMPORT_UUID_BEHAVIOR, new Integer(uuidBehaviour).toString());
@@ -997,9 +1019,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * @see RepositoryService#move(SessionInfo, NodeId, NodeId, QName)
+     * @see RepositoryService#move(SessionInfo, NodeId, NodeId, Name)
      */
-    public void move(SessionInfo sessionInfo, NodeId srcNodeId, NodeId destParentNodeId, QName destName) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+    public void move(SessionInfo sessionInfo, NodeId srcNodeId, NodeId destParentNodeId, Name destName) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
         String uri = getItemUri(srcNodeId, sessionInfo);
         String destUri = getItemUri(destParentNodeId, destName, sessionInfo);
         MoveMethod method = new MoveMethod(uri, destUri, true);
@@ -1007,9 +1029,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * @see RepositoryService#copy(SessionInfo, String, NodeId, NodeId, QName)
+     * @see RepositoryService#copy(SessionInfo, String, NodeId, NodeId, Name)
      */
-    public void copy(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, QName destName) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
+    public void copy(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, Name destName) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
         String uri = uriResolver.getItemUri(srcNodeId, srcWorkspaceName, sessionInfo);
         String destUri = getItemUri(destParentNodeId, destName, sessionInfo);
         CopyMethod method = new CopyMethod(uri, destUri, true, false);
@@ -1027,9 +1049,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * @see RepositoryService#clone(SessionInfo, String, NodeId, NodeId, QName, boolean)
+     * @see RepositoryService#clone(SessionInfo, String, NodeId, NodeId, Name, boolean)
      */
-    public void clone(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, QName destName, boolean removeExisting) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
+    public void clone(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, Name destName, boolean removeExisting) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
         // TODO: missing implementation
         throw new UnsupportedOperationException("Missing implementation");
     }
@@ -1290,33 +1312,29 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * @see RepositoryService#addVersionLabel(SessionInfo,NodeId,NodeId,QName,boolean)
+     * @see RepositoryService#addVersionLabel(SessionInfo,NodeId,NodeId,Name,boolean)
      */
-    public void addVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, QName label, boolean moveLabel) throws VersionException, RepositoryException {
+    public void addVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, Name label, boolean moveLabel) throws VersionException, RepositoryException {
         try {
             String uri = getItemUri(versionId, sessionInfo);
-            String strLabel = NameFormat.format(label, new NamespaceResolverImpl(sessionInfo));
+            String strLabel = new NamePathResolverImpl(sessionInfo).getJCRName(label);
             LabelMethod method = new LabelMethod(uri, strLabel, (moveLabel) ? LabelInfo.TYPE_SET : LabelInfo.TYPE_ADD);
             execute(method, sessionInfo);
         } catch (IOException e) {
-            throw new RepositoryException(e);
-        } catch (NoPrefixDeclaredException e) {
             throw new RepositoryException(e);
         }
     }
 
     /**
-     * @see RepositoryService#removeVersionLabel(SessionInfo,NodeId,NodeId,QName)
+     * @see RepositoryService#removeVersionLabel(SessionInfo,NodeId,NodeId,Name)
      */
-    public void removeVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, QName label) throws VersionException, RepositoryException {
+    public void removeVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, Name label) throws VersionException, RepositoryException {
         try {
             String uri = getItemUri(versionId, sessionInfo);
-            String strLabel = NameFormat.format(label, new NamespaceResolverImpl(sessionInfo));
+            String strLabel = new NamePathResolverImpl(sessionInfo).getJCRName(label);
             LabelMethod method = new LabelMethod(uri, strLabel, LabelInfo.TYPE_REMOVE);
             execute(method, sessionInfo);
         } catch (IOException e) {
-            throw new RepositoryException(e);
-        } catch (NoPrefixDeclaredException e) {
             throw new RepositoryException(e);
         }
     }
@@ -1364,9 +1382,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             method.checkSuccess();
 
             MultiStatus ms = method.getResponseBodyAsMultiStatus();
-            NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
-            return new QueryInfoImpl(ms, sessionInfo, uriResolver,
-                resolver, valueFactory, getQValueFactory());
+            NamePathResolver resolver = new NamePathResolverImpl(sessionInfo);
+            return new QueryInfoImpl(ms, sessionInfo, uriResolver, resolver, valueFactory, getQValueFactory());
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1379,14 +1396,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * @see RepositoryService#createEventFilter(SessionInfo, int, org.apache.jackrabbit.name.Path, boolean, String[], org.apache.jackrabbit.name.QName[], boolean)
+     * @see RepositoryService#createEventFilter(SessionInfo, int, Path, boolean, String[], Name[], boolean)
      */
     public EventFilter createEventFilter(SessionInfo sessionInfo,
                                          int eventTypes,
                                          Path absPath,
                                          boolean isDeep,
                                          String[] uuids,
-                                         QName[] nodeTypeNames,
+                                         Name[] nodeTypeNames,
                                          boolean noLocal)
             throws UnsupportedRepositoryOperationException, RepositoryException {
         // resolve node type names
@@ -1469,13 +1486,13 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    private void resolveNodeType(Set resolved, QName ntName) {
+    private void resolveNodeType(Set resolved, Name ntName) {
         if (!resolved.add(ntName)) {
             return;
         }
         QNodeTypeDefinition def = (QNodeTypeDefinition) nodeTypeDefinitions.get(ntName);
         if (def != null) {
-            QName[] supertypes = def.getSupertypes();
+            Name[] supertypes = def.getSupertypes();
             for (int i = 0; i < supertypes.length; i++) {
                 resolveNodeType(resolved, supertypes[i]);
             }
@@ -1753,15 +1770,15 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * {@inheritDoc}
      */
-    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, QName[] nodetypeNames) throws RepositoryException {
+    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, Name[] nodetypeNames) throws RepositoryException {
         ReportMethod method = null;
         try {
-            NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
+            NamePathResolver resolver = new NamePathResolverImpl(sessionInfo);
 
             ReportInfo info = new ReportInfo(NodeTypesReport.NODETYPES_REPORT, DEPTH_0);
             for (int i = 0; i < nodetypeNames.length; i++) {
                 Element el = DomUtil.createElement(domFactory, NodeTypeConstants.XML_NODETYPE, NodeTypeConstants.NAMESPACE);
-                String jcrName = NameFormat.format(nodetypeNames[i], resolver);
+                String jcrName = resolver.getJCRName(nodetypeNames[i]);
                 DomUtil.addChildElement(el, NodeTypeConstants.XML_NODETYPENAME, NodeTypeConstants.NAMESPACE, jcrName);
                 info.setContentElement(el);
             }
@@ -1777,8 +1794,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw new RepositoryException(e);
         } catch (DavException e) {
             throw ExceptionConverter.generate(e);
-        } catch (NoPrefixDeclaredException e) {
-            throw new RepositoryException(e);
         } finally {
             if (method != null) {
                 method.releaseConnection();
@@ -1796,7 +1811,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private Iterator retrieveQNodeTypeDefinitions(SessionInfo sessionInfo, Document reportDoc) throws RepositoryException {
         ElementIterator it = DomUtil.getChildren(reportDoc.getDocumentElement(), NodeTypeConstants.NODETYPE_ELEMENT, null);
             List ntDefs = new ArrayList();
-            NamespaceResolver resolver = new NamespaceResolverImpl(sessionInfo);
+            NamePathResolver resolver = new NamePathResolverImpl(sessionInfo);
             while (it.hasNext()) {
                 ntDefs.add(new QNodeTypeDefinitionImpl(it.nextElement(), resolver, getQValueFactory()));
             }
@@ -1805,7 +1820,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 nodeTypeDefinitions.clear();
                 for (Iterator defIt = ntDefs.iterator(); defIt.hasNext(); ) {
                     QNodeTypeDefinition def = (QNodeTypeDefinition) defIt.next();
-                    nodeTypeDefinitions.put(def.getQName(), def);
+                    nodeTypeDefinitions.put(def.getName(), def);
                 }
             }
             return ntDefs.iterator();
@@ -1814,7 +1829,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * The XML elements and attributes used in serialization
      */
-    private static final Namespace SV_NAMESPACE = Namespace.getNamespace(QName.NS_SV_PREFIX, QName.NS_SV_URI);
+    private static final Namespace SV_NAMESPACE = Namespace.getNamespace(Name.NS_SV_PREFIX, Name.NS_SV_URI);
     private static final String NODE_ELEMENT = "node";
     private static final String PROPERTY_ELEMENT = "property";
     private static final String VALUE_ELEMENT = "value";
@@ -1827,7 +1842,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         private final SessionInfo sessionInfo;
         private final ItemId targetId;
         private final List methods = new ArrayList();
-        private final NamespaceResolver nsResolver;
+        private final NamePathResolver resolver;
 
         private String batchId;
 
@@ -1836,7 +1851,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         private BatchImpl(ItemId targetId, SessionInfo sessionInfo) {
             this.targetId = targetId;
             this.sessionInfo = sessionInfo;
-            this.nsResolver = new NamespaceResolverImpl(sessionInfo);
+            this.resolver = new NamePathResolverImpl(sessionInfo);
         }
 
         private HttpClient start() throws RepositoryException {
@@ -1916,32 +1931,35 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
         //----------------------------------------------------------< Batch >---
         /**
-         * @see Batch#addNode(NodeId, QName, QName, String)
+         * @see Batch#addNode(NodeId, Name, Name, String)
          */
-        public void addNode(NodeId parentId, QName nodeName, QName nodetypeName, String uuid) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, NoSuchNodeTypeException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+        public void addNode(NodeId parentId, Name nodeName, Name nodetypeName, String uuid) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, NoSuchNodeTypeException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
             checkConsumed();
             try {
                 // TODO: TOBEFIXED. WebDAV does not allow MKCOL for existing resource -> problem with SNS
                 // use fake name instead (see also #importXML)
-                QName fakeName = new QName(QName.NS_DEFAULT_URI, UUID.randomUUID().toString());
+                Name fakeName = getNameFactory().create(Name.NS_DEFAULT_URI, UUID.randomUUID().toString());
                 String uri = getItemUri(parentId, fakeName, sessionInfo);
                 MkColMethod method = new MkColMethod(uri);
 
                 // build 'sys-view' for the node to create and append it as request body
                 Document body = DomUtil.BUILDER_FACTORY.newDocumentBuilder().newDocument();
                 Element nodeElement = DomUtil.addChildElement(body, NODE_ELEMENT, SV_NAMESPACE);
-                String nameAttr = NameFormat.format(nodeName, nsResolver);
+                String nameAttr = resolver.getJCRName(nodeName);
                 DomUtil.setAttribute(nodeElement, NAME_ATTRIBUTE, SV_NAMESPACE, nameAttr);
 
                 // nodetype must never be null
                 Element propElement = DomUtil.addChildElement(nodeElement, PROPERTY_ELEMENT, SV_NAMESPACE);
-                DomUtil.setAttribute(propElement, NAME_ATTRIBUTE, SV_NAMESPACE, NameFormat.format(QName.JCR_PRIMARYTYPE, nsResolver));
+                String name = resolver.getJCRName(NameConstants.JCR_PRIMARYTYPE);
+                DomUtil.setAttribute(propElement, NAME_ATTRIBUTE, SV_NAMESPACE, name);
                 DomUtil.setAttribute(propElement, TYPE_ATTRIBUTE, SV_NAMESPACE, PropertyType.nameFromValue(PropertyType.NAME));
-                DomUtil.addChildElement(propElement, VALUE_ELEMENT, SV_NAMESPACE, NameFormat.format(nodetypeName, nsResolver));
+                name = resolver.getJCRName(nodetypeName);
+                DomUtil.addChildElement(propElement, VALUE_ELEMENT, SV_NAMESPACE, name);
                 // optional uuid
                 if (uuid != null) {
                     propElement = DomUtil.addChildElement(nodeElement, PROPERTY_ELEMENT, SV_NAMESPACE);
-                    DomUtil.setAttribute(propElement, NAME_ATTRIBUTE, SV_NAMESPACE, NameFormat.format(QName.JCR_UUID, nsResolver));
+                    name = resolver.getJCRName(NameConstants.JCR_UUID);
+                    DomUtil.setAttribute(propElement, NAME_ATTRIBUTE, SV_NAMESPACE, name);
                     DomUtil.setAttribute(propElement, TYPE_ATTRIBUTE, SV_NAMESPACE, PropertyType.nameFromValue(PropertyType.STRING));
                     DomUtil.addChildElement(propElement, VALUE_ELEMENT, SV_NAMESPACE, uuid);
                 }
@@ -1952,35 +1970,33 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 throw new RepositoryException(e);
             } catch (ParserConfigurationException e) {
                 throw new RepositoryException(e);
-            } catch (NoPrefixDeclaredException e) {
-                throw new RepositoryException(e);
             }
         }
 
         /**
-         * @see Batch#addProperty(NodeId, QName, QValue)
+         * @see Batch#addProperty(NodeId, Name, QValue)
          */
-        public void addProperty(NodeId parentId, QName propertyName, QValue value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+        public void addProperty(NodeId parentId, Name propertyName, QValue value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
             checkConsumed();
-            Value jcrValue = ValueFormat.getJCRValue(value, nsResolver, valueFactory);
+            Value jcrValue = ValueFormat.getJCRValue(value, resolver, valueFactory);
             ValuesProperty vp = new ValuesProperty(jcrValue);
             internalAddProperty(parentId, propertyName, vp);
         }
 
         /**
-         * @see Batch#addProperty(NodeId, QName, QValue[])
+         * @see Batch#addProperty(NodeId, Name, QValue[])
          */
-        public void addProperty(NodeId parentId, QName propertyName, QValue[] values) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+        public void addProperty(NodeId parentId, Name propertyName, QValue[] values) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
             checkConsumed();
             Value[] jcrValues = new Value[values.length];
             for (int i = 0; i < values.length; i++) {
-                jcrValues[i] = ValueFormat.getJCRValue(values[i], nsResolver, valueFactory);
+                jcrValues[i] = ValueFormat.getJCRValue(values[i], resolver, valueFactory);
             }
             ValuesProperty vp = new ValuesProperty(jcrValues);
             internalAddProperty(parentId, propertyName, vp);
         }
 
-        private void internalAddProperty(NodeId parentId, QName propertyName, ValuesProperty vp) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+        private void internalAddProperty(NodeId parentId, Name propertyName, ValuesProperty vp) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
             try {
                 String uri = getItemUri(parentId, propertyName, sessionInfo);
                 PutMethod method = new PutMethod(uri);
@@ -2004,7 +2020,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 remove(propertyId);
             } else {
                 // qualified value must be converted to jcr value
-                Value jcrValue = ValueFormat.getJCRValue(value, nsResolver, valueFactory);
+                Value jcrValue = ValueFormat.getJCRValue(value, resolver, valueFactory);
                 ValuesProperty vp = new ValuesProperty(jcrValue);
                 setProperties.add(vp);
             }
@@ -2024,7 +2040,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 // qualified values must be converted to jcr values
                 Value[] jcrValues = new Value[values.length];
                 for (int i = 0; i < values.length; i++) {
-                    jcrValues[i] = ValueFormat.getJCRValue(values[i], nsResolver, valueFactory);
+                    jcrValues[i] = ValueFormat.getJCRValue(values[i], resolver, valueFactory);
                 }
                 setProperties.add(new ValuesProperty(jcrValues));
             }
@@ -2092,9 +2108,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
 
         /**
-         * @see Batch#setMixins(NodeId, QName[])
+         * @see Batch#setMixins(NodeId, Name[])
          */
-        public void setMixins(NodeId nodeId, QName[] mixinNodeTypeIds) throws NoSuchNodeTypeException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+        public void setMixins(NodeId nodeId, Name[] mixinNodeTypeIds) throws NoSuchNodeTypeException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
             checkConsumed();
             try {
                 DavPropertySet setProperties;
@@ -2106,7 +2122,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 } else {
                     String[] ntNames = new String[mixinNodeTypeIds.length];
                     for (int i = 0; i < mixinNodeTypeIds.length; i++) {
-                        ntNames[i] = NameFormat.format(mixinNodeTypeIds[i], nsResolver);
+                        ntNames[i] = resolver.getJCRName(mixinNodeTypeIds[i]);
                     }
                     setProperties = new DavPropertySet();
                     setProperties.add(new NodeTypeProperty(ItemResourceConstants.JCR_MIXINNODETYPES, ntNames, false));
@@ -2119,16 +2135,13 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 methods.add(method);
             } catch (IOException e) {
                 throw new RepositoryException(e);
-            } catch (NoPrefixDeclaredException e) {
-                // should not occur.
-                throw new RepositoryException(e);
             }
         }
 
         /**
-         * @see Batch#move(NodeId, NodeId, QName)
+         * @see Batch#move(NodeId, NodeId, Name)
          */
-        public void move(NodeId srcNodeId, NodeId destParentNodeId, QName destName) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+        public void move(NodeId srcNodeId, NodeId destParentNodeId, Name destName) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
             checkConsumed();
             String uri = getItemUri(srcNodeId, sessionInfo);
             String destUri = getItemUri(destParentNodeId, destName, sessionInfo);
@@ -2138,11 +2151,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    //----------------------------------------------< NamespaceResolverImpl >---
 
-    /**
-     * Implements a namespace resolver based on a session info.
-     */
     private class NamespaceResolverImpl implements NamespaceResolver {
 
         private final SessionInfo sessionInfo;
@@ -2152,7 +2161,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
          *
          * @param sessionInfo the session info to contact the repository.
          */
-        NamespaceResolverImpl(SessionInfo sessionInfo) {
+        private NamespaceResolverImpl(SessionInfo sessionInfo) {
             this.sessionInfo = sessionInfo;
         }
 
@@ -2179,19 +2188,54 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 throw new NamespaceException(msg, e);
             }
         }
+    }
 
-        /**
-         * @inheritDoc
-         */
-        public QName getQName(String jcrName) throws IllegalNameException, UnknownPrefixException {
-            return NameFormat.parse(jcrName, this);
+    //-----------------------------------------------< NamePathResolverImpl >---
+    /**
+     * Implements a namespace resolver based on a session info.
+     */
+    private class NamePathResolverImpl implements NamePathResolver {
+
+        private final NameResolver nResolver;
+        private final PathResolver pResolver;
+
+        private NamePathResolverImpl(SessionInfo sessionInfo) {
+            NamespaceResolver nsResolver = new NamespaceResolverImpl(sessionInfo);
+            this.nResolver = new ParsingNameResolver(getNameFactory(), nsResolver);
+            this.pResolver = new ParsingPathResolver(getPathFactory(), nResolver);
+        }
+
+        private NamePathResolverImpl(NamespaceResolver nsResolver) {
+            this.nResolver = new ParsingNameResolver(getNameFactory(), nsResolver);
+            this.pResolver = new ParsingPathResolver(getPathFactory(), nResolver);
         }
 
         /**
          * @inheritDoc
          */
-        public String getJCRName(QName qName) throws NoPrefixDeclaredException {
-            return NameFormat.format(qName, this);
+        public Name getQName(String jcrName) throws IllegalNameException, NamespaceException {
+            return nResolver.getQName(jcrName);
+        }
+
+        /**
+         * @inheritDoc
+         */
+        public String getJCRName(Name qName) throws NamespaceException {
+            return nResolver.getJCRName(qName);
+        }
+
+        /**
+         * @inheritDoc
+         */
+        public Path getQPath(String path) throws MalformedPathException, IllegalNameException, NamespaceException {
+            return pResolver.getQPath(path);
+        }
+
+        /**
+         * @inheritDoc
+         */
+        public String getJCRPath(Path path) throws NamespaceException {
+            return pResolver.getJCRPath(path);
         }
     }
 

@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import java.util.Collection;
 
@@ -31,16 +31,16 @@ public interface ChildPropertyEntries {
      * @param propertyName
      * @return true if a property entry with the given name exists.
      */
-    public boolean contains(QName propertyName);
+    public boolean contains(Name propertyName);
 
     /**
-     * Return the PropertyEntry with the given <code>QName</code> or
+     * Return the PropertyEntry with the given <code>Name</code> or
      * <code>null</code>.
      *
      * @param propertyName
      * @return
      */
-    public PropertyEntry get(QName propertyName);
+    public PropertyEntry get(Name propertyName);
 
     /**
      * Returns an unmodifiable collection containing all <code>PropertyEntry</code>
@@ -53,7 +53,7 @@ public interface ChildPropertyEntries {
     /**
      * Returns an unmodifiable collection containing all existing property names.
      *
-     * @return Collection of <code>QName</code>
+     * @return Collection of <code>Name</code>
      */
     public Collection getPropertyNames();
 
@@ -73,11 +73,11 @@ public interface ChildPropertyEntries {
     public void addAll(Collection propertyEntries);
 
     /**
-     * Remove the collection entry with the given <code>QName</code>.
+     * Remove the collection entry with the given <code>Name</code>.
      *
      * @param propertyName
      * @return true If this <code>ChildPropertyEntries</code> contained any
-     * entry with the given <code>QName</code>. False otherwise.
+     * entry with the given <code>Name</code>. False otherwise.
      */
-    public boolean remove(QName propertyName);
+    public boolean remove(Name propertyName);
 }

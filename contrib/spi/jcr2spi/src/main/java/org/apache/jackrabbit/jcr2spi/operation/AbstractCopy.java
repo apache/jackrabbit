@@ -20,8 +20,8 @@ import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -38,7 +38,7 @@ public abstract class AbstractCopy extends AbstractOperation {
 
     final NodeState destParentState;
     private final NodeState srcState;
-    private final QName destName;
+    private final Name destName;
     private final String srcWorkspaceName;
 
     /**
@@ -53,13 +53,13 @@ public abstract class AbstractCopy extends AbstractOperation {
 
         ItemState srcItemState = srcMgrProvider.getHierarchyManager().getItemState(srcPath);
         if (!srcItemState.isNode()) {
-            throw new PathNotFoundException("Source path " + LogUtil.safeGetJCRPath(srcPath, srcMgrProvider.getNamespaceResolver()) + " is not a valid path.");
+            throw new PathNotFoundException("Source path " + LogUtil.safeGetJCRPath(srcPath, srcMgrProvider.getPathResolver()) + " is not a valid path.");
         }
         this.srcState = (NodeState)srcItemState;
-        this.destParentState = getNodeState(destPath.getAncestor(1), destMgrProvider.getHierarchyManager(), destMgrProvider.getNamespaceResolver());
+        this.destParentState = getNodeState(destPath.getAncestor(1), destMgrProvider.getHierarchyManager(), destMgrProvider.getNamePathResolver());
 
         // check for illegal index present in destination path
-        Path.PathElement destElement = destPath.getNameElement();
+        Path.Element destElement = destPath.getNameElement();
         int index = destElement.getIndex();
         if (index > Path.INDEX_UNDEFINED) {
             // subscript in name element
@@ -96,7 +96,7 @@ public abstract class AbstractCopy extends AbstractOperation {
         return destParentState.getNodeId();
     }
 
-    public QName getDestinationName() {
+    public Name getDestinationName() {
         return destName;
     }
 }

@@ -17,15 +17,15 @@
 package org.apache.jackrabbit.spi2dav;
 
 import org.w3c.dom.Element;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.value.ValueFormat;
 import org.apache.jackrabbit.value.ValueFactoryImplEx;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,12 +70,12 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
     /**
      * Default constructor.
      */
-    QPropertyDefinitionImpl(QName declaringNodeType, Element pdefElement,
-                            NamespaceResolver nsResolver, QValueFactory qValueFactory)
+    QPropertyDefinitionImpl(Name declaringNodeType, Element pdefElement,
+                            NamePathResolver resolver, QValueFactory qValueFactory)
         throws RepositoryException {
         // TODO: webdav server sends jcr names -> nsResolver required. improve this.
         // NOTE: the server should send the namespace-mappings as addition ns-defininitions
-        super(declaringNodeType, pdefElement, nsResolver);
+        super(declaringNodeType, pdefElement, resolver);
 
         if (pdefElement.hasAttribute(REQUIREDTYPE_ATTRIBUTE)) {
             requiredType = PropertyType.valueFromName(pdefElement.getAttribute(REQUIREDTYPE_ATTRIBUTE));
@@ -102,9 +102,9 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
                 if (requiredType == PropertyType.BINARY) {
                     // TODO: improve
                     Value v = ValueFactoryImplEx.getInstance().createValue(jcrVal, requiredType);
-                    qValue = ValueFormat.getQValue(v, nsResolver, qValueFactory);
+                    qValue = ValueFormat.getQValue(v, resolver, qValueFactory);
                 } else {
-                    qValue = ValueFormat.getQValue(jcrVal, requiredType, nsResolver, qValueFactory);
+                    qValue = ValueFormat.getQValue(jcrVal, requiredType, resolver, qValueFactory);
                 }
                 vs.add(qValue);
             }
@@ -123,7 +123,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
                 // in case of name and path constraint, the value must be
                 // converted to be in qualified format
                 if (constType == PropertyType.NAME || constType == PropertyType.PATH) {
-                   qValue = ValueFormat.getQValue(qValue, constType, nsResolver, qValueFactory).getString();
+                   qValue = ValueFormat.getQValue(qValue, constType, resolver, qValueFactory).getString();
                 }
                 vc.add(qValue);
             }
@@ -210,7 +210,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
             if (definesResidual()) {
                 sb.append('*');
             } else {
-                sb.append(getQName().toString());
+                sb.append(getName().toString());
             }
             sb.append('/');
             sb.append(getRequiredType());

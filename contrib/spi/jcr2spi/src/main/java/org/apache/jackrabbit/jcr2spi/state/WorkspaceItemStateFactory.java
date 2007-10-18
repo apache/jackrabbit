@@ -18,6 +18,11 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
+import org.apache.jackrabbit.name.NameConstants;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.NodeInfo;
@@ -25,13 +30,8 @@ import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.ItemInfo;
-import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
-import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
-import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
@@ -163,7 +163,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
     public NodeReferences getNodeReferences(NodeState nodeState) {
         NodeEntry entry = nodeState.getNodeEntry();
         // shortcut
-        if (entry.getUniqueID() == null || !entry.hasPropertyEntry(QName.JCR_UUID)) {
+        if (entry.getUniqueID() == null || !entry.hasPropertyEntry(NameConstants.JCR_UUID)) {
             // for sure not referenceable
             return EmptyNodeReferences.getInstance();
         }
@@ -263,7 +263,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         List propNames = new ArrayList();
         for (Iterator it = info.getPropertyIds(); it.hasNext(); ) {
             PropertyId pId = (PropertyId) it.next();
-            QName propertyName = pId.getQName();
+            Name propertyName = pId.getName();
             propNames.add(propertyName);
         }
         try {
@@ -315,11 +315,11 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             // entries are missing -> calculate relative path.
             Path anyParentPath = anyParent.getPath();
             Path relPath = anyParentPath.computeRelativePath(info.getPath());
-            Path.PathElement[] missingElems = relPath.getElements();
+            Path.Element[] missingElems = relPath.getElements();
 
             NodeEntry entry = anyParent;
             for (int i = 0; i < missingElems.length; i++) {
-                QName name = missingElems[i].getName();
+                Name name = missingElems[i].getName();
                 int index = missingElems[i].getNormalizedIndex();
                 entry = createIntermediateNodeEntry(entry, name, index);
             }
@@ -329,8 +329,6 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             return createNodeState(info, entry);
         } catch (PathNotFoundException e) {
             throw new ItemNotFoundException(e.getMessage(), e);
-        } catch (MalformedPathException e) {
-            throw new RepositoryException(e.getMessage(), e);
         }
     }
 
@@ -348,18 +346,18 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             // entries are missing -> calculate relative path.
             Path anyParentPath = anyParent.getPath();
             Path relPath = anyParentPath.computeRelativePath(info.getPath());
-            Path.PathElement[] missingElems = relPath.getElements();
+            Path.Element[] missingElems = relPath.getElements();
             NodeEntry entry = anyParent;
             int i = 0;
             // NodeEntries except for the very last 'missingElem'
             while (i < missingElems.length - 1) {
-                QName name = missingElems[i].getName();
+                Name name = missingElems[i].getName();
                 int index = missingElems[i].getNormalizedIndex();
                 entry = createIntermediateNodeEntry(entry, name, index);
                 i++;
             }
             // create PropertyEntry for the last element if not existing yet
-            QName propName = missingElems[i].getName();
+            Name propName = missingElems[i].getName();
             PropertyEntry propEntry = entry.getPropertyEntry(propName);
             if (propEntry == null) {
                 propEntry = entry.addPropertyEntry(propName);
@@ -367,8 +365,6 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             return createPropertyState(info, propEntry);
         } catch (PathNotFoundException e) {
             throw new ItemNotFoundException(e.getMessage());
-        } catch (MalformedPathException e) {
-            throw new RepositoryException(e.getMessage());
         }
     }
 
@@ -380,7 +376,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @return
      * @throws RepositoryException
      */
-    private static NodeEntry createIntermediateNodeEntry(NodeEntry parentEntry, QName name, int index) throws RepositoryException {
+    private static NodeEntry createIntermediateNodeEntry(NodeEntry parentEntry, Name name, int index) throws RepositoryException {
         NodeEntry entry;
         if (parentEntry.hasNodeEntry(name, index)) {
             entry = parentEntry.getNodeEntry(name, index);

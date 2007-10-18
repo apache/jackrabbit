@@ -16,8 +16,9 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.nodetype.InvalidNodeTypeDefException;
 
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.RepositoryException;
@@ -37,7 +38,7 @@ public interface NodeTypeRegistry {
      * @throws NoSuchNodeTypeException if a node type with the given name
      *                                 does not exist
      */
-    QNodeTypeDefinition getNodeTypeDefinition(QName nodeTypeName)
+    QNodeTypeDefinition getNodeTypeDefinition(Name nodeTypeName)
             throws NoSuchNodeTypeException;
 
     /**
@@ -59,7 +60,7 @@ public interface NodeTypeRegistry {
      * @param ntName
      * @return
      */
-    boolean isRegistered(QName ntName);
+    boolean isRegistered(Name ntName);
 
     /**
      * Returns the names of all registered node types. That includes primary
@@ -67,7 +68,7 @@ public interface NodeTypeRegistry {
      *
      * @return the names of all registered node types.
      */
-    public QName[] getRegisteredNodeTypes() throws RepositoryException;
+    public Name[] getRegisteredNodeTypes() throws RepositoryException;
 
     /**
      * Validates the <code>NodeTypeDef</code> and returns
@@ -131,22 +132,22 @@ public interface NodeTypeRegistry {
      * @throws NoSuchNodeTypeException
      * @throws RepositoryException
      */
-    public void unregisterNodeType(QName nodeTypeName)
+    public void unregisterNodeType(Name nodeTypeName)
             throws NoSuchNodeTypeException, RepositoryException;
 
     /**
-     * Same as <code>{@link #unregisterNodeType(QName)}</code> except
+     * Same as <code>{@link #unregisterNodeType(Name)}</code> except
      * that a set of node types is unregistered instead of just one.
      * <p/>
      * This method can be used to unregister a set of node types that depend on
      * each other.
      *
-     * @param nodeTypeNames a collection of <code>QName</code> objects denoting the
+     * @param nodeTypeNames a collection of <code>Name</code> objects denoting the
      *                node types to be unregistered
      * @throws NoSuchNodeTypeException if any of the specified names does not
      *                                 denote a registered node type.
      * @throws RepositoryException if another error occurs
-     * @see #unregisterNodeType(QName)
+     * @see #unregisterNodeType(Name)
      */
     public void unregisterNodeTypes(Collection nodeTypeNames)
         throws NoSuchNodeTypeException, RepositoryException;

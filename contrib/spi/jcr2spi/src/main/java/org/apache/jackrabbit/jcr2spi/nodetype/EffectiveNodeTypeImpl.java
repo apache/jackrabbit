@@ -19,8 +19,9 @@ package org.apache.jackrabbit.jcr2spi.nodetype;
 import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.nodetype.NodeTypeConflictException;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -86,7 +87,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
             throws NodeTypeConflictException, NoSuchNodeTypeException {
         // create empty effective node type instance
         EffectiveNodeTypeImpl ent = new EffectiveNodeTypeImpl();
-        QName ntName = ntd.getQName();
+        Name ntName = ntd.getName();
 
         // prepare new instance
         ent.mergedNodeTypes.add(ntName);
@@ -108,7 +109,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                     msg = ntName + " contains ambiguous residual child node definitions";
                 } else {
                     msg = ntName + " contains ambiguous definitions for child node named "
-                            + cnda[i].getQName();
+                            + cnda[i].getName();
                 }
                 log.debug(msg);
                 throw new NodeTypeConflictException(msg);
@@ -120,7 +121,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                 ent.unnamedItemDefs.add(cnda[i]);
             } else {
                 // named node definition
-                QName name = cnda[i].getQName();
+                Name name = cnda[i].getName();
                 List defs = (List) ent.namedItemDefs.get(name);
                 if (defs == null) {
                     defs = new ArrayList();
@@ -156,7 +157,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                     msg = ntName + " contains ambiguous residual property definitions";
                 } else {
                     msg = ntName + " contains ambiguous definitions for property named "
-                            + pda[i].getQName();
+                            + pda[i].getName();
                 }
                 log.debug(msg);
                 throw new NodeTypeConflictException(msg);
@@ -168,7 +169,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                 ent.unnamedItemDefs.add(pda[i]);
             } else {
                 // named property definition
-                QName name = pda[i].getQName();
+                Name name = pda[i].getName();
                 List defs = (List) ent.namedItemDefs.get(name);
                 if (defs == null) {
                     defs = new ArrayList();
@@ -195,7 +196,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         }
 
         // resolve supertypes recursively
-        QName[] supertypes = ntd.getSupertypes();
+        Name[] supertypes = ntd.getSupertypes();
         if (supertypes.length > 0) {
             EffectiveNodeTypeImpl effSuperType = (EffectiveNodeTypeImpl)entProvider.getEffectiveNodeType(supertypes, ntdMap);
             ent.internalMerge(effSuperType, true);
@@ -218,22 +219,22 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     /**
      * @see EffectiveNodeType#getInheritedNodeTypes()
      */
-    public QName[] getInheritedNodeTypes() {
-        return (QName[]) inheritedNodeTypes.toArray(new QName[inheritedNodeTypes.size()]);
+    public Name[] getInheritedNodeTypes() {
+        return (Name[]) inheritedNodeTypes.toArray(new Name[inheritedNodeTypes.size()]);
     }
 
     /**
      * @see EffectiveNodeType#getAllNodeTypes()
      */
-    public QName[] getAllNodeTypes() {
-        return (QName[]) allNodeTypes.toArray(new QName[allNodeTypes.size()]);
+    public Name[] getAllNodeTypes() {
+        return (Name[]) allNodeTypes.toArray(new Name[allNodeTypes.size()]);
     }
 
     /**
      * @see EffectiveNodeType#getMergedNodeTypes()
      */
-    public QName[] getMergedNodeTypes() {
-        return (QName[]) mergedNodeTypes.toArray(new QName[mergedNodeTypes.size()]);
+    public Name[] getMergedNodeTypes() {
+        return (Name[]) mergedNodeTypes.toArray(new Name[mergedNodeTypes.size()]);
     }
 
     /**
@@ -409,9 +410,9 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     }
 
     /**
-     * @see EffectiveNodeType#getNamedQNodeDefinitions(QName)
+     * @see EffectiveNodeType#getNamedQNodeDefinitions(Name)
      */
-    public QNodeDefinition[] getNamedQNodeDefinitions(QName name) {
+    public QNodeDefinition[] getNamedQNodeDefinitions(Name name) {
         List list = (List) namedItemDefs.get(name);
         if (list == null || list.size() == 0) {
             return QNodeDefinition.EMPTY_ARRAY;
@@ -452,9 +453,9 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     }
 
     /**
-     * @see EffectiveNodeType#getNamedQPropertyDefinitions(QName)
+     * @see EffectiveNodeType#getNamedQPropertyDefinitions(Name)
      */
-    public QPropertyDefinition[] getNamedQPropertyDefinitions(QName name) {
+    public QPropertyDefinition[] getNamedQPropertyDefinitions(Name name) {
         List list = (List) namedItemDefs.get(name);
         if (list == null || list.size() == 0) {
             return QPropertyDefinition.EMPTY_ARRAY;
@@ -497,22 +498,22 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     /**
      * @inheritDoc
      */
-    public boolean includesNodeType(QName nodeTypeName) {
+    public boolean includesNodeType(Name nodeTypeName) {
         return allNodeTypes.contains(nodeTypeName);
     }
 
     /**
      * @inheritDoc
      */
-    public boolean includesNodeTypes(QName[] nodeTypeNames) {
+    public boolean includesNodeTypes(Name[] nodeTypeNames) {
         return allNodeTypes.containsAll(Arrays.asList(nodeTypeNames));
     }
 
     /**
      * @inheritDoc
-     * @see EffectiveNodeType#checkAddNodeConstraints(QName, ItemDefinitionProvider)
+     * @see EffectiveNodeType#checkAddNodeConstraints(Name, ItemDefinitionProvider)
      */
-    public void checkAddNodeConstraints(QName name, ItemDefinitionProvider definitionProvider)
+    public void checkAddNodeConstraints(Name name, ItemDefinitionProvider definitionProvider)
             throws ConstraintViolationException {
         try {
             definitionProvider.getQNodeDefinition(this, name, null);
@@ -525,9 +526,9 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
 
     /**
      * @inheritDoc
-     * @see EffectiveNodeType#checkAddNodeConstraints(QName, ItemDefinitionProvider)
+     * @see EffectiveNodeType#checkAddNodeConstraints(Name, ItemDefinitionProvider)
      */
-    public void checkAddNodeConstraints(QName name, QName nodeTypeName, ItemDefinitionProvider definitionProvider)
+    public void checkAddNodeConstraints(Name name, Name nodeTypeName, ItemDefinitionProvider definitionProvider)
             throws ConstraintViolationException, NoSuchNodeTypeException {
         QNodeDefinition nd = definitionProvider.getQNodeDefinition(this, name, nodeTypeName);
         if (nd.isProtected()) {
@@ -540,9 +541,9 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
 
     /**
      * @inheritDoc
-     * @see EffectiveNodeType#checkRemoveItemConstraints(QName)
+     * @see EffectiveNodeType#checkRemoveItemConstraints(Name)
      */
-    public void checkRemoveItemConstraints(QName name) throws ConstraintViolationException {
+    public void checkRemoveItemConstraints(Name name) throws ConstraintViolationException {
         /**
          * as there might be multiple definitions with the same name and we
          * don't know which one is applicable, we check all of them
@@ -577,7 +578,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         return (QItemDefinition[]) defs.toArray(new QItemDefinition[defs.size()]);
     }
 
-    private QItemDefinition[] getNamedItemDefs(QName name) {
+    private QItemDefinition[] getNamedItemDefs(Name name) {
         List list = (List) namedItemDefs.get(name);
         if (list == null || list.size() == 0) {
             return QNodeDefinition.EMPTY_ARRAY;
@@ -626,7 +627,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
      */
     private synchronized void internalMerge(EffectiveNodeTypeImpl other, boolean supertype)
             throws NodeTypeConflictException {
-        QName[] nta = other.getAllNodeTypes();
+        Name[] nta = other.getAllNodeTypes();
         int includedCount = 0;
         for (int i = 0; i < nta.length; i++) {
             if (includesNodeType(nta[i])) {
@@ -648,7 +649,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                 // ignore redundant definitions
                 continue;
             }
-            QName name = qDef.getQName();
+            Name name = qDef.getName();
             List existingDefs = (List) namedItemDefs.get(name);
             if (existingDefs != null) {
                 if (existingDefs.size() > 0) {

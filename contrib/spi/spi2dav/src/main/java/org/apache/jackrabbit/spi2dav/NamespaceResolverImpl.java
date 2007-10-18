@@ -18,8 +18,7 @@ package org.apache.jackrabbit.spi2dav;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.name.AbstractNamespaceResolver;
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
 
 import javax.jcr.NamespaceException;
 import java.util.Map;
@@ -29,7 +28,7 @@ import java.util.Collections;
 /**
  * <code>NamespaceResolverImpl</code>...
  */
-class NamespaceResolverImpl extends AbstractNamespaceResolver {
+class NamespaceResolverImpl extends org.apache.jackrabbit.namespace.AbstractNamespaceResolver {
 
     private static Logger log = LoggerFactory.getLogger(NamespaceResolverImpl.class);
 
@@ -65,7 +64,7 @@ class NamespaceResolverImpl extends AbstractNamespaceResolver {
     }
 
     /**
-     * @see NamespaceResolver#getPrefix(String)
+     * @see org.apache.jackrabbit.namespace.NamespaceResolver#getPrefix(String)
      */
     public String getPrefix(String uri) throws NamespaceException {
         String prefix = (String) uriToPrefix.get(uri);

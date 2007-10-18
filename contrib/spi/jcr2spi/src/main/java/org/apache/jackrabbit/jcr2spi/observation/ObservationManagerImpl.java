@@ -18,16 +18,13 @@ package org.apache.jackrabbit.jcr2spi.observation;
 
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathFormat;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.util.IteratorHelper;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.NameException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +57,7 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
     /**
      * The session this observation manager belongs to.
      */
-    private final NamespaceResolver nsResolver;
+    private final NamePathResolver resolver;
 
     /**
      * The <code>NodeTypeRegistry</code> of the session.
@@ -86,13 +83,13 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
     /**
      * Creates a new observation manager for <code>session</code>.
      * @param wspManager the WorkspaceManager.
-     * @param nsResolver NamespaceResolver to be used by this observation manager
-     * is based on.
+     * @param resolver
      * @param ntRegistry The <code>NodeTypeRegistry</code> of the session.
      */
-    public ObservationManagerImpl(WorkspaceManager wspManager, NamespaceResolver nsResolver, NodeTypeRegistry ntRegistry) {
+    public ObservationManagerImpl(WorkspaceManager wspManager, NamePathResolver resolver,
+                                  NodeTypeRegistry ntRegistry) {
         this.wspManager = wspManager;
-        this.nsResolver = nsResolver;
+        this.resolver = resolver;
         this.ntRegistry = ntRegistry;
     }
 
@@ -112,31 +109,31 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
         }
         Path path;
         try {
-            path = PathFormat.parse(absPath, nsResolver).getCanonicalPath();
-        } catch (MalformedPathException e) {
+            path = resolver.getQPath(absPath).getCanonicalPath();
+        } catch (NameException e) {
             throw new RepositoryException("Malformed path: " + absPath);
         }
 
         // create NodeType instances from names
-        QName[] nodeTypeQNames;
+        Name[] qNodeTypeNames;
         if (nodeTypeNames == null) {
-            nodeTypeQNames = null;
+            qNodeTypeNames = null;
         } else {
             try {
-                nodeTypeQNames = new QName[nodeTypeNames.length];
+                qNodeTypeNames = new Name[nodeTypeNames.length];
                 for (int i = 0; i < nodeTypeNames.length; i++) {
-                    QName ntName = NameFormat.parse(nodeTypeNames[i], nsResolver);
+                    Name ntName = resolver.getQName(nodeTypeNames[i]);
                     if (!ntRegistry.isRegistered(ntName)) {
                         throw new RepositoryException("unknown node type: " + nodeTypeNames[i]);
                     }
-                    nodeTypeQNames[i] = ntName;
+                    qNodeTypeNames[i] = ntName;
                 }
             } catch (NameException e) {
                 throw new RepositoryException(e.getMessage());
             }
         }
 
-        EventFilter filter = wspManager.createEventFilter(eventTypes, path, isDeep, uuids, nodeTypeQNames, noLocal);
+        EventFilter filter = wspManager.createEventFilter(eventTypes, path, isDeep, uuids, qNodeTypeNames, noLocal);
         synchronized (subscriptions) {
             subscriptions.put(listener, filter);
             readOnlySubscriptions = null;
@@ -188,7 +185,7 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
             Map.Entry entry = (Map.Entry) it.next();
             EventListener listener = (EventListener) entry.getKey();
             EventFilter filter = (EventFilter) entry.getValue();
-            FilteredEventIterator eventIter = new FilteredEventIterator(eventBundle, filter, nsResolver);
+            FilteredEventIterator eventIter = new FilteredEventIterator(eventBundle, filter, resolver);
             if (eventIter.hasNext()) {
                 try {
                     listener.onEvent(eventIter);

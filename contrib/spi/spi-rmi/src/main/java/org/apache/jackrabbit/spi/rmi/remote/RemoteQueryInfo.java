@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.spi.rmi.remote;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -33,9 +33,9 @@ public interface RemoteQueryInfo extends Remote {
     public RemoteIterator getRows() throws RemoteException;
 
     /**
-     * @return an array of QName representing the column names of the query
+     * @return an array of Name representing the column names of the query
      *         result.
      * @see javax.jcr.query.QueryResult#getColumnNames()
      */
-    public QName[] getColumnNames() throws RemoteException;
+    public Name[] getColumnNames() throws RemoteException;
 }

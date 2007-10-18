@@ -20,7 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.jcr2spi.state.TransientItemStateFactory;
 import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.PathFactory;
 
 /**
  * <code>EntryFactory</code>...
@@ -34,6 +35,8 @@ public class EntryFactory {
      */
     private final IdFactory idFactory;
 
+    private final PathFactory pathFactory;
+
     private final NodeEntry rootEntry;
 
     /**
@@ -46,8 +49,9 @@ public class EntryFactory {
      */
     private final TransientItemStateFactory isf;
 
-    public EntryFactory(TransientItemStateFactory isf, IdFactory idFactory, NodeEntryListener listener) {
+    public EntryFactory(TransientItemStateFactory isf, IdFactory idFactory, NodeEntryListener listener, PathFactory pathFactory) {
         this.idFactory = idFactory;
+        this.pathFactory = pathFactory;
         this.isf = isf;
         this.listener = listener;
         this.rootEntry = NodeEntryImpl.createRootEntry(this);
@@ -61,14 +65,14 @@ public class EntryFactory {
         return rootEntry;
     }
 
-    public NodeEntry createNodeEntry(NodeEntry parent, QName qName, String uniqueId) {
+    public NodeEntry createNodeEntry(NodeEntry parent, Name qName, String uniqueId) {
         if (!(parent instanceof NodeEntryImpl)) {
             throw new IllegalArgumentException();
         }
         return NodeEntryImpl.createNodeEntry((NodeEntryImpl) parent, qName, uniqueId, this);
     }
 
-    public PropertyEntry createPropertyEntry(NodeEntry parent, QName qName) {
+    public PropertyEntry createPropertyEntry(NodeEntry parent, Name qName) {
         if (!(parent instanceof NodeEntryImpl)) {
             throw new IllegalArgumentException();
         }
@@ -77,6 +81,10 @@ public class EntryFactory {
 
     public IdFactory getIdFactory() {
         return idFactory;
+    }
+
+    public PathFactory getPathFactory() {
+        return pathFactory;
     }
 
     public TransientItemStateFactory getItemStateFactory() {

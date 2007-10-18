@@ -21,7 +21,7 @@ import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.BaseException;
+import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -200,9 +200,11 @@ public class RepositorySetup {
                         }
                     }
                     ntMgr.getNodeTypeRegistry().registerNodeTypes(unregisteredNTs);
-                } catch (BaseException e) {
-                    throw new RepositoryException(e.getMessage());
                 } catch (IOException e) {
+                    throw new RepositoryException(e.getMessage());
+                } catch (InvalidNodeTypeDefException e) {
+                    throw new RepositoryException(e.getMessage());
+                } catch (org.apache.jackrabbit.name.NameException e) {
                     throw new RepositoryException(e.getMessage());
                 } finally {
                     try {

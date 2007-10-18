@@ -16,9 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
@@ -40,7 +39,7 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
      * @param name      the name of the property.
      * @param factory
      */
-    private PropertyEntryImpl(NodeEntryImpl parent, QName name, EntryFactory factory) {
+    private PropertyEntryImpl(NodeEntryImpl parent, Name name, EntryFactory factory) {
         super(parent, name, factory);
     }
 
@@ -52,7 +51,7 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
      * @param factory
      * @return new <code>PropertyEntry</code>
      */
-    static PropertyEntry create(NodeEntryImpl parent, QName name, EntryFactory factory) {
+    static PropertyEntry create(NodeEntryImpl parent, Name name, EntryFactory factory) {
         return new PropertyEntryImpl(parent, name, factory);
     }
 
@@ -71,17 +70,8 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
      * @see HierarchyEntryImpl#buildPath(boolean)
      */
     Path buildPath(boolean workspacePath) throws RepositoryException {
-        try {
-            Path.PathBuilder builder = new Path.PathBuilder();
-            builder.addAll(parent.buildPath(workspacePath).getElements());
-            // add property name to parent path
-            builder.addLast(getQName());
-
-            return builder.getPath();
-        } catch (MalformedPathException e) {
-            String msg = "Failed to build path of " + this;
-            throw new RepositoryException(msg, e);
-        }
+        Path parentPath = parent.buildPath(workspacePath);
+        return factory.getPathFactory().create(parentPath, getName(), true);
     }
 
     //------------------------------------------------------< PropertyEntry >---
@@ -89,14 +79,14 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
      * @see PropertyEntry#getId()
      */
     public PropertyId getId() {
-        return factory.getIdFactory().createPropertyId(parent.getId(), getQName());
+        return factory.getIdFactory().createPropertyId(parent.getId(), getName());
     }
 
     /**
      * @see PropertyEntry#getWorkspaceId()
      */
     public PropertyId getWorkspaceId() {
-        return factory.getIdFactory().createPropertyId(parent.getWorkspaceId(), getQName());
+        return factory.getIdFactory().createPropertyId(parent.getWorkspaceId(), getName());
     }
 
     /**
@@ -124,7 +114,7 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
     public void remove() {
         removeEntry(this);
         if (getStatus() != Status.STALE_DESTROYED) {
-            parent.internalRemovePropertyEntry(getQName());
+            parent.internalRemovePropertyEntry(getName());
         }
     }
 }

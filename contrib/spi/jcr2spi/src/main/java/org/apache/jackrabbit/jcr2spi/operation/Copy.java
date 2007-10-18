@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
