@@ -32,6 +32,12 @@ public class RowIteratorAdapter extends RangeIteratorDecorator
         implements RowIterator {
 
     /**
+     * Static instance of an empty {@link RowIterator}.
+     */
+    public static final RowIterator EMPTY =
+        new RowIteratorAdapter(RangeIteratorAdapter.EMPTY);
+
+    /**
      * Creates an adapter for the given {@link RangeIterator}.
      *
      * @param iterator iterator of {@link Row}s

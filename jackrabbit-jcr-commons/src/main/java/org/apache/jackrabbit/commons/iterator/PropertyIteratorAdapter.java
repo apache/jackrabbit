@@ -32,6 +32,12 @@ public class PropertyIteratorAdapter extends RangeIteratorDecorator
         implements PropertyIterator {
 
     /**
+     * Static instance of an empty {@link PropertyIterator}.
+     */
+    public static final PropertyIterator EMPTY =
+        new PropertyIteratorAdapter(RangeIteratorAdapter.EMPTY);
+
+    /**
      * Creates an adapter for the given {@link RangeIterator}.
      *
      * @param iterator iterator of {@link Property} instances

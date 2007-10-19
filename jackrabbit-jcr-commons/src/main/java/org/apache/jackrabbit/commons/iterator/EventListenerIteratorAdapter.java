@@ -32,6 +32,12 @@ public class EventListenerIteratorAdapter extends RangeIteratorDecorator
         implements EventListenerIterator {
 
     /**
+     * Static instance of an empty {@link EventListenerIterator}.
+     */
+    public static final EventListenerIterator EMPTY =
+        new EventListenerIteratorAdapter(RangeIteratorAdapter.EMPTY);
+
+    /**
      * Creates an adapter for the given {@link RangeIterator}.
      *
      * @param iterator iterator of {@link EventListener}s
