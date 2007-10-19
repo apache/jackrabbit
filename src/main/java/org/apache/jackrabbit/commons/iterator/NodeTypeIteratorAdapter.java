@@ -32,6 +32,12 @@ public class NodeTypeIteratorAdapter extends RangeIteratorDecorator
         implements NodeTypeIterator {
 
     /**
+     * Static instance of an empty {@link NodeTypeIterator}.
+     */
+    public static final NodeTypeIterator EMPTY =
+        new NodeTypeIteratorAdapter(RangeIteratorAdapter.EMPTY);
+
+    /**
      * Creates an adapter for the given {@link RangeIterator}.
      *
      * @param iterator iterator of {@link NodeType}s
