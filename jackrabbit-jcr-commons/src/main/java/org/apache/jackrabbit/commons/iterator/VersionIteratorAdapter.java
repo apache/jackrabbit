@@ -32,6 +32,12 @@ public class VersionIteratorAdapter extends RangeIteratorDecorator
         implements VersionIterator {
 
     /**
+     * Static instance of an empty {@link VersionIterator}.
+     */
+    public static final VersionIterator EMPTY =
+        new VersionIteratorAdapter(RangeIteratorAdapter.EMPTY);
+
+    /**
      * Creates an adapter for the given {@link RangeIterator}.
      *
      * @param iterator iterator of {@link Version}s

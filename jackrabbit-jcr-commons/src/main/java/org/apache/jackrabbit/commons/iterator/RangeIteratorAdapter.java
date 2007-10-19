@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.commons.iterator;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -28,6 +29,12 @@ import javax.jcr.RangeIterator;
  * implement the JCR iterator interfaces on top of normal Java iterators.
  */
 public class RangeIteratorAdapter implements RangeIterator {
+
+    /**
+     * Static instance of an empty {@link RangeIterator}.
+     */
+    public static final RangeIterator EMPTY =
+        new RangeIteratorAdapter(Collections.EMPTY_LIST);
 
     /**
      * The adapted iterator instance.
