@@ -604,7 +604,10 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             }
             return nameIndex;
         } catch (Exception e) {
-            throw new IllegalStateException("Unable to create nsIndex", e);
+            IllegalStateException exception =
+                new IllegalStateException("Unable to create nsIndex");
+            exception.initCause(e);
+            throw exception;
         }
     }
 
