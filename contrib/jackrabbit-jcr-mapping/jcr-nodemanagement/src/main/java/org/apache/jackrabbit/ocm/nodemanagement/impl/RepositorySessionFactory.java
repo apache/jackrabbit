@@ -25,8 +25,7 @@ import javax.jcr.Session;
  */
 public class RepositorySessionFactory {
     
-    public static final String JACKRABBIT = "jackrabbit";
-    public static final String JECEIRA = "jeceira";
+    public static final String JACKRABBIT = "jackrabbit";   
 
     private static Session session;
     
@@ -57,10 +56,7 @@ public class RepositorySessionFactory {
                 {
                     session = new JackrabbitRepositorySession().getSession(username, password, configuration);
                 }
-                else if (jcrRepository.equals(JECEIRA)) 
-                {
-                    session = new JeceiraRepositorySession().getSession(username, password, configuration); 
-                }
+                
             }
         }
 
