@@ -241,29 +241,26 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
      */
     protected boolean importProperties(ImportContext context, boolean isCollection, Node contentNode) {
         try {
-            // if context-mimetype is null -> remove the property
-            contentNode.setProperty(JcrConstants.JCR_MIMETYPE, context.getMimeType());
-        } catch (RepositoryException e) {
-            // ignore: property may not be present on the node
-        }
-        try {
-            // if context-encoding is null -> remove the property
-            contentNode.setProperty(JcrConstants.JCR_ENCODING, context.getEncoding());
-        } catch (RepositoryException e) {
-            // ignore: property may not be present on the node
-        }
-        try {
-            Calendar lastMod = Calendar.getInstance();
-            if (context.getModificationTime() != IOUtil.UNDEFINED_TIME) {
-                lastMod.setTimeInMillis(context.getModificationTime());
-            } else {
-                lastMod.setTime(new Date());
+            // set mimeType property upon resource creation but don't modify
+            // it on a subsequent PUT. In contrast to a PROPPATCH request, which
+            // is handled by  #importProperties(PropertyContext, boolean)}
+            if (!contentNode.hasProperty(JcrConstants.JCR_MIMETYPE)) {
+                contentNode.setProperty(JcrConstants.JCR_MIMETYPE, context.getMimeType());
             }
-            contentNode.setProperty(JcrConstants.JCR_LASTMODIFIED, lastMod);
         } catch (RepositoryException e) {
-            // ignore: property may not be present on the node.
-            // deliberately not rethrowing as IOException.
+            // ignore: property may not be present on the node
         }
+        try {
+            // set encoding property upon resource creation but don't modify
+            // it on a subsequent PUT. In contrast to a PROPPATCH request, which
+            // is handled by  #importProperties(PropertyContext, boolean)}
+            if (!contentNode.hasProperty(JcrConstants.JCR_ENCODING)) {
+                contentNode.setProperty(JcrConstants.JCR_ENCODING, context.getEncoding());
+            }
+        } catch (RepositoryException e) {
+            // ignore: property may not be present on the node
+        }
+        setLastModified(contentNode, context.getModificationTime());
         return true;
     }
 
@@ -604,7 +601,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
                 try {
                     if (propEntry instanceof DavPropertyName) {
                         // remove
-                        DavPropertyName propName = (DavPropertyName)propEntry;
+                        DavPropertyName propName = (DavPropertyName) propEntry;
                         removeJcrProperty(propName, cn);
                     } else if (propEntry instanceof DavProperty) {
                         // add or modify property
@@ -618,6 +615,9 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
                     failures.put(propEntry, e);
                 }
             }
+        }
+        if (failures.isEmpty()) {
+            setLastModified(cn, IOUtil.UNDEFINED_LENGTH);
         }
         return failures;
     }
@@ -695,7 +695,16 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
         if (property.getValue() != null) {
             value = property.getValue().toString();
         }
-        contentNode.setProperty(getJcrName(property.getName(), contentNode.getSession()), value);
+
+        DavPropertyName davName = property.getName();
+        if (DavPropertyName.GETCONTENTTYPE.equals(davName)) {
+            String mimeType = IOUtil.getMimeType(value);
+            String encoding = IOUtil.getEncoding(value);
+            contentNode.setProperty(JcrConstants.JCR_MIMETYPE, mimeType);
+            contentNode.setProperty(JcrConstants.JCR_ENCODING, encoding);
+        } else {
+            contentNode.setProperty(getJcrName(davName, contentNode.getSession()), value);
+        }
     }
 
     /**
@@ -703,11 +712,35 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
      * @throws RepositoryException
      */
     private void removeJcrProperty(DavPropertyName propertyName, Node contentNode) throws RepositoryException {
-        String jcrName = getJcrName(propertyName, contentNode.getSession());
-        if (contentNode.hasProperty(jcrName)) {
-            contentNode.getProperty(jcrName).remove();
+        if (DavPropertyName.GETCONTENTTYPE.equals(propertyName)) {
+            if (contentNode.hasProperty(JcrConstants.JCR_MIMETYPE)) {
+                contentNode.getProperty(JcrConstants.JCR_MIMETYPE).remove();
+            }
+            if (contentNode.hasProperty(JcrConstants.JCR_ENCODING)) {
+                contentNode.getProperty(JcrConstants.JCR_ENCODING).remove();
+            }
+        } else {
+            String jcrName = getJcrName(propertyName, contentNode.getSession());
+            if (contentNode.hasProperty(jcrName)) {
+                contentNode.getProperty(jcrName).remove();
+            }
+            // removal of non existing property succeeds
         }
-        // removal of non existing property succeeds
+    }
+
+    private void setLastModified(Node contentNode, long hint) {
+        try {
+            Calendar lastMod = Calendar.getInstance();
+            if (hint > IOUtil.UNDEFINED_TIME) {
+                lastMod.setTimeInMillis(hint);
+            } else {
+                lastMod.setTime(new Date());
+            }
+            contentNode.setProperty(JcrConstants.JCR_LASTMODIFIED, lastMod);
+        } catch (RepositoryException e) {
+            // ignore: property may not be available on the node.
+            // deliberately not rethrowing as IOException.
+        }
     }
 
     private static boolean isDefinedByFilteredNodeType(PropertyDefinition def) {
