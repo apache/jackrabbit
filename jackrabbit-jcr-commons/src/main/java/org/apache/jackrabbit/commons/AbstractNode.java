@@ -37,8 +37,6 @@ import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 
-import org.apache.jackrabbit.name.QName;
-
 /**
  * Abstract base class for implementing the JCR {@link Node} interface.
  * <p>
@@ -90,6 +88,16 @@ import org.apache.jackrabbit.name.QName;
  * </ul>
  */
 public abstract class AbstractNode extends AbstractItem implements Node {
+
+    /**
+     * The JCR namespace URI.
+     */
+    private static final String JCR = "http://www.jcp.org/jcr/1.0";
+
+    /**
+     * The JCR mix namespace URI.
+     */
+    private static final String MIX = "http://www.jcp.org/jcr/mix/1.0";
 
     //----------------------------------------------------------------< Item >
 
@@ -161,7 +169,7 @@ public abstract class AbstractNode extends AbstractItem implements Node {
         try {
             NodeTypeManager manager =
                 getSession().getWorkspace().getNodeTypeManager();
-            Property property = getProperty(getName(QName.JCR_MIXINTYPES));
+            Property property = getProperty(getName(JCR, "mixinTypes"));
             Value[] values = property.getValues();
             NodeType[] types = new NodeType[values.length];
             for (int i = 0; i < values.length; i++) {
@@ -187,7 +195,7 @@ public abstract class AbstractNode extends AbstractItem implements Node {
     public NodeType getPrimaryNodeType() throws RepositoryException {
         NodeTypeManager manager =
             getSession().getWorkspace().getNodeTypeManager();
-        Property property = getProperty(getName(QName.JCR_PRIMARYTYPE));
+        Property property = getProperty(getName(JCR, "primaryType"));
         return manager.getNodeType(property.getString());
     }
 
@@ -248,8 +256,8 @@ public abstract class AbstractNode extends AbstractItem implements Node {
      */
     public String getUUID()
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        if (isNodeType(getName(QName.MIX_REFERENCEABLE))) {
-            return getProperty(getName(QName.JCR_UUID)).getString();
+        if (isNodeType(getName(MIX, "referenceable"))) {
+            return getProperty(getName(JCR, "uuid")).getString();
         } else {
             throw new UnsupportedRepositoryOperationException(
                     "This node is not referenceable: " + getPath());
@@ -375,9 +383,9 @@ public abstract class AbstractNode extends AbstractItem implements Node {
      * @throws RepositoryException if an error occurs
      */
     public boolean isCheckedOut() throws RepositoryException {
-        if (isNodeType(getName(QName.MIX_VERSIONABLE))) {
+        if (isNodeType(getName(MIX, "versionable"))) {
             // This node is versionable, check the jcr:isCheckedOut property
-            return getProperty(getName(QName.JCR_ISCHECKEDOUT)).getBoolean();
+            return getProperty(getName(JCR, "isCheckedOut")).getBoolean();
         } else {
             try {
                 // This node is not versionable, is the parent checked out?
@@ -752,19 +760,21 @@ public abstract class AbstractNode extends AbstractItem implements Node {
     //-------------------------------------------------------------< private >
 
     /**
-     * Returns the prefixed JCR name for the given {@link QName} using the
-     * current namespace mappings. The given name is assumed <em>not</em>
-     * to be in the default namespace, i.e. there will always be a non-empty
-     * prefix for the name.
+     * Returns the prefixed JCR name for the namespace URI and local name
+     * using the current namespace mappings.
      *
-     * @param name namespaced name
+     * @param uri namespace URI
+     * @param name namespace-local name
      * @return prefixed JCR name
      * @throws RepositoryException if an error occurs
      */
-    private String getName(QName name) throws RepositoryException {
-        assert name.getNamespaceURI().length() > 0;
-        String prefix = getSession().getNamespacePrefix(name.getNamespaceURI());
-        return prefix + ":" + name.getLocalName();
+    private String getName(String uri, String name) throws RepositoryException {
+        String prefix = getSession().getNamespacePrefix(uri);
+        if (prefix.length() > 0) {
+            return prefix + ":" + name;
+        } else {
+            return name;
+        }
     }
 
 }
