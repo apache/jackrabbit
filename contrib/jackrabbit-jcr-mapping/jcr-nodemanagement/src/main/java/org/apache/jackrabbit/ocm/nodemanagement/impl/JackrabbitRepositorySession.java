@@ -20,7 +20,6 @@ import javax.jcr.Repository;
 import javax.jcr.Session;
 
 import org.apache.jackrabbit.ocm.nodemanagement.RepositorySession;
-import org.apache.jackrabbit.ocm.repository.RepositoryUtil;
 
 /** This class is the Jackrabbit JCR Repository session implementation.
  *
