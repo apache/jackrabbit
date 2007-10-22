@@ -67,7 +67,6 @@ public class TestAll extends TestCase {
         suite.addTestSuite(RenameTest.class);
 
         // reorder
-        /*
         suite.addTestSuite(ReorderTest.class);
         suite.addTestSuite(ReorderReferenceableSNSTest.class);
         suite.addTestSuite(ReorderSNSTest.class);
@@ -76,7 +75,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ReorderNewAndSavedTest.class);
         suite.addTestSuite(ReorderMixedTest.class);
         suite.addTestSuite(ReorderMoveTest.class);
-        */
+
         // update
         suite.addTestSuite(UpdateTest.class);
 
