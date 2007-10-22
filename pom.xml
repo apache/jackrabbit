@@ -68,6 +68,8 @@
     <module>jackrabbit-jca</module>
     <module>jackrabbit-spi</module>
     <module>jackrabbit-spi-commons</module>
+    <module>jackrabbit-jcr2spi</module>
+    <module>jackrabbit-spi2jcr</module>
   </modules>
 
   <build>

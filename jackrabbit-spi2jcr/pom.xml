@@ -28,21 +28,21 @@
 <!-- ====================================================================== -->
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
-    <artifactId>jackrabbit-spi-contrib</artifactId>
+    <artifactId>jackrabbit</artifactId>
     <version>1.4-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
-  <artifactId>jackrabbit-spi-spi2jcr</artifactId>
-  <name>SPI to JCR</name>
+  <artifactId>jackrabbit-spi2jcr</artifactId>
+  <name>Jackrabbit SPI to JCR</name>
 
   <scm>
     <connection>
-      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/contrib/spi/spi2jcr
+      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-spi2jcr
     </connection>
     <developerConnection>
-      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/contrib/spi/spi2jcr
+      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-spi2jcr
     </developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/trunk/contrib/spi/spi2jcr</url>
+    <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-spi2jcr</url>
   </scm>
 
   <build>
