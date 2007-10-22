@@ -35,8 +35,6 @@
   <packaging>pom</packaging>
   
   <modules>
-    <module>jcr2spi</module>
-    <module>spi2jcr</module>
     <module>spi2dav</module>
     <module>spi-rmi</module>
     <module>client</module>
