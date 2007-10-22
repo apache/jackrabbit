@@ -103,10 +103,6 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
                                  String[] uuids,
                                  String[] nodeTypeNames,
                                  boolean noLocal) throws RepositoryException {
-        if (!isRegistered) {
-            wspManager.addEventListener(this);
-            isRegistered = true;
-        }
         Path path;
         try {
             path = resolver.getQPath(absPath).getCanonicalPath();
@@ -137,6 +133,11 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
         synchronized (subscriptions) {
             subscriptions.put(listener, filter);
             readOnlySubscriptions = null;
+        }
+
+        if (!isRegistered) {
+            wspManager.addEventListener(this);
+            isRegistered = true;
         }
     }
 
