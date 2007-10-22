@@ -375,6 +375,16 @@ public class NodeState extends ItemState {
     }
 
     /**
+     * Returns true if the definition of this state has already been
+     * calculated. False otherwise.
+     *
+     * @return true if definition has already been calculated.
+     */
+    public boolean hasDefinition() throws RepositoryException {
+        return definition != null;
+    }
+
+    /**
      * Returns the {@link QNodeDefinition definition} defined for this
      * node state. Note, that the definition has been set upon creation or
      * upon move.

@@ -352,7 +352,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
         NodeState state = (NodeState) internalGetItemState();
         try {
-            if (state == null || state.getDefinition().allowsSameNameSiblings()) {
+            if (state == null || !state.hasDefinition() || state.getDefinition().allowsSameNameSiblings()) {
                 return parent.getChildIndex(this);
             } else {
                 return Path.INDEX_DEFAULT;
