@@ -276,7 +276,7 @@ public class MultiIndex {
                 continue;
             }
             PersistentIndex index = new PersistentIndex(
-                    indexNames.getName(i), sub, false,
+                    indexNames.getName(i), sub,
                     handler.getTextAnalyzer(), cache, indexingQueue);
             index.setMaxMergeDocs(handler.getMaxMergeDocs());
             index.setMergeFactor(handler.getMergeFactor());
@@ -557,12 +557,10 @@ public class MultiIndex {
      *
      * @param indexName the name of the index to open, or <code>null</code> if
      *                  an index with a new name should be created.
-     * @param create    if the index that is opened should delete existing index
-     *                  data.
      * @return a new <code>PersistentIndex</code>.
      * @throws IOException if a new index cannot be created.
      */
-    synchronized PersistentIndex getOrCreateIndex(String indexName, boolean create)
+    synchronized PersistentIndex getOrCreateIndex(String indexName)
             throws IOException {
         // check existing
         for (Iterator it = indexes.iterator(); it.hasNext();) {
@@ -580,7 +578,7 @@ public class MultiIndex {
         } else {
             sub = new File(indexDir, indexName);
         }
-        PersistentIndex index = new PersistentIndex(indexName, sub, create,
+        PersistentIndex index = new PersistentIndex(indexName, sub,
                 handler.getTextAnalyzer(), cache, indexingQueue);
         index.setMaxMergeDocs(handler.getMaxMergeDocs());
         index.setMergeFactor(handler.getMergeFactor());
@@ -650,7 +648,7 @@ public class MultiIndex {
 
             // Index merger does not log an action when it creates the target
             // index of the merge. We have to do this here.
-            executeAndLog(new CreateIndex(getTransactionId(), index.getName(), false));
+            executeAndLog(new CreateIndex(getTransactionId(), index.getName()));
 
             executeAndLog(new AddIndex(getTransactionId(), index.getName()));
 
@@ -975,7 +973,7 @@ public class MultiIndex {
 
             long time = System.currentTimeMillis();
             // create index
-            CreateIndex create = new CreateIndex(getTransactionId(), null, true);
+            CreateIndex create = new CreateIndex(getTransactionId(), null);
             executeAndLog(create);
 
             // commit volatile index
@@ -1415,7 +1413,7 @@ public class MultiIndex {
          * @inheritDoc
          */
         public void execute(MultiIndex index) throws IOException {
-            PersistentIndex idx = index.getOrCreateIndex(indexName, false);
+            PersistentIndex idx = index.getOrCreateIndex(indexName);
             if (!index.indexNames.contains(indexName)) {
                 index.indexNames.addName(indexName);
                 // now that the index is in the active list let the merger know about it
@@ -1590,25 +1588,16 @@ public class MultiIndex {
         private String indexName;
 
         /**
-         * Indicates if the index is forced to be created. That is, existing
-         * index data is deleted.
-         */
-        private final boolean create;
-
-        /**
          * Creates a new CreateIndex action.
          *
          * @param transactionId the id of the transaction that executes this
          *                      action.
          * @param indexName     the name of the index to add, or <code>null</code>
          *                      if an index with a new name should be created.
-         * @param create        if <code>true</code> existing index data is
-         *                      overwritten.
          */
-        CreateIndex(long transactionId, String indexName, boolean create) {
+        CreateIndex(long transactionId, String indexName) {
             super(transactionId, Action.TYPE_CREATE_INDEX);
             this.indexName = indexName;
-            this.create = create;
         }
 
         /**
@@ -1622,8 +1611,7 @@ public class MultiIndex {
          */
         static CreateIndex fromString(long transactionId, String arguments) {
             // when created from String, this action is executed as redo action
-            // -> don't create index, simply open it.
-            return new CreateIndex(transactionId, arguments, false);
+            return new CreateIndex(transactionId, arguments);
         }
 
         /**
@@ -1632,7 +1620,7 @@ public class MultiIndex {
          * @inheritDoc
          */
         public void execute(MultiIndex index) throws IOException {
-            PersistentIndex idx = index.getOrCreateIndex(indexName, create);
+            PersistentIndex idx = index.getOrCreateIndex(indexName);
             indexName = idx.getName();
         }
 
@@ -1641,7 +1629,7 @@ public class MultiIndex {
          */
         public void undo(MultiIndex index) throws IOException {
             if (index.hasIndex(indexName)) {
-                PersistentIndex idx = index.getOrCreateIndex(indexName, false);
+                PersistentIndex idx = index.getOrCreateIndex(indexName);
                 idx.close();
                 index.deleteIndex(idx);
             }
@@ -1911,7 +1899,7 @@ public class MultiIndex {
          */
         public void execute(MultiIndex index) throws IOException {
             VolatileIndex volatileIndex = index.getVolatileIndex();
-            PersistentIndex persistentIndex = index.getOrCreateIndex(targetIndex, true);
+            PersistentIndex persistentIndex = index.getOrCreateIndex(targetIndex);
             persistentIndex.copyIndex(volatileIndex);
             index.resetVolatileIndex();
         }
