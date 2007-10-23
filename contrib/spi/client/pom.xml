@@ -56,7 +56,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
-      <artifactId>jackrabbit-spi-jcr2spi</artifactId>
+      <artifactId>jackrabbit-jcr2spi</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
@@ -64,7 +64,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
-      <artifactId>jackrabbit-spi-spi2jcr</artifactId>
+      <artifactId>jackrabbit-spi2jcr</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
