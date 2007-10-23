@@ -31,7 +31,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.StringReader;
 import java.util.BitSet;
-import java.util.Enumeration;
+import java.util.Iterator;
 
 /**
  * Implements common functionality for a lucene index.
@@ -117,7 +117,7 @@ abstract class AbstractIndex {
         this.indexingQueue = indexingQueue;
 
         if (!IndexReader.indexExists(directory)) {
-            indexWriter = new IndexWriter(directory, analyzer, true);
+            indexWriter = new IndexWriter(directory, analyzer);
             // immediately close, now that index has been created
             indexWriter.close();
             indexWriter = null;
@@ -220,7 +220,7 @@ abstract class AbstractIndex {
             indexReader = null;
         }
         if (indexWriter == null) {
-            indexWriter = new IndexWriter(getDirectory(), analyzer, false);
+            indexWriter = new IndexWriter(getDirectory(), analyzer);
             // since lucene 2.0 setMaxBuffereDocs is equivalent to previous minMergeDocs attribute
             indexWriter.setMaxBufferedDocs(minMergeDocs);
             indexWriter.setMaxMergeDocs(maxMergeDocs);
@@ -332,8 +332,8 @@ abstract class AbstractIndex {
     private Document getFinishedDocument(Document doc) throws IOException {
         if (!Util.isDocumentReady(doc)) {
             Document copy = new Document();
-            for (Enumeration fields = doc.fields(); fields.hasMoreElements(); ) {
-                Field f = (Field) fields.nextElement();
+            for (Iterator fields = doc.getFields().iterator(); fields.hasNext(); ) {
+                Field f = (Field) fields.next();
                 Field field = null;
                 Field.TermVector tv = getTermVectorParameter(f);
                 Field.Store stored = getStoreParameter(f);
