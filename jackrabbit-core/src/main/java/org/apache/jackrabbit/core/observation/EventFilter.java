@@ -196,22 +196,7 @@ class EventFilter {
 
         // finally check path
         try {
-            // the relevant path for the path filter depends on the event type
-            // for node events, the relevant path is the one returned by
-            // Event.getPath().
-            // for property events, the relevant path is the path of the
-            // node where the property belongs to.
-            Path eventPath;
-            if (type == Event.NODE_ADDED || type == Event.NODE_REMOVED) {
-                Path.PathElement nameElem = eventState.getChildRelPath();
-                if (nameElem.getIndex() == 0) {
-                    eventPath = Path.create(eventState.getParentPath(), nameElem.getName(), false);
-                } else {
-                    eventPath = Path.create(eventState.getParentPath(), nameElem.getName(), nameElem.getIndex(), false);
-                }
-            } else {
-                eventPath = eventState.getParentPath();
-            }
+            Path eventPath = eventState.getParentPath();
             boolean match = eventPath.equals(path);
             if (!match && isDeep) {
                 match = eventPath.isDescendantOf(path);
