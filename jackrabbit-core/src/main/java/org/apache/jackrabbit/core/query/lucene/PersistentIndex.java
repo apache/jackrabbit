@@ -16,15 +16,14 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.store.IndexOutput;
+import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.NativeFSLockFactory;
 
 import java.io.IOException;
 import java.io.File;
@@ -35,20 +34,8 @@ import java.io.File;
  */
 class PersistentIndex extends AbstractIndex {
 
-    /** The logger instance for this class */
-    private static final Logger log = LoggerFactory.getLogger(PersistentIndex.class);
-
-    /** Name of the write lock file */
-    private static final String WRITE_LOCK = IndexWriter.WRITE_LOCK_NAME;
-
-    /** Name of the commit lock file */
-    private static final String COMMIT_LOCK = "commit.lock";
-
     /** The name of this persistent index */
     private final String name;
-
-    /** Set to <code>true</code> if this index encountered locks on startup */
-    private boolean lockEncountered = false;
 
     /**
      * If non <code>null</code>, <code>listener</code> needs to be informed
@@ -61,7 +48,6 @@ class PersistentIndex extends AbstractIndex {
      * <code>indexDir</code>.
      * @param name the name of this index.
      * @param indexDir the directory to store the index.
-     * @param create if <code>true</code> an existing index is deleted.
      * @param analyzer the analyzer for text tokenizing.
      * @param cache the document number cache
      * @param indexingQueue the indexing queue.
@@ -70,32 +56,13 @@ class PersistentIndex extends AbstractIndex {
      * @throws IOException if an error occurs while opening / creating
      *  the index.
      */
-    PersistentIndex(String name, File indexDir, boolean create,
+    PersistentIndex(String name, File indexDir,
                     Analyzer analyzer, DocNumberCache cache,
                     IndexingQueue indexingQueue)
             throws IOException {
-        super(analyzer, FSDirectory.getDirectory(indexDir, create),
+        super(analyzer, FSDirectory.getDirectory(indexDir, new NativeFSLockFactory(indexDir)),
                 cache, indexingQueue);
         this.name = name;
-
-        // check if index is locked, probably from an unclean repository
-        // shutdown
-        File writeLock = new File(indexDir, WRITE_LOCK);
-        if (writeLock.exists()) {
-            lockEncountered = true;
-            log.warn("Removing write lock on search index.");
-            if (!writeLock.delete()) {
-                log.error("Unable to remove write lock on search index.");
-            }
-        }
-        File commitLock = new File(indexDir, COMMIT_LOCK);
-        if (commitLock.exists()) {
-            lockEncountered = true;
-            log.warn("Removing commit lock on search index.");
-            if (!commitLock.delete()) {
-                log.error("Unable to remove write lock on search index.");
-            }
-        }
     }
 
     /**
@@ -107,17 +74,6 @@ class PersistentIndex extends AbstractIndex {
             listener.documentDeleted(idTerm);
         }
         return num;
-    }
-
-    /**
-     * Returns <code>true</code> if this index encountered a lock on the file
-     * system during startup. This indicates a unclean shutdown.
-     *
-     * @return <code>true</code> if this index encountered a lock on startup;
-     *         <code>false</code> otherwise.
-     */
-    boolean getLockEncountered() {
-        return lockEncountered;
     }
 
     /**

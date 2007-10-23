@@ -286,7 +286,7 @@ class IndexMerger extends Thread implements IndexListener {
             }
             try {
                 log.debug("create new index");
-                PersistentIndex index = multiIndex.getOrCreateIndex(null, true);
+                PersistentIndex index = multiIndex.getOrCreateIndex(null);
                 boolean success = false;
                 try {
 
