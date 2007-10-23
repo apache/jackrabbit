@@ -114,16 +114,13 @@ public class VersionHistoryTest extends AbstractVersionTest {
      *
      * @see javax.jcr.version.VersionHistory#getRootVersion()
      */
-    public void testInitallyGetAllVersionsContainsTheRootVersion() throws RepositoryException {
+    public void testInitiallyGetAllVersionsContainsTheRootVersion() throws RepositoryException {
         Version rootVersion = vHistory.getRootVersion();
-        Version v = null;
-        VersionIterator it = vHistory.getAllVersions();
-        while (it.hasNext()) {
-            // break after the first version, that MUST be the root version
-            v = it.nextVersion();
-            break;
+        boolean isContained = false;
+        for (VersionIterator it = vHistory.getAllVersions(); it.hasNext(); ) {
+            isContained |= it.nextVersion().isSame(rootVersion);
         }
-        assertTrue("The version that is autocreated on version history creation must be the root version", rootVersion.isSame(v));
+        assertTrue("root version must be part of the version history", isContained);
     }
 
     /**
