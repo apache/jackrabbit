@@ -112,18 +112,7 @@ public class EventFilterImpl implements EventFilter, Serializable {
 
         // finally check path
         try {
-            // the relevant path for the path filter depends on the event type
-            // for node events, the relevant path is the one returned by
-            // Event.getPath().
-            // for property events, the relevant path is the path of the
-            // node where the property belongs to.
-            Path eventPath;
-            if (type == Event.NODE_ADDED || type == Event.NODE_REMOVED) {
-                eventPath = event.getPath();
-            } else {
-                eventPath = event.getPath().getAncestor(1);
-            }
-
+            Path eventPath = event.getPath().getAncestor(1);
             boolean match = eventPath.equals(absPath);
             if (!match && isDeep) {
                 match = eventPath.isDescendantOf(absPath);
