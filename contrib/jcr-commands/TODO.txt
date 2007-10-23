@@ -1,6 +1,0 @@
-- xdocs
-- javadocs
-- testing
-- review i18n resource file
-- friendly exception handling in interactive mode
-- review command syntax
