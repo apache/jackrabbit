@@ -337,7 +337,9 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
             StringBuffer propPath = new StringBuffer();
             // only encode if not position function
             Path relPath = node.getRelativePath();
-            if (relPath.getNameElement().getName().equals(XPathQueryBuilder.FN_POSITION_FULL)) {
+            if (relPath == null) {
+                propPath.append(".");
+            } else if (relPath.getNameElement().getName().equals(XPathQueryBuilder.FN_POSITION_FULL)) {
                 NameFormat.format(XPathQueryBuilder.FN_POSITION_FULL, resolver, propPath);
             } else {
                 Path.PathElement[] elements = relPath.getElements();
@@ -345,7 +347,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 for (int i = 0; i < elements.length; i++) {
                     propPath.append(slash);
                     slash = "/";
-                    if (i == elements.length - 1) {
+                    if (i == elements.length - 1 && node.getOperation() != OPERATION_SIMILAR) {
                         propPath.append("@");
                     }
                     if (elements[i].getName().equals(RelationQueryNode.STAR_NAME_TEST)) {
@@ -408,6 +410,15 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 sb.append("(").append(propPath).append(")");
             } else if (node.getOperation() == OPERATION_NOT_NULL) {
                 sb.append(propPath);
+            } else if (node.getOperation() == OPERATION_SIMILAR) {
+                NameFormat.format(XPathQueryBuilder.REP_SIMILAR, resolver, sb);
+                sb.append("(").append(propPath).append(", ");
+                appendValue(node, sb);
+            } else if (node.getOperation() == OPERATION_SPELLCHECK) {
+                NameFormat.format(XPathQueryBuilder.REP_SPELLCHECK, resolver, sb);
+                sb.append("(");
+                appendValue(node, sb);
+                sb.append(")");
             } else {
                 exceptions.add(new InvalidQueryException("Invalid operation: " + node.getOperation()));
             }

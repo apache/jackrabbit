@@ -121,7 +121,8 @@ public class PreparedQueryImpl
         }
         return new QueryResultImpl(index, itemMgr,
                 session.getNamespaceResolver(), session.getAccessManager(),
-                this, query, selectProps, orderProps, orderSpecs,
+                // TODO: spell suggestion missing
+                this, query, null, selectProps, orderProps, orderSpecs,
                 getRespectDocumentOrder(), offset, limit);
     }
 
