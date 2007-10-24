@@ -80,6 +80,11 @@ public class QueryResultImpl implements QueryResult {
     protected final Query query;
 
     /**
+     * The spell suggestion or <code>null</code> if not available.
+     */
+    protected final SpellSuggestion spellSuggestion;
+
+    /**
      * The select properties
      */
     protected final QName[] selectProps;
@@ -137,22 +142,26 @@ public class QueryResultImpl implements QueryResult {
     /**
      * Creates a new query result.
      *
-     * @param index         the search index where the query is executed.
-     * @param itemMgr       the item manager of the session executing the
-     *                      query.
-     * @param resolver      the namespace resolver of the session executing the
-     *                      query.
-     * @param accessMgr     the access manager of the session executiong the
-     *                      query.
-     * @param queryImpl     the query instance which created this query result.
-     * @param query         the lucene query to execute on the index.
-     * @param selectProps   the select properties of the query.
-     * @param orderProps    the names of the order properties.
-     * @param orderSpecs    the order specs, one for each order property name.
-     * @param documentOrder if <code>true</code> the result is returned in
-     *                      document order.
-     * @param limit         the maximum result size
-     * @param offset        the offset in the total result set
+     * @param index           the search index where the query is executed.
+     * @param itemMgr         the item manager of the session executing the
+     *                        query.
+     * @param resolver        the namespace resolver of the session executing
+     *                        the query.
+     * @param accessMgr       the access manager of the session executiong the
+     *                        query.
+     * @param queryImpl       the query instance which created this query
+     *                        result.
+     * @param query           the lucene query to execute on the index.
+     * @param spellSuggestion the spell suggestion or <code>null</code> if none
+     *                        is available.
+     * @param selectProps     the select properties of the query.
+     * @param orderProps      the names of the order properties.
+     * @param orderSpecs      the order specs, one for each order property
+     *                        name.
+     * @param documentOrder   if <code>true</code> the result is returned in
+     *                        document order.
+     * @param limit           the maximum result size
+     * @param offset          the offset in the total result set
      */
     public QueryResultImpl(SearchIndex index,
                            ItemManager itemMgr,
@@ -160,6 +169,7 @@ public class QueryResultImpl implements QueryResult {
                            AccessManager accessMgr,
                            AbstractQueryImpl queryImpl,
                            Query query,
+                           SpellSuggestion spellSuggestion,
                            QName[] selectProps,
                            QName[] orderProps,
                            boolean[] orderSpecs,
@@ -172,6 +182,7 @@ public class QueryResultImpl implements QueryResult {
         this.accessMgr = accessMgr;
         this.queryImpl = queryImpl;
         this.query = query;
+        this.spellSuggestion = spellSuggestion;
         this.selectProps = selectProps;
         this.orderProps = orderProps;
         this.orderSpecs = orderSpecs;
@@ -218,8 +229,8 @@ public class QueryResultImpl implements QueryResult {
                 throw new RepositoryException(e);
             }
         }
-        return new RowIteratorImpl(getNodeIterator(),
-                selectProps, resolver, excerptProvider);
+        return new RowIteratorImpl(getNodeIterator(), selectProps,
+                resolver, excerptProvider, spellSuggestion);
     }
 
     /**

@@ -657,7 +657,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         }
 
         if (node.getRelativePath() == null &&
-                node.getOperation() != QueryConstants.OPERATION_SIMILAR) {
+                node.getOperation() != QueryConstants.OPERATION_SIMILAR &&
+                node.getOperation() != QueryConstants.OPERATION_SPELLCHECK) {
             exceptions.add(new InvalidQueryException("@* not supported in predicate"));
             return data;
         }
@@ -885,6 +886,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     query = new SimilarityQuery(uuid, analyzer);
                     break;
                 case QueryConstants.OPERATION_NOT_NULL:
+                    query = createMatchAllQuery(field);
+                    break;
+                case QueryConstants.OPERATION_SPELLCHECK:
                     query = createMatchAllQuery(field);
                     break;
                 default:

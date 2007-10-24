@@ -428,7 +428,16 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 predicateNode = createRelationQueryNode(parent,
                         identifier, type, star);
             } else if (type == QueryConstants.OPERATION_SIMILAR) {
-                predicateNode = createRelationQueryNode(parent, null, type,
+                ASTLiteral literal;
+                if (node.children.length == 1) {
+                    literal = (ASTLiteral) node.children[0];
+                } else {
+                    literal = (ASTLiteral) node.children[1];
+                }
+                predicateNode = createRelationQueryNode(parent, identifier, type, literal);
+            } else if (type == QueryConstants.OPERATION_SPELLCHECK) {
+                predicateNode = createRelationQueryNode(parent,
+                        QName.JCR_PRIMARYTYPE, type,
                         (ASTLiteral) node.children[0]);
             } else {
                 throw new IllegalArgumentException("Unknown operation type: " + type);

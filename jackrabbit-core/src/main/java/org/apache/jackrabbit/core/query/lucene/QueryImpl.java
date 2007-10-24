@@ -136,7 +136,8 @@ public class QueryImpl extends AbstractQueryImpl {
 
         return new QueryResultImpl(index, itemMgr,
                 session.getNamespaceResolver(), session.getAccessManager(),
-                this, query, getSelectProperties(), orderProperties, ascSpecs,
+                this, query, new SpellSuggestion(index.getSpellChecker(), root),
+                getSelectProperties(), orderProperties, ascSpecs,
                 getRespectDocumentOrder(), offset, limit);
     }
 
