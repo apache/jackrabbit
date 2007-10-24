@@ -251,7 +251,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
                 try {
                     unlock(nState);
                 } catch (RepositoryException e) {
-                    log.error("Error while unlocking session scoped lock. Cleaning up local lock status.");
+                    log.warn("Error while unlocking session scoped lock. Cleaning up local lock status.");
                     // at least clean up local lock map and the locks life cycle
                     l.lockState.unlocked();
                 }
@@ -538,6 +538,12 @@ public class LockManagerImpl implements LockManager, SessionListener {
         }
 
         private void startListening() {
+            // LockState must be aware of removal of the Node.
+            lockHoldingState.addListener(this);
+
+            // in case of CacheBehaviour.OBSERVATION this lockstate can also
+            // be aware of another session removing the lock -> listen to
+            // status changes of the jcr:lockIsDeep property.
             if (cacheBehaviour == CacheBehaviour.OBSERVATION) {
                 try {
                     PropertyState ps = lockHoldingState.getPropertyState(NameConstants.JCR_LOCKISDEEP);
@@ -549,6 +555,8 @@ public class LockManagerImpl implements LockManager, SessionListener {
         }
 
         private void stopListening() {
+            lockHoldingState.removeListener(this);
+
             if (cacheBehaviour == CacheBehaviour.OBSERVATION) {
                 try {
                     if (lockHoldingState.hasPropertyName(NameConstants.JCR_LOCKISDEEP)) {
@@ -615,6 +623,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
                 lockState.startListening();
             } else if (isHoldBySession()) {
                 lockMap.put(lockState.lockHoldingState, this);
+                lockState.startListening();
                 // open-scoped locks: the map entry and the lock information
                 // stored therein may become outdated if the token is transfered
                 // to another session -> info must be reloaded.
