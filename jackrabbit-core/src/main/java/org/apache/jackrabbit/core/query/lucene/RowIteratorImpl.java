@@ -24,9 +24,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.value.LongValue;
-import org.apache.jackrabbit.value.PathValue;
-import org.apache.jackrabbit.value.StringValue;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.apache.jackrabbit.util.ISO9075;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -37,6 +35,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.ValueFactory;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 import java.util.Arrays;
@@ -57,9 +56,20 @@ class RowIteratorImpl implements RowIterator {
     private static final Logger log = LoggerFactory.getLogger(RowIteratorImpl.class);
 
     /**
+     * The value factory.
+     */
+    private static final ValueFactory VALUE_FACTORY = ValueFactoryImpl.getInstance();
+
+    /**
      * The name of the excerpt function without prefix but with left parenthesis.
      */
     private static final String EXCERPT_FUNC_LPAR = "excerpt(";
+
+    /**
+     * The name of the spell check function without prefix but with left
+     * parenthesis.
+     */
+    private static final String SPELLCHECK_FUNC_LPAR = "spellcheck(";
 
     /**
      * The start QName for the rep:excerpt function: rep:excerpt(
@@ -83,9 +93,14 @@ class RowIteratorImpl implements RowIterator {
     private final NamespaceResolver resolver;
 
     /**
-     * The excerpt provider.
+     * The excerpt provider or <code>null</code> if none is available.
      */
     private final ExcerptProvider excerptProvider;
+
+    /**
+     * The spell suggestion or <code>null</code> if none is available.
+     */
+    private final SpellSuggestion spellSuggestion;
 
     /**
      * Creates a new <code>RowIteratorImpl</code> that iterates over the result
@@ -98,29 +113,33 @@ class RowIteratorImpl implements RowIterator {
      *                   <code>Session</code>.
      */
     RowIteratorImpl(ScoreNodeIterator nodes, QName[] properties, NamespaceResolver resolver) {
-        this(nodes, properties, resolver, null);
+        this(nodes, properties, resolver, null, null);
     }
 
     /**
      * Creates a new <code>RowIteratorImpl</code> that iterates over the result
      * nodes.
      *
-     * @param nodes      a <code>ScoreNodeIterator</code> that contains the
-     *                   nodes of the query result.
-     * @param properties <code>QName</code> of the select properties.
-     * @param resolver   <code>NamespaceResolver</code> of the user
-     *                   <code>Session</code>.
-     * @param exProvider the excerpt provider associated with the query result
-     *                   that created this row iterator.
+     * @param nodes           a <code>ScoreNodeIterator</code> that contains the
+     *                        nodes of the query result.
+     * @param properties      <code>QName</code> of the select properties.
+     * @param resolver        <code>NamespaceResolver</code> of the user
+     *                        <code>Session</code>.
+     * @param exProvider      the excerpt provider associated with the query
+     *                        result that created this row iterator.
+     * @param spellSuggestion the spell suggestion associated with the query
+     *                        result or <code>null</code> if none is available.
      */
     RowIteratorImpl(ScoreNodeIterator nodes,
                     QName[] properties,
                     NamespaceResolver resolver,
-                    ExcerptProvider exProvider) {
+                    ExcerptProvider exProvider,
+                    SpellSuggestion spellSuggestion) {
         this.nodes = nodes;
         this.properties = properties;
         this.resolver = resolver;
         this.excerptProvider = exProvider;
+        this.spellSuggestion = spellSuggestion;
     }
     
     /**
@@ -252,7 +271,7 @@ class RowIteratorImpl implements RowIterator {
                         PropertyImpl prop = node.getProperty(properties[i]);
                         if (!prop.getDefinition().isMultiple()) {
                             if (prop.getDefinition().getRequiredType() == PropertyType.UNDEFINED) {
-                                tmp[i] = new StringValue(prop.getString());
+                                tmp[i] = VALUE_FACTORY.createValue(prop.getString());
                             } else {
                                 tmp[i] = prop.getValue();
                             }
@@ -261,13 +280,16 @@ class RowIteratorImpl implements RowIterator {
                             tmp[i] = null;
                         }
                     } else {
-                        // property not set or jcr:path / jcr:score / jcr:highlight
+                        // property not set or one of the following:
+                        // jcr:path / jcr:score / rep:excerpt / rep:spellcheck
                         if (QName.JCR_PATH.equals(properties[i])) {
-                            tmp[i] = PathValue.valueOf(node.getPath());
+                            tmp[i] = VALUE_FACTORY.createValue(node.getPath(), PropertyType.PATH);
                         } else if (QName.JCR_SCORE.equals(properties[i])) {
-                            tmp[i] = new LongValue(Math.round(score * 1000f));
+                            tmp[i] = VALUE_FACTORY.createValue(Math.round(score * 1000f));
                         } else if (isExcerptFunction(properties[i])) {
                             tmp[i] = getExcerpt();
+                        } else if (isSpellCheckFunction(properties[i])) {
+                            tmp[i] = getSpellCheckedStatement();
                         } else {
                             tmp[i] = null;
                         }
@@ -313,18 +335,21 @@ class RowIteratorImpl implements RowIterator {
                 if (node.hasProperty(prop)) {
                     Property p = node.getProperty(prop);
                     if (p.getDefinition().getRequiredType() == PropertyType.UNDEFINED) {
-                        return new StringValue(p.getString());
+                        return VALUE_FACTORY.createValue(p.getString());
                     } else {
                         return p.getValue();
                     }
                 } else {
-                    // either jcr:score, jcr:path or not set
+                    // either jcr:score, jcr:path, rep:excerpt,
+                    // rep:spellcheck or not set
                     if (QName.JCR_PATH.equals(prop)) {
-                        return PathValue.valueOf(node.getPath());
+                        return VALUE_FACTORY.createValue(node.getPath(), PropertyType.PATH);
                     } else if (QName.JCR_SCORE.equals(prop)) {
-                        return new LongValue(Math.round(score * 1000f));
+                        return VALUE_FACTORY.createValue(Math.round(score * 1000f));
                     } else if (isExcerptFunction(prop)) {
                         return getExcerpt();
+                    } else if (isSpellCheckFunction(prop)) {
+                        return getSpellCheckedStatement();
                     } else {
                         return null;
                     }
@@ -425,7 +450,7 @@ class RowIteratorImpl implements RowIterator {
                 time = System.currentTimeMillis() - time;
                 log.debug("Created excerpt in {} ms.", new Long(time));
                 if (excerpt != null) {
-                    return new StringValue(excerpt);
+                    return VALUE_FACTORY.createValue(excerpt);
                 } else {
                     return null;
                 }
@@ -450,8 +475,42 @@ class RowIteratorImpl implements RowIterator {
                 text = hep.highlight(text);
                 time = System.currentTimeMillis() - time;
                 log.debug("Highlighted text in {} ms.", new Long(time));
-                return new StringValue(text);
+                return VALUE_FACTORY.createValue(text);
             } catch (IOException e) {
+                return null;
+            }
+        }
+
+        /**
+         * @param name a QName.
+         * @return <code>true</code> if <code>name</code> is the rep:spellcheck
+         *         function, <code>false</code> otherwise.
+         */
+        private boolean isSpellCheckFunction(QName name) {
+            return name.getNamespaceURI().equals(QName.NS_REP_URI) &&
+                    name.getLocalName().startsWith(SPELLCHECK_FUNC_LPAR);
+        }
+
+        /**
+         * Returns the spell checked string of the first relation query node
+         * with a spellcheck operation.
+         *
+         * @return a StringValue or <code>null</code> if the spell checker
+         *         thinks the words are spelled correctly. This method also
+         *         returns <code>null</code> if no spell checker is configured.
+         */
+        private Value getSpellCheckedStatement() {
+            String v = null;
+            if (spellSuggestion != null) {
+                try {
+                    v = spellSuggestion.getSuggestion();
+                } catch (IOException e) {
+                    log.warn("Spell checking failed", e);
+                }
+            }
+            if (v != null) {
+                return VALUE_FACTORY.createValue(v);
+            } else {
                 return null;
             }
         }

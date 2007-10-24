@@ -396,44 +396,65 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
     }
 
     public Object visit(RelationQueryNode node, Object data) {
-        Path relPath = node.getRelativePath();
-        if (relPath.getLength() > 1) {
-            exceptions.add(new InvalidQueryException("Child axis not supported in SQL"));
-            return data;
-        }
         StringBuffer sb = (StringBuffer) data;
         try {
             StringBuffer propName = new StringBuffer();
-            appendName(relPath.getNameElement().getName(), resolver, propName);
+            Path relPath = node.getRelativePath();
+            if (relPath == null) {
+                propName.append(".");
+            } else if (relPath.getLength() > 1) {
+                exceptions.add(new InvalidQueryException("Child axis not supported in SQL"));
+                return data;
+            } else {
+                appendName(relPath.getNameElement().getName(), resolver, propName);
+            }
             // surround name with property function
             node.acceptOperands(this, propName);
 
-            sb.append(propName);
             if (node.getOperation() == OPERATION_EQ_VALUE || node.getOperation() == OPERATION_EQ_GENERAL) {
+                sb.append(propName);
                 sb.append(" = ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_GE_VALUE || node.getOperation() == OPERATION_GE_GENERAL) {
+                sb.append(propName);
                 sb.append(" >= ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_GT_VALUE || node.getOperation() == OPERATION_GT_GENERAL) {
+                sb.append(propName);
                 sb.append(" > ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_LE_VALUE || node.getOperation() == OPERATION_LE_GENERAL) {
+                sb.append(propName);
                 sb.append(" <= ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_LIKE) {
+                sb.append(propName);
                 sb.append(" LIKE ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_LT_VALUE || node.getOperation() == OPERATION_LT_GENERAL) {
+                sb.append(propName);
                 sb.append(" < ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_NE_VALUE || node.getOperation() == OPERATION_NE_GENERAL) {
+                sb.append(propName);
                 sb.append(" <> ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_NULL) {
+                sb.append(propName);
                 sb.append(" IS NULL");
             } else if (node.getOperation() == OPERATION_NOT_NULL) {
+                sb.append(propName);
                 sb.append(" IS NOT NULL");
+            } else if (node.getOperation() == OPERATION_SIMILAR) {
+                sb.append("SIMILAR(");
+                sb.append(propName);
+                sb.append(", ");
+                appendValue(node, sb);
+                sb.append(")");
+            } else if (node.getOperation() == OPERATION_SPELLCHECK) {
+                sb.append("SPELLCHECK(");
+                appendValue(node, sb);
+                sb.append(")");
             } else {
                 exceptions.add(new InvalidQueryException("Invalid operation: " + node.getOperation()));
             }

@@ -109,6 +109,7 @@ TOKEN [ IGNORE_CASE ] :
 | < EXCERPT: "EXCERPT" >
 | < SIMILAR: "SIMILAR" >
 | < CONTAINS: "CONTAINS" >
+| < SPELLCHECK: "SPELLCHECK" >
 }
 
 
@@ -274,7 +275,13 @@ void SelectList() :
 {}
 {
     (<ASTERISK>)
-  | ((ExcerptFunction() | Identifier() (<PERIOD> Identifier() { Node n = jjtree.popNode(); jjtree.popNode(); jjtree.pushNode(n); } )?) (<COMMA> (ExcerptFunction() | Identifier() (<PERIOD> Identifier() { Node n = jjtree.popNode(); jjtree.popNode(); jjtree.pushNode(n); } )?) )*)
+  | ( SelectItem() ( <COMMA> SelectItem() )* )
+}
+
+void SelectItem() #void :
+{}
+{
+  (ExcerptFunction() | Identifier() (<PERIOD> Identifier() { Node n = jjtree.popNode(); jjtree.popNode(); jjtree.pushNode(n); } )?)
 }
 
 void TableExpression() #void :
@@ -371,6 +378,17 @@ void Predicate() :
             s.setType(QueryConstants.TYPE_STRING);
             s.setValue(value);
             jjtree.pushNode(s);
+          } ")"
+    )
+  |
+    (
+      <SPELLCHECK> "(" { jjtThis.setOperationType(QueryConstants.OPERATION_SPELLCHECK); }
+        value = CharStringLiteral()
+          {
+            ASTLiteral stmt = new ASTLiteral(JJTLITERAL);
+            stmt.setType(QueryConstants.TYPE_STRING);
+            stmt.setValue(value);
+            jjtree.pushNode(stmt);
           } ")"
     )
   )
@@ -571,13 +589,18 @@ QName Identifier() :
 {
   Token t = null;
   QName name = null;
+  boolean pseudoProperty = false;
 }
 {
   (
-    t = <REGULAR_IDENTIFIER>
+    t = <REGULAR_IDENTIFIER> ( <LEFT_PAREN> <RIGHT_PAREN> { pseudoProperty = true; } ) ?
       {
         try {
-          jjtThis.setName(NameFormat.parse(t.image, resolver));
+          String jcrName = t.image;
+          if (pseudoProperty) {
+            jcrName += "()";
+          }
+          jjtThis.setName(NameFormat.parse(jcrName, resolver));
         } catch (NameException e) {
           throw new ParseException(e.getMessage());
         }

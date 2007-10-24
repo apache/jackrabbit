@@ -155,6 +155,11 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     static final QName REP_SIMILAR = new QName(QName.NS_REP_URI, "similar");
 
     /**
+     * QName for rep:spellcheck
+     */
+    static final QName REP_SPELLCHECK = new QName(QName.NS_REP_URI, "spellcheck");
+
+    /**
      * String constant for operator 'eq'
      */
     private static final String OP_EQ = "eq";
@@ -1007,6 +1012,33 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 } else {
                     exceptions.add(new InvalidQueryException(
                             "Wrong number of arguments for rep:similar()"));
+                }
+            } else if (NameFormat.format(REP_SPELLCHECK, resolver).equals(fName)
+                    && queryNode.getType() != QueryNode.TYPE_PATH) {
+                if (node.jjtGetNumChildren() == 2) {
+                    if (queryNode instanceof NAryQueryNode) {
+                        NAryQueryNode parent = (NAryQueryNode) queryNode;
+                        RelationQueryNode rel = factory.createRelationQueryNode(
+                                parent, RelationQueryNode.OPERATION_SPELLCHECK);
+                        parent.addOperand(rel);
+
+                        // get string to check
+                        node.jjtGetChild(1).jjtAccept(this, rel);
+                        // check if string is set
+                        if (rel.getStringValue() == null) {
+                            exceptions.add(new InvalidQueryException(
+                                    "Argument for rep:spellcheck() must be of type string"));
+                        }
+
+                        // set a dummy property name
+                        rel.addPathElement(Path.PathElement.create(QName.JCR_PRIMARYTYPE));
+                    } else {
+                        exceptions.add(new InvalidQueryException(
+                                "Unsupported location for rep:spellcheck()"));
+                    }
+                } else {
+                    exceptions.add(new InvalidQueryException(
+                            "Wrong number of arguments for rep:spellcheck()"));
                 }
             } else if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                 // use function name as name of a pseudo property in a relation

@@ -151,4 +151,11 @@ public interface QueryConstants {
      * SQL: SIMILAR(path_string)
      */
     int OPERATION_SIMILAR = OPERATION_NOT_NULL + 1;
+
+    /**
+     * spellcheck operation:
+     * XPath: rep:spellcheck(string_literal)
+     * SQL: SPELLCHECK(string_literal)
+     */
+    int OPERATION_SPELLCHECK = OPERATION_SIMILAR + 1;
 }
