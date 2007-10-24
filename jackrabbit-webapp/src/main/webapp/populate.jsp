@@ -166,6 +166,9 @@ ProgressBar.prototype.borderWidth = "2px";
                         for (Iterator fn = folderNames.iterator(); fn.hasNext(); ) {
                             String name = URLDecoder.decode((String) fn.next(), "UTF-8");
                             name = name.replaceAll(":", "_");
+                            if (name.length() == 0) {
+                                continue;
+                            }
                             if (!node.hasNode(name)) {
                                 node.addNode(name, "nt:folder");
                             }
@@ -380,10 +383,10 @@ from the Internet.</p>
         private void reportProgress(int r) throws IOException {
             if (r != -1) {
                 read += r;
-                if (read > nextReport || read == length * 2) {
+                if (read > nextReport || read == length) {
                     // report every 16k
                     synchronized (out) {
-                        double s = 500d * (double) read / (double) length;
+                        double s = 1000d * (double) read / (double) length;
                         out.println("<script>" + varName + ".inform(" +
                                 Math.min((int) Math.ceil(s), 1000) +
                                 ", '" + fileName + "')</script>");

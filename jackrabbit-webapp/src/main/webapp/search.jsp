@@ -32,7 +32,9 @@
                    java.text.DateFormat,
                    java.util.List,
                    java.util.ArrayList,
-                   java.util.Iterator"%>
+                   java.util.Iterator,
+                   javax.jcr.Value,
+                   javax.jcr.RepositoryException"%>
 <%@ page contentType="text/html;charset=UTF-8" %><%
     Repository rep;
     Session jcrSession;
@@ -64,6 +66,7 @@
         long currentPageIndex = 0;
         List indexes = new ArrayList();
         RowIterator rows = null;
+        String suggestedQuery = null;
         if (q != null && q.length() > 0) {
             String stmt;
             if (q.startsWith("related:")) {
@@ -108,6 +111,19 @@
             minPage = Math.max(0, currentPageIndex - 10);
             for (long i = minPage; i < maxPage; i++) {
                 indexes.add(new Long(i));
+            }
+
+            if (total < 10 && !q.startsWith("related:")) {
+                try {
+                    Value v = jcrSession.getWorkspace().getQueryManager().createQuery(
+                            "/jcr:root[rep:spellcheck('" + q + "')]/(rep:spellcheck())",
+                            Query.XPATH).execute().getRows().nextRow().getValue("rep:spellcheck()");
+                    if (v != null) {
+                        suggestedQuery = v.getString();
+                    }
+                } catch (RepositoryException e) {
+                    // ignore
+                }
             }
         }
 %><html>
@@ -200,6 +216,11 @@ body,td,div,.p,a{font-family:arial,sans-serif}
   <table border=0 cellpadding=0 cellspacing=0 width=100% class="t bt">
     <tr><td nowrap><span id=sd>&nbsp;Workspace: <%= wspName %>&nbsp;</span></td></tr>
   </table>
+  <%
+      if (suggestedQuery != null) {
+        %><p><font class="p" color="#cc0000">Did you mean: </font><a href="search.jsp?q=<%= suggestedQuery %>" class="p"><b><i><%= suggestedQuery %></i></b></a>&nbsp;&nbsp;<br></p><%
+      }
+  %>
   <p/>Your search - <b><%= q %></b> - did not match any documents.
   <br/><br/>Suggestions:
   <ul><li>Make sure all words are spelled correctly.</li><li>Try different keywords.</li><li>Try more general keywords.</li><li>Try fewer keywords.</li></ul>
@@ -209,7 +230,11 @@ body,td,div,.p,a{font-family:arial,sans-serif}
   <table border=0 cellpadding=0 cellspacing=0 width=100% class="t bt">
     <tr><td nowrap><span id=sd>&nbsp;Workspace: <%= wspName %>&nbsp;</span></td><td align=right nowrap><font size=-1>Results <b><%= from + 1 %></b> - <b><%= to %></b> of about <b><%= totalResults %></b> <%= queryTerms %>. (<b><%= executedIn %></b> seconds)&nbsp;</font></td></tr>
   </table>
-
+  <%
+      if (suggestedQuery != null) {
+        %><p><font class="p" color="#cc0000">Did you mean: </font><a href="search.jsp?q=<%= suggestedQuery %>" class="p"><b><i><%= suggestedQuery %></i></b></a>&nbsp;&nbsp;<br></p><%
+      }
+  %>
   <div id=res>
     <%
       while (rows.hasNext() && rows.getPosition() < to) {
