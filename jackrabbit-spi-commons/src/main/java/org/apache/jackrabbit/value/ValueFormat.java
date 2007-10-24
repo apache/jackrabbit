@@ -57,6 +57,10 @@ public class ValueFormat {
             }
         } else if (jcrValue.getType() == PropertyType.DATE) {
             return factory.create(jcrValue.getDate());
+        } else if (jcrValue.getType() == PropertyType.DOUBLE) {
+            return factory.create(jcrValue.getDouble());
+        } else if (jcrValue.getType() == PropertyType.LONG) {
+            return factory.create(jcrValue.getLong());
         } else {
             return getQValue(jcrValue.getString(), jcrValue.getType(), resolver, factory);
         }
@@ -146,8 +150,6 @@ public class ValueFormat {
         switch (propertyType) {
             case PropertyType.STRING:
             case PropertyType.BOOLEAN:
-            case PropertyType.DOUBLE:
-            case PropertyType.LONG:
             case PropertyType.REFERENCE:
                 jcrValue = factory.createValue(qualifiedValue.getString(), propertyType);
                 break;
@@ -164,6 +166,12 @@ public class ValueFormat {
                 break;
             case PropertyType.DATE:
                 jcrValue = factory.createValue(qualifiedValue.getCalendar());
+                break;
+            case PropertyType.DOUBLE:
+              jcrValue = factory.createValue(qualifiedValue.getDouble());
+              break;
+            case PropertyType.LONG:
+                jcrValue = factory.createValue(qualifiedValue.getLong());
                 break;
             default:
                 throw new RepositoryException("illegal internal value type");

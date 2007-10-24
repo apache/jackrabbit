@@ -83,20 +83,36 @@ public interface QValue {
     public InputStream getStream() throws RepositoryException;
 
     /**
-     * Returns a <code>Name</code> representation of this value.
-     *
-     * @return A <code>Name</code> representation of this value.
-     * @throws RepositoryException if an error occurs.
-     */
-    public Name getName() throws RepositoryException;
-
-    /**
      * Returns a <code>Calendar</code> representation of this value.
      *
      * @return A <code>Calendar</code> representation of this value.
      * @throws RepositoryException if an error occurs.
      */
     public Calendar getCalendar() throws RepositoryException;
+
+    /**
+     * Returns a <code>double</code> representation of this value.
+     *
+     * @return A <code>double</code> representation of this value.
+     * @throws RepositoryException if an error occurs.
+     */
+    public double getDouble() throws RepositoryException;
+
+    /**
+     * Returns a <code>long</code> representation of this value.
+     *
+     * @return A <code>long</code> representation of this value.
+     * @throws RepositoryException if an error occurs.
+     */
+    public long getLong() throws RepositoryException;
+
+    /**
+     * Returns a <code>Name</code> representation of this value.
+     *
+     * @return A <code>Name</code> representation of this value.
+     * @throws RepositoryException if an error occurs.
+     */
+    public Name getName() throws RepositoryException;
 
     /**
      * Returns a <code>Path</code> representation of this value.
