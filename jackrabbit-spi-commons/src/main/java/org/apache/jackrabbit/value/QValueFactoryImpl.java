@@ -106,6 +106,20 @@ public final class QValueFactoryImpl implements QValueFactory {
     }
 
     /**
+     * @see QValueFactory#create(double)
+     */
+    public QValue create(double value) {
+        return new QValueImpl(Double.valueOf(value));
+    }
+
+    /**
+     * @see QValueFactory#create(long)
+     */
+    public QValue create(long value) {
+        return new QValueImpl(Long.valueOf(value));
+    }
+
+    /**
      * @see QValueFactory#create(Name)
      */
     public QValue create(Name value) {
@@ -261,6 +275,28 @@ public final class QValueFactoryImpl implements QValueFactory {
                 return (Calendar) ((Calendar) val).clone();
             } else {
                 return ISO8601.parse(getString());
+            }
+        }
+
+        /**
+         * @see QValue#getDouble()
+         */
+        public double getDouble() throws RepositoryException {
+            if (type == PropertyType.DOUBLE) {
+                return ((Double) val).doubleValue();
+            } else {
+                return Double.parseDouble(getString());
+            }
+        }
+
+        /**
+         * @see QValue#getLong()
+         */
+        public long getLong() throws RepositoryException {
+            if (type == PropertyType.LONG) {
+                return ((Long) val).longValue();
+            } else {
+                return Long.parseLong(getString());
             }
         }
 
@@ -610,6 +646,20 @@ public final class QValueFactoryImpl implements QValueFactory {
          */
         public Calendar getCalendar() throws RepositoryException {
            throw new UnsupportedOperationException();
+        }
+
+        /**
+         * @see QValue#getDouble()
+         */
+        public double getDouble() throws RepositoryException {
+            return Double.parseDouble(getString());
+        }
+
+        /**
+         * @see QValue#getLong()
+         */
+        public long getLong() throws RepositoryException {
+            return Long.parseLong(getString());
         }
 
         /**

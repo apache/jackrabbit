@@ -51,6 +51,24 @@ public interface QValueFactory {
     public QValue create(Calendar value);
 
     /**
+     * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#DOUBLE}.
+     *
+     * @param value A <code>double</code> containing the value
+     * of the new <code>QValue</code>.
+     * @return a new <code>QValue</code>.
+     */
+    public QValue create(double value);
+
+    /**
+     * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#LONG}.
+     *
+     * @param value A <code>long</code> containing the value
+     * of the new <code>QValue</code>.
+     * @return a new <code>QValue</code>.
+     */
+    public QValue create(long value);
+
+    /**
      * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#NAME}.
      *
      * @param value A non-null <code>Name</code>.

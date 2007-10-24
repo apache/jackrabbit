@@ -463,11 +463,11 @@ class NumericConstraint extends ValueConstraint {
         }
         switch (value.getType()) {
             case PropertyType.LONG:
-                check(Long.parseLong(value.getString()));
+                check(value.getLong());
                 return;
 
             case PropertyType.DOUBLE:
-                check(Double.parseDouble(value.getString()));
+                check(value.getDouble());
                 return;
 
             case PropertyType.BINARY:
