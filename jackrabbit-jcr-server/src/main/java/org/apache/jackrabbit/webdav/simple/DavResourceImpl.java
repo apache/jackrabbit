@@ -28,7 +28,6 @@ import org.apache.jackrabbit.server.io.ImportContext;
 import org.apache.jackrabbit.server.io.ImportContextImpl;
 import org.apache.jackrabbit.server.io.PropertyExportContext;
 import org.apache.jackrabbit.server.io.PropertyImportContext;
-import org.apache.jackrabbit.server.io.PropertyManager;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
@@ -69,7 +68,6 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.lock.Lock;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -99,10 +97,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     protected boolean propsInitialized = false;
     private boolean isCollection = true;
 
-    private ItemFilter filter;
-    private IOManager ioManager;
-    private PropertyManager propManager;
-
+    private ResourceConfig config;
     private long modificationTime = IOUtil.UNDEFINED_TIME;
 
     /**
@@ -119,9 +114,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         this.session = (JcrDavSession)session;
         this.factory = factory;
         this.locator = locator;
-        this.filter = config.getItemFilter();
-        this.ioManager = config.getIOManager();
-        this.propManager = config.getPropertyManager();
+        this.config = config;
 
         if (locator != null && locator.getRepositoryPath() != null) {
             try {
@@ -178,9 +171,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         this.session = (JcrDavSession)session;
         this.factory = factory;
         this.locator = locator;
-        this.filter = config.getItemFilter();
-        this.ioManager = config.getIOManager();
-        this.propManager = config.getPropertyManager();
+        this.config = config;
 
         if (locator.getResourcePath() != null) {
             if (node != null) {
@@ -294,7 +285,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     public void spool(OutputContext outputContext) throws IOException {
         if (exists() && outputContext != null) {
             ExportContext exportCtx = getExportContext(outputContext);
-            if (!ioManager.exportContent(exportCtx, this)) {
+            if (!config.getIOManager().exportContent(exportCtx, this)) {
                 throw new IOException("Unexpected Error while spooling resource.");
             }
         }
@@ -332,7 +323,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         }
 
         try {
-            propManager.exportProperties(getPropertyExportContext(), isCollection());
+            config.getPropertyManager().exportProperties(getPropertyExportContext(), isCollection());
         } catch (RepositoryException e) {
             log.warn("Error while accessing resource properties", e);
         }
@@ -392,7 +383,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             List l = new ArrayList(1);
             l.add(prop);
             alterProperties(l);
-            Map failure = propManager.alterProperties(getPropertyImportContext(l), isCollection());
+            Map failure = config.getPropertyManager().alterProperties(getPropertyImportContext(l), isCollection());
             if (failure.isEmpty()) {
                 node.save();
             } else {
@@ -443,7 +434,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         }
         MultiStatusResponse msr = new MultiStatusResponse(getHref(), null);
         try {
-            Map failures = propManager.alterProperties(getPropertyImportContext(changeList), isCollection());
+            Map failures = config.getPropertyManager().alterProperties(getPropertyImportContext(changeList), isCollection());
             if (failures.isEmpty()) {
                 // save all changes together (reverted in case this fails)
                 node.save();
@@ -555,7 +546,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
 
             String memberName = Text.getName(member.getLocator().getRepositoryPath());
             ImportContext ctx = getImportContext(inputContext, memberName);
-            if (!ioManager.importContent(ctx, member)) {
+            if (!config.getIOManager().importContent(ctx, member)) {
                 // any changes should have been reverted in the importer
                 throw new DavException(DavServletResponse.SC_UNSUPPORTED_MEDIA_TYPE);
             }
@@ -833,7 +824,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @throws IOException
      */
     protected ImportContext getImportContext(InputContext inputCtx, String systemId) throws IOException {
-        return new ImportContextImpl(node, systemId, inputCtx);
+        return new ImportContextImpl(node, systemId, inputCtx, config.getMimeResolver());
     }
 
     /**
@@ -844,7 +835,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @throws IOException
      */
     protected ExportContext getExportContext(OutputContext outputCtx) throws IOException {
-        return new ExportContextImpl(node, outputCtx);
+        return new ExportContextImpl(node, outputCtx, config.getMimeResolver());
     }
 
     /**
@@ -918,10 +909,12 @@ public class DavResourceImpl implements DavResource, JcrConstants {
 
     private boolean isFilteredResource(DavResource resource) {
         // TODO: filtered nodetypes should be checked as well in order to prevent problems.
+        ItemFilter filter = config.getItemFilter();
         return filter != null && filter.isFilteredItem(resource.getDisplayName(), getJcrSession());
     }
 
     private boolean isFilteredItem(Item item) {
+        ItemFilter filter = config.getItemFilter();
         return filter != null && filter.isFilteredItem(item);
     }
 

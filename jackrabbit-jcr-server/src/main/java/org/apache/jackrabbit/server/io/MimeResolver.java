@@ -27,17 +27,18 @@ import java.util.Properties;
 public class MimeResolver {
 
     /**
-     * the loaded mime types
+     * the loaded mimetypes
      */
     private Properties mimeTypes = new Properties();
 
     /**
-     * the default mime type
+     * the default mimetype
      */
     private String defaultMimeType = "application/octet-stream";
 
     /**
-     * Creates a new mime resolver.
+     * Creates a new mimetype resolver containing the default mappings and having
+     * "application/octet-stream" set as default mimetype.
      */
     public MimeResolver() {
         try {
@@ -49,11 +50,34 @@ public class MimeResolver {
     }
 
     /**
+     * Creates a new mime type resolver extending the default mapping by the
+     * entries of the given Properties. The default mimetype is set to the
+     * given <code>defaultMimeType</code>.
+     *
+     * @param additionalProperties MimeType mappings to be added to the default
+     * properties.
+     * @param defaultMimeType The default mimetype. A non-null String with a
+     * length greater than 0.
+     */
+    public MimeResolver(Properties additionalProperties, String defaultMimeType) {
+        // init default mimetypes.
+        this();
+        // extend or adjust mapping.
+        if (additionalProperties != null && !additionalProperties.isEmpty()) {
+            mimeTypes.putAll(additionalProperties);
+        }
+        // set the default type.
+        if (defaultMimeType != null && defaultMimeType.length() > 0) {
+            this.defaultMimeType = defaultMimeType;
+        }
+    }
+
+    /**
      * Returns the default mime type
      * @return
      */
     public String getDefaultMimeType() {
-	return defaultMimeType;
+        return defaultMimeType;
     }
 
     /**
@@ -61,7 +85,7 @@ public class MimeResolver {
      * @param defaultMimeType
      */
     public void setDefaultMimeType(String defaultMimeType) {
-	this.defaultMimeType = defaultMimeType;
+        this.defaultMimeType = defaultMimeType;
     }
 
     /**
@@ -70,11 +94,10 @@ public class MimeResolver {
      * @return
      */
     public String getMimeType(String filename) {
-	String ext = Text.getName(filename, '.');
+        String ext = Text.getName(filename, '.');
         if (ext.equals("")) {
             ext = filename;
         }
-	return mimeTypes.getProperty(ext.toLowerCase(), defaultMimeType);
+        return mimeTypes.getProperty(ext.toLowerCase(), defaultMimeType);
     }
-
 }
