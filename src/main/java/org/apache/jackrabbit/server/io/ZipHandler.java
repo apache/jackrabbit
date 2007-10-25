@@ -153,7 +153,7 @@ public class ZipHandler extends DefaultHandler {
                 if (contentNode.hasProperty(JcrConstants.JCR_MIMETYPE)) {
                     mimeType  = contentNode.getProperty(JcrConstants.JCR_MIMETYPE).getString();
                 } else {
-                    mimeType = IOUtil.MIME_RESOLVER.getMimeType(context.getExportRoot().getName());
+                    mimeType = context.getMimeResolver().getMimeType(context.getExportRoot().getName());
                 }
             } catch (RepositoryException e) {
                 // ignore and return false
@@ -283,7 +283,7 @@ public class ZipHandler extends DefaultHandler {
         private final ZipEntry entry;
 
         private ZipEntryImportContext(ImportContext context, ZipEntry entry, BoundedInputStream bin, Node contentNode) throws IOException, RepositoryException {
-            super(contentNode, Text.getName(makeValidJCRPath(entry.getName(), true)), bin, context.getIOListener());
+            super(contentNode, Text.getName(makeValidJCRPath(entry.getName(), true)), bin, context.getIOListener(), context.getMimeResolver());
             this.entry = entry;
             String path = makeValidJCRPath(entry.getName(), true);
             importRoot = IOUtil.mkDirs(contentNode, Text.getRelativeParent(path, 1), getCollectionNodeType());
@@ -312,7 +312,7 @@ public class ZipHandler extends DefaultHandler {
         private OutputStream out;
 
         private ZipEntryExportContext(Item exportRoot, OutputStream out, ExportContext context, int pos) {
-            super(exportRoot, out != null, context.getIOListener());
+            super(exportRoot, out != null, context.getIOListener(), context.getMimeResolver());
             this.out = out;
             try {
                 String entryPath = (exportRoot.getPath().length() > pos) ? exportRoot.getPath().substring(pos) : "";

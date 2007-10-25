@@ -38,6 +38,7 @@ public class ImportContextImpl implements ImportContext {
     private final Item importRoot;
     private final String systemId;
     private final File inputFile;
+    private final MimeResolver mimeResolver;
 
     private InputContext inputCtx;
     private boolean completed;
@@ -51,10 +52,29 @@ public class ImportContextImpl implements ImportContext {
      * the import has been completed and it will not be used any more.
      *
      * @param importRoot the import root node
+     * @param systemId
      * @param inputCtx wrapped by this <code>ImportContext</code>
      */
     public ImportContextImpl(Item importRoot, String systemId, InputContext inputCtx) throws IOException {
-        this(importRoot, systemId, (inputCtx != null) ? inputCtx.getInputStream() : null, null);
+        this(importRoot, systemId, inputCtx, null);
+    }
+
+    /**
+     * Creates a new item import context with the given root item and the
+     * specified <code>InputContext</code>. If the input context provides an
+     * input stream, the stream is written to a temporary file in order to avoid
+     * problems with multiple IOHandlers that try to run the import but fail.
+     * The temporary file is deleted as soon as this context is informed that
+     * the import has been completed and it will not be used any more.
+     *
+     * @param importRoot the import root node
+     * @param systemId
+     * @param inputCtx wrapped by this <code>ImportContext</code>
+     * @param mimeResolver
+     */
+    public ImportContextImpl(Item importRoot, String systemId, InputContext inputCtx,
+                             MimeResolver mimeResolver) throws IOException {
+        this(importRoot, systemId, (inputCtx != null) ? inputCtx.getInputStream() : null, null, mimeResolver);
         this.inputCtx = inputCtx;
     }
 
@@ -72,11 +92,34 @@ public class ImportContextImpl implements ImportContext {
      * @throws IOException
      * @see ImportContext#informCompleted(boolean)
      */
-    public ImportContextImpl(Item importRoot, String systemId, InputStream in, IOListener ioListener) throws IOException {
+    public ImportContextImpl(Item importRoot, String systemId, InputStream in,
+                             IOListener ioListener) throws IOException {
+        this(importRoot, systemId, in, ioListener, null);
+    }
+
+    /**
+     * Creates a new item import context. The specified InputStream is written
+     * to a temporary file in order to avoid problems with multiple IOHandlers
+     * that try to run the import but fail. The temporary file is deleted as soon
+     * as this context is informed that the import has been completed and it
+     * will not be used any more.
+     *
+     * @param importRoot
+     * @param systemId
+     * @param in
+     * @param ioListener
+     * @param mimeResolver
+     * @throws IOException
+     * @see ImportContext#informCompleted(boolean)
+     */
+    public ImportContextImpl(Item importRoot, String systemId, InputStream in,
+                             IOListener ioListener, MimeResolver mimeResolver)
+            throws IOException {
         this.importRoot = importRoot;
         this.systemId = systemId;
         this.inputFile = IOUtil.getTempFile(in);
         this.ioListener = (ioListener != null) ? ioListener : new DefaultIOListener(log);
+        this.mimeResolver = (mimeResolver == null) ? IOUtil.MIME_RESOLVER : mimeResolver;
     }
 
     /**
@@ -91,6 +134,13 @@ public class ImportContextImpl implements ImportContext {
      */
     public Item getImportRoot() {
         return importRoot;
+    }
+
+    /**
+     * @see ImportContext#getImportRoot()
+     */
+    public MimeResolver getMimeResolver() {
+        return mimeResolver;
     }
 
     /**
@@ -174,7 +224,7 @@ public class ImportContextImpl implements ImportContext {
         if (contentType != null) {
             mimeType = IOUtil.getMimeType(contentType);
         } else if (getSystemId() != null) {
-            mimeType = IOUtil.MIME_RESOLVER.getMimeType(getSystemId());
+            mimeType = mimeResolver.getMimeType(getSystemId());
         }
         return mimeType;
     }

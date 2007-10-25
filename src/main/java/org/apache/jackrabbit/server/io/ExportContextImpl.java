@@ -54,7 +54,12 @@ public class ExportContextImpl extends AbstractExportContext {
     private OutputStream outStream;
 
     public ExportContextImpl(Item exportRoot, OutputContext outputCtx) throws IOException {
-        super(exportRoot, (outputCtx != null) ? outputCtx.hasStream() : false, null);
+        this(exportRoot, outputCtx, null);
+    }
+
+    public ExportContextImpl(Item exportRoot, OutputContext outputCtx,
+                             MimeResolver mimeResolver) throws IOException {
+        super(exportRoot, (outputCtx != null) ? outputCtx.hasStream() : false, null, mimeResolver);
         this.outputCtx = outputCtx;
         if (hasStream()) {
             // we need a tmp file, since the export could fail

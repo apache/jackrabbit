@@ -39,6 +39,13 @@ public interface ExportContext extends IOContext {
     public OutputStream getOutputStream();
 
     /**
+     * Return the <code>MimeResolver</code> defined for this export context.
+     *
+     * @return mimetype resolver defined for this export context.
+     */
+    public MimeResolver getMimeResolver();
+
+    /**
      * Set the content type for the resource content
      *
      * @param mimeType

@@ -22,6 +22,7 @@ import org.apache.jackrabbit.server.io.IOHandler;
 import org.apache.jackrabbit.server.io.PropertyManager;
 import org.apache.jackrabbit.server.io.PropertyHandler;
 import org.apache.jackrabbit.server.io.PropertyManagerImpl;
+import org.apache.jackrabbit.server.io.MimeResolver;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.slf4j.Logger;
@@ -38,6 +39,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.net.URL;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Properties;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -53,12 +55,13 @@ public class ResourceConfig {
     private PropertyManager propManager;
     private String[] nodetypeNames = new String[0];
     private boolean collectionNames = false;
+    private MimeResolver mimeResolver;
 
     /**
      * Tries to parse the given xml configuration file.
      * The xml must match the following structure:<br>
      * <pre>
-     * &lt;!ELEMENT config (iomanager, propertymanager, (collection | noncollection)?, filter?) &gt;
+     * &lt;!ELEMENT config (iomanager, propertymanager, (collection | noncollection)?, filter?, mimetypeproperties?) &gt;
      * &lt;!ELEMENT iomanager (class, iohandler*) &gt;
      * &lt;!ELEMENT iohandler (class) &gt;
      * &lt;!ELEMENT propertymanager (class, propertyhandler*) &gt;
@@ -75,6 +78,13 @@ public class ResourceConfig {
      * &lt;!ELEMENT uri (CDATA) &gt;
      * &lt;!ELEMENT nodetypes (nodetype)* &gt;
      * &lt;!ELEMENT nodetype (CDATA) &gt;
+     * &lt;!ELEMENT mimetypeproperties (mimemapping*, defaultmimetype) &gt;
+     * &lt;!ELEMENT mimemapping &gt;
+     *    &lt;!ATTLIST mimemapping
+     *      extension  CDATA #REQUIRED
+     *      mimetype  CDATA #REQUIRED
+     *    &gt;
+     * &lt;!ELEMENT defaultmimetype (CDATA) &gt;
      * </pre>
      *
      * @param configURL
@@ -91,6 +101,7 @@ public class ResourceConfig {
                 return;
             }
 
+            // iomanager config entry
             Element el = DomUtil.getChildElement(config, "iomanager", null);
             if (el != null) {
                 Object inst = buildClassFromConfig(el);
@@ -115,6 +126,7 @@ public class ResourceConfig {
                 log.warn("Resource configuration: 'iomanager' element is missing.");
             }
 
+            // propertymanager config entry
             el = DomUtil.getChildElement(config, "propertymanager", null);
             if (el != null) {
                 Object inst = buildClassFromConfig(el);
@@ -139,6 +151,7 @@ public class ResourceConfig {
                 log.debug("Resource configuration: 'propertymanager' element is missing.");
             }
 
+            // collection/non-collection config entry
             el = DomUtil.getChildElement(config, "collection", null);
             if (el != null) {
                 nodetypeNames = parseNodeTypesEntry(el);
@@ -149,6 +162,7 @@ public class ResourceConfig {
             }
             // todo: should check if both 'noncollection' and 'collection' are present and write a warning
 
+            // filter config entry
             el = DomUtil.getChildElement(config, "filter", null);
             if (el != null) {
                 Object inst = buildClassFromConfig(el);
@@ -162,6 +176,22 @@ public class ResourceConfig {
             } else {
                 log.debug("Resource configuration: no 'filter' element specified.");
             }
+
+            // optional mimetype properties
+            Properties properties = new Properties();
+            String defaultMimetype = null;
+            el = DomUtil.getChildElement(config, "mimetypeproperties", null);
+            if (el != null) {
+                defaultMimetype = DomUtil.getChildText(el, "defaultmimetype", null);
+                ElementIterator it = DomUtil.getChildren(el, "mimemapping", null);
+                while (it.hasNext()) {
+                    Element mimeMapping = it.nextElement();
+                    String extension = DomUtil.getAttribute(mimeMapping, "extension", null);
+                    String mimetype = DomUtil.getAttribute(mimeMapping, "mimetype", null);
+                    properties.put(extension, mimetype);
+                }
+            }
+            mimeResolver = new MimeResolver(properties, defaultMimetype);
         } catch (IOException e) {
             log.debug("Invalid resource configuration: " + e.getMessage());
         } catch (ParserConfigurationException e) {
@@ -298,5 +328,13 @@ public class ResourceConfig {
             itemFilter = new DefaultItemFilter();
         }
         return itemFilter;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public MimeResolver getMimeResolver() {
+        return mimeResolver;
     }
 }
