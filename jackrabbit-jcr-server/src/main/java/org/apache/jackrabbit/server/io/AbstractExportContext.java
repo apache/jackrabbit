@@ -32,13 +32,21 @@ public abstract class AbstractExportContext implements ExportContext {
     private final IOListener ioListener;
     private final Item exportRoot;
     private final boolean hasStream;
+    private final MimeResolver mimeResolver;
 
     protected boolean completed;
 
-    public AbstractExportContext(Item exportRoot, boolean hasStream, IOListener ioListener) {
+    public AbstractExportContext(Item exportRoot, boolean hasStream,
+                                 IOListener ioListener) {
+        this(exportRoot, hasStream, ioListener, null);
+    }
+
+    public AbstractExportContext(Item exportRoot, boolean hasStream,
+                                 IOListener ioListener, MimeResolver mimeResolver) {
         this.exportRoot = exportRoot;
         this.hasStream = hasStream;
         this.ioListener = (ioListener != null) ? ioListener : new DefaultIOListener(log);
+        this.mimeResolver = (mimeResolver != null) ? mimeResolver : IOUtil.MIME_RESOLVER;
     }
 
     public IOListener getIOListener() {
@@ -47,6 +55,10 @@ public abstract class AbstractExportContext implements ExportContext {
 
     public Item getExportRoot() {
         return exportRoot;
+    }
+
+    public MimeResolver getMimeResolver() {
+        return mimeResolver;
     }
 
     public boolean hasStream() {

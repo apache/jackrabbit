@@ -17,7 +17,7 @@
   -->
 <!--
 <!DOCTYPE config [
-        <!ELEMENT config (iomanager , propertymanager, (collection | noncollection)? , filter?) >
+        <!ELEMENT config (iomanager , propertymanager, (collection | noncollection)? , filter?, mimetypeproperties?) >
 
         <!ELEMENT iomanager (class, iohandler*) >
         <!ELEMENT iohandler (class) >
@@ -40,13 +40,23 @@
 
         <!ELEMENT nodetypes (nodetype)* >
         <!ELEMENT nodetype (CDATA) >
+
+        <!ELEMENT mimetypeproperties (mimemapping*, defaultmimetype) >
+
+        <!ELEMENT mimemapping >
+        <!ATTLIST mimemapping
+            extension  CDATA #REQUIRED
+            mimetype  CDATA #REQUIRED
+        >
+
+        <!ELEMENT defaultmimetype (CDATA) >
 ]>
 -->
 
 <config>
     <!--
-    Defines the IOManager implementation that is responsible for passing import/export
-    request to the individual IO-handlers.
+     Defines the IOManager implementation that is responsible for passing
+     import/export request to the individual IO-handlers.
     -->
     <iomanager>
         <!-- class element defines the manager to be used. The specified class
@@ -75,8 +85,8 @@
         </iohandler>
     </iomanager>
     <!--
-    Example config for iomanager that populates its list of handlers with
-    default values. Therefore the 'iohandler' elements are omited.
+     Example config for iomanager that populates its list of handlers with
+     default values. Therefore the 'iohandler' elements are omited.
     -->
     <!--
     <iomanager>
@@ -84,8 +94,8 @@
     </iomanager>
     -->
     <!--
-    Defines the PropertyManager implementation that is responsible for export
-    and import of resource properties.
+     Defines the PropertyManager implementation that is responsible for export
+     and import of resource properties.
     -->
     <propertymanager>
         <!-- class element defines the manager to be used. The specified class
@@ -114,7 +124,7 @@
         </propertyhandler>
     </propertymanager>
     <!--
-    Define nodetypes, that should never by displayed as 'collection'
+     Define nodetypes, that should never by displayed as 'collection'
     -->
     <noncollection>
         <nodetypes>
@@ -123,7 +133,7 @@
         </nodetypes>
     </noncollection>
     <!--
-    Example: Defines nodetypes, that should always be displayed as 'collection'.
+     Example: Defines nodetypes, that should always be displayed as 'collection'.
     -->
     <!--
     <collection>
@@ -146,20 +156,22 @@
         <!-- class element defines the resource filter to be used. The specified class
              must implement the ItemFilter interface -->
         <class name="org.apache.jackrabbit.webdav.simple.DefaultItemFilter" />
-        <!-- Nodetype names to be used to filter child nodes.
-             A child node can be filtered if the declaring nodetype of its definition
-             is one of the nodetype names specified in the nodetypes Element.
-             E.g. defining 'rep:root' as filtered nodetype whould result in jcr:system
-             being hidden but no other child node of the root node, since those
-             are defined by the nodetype nt:unstructered.
+        <!--
+         Nodetype names to be used to filter child nodes.
+         A child node can be filtered if the declaring nodetype of its definition
+         is one of the nodetype names specified in the nodetypes Element.
+         E.g. defining 'rep:root' as filtered nodetype whould result in jcr:system
+         being hidden but no other child node of the root node, since those
+         are defined by the nodetype nt:unstructered.
         -->
         <!--
         <nodetypes>
             <nodetype>rep:root</nodetype>
         </nodetypes>
         -->
-        <!-- Namespace prefixes or uris. Items having a name that matches any of the
-             entries will be filtered.
+        <!--
+         Namespace prefixes or uris. Items having a name that matches any of the
+         entries will be filtered.
         -->
         <namespaces>
             <prefix>rep</prefix>
@@ -170,5 +182,20 @@
             -->
         </namespaces>
     </filter>
+    
+    <!--
+     Optional 'mimetypeproperties' element.
+     It defines additional or replaces existing mappings for the MimeResolver
+     instance created by the ResourceConfig.
+     The default mappings are defined in org.apache.jackrabbit.server.io.mimetypes.properties.
+     If the default mime type defined by MimeResolver is 'application/octet-stream'.
+    -->
+    <!--
+    <mimetypeproperties>
+        <mimemapping extension="rtf" mimetype="application/rtf" />
+        <mimemapping extension="ott" mimetype="application/vnd.oasis.opendocument.text-template" />
+        <defaultmimetype>text/html</defaultmimetype>
+    </mimetypeproperties>
+    -->
 </config>
 

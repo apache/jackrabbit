@@ -33,6 +33,13 @@ public interface ImportContext extends IOContext {
     public Item getImportRoot();
 
     /**
+     * Return the <code>MimeResolver</code> defined for this import context.
+     *
+     * @return mimetype resolver defined for this import context.
+     */
+    public MimeResolver getMimeResolver();
+
+    /**
      * Returns the system id of the resource to be imported. This id depends on
      * the system the resource is comming from. it can be a filename, a
      * display name of a webdav resource, an URI, etc.
