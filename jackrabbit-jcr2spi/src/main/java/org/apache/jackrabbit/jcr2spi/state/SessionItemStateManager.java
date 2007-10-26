@@ -702,7 +702,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @return the computed values
      */
     private QValue[] computeSystemGeneratedPropertyValues(NodeState parent,
-                                                          QPropertyDefinition def) {
+                                                          QPropertyDefinition def) throws RepositoryException {
         QValue[] genValues = null;
         QValue[] qDefaultValues = def.getDefaultValues();
         if (qDefaultValues != null && qDefaultValues.length > 0) {
@@ -747,7 +747,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @param factory
      * @return An array of QValue objects from the given <code>Name</code>s
      */
-    private static QValue[] getQValues(Name[] qNames, QValueFactory factory) {
+    private static QValue[] getQValues(Name[] qNames, QValueFactory factory) throws RepositoryException {
         QValue[] ret = new QValue[qNames.length];
         for (int i = 0; i < qNames.length; i++) {
             ret[i] = factory.create(qNames[i]);
@@ -755,7 +755,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         return ret;
     }
 
-    private static QValue[] getQValues(String uniqueID, QValueFactory factory) {
+    private static QValue[] getQValues(String uniqueID, QValueFactory factory) throws RepositoryException {
         if (uniqueID == null) {
             uniqueID = UUID.randomUUID().toString();
         }
