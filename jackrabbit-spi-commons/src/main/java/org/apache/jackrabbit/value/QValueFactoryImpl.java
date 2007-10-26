@@ -109,14 +109,14 @@ public final class QValueFactoryImpl implements QValueFactory {
      * @see QValueFactory#create(double)
      */
     public QValue create(double value) {
-        return new QValueImpl(Double.valueOf(value));
+        return new QValueImpl(new Double(value));
     }
 
     /**
      * @see QValueFactory#create(long)
      */
     public QValue create(long value) {
-        return new QValueImpl(Long.valueOf(value));
+        return new QValueImpl(new Long(value));
     }
 
     /**
