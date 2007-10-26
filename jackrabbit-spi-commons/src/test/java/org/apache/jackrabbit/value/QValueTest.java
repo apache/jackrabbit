@@ -20,6 +20,8 @@ import junit.framework.TestCase;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.ValueFormatException;
+
 import java.util.Calendar;
 import java.util.Arrays;
 import java.io.InputStream;
@@ -55,7 +57,7 @@ public class QValueTest extends TestCase {
     private static final QValueFactory factory = QValueFactoryImpl.getInstance();
 
     //---------------------------------------------------------------< DATE >---
-    public void testNullDateValue() throws IOException {
+    public void testNullDateValue() throws IOException, RepositoryException {
         try {
             factory.create((Calendar) null);
             fail();
@@ -70,11 +72,11 @@ public class QValueTest extends TestCase {
         }
     }
 
-    public void testDateValueType() {
+    public void testDateValueType() throws RepositoryException {
         QValue v = factory.create(CALENDAR);
         assertTrue("Type of a date value must be PropertyType.DATE", v.getType() == PropertyType.DATE);
     }
-    public void testDateValueEquality() {
+    public void testDateValueEquality() throws RepositoryException {
         QValue v = factory.create(CALENDAR);
         QValue otherV = factory.create(CALENDAR);
         assertEquals("Equality of qualified date value must be calculated based on their String representation.", v, otherV);
@@ -93,7 +95,7 @@ public class QValueTest extends TestCase {
     }
 
     //----------------------------------------------------------< REFERENCE >---
-    public void testNullReferenceValue() throws IOException {
+    public void testNullReferenceValue() throws IOException, RepositoryException {
         try {
             factory.create(null, PropertyType.REFERENCE);
             fail();
@@ -102,18 +104,18 @@ public class QValueTest extends TestCase {
         }
     }
 
-    public void testReferenceValueType() {
+    public void testReferenceValueType() throws RepositoryException {
         QValue v = factory.create(REFERENCE, PropertyType.REFERENCE);
         assertTrue("Type of a date value must be PropertyType.REFERENCE.", v.getType() == PropertyType.REFERENCE);
     }
 
-    public void testReferenceValueEquality() {
+    public void testReferenceValueEquality() throws RepositoryException {
         QValue v = factory.create(REFERENCE, PropertyType.REFERENCE);
         QValue otherV = factory.create(REFERENCE, PropertyType.REFERENCE);
         assertEquals("Qualified ref values created from the same string must be equal.", v, otherV);
     }
 
-    public void testEqualityDifferentTypes() {
+    public void testEqualityDifferentTypes() throws RepositoryException {
         QValue v = factory.create(REFERENCE, PropertyType.REFERENCE);
         QValue v2 = factory.create(REFERENCE, PropertyType.STRING);
         assertFalse(v.equals(v2));
@@ -121,7 +123,7 @@ public class QValueTest extends TestCase {
 
 
     //---------------------------------------------------------------< Name >---
-    public void testNullQNameValue() throws IOException {
+    public void testNullQNameValue() throws IOException, RepositoryException {
         try {
             factory.create((Name) null);
             fail();
@@ -130,14 +132,14 @@ public class QValueTest extends TestCase {
         }
     }
 
-    public void testQNameValueType() throws IOException {
+    public void testQNameValueType() throws IOException, RepositoryException {
         QValue v = factory.create(NameConstants.JCR_DATA);
         assertTrue(v.getType() == PropertyType.NAME);
         v = factory.create(NameConstants.JCR_DATA.toString(), PropertyType.NAME);
         assertTrue(v.getType() == PropertyType.NAME);
     }
 
-    public void testQNameValueEquality() throws IOException {
+    public void testQNameValueEquality() throws IOException, RepositoryException {
         QValue v = factory.create(NameConstants.JCR_DATA);
         QValue v2 = factory.create(NameConstants.JCR_DATA.toString(), PropertyType.NAME);
         assertTrue(v.equals(v2));
@@ -149,7 +151,7 @@ public class QValueTest extends TestCase {
     }
 
     //--------------------------------------------------------------< QPath >---
-    public void testNullPathValue() throws IOException {
+    public void testNullPathValue() throws IOException, RepositoryException {
         try {
             factory.create((Path) null);
             fail();
@@ -158,7 +160,7 @@ public class QValueTest extends TestCase {
         }
     }
 
-    public void testPathValueType() throws IOException {
+    public void testPathValueType() throws IOException, RepositoryException {
         QValue v = factory.create(ROOT_PATH);
         assertTrue(v.getType() == PropertyType.PATH);
         v = factory.create(ROOT_PATH.toString(), PropertyType.PATH);
@@ -166,7 +168,7 @@ public class QValueTest extends TestCase {
     }
 
 
-    public void testPathValueEquality() throws IOException {
+    public void testPathValueEquality() throws IOException, RepositoryException {
         QValue v = factory.create(ROOT_PATH);
         QValue v2 = factory.create(ROOT_PATH.toString(), PropertyType.PATH);
         assertTrue(v.equals(v2));
@@ -199,7 +201,7 @@ public class QValueTest extends TestCase {
         }
     }
 
-    public void testBinaryValueType() throws IOException {
+    public void testBinaryValueType() throws IOException, RepositoryException {
         QValue v = factory.create(new byte[] {'a', 'b', 'c'});
         assertTrue(v.getType() == PropertyType.BINARY);
     }

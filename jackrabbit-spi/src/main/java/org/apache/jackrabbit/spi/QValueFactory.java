@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.util.Calendar;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.ValueFormatException;
 
 /**
  * <code>QValueFactory</code> defines methods to create <code>QValue</code>
@@ -39,7 +40,7 @@ public interface QValueFactory {
      * @return a new <code>QValue</code>.
      * @see QValue#getType()
      */
-    public QValue create(String value, int type);
+    public QValue create(String value, int type) throws ValueFormatException, RepositoryException;
 
     /**
      * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#DATE}.
@@ -48,7 +49,7 @@ public interface QValueFactory {
      * of the new <code>QValue</code>.
      * @return a new <code>QValue</code>.
      */
-    public QValue create(Calendar value);
+    public QValue create(Calendar value) throws RepositoryException;
 
     /**
      * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#DOUBLE}.
@@ -57,7 +58,7 @@ public interface QValueFactory {
      * of the new <code>QValue</code>.
      * @return a new <code>QValue</code>.
      */
-    public QValue create(double value);
+    public QValue create(double value) throws RepositoryException;
 
     /**
      * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#LONG}.
@@ -66,7 +67,7 @@ public interface QValueFactory {
      * of the new <code>QValue</code>.
      * @return a new <code>QValue</code>.
      */
-    public QValue create(long value);
+    public QValue create(long value) throws RepositoryException;
 
     /**
      * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#NAME}.
@@ -74,7 +75,7 @@ public interface QValueFactory {
      * @param value A non-null <code>Name</code>.
      * @return a new <code>QValue</code>.
      */
-    public QValue create(Name value);
+    public QValue create(Name value) throws RepositoryException;
 
     /**
      * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#PATH}.
@@ -82,7 +83,7 @@ public interface QValueFactory {
      * @param value A non-null <code>Path</code>.
      * @return a new <code>QValue</code>.
      */
-    public QValue create(Path value);
+    public QValue create(Path value) throws RepositoryException;
 
 
     /**
@@ -91,7 +92,7 @@ public interface QValueFactory {
      * @param value
      * @return a new <code>QValue</code>.
      */
-    public QValue create(byte[] value);
+    public QValue create(byte[] value) throws RepositoryException;
 
     /**
      * Creates a QValue that contains the given binary stream.
@@ -112,5 +113,5 @@ public interface QValueFactory {
      * @return a new binarly <code>QValue</code>.
      * @throws IOException
      */
-    public QValue create(File value) throws IOException;
+    public QValue create(File value) throws RepositoryException, IOException;
 }
