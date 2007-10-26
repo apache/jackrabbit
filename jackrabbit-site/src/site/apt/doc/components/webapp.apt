@@ -32,14 +32,26 @@ Jackrabbit Web Application
 
       * SimpleWebdavServlet.java
 
-        Adds webdav support (DAV 1,2) to your jackrabbit repository.
-  
       * JCRWebdavServerServlet.java
 
-        A servlet used to remove JSR170 calls via webDAV. 
+* Simple Webdav Server
+
+        Adds WebDAV support (DAV 1,2 and DeltaV) to your jackrabbit repository.
+
+        The servlet configuration goes along with a 
+        {{{https://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-webapp/src/main/webapp/WEB-INF/config.xml}config.xml}} 
+        that provides additional configuration options for the WebDAV resources
+        including import and export behaviour for both resources and their properties, 
+        mime type and nodetype mappings and simple item filters.
+
+* JCR Webdav Server
+
+        A servlet used to remote JSR170 calls via webDAV. 
 
         IMPORTANT: Please note, that this servlet is not intended to provide 
-        common webdav support to the repository. Instead the primary goal is to 
+        common WebDAV support to the repository. Instead the primary goal is to 
         remote JSR170 calls.
 
-        For the corresponding client see -> contrib/spi (work in progress).
+        For the corresponding JCR client see {{{jcr2spi.html} JCR to SPI}} and
+        the <SPI to WebDAV> contribution inside the 
+        {{{https://svn.apache.org/repos/asf/jackrabbit/sandbox/spi/spi2dav} Jackrabbit sandbox}}.

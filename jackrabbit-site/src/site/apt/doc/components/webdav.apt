@@ -21,22 +21,22 @@ Jackrabbit WebDAV Library
 
    This is the WebDAV Library component of the Apache Jackrabbit project.
    This component provides interfaces and common utility classes used for
-   building a WebDAV server or client. The following RFC have been integrated:
+   building a WebDAV server or client.
 
-     * RFC 2518 (WebDAV - HTTP Extensions for Distributed Authoring)
+   The following RFCs have been integrated:
 
-     * RFC 3253 (DeltaV - Versioning Extensions to WebDAV)
+     * {{{http://www.ietf.org/rfc/rfc2518.txt}RFC 2518}} (WebDAV - HTTP Extensions for Distributed Authoring)
 
-     * RFC 3648 (Ordered Collections Protocol)
+     * {{{http://www.ietf.org/rfc/rfc3253.txt}RFC 3253}} (DeltaV - Versioning Extensions to WebDAV)
 
-     * RFC 3744 (Access Control Protocol)
+     * {{{http://www.ietf.org/rfc/rfc3648.txt}RFC 3648}} (Ordered Collections Protocol)
 
-     * DAV Searching and Locating  (DASL)
+     * {{{http://www.ietf.org/rfc/rfc3744.txt}RFC 3744}} (Access Control Protocol)
+
+     * {{{http://greenbytes.de/tech/webdav/draft-reschke-webdav-search-latest.html}DAV Searching and Locating}} (DASL)
 
    In addition this library defines (unspecified)
 
      * Observation
 
      * Bundling multiple request with extensions to locking
-
-   See "TODO.txt" for the current status and open issues.

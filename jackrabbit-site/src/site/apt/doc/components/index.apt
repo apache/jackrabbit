@@ -42,7 +42,15 @@ Jackrabbit Components
 
      * {{{jca.html}Jackrabbit JCA Resource Adapter}}
 
+     * {{{spi.html}Jackrabbit SPI}}
+
+     * {{{spi-commons.html}Jackrabbit SPI Commons}}
+
+     * {{{jcr2spi.html}Jackrabbit JCR to SPI}}
+
+     * {{{spi2jcr.html}Jackrabbit SPI to JCR}}
+
    In addition there are a number of contributed components in the
-   <<<contrib>>> folder of the Jackrabbit trunk. These components are
+   <sandbox> folder of the Jackrabbit project. These components are
    not yet considered stable enough to be included in the official
    Apache Jackrabbit releases.

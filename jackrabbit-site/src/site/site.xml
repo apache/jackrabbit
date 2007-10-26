@@ -49,6 +49,10 @@
         <item name="Repository Classloader"     href="/doc/components/classloader.html"/>
         <item name="Web Application"            href="/doc/components/webapp.html"/>
         <item name="JCA Resource Adapter"       href="/doc/components/jca.html"/>
+        <item name="SPI"                        href="/doc/components/spi.html"/>
+        <item name="SPI Commons"                href="/doc/components/spi-commons.html"/>
+        <item name="JCR to SPI"                 href="/doc/components/jcr2spi.html"/>
+        <item name="SPI to JCR"                 href="/doc/components/spi2jcr.html"/>
       </item>
       <item name="Building Jackrabbit"        href="/doc/building.html" />
       <item name="First Hops"                 href="/doc/firststeps.html" />
