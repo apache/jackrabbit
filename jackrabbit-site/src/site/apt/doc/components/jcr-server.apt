@@ -22,50 +22,60 @@ Jackrabbit JCR Server
    This is the JCR Server component of the Apache Jackrabbit project.
    This component contains two WebDAV based JCR server implementations:
 
-     [[1]] WebDAV server ('simple')
+      * Simple Webdav Server
 
-           DAV1,2 compliant WebDAV server implementation to access a
-           JSR170 repository.
+      * JCR Webdav Server
+
+* Simple Webdav Server
+
+           DAV1,2 and DeltaV compliant WebDAV server implementation to 
+           access a JSR170 repository.
   
            Futher information such as configuration as well as the
-           SimpleWebdavServlet itself may be found in the 'webapp' project.
-  
-           Packages:
+           <SimpleWebdavServlet.java> itself can be found in the 
+           {{{webapp.html} Jackrabbit Webapp}} project.
 
-              * org.apache.jackrabbit.server - server
+             * Packages:
 
-              * org.apache.jackrabbit.server.io - import/export
+*----------+------------------------------------------------------------+
+| org.apache.jackrabbit.server     | Common server functionality        |
+*----------+------------------------------------------------------------+
+| org.apache.jackrabbit.server.io  | Import and export facilities       |
+*----------+------------------------------------------------------------+
+| org.apache.jackrabbit.webdav.simple | Server side WebDAV implementation (DavResource, ResourceConfig,...). |
+*----------+------------------------------------------------------------+
 
-              * org.apache.jackrabbit.webdav.simple
-                - dav-resource implementation + config
+             * Servlet:
 
-           Servlet (webapp project):
+*----------+------------------------------------------------------------+
+| org.apache.jackrabbit.j2ee.SimpleWebdavServlet.java | see {{{webapp.html} Jackrabbit Webapp}} |
+*----------+------------------------------------------------------------+
 
-             * org.apache.jackrabbit.j2ee.SimpleWebdavServlet.java 
-  
+* JCR Webdav Server
 
-     [[2]] 'jcr' server:
-
-           Server used to remove JSR170 calls via WebDAV.
-           No particular effort to be compliant to WebDAV related RFCs.
+           Server used to remote JSR170 calls via WebDAV.
    
-           The 'client' counterpart of this server is under development and
-           can be found within the <jackrabbit>/contrib/spi contribution.
+           The client counterpart of this server is represented by the
+           {{{jcr2spi.html} JCR to SPI}} project in combination with
+           the <SPI to WebDAV> SPI implementation that can be found in the
+           {{{https://svn.apache.org/repos/asf/jackrabbit/sandbox/spi/spi2dav} Jackrabbit sandbox}}.
    
-           Packages:
- 
-             * org.apache.jackrabbit.server - server
+             * Packages:
 
-             * org.apache.jackrabbit.server.jcr
-               - jcr-server specific server part
-             
-             * org.apache.jackrabbit.webdav.jcr
-               - dav-resources, reports, properties   
-   
-           Servlet (webapp project):
-           
-             * org.apache.jackrabbit.j2ee.JCRServerServlet.java
-           
+*----------+------------------------------------------------------------+
+| org.apache.jackrabbit.server     | Common server functionality        |
+*----------+------------------------------------------------------------+
+| org.apache.jackrabbit.server.jcr | JCR-Server  |
+*----------+------------------------------------------------------------+
+| org.apache.jackrabbit.webdav.jcr | Server side WebDAV implementation (DavResources, Reports, Properties) |
+*----------+------------------------------------------------------------+
+
+             * Servlet:
+
+*----------+------------------------------------------------------------+
+| org.apache.jackrabbit.j2ee.JCRServerServlet.java | see {{{webapp.html} Jackrabbit Webapp}} |
+*----------+------------------------------------------------------------+
+
            Further reading:
 
              * {{http://jackrabbit.apache.org/JCR_Webdav_Protocol.doc}}
