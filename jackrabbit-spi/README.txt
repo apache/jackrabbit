@@ -10,8 +10,6 @@ the transient space from the persistent layer. The main goals were:
 (1) Defined support of a client/server architecture
 A flat SPI-API lends itself to protocol mappings to protocols 
 like WebDAV, SOAP or others in a straightforward yet meaningful way.
-An SPI allows that a repository client and a repository server 
-can interact without explicitely specifying protocol mappings.
 
 (2) Implementation Support
 Drawing the boundaries between the repository client and the
