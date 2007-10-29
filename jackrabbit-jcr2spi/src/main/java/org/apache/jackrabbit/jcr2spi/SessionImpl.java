@@ -718,7 +718,7 @@ public class SessionImpl implements Session, ManagerProvider {
      * @see ManagerProvider#getJcrValueFactory()
      */
     public ValueFactory getJcrValueFactory() throws RepositoryException {
-        return config.getValueFactory();
+        return config.getValueFactory(getNamePathResolver());
     }
 
     //--------------------------------------------------------------------------

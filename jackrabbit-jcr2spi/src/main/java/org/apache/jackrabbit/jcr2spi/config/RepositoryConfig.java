@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.config;
 
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.RepositoryService;
 
 import javax.jcr.RepositoryException;
@@ -33,7 +34,7 @@ public interface RepositoryConfig {
 
     public RepositoryService getRepositoryService() throws RepositoryException;
 
-    public ValueFactory getValueFactory() throws RepositoryException;
+    public ValueFactory getValueFactory(NamePathResolver resolver) throws RepositoryException;
 
     public String getDefaultWorkspaceName();
 
