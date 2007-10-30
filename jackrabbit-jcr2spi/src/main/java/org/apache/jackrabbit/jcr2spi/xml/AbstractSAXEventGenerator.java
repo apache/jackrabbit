@@ -16,19 +16,18 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.namespace.SessionNamespaceResolver;
-import org.apache.jackrabbit.namespace.NamespaceResolver;
-import org.apache.jackrabbit.name.NameConstants;
-import org.apache.jackrabbit.name.NameFactoryImpl;
 import org.apache.jackrabbit.conversion.NameResolver;
 import org.apache.jackrabbit.conversion.ParsingNameResolver;
-
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.namespace.SessionNamespaceResolver;
+import org.apache.jackrabbit.spi.Name;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -36,7 +35,6 @@ import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-
 import java.util.HashMap;
 import java.util.Map;
 

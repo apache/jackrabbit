@@ -16,23 +16,23 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.jackrabbit.conversion.NameResolver;
 import org.apache.jackrabbit.namespace.NamespaceResolver;
-import org.xml.sax.helpers.DefaultHandler;
-import org.xml.sax.SAXException;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.util.TransientFileFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 import javax.jcr.RepositoryException;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
 
 /**
  * <code>TargetImportHandler</code> serves as the base class for the concrete
