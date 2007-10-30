@@ -32,6 +32,7 @@ import javax.jcr.ValueFormatException;
 import javax.jcr.PropertyType;
 import java.util.Calendar;
 import java.util.Arrays;
+import java.util.TimeZone;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.File;
@@ -56,6 +57,11 @@ public final class QValueFactoryImpl implements QValueFactory {
     private static final PathFactory PATH_FACTORY = PathFactoryImpl.getInstance();
     private static final NameFactory NAME_FACTORY = NameFactoryImpl.getInstance();
 
+    /**
+     * the default encoding
+     */
+    private static final String DEFAULT_ENCODING = "UTF-8";
+
     private QValueFactoryImpl() {
     }
 
@@ -67,30 +73,42 @@ public final class QValueFactoryImpl implements QValueFactory {
     /**
      * @see QValueFactory#create(String, int)
      */
-    public QValue create(String value, int type) {
+    public QValue create(String value, int type) throws RepositoryException {
         if (value == null) {
             throw new IllegalArgumentException("Cannot create QValue from null value.");
         }
-        switch (type) {
-            case PropertyType.BOOLEAN:
-                return new QValueImpl(Boolean.valueOf(value));
-            case PropertyType.DATE:
-                return new DateQValue(value);
-            case PropertyType.DOUBLE:
-                return new QValueImpl(Double.valueOf(value));
-            case PropertyType.LONG:
-                return new QValueImpl(Long.valueOf(value));
-            case PropertyType.PATH:
-                return new QValueImpl(PATH_FACTORY.create(value));
-            case PropertyType.NAME:
-                return new QValueImpl(NAME_FACTORY.create(value));
-            case PropertyType.STRING:
-            case PropertyType.REFERENCE:
-                return new QValueImpl(value, type);
-            case PropertyType.BINARY:
-                throw new IllegalArgumentException("this method does not support the type PropertyType.BINARY");
-            default:
-                throw new IllegalArgumentException("illegal type");
+        
+        try {
+            switch (type) {
+                case PropertyType.BOOLEAN:
+                    return new QValueImpl(Boolean.valueOf(value));
+                case PropertyType.DATE: {
+                        Calendar cal = ISO8601.parse(value);
+                        if (cal == null) {
+                            throw new ValueFormatException("not a valid date: " + value);
+                        }
+                        return new DateQValue(cal);
+                    }
+                case PropertyType.DOUBLE:
+                    return new QValueImpl(Double.valueOf(value));
+                case PropertyType.LONG:
+                    return new QValueImpl(Long.valueOf(value));
+                case PropertyType.PATH:
+                    return new QValueImpl(PATH_FACTORY.create(value));
+                case PropertyType.NAME:
+                    return new QValueImpl(NAME_FACTORY.create(value));
+                case PropertyType.STRING:
+                case PropertyType.REFERENCE:
+                    return new QValueImpl(value, type);
+                case PropertyType.BINARY:
+                    return new BinaryQValue(value.getBytes(DEFAULT_ENCODING));
+                default:
+                    throw new IllegalArgumentException("illegal type");
+            }
+        } catch (NumberFormatException ex) {
+            throw new ValueFormatException(ex);
+        } catch (UnsupportedEncodingException ex) {
+            throw new RepositoryException(ex);
         }
     }
 
@@ -176,10 +194,6 @@ public final class QValueFactoryImpl implements QValueFactory {
      * @see QValueFactoryImpl.BinaryQValue
      */
     private static class QValueImpl implements QValue, Serializable {
-        /**
-         * the default encoding
-         */
-        private static final String DEFAULT_ENCODING = "UTF-8";
 
         private final Object val;
         private final int type;
@@ -250,9 +264,9 @@ public final class QValueFactoryImpl implements QValueFactory {
         public InputStream getStream() throws RepositoryException {
             try {
                 // convert via string
-                return new ByteArrayInputStream(getString().getBytes(QValueImpl.DEFAULT_ENCODING));
+                return new ByteArrayInputStream(getString().getBytes(QValueFactoryImpl.DEFAULT_ENCODING));
             } catch (UnsupportedEncodingException e) {
-                throw new RepositoryException(QValueImpl.DEFAULT_ENCODING + " is not supported encoding on this platform", e);
+                throw new RepositoryException(QValueFactoryImpl.DEFAULT_ENCODING + " is not supported encoding on this platform", e);
             }
         }
 
@@ -273,8 +287,22 @@ public final class QValueFactoryImpl implements QValueFactory {
         public Calendar getCalendar() throws RepositoryException {
             if (type == PropertyType.DATE) {
                 return (Calendar) ((Calendar) val).clone();
+            } else if (type == PropertyType.DOUBLE) {
+                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00"));
+                cal.setTimeInMillis(((Double) val).longValue());
+                return cal;
+            } else if (type == PropertyType.LONG) {
+                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00"));
+                cal.setTimeInMillis(((Long) val).longValue());
+                return cal;
             } else {
-                return ISO8601.parse(getString());
+                Calendar cal = ISO8601.parse(getString());
+                if (cal == null) {
+                    throw new ValueFormatException("not a date string: " + getString());
+                }
+                else {
+                    return cal;
+                }
             }
         }
 
@@ -284,8 +312,14 @@ public final class QValueFactoryImpl implements QValueFactory {
         public double getDouble() throws RepositoryException {
             if (type == PropertyType.DOUBLE) {
                 return ((Double) val).doubleValue();
+            } else if (type == PropertyType.DATE) {
+                return ((Calendar) val).getTimeInMillis(); 
             } else {
-                return Double.parseDouble(getString());
+                try {
+                    return Double.parseDouble(getString());
+                } catch (NumberFormatException ex) {
+                    throw new ValueFormatException("not a double: " + getString(), ex);
+                }
             }
         }
 
@@ -295,8 +329,16 @@ public final class QValueFactoryImpl implements QValueFactory {
         public long getLong() throws RepositoryException {
             if (type == PropertyType.LONG) {
                 return ((Long) val).longValue();
+            } else if (type == PropertyType.DOUBLE) {
+                return ((Double) val).longValue();
+            } else if (type == PropertyType.DATE) {
+                return ((Calendar) val).getTimeInMillis(); 
             } else {
-                return Long.parseLong(getString());
+                try {
+                    return Long.parseLong(getString());
+                } catch (NumberFormatException ex) {
+                    throw new ValueFormatException("not a long: " + getString(), ex);
+                }
             }
         }
 
@@ -331,7 +373,6 @@ public final class QValueFactoryImpl implements QValueFactory {
         /**
          *
          * @param obj
-         * @return
          * @see Object#equals(Object)
          */
         public boolean equals(Object obj) {
@@ -361,11 +402,6 @@ public final class QValueFactoryImpl implements QValueFactory {
     private static class DateQValue extends QValueImpl {
 
         private final String formattedStr;
-
-        private DateQValue(String value) {
-            super(ISO8601.parse(value), PropertyType.DATE);
-            formattedStr = value;
-        }
 
         private DateQValue(Calendar value) {
             super(value, PropertyType.DATE);
@@ -599,9 +635,9 @@ public final class QValueFactoryImpl implements QValueFactory {
                 try {
                     spool(out);
                     byte[] data = out.toByteArray();
-                    text = new String(data, QValueImpl.DEFAULT_ENCODING);
+                    text = new String(data, QValueFactoryImpl.DEFAULT_ENCODING);
                 } catch (UnsupportedEncodingException e) {
-                    throw new RepositoryException(QValueImpl.DEFAULT_ENCODING
+                    throw new RepositoryException(QValueFactoryImpl.DEFAULT_ENCODING
                         + " not supported on this platform", e);
                 } catch (IOException e) {
                     throw new ValueFormatException("conversion from stream to string failed", e);
@@ -645,21 +681,34 @@ public final class QValueFactoryImpl implements QValueFactory {
          * @see QValue#getCalendar()
          */
         public Calendar getCalendar() throws RepositoryException {
-           throw new UnsupportedOperationException();
+             Calendar cal = ISO8601.parse(getString());
+             if (cal == null) {
+                 throw new ValueFormatException("not a date string: " + getString());
+             } else {
+                 return cal;
+             }
         }
 
         /**
          * @see QValue#getDouble()
          */
         public double getDouble() throws RepositoryException {
-            return Double.parseDouble(getString());
+            try {
+                return Double.parseDouble(getString());
+            } catch (NumberFormatException ex) {
+                throw new ValueFormatException(ex);
+            }
         }
 
         /**
          * @see QValue#getLong()
          */
         public long getLong() throws RepositoryException {
-            return Long.parseLong(getString());
+            try {
+                return Long.parseLong(getString());
+            } catch (NumberFormatException ex) {
+                throw new ValueFormatException(ex);
+            }
         }
 
         /**

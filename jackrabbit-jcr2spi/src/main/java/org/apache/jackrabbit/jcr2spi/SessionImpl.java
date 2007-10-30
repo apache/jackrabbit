@@ -51,6 +51,7 @@ import org.apache.jackrabbit.spi.XASessionInfo;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.conversion.NameException;
 import org.apache.jackrabbit.conversion.PathResolver;
@@ -124,6 +125,8 @@ public class SessionImpl implements Session, ManagerProvider {
     private final NamePathResolver npResolver;
     private final NodeTypeManagerImpl ntManager;
 
+    private final ValueFactory valueFactory;
+
     private final SessionItemStateManager itemStateManager;
     private final ItemManager itemManager;
     private final ItemStateValidator validator;
@@ -141,6 +144,9 @@ public class SessionImpl implements Session, ManagerProvider {
         // build local name-mapping
         nsMappings = new LocalNamespaceMappings(workspace.getNamespaceRegistryImpl());
         npResolver = new DefaultNamePathResolver(nsMappings, true);
+
+        // build ValueFactory
+        valueFactory = new ValueFactoryQImpl(config.getRepositoryService().getQValueFactory(), npResolver);
 
         // build nodetype manager
         ntManager = new NodeTypeManagerImpl(workspace.getNodeTypeRegistry(), this, getJcrValueFactory());
@@ -718,7 +724,7 @@ public class SessionImpl implements Session, ManagerProvider {
      * @see ManagerProvider#getJcrValueFactory()
      */
     public ValueFactory getJcrValueFactory() throws RepositoryException {
-        return config.getValueFactory(getNamePathResolver());
+        return valueFactory;
     }
 
     //--------------------------------------------------------------------------

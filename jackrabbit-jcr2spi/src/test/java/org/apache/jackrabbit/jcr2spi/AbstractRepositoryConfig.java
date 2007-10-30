@@ -18,13 +18,8 @@ package org.apache.jackrabbit.jcr2spi;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
-import org.apache.jackrabbit.value.ValueFactoryImplEx;
-
-import javax.jcr.ValueFactory;
-import javax.jcr.RepositoryException;
 
 /**
  * <code>AbstractRepositoryConfig</code>...
@@ -32,10 +27,6 @@ import javax.jcr.RepositoryException;
 public abstract class AbstractRepositoryConfig implements RepositoryConfig {
 
     private static Logger log = LoggerFactory.getLogger(AbstractRepositoryConfig.class);
-
-    public ValueFactory getValueFactory(NamePathResolver resolver) throws RepositoryException {
-        return ValueFactoryImplEx.getInstance();
-    }
 
     public String getDefaultWorkspaceName() {
         return null;

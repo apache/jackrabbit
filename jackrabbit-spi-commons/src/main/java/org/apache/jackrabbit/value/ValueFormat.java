@@ -48,8 +48,9 @@ public class ValueFormat {
                                    QValueFactory factory) throws RepositoryException {
         if (jcrValue == null) {
             throw new IllegalArgumentException("null value");
-        }
-        if (jcrValue.getType() == PropertyType.BINARY) {
+        } else if (jcrValue instanceof QValueValue) {
+            return ((QValueValue)jcrValue).getQValue();
+        } else if (jcrValue.getType() == PropertyType.BINARY) {
             try {
                 return factory.create(jcrValue.getStream());
             } catch (IOException e) {
@@ -145,37 +146,42 @@ public class ValueFormat {
     public static Value getJCRValue(QValue qualifiedValue,
                                     NamePathResolver resolver,
                                     ValueFactory factory) throws RepositoryException {
-        Value jcrValue;
-        int propertyType = qualifiedValue.getType();
-        switch (propertyType) {
-            case PropertyType.STRING:
-            case PropertyType.BOOLEAN:
-            case PropertyType.REFERENCE:
-                jcrValue = factory.createValue(qualifiedValue.getString(), propertyType);
-                break;
-            case PropertyType.PATH:
-                Path qPath = qualifiedValue.getPath();
-                jcrValue = factory.createValue(resolver.getJCRPath(qPath), propertyType);
-                break;
-            case PropertyType.NAME:
-                Name qName = qualifiedValue.getName();
-                jcrValue = factory.createValue(resolver.getJCRName(qName), propertyType);
-                break;
-            case PropertyType.BINARY:
-                jcrValue = factory.createValue(qualifiedValue.getStream());
-                break;
-            case PropertyType.DATE:
-                jcrValue = factory.createValue(qualifiedValue.getCalendar());
-                break;
-            case PropertyType.DOUBLE:
-              jcrValue = factory.createValue(qualifiedValue.getDouble());
-              break;
-            case PropertyType.LONG:
-                jcrValue = factory.createValue(qualifiedValue.getLong());
-                break;
-            default:
-                throw new RepositoryException("illegal internal value type");
+        if (factory instanceof ValueFactoryQImpl) {
+            return ((ValueFactoryQImpl)factory).createValue(qualifiedValue);
         }
-        return jcrValue;
+        else {
+            Value jcrValue;
+            int propertyType = qualifiedValue.getType();
+            switch (propertyType) {
+                case PropertyType.STRING:
+                case PropertyType.BOOLEAN:
+                case PropertyType.REFERENCE:
+                    jcrValue = factory.createValue(qualifiedValue.getString(), propertyType);
+                    break;
+                case PropertyType.PATH:
+                    Path qPath = qualifiedValue.getPath();
+                    jcrValue = factory.createValue(resolver.getJCRPath(qPath), propertyType);
+                    break;
+                case PropertyType.NAME:
+                    Name qName = qualifiedValue.getName();
+                    jcrValue = factory.createValue(resolver.getJCRName(qName), propertyType);
+                    break;
+                case PropertyType.BINARY:
+                    jcrValue = factory.createValue(qualifiedValue.getStream());
+                    break;
+                case PropertyType.DATE:
+                    jcrValue = factory.createValue(qualifiedValue.getCalendar());
+                    break;
+                case PropertyType.DOUBLE:
+                  jcrValue = factory.createValue(qualifiedValue.getDouble());
+                  break;
+                case PropertyType.LONG:
+                    jcrValue = factory.createValue(qualifiedValue.getLong());
+                    break;
+                default:
+                    throw new RepositoryException("illegal internal value type");
+            }
+            return jcrValue;
+        }
     }
 }
