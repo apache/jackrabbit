@@ -34,7 +34,8 @@ import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -976,7 +977,7 @@ public class SharedItemStateManager
      * @param parentId   parent UUID
      * @return new node state instance
      */
-    private NodeState createInstance(NodeId id, QName nodeTypeName,
+    private NodeState createInstance(NodeId id, Name nodeTypeName,
                                      NodeId parentId) {
 
         NodeState state = persistMgr.createNew(id);
@@ -1000,8 +1001,8 @@ public class SharedItemStateManager
                                           NodeTypeRegistry ntReg)
             throws ItemStateException {
 
-        NodeState rootState = createInstance(rootNodeId, QName.REP_ROOT, null);
-        NodeState jcrSystemState = createInstance(RepositoryImpl.SYSTEM_ROOT_NODE_ID, QName.REP_SYSTEM, rootNodeId);
+        NodeState rootState = createInstance(rootNodeId, NameConstants.REP_ROOT, null);
+        NodeState jcrSystemState = createInstance(RepositoryImpl.SYSTEM_ROOT_NODE_ID, NameConstants.REP_SYSTEM, rootNodeId);
 
         // FIXME need to manually setup root node by creating mandatory jcr:primaryType property
         // @todo delegate setup of root node to NodeTypeInstanceHandler
@@ -1014,10 +1015,10 @@ public class SharedItemStateManager
         NodeDefId jcrSystemDefId;
         try {
             nodeDefId = ntReg.getRootNodeDef().getId();
-            EffectiveNodeType ent = ntReg.getEffectiveNodeType(QName.REP_ROOT);
-            propDef = ent.getApplicablePropertyDef(QName.JCR_PRIMARYTYPE,
+            EffectiveNodeType ent = ntReg.getEffectiveNodeType(NameConstants.REP_ROOT);
+            propDef = ent.getApplicablePropertyDef(NameConstants.JCR_PRIMARYTYPE,
                     PropertyType.NAME, false);
-            jcrSystemDefId = ent.getApplicableChildNodeDef(QName.JCR_SYSTEM, QName.REP_SYSTEM, ntReg).getId();
+            jcrSystemDefId = ent.getApplicableChildNodeDef(NameConstants.JCR_SYSTEM, NameConstants.REP_SYSTEM, ntReg).getId();
         } catch (NoSuchNodeTypeException nsnte) {
             String msg = "internal error: failed to create root node";
             log.error(msg, nsnte);
@@ -1034,7 +1035,7 @@ public class SharedItemStateManager
         rootState.addPropertyName(propDef.getName());
 
         PropertyState prop = createInstance(propDef.getName(), rootNodeId);
-        prop.setValues(new InternalValue[]{InternalValue.create(QName.REP_ROOT)});
+        prop.setValues(new InternalValue[]{InternalValue.create(NameConstants.REP_ROOT)});
         prop.setType(propDef.getRequiredType());
         prop.setMultiValued(propDef.isMultiple());
         prop.setDefinitionId(propDef.getId());
@@ -1043,19 +1044,19 @@ public class SharedItemStateManager
         jcrSystemState.addPropertyName(propDef.getName());
 
         PropertyState primaryTypeProp = createInstance(propDef.getName(), jcrSystemState.getNodeId());
-        primaryTypeProp.setValues(new InternalValue[]{InternalValue.create(QName.REP_SYSTEM)});
+        primaryTypeProp.setValues(new InternalValue[]{InternalValue.create(NameConstants.REP_SYSTEM)});
         primaryTypeProp.setType(propDef.getRequiredType());
         primaryTypeProp.setMultiValued(propDef.isMultiple());
         primaryTypeProp.setDefinitionId(propDef.getId());
 
         // add child node entry for jcr:system node
-        rootState.addChildNodeEntry(QName.JCR_SYSTEM, RepositoryImpl.SYSTEM_ROOT_NODE_ID);
+        rootState.addChildNodeEntry(NameConstants.JCR_SYSTEM, RepositoryImpl.SYSTEM_ROOT_NODE_ID);
 
         // add child node entry for virtual jcr:versionStorage
-        jcrSystemState.addChildNodeEntry(QName.JCR_VERSIONSTORAGE, RepositoryImpl.VERSION_STORAGE_NODE_ID);
+        jcrSystemState.addChildNodeEntry(NameConstants.JCR_VERSIONSTORAGE, RepositoryImpl.VERSION_STORAGE_NODE_ID);
 
         // add child node entry for virtual jcr:nodeTypes
-        jcrSystemState.addChildNodeEntry(QName.JCR_NODETYPES, RepositoryImpl.NODETYPES_NODE_ID);
+        jcrSystemState.addChildNodeEntry(NameConstants.JCR_NODETYPES, RepositoryImpl.NODETYPES_NODE_ID);
 
 
         ChangeLog changeLog = new ChangeLog();
@@ -1136,7 +1137,7 @@ public class SharedItemStateManager
      * @param parentId parent Id
      * @return new property state instance
      */
-    private PropertyState createInstance(QName propName, NodeId parentId) {
+    private PropertyState createInstance(Name propName, NodeId parentId) {
         PropertyState state = persistMgr.createNew(new PropertyId(parentId, propName));
         state.setStatus(ItemState.STATUS_NEW);
         state.setContainer(this);
@@ -1173,20 +1174,20 @@ public class SharedItemStateManager
      */
     private boolean isReferenceable(NodeState state) throws ItemStateException {
         // shortcut: check some wellknown built-in types first
-        QName primary = state.getNodeTypeName();
+        Name primary = state.getNodeTypeName();
         Set mixins = state.getMixinTypeNames();
-        if (mixins.contains(QName.MIX_REFERENCEABLE)
-                || mixins.contains(QName.MIX_VERSIONABLE)
-                || primary.equals(QName.NT_RESOURCE)) {
+        if (mixins.contains(NameConstants.MIX_REFERENCEABLE)
+                || mixins.contains(NameConstants.MIX_VERSIONABLE)
+                || primary.equals(NameConstants.NT_RESOURCE)) {
             return true;
         }
         // build effective node type
-        QName[] types = new QName[mixins.size() + 1];
+        Name[] types = new Name[mixins.size() + 1];
         mixins.toArray(types);
         // primary type
         types[types.length - 1] = primary;
         try {
-            return ntReg.getEffectiveNodeType(types).includesNodeType(QName.MIX_REFERENCEABLE);
+            return ntReg.getEffectiveNodeType(types).includesNodeType(NameConstants.MIX_REFERENCEABLE);
         } catch (NodeTypeConflictException ntce) {
             String msg = "internal error: failed to build effective node type for node "
                     + state.getNodeId();

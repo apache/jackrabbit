@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameFactoryImpl;
 
 /**
  * Property identifier. An instance of this class identifies a single
@@ -32,7 +33,7 @@ public class PropertyId extends ItemId {
     private final NodeId parentId;
 
     /** Qualified name of the property. */
-    private final QName propName;
+    private final Name propName;
 
     /** the precalculated hash code */
     private final int hashCode;
@@ -43,7 +44,7 @@ public class PropertyId extends ItemId {
      * @param parentId the id of the parent node
      * @param propName qualified name of the property
      */
-    public PropertyId(NodeId parentId, QName propName) {
+    public PropertyId(NodeId parentId, Name propName) {
         if (parentId == null) {
             throw new IllegalArgumentException("parentId can not be null");
         }
@@ -84,7 +85,7 @@ public class PropertyId extends ItemId {
      *
      * @return qualified name
      */
-    public QName getName() {
+    public Name getName() {
         return propName;
     }
 
@@ -109,7 +110,7 @@ public class PropertyId extends ItemId {
             throw new IllegalArgumentException("invalid PropertyId literal");
         }
         String uuid = s.substring(0, i);
-        QName name = QName.valueOf(s.substring(i + 1));
+        Name name = NameFactoryImpl.getInstance().create(s.substring(i + 1));
 
         return new PropertyId(NodeId.valueOf(uuid), name);
     }

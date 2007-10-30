@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 /**
  * the base interface for nodes that were versioned and turned either into
@@ -29,6 +29,6 @@ public interface InternalFreeze extends InternalVersionItem {
      *
      * @return the name of the node.
      */
-    QName getName();
+    Name getName();
 
 }

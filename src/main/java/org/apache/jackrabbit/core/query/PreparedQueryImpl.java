@@ -20,8 +20,8 @@ import org.apache.jackrabbit.core.query.jsr283.PreparedQuery;
 import org.apache.jackrabbit.core.query.qom.QueryObjectModelTree;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.name.NameConstants;
 
 import javax.jcr.Value;
 import javax.jcr.RepositoryException;
@@ -73,11 +73,11 @@ public class PreparedQueryImpl extends QueryImpl implements PreparedQuery {
         this.node = node;
         this.handler = handler;
 
-        if (!node.isNodeType(session.getJCRName(QName.NT_QUERY))) {
+        if (!node.isNodeType(session.getJCRName(NameConstants.NT_QUERY))) {
             throw new InvalidQueryException("node is not of type nt:query");
         }
-        this.statement = node.getProperty(session.getJCRName(QName.JCR_STATEMENT)).getString();
-        this.language = node.getProperty(session.getJCRName(QName.JCR_LANGUAGE)).getString();
+        this.statement = node.getProperty(session.getJCRName(NameConstants.JCR_STATEMENT)).getString();
+        this.language = node.getProperty(session.getJCRName(NameConstants.JCR_LANGUAGE)).getString();
         setExecutableQuery(handler.createExecutablePreparedQuery(
                 session, itemMgr, createQOMTree(statement, language)));
         setInitialized();

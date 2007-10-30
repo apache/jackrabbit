@@ -16,9 +16,10 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.name.NameConstants;
 import org.apache.jackrabbit.core.NodeId;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -26,6 +27,7 @@ import org.xml.sax.SAXException;
 import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -47,7 +49,7 @@ class SysViewImportHandler extends TargetImportHandler {
     /**
      * fields used temporarily while processing sv:property and sv:value elements
      */
-    private QName currentPropName;
+    private Name currentPropName;
     private int currentPropType = PropertyType.UNDEFINED;
     // list of AppendableValue objects
     private ArrayList currentPropValues = new ArrayList();
@@ -57,7 +59,6 @@ class SysViewImportHandler extends TargetImportHandler {
      * Constructs a new <code>SysViewImportHandler</code>.
      *
      * @param importer
-     * @param nsContext
      */
     SysViewImportHandler(Importer importer) {
         super(importer);
@@ -68,10 +69,10 @@ class SysViewImportHandler extends TargetImportHandler {
         if (!start && !end) {
             return;
         }
-        QName[] mixinNames = null;
+        Name[] mixinNames = null;
         if (state.mixinNames != null) {
-            mixinNames = (QName[]) state.mixinNames.toArray(
-                    new QName[state.mixinNames.size()]);
+            mixinNames = (Name[]) state.mixinNames.toArray(
+                    new Name[state.mixinNames.size()]);
         }
         NodeId id = null;
         if (state.uuid != null) {
@@ -106,13 +107,13 @@ class SysViewImportHandler extends TargetImportHandler {
     public void startElement(String namespaceURI, String localName,
                              String qName, Attributes atts)
             throws SAXException {
-        QName name = new QName(namespaceURI, localName);
+        Name name = NameFactoryImpl.getInstance().create(namespaceURI, localName);
         // check element name
-        if (name.equals(QName.SV_NODE)) {
+        if (name.equals(NameConstants.SV_NODE)) {
             // sv:node element
 
             // node name (value of sv:name attribute)
-            String svName = getAttribute(atts, QName.SV_NAME);
+            String svName = getAttribute(atts, NameConstants.SV_NAME);
             if (name == null) {
                 throw new SAXException(new InvalidSerializedDataException(
                         "missing mandatory sv:name attribute of element sv:node"));
@@ -131,30 +132,34 @@ class SysViewImportHandler extends TargetImportHandler {
             // push new ImportState instance onto the stack
             ImportState state = new ImportState();
             try {
-                state.nodeName = NameFormat.parse(svName, nsContext);
+                state.nodeName = resolver.getQName(svName);
             } catch (NameException e) {
+                throw new SAXException(new InvalidSerializedDataException("illegal node name: " + name, e));
+            } catch (NamespaceException e) {
                 throw new SAXException(new InvalidSerializedDataException("illegal node name: " + name, e));
             }
             stack.push(state);
-        } else if (name.equals(QName.SV_PROPERTY)) {
+        } else if (name.equals(NameConstants.SV_PROPERTY)) {
             // sv:property element
 
             // reset temp fields
             currentPropValues.clear();
 
             // property name (value of sv:name attribute)
-            String svName = getAttribute(atts, QName.SV_NAME);
+            String svName = getAttribute(atts, NameConstants.SV_NAME);
             if (name == null) {
                 throw new SAXException(new InvalidSerializedDataException(
                         "missing mandatory sv:name attribute of element sv:property"));
             }
             try {
-                currentPropName = NameFormat.parse(svName, nsContext);
+                currentPropName = resolver.getQName(svName);
             } catch (NameException e) {
+                throw new SAXException(new InvalidSerializedDataException("illegal property name: " + name, e));
+            } catch (NamespaceException e) {
                 throw new SAXException(new InvalidSerializedDataException("illegal property name: " + name, e));
             }
             // property type (sv:type attribute)
-            String type = getAttribute(atts, QName.SV_TYPE);
+            String type = getAttribute(atts, NameConstants.SV_TYPE);
             if (type == null) {
                 throw new SAXException(new InvalidSerializedDataException(
                         "missing mandatory sv:type attribute of element sv:property"));
@@ -165,11 +170,11 @@ class SysViewImportHandler extends TargetImportHandler {
                 throw new SAXException(new InvalidSerializedDataException(
                         "Unknown property type: " + type, e));
             }
-        } else if (name.equals(QName.SV_VALUE)) {
+        } else if (name.equals(NameConstants.SV_VALUE)) {
             // sv:value element
 
             // reset temp fields
-            currentPropValue = new BufferedStringValue(nsContext);
+            currentPropValue = new BufferedStringValue(resolver);
         } else {
             throw new SAXException(new InvalidSerializedDataException(
                     "Unexpected element in system view xml document: " + name));
@@ -216,10 +221,10 @@ class SysViewImportHandler extends TargetImportHandler {
      */
     public void endElement(String namespaceURI, String localName, String qName)
             throws SAXException {
-        QName name = new QName(namespaceURI, localName);
+        Name name = NameFactoryImpl.getInstance().create(namespaceURI, localName);
         // check element name
         ImportState state = (ImportState) stack.peek();
-        if (name.equals(QName.SV_NODE)) {
+        if (name.equals(NameConstants.SV_NODE)) {
             // sv:node element
             if (!state.started) {
                 // need to start & end current node
@@ -231,23 +236,25 @@ class SysViewImportHandler extends TargetImportHandler {
             }
             // pop current state from stack
             stack.pop();
-        } else if (name.equals(QName.SV_PROPERTY)) {
+        } else if (name.equals(NameConstants.SV_PROPERTY)) {
             // sv:property element
 
             // check if all system properties (jcr:primaryType, jcr:uuid etc.)
             // have been collected and create node as necessary
-            if (currentPropName.equals(QName.JCR_PRIMARYTYPE)) {
+            if (currentPropName.equals(NameConstants.JCR_PRIMARYTYPE)) {
                 BufferedStringValue val = (BufferedStringValue) currentPropValues.get(0);
                 String s = null;
                 try {
                     s = val.retrieve();
-                    state.nodeTypeName = NameFormat.parse(s, nsContext);
+                    state.nodeTypeName = resolver.getQName(s);
                 } catch (IOException ioe) {
                     throw new SAXException("error while retrieving value", ioe);
                 } catch (NameException e) {
                     throw new SAXException(new InvalidSerializedDataException("illegal node type name: " + s, e));
+                } catch (NamespaceException e) {
+                    throw new SAXException(new InvalidSerializedDataException("illegal node type name: " + s, e));
                 }
-            } else if (currentPropName.equals(QName.JCR_MIXINTYPES)) {
+            } else if (currentPropName.equals(NameConstants.JCR_MIXINTYPES)) {
                 if (state.mixinNames == null) {
                     state.mixinNames = new ArrayList(currentPropValues.size());
                 }
@@ -257,15 +264,17 @@ class SysViewImportHandler extends TargetImportHandler {
                     String s = null;
                     try {
                         s = val.retrieve();
-                        QName mixin = NameFormat.parse(s, nsContext);
+                        Name mixin = resolver.getQName(s);
                         state.mixinNames.add(mixin);
                     } catch (IOException ioe) {
                         throw new SAXException("error while retrieving value", ioe);
                     } catch (NameException e) {
                         throw new SAXException(new InvalidSerializedDataException("illegal mixin type name: " + s, e));
+                    } catch (NamespaceException e) {
+                        throw new SAXException(new InvalidSerializedDataException("illegal mixin type name: " + s, e));
                     }
                 }
-            } else if (currentPropName.equals(QName.JCR_UUID)) {
+            } else if (currentPropName.equals(NameConstants.JCR_UUID)) {
                 BufferedStringValue val = (BufferedStringValue) currentPropValues.get(0);
                 try {
                     state.uuid = val.retrieve();
@@ -281,7 +290,7 @@ class SysViewImportHandler extends TargetImportHandler {
             }
             // reset temp fields
             currentPropValues.clear();
-        } else if (name.equals(QName.SV_VALUE)) {
+        } else if (name.equals(NameConstants.SV_VALUE)) {
             // sv:value element
             currentPropValues.add(currentPropValue);
             // reset temp fields
@@ -296,11 +305,11 @@ class SysViewImportHandler extends TargetImportHandler {
         /**
          * name of current node
          */
-        QName nodeName;
+        Name nodeName;
         /**
          * primary type of current node
          */
-        QName nodeTypeName;
+        Name nodeTypeName;
         /**
          * list of mixin types of current node
          */
@@ -331,7 +340,7 @@ class SysViewImportHandler extends TargetImportHandler {
      * @return attribute value,
      *         or <code>null</code> if the named attribute is not found
      */
-    private static String getAttribute(Attributes attributes, QName name) {
+    private static String getAttribute(Attributes attributes, Name name) {
         return attributes.getValue(name.getNamespaceURI(), name.getLocalName());
     }
 

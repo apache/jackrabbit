@@ -24,7 +24,7 @@ import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.PropertyType;
 import java.io.IOException;
@@ -62,7 +62,7 @@ public class SimpleExcerptProvider implements ExcerptProvider {
             String separator = "";
             for (Iterator it = nodeState.getPropertyNames().iterator();
                  it.hasNext() && text.length() < maxFragmentSize; ) {
-                PropertyId propId = new PropertyId(id, (QName) it.next());
+                PropertyId propId = new PropertyId(id, (Name) it.next());
                 PropertyState propState = (PropertyState) ism.getItemState(propId);
                 if (propState.getType() == PropertyType.STRING) {
                     text.append(separator);

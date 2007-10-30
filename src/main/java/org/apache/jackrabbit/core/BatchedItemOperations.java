@@ -35,10 +35,11 @@ import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -272,7 +273,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         NodeState srcState = getNodeState(srcStateMgr, srcHierMgr, srcPath);
 
-        Path.PathElement destName = destPath.getNameElement();
+        Path.Element destName = destPath.getNameElement();
         Path destParentPath = destPath.getAncestor(1);
         NodeState destParentState = getNodeState(destParentPath);
         int ind = destName.getIndex();
@@ -395,12 +396,12 @@ public class BatchedItemOperations extends ItemValidator {
             throw new RepositoryException(msg, mpe);
         }
 
-        Path.PathElement srcName = srcPath.getNameElement();
+        Path.Element srcName = srcPath.getNameElement();
         Path srcParentPath = srcPath.getAncestor(1);
         NodeState target = getNodeState(srcPath);
         NodeState srcParent = getNodeState(srcParentPath);
 
-        Path.PathElement destName = destPath.getNameElement();
+        Path.Element destName = destPath.getNameElement();
         Path destParentPath = destPath.getAncestor(1);
         NodeState destParent = getNodeState(destParentPath);
 
@@ -529,8 +530,8 @@ public class BatchedItemOperations extends ItemValidator {
      * @throws ItemExistsException
      * @throws RepositoryException
      */
-    public void checkAddNode(NodeState parentState, QName nodeName,
-                             QName nodeTypeName, int options)
+    public void checkAddNode(NodeState parentState, Name nodeName,
+                             Name nodeTypeName, int options)
             throws ConstraintViolationException, AccessDeniedException,
             VersionException, LockException, ItemNotFoundException,
             ItemExistsException, RepositoryException {
@@ -755,7 +756,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         if ((options & CHECK_REFERENCES) == CHECK_REFERENCES) {
             EffectiveNodeType ent = getEffectiveNodeType(targetState);
-            if (ent.includesNodeType(QName.MIX_REFERENCEABLE)) {
+            if (ent.includesNodeType(NameConstants.MIX_REFERENCEABLE)) {
                 NodeReferencesId refsId = new NodeReferencesId(targetState.getNodeId());
                 if (stateMgr.hasNodeReferences(refsId)) {
                     try {
@@ -870,8 +871,8 @@ public class BatchedItemOperations extends ItemValidator {
      *                                      could be found
      * @throws RepositoryException          if another error occurs
      */
-    public NodeDef findApplicableNodeDefinition(QName name,
-                                                QName nodeTypeName,
+    public NodeDef findApplicableNodeDefinition(Name name,
+                                                Name nodeTypeName,
                                                 NodeState parentState)
             throws RepositoryException, ConstraintViolationException {
         EffectiveNodeType entParent = getEffectiveNodeType(parentState);
@@ -898,7 +899,7 @@ public class BatchedItemOperations extends ItemValidator {
      *                                      could be found
      * @throws RepositoryException          if another error occurs
      */
-    public PropDef findApplicablePropertyDefinition(QName name,
+    public PropDef findApplicablePropertyDefinition(Name name,
                                                     int type,
                                                     boolean multiValued,
                                                     NodeState parentState)
@@ -910,7 +911,7 @@ public class BatchedItemOperations extends ItemValidator {
     /**
      * Helper method that finds the applicable definition for a property with
      * the given name, type in the parent node's node type and mixin types.
-     * Other than <code>{@link #findApplicablePropertyDefinition(QName, int, boolean, NodeState)}</code>
+     * Other than <code>{@link #findApplicablePropertyDefinition(Name, int, boolean, NodeState)}</code>
      * this method does not take the multiValued flag into account in the
      * selection algorithm. If there more than one applicable definitions then
      * the following rules are applied:
@@ -929,7 +930,7 @@ public class BatchedItemOperations extends ItemValidator {
      *                                      could be found
      * @throws RepositoryException          if another error occurs
      */
-    public PropDef findApplicablePropertyDefinition(QName name,
+    public PropDef findApplicablePropertyDefinition(Name name,
                                                     int type,
                                                     NodeState parentState)
             throws RepositoryException, ConstraintViolationException {
@@ -957,9 +958,9 @@ public class BatchedItemOperations extends ItemValidator {
      * @throws IllegalStateException        if the state mananger is not in edit mode
      */
     public NodeState createNodeState(NodeState parent,
-                                     QName nodeName,
-                                     QName nodeTypeName,
-                                     QName[] mixinNames,
+                                     Name nodeName,
+                                     Name nodeTypeName,
+                                     Name[] mixinNames,
                                      NodeId id)
             throws ItemExistsException, ConstraintViolationException,
             RepositoryException, IllegalStateException {
@@ -993,9 +994,9 @@ public class BatchedItemOperations extends ItemValidator {
      * @throws IllegalStateException
      */
     public NodeState createNodeState(NodeState parent,
-                                     QName nodeName,
-                                     QName nodeTypeName,
-                                     QName[] mixinNames,
+                                     Name nodeName,
+                                     Name nodeTypeName,
+                                     Name[] mixinNames,
                                      NodeId id,
                                      NodeDef def)
             throws ItemExistsException, ConstraintViolationException,
@@ -1040,7 +1041,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         if (!node.getMixinTypeNames().isEmpty()) {
             // create jcr:mixinTypes property
-            PropDef pd = ent.getApplicablePropertyDef(QName.JCR_MIXINTYPES,
+            PropDef pd = ent.getApplicablePropertyDef(NameConstants.JCR_MIXINTYPES,
                     PropertyType.NAME, true);
             createPropertyState(node, pd.getName(), pd.getRequiredType(), pd);
         }
@@ -1086,7 +1087,7 @@ public class BatchedItemOperations extends ItemValidator {
      * @throws IllegalStateException        if the state mananger is not in edit mode
      */
     public PropertyState createPropertyState(NodeState parent,
-                                             QName propName,
+                                             Name propName,
                                              int type,
                                              int numValues)
             throws ItemExistsException, ConstraintViolationException,
@@ -1135,7 +1136,7 @@ public class BatchedItemOperations extends ItemValidator {
      * @throws RepositoryException
      */
     public PropertyState createPropertyState(NodeState parent,
-                                             QName propName,
+                                             Name propName,
                                              int type,
                                              PropDef def)
             throws ItemExistsException, RepositoryException {
@@ -1296,7 +1297,7 @@ public class BatchedItemOperations extends ItemValidator {
          * this would have a negative impact on performance though...
          */
         NodeState nodeState = getNodeState(nodePath);
-        while (!nodeState.hasPropertyName(QName.JCR_ISCHECKEDOUT)) {
+        while (!nodeState.hasPropertyName(NameConstants.JCR_ISCHECKEDOUT)) {
             if (nodePath.denotesRoot()) {
                 return;
             }
@@ -1304,7 +1305,7 @@ public class BatchedItemOperations extends ItemValidator {
             nodeState = getNodeState(nodePath);
         }
         PropertyId propId =
-                new PropertyId(nodeState.getNodeId(), QName.JCR_ISCHECKEDOUT);
+                new PropertyId(nodeState.getNodeId(), NameConstants.JCR_ISCHECKEDOUT);
         PropertyState propState;
         try {
             propState = (PropertyState) stateMgr.getItemState(propId);
@@ -1428,45 +1429,45 @@ public class BatchedItemOperations extends ItemValidator {
          */
 
         // compute system generated values
-        QName declaringNT = def.getDeclaringNodeType();
-        QName name = def.getName();
-        if (QName.MIX_REFERENCEABLE.equals(declaringNT)) {
+        Name declaringNT = def.getDeclaringNodeType();
+        Name name = def.getName();
+        if (NameConstants.MIX_REFERENCEABLE.equals(declaringNT)) {
             // mix:referenceable node type
-            if (QName.JCR_UUID.equals(name)) {
+            if (NameConstants.JCR_UUID.equals(name)) {
                 // jcr:uuid property
                 genValues = new InternalValue[]{InternalValue.create(
                         parent.getNodeId().getUUID().toString())};
             }
-        } else if (QName.NT_BASE.equals(declaringNT)) {
+        } else if (NameConstants.NT_BASE.equals(declaringNT)) {
             // nt:base node type
-            if (QName.JCR_PRIMARYTYPE.equals(name)) {
+            if (NameConstants.JCR_PRIMARYTYPE.equals(name)) {
                 // jcr:primaryType property
                 genValues = new InternalValue[]{InternalValue.create(parent.getNodeTypeName())};
-            } else if (QName.JCR_MIXINTYPES.equals(name)) {
+            } else if (NameConstants.JCR_MIXINTYPES.equals(name)) {
                 // jcr:mixinTypes property
                 Set mixins = parent.getMixinTypeNames();
                 ArrayList values = new ArrayList(mixins.size());
                 Iterator iter = mixins.iterator();
                 while (iter.hasNext()) {
-                    values.add(InternalValue.create((QName) iter.next()));
+                    values.add(InternalValue.create((Name) iter.next()));
                 }
                 genValues = (InternalValue[]) values.toArray(new InternalValue[values.size()]);
             }
-        } else if (QName.NT_HIERARCHYNODE.equals(declaringNT)) {
+        } else if (NameConstants.NT_HIERARCHYNODE.equals(declaringNT)) {
             // nt:hierarchyNode node type
-            if (QName.JCR_CREATED.equals(name)) {
+            if (NameConstants.JCR_CREATED.equals(name)) {
                 // jcr:created property
                 genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
             }
-        } else if (QName.NT_RESOURCE.equals(declaringNT)) {
+        } else if (NameConstants.NT_RESOURCE.equals(declaringNT)) {
             // nt:resource node type
-            if (QName.JCR_LASTMODIFIED.equals(name)) {
+            if (NameConstants.JCR_LASTMODIFIED.equals(name)) {
                 // jcr:lastModified property
                 genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
             }
-        } else if (QName.NT_VERSION.equals(declaringNT)) {
+        } else if (NameConstants.NT_VERSION.equals(declaringNT)) {
             // nt:version node type
-            if (QName.JCR_CREATED.equals(name)) {
+            if (NameConstants.JCR_CREATED.equals(name)) {
                 // jcr:created property
                 genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
             }
@@ -1528,7 +1529,7 @@ public class BatchedItemOperations extends ItemValidator {
         // use temp set to avoid ConcurrentModificationException
         HashSet tmp = new HashSet(targetState.getPropertyNames());
         for (Iterator iter = tmp.iterator(); iter.hasNext();) {
-            QName propName = (QName) iter.next();
+            Name propName = (Name) iter.next();
             PropertyId propId =
                     new PropertyId(targetState.getNodeId(), propName);
             try {
@@ -1583,8 +1584,8 @@ public class BatchedItemOperations extends ItemValidator {
         try {
             NodeId id;
             EffectiveNodeType ent = getEffectiveNodeType(srcState);
-            boolean referenceable = ent.includesNodeType(QName.MIX_REFERENCEABLE);
-            boolean versionable = ent.includesNodeType(QName.MIX_VERSIONABLE);
+            boolean referenceable = ent.includesNodeType(NameConstants.MIX_REFERENCEABLE);
+            boolean versionable = ent.includesNodeType(NameConstants.MIX_VERSIONABLE);
             switch (flag) {
                 case COPY:
                     // always create new uuid
@@ -1673,7 +1674,7 @@ public class BatchedItemOperations extends ItemValidator {
             // copy properties
             iter = srcState.getPropertyNames().iterator();
             while (iter.hasNext()) {
-                QName propName = (QName) iter.next();
+                Name propName = (Name) iter.next();
                 PropertyId propId = new PropertyId(srcState.getNodeId(), propName);
                 if (!srcAccessMgr.isGranted(propId, AccessManager.READ)) {
                     continue;
@@ -1690,7 +1691,7 @@ public class BatchedItemOperations extends ItemValidator {
                  */
                 PropDefId defId = srcChildState.getDefinitionId();
                 PropDef def = ntReg.getPropDef(defId);
-                if (def.getDeclaringNodeType().equals(QName.MIX_LOCKABLE)) {
+                if (def.getDeclaringNodeType().equals(NameConstants.MIX_LOCKABLE)) {
                     // skip properties defined by mix:lockable
                     continue;
                 }
@@ -1704,19 +1705,19 @@ public class BatchedItemOperations extends ItemValidator {
                      * copied properties declared by mix:versionable need to be
                      * adjusted accordingly.
                      */
-                    if (propName.equals(QName.JCR_VERSIONHISTORY)) {
+                    if (propName.equals(NameConstants.JCR_VERSIONHISTORY)) {
                         // jcr:versionHistory
                         VersionHistory vh = getOrCreateVersionHistory(newState);
                         newChildState.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getUUID()))});
-                    } else if (propName.equals(QName.JCR_BASEVERSION)) {
+                    } else if (propName.equals(NameConstants.JCR_BASEVERSION)) {
                         // jcr:baseVersion
                         VersionHistory vh = getOrCreateVersionHistory(newState);
                         newChildState.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
-                    } else if (propName.equals(QName.JCR_PREDECESSORS)) {
+                    } else if (propName.equals(NameConstants.JCR_PREDECESSORS)) {
                         // jcr:predecessors
                         VersionHistory vh = getOrCreateVersionHistory(newState);
                         newChildState.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
-                    } else if (propName.equals(QName.JCR_ISCHECKEDOUT)) {
+                    } else if (propName.equals(NameConstants.JCR_ISCHECKEDOUT)) {
                         // jcr:isCheckedOut
                         newChildState.setValues(new InternalValue[]{InternalValue.create(true)});
                     }
@@ -1749,7 +1750,7 @@ public class BatchedItemOperations extends ItemValidator {
      */
     private PropertyState copyPropertyState(PropertyState srcState,
                                             NodeId parentId,
-                                            QName propName)
+                                            Name propName)
             throws RepositoryException {
 
         PropDefId defId = srcState.getDefinitionId();
@@ -1769,8 +1770,8 @@ public class BatchedItemOperations extends ItemValidator {
              *
              * todo FIXME delegate to 'node type instance handler'
              */
-            if (def.getDeclaringNodeType().equals(QName.MIX_REFERENCEABLE)
-                    && propName.equals(QName.JCR_UUID)) {
+            if (def.getDeclaringNodeType().equals(NameConstants.MIX_REFERENCEABLE)
+                    && propName.equals(NameConstants.JCR_UUID)) {
                 // set correct value of jcr:uuid property
                 newState.setValues(new InternalValue[]{InternalValue.create(parentId.getUUID().toString())});
             } else {

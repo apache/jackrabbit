@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.qom;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NamePathResolver;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 
 import org.apache.jackrabbit.core.query.jsr283.qom.FullTextSearch;
 
@@ -31,12 +31,12 @@ public class FullTextSearchImpl
     /**
      * Name of the selector against which to apply this constraint
      */
-    private final QName selectorName;
+    private final Name selectorName;
 
     /**
      * Name of the property.
      */
-    private final QName propertyName;
+    private final Name propertyName;
 
     /**
      * Full text search expression.
@@ -44,8 +44,8 @@ public class FullTextSearchImpl
     private final String fullTextSearchExpression;
 
     FullTextSearchImpl(NamePathResolver resolver,
-                       QName selectorName,
-                       QName propertyName,
+                       Name selectorName,
+                       Name propertyName,
                        String fullTextSearchExpression) {
         super(resolver);
         this.selectorName = selectorName;
@@ -58,7 +58,7 @@ public class FullTextSearchImpl
      *
      * @return the selector name; non-null
      */
-    public QName getSelectorQName() {
+    public Name getSelectorQName() {
         return selectorName;
     }
 
@@ -69,7 +69,7 @@ public class FullTextSearchImpl
      *         otherwise null if the full-text search scope is the node (or node
      *         subtree, in some implementations).
      */
-    public QName getPropertyQName() {
+    public Name getPropertyQName() {
         return propertyName;
     }
 

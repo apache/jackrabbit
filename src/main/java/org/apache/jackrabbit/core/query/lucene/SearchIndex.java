@@ -32,9 +32,9 @@ import org.apache.jackrabbit.core.state.NodeStateIterator;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.extractor.DefaultTextExtractor;
 import org.apache.jackrabbit.extractor.TextExtractor;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
 import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +55,7 @@ import org.xml.sax.SAXException;
 import org.w3c.dom.Element;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceException;
 import javax.jcr.query.InvalidQueryException;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
@@ -78,21 +79,21 @@ import java.util.Map;
 public class SearchIndex extends AbstractQueryHandler {
 
     public static final List VALID_SYSTEM_INDEX_NODE_TYPE_NAMES
-        = Collections.unmodifiableList(Arrays.asList(new QName[]{
-            QName.NT_CHILDNODEDEFINITION,
-            QName.NT_FROZENNODE,
-            QName.NT_NODETYPE,
-            QName.NT_PROPERTYDEFINITION,
-            QName.NT_VERSION,
-            QName.NT_VERSIONEDCHILD,
-            QName.NT_VERSIONHISTORY,
-            QName.NT_VERSIONLABELS,
-            QName.REP_NODETYPES,
-            QName.REP_SYSTEM,
-            QName.REP_VERSIONSTORAGE,
+        = Collections.unmodifiableList(Arrays.asList(new Name[]{
+            NameConstants.NT_CHILDNODEDEFINITION,
+            NameConstants.NT_FROZENNODE,
+            NameConstants.NT_NODETYPE,
+            NameConstants.NT_PROPERTYDEFINITION,
+            NameConstants.NT_VERSION,
+            NameConstants.NT_VERSIONEDCHILD,
+            NameConstants.NT_VERSIONHISTORY,
+            NameConstants.NT_VERSIONLABELS,
+            NameConstants.REP_NODETYPES,
+            NameConstants.REP_SYSTEM,
+            NameConstants.REP_VERSIONSTORAGE,
             // Supertypes
-            QName.NT_BASE,
-            QName.MIX_REFERENCEABLE
+            NameConstants.NT_BASE,
+            NameConstants.MIX_REFERENCEABLE
         }));
 
     private static final DefaultQueryNodeFactory DEFAULT_QUERY_NODE_FACTORY = new DefaultQueryNodeFactory(
@@ -170,6 +171,11 @@ public class SearchIndex extends AbstractQueryHandler {
      * The namespace mappings used internally.
      */
     private NamespaceMappings nsMappings;
+
+    /**
+     * The name and path resolver used internally.
+     */
+    private NamePathResolver npResolver;
 
     /**
      * The location of the search index.
@@ -394,7 +400,8 @@ public class SearchIndex extends AbstractQueryHandler {
                         context.getNamespaceRegistry());
             }
         }
-        
+        npResolver = NamePathResolverImpl.create(nsMappings);
+
         indexingConfig = createIndexingConfiguration(nsMappings);
         analyzer.setIndexingConfig(indexingConfig);
         
@@ -617,7 +624,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public QueryHits executeQuery(AbstractQueryImpl queryImpl,
                                   Query query,
-                                  QName[] orderProps,
+                                  Name[] orderProps,
                                   boolean[] orderSpecs) throws IOException {
         checkOpen();
         SortField[] sortFields = createSortFields(orderProps, orderSpecs);
@@ -785,12 +792,12 @@ public class SearchIndex extends AbstractQueryHandler {
      * @param orderSpecs the order specs for the properties.
      * @return an array of sort fields
      */
-    protected SortField[] createSortFields(QName[] orderProps,
+    protected SortField[] createSortFields(Name[] orderProps,
                                            boolean[] orderSpecs) {
         List sortFields = new ArrayList();
         for (int i = 0; i < orderProps.length; i++) {
             String prop = null;
-            if (QName.JCR_SCORE.equals(orderProps[i])) {
+            if (NameConstants.JCR_SCORE.equals(orderProps[i])) {
                 // order on jcr:score does not use the natural order as
                 // implemented in lucene. score ascending in lucene means that
                 // higher scores are first. JCR specs that lower score values
@@ -798,8 +805,8 @@ public class SearchIndex extends AbstractQueryHandler {
                 sortFields.add(new SortField(null, SortField.SCORE, orderSpecs[i]));
             } else {
                 try {
-                    prop = NameFormat.format(orderProps[i], getNamespaceMappings());
-                } catch (NoPrefixDeclaredException e) {
+                    prop = npResolver.getJCRName(orderProps[i]);
+                } catch (NamespaceException e) {
                     // will never happen
                 }
                 sortFields.add(new SortField(prop, SharedFieldSortComparator.PROPERTIES, !orderSpecs[i]));

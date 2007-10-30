@@ -27,15 +27,17 @@ import org.apache.jackrabbit.core.nodetype.PropDefImpl;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.util.DOMWalker;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceException;
 import javax.jcr.version.OnParentVersionAction;
 import java.io.IOException;
 import java.io.InputStream;
@@ -68,6 +70,9 @@ public class NodeTypeReader {
         } catch (NameException e) {
             throw new InvalidNodeTypeDefException(
                     "Invalid namespace reference in a node type definition", e);
+        } catch (NamespaceException e) {
+            throw new InvalidNodeTypeDefException(
+                    "Invalid namespace reference in a node type definition", e);
         }
     }
 
@@ -77,8 +82,8 @@ public class NodeTypeReader {
     /** The namespaces associated with the node type XML document. */
     private final Properties namespaces;
 
-    /** The namespace resolver. */
-    private final NamespaceResolver resolver;
+    /** The name, path resolver. */
+    private final NamePathResolver resolver;
 
     /**
      * Creates a node type definition file reader.
@@ -89,7 +94,8 @@ public class NodeTypeReader {
     public NodeTypeReader(InputStream xml) throws IOException {
         walker = new DOMWalker(xml);
         namespaces = walker.getNamespaces();
-        resolver = new AdditionalNamespaceResolver(namespaces);
+        NamespaceResolver nsResolver = new AdditionalNamespaceResolver(namespaces);
+        resolver = new DefaultNamePathResolver(nsResolver);
     }
 
     /**
@@ -110,7 +116,7 @@ public class NodeTypeReader {
      *                                     illegal name
      */
     public NodeTypeDef[] getNodeTypeDefs()
-            throws InvalidNodeTypeDefException, NameException {
+            throws InvalidNodeTypeDefException, NameException, NamespaceException {
         Vector defs = new Vector();
         while (walker.iterateElements(Constants.NODETYPE_ELEMENT)) {
             defs.add(getNodeTypeDef());
@@ -127,11 +133,11 @@ public class NodeTypeReader {
      *                                     illegal name
      */
     private NodeTypeDef getNodeTypeDef()
-            throws InvalidNodeTypeDefException, NameException {
+            throws InvalidNodeTypeDefException, NameException, NamespaceException {
         NodeTypeDef type = new NodeTypeDef();
 
-        type.setName(NameFormat.parse(
-                walker.getAttribute(Constants.NAME_ATTRIBUTE), resolver));
+        type.setName(resolver.getQName(
+                walker.getAttribute(Constants.NAME_ATTRIBUTE)));
         type.setMixin(Boolean.valueOf(
                 walker.getAttribute(Constants.ISMIXIN_ATTRIBUTE))
                 .booleanValue());
@@ -142,7 +148,7 @@ public class NodeTypeReader {
             walker.getAttribute(Constants.PRIMARYITEMNAME_ATTRIBUTE);
         if (primaryItemName != null && primaryItemName.length() > 0) {
             type.setPrimaryItemName(
-                    NameFormat.parse(primaryItemName, resolver));
+                    resolver.getQName(primaryItemName));
         }
 
         // supertype declarations
@@ -150,10 +156,10 @@ public class NodeTypeReader {
             Vector supertypes = new Vector();
             while (walker.iterateElements(Constants.SUPERTYPE_ELEMENT)) {
                 supertypes.add(
-                        NameFormat.parse(walker.getContent(), resolver));
+                        resolver.getQName(walker.getContent()));
             }
-            type.setSupertypes((QName[])
-                    supertypes.toArray(new QName[supertypes.size()]));
+            type.setSupertypes((Name[])
+                    supertypes.toArray(new Name[supertypes.size()]));
             walker.leaveElement();
         }
 
@@ -189,13 +195,13 @@ public class NodeTypeReader {
      *                                     illegal name
      */
     private PropDefImpl getPropDef()
-            throws InvalidNodeTypeDefException, NameException {
+            throws InvalidNodeTypeDefException, NameException, NamespaceException {
         PropDefImpl def = new PropDefImpl();
         String name = walker.getAttribute(Constants.NAME_ATTRIBUTE);
         if (name.equals("*")) {
             def.setName(ItemDef.ANY_NAME);
         } else {
-            def.setName(NameFormat.parse(name, resolver));
+            def.setName(resolver.getQName(name));
         }
 
         // simple attributes
@@ -266,13 +272,13 @@ public class NodeTypeReader {
      * @return child node definition
      * @throws NameException if the definition contains an illegal name
      */
-    private NodeDefImpl getChildNodeDef() throws NameException {
+    private NodeDefImpl getChildNodeDef() throws NameException, NamespaceException {
         NodeDefImpl def = new NodeDefImpl();
         String name = walker.getAttribute(Constants.NAME_ATTRIBUTE);
         if (name.equals("*")) {
             def.setName(ItemDef.ANY_NAME);
         } else {
-            def.setName(NameFormat.parse(name, resolver));
+            def.setName(resolver.getQName(name));
         }
 
         // simple attributes
@@ -295,17 +301,17 @@ public class NodeTypeReader {
         String type =
             walker.getAttribute(Constants.DEFAULTPRIMARYTYPE_ATTRIBUTE);
         if (type != null && type.length() > 0) {
-            def.setDefaultPrimaryType(NameFormat.parse(type, resolver));
+            def.setDefaultPrimaryType(resolver.getQName(type));
         }
 
         // required primary types
         if (walker.enterElement(Constants.REQUIREDPRIMARYTYPES_ELEMENT)) {
             Vector types = new Vector();
             while (walker.iterateElements(Constants.REQUIREDPRIMARYTYPE_ELEMENT)) {
-                types.add(NameFormat.parse(walker.getContent(), resolver));
+                types.add(resolver.getQName(walker.getContent()));
             }
             def.setRequiredPrimaryTypes(
-                    (QName[]) types.toArray(new QName[types.size()]));
+                    (Name[]) types.toArray(new Name[types.size()]));
             walker.leaveElement();
         } else {
             /* Default to nt:base?

@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.lock;
 
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;

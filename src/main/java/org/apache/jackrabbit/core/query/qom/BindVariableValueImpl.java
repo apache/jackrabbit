@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.qom;
 
-import org.apache.jackrabbit.name.NamePathResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.Name;
 
 import org.apache.jackrabbit.core.query.jsr283.qom.BindVariableValue;
 
@@ -31,9 +31,9 @@ public class BindVariableValueImpl
     /**
      * The name of the bind variable.
      */
-    private final QName variableName;
+    private final Name variableName;
 
-    BindVariableValueImpl(NamePathResolver resolver, QName variableName) {
+    BindVariableValueImpl(NamePathResolver resolver, Name variableName) {
         super(resolver);
         this.variableName = variableName;
     }
@@ -43,7 +43,7 @@ public class BindVariableValueImpl
      *
      * @return the bind variable name; non-null
      */
-    public QName getBindVariableQName() {
+    public Name getBindVariableQName() {
         return variableName;
     }
 

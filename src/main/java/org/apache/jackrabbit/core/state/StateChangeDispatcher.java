@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.state;
 
 import EDU.oswego.cs.dl.util.concurrent.CopyOnWriteArrayList;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -115,7 +115,7 @@ public class StateChangeDispatcher {
      * @param index index of new node
      * @param id    id of new node
      */
-    public void notifyNodeAdded(NodeState state, QName name, int index, NodeId id) {
+    public void notifyNodeAdded(NodeState state, Name name, int index, NodeId id) {
         Iterator iter = nsListeners.iterator();
         while (iter.hasNext()) {
             ((NodeStateListener) iter.next()).nodeAdded(state, name, index, id);
@@ -151,7 +151,7 @@ public class StateChangeDispatcher {
      * @param index index of new node
      * @param id    id of new node
      */
-    public void notifyNodeRemoved(NodeState state, QName name, int index, NodeId id) {
+    public void notifyNodeRemoved(NodeState state, Name name, int index, NodeId id) {
         Iterator iter = nsListeners.iterator();
         while (iter.hasNext()) {
             ((NodeStateListener) iter.next()).nodeRemoved(state, name, index, id);

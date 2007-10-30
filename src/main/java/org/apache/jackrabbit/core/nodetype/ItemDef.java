@@ -16,11 +16,12 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
 
 /**
  * <code>ItemDef</code> is the internal representation of
- * an item definition. It refers to <code>QName</code>s only
+ * an item definition. It refers to <code>Name</code>s only
  * and is thus isolated from session-specific namespace mappings.
  *
  * @see javax.jcr.nodetype.ItemDefinition
@@ -32,21 +33,21 @@ public interface ItemDef {
     /**
      * The special wildcard name used as the name of residual item definitions.
      */
-    QName ANY_NAME = new QName("", "*");
+    Name ANY_NAME = NameConstants.ANY_NAME;
 
     /**
      * Gets the name of the child item.
      *
      * @return the name of the child item.
      */
-    QName getName();
+    Name getName();
 
     /**
      * Gets the name of the declaring node type.
      *
      * @return the name of the declaring node type.
      */
-    QName getDeclaringNodeType();
+    Name getDeclaringNodeType();
 
     /**
      * Determines whether the item is 'autoCreated'.

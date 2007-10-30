@@ -20,7 +20,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistryListener;
 import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +52,7 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
     /** The NodeTypeRegistry */
     private final NodeTypeRegistry registry;
 
-    /** Property QName to TypeMapping[] mapping */
+    /** Property Name to TypeMapping[] mapping */
     private final Map typeMapping = new HashMap();
 
     /**
@@ -73,7 +73,7 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
      * @param propName the name of the property.
      * @return an array of <code>TypeMapping</code> instances.
      */
-    public TypeMapping[] getPropertyTypes(QName propName) {
+    public TypeMapping[] getPropertyTypes(Name propName) {
         synchronized (typeMapping) {
             TypeMapping[] types = (TypeMapping[]) typeMapping.get(propName);
             if (types != null) {
@@ -84,7 +84,7 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
         }
     }
 
-    public void nodeTypeRegistered(QName ntName) {
+    public void nodeTypeRegistered(Name ntName) {
         try {
             NodeTypeDef def = registry.getNodeTypeDef(ntName);
             PropDef[] propDefs = def.getPropertyDefs();
@@ -92,7 +92,7 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
                 for (int i = 0; i < propDefs.length; i++) {
                     int type = propDefs[i].getRequiredType();
                     if (!propDefs[i].definesResidual() && type != PropertyType.UNDEFINED) {
-                        QName name = propDefs[i].getName();
+                        Name name = propDefs[i].getName();
                         // only remember defined property types
                         TypeMapping[] types = (TypeMapping[]) typeMapping.get(name);
                         if (types == null) {
@@ -112,17 +112,17 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
         }
     }
 
-    public void nodeTypeReRegistered(QName ntName) {
+    public void nodeTypeReRegistered(Name ntName) {
         nodeTypeUnregistered(ntName);
         nodeTypeRegistered(ntName);
     }
 
-    public void nodeTypeUnregistered(QName ntName) {
+    public void nodeTypeUnregistered(Name ntName) {
         // remove all TypeMapping instances refering to this ntName
         synchronized (typeMapping) {
             Map modified = new HashMap();
             for (Iterator it = typeMapping.keySet().iterator(); it.hasNext();) {
-                QName propName = (QName) it.next();
+                Name propName = (Name) it.next();
                 TypeMapping[] mapping = (TypeMapping[]) typeMapping.get(propName);
                 List remove = null;
                 for (int i = 0; i < mapping.length; i++) {
@@ -156,7 +156,7 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
      * from the {@link org.apache.jackrabbit.core.nodetype.NodeTypeRegistry}.
      */
     private void fillCache() {
-        QName[] ntNames = registry.getRegisteredNodeTypes();
+        Name[] ntNames = registry.getRegisteredNodeTypes();
         for (int i = 0; i < ntNames.length; i++) {
             nodeTypeRegistered(ntNames[i]);
         }
@@ -167,13 +167,13 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
         /** The property type as an integer */
         public final int type;
 
-        /** The QName of the node type where this type mapping originated */
-        final QName ntName;
+        /** The Name of the node type where this type mapping originated */
+        final Name ntName;
 
         /** True if the property type is multi-valued */
         public final boolean isMultiValued;
 
-        private TypeMapping(QName ntName, int type, boolean isMultiValued) {
+        private TypeMapping(Name ntName, int type, boolean isMultiValued) {
             this.type = type;
             this.ntName = ntName;
             this.isMultiValued = isMultiValued;

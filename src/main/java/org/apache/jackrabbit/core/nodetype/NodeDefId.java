@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -63,7 +63,7 @@ public class NodeDefId implements Serializable {
 
         // required node type names, sorted in ascending order
         // format: "[name1, name2, name3]", see AbstractCollection#toString()
-        QName[] names = def.getRequiredPrimaryTypes();
+        Name[] names = def.getRequiredPrimaryTypes();
         Arrays.sort(names);
         sb.append('[');
         for (int i = 0; i < names.length; i++) {

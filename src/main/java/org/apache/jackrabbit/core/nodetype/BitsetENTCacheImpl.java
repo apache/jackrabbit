@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import java.util.TreeSet;
 import java.util.HashMap;
@@ -69,7 +69,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
     /**
      * The reverse lookup table for bit numbers to names
      */
-    private QName[] names = new QName[1024];
+    private Name[] names = new Name[1024];
 
     /**
      * Creates a new bitset effective node type cache
@@ -82,7 +82,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
     /**
      * {@inheritDoc}
      */
-    public Key getKey(QName[] ntNames) {
+    public Key getKey(Name[] ntNames) {
         return new BitsetKey(ntNames, nameIndex.size() + ntNames.length);
     }
 
@@ -122,7 +122,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
     /**
      * {@inheritDoc}
      */
-    public void invalidate(QName name) {
+    public void invalidate(Name name) {
         /**
          * remove all affected effective node types from aggregates cache
          * (copy keys first to prevent ConcurrentModificationException)
@@ -158,7 +158,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
      * @param name the name to lookup
      * @return the bit number for the given name
      */
-    private int getBitNumber(QName name) {
+    private int getBitNumber(Name name) {
         Integer i = (Integer) nameIndex.get(name);
         if (i == null) {
             synchronized (nameIndex) {
@@ -168,7 +168,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
                     i = new Integer(idx);
                     nameIndex.put(name, i);
                     if (idx >= names.length) {
-                        QName[] newNames = new QName[names.length*2];
+                        Name[] newNames = new Name[names.length*2];
                         System.arraycopy(names, 0, newNames, 0, names.length);
                         names = newNames;
                     }
@@ -184,7 +184,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
      * @param n the bit number to lookup
      * @return the node type name
      */
-    private QName getName(int n) {
+    private Name getName(int n) {
         return names[n];
     }
 
@@ -213,7 +213,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         BitsetENTCacheImpl clone = new BitsetENTCacheImpl();
         clone.sortedKeys.addAll(sortedKeys);
         clone.aggregates.putAll(aggregates);
-        clone.names = new QName[names.length];
+        clone.names = new Name[names.length];
         System.arraycopy(names, 0, clone.names, 0, names.length);
         clone.nameIndex.putAll(nameIndex);
         return clone;
@@ -246,7 +246,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         /**
          * The names of the node types that form this key.
          */
-        private final QName[] names;
+        private final Name[] names;
 
         /**
          * The array of longs that hold the bit information.
@@ -263,7 +263,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
          * @param names the node type names
          * @param maxBit the approximative number of the geatest bit
          */
-        public BitsetKey(QName[] names, int maxBit) {
+        public BitsetKey(Name[] names, int maxBit) {
             this.names = names;
             bits = new long[maxBit/BPW+1];
 
@@ -281,7 +281,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
          */
         private BitsetKey(long[] bits, int numBits) {
             this.bits = bits;
-            names = new QName[numBits];
+            names = new Name[numBits];
             int i = nextSetBit(0);
             int j=0;
             while (i >= 0) {
@@ -294,7 +294,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         /**
          * {@inheritDoc}
          */
-        public QName[] getNames() {
+        public Name[] getNames() {
             return names;
         }
 

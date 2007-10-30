@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
 
 import javax.jcr.PropertyType;
 import java.util.Arrays;
@@ -32,18 +33,20 @@ import java.util.TreeSet;
  */
 public class NodeTypeDef implements Cloneable {
 
-    private QName name;
+    private Name name;
 
     /**
      * Ordered array of supertype names. Empty if no supertypes have been
      * specified. Never <code>null</code>.
      */
-    private QName[] supertypes;
+    private Name[] supertypes;
 
     private boolean mixin;
     private boolean orderableChildNodes;
+    
     private boolean abstractStatus;
-    private QName primaryItemName;
+    private Name primaryItemName;
+
     private HashSet propDefs;
     private HashSet nodeDefs;
     private Set dependencies;
@@ -57,14 +60,14 @@ public class NodeTypeDef implements Cloneable {
         primaryItemName = null;
         nodeDefs = new HashSet();
         propDefs = new HashSet();
-        supertypes = QName.EMPTY_ARRAY;
+        supertypes = Name.EMPTY_ARRAY;
         mixin = false;
         orderableChildNodes = false;
         abstractStatus = false;
     }
 
     /**
-     * Returns a collection of node type <code>QName</code>s that are being
+     * Returns a collection of node type <code>Name</code>s that are being
      * referenced by <i>this</i> node type definition (e.g. as supertypes, as
      * required/default primary types in child node definitions, as REFERENCE
      * value constraints in property definitions).
@@ -73,7 +76,7 @@ public class NodeTypeDef implements Cloneable {
      * the declaring node type as the default primary type) are not considered
      * dependencies.
      *
-     * @return a collection of node type <code>QName</code>s
+     * @return a collection of node type <code>Name</code>s
      */
     public Collection getDependencies() {
         if (dependencies == null) {
@@ -84,12 +87,12 @@ public class NodeTypeDef implements Cloneable {
             for (Iterator iter = nodeDefs.iterator(); iter.hasNext();) {
                 NodeDef nd = (NodeDef) iter.next();
                 // default primary type
-                QName ntName = nd.getDefaultPrimaryType();
+                Name ntName = nd.getDefaultPrimaryType();
                 if (ntName != null && !name.equals(ntName)) {
                     dependencies.add(ntName);
                 }
                 // required primary type
-                QName[] ntNames = nd.getRequiredPrimaryTypes();
+                Name[] ntNames = nd.getRequiredPrimaryTypes();
                 for (int j = 0; j < ntNames.length; j++) {
                     if (ntNames[j] != null && !name.equals(ntNames[j])) {
                         dependencies.add(ntNames[j]);
@@ -126,7 +129,7 @@ public class NodeTypeDef implements Cloneable {
      *
      * @param name The name of the node type.
      */
-    public void setName(QName name) {
+    public void setName(Name name) {
         this.name = name;
     }
 
@@ -135,18 +138,18 @@ public class NodeTypeDef implements Cloneable {
      *
      * @param names the names of the supertypes.
      */
-    public void setSupertypes(QName[] names) {
+    public void setSupertypes(Name[] names) {
         resetDependencies();
         // Optimize common cases (zero or one supertypes)
         if (names.length == 0) {
-            supertypes = QName.EMPTY_ARRAY;
+            supertypes = Name.EMPTY_ARRAY;
         } else if (names.length == 1) {
-            supertypes = new QName[] { names[0] };
+            supertypes = new Name[] { names[0] };
         } else {
             // Sort and remove duplicates
             SortedSet types = new TreeSet();
             types.addAll(Arrays.asList(names));
-            supertypes = (QName[]) types.toArray(new QName[types.size()]);
+            supertypes = (Name[]) types.toArray(new Name[types.size()]);
         }
     }
 
@@ -183,7 +186,7 @@ public class NodeTypeDef implements Cloneable {
      *
      * @param primaryItemName The name of the primary item.
      */
-    public void setPrimaryItemName(QName primaryItemName) {
+    public void setPrimaryItemName(Name primaryItemName) {
         this.primaryItemName = primaryItemName;
     }
 
@@ -215,7 +218,7 @@ public class NodeTypeDef implements Cloneable {
      *
      * @return the name of the node type or <code>null</code> if not set.
      */
-    public QName getName() {
+    public Name getName() {
         return name;
     }
 
@@ -229,12 +232,12 @@ public class NodeTypeDef implements Cloneable {
      *
      * @return a sorted array of supertype names
      */
-    public QName[] getSupertypes() {
+    public Name[] getSupertypes() {
         if (supertypes.length > 0
-                || isMixin() || QName.NT_BASE.equals(getName())) {
+                || isMixin() || NameConstants.NT_BASE.equals(getName())) {
             return supertypes;
         } else {
-            return new QName[] { QName.NT_BASE };
+            return new Name[] { NameConstants.NT_BASE };
         }
     }
 
@@ -271,7 +274,7 @@ public class NodeTypeDef implements Cloneable {
      *
      * @return the name of the primary item or <code>null</code> if not set.
      */
-    public QName getPrimaryItemName() {
+    public Name getPrimaryItemName() {
         return primaryItemName;
     }
 

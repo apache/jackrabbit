@@ -39,7 +39,8 @@ import org.apache.jackrabbit.core.state.XAItemStateManager;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -112,7 +113,7 @@ public class XAVersionManager extends AbstractVersionManager
         } catch (ItemStateException e) {
             throw new RepositoryException("Unable to retrieve history root", e);
         }
-        this.historyRoot = new NodeStateEx(stateMgr, ntReg, state, QName.JCR_VERSIONSTORAGE);
+        this.historyRoot = new NodeStateEx(stateMgr, ntReg, state, NameConstants.JCR_VERSIONSTORAGE);
     }
 
     //------------------------------------------< EventStateCollectionFactory >
@@ -153,7 +154,7 @@ public class XAVersionManager extends AbstractVersionManager
      */
     public Version checkin(NodeImpl node) throws RepositoryException {
         if (isInXA()) {
-            String histUUID = node.getProperty(QName.JCR_VERSIONHISTORY).getString();
+            String histUUID = node.getProperty(NameConstants.JCR_VERSIONHISTORY).getString();
             InternalVersion version = checkin((InternalVersionHistoryImpl)
                     getVersionHistory(NodeId.valueOf(histUUID)), node);
             return (Version) ((SessionImpl) node.getSession()).getNodeById(version.getId());
@@ -164,7 +165,7 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * {@inheritDoc}
      */
-    public void removeVersion(VersionHistory history, QName versionName)
+    public void removeVersion(VersionHistory history, Name versionName)
             throws RepositoryException {
 
         if (isInXA()) {
@@ -179,8 +180,8 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * {@inheritDoc}
      */
-    public Version setVersionLabel(VersionHistory history, QName version,
-                                   QName label, boolean move)
+    public Version setVersionLabel(VersionHistory history, Name version,
+                                   Name label, boolean move)
             throws RepositoryException {
 
         if (isInXA()) {
@@ -223,7 +224,7 @@ public class XAVersionManager extends AbstractVersionManager
      * {@inheritDoc}
      */
     public VirtualPropertyState createPropertyState(VirtualNodeState parent,
-                                                    QName name, int type,
+                                                    Name name, int type,
                                                     boolean multiValued)
             throws RepositoryException {
 
@@ -233,8 +234,8 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * {@inheritDoc}
      */
-    public VirtualNodeState createNodeState(VirtualNodeState parent, QName name,
-                                            NodeId id, QName nodeTypeName)
+    public VirtualNodeState createNodeState(VirtualNodeState parent, Name name,
+                                            NodeId id, Name nodeTypeName)
             throws RepositoryException {
 
         throw new IllegalStateException("Read-only");
@@ -373,7 +374,7 @@ public class XAVersionManager extends AbstractVersionManager
      * <p/>
      * Before modifying version history given, make a local copy of it.
      */
-    protected void removeVersion(InternalVersionHistoryImpl history, QName name)
+    protected void removeVersion(InternalVersionHistoryImpl history, Name name)
             throws VersionException, RepositoryException {
 
         if (history.getVersionManager() != this) {
@@ -399,7 +400,7 @@ public class XAVersionManager extends AbstractVersionManager
      * Before modifying version history given, make a local copy of it.
      */
     protected InternalVersion setVersionLabel(InternalVersionHistoryImpl history,
-                                              QName version, QName label,
+                                              Name version, Name label,
                                               boolean move)
             throws RepositoryException {
 

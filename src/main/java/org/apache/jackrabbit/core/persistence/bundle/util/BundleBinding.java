@@ -27,8 +27,9 @@ import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.name.NameFactoryImpl;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -89,7 +90,7 @@ public class BundleBinding extends ItemStateBinding {
         index &= 0x00ffffff;
         String uri = nsIndex.indexToString(index);
         String local = nameIndex.indexToString(in.readInt());
-        QName nodeTypeName = new QName(uri, local);
+        Name nodeTypeName = NameFactoryImpl.getInstance().create(uri, local);
 
         // primaryType
         bundle.setNodeTypeName(nodeTypeName);
@@ -102,7 +103,7 @@ public class BundleBinding extends ItemStateBinding {
 
         // mixin types
         Set mixinTypeNames = new HashSet();
-        QName name = readIndexedQName(in);
+        Name name = readIndexedQName(in);
         while (name != null) {
             mixinTypeNames.add(name);
             name = readIndexedQName(in);
@@ -154,7 +155,7 @@ public class BundleBinding extends ItemStateBinding {
             index &= 0x00ffffff;
             String uri = nsIndex.indexToString(index);
             String local = nameIndex.indexToString(in.readInt());
-            QName nodeTypeName = new QName(uri, local);
+            Name nodeTypeName = NameFactoryImpl.getInstance().create(uri, local);
 
             log.info("Serialzation Version: " + version);
             log.info("NodeTypeName: " + nodeTypeName);
@@ -177,7 +178,7 @@ public class BundleBinding extends ItemStateBinding {
             return false;
         }
         try {
-            QName mixinName = readIndexedQName(in);
+            Name mixinName = readIndexedQName(in);
             while (mixinName != null) {
                 log.info("MixinTypeName: " + mixinName);
                 mixinName = readIndexedQName(in);
@@ -187,7 +188,7 @@ public class BundleBinding extends ItemStateBinding {
             return false;
         }
         try {
-            QName propName = readIndexedQName(in);
+            Name propName = readIndexedQName(in);
             while (propName != null) {
                 log.info("PropertyName: " + propName);
                 if (!checkPropertyState(in)) {
@@ -209,7 +210,7 @@ public class BundleBinding extends ItemStateBinding {
         try {
             UUID cneUUID = readUUID(in);
             while (cneUUID != null) {
-                QName cneName = readQName(in);
+                Name cneName = readQName(in);
                 log.info("ChildNodentry: " + cneUUID + ":" + cneName);
                 cneUUID = readUUID(in);
             }
@@ -255,14 +256,14 @@ public class BundleBinding extends ItemStateBinding {
         // mixin types
         Iterator iter = bundle.getMixinTypeNames().iterator();
         while (iter.hasNext()) {
-            writeIndexedQName(out, (QName) iter.next());
+            writeIndexedQName(out, (Name) iter.next());
         }
         writeIndexedQName(out, null);
 
         // properties
         iter = bundle.getPropertyNames().iterator();
         while (iter.hasNext()) {
-            QName pName = (QName) iter.next();
+            Name pName = (Name) iter.next();
             NodePropBundle.PropertyEntry pState = bundle.getPropertyEntry(pName);
             if (pState == null) {
                 log.error("PropertyState missing in bundle: " + pName);
@@ -493,7 +494,7 @@ public class BundleBinding extends ItemStateBinding {
                     break;
                 case PropertyType.NAME:
                     try {
-                        QName name = readQName(in);
+                        Name name = readQName(in);
                         log.info("  name: " + name);
                     } catch (IOException e) {
                         log.error("Error while reading name value: " + e);

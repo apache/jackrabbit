@@ -16,21 +16,21 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.NamespaceException;
 
 /**
  * This class implements the <code>NodeDefinition</code> interface.
  * All method calls are delegated to the wrapped {@link NodeDef},
- * performing the translation from <code>QName</code>s to JCR names
+ * performing the translation from <code>Name</code>s to JCR names
  * (and vice versa) where necessary.
  */
 public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefinition {
@@ -45,11 +45,11 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
      *
      * @param nodeDef    child node definition
      * @param ntMgr      node type manager
-     * @param nsResolver namespace resolver
+     * @param resolver
      */
     NodeDefinitionImpl(NodeDef nodeDef, NodeTypeManagerImpl ntMgr,
-                NamespaceResolver nsResolver) {
-        super(nodeDef, ntMgr, nsResolver);
+                       NamePathResolver resolver) {
+        super(nodeDef, ntMgr, resolver);
     }
 
     /**
@@ -66,7 +66,7 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
      * {@inheritDoc}
      */
     public NodeType getDefaultPrimaryType() {
-        QName ntName = ((NodeDef) itemDef).getDefaultPrimaryType();
+        Name ntName = ((NodeDef) itemDef).getDefaultPrimaryType();
         if (ntName == null) {
             return null;
         }
@@ -83,11 +83,11 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
      * {@inheritDoc}
      */
     public NodeType[] getRequiredPrimaryTypes() {
-        QName[] ntNames = ((NodeDef) itemDef).getRequiredPrimaryTypes();
+        Name[] ntNames = ((NodeDef) itemDef).getRequiredPrimaryTypes();
         try {
             if (ntNames == null || ntNames.length == 0) {
                 // return "nt:base"
-                return new NodeType[] {ntMgr.getNodeType(QName.NT_BASE)};
+                return new NodeType[] {ntMgr.getNodeType(NameConstants.NT_BASE)};
             } else {
                 NodeType[] nodeTypes = new NodeType[ntNames.length];
                 for (int i = 0; i < ntNames.length; i++) {
@@ -128,19 +128,19 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
      * @since JCR 2.0
      */
     public String[] getRequiredPrimaryTypeNames() {
-        QName[] ntNames = ((NodeDef) itemDef).getRequiredPrimaryTypes();
+        Name[] ntNames = ((NodeDef) itemDef).getRequiredPrimaryTypes();
         try {
             if (ntNames == null || ntNames.length == 0) {
                 // return "nt:base"
-                return new String[] {NameFormat.format(QName.NT_BASE, nsResolver)};
+                return new String[] {resolver.getJCRName(NameConstants.NT_BASE)};
             } else {
                 String[] names = new String[ntNames.length];
                 for (int i = 0; i < ntNames.length; i++) {
-                    names[i] = NameFormat.format(ntNames[i], nsResolver);
+                    names[i] = resolver.getJCRName(ntNames[i]);
                 }
                 return names;
             }
-        } catch (NoPrefixDeclaredException npde) {
+        } catch (NamespaceException npde) {
             // should never get here
             log.error("encountered unregistered namespace in node type name",
                     npde);
@@ -165,14 +165,14 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
      * @since JCR 2.0
      */
     public String getDefaultPrimaryTypeName() {
-        QName ntName = ((NodeDef) itemDef).getDefaultPrimaryType();
+        Name ntName = ((NodeDef) itemDef).getDefaultPrimaryType();
         if (ntName == null) {
             return null;
         }
 
         try {
-            return NameFormat.format(ntName, nsResolver);
-        } catch (NoPrefixDeclaredException npde) {
+            return resolver.getJCRName(ntName);
+        } catch (NamespaceException npde) {
             // should never get here
             log.error("encountered unregistered namespace in node type name",
                     npde);

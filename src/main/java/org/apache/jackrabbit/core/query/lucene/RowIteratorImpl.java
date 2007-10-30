@@ -19,11 +19,11 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.apache.jackrabbit.util.ISO9075;
 import org.slf4j.LoggerFactory;
@@ -35,6 +35,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.NamespaceException;
 import javax.jcr.ValueFactory;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
@@ -72,10 +73,10 @@ class RowIteratorImpl implements RowIterator {
     private static final String SPELLCHECK_FUNC_LPAR = "spellcheck(";
 
     /**
-     * The start QName for the rep:excerpt function: rep:excerpt(
+     * The start Name for the rep:excerpt function: rep:excerpt(
      */
-    private static final QName REP_EXCERPT_LPAR = new QName(
-            QName.NS_REP_URI, EXCERPT_FUNC_LPAR);
+    private static final Name REP_EXCERPT_LPAR = NameFactoryImpl.getInstance().create(
+            Name.NS_REP_URI, EXCERPT_FUNC_LPAR);
 
     /**
      * Iterator over nodes, that constitute the result set.
@@ -85,12 +86,12 @@ class RowIteratorImpl implements RowIterator {
     /**
      * Array of select property names
      */
-    private final QName[] properties;
+    private final Name[] properties;
 
     /**
-     * The <code>NamespaceResolver</code> of the user <code>Session</code>.
+     * The <code>NamePathResolver</code> of the user <code>Session</code>.
      */
-    private final NamespaceResolver resolver;
+    private final NamePathResolver resolver;
 
     /**
      * The excerpt provider or <code>null</code> if none is available.
@@ -108,11 +109,10 @@ class RowIteratorImpl implements RowIterator {
      *
      * @param nodes      a <code>ScoreNodeIterator</code> that contains the nodes of
      *                   the query result.
-     * @param properties <code>QName</code> of the select properties.
+     * @param properties <code>Name</code> of the select properties.
      * @param resolver   <code>NamespaceResolver</code> of the user
-     *                   <code>Session</code>.
      */
-    RowIteratorImpl(ScoreNodeIterator nodes, QName[] properties, NamespaceResolver resolver) {
+    RowIteratorImpl(ScoreNodeIterator nodes, Name[] properties, NamePathResolver resolver) {
         this(nodes, properties, resolver, null, null);
     }
 
@@ -122,7 +122,7 @@ class RowIteratorImpl implements RowIterator {
      *
      * @param nodes           a <code>ScoreNodeIterator</code> that contains the
      *                        nodes of the query result.
-     * @param properties      <code>QName</code> of the select properties.
+     * @param properties      <code>Name</code> of the select properties.
      * @param resolver        <code>NamespaceResolver</code> of the user
      *                        <code>Session</code>.
      * @param exProvider      the excerpt provider associated with the query
@@ -131,8 +131,8 @@ class RowIteratorImpl implements RowIterator {
      *                        result or <code>null</code> if none is available.
      */
     RowIteratorImpl(ScoreNodeIterator nodes,
-                    QName[] properties,
-                    NamespaceResolver resolver,
+                    Name[] properties,
+                    NamePathResolver resolver,
                     ExcerptProvider exProvider,
                     SpellSuggestion spellSuggestion) {
         this.nodes = nodes;
@@ -239,7 +239,7 @@ class RowIteratorImpl implements RowIterator {
         private Value[] values;
 
         /**
-         * Set of select property <code>QName</code>s.
+         * Set of select property <code>Name</code>s.
          */
         private Set propertySet;
 
@@ -282,9 +282,9 @@ class RowIteratorImpl implements RowIterator {
                     } else {
                         // property not set or one of the following:
                         // jcr:path / jcr:score / rep:excerpt / rep:spellcheck
-                        if (QName.JCR_PATH.equals(properties[i])) {
+                        if (NameConstants.JCR_PATH.equals(properties[i])) {
                             tmp[i] = VALUE_FACTORY.createValue(node.getPath(), PropertyType.PATH);
-                        } else if (QName.JCR_SCORE.equals(properties[i])) {
+                        } else if (NameConstants.JCR_SCORE.equals(properties[i])) {
                             tmp[i] = VALUE_FACTORY.createValue(Math.round(score * 1000f));
                         } else if (isExcerptFunction(properties[i])) {
                             tmp[i] = getExcerpt();
@@ -323,7 +323,7 @@ class RowIteratorImpl implements RowIterator {
                 propertySet = tmp;
             }
             try {
-                QName prop = NameFormat.parse(propertyName, resolver);
+                Name prop = resolver.getQName(propertyName);
                 if (!propertySet.contains(prop)) {
                     if (isExcerptFunction(propertyName)) {
                         // excerpt function with parameter
@@ -342,9 +342,9 @@ class RowIteratorImpl implements RowIterator {
                 } else {
                     // either jcr:score, jcr:path, rep:excerpt,
                     // rep:spellcheck or not set
-                    if (QName.JCR_PATH.equals(prop)) {
+                    if (NameConstants.JCR_PATH.equals(prop)) {
                         return VALUE_FACTORY.createValue(node.getPath(), PropertyType.PATH);
-                    } else if (QName.JCR_SCORE.equals(prop)) {
+                    } else if (NameConstants.JCR_SCORE.equals(prop)) {
                         return VALUE_FACTORY.createValue(Math.round(score * 1000f));
                     } else if (isExcerptFunction(prop)) {
                         return getExcerpt();
@@ -365,12 +365,12 @@ class RowIteratorImpl implements RowIterator {
         }
 
         /**
-         * @param name a QName.
+         * @param name a Name.
          * @return <code>true</code> if <code>name</code> is the rep:excerpt
          *         function, <code>false</code> otherwise.
          */
-        private boolean isExcerptFunction(QName name) {
-            return name.getNamespaceURI().equals(QName.NS_REP_URI) &&
+        private boolean isExcerptFunction(Name name) {
+            return name.getNamespaceURI().equals(Name.NS_REP_URI) &&
                     name.getLocalName().startsWith(EXCERPT_FUNC_LPAR);
         }
 
@@ -382,8 +382,8 @@ class RowIteratorImpl implements RowIterator {
         private boolean isExcerptFunction(String name) {
             try {
                 return name.startsWith(
-                        NameFormat.format(REP_EXCERPT_LPAR, resolver));
-            } catch (NoPrefixDeclaredException e) {
+                        resolver.getJCRName(REP_EXCERPT_LPAR));
+            } catch (NamespaceException e) {
                 // will never happen
                 return false;
             }
@@ -482,12 +482,12 @@ class RowIteratorImpl implements RowIterator {
         }
 
         /**
-         * @param name a QName.
+         * @param name a Name.
          * @return <code>true</code> if <code>name</code> is the rep:spellcheck
          *         function, <code>false</code> otherwise.
          */
-        private boolean isSpellCheckFunction(QName name) {
-            return name.getNamespaceURI().equals(QName.NS_REP_URI) &&
+        private boolean isSpellCheckFunction(Name name) {
+            return name.getNamespaceURI().equals(Name.NS_REP_URI) &&
                     name.getLocalName().startsWith(SPELLCHECK_FUNC_LPAR);
         }
 

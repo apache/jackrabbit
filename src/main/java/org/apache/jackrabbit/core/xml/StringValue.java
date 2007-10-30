@@ -17,10 +17,10 @@
 package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.util.Base64;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -36,7 +36,7 @@ class StringValue implements TextValue {
 
     private final String value;
 
-    private final NamespaceResolver nsContext;
+    private final NamePathResolver nsContext;
 
     /**
      * Constructs a new <code>StringValue</code> representing the given
@@ -44,14 +44,14 @@ class StringValue implements TextValue {
      *
      * @param value
      */
-    protected StringValue(String value, NamespaceResolver nsContext) {
+    protected StringValue(String value, NamePathResolver nsContext) {
         this.value = value;
         this.nsContext = nsContext;
     }
 
     //--------------------------------------------------------< TextValue >
 
-    public Value getValue(int type, NamespaceResolver resolver)
+    public Value getValue(int type, NamePathResolver resolver)
             throws ValueFormatException, RepositoryException {
         if (type == PropertyType.NAME || type == PropertyType.PATH) {
             // NAME and PATH require special treatment because

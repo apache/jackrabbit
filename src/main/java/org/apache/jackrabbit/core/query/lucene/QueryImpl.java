@@ -31,7 +31,8 @@ import org.apache.jackrabbit.core.query.QueryParser;
 import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.AndQueryNode;
 import org.apache.jackrabbit.core.query.QueryNodeFactory;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.search.Query;
@@ -88,7 +89,7 @@ public class QueryImpl extends AbstractQueryImpl {
         // parse query according to language
         // build query tree using the passed factory
         this.root = QueryParser.parse(statement, language,
-                session.getNamespaceResolver(), factory);
+                session.getNamePathResolver(), factory);
         allNodesQueryNode = createMatchAllNodesQuery(factory);
     }
     
@@ -108,8 +109,8 @@ public class QueryImpl extends AbstractQueryImpl {
         // check for special query
         if (allNodesQueryNode.equals(root)) {
             return new WorkspaceTraversalResult(session,
-                    new QName[] { QName.JCR_PRIMARYTYPE, QName.JCR_PATH, QName.JCR_SCORE },
-                    session.getNamespaceResolver());
+                    new Name[] { NameConstants.JCR_PRIMARYTYPE, NameConstants.JCR_PATH, NameConstants.JCR_SCORE },
+                    session.getNamePathResolver());
         }
 
         // build lucene query
@@ -127,7 +128,7 @@ public class QueryImpl extends AbstractQueryImpl {
         } else {
             orderSpecs = new OrderQueryNode.OrderSpec[0];
         }
-        QName[] orderProperties = new QName[orderSpecs.length];
+        Name[] orderProperties = new Name[orderSpecs.length];
         boolean[] ascSpecs = new boolean[orderSpecs.length];
         for (int i = 0; i < orderSpecs.length; i++) {
             orderProperties[i] = orderSpecs[i].getProperty();
@@ -135,7 +136,7 @@ public class QueryImpl extends AbstractQueryImpl {
         }
 
         return new QueryResultImpl(index, itemMgr,
-                session.getNamespaceResolver(), session.getAccessManager(),
+                session.getNamePathResolver(), session.getAccessManager(),
                 this, query, new SpellSuggestion(index.getSpellChecker(), root),
                 getSelectProperties(), orderProperties, ascSpecs,
                 getRespectDocumentOrder(), offset, limit);
@@ -147,14 +148,14 @@ public class QueryImpl extends AbstractQueryImpl {
      * @return array of select property names.
      * @throws RepositoryException if an error occurs.
      */
-    protected QName[] getSelectProperties() throws RepositoryException {
+    protected Name[] getSelectProperties() throws RepositoryException {
         // get select properties
         List selectProps = new ArrayList();
         selectProps.addAll(Arrays.asList(root.getSelectProperties()));
         if (selectProps.size() == 0) {
             // use node type constraint
             LocationStepQueryNode[] steps = root.getLocationNode().getPathSteps();
-            final QName[] ntName = new QName[1];
+            final Name[] ntName = new Name[1];
             steps[steps.length - 1].acceptOperands(new DefaultQueryNodeVisitor() {
 
                 public Object visit(AndQueryNode node, Object data) {
@@ -167,7 +168,7 @@ public class QueryImpl extends AbstractQueryImpl {
                 }
             }, null);
             if (ntName[0] == null) {
-                ntName[0] = QName.NT_BASE;
+                ntName[0] = NameConstants.NT_BASE;
             }
             NodeTypeImpl nt = session.getNodeTypeManager().getNodeType(ntName[0]);
             PropertyDefinition[] propDefs = nt.getPropertyDefinitions();
@@ -180,14 +181,14 @@ public class QueryImpl extends AbstractQueryImpl {
         }
 
         // add jcr:path and jcr:score if not selected already
-        if (!selectProps.contains(QName.JCR_PATH)) {
-            selectProps.add(QName.JCR_PATH);
+        if (!selectProps.contains(NameConstants.JCR_PATH)) {
+            selectProps.add(NameConstants.JCR_PATH);
         }
-        if (!selectProps.contains(QName.JCR_SCORE)) {
-            selectProps.add(QName.JCR_SCORE);
+        if (!selectProps.contains(NameConstants.JCR_SCORE)) {
+            selectProps.add(NameConstants.JCR_SCORE);
         }
 
-        return (QName[]) selectProps.toArray(new QName[selectProps.size()]);
+        return (Name[]) selectProps.toArray(new Name[selectProps.size()]);
     }
     
     /**

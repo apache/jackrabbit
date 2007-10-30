@@ -25,11 +25,13 @@ import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.PropDefImpl;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.util.name.NamespaceMapping;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.namespace.NamespaceMapping;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
@@ -38,6 +40,7 @@ import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
+import javax.jcr.Value;
 import javax.jcr.version.OnParentVersionAction;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -135,6 +138,11 @@ public class CompactNodeTypeDefReader {
     private NamespaceMapping nsMapping;
 
     /**
+     * Name and Path resolver
+     */
+    private NamePathResolver resolver;
+
+    /**
      * the underlying lexer
      */
     private Lexer lexer;
@@ -165,6 +173,7 @@ public class CompactNodeTypeDefReader {
             throws ParseException {
         lexer = new Lexer(r, systemId);
         this.nsMapping = mapping;
+        this.resolver = new DefaultNamePathResolver(nsMapping);
         nextToken();
         parse();
     }
@@ -281,7 +290,7 @@ public class CompactNodeTypeDefReader {
             supertypes.add(toQName(currentToken));
             nextToken();
         } while (currentTokenEquals(Lexer.LIST_DELIMITER));
-        ntd.setSupertypes((QName[]) supertypes.toArray(new QName[0]));
+        ntd.setSupertypes((Name[]) supertypes.toArray(new Name[0]));
     }
 
     /**
@@ -345,7 +354,7 @@ public class CompactNodeTypeDefReader {
                 ndi.setOnParentVersion(OnParentVersionAction.COPY);
                 ndi.setProtected(false);
                 ndi.setDefaultPrimaryType(null);
-                ndi.setRequiredPrimaryTypes(new QName[]{QName.NT_BASE});
+                ndi.setRequiredPrimaryTypes(new Name[]{NameConstants.NT_BASE});
 
                 nextToken();
                 doChildNodeDefinition(ndi, ntd);
@@ -437,8 +446,8 @@ public class CompactNodeTypeDefReader {
                 if (ntd.getPrimaryItemName() != null) {
                     String name = null;
                     try {
-                        name = NameFormat.format(ntd.getName(), nsMapping);
-                    } catch (NoPrefixDeclaredException e) {
+                        name = resolver.getJCRName(ntd.getName());
+                    } catch (NamespaceException e) {
                         // Should never happen, checked earlier
                     }
                     lexer.fail("More than one primary item specified in node type '" + name + "'");
@@ -484,9 +493,10 @@ public class CompactNodeTypeDefReader {
             nextToken();
             InternalValue value = null;
             try {
-                value = InternalValue.create(ValueHelper.convert(
+                Value v = ValueHelper.convert(
                         currentToken, pdi.getRequiredType(),
-                        ValueFactoryImpl.getInstance()), nsMapping);
+                        ValueFactoryImpl.getInstance());
+                value = InternalValue.create(v, resolver);
             } catch (ValueFormatException e) {
                 lexer.fail("'" + currentToken + "' is not a valid string representation of a value of type " + pdi.getRequiredType());
             } catch (RepositoryException e) {
@@ -513,7 +523,7 @@ public class CompactNodeTypeDefReader {
             nextToken();
             ValueConstraint constraint = null;
             try {
-                constraint = ValueConstraint.create(pdi.getRequiredType(), currentToken, nsMapping);
+                constraint = ValueConstraint.create(pdi.getRequiredType(), currentToken, resolver);
             } catch (InvalidConstraintException e) {
                 lexer.fail("'" + currentToken + "' is not a valid constraint expression for a value of type " + pdi.getRequiredType());
             }
@@ -559,7 +569,7 @@ public class CompactNodeTypeDefReader {
             types.add(toQName(currentToken));
             nextToken();
         } while (currentTokenEquals(Lexer.LIST_DELIMITER));
-        ndi.setRequiredPrimaryTypes((QName[]) types.toArray(new QName[0]));
+        ndi.setRequiredPrimaryTypes((Name[]) types.toArray(new Name[0]));
         nextToken();
     }
 
@@ -591,8 +601,8 @@ public class CompactNodeTypeDefReader {
                 if (ntd.getPrimaryItemName() != null) {
                     String name = null;
                     try {
-                        name = NameFormat.format(ntd.getName(), nsMapping);
-                    } catch (NoPrefixDeclaredException e) {
+                        name = resolver.getJCRName(ntd.getName());
+                    } catch (NamespaceException e) {
                         // Should never happen, checked earlier
                     }
                     lexer.fail("More than one primary item specified in node type '" + name + "'");
@@ -631,10 +641,15 @@ public class CompactNodeTypeDefReader {
      * @return the qualified name
      * @throws ParseException if the conversion fails
      */
-    private QName toQName(String stringName) throws ParseException {
+    private Name toQName(String stringName) throws ParseException {
         try {
-            return ISO9075.decode(NameFormat.parse(stringName, nsMapping));
+            Name n = resolver.getQName(stringName);
+            String decodedLocalName = ISO9075.decode(n.getLocalName());
+            return NameFactoryImpl.getInstance().create(n.getNamespaceURI(), decodedLocalName);
         } catch (NameException e) {
+            lexer.fail("Error while parsing '" + stringName + "'", e);
+            return null;
+        } catch (NamespaceException e) {
             lexer.fail("Error while parsing '" + stringName + "'", e);
             return null;
         }

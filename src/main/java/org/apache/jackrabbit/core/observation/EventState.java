@@ -20,8 +20,8 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -70,12 +70,12 @@ public class EventState {
      * The relative path of the child item associated with this event.
      * This is basically the name of the item with an optional index.
      */
-    private final Path.PathElement childRelPath;
+    private final Path.Element childRelPath;
 
     /**
      * The node type name of the parent node.
      */
-    private final QName nodeType;
+    private final Name nodeType;
 
     /**
      * Set of mixin QNames assigned to the parent node.
@@ -130,7 +130,7 @@ public class EventState {
      * @param session    the {@link javax.jcr.Session} that caused this event.
      */
     private EventState(int type, NodeId parentId, Path parentPath,
-                       NodeId childId, Path.PathElement childPath, QName nodeType,
+                       NodeId childId, Path.Element childPath, Name nodeType,
                        Set mixins, Session session, boolean external) {
 
         int mask = (Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED);
@@ -174,8 +174,8 @@ public class EventState {
     public static EventState childNodeAdded(NodeId parentId,
                                             Path parentPath,
                                             NodeId childId,
-                                            Path.PathElement childPath,
-                                            QName nodeType,
+                                            Path.Element childPath,
+                                            Name nodeType,
                                             Set mixins,
                                             Session session) {
         
@@ -202,8 +202,8 @@ public class EventState {
     public static EventState childNodeAdded(NodeId parentId,
                                             Path parentPath,
                                             NodeId childId,
-                                            Path.PathElement childPath,
-                                            QName nodeType,
+                                            Path.Element childPath,
+                                            Name nodeType,
                                             Set mixins,
                                             Session session,
                                             boolean external) {
@@ -230,8 +230,8 @@ public class EventState {
     public static EventState childNodeRemoved(NodeId parentId,
                                               Path parentPath,
                                               NodeId childId,
-                                              Path.PathElement childPath,
-                                              QName nodeType,
+                                              Path.Element childPath,
+                                              Name nodeType,
                                               Set mixins,
                                               Session session) {
 
@@ -258,8 +258,8 @@ public class EventState {
     public static EventState childNodeRemoved(NodeId parentId,
                                               Path parentPath,
                                               NodeId childId,
-                                              Path.PathElement childPath,
-                                              QName nodeType,
+                                              Path.Element childPath,
+                                              Name nodeType,
                                               Set mixins,
                                               Session session,
                                               boolean external) {
@@ -284,8 +284,8 @@ public class EventState {
      */
     public static EventState propertyAdded(NodeId parentId,
                                            Path parentPath,
-                                           Path.PathElement childPath,
-                                           QName nodeType,
+                                           Path.Element childPath,
+                                           Name nodeType,
                                            Set mixins,
                                            Session session) {
         
@@ -310,8 +310,8 @@ public class EventState {
      */
     public static EventState propertyAdded(NodeId parentId,
                                            Path parentPath,
-                                           Path.PathElement childPath,
-                                           QName nodeType,
+                                           Path.Element childPath,
+                                           Name nodeType,
                                            Set mixins,
                                            Session session,
                                            boolean external) {
@@ -336,8 +336,8 @@ public class EventState {
      */
     public static EventState propertyRemoved(NodeId parentId,
                                              Path parentPath,
-                                             Path.PathElement childPath,
-                                             QName nodeType,
+                                             Path.Element childPath,
+                                             Name nodeType,
                                              Set mixins,
                                              Session session) {
         
@@ -362,8 +362,8 @@ public class EventState {
      */
     public static EventState propertyRemoved(NodeId parentId,
                                              Path parentPath,
-                                             Path.PathElement childPath,
-                                             QName nodeType,
+                                             Path.Element childPath,
+                                             Name nodeType,
                                              Set mixins,
                                              Session session,
                                              boolean external) {
@@ -388,8 +388,8 @@ public class EventState {
      */
     public static EventState propertyChanged(NodeId parentId,
                                              Path parentPath,
-                                             Path.PathElement childPath,
-                                             QName nodeType,
+                                             Path.Element childPath,
+                                             Name nodeType,
                                              Set mixins,
                                              Session session) {
 
@@ -414,8 +414,8 @@ public class EventState {
      */
     public static EventState propertyChanged(NodeId parentId,
                                              Path parentPath,
-                                             Path.PathElement childPath,
-                                             QName nodeType,
+                                             Path.Element childPath,
+                                             Name nodeType,
                                              Set mixins,
                                              Session session,
                                              boolean external) {
@@ -464,9 +464,9 @@ public class EventState {
      * Returns the relative {@link Path} of the child
      * {@link javax.jcr.Item} associated with this event.
      *
-     * @return the <code>Path.PathElement</code> associated with this event.
+     * @return the <code>Path.Element</code> associated with this event.
      */
-    public Path.PathElement getChildRelPath() {
+    public Path.Element getChildRelPath() {
         return childRelPath;
     }
 
@@ -475,15 +475,15 @@ public class EventState {
      *
      * @return the node type of the parent associated with this event.
      */
-    public QName getNodeType() {
+    public Name getNodeType() {
         return nodeType;
     }
 
     /**
-     * Returns a set of <code>QName</code>s which are the names of the mixins
+     * Returns a set of <code>Name</code>s which are the names of the mixins
      * assigned to the parent node associated with this event.
      *
-     * @return the mixin names as <code>QName</code>s.
+     * @return the mixin names as <code>Name</code>s.
      */
     public Set getMixinNames() {
         return mixins;
@@ -506,7 +506,7 @@ public class EventState {
                 log.warn("Unknown node type: " + nodeType);
             }
             for (Iterator it = mixins.iterator(); it.hasNext(); ) {
-                QName mixinName = (QName) it.next();
+                Name mixinName = (Name) it.next();
                 try {
                     tmp.add(ntMgr.getNodeType(mixinName));
                 } catch (NoSuchNodeTypeException e) {

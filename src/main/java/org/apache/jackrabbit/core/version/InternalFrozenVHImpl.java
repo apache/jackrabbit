@@ -16,8 +16,9 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.name.NameConstants;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionException;
@@ -42,7 +43,7 @@ class InternalFrozenVHImpl extends InternalFreezeImpl
     /**
      * {@inheritDoc}
      */
-    public QName getName() {
+    public Name getName() {
         return node.getName();
     }
 
@@ -57,7 +58,7 @@ class InternalFrozenVHImpl extends InternalFreezeImpl
      * {@inheritDoc}
      */
     public NodeId getVersionHistoryId() {
-        return new NodeId(node.getPropertyValue(QName.JCR_CHILDVERSIONHISTORY).getUUID());
+        return new NodeId(node.getPropertyValue(NameConstants.JCR_CHILDVERSIONHISTORY).getUUID());
     }
 
     /**
@@ -76,7 +77,7 @@ class InternalFrozenVHImpl extends InternalFreezeImpl
      * {@inheritDoc}
      */
     public NodeId getBaseVersionId() {
-        return new NodeId(node.getPropertyValue(QName.JCR_BASEVERSION).getUUID());
+        return new NodeId(node.getPropertyValue(NameConstants.JCR_BASEVERSION).getUUID());
     }
 
     /**

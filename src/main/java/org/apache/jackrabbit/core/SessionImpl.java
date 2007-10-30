@@ -89,11 +89,14 @@ import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.SAXParserProvider;
 import org.apache.jackrabbit.core.xml.SessionImporter;
 import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NamePathResolver;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.conversion.IllegalNameException;
+import org.apache.jackrabbit.conversion.MalformedPathException;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.slf4j.Logger;
@@ -184,6 +187,11 @@ public class SessionImpl implements Session, NamePathResolver, Dumpable {
     protected final LocalNamespaceMappings nsMappings;
 
     /**
+     * Name and Path resolver
+     */
+    protected final NamePathResolver namePathResolver;
+
+    /**
      * The version manager for this session
      */
     protected final VersionManager versionMgr;
@@ -248,7 +256,8 @@ public class SessionImpl implements Session, NamePathResolver, Dumpable {
         }
         this.subject = subject;
         nsMappings = new LocalNamespaceMappings(rep.getNamespaceRegistry());
-        ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), rep.getNamespaceRegistry(), getNamespaceResolver(), rep.getDataStore());
+        namePathResolver = new DefaultNamePathResolver(nsMappings, true);
+        ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), rep.getNamespaceRegistry(), getNamespaceResolver(), getNamePathResolver(), rep.getDataStore());
         String wspName = wspConfig.getName();
         wsp = createWorkspaceInstance(wspConfig,
                 rep.getWorkspaceStateManager(wspName), rep, this);
@@ -400,6 +409,15 @@ public class SessionImpl implements Session, NamePathResolver, Dumpable {
     }
 
     /**
+     * Returns the <code>NamePathResolver</code> of this session.
+     *
+     * @return the <code>NamePathResolver</code> of this session
+     */
+    public NamePathResolver getNamePathResolver() {
+        return namePathResolver;
+    }
+
+    /**
      * Returns the <code>SessionItemStateManager</code> associated with this session.
      *
      * @return the <code>SessionItemStateManager</code> associated with this session
@@ -445,7 +463,7 @@ public class SessionImpl implements Session, NamePathResolver, Dumpable {
         // check for mix:referenceable seems therefore to be a reasonable
         // compromise in order to improve performance.
 /*
-        if (node.isNodeType(QName.MIX_REFERENCEABLE)) {
+        if (node.isNodeType(Name.MIX_REFERENCEABLE)) {
             return node;
         } else {
             // there is a node with that uuid but the node does not expose it
@@ -583,22 +601,22 @@ public class SessionImpl implements Session, NamePathResolver, Dumpable {
 
     //--------------------------------------------------------< NameResolver >
 
-    public String getJCRName(QName name) throws NamespaceException {
-        return nsMappings.getNameResolver().getJCRName(name);
+    public String getJCRName(Name name) throws NamespaceException {
+        return namePathResolver.getJCRName(name);
     }
 
-    public QName getQName(String name) throws NameException, NamespaceException {
-        return nsMappings.getNameResolver().getQName(name);
+    public Name getQName(String name) throws IllegalNameException, NamespaceException {
+        return namePathResolver.getQName(name);
     }
 
     //--------------------------------------------------------< PathResolver >
 
     public String getJCRPath(Path path) throws NamespaceException {
-        return nsMappings.getPathResolver().getJCRPath(path);
+        return namePathResolver.getJCRPath(path);
     }
 
-    public Path getQPath(String path) throws NameException, NamespaceException {
-        return nsMappings.getPathResolver().getQPath(path);
+    public Path getQPath(String path) throws MalformedPathException, IllegalNameException, NamespaceException {
+        return namePathResolver.getQPath(path);
     }
 
     //--------------------------------------------------------------< Session >
@@ -887,7 +905,7 @@ public class SessionImpl implements Session, NamePathResolver, Dumpable {
         // check paths & get node instances
 
         Path srcPath;
-        Path.PathElement srcName;
+        Path.Element srcName;
         Path srcParentPath;
         NodeImpl targetNode;
         NodeImpl srcParentNode;
@@ -913,7 +931,7 @@ public class SessionImpl implements Session, NamePathResolver, Dumpable {
         }
 
         Path destPath;
-        Path.PathElement destName;
+        Path.Element destName;
         Path destParentPath;
         NodeImpl destParentNode;
         try {

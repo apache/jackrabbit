@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -30,7 +31,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
     /**
      * The name of the default primary type.
      */
-    private QName defaultPrimaryType;
+    private Name defaultPrimaryType;
 
     /**
      * The names of the required primary types.
@@ -55,7 +56,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
     public NodeDefImpl() {
         defaultPrimaryType = null;
         requiredPrimaryTypes = new HashSet();
-        requiredPrimaryTypes.add(QName.NT_BASE);
+        requiredPrimaryTypes.add(NameConstants.NT_BASE);
         allowsSameNameSiblings = false;
         id = null;
     }
@@ -65,7 +66,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
      *
      * @param defaultNodeType
      */
-    public void setDefaultPrimaryType(QName defaultNodeType) {
+    public void setDefaultPrimaryType(Name defaultNodeType) {
         // reset id field in order to force lazy recomputation of identifier
         id = null;
         this.defaultPrimaryType = defaultNodeType;
@@ -76,7 +77,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
      *
      * @param requiredPrimaryTypes
      */
-    public void setRequiredPrimaryTypes(QName[] requiredPrimaryTypes) {
+    public void setRequiredPrimaryTypes(Name[] requiredPrimaryTypes) {
         if (requiredPrimaryTypes == null) {
             throw new IllegalArgumentException("requiredPrimaryTypes can not be null");
         }
@@ -101,7 +102,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
     /**
      * {@inheritDoc}
      */
-    public void setDeclaringNodeType(QName declaringNodeType) {
+    public void setDeclaringNodeType(Name declaringNodeType) {
         // reset id field in order to force lazy recomputation of identifier
         id = null;
         super.setDeclaringNodeType(declaringNodeType);
@@ -110,7 +111,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
     /**
      * {@inheritDoc}
      */
-    public void setName(QName name) {
+    public void setName(Name name) {
         // reset id field in order to force lazy recomputation of identifier
         id = null;
         super.setName(name);
@@ -171,19 +172,19 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
     /**
      * {@inheritDoc}
      */
-    public QName getDefaultPrimaryType() {
+    public Name getDefaultPrimaryType() {
         return defaultPrimaryType;
     }
 
     /**
      * {@inheritDoc}
      */
-    public QName[] getRequiredPrimaryTypes() {
+    public Name[] getRequiredPrimaryTypes() {
         if (requiredPrimaryTypes.isEmpty()) {
-            return QName.EMPTY_ARRAY;
+            return Name.EMPTY_ARRAY;
         }
-        return (QName[]) requiredPrimaryTypes.toArray(
-                new QName[requiredPrimaryTypes.size()]);
+        return (Name[]) requiredPrimaryTypes.toArray(
+                new Name[requiredPrimaryTypes.size()]);
     }
 
     /**

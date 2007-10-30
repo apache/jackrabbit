@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.lucene.analysis.Analyzer;
 import org.w3c.dom.Element;
 
@@ -62,7 +62,7 @@ public interface IndexingConfiguration {
      * @return <code>true</code> if the property is indexed; <code>false</code>
      *         otherwise.
      */
-    boolean isIndexed(NodeState state, QName propertyName);
+    boolean isIndexed(NodeState state, Name propertyName);
 
     /**
      * Returns <code>true</code> if the property with the given name should be
@@ -74,7 +74,7 @@ public interface IndexingConfiguration {
      * @return <code>true</code> if the property should be included in the node
      *         scope fulltext index.
      */
-    boolean isIncludedInNodeScopeIndex(NodeState state, QName propertyName);
+    boolean isIncludedInNodeScopeIndex(NodeState state, Name propertyName);
 
     /**
      * Returns the boost value for the given property name. If there is no
@@ -85,7 +85,7 @@ public interface IndexingConfiguration {
      * @param propertyName the name of a property.
      * @return the boost value for the property.
      */
-    float getPropertyBoost(NodeState state, QName propertyName);
+    float getPropertyBoost(NodeState state, Name propertyName);
 
     /**
      * Returns the boost for the node scope fulltext index field.
@@ -97,13 +97,13 @@ public interface IndexingConfiguration {
     
     /**
      * Returns the analyzer configured for the property with this fieldName 
-     * (the string representation ,JCR-style name, of the given <code>QName</code> 
+     * (the string representation ,JCR-style name, of the given <code>Name</code>
      * prefixed with <code>FieldNames.FULLTEXT_PREFIX</code>), 
      * and <code>null</code> if none is configured, or the configured analyzer
      * cannot be found. If <code>null</code> is returned, the default Analyzer
      * is used.
      * 
-     * @param fieldName the string representation ,JCR-style name, of the given <code>QName</code>, 
+     * @param fieldName the string representation ,JCR-style name, of the given <code>Name</code>,
      * prefixed with <code>FieldNames.FULLTEXT_PREFIX</code>)
      * @return the <code>analyzer</code> to use for indexing this property 
      */

@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.ItemId;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -157,7 +157,7 @@ class NodeStateMerger {
 
             for (Iterator iter = state.getAddedPropertyNames().iterator();
                  iter.hasNext();) {
-                QName name = (QName) iter.next();
+                Name name = (Name) iter.next();
                 PropertyId propId =
                         new PropertyId(state.getNodeId(), name);
                 if (context.isAdded(propId)) {
@@ -174,7 +174,7 @@ class NodeStateMerger {
             }
             for (Iterator iter = state.getRemovedPropertyNames().iterator();
                  iter.hasNext();) {
-                QName name = (QName) iter.next();
+                Name name = (Name) iter.next();
                 PropertyId propId =
                         new PropertyId(state.getNodeId(), name);
                 if (context.isDeleted(propId)) {
@@ -187,11 +187,11 @@ class NodeStateMerger {
             // re-apply changes made on this state
             state.setPropertyNames(overlayedState.getPropertyNames());
             for (Iterator iter = added.iterator(); iter.hasNext();) {
-                QName name = (QName) iter.next();
+                Name name = (Name) iter.next();
                 state.addPropertyName(name);
             }
             for (Iterator iter = removed.iterator(); iter.hasNext();) {
-                QName name = (QName) iter.next();
+                Name name = (Name) iter.next();
                 state.removePropertyName(name);
             }
         }

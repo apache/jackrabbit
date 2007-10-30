@@ -24,9 +24,9 @@ import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.conversion.PathResolver;
+import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,7 +107,7 @@ public class ItemValidator {
         NodeDef def = ntReg.getNodeDef(nodeState.getDefinitionId());
 
         // check if primary type satisfies the 'required node types' constraint
-        QName[] requiredPrimaryTypes = def.getRequiredPrimaryTypes();
+        Name[] requiredPrimaryTypes = def.getRequiredPrimaryTypes();
         for (int i = 0; i < requiredPrimaryTypes.length; i++) {
             if (!entPrimary.includesNodeType(requiredPrimaryTypes[i])) {
                 String msg = safeGetJCRPath(nodeState.getNodeId())
@@ -193,7 +193,7 @@ public class ItemValidator {
             throws RepositoryException {
         // mixin types
         Set set = nodeState.getMixinTypeNames();
-        QName[] types = new QName[set.size() + 1];
+        Name[] types = new Name[set.size() + 1];
         set.toArray(types);
         // primary type
         types[types.length - 1] = nodeState.getNodeTypeName();

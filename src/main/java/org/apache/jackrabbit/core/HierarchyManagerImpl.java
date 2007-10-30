@@ -22,10 +22,13 @@ import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.conversion.MalformedPathException;
+import org.apache.jackrabbit.conversion.PathResolver;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.name.PathBuilder;
+import org.apache.jackrabbit.name.PathFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,9 +45,9 @@ public class HierarchyManagerImpl implements HierarchyManager {
 
     /**
      * The parent name returned for orphaned or root nodes.
-     * TODO: Is it proper to use an invalid QName for this.
+     * TODO: Is it proper to use an invalid Name for this.
      */
-    private static final QName EMPTY_NAME = new QName("", "");
+    private static final Name EMPTY_NAME = NameFactoryImpl.getInstance().create("", "");
 
     protected final NodeId rootNodeId;
     protected final ItemStateManager provider;
@@ -177,10 +180,10 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * @return the <code>ChildNodeEntry</code> of <code>parent</code> with
      *         the specified <code>name</code> and <code>index</code> or
      *         <code>null</code> if there's no such entry.
-     * @see ZombieHierarchyManager#getChildNodeEntry(NodeState, QName, int)
+     * @see ZombieHierarchyManager#getChildNodeEntry(NodeState, Name, int)
      */
     protected NodeState.ChildNodeEntry getChildNodeEntry(NodeState parent,
-                                                         QName name,
+                                                         Name name,
                                                          int index) {
         return parent.getChildNodeEntry(name, index);
     }
@@ -225,13 +228,13 @@ public class HierarchyManagerImpl implements HierarchyManager {
     protected ItemId resolvePath(Path path, ItemState state, int next)
             throws ItemStateException {
 
-        Path.PathElement[] elements = path.getElements();
+        Path.Element[] elements = path.getElements();
         if (elements.length == next) {
             return state.getId();
         }
-        Path.PathElement elem = elements[next];
+        Path.Element elem = elements[next];
 
-        QName name = elem.getName();
+        Name name = elem.getName();
         int index = elem.getIndex();
         if (index == 0) {
             index = 1;
@@ -275,7 +278,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * @param builder builder currently being used
      * @param state   item to find path of
      */
-    protected void buildPath(Path.PathBuilder builder, ItemState state)
+    protected void buildPath(PathBuilder builder, ItemState state)
             throws ItemStateException, RepositoryException {
 
         // shortcut
@@ -315,7 +318,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
             }
         } else {
             PropertyState propState = (PropertyState) state;
-            QName name = propState.getName();
+            Name name = propState.getName();
             // add to path
             builder.addLast(name);
         }
@@ -347,10 +350,10 @@ public class HierarchyManagerImpl implements HierarchyManager {
             throws ItemNotFoundException, RepositoryException {
         // shortcut
         if (id.equals(rootNodeId)) {
-            return Path.ROOT;
+            return PathFactoryImpl.getInstance().getRootPath();
         }
 
-        Path.PathBuilder builder = new Path.PathBuilder();
+        PathBuilder builder = new PathBuilder();
 
         try {
             buildPath(builder, getItemState(id));
@@ -373,7 +376,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
     /**
      * {@inheritDoc}
      */
-    public QName getName(ItemId itemId)
+    public Name getName(ItemId itemId)
             throws ItemNotFoundException, RepositoryException {
         if (itemId.denotesNode()) {
             NodeId nodeId = (NodeId) itemId;

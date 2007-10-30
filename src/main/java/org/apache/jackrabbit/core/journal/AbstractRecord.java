@@ -16,29 +16,28 @@
  */
 package org.apache.jackrabbit.core.journal;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathFormat;
-import org.apache.jackrabbit.name.UnknownPrefixException;
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.conversion.MalformedPathException;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
-import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefWriter;
 import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
+import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefWriter;
 import org.apache.jackrabbit.core.nodetype.compact.ParseException;
+import org.apache.jackrabbit.name.PathFactoryImpl;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.uuid.Constants;
 import org.apache.jackrabbit.uuid.UUID;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.io.StringWriter;
+import javax.jcr.NamespaceException;
 import java.io.IOException;
 import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Base implementation for a record.
@@ -63,22 +62,28 @@ public abstract class AbstractRecord implements Record {
     /**
      * Namespace resolver.
      */
-    protected final NamespaceResolver resolver;
+    protected final NamespaceResolver nsResolver;
+
+    /**
+     * Name and Path resolver.
+     */
+    protected final NamePathResolver resolver;
 
     /**
      * Create a new instance of this class.
      */
-    public AbstractRecord(NamespaceResolver resolver) {
+    public AbstractRecord(NamespaceResolver nsResolver, NamePathResolver resolver) {
+        this.nsResolver = nsResolver;
         this.resolver = resolver;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void writeQName(QName name) throws JournalException {
+    public void writeQName(Name name) throws JournalException {
         try {
-            writeString(NameFormat.format(name, resolver));
-        } catch (NoPrefixDeclaredException e) {
+            writeString(resolver.getJCRName(name));
+        } catch (NamespaceException e) {
             String msg = "Undeclared prefix error while writing name.";
             throw new JournalException(msg, e);
         }
@@ -87,7 +92,7 @@ public abstract class AbstractRecord implements Record {
     /**
      * {@inheritDoc}
      */
-    public void writePathElement(Path.PathElement element) throws JournalException {
+    public void writePathElement(Path.Element element) throws JournalException {
         writeQName(element.getName());
         writeInt(element.getIndex());
     }
@@ -97,8 +102,8 @@ public abstract class AbstractRecord implements Record {
      */
     public void writePath(Path path) throws JournalException {
         try {
-            writeString(PathFormat.format(path, resolver));
-        } catch (NoPrefixDeclaredException e) {
+            writeString(resolver.getJCRPath(path));
+        } catch (NamespaceException e) {
             String msg = "Undeclared prefix error while writing path.";
             throw new JournalException(msg, e);
         }
@@ -137,7 +142,7 @@ public abstract class AbstractRecord implements Record {
     public void writeNodeTypeDef(NodeTypeDef ntd) throws JournalException {
         try {
             StringWriter sw = new StringWriter();
-            CompactNodeTypeDefWriter writer = new CompactNodeTypeDefWriter(sw, resolver, true);
+            CompactNodeTypeDefWriter writer = new CompactNodeTypeDefWriter(sw, nsResolver, resolver, true);
             writer.write(ntd);
             writer.close();
 
@@ -151,13 +156,13 @@ public abstract class AbstractRecord implements Record {
     /**
      * {@inheritDoc}
      */
-    public QName readQName() throws JournalException {
+    public Name readQName() throws JournalException {
         try {
-            return NameFormat.parse(readString(), resolver);
-        } catch (UnknownPrefixException e) {
+            return resolver.getQName(readString());
+        } catch (NameException e) {
             String msg = "Unknown prefix error while reading name.";
             throw new JournalException(msg, e);
-        } catch (IllegalNameException e) {
+        } catch (NamespaceException e) {
             String msg = "Illegal name error while reading name.";
             throw new JournalException(msg, e);
         }
@@ -166,19 +171,19 @@ public abstract class AbstractRecord implements Record {
     /**
      * {@inheritDoc}
      */
-    public Path.PathElement readPathElement() throws JournalException {
+    public Path.Element readPathElement() throws JournalException {
         try {
-            QName name = NameFormat.parse(readString(), resolver);
+            Name name = resolver.getQName(readString());
             int index = readInt();
             if (index != 0) {
-                return Path.PathElement.create(name, index);
+                return PathFactoryImpl.getInstance().createElement(name, index);
             } else {
-                return Path.PathElement.create(name);
+                return PathFactoryImpl.getInstance().createElement(name);
             }
-        } catch (UnknownPrefixException e) {
+        } catch (NameException e) {
             String msg = "Unknown prefix error while reading path element.";
             throw new JournalException(msg, e);
-        } catch (IllegalNameException e) {
+        } catch (NamespaceException e) {
             String msg = "Illegal name error while reading path element.";
             throw new JournalException(msg, e);
         }
@@ -189,8 +194,14 @@ public abstract class AbstractRecord implements Record {
      */
     public Path readPath() throws JournalException {
         try {
-            return PathFormat.parse(readString(), resolver);
+            return resolver.getQPath(readString());
         } catch (MalformedPathException e) {
+            String msg = "Malformed path error while reading path.";
+            throw new JournalException(msg, e);
+        } catch (NamespaceException e) {
+            String msg = "Malformed path error while reading path.";
+            throw new JournalException(msg, e);
+        } catch (NameException e) {
             String msg = "Malformed path error while reading path.";
             throw new JournalException(msg, e);
         }

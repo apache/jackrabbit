@@ -16,11 +16,12 @@
  */
 package org.apache.jackrabbit.core.journal;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.Name;
 
-import java.io.IOException;
 import java.io.DataInputStream;
+import java.io.IOException;
 
 /**
  * Record used for reading.
@@ -62,9 +63,9 @@ class ReadRecord extends AbstractRecord {
      */
     public ReadRecord(String journalId, String producerId,
                       long revision, DataInputStream dataIn, int length,
-                      NamespaceResolver resolver) {
+                      NamespaceResolver resolver, NamePathResolver npResolver) {
 
-        super(resolver);
+        super(resolver, npResolver);
 
         this.journalId = journalId;
         this.producerId = producerId;
@@ -244,7 +245,7 @@ class ReadRecord extends AbstractRecord {
         throw unsupported();
     }
 
-    public void writeQName(QName name) throws JournalException {
+    public void writeQName(Name name) throws JournalException {
         throw unsupported();
     }
 

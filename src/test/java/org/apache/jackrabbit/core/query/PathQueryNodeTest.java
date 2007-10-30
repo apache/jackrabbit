@@ -21,36 +21,32 @@ import java.util.Arrays;
 import junit.framework.TestCase;
 
 import org.apache.jackrabbit.core.query.xpath.XPathQueryBuilder;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.conversion.DefaultNamePathResolver;
 
 public class PathQueryNodeTest extends TestCase {
 
     private static final DefaultQueryNodeFactory QUERY_NODE_FACTORY = new DefaultQueryNodeFactory(
-            Arrays.asList(new QName[] { QName.NT_NODETYPE }));
-    
-    private static final NamespaceResolver JCR_RESOLVER = new NamespaceResolver() {
-        public String getJCRName(QName qName) {
-            throw new UnsupportedOperationException();
-        }
+            Arrays.asList(new Name[] { NameConstants.NT_NODETYPE }));
+
+    private static final NameResolver JCR_RESOLVER = new DefaultNamePathResolver(new NamespaceResolver() {
 
         public String getPrefix(String uri) {
             throw new UnsupportedOperationException();
         }
-
-        public QName getQName(String jcrName) {
-            throw new UnsupportedOperationException();
-        }
-
+        
         public String getURI(String prefix) {
-            if (QName.NS_JCR_PREFIX.equals(prefix))
-                return QName.NS_JCR_URI;
-            if (QName.NS_NT_PREFIX.equals(prefix))
-                return QName.NS_NT_URI;
+            if (Name.NS_JCR_PREFIX.equals(prefix))
+                return Name.NS_JCR_URI;
+            if (Name.NS_NT_PREFIX.equals(prefix))
+                return Name.NS_NT_URI;
             return "";
         }
-    };    
-    
+    });
+
     public void testNeedsSystemTree() throws Exception {
         QueryRootNode queryRootNode = XPathQueryBuilder.createQuery("/jcr:root/*", JCR_RESOLVER, QUERY_NODE_FACTORY);
         assertTrue(queryRootNode.needsSystemTree());
@@ -66,11 +62,11 @@ public class PathQueryNodeTest extends TestCase {
 
         queryRootNode = XPathQueryBuilder.createQuery("test//*", JCR_RESOLVER, QUERY_NODE_FACTORY);
         assertFalse(queryRootNode.needsSystemTree());
-        
+
         queryRootNode = XPathQueryBuilder.createQuery("//test/*", JCR_RESOLVER, QUERY_NODE_FACTORY);
-        assertTrue(queryRootNode.needsSystemTree());         
+        assertTrue(queryRootNode.needsSystemTree());
     }
-    
+
     public void testNeedsSystemTreeForAllNodesByNodeType() throws Exception {
         QueryRootNode queryRootNode = XPathQueryBuilder.createQuery("//element(*, nt:resource)", JCR_RESOLVER, QUERY_NODE_FACTORY);
         assertFalse(queryRootNode.needsSystemTree());

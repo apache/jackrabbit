@@ -17,11 +17,11 @@
 package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.util.Base64;
 import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,12 +81,13 @@ class BufferedStringValue implements TextValue {
      */
     private Writer writer;
 
-    private final NamespaceResolver nsContext;
+    private final NamePathResolver nsContext;
 
     /**
      * Constructs a new empty <code>BufferedStringValue</code>.
+     * @param nsContext
      */
-    protected BufferedStringValue(NamespaceResolver nsContext) {
+    protected BufferedStringValue(NamePathResolver nsContext) {
         buffer = new char[0x2000];
         bufferPos = 0;
         tmpFile = null;
@@ -229,7 +230,7 @@ class BufferedStringValue implements TextValue {
 
     //--------------------------------------------------------< TextValue >
 
-    public Value getValue(int targetType, NamespaceResolver resolver)
+    public Value getValue(int targetType, NamePathResolver resolver)
             throws ValueFormatException, RepositoryException {
         try {
             if (targetType == PropertyType.NAME

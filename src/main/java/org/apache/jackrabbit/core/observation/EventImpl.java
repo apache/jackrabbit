@@ -18,8 +18,9 @@ package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.name.PathFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,12 +105,12 @@ public final class EventImpl implements Event {
     public Path getQPath() throws RepositoryException {
         try {
             Path parent = eventState.getParentPath();
-            Path.PathElement child = eventState.getChildRelPath();
+            Path.Element child = eventState.getChildRelPath();
             int index = child.getIndex();
             if (index > 0) {
-                return Path.create(parent, child.getName(), index, false);
+                return PathFactoryImpl.getInstance().create(parent, child.getName(), index, false);
             } else {
-                return Path.create(parent, child.getName(), false);
+                return PathFactoryImpl.getInstance().create(parent, child.getName(), false);
             }
         } catch (MalformedPathException e) {
             String msg = "internal error: malformed path for event";

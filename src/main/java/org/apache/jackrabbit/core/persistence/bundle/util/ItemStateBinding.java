@@ -25,8 +25,9 @@ import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.name.NameFactoryImpl;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -181,7 +182,7 @@ public class ItemStateBinding {
         int version = (index >> 24) & 0x0ff;
         String uri = nsIndex.indexToString(index & 0x0ffffff);
         String local = in.readUTF();
-        state.setNodeTypeName(new QName(uri, local));
+        state.setNodeTypeName(NameFactoryImpl.getInstance().create(uri, local));
 
         // parentUUID
         state.setParentId(readID(in));
@@ -205,7 +206,7 @@ public class ItemStateBinding {
         // child nodes (list of name/uuid pairs)
         count = in.readInt();   // count
         for (int i = 0; i < count; i++) {
-            QName name = readQName(in);
+            Name name = readQName(in);
             NodeId parentId = readID(in);
             state.addChildNodeEntry(name, parentId);
         }
@@ -236,13 +237,13 @@ public class ItemStateBinding {
         Collection c = state.getMixinTypeNames();
         out.writeInt(c.size()); // count
         for (Iterator iter = c.iterator(); iter.hasNext();) {
-            writeQName(out, (QName) iter.next());
+            writeQName(out, (Name) iter.next());
         }
         // properties (names)
         c = state.getPropertyNames();
         out.writeInt(c.size()); // count
         for (Iterator iter = c.iterator(); iter.hasNext();) {
-            QName pName = (QName) iter.next();
+            Name pName = (Name) iter.next();
             writeIndexedQName(out, pName);
         }
         // child nodes (list of name/uuid pairs)
@@ -340,15 +341,15 @@ public class ItemStateBinding {
     }
 
     /**
-     * Deserializes a QName
+     * Deserializes a Name
      * @param in the input stream
      * @return the qname
      * @throws IOException in an I/O error occurs.
      */
-    public QName readQName(DataInputStream in) throws IOException {
+    public Name readQName(DataInputStream in) throws IOException {
         String uri = nsIndex.indexToString(in.readInt());
         String local = in.readUTF();
-        return new QName(uri, local);
+        return NameFactoryImpl.getInstance().create(uri, local);
     }
 
     /**
@@ -372,40 +373,40 @@ public class ItemStateBinding {
     }
 
     /**
-     * Serializes a QName
+     * Serializes a Name
      * @param out the output stream
      * @param name the name
      * @throws IOException in an I/O error occurs.
      */
-    public void writeQName(DataOutputStream out, QName name) throws IOException {
+    public void writeQName(DataOutputStream out, Name name) throws IOException {
         out.writeInt(nsIndex.stringToIndex(name.getNamespaceURI()));
         out.writeUTF(name.getLocalName());
     }
 
     /**
-     * Deserializes an indexed QName
+     * Deserializes an indexed Name
      * @param in the input stream
      * @return the qname
      * @throws IOException in an I/O error occurs.
      */
-    public QName readIndexedQName(DataInputStream in) throws IOException {
+    public Name readIndexedQName(DataInputStream in) throws IOException {
         int index = in.readInt();
         if (index < 0) {
             return null;
         } else {
             String uri = nsIndex.indexToString(index);
             String local = nameIndex.indexToString(in.readInt());
-            return new QName(uri, local);
+            return NameFactoryImpl.getInstance().create(uri, local);
         }
     }
 
     /**
-     * Serializes a indexed QName
+     * Serializes a indexed Name
      * @param out the output stream
      * @param name the name
      * @throws IOException in an I/O error occurs.
      */
-    public void writeIndexedQName(DataOutputStream out, QName name) throws IOException {
+    public void writeIndexedQName(DataOutputStream out, Name name) throws IOException {
         if (name == null) {
             out.writeInt(-1);
         } else {
@@ -433,7 +434,7 @@ public class ItemStateBinding {
      */
     public PropertyId readPropertyId(DataInputStream in) throws IOException {
         UUID uuid = readUUID(in);
-        QName name = readQName(in);
+        Name name = readQName(in);
         return new PropertyId(new NodeId(uuid), name);
     }
 }
