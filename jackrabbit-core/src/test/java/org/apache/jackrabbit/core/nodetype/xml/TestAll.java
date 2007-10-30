@@ -26,8 +26,12 @@ import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.name.NameFactoryImpl;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
@@ -61,6 +65,8 @@ public class TestAll extends TestCase {
     private static final String TEST_NS_CND_NODETYPES =
         "test_ns_cnd_nodetypes.cnd";
 
+    private static final NameFactory FACTORY = NameFactoryImpl.getInstance();
+
     /** Test node types definitions. */
     private NodeTypeDef[] types;
 
@@ -90,7 +96,7 @@ public class TestAll extends TestCase {
      * @return node type definition
      */
     private NodeTypeDef getNodeType(String name) {
-        QName qname = new QName(TEST_NAMESPACE, name);
+        Name qname = FACTORY.create(TEST_NAMESPACE, name);
         for (int i = 0; i < types.length; i++) {
             if (qname.equals(types[i].getName())) {
                 return types[i];
@@ -112,9 +118,9 @@ public class TestAll extends TestCase {
      * @return property definition
      */
     private PropDef getProperty(String typeName, String propertyName) {
-        QName name;
+        Name name;
         if (propertyName != null) {
-            name = new QName(TEST_NAMESPACE, propertyName);
+            name = FACTORY.create(TEST_NAMESPACE, propertyName);
         } else {
             name = PropDef.ANY_NAME;
         }
@@ -141,7 +147,8 @@ public class TestAll extends TestCase {
     private String getDefaultValue(PropDef def, int index) {
         try {
             InternalValue[] values = def.getDefaultValues();
-            NamespaceResolver resolver = new AdditionalNamespaceResolver(registry);
+            NamespaceResolver nsResolver = new AdditionalNamespaceResolver(registry);
+            NamePathResolver resolver = new DefaultNamePathResolver(nsResolver);
             return values[index].toJCRValue(resolver).getString();
         } catch (RepositoryException e) {
             throw new AssertionFailedError(e.getMessage());
@@ -158,7 +165,7 @@ public class TestAll extends TestCase {
      * @return child node definition
      */
     private NodeDef getChildNode(String typeName, String nodeName) {
-        QName name = new QName(TEST_NAMESPACE, nodeName);
+        Name name = FACTORY.create(TEST_NAMESPACE, nodeName);
 
         NodeTypeDef def = getNodeType(typeName);
         NodeDef[] defs = def.getChildNodeDefs();
@@ -215,7 +222,7 @@ public class TestAll extends TestCase {
     public void testItemNodeType() {
         NodeTypeDef def = getNodeType("itemNodeType");
         assertEquals("itemNodeType primaryItemName",
-                new QName(TEST_NAMESPACE, "emptyItem"),
+                FACTORY.create(TEST_NAMESPACE, "emptyItem"),
                 def.getPrimaryItemName());
         assertEquals("itemNodeType propertyDefs",
                 10, def.getPropertyDefs().length);
@@ -537,7 +544,7 @@ public class TestAll extends TestCase {
     public void testDefaultTypeNode() {
         NodeDef def = getChildNode("childNodeType", "defaultTypeNode");
         assertEquals("defaultTypeNode defaultPrimaryType",
-                new QName(TEST_NAMESPACE, "testType"),
+                FACTORY.create(TEST_NAMESPACE, "testType"),
                 def.getDefaultPrimaryType());
     }
 
@@ -546,12 +553,12 @@ public class TestAll extends TestCase {
         NodeDef def = getChildNode("childNodeType", "requiredTypeNode");
         assertEquals("requiredTypeNode requiredPrimaryTypes",
                 2, def.getRequiredPrimaryTypes().length);
-        QName[] types = def.getRequiredPrimaryTypes();
+        Name[] types = def.getRequiredPrimaryTypes();
         Arrays.sort(types);
         assertEquals("requiredTypeNode requiredPrimaryTypes[0]",
-                new QName(TEST_NAMESPACE, "baseType"), types[0]);
+                FACTORY.create(TEST_NAMESPACE, "baseType"), types[0]);
         assertEquals("requiredTypeNode requiredPrimaryTypes[1]",
-                new QName(TEST_NAMESPACE, "testType"), types[1]);
+                FACTORY.create(TEST_NAMESPACE, "testType"), types[1]);
     }
 
     /**

@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.journal;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,6 +50,11 @@ class FileRecordIterator implements RecordIterator {
     private NamespaceResolver resolver;
 
     /**
+     * Name and Path resolver.
+     */
+    private NamePathResolver npResolver;
+
+    /**
      * Current record log, containing file records.
      */
     private FileRecordLog recordLog;
@@ -66,11 +72,12 @@ class FileRecordIterator implements RecordIterator {
      * @param stopRevision stop point (inclusive)
      */
     public FileRecordIterator(File[] logFiles, long startRevision, long stopRevision,
-                              NamespaceResolver resolver) {
+                              NamespaceResolver resolver, NamePathResolver npResolver) {
         this.logFiles = logFiles;
         this.revision = startRevision;
         this.stopRevision = stopRevision;
         this.resolver = resolver;
+        this.npResolver = npResolver;
     }
 
 
@@ -117,7 +124,7 @@ class FileRecordIterator implements RecordIterator {
         }
 
         try {
-            record = recordLog.read(resolver);
+            record = recordLog.read(resolver, npResolver);
             revision = record.getRevision();
             return record;
         } catch (IOException e) {

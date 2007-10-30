@@ -21,7 +21,7 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.ItemStateListener;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.RepositoryException;
 
@@ -56,7 +56,7 @@ public interface VirtualItemStateProvider extends ItemStateManager {
      * @throws RepositoryException
      */
     VirtualPropertyState createPropertyState(VirtualNodeState parent,
-                                             QName name, int type,
+                                             Name name, int type,
                                              boolean multiValued)
             throws RepositoryException;
 
@@ -70,8 +70,8 @@ public interface VirtualItemStateProvider extends ItemStateManager {
      * @return
      * @throws RepositoryException
      */
-    VirtualNodeState createNodeState(VirtualNodeState parent, QName name,
-                                     NodeId id, QName nodeTypeName)
+    VirtualNodeState createNodeState(VirtualNodeState parent, Name name,
+                                     NodeId id, Name nodeTypeName)
         throws RepositoryException;
 
     /**

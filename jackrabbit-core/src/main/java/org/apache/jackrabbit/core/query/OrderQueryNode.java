@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.name.QName;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.jackrabbit.spi.Name;
 
 /**
  * Implements a query node that defines the order of nodes according to the
@@ -58,7 +58,7 @@ public class OrderQueryNode extends QueryNode {
      * @param ascending if <code>true</code> values of this properties are
      *                  ordered ascending; descending if <code>false</code>.
      */
-    public void addOrderSpec(QName property, boolean ascending) {
+    public void addOrderSpec(Name property, boolean ascending) {
         specs.add(new OrderSpec(property, ascending));
     }
 
@@ -123,7 +123,7 @@ public class OrderQueryNode extends QueryNode {
         /**
          * The name of the property
          */
-        private QName property;
+        private Name property;
 
         /**
          * If <code>true</code> this property is orderd ascending
@@ -137,7 +137,7 @@ public class OrderQueryNode extends QueryNode {
          * @param ascending if <code>true</code> the property is ordered
          *                  ascending, otherwise descending.
          */
-        public OrderSpec(QName property, boolean ascending) {
+        public OrderSpec(Name property, boolean ascending) {
             this.property = property;
             this.ascending = ascending;
         }
@@ -147,7 +147,7 @@ public class OrderQueryNode extends QueryNode {
          *
          * @return the name of the property.
          */
-        public QName getProperty() {
+        public Name getProperty() {
             return property;
         }
 

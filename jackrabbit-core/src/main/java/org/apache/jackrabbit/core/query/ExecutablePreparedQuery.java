@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.Value;
 import javax.jcr.RepositoryException;
@@ -37,6 +37,6 @@ public interface ExecutablePreparedQuery extends ExecutableQuery {
      *                                       valid variable in this query.
      * @throws javax.jcr.RepositoryException if an error occurs.
      */
-    public void bindValue(QName varName, Value value)
+    public void bindValue(Name varName, Value value)
             throws IllegalArgumentException, RepositoryException;
 }

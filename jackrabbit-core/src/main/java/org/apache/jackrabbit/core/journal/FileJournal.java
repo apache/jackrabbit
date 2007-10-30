@@ -16,16 +16,16 @@
  */
 package org.apache.jackrabbit.core.journal;
 
+import org.apache.jackrabbit.namespace.NamespaceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.name.NamespaceResolver;
 
-import java.util.Arrays;
-import java.util.Comparator;
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Comparator;
 
 /**
  * File-based journal implementation that appends journal records to a single
@@ -156,7 +156,7 @@ public class FileJournal extends AbstractJournal {
                 }
             });
         }
-        return new FileRecordIterator(logFiles, startRevision, stopRevision, getResolver());
+        return new FileRecordIterator(logFiles, startRevision, stopRevision, getResolver(), getNamePathResolver());
     }
 
     /**

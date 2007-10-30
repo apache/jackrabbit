@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 /**
  * A factory for {@link QueryNode}s.
@@ -31,7 +31,7 @@ public interface QueryNodeFactory {
      * @return a {@link NodeTypeQueryNode}.
      */
     public NodeTypeQueryNode createNodeTypeQueryNode(
-            QueryNode parent, QName nodeType);
+            QueryNode parent, Name nodeType);
 
     /**
      * Creates a {@link AndQueryNode} instance.
@@ -60,7 +60,7 @@ public interface QueryNodeFactory {
      * @return a {@link DerefQueryNode}.
      */
     public DerefQueryNode createDerefQueryNode(
-            QueryNode parent, QName nameTest, boolean descendants);
+            QueryNode parent, Name nameTest, boolean descendants);
 
     /**
      * Creates a {@link NotQueryNode} instance.

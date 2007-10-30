@@ -25,7 +25,8 @@ import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,8 +127,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      *
      * @return the names of all registered node types.
      */
-    public QName[] getRegisteredNodeTypes() {
-        return (QName[]) registeredNTDefs.keySet().toArray(new QName[registeredNTDefs.size()]);
+    public Name[] getRegisteredNodeTypes() {
+        return (Name[]) registeredNTDefs.keySet().toArray(new Name[registeredNTDefs.size()]);
     }
 
     /**
@@ -239,18 +240,18 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     }
 
     /**
-     * Same as <code>{@link #unregisterNodeType(QName)}</code> except
+     * Same as <code>{@link #unregisterNodeType(Name)}</code> except
      * that a set of node types is unregistered instead of just one.
      * <p/>
      * This method can be used to unregister a set of node types that depend on
      * each other.
      *
-     * @param ntNames a collection of <code>QName</code> objects denoting the
+     * @param ntNames a collection of <code>Name</code> objects denoting the
      *                node types to be unregistered
      * @throws NoSuchNodeTypeException if any of the specified names does not
      *                                 denote a registered node type.
      * @throws RepositoryException if another error occurs
-     * @see #unregisterNodeType(QName)
+     * @see #unregisterNodeType(Name)
      */
     public void unregisterNodeTypes(Collection ntNames)
             throws NoSuchNodeTypeException, RepositoryException {
@@ -261,7 +262,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     /**
      * Internal implementation of {@link #unregisterNodeTypes(Collection)}
      *
-     * @param ntNames a collection of <code>QName</code> objects denoting the
+     * @param ntNames a collection of <code>Name</code> objects denoting the
      *                node types to be unregistered
      * @param external whether this invocation should be considered external
      * @throws NoSuchNodeTypeException if any of the specified names does not
@@ -273,7 +274,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
 
         // do some preliminary checks
         for (Iterator iter = ntNames.iterator(); iter.hasNext();) {
-            QName ntName = (QName) iter.next();
+            Name ntName = (Name) iter.next();
             if (!registeredNTDefs.containsKey(ntName)) {
                 throw new NoSuchNodeTypeException(ntName.toString());
             }
@@ -298,7 +299,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
 
         // make sure node types are not currently in use
         for (Iterator iter = ntNames.iterator(); iter.hasNext();) {
-            QName ntName = (QName) iter.next();
+            Name ntName = (Name) iter.next();
             checkForReferencesInContent(ntName);
         }
 
@@ -312,7 +313,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
 
         // persist removal of node type definitions & notify listeners
         for (Iterator iter = ntNames.iterator(); iter.hasNext();) {
-            QName ntName = (QName) iter.next();
+            Name ntName = (Name) iter.next();
             customNTDefs.remove(ntName);
             notifyUnregistered(ntName);
         }
@@ -336,7 +337,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @throws RepositoryException if another error occurs.
      * @see #unregisterNodeTypes(Collection)
      */
-    public void unregisterNodeType(QName ntName)
+    public void unregisterNodeType(Name ntName)
             throws NoSuchNodeTypeException, RepositoryException {
         HashSet ntNames = new HashSet();
         ntNames.add(ntName);
@@ -377,7 +378,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             throws NoSuchNodeTypeException, InvalidNodeTypeDefException,
             RepositoryException {
 
-        QName name = ntd.getName();
+        Name name = ntd.getName();
         if (!registeredNTDefs.containsKey(name)) {
             throw new NoSuchNodeTypeException(name.toString());
         }
@@ -461,7 +462,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @return
      * @throws NoSuchNodeTypeException
      */
-    public EffectiveNodeType getEffectiveNodeType(QName ntName)
+    public EffectiveNodeType getEffectiveNodeType(Name ntName)
             throws NoSuchNodeTypeException {
         return getEffectiveNodeType(ntName, entCache, registeredNTDefs);
     }
@@ -472,7 +473,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @throws NodeTypeConflictException
      * @throws NoSuchNodeTypeException
      */
-    public EffectiveNodeType getEffectiveNodeType(QName[] ntNames)
+    public EffectiveNodeType getEffectiveNodeType(Name[] ntNames)
             throws NodeTypeConflictException, NoSuchNodeTypeException {
         return getEffectiveNodeType(ntNames, entCache, registeredNTDefs);
     }
@@ -482,10 +483,10 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * dependencies on the given node type.
      *
      * @param nodeTypeName node type name
-     * @return a set of node type <code>QName</code>s
+     * @return a set of node type <code>Name</code>s
      * @throws NoSuchNodeTypeException
      */
-    public Set getDependentNodeTypes(QName nodeTypeName)
+    public Set getDependentNodeTypes(Name nodeTypeName)
             throws NoSuchNodeTypeException {
         if (!registeredNTDefs.containsKey(nodeTypeName)) {
             throw new NoSuchNodeTypeException(nodeTypeName.toString());
@@ -514,7 +515,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @throws NoSuchNodeTypeException if a node type with the given name
      *                                 does not exist
      */
-    public NodeTypeDef getNodeTypeDef(QName nodeTypeName)
+    public NodeTypeDef getNodeTypeDef(Name nodeTypeName)
             throws NoSuchNodeTypeException {
         NodeTypeDef def = (NodeTypeDef) registeredNTDefs.get(nodeTypeName);
         if (def == null) {
@@ -529,7 +530,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @return <code>true</code> if the specified node type is registered;
      *         <code>false</code> otherwise.
      */
-    public boolean isRegistered(QName nodeTypeName) {
+    public boolean isRegistered(Name nodeTypeName) {
         return registeredNTDefs.containsKey(nodeTypeName);
     }
 
@@ -538,7 +539,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @return <code>true</code> if the specified node type is built-in;
      *         <code>false</code> otherwise.
      */
-    public boolean isBuiltIn(QName nodeTypeName) {
+    public boolean isBuiltIn(Name nodeTypeName) {
         return builtInNTDefs.contains(nodeTypeName);
     }
 
@@ -592,7 +593,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         while (iter.hasNext()) {
             NodeTypeDef ntd = (NodeTypeDef) iter.next();
             ps.println(ntd.getName());
-            QName[] supertypes = ntd.getSupertypes();
+            Name[] supertypes = ntd.getSupertypes();
             ps.println("\tSupertypes");
             for (int i = 0; i < supertypes.length; i++) {
                 ps.println("\t\t" + supertypes[i]);
@@ -644,13 +645,13 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                 ps.print("\tNodeDefinition");
                 ps.println(" (declared in " + nd[i].getDeclaringNodeType() + ") id=" + nd[i].getId());
                 ps.println("\t\tName\t\t" + (nd[i].definesResidual() ? "*" : nd[i].getName().toString()));
-                QName[] reqPrimaryTypes = nd[i].getRequiredPrimaryTypes();
+                Name[] reqPrimaryTypes = nd[i].getRequiredPrimaryTypes();
                 if (reqPrimaryTypes != null && reqPrimaryTypes.length > 0) {
                     for (int n = 0; n < reqPrimaryTypes.length; n++) {
                         ps.print("\t\tRequiredPrimaryType\t" + reqPrimaryTypes[n]);
                     }
                 }
-                QName defPrimaryType = nd[i].getDefaultPrimaryType();
+                Name defPrimaryType = nd[i].getDefaultPrimaryType();
                 if (defPrimaryType != null) {
                     ps.print("\n\t\tDefaultPrimaryType\t" + defPrimaryType);
                 }
@@ -959,7 +960,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      *                             being referenced or if the check failed for
      *                             some other reason.
      */
-    protected void checkForReferencesInContent(QName nodeTypeName)
+    protected void checkForReferencesInContent(Name nodeTypeName)
             throws RepositoryException {
         throw new RepositoryException("not yet implemented");
     }
@@ -994,12 +995,12 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @throws NoSuchNodeTypeException if a node type reference (e.g. a supertype)
      *                                 could not be resolved.
      */
-    static EffectiveNodeType getEffectiveNodeType(QName ntName,
+    static EffectiveNodeType getEffectiveNodeType(Name ntName,
                                                   EffectiveNodeTypeCache entCache,
                                                   Map ntdCache)
             throws NoSuchNodeTypeException {
         // 1. check if effective node type has already been built
-        EffectiveNodeTypeCache.Key key = entCache.getKey(new QName[]{ntName});
+        EffectiveNodeTypeCache.Key key = entCache.getKey(new Name[]{ntName});
         EffectiveNodeType ent = entCache.get(key);
         if (ent != null) {
             return ent;
@@ -1040,7 +1041,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @throws NoSuchNodeTypeException if a node type reference (e.g. a supertype)
      *                                 could not be resolved.
      */
-    static EffectiveNodeType getEffectiveNodeType(QName[] ntNames,
+    static EffectiveNodeType getEffectiveNodeType(Name[] ntNames,
                                                   EffectiveNodeTypeCache entCache,
                                                   Map ntdCache)
             throws NodeTypeConflictException, NoSuchNodeTypeException {
@@ -1083,7 +1084,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                      * no matching sub-aggregates found:
                      * build aggregate of remaining node types through iteration
                      */
-                    QName[] remainder = key.getNames();
+                    Name[] remainder = key.getNames();
                     for (int i = 0; i < remainder.length; i++) {
                         NodeTypeDef ntd = (NodeTypeDef) ntdCache.get(remainder[i]);
                         EffectiveNodeType ent =
@@ -1111,12 +1112,12 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         return result;
     }
 
-    static void checkForCircularInheritance(QName[] supertypes,
+    static void checkForCircularInheritance(Name[] supertypes,
                                             Stack inheritanceChain,
                                             Map ntDefCache)
             throws InvalidNodeTypeDefException, RepositoryException {
         for (int i = 0; i < supertypes.length; i++) {
-            QName nt = supertypes[i];
+            Name nt = supertypes[i];
             int pos = inheritanceChain.lastIndexOf(nt);
             if (pos >= 0) {
                 StringBuffer buf = new StringBuffer();
@@ -1135,7 +1136,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             try {
 
                 NodeTypeDef ntd = (NodeTypeDef) ntDefCache.get(nt);
-                QName[] sta = ntd.getSupertypes();
+                Name[] sta = ntd.getSupertypes();
                 if (sta.length > 0) {
                     // check recursively
                     inheritanceChain.push(nt);
@@ -1157,9 +1158,9 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             throws InvalidNodeTypeDefException {
         // check for circularity through default node types of auto-created child nodes
         // (node type 'a' defines auto-created child node with default node type 'a')
-        QName[] childNodeNTs = childNodeENT.getAllNodeTypes();
+        Name[] childNodeNTs = childNodeENT.getAllNodeTypes();
         for (int i = 0; i < childNodeNTs.length; i++) {
-            QName nt = childNodeNTs[i];
+            Name nt = childNodeNTs[i];
             int pos = definingParentNTs.lastIndexOf(nt);
             if (pos >= 0) {
                 StringBuffer buf = new StringBuffer();
@@ -1181,8 +1182,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
 
         NodeDef[] nodeDefs = childNodeENT.getAutoCreateNodeDefs();
         for (int i = 0; i < nodeDefs.length; i++) {
-            QName dnt = nodeDefs[i].getDefaultPrimaryType();
-            QName definingNT = nodeDefs[i].getDeclaringNodeType();
+            Name dnt = nodeDefs[i].getDefaultPrimaryType();
+            Name definingNT = nodeDefs[i].getDeclaringNodeType();
             try {
                 if (dnt != null) {
                     // check recursively
@@ -1202,7 +1203,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
 
     private EffectiveNodeType internalRegister(NodeTypeDef ntd)
             throws InvalidNodeTypeDefException, RepositoryException {
-        QName name = ntd.getName();
+        Name name = ntd.getName();
         if (name != null && registeredNTDefs.containsKey(name)) {
             String msg = name + " already exists";
             log.debug(msg);
@@ -1273,7 +1274,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         // and do some preliminary checks
         for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
             NodeTypeDef ntd = (NodeTypeDef) iter.next();
-            QName name = ntd.getName();
+            Name name = ntd.getName();
             if (name != null && registeredNTDefs.containsKey(name)) {
                 String msg = name + " already exists";
                 log.debug(msg);
@@ -1317,7 +1318,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         entCache = tmpENTCache;
     }
 
-    private void internalUnregister(QName name) throws NoSuchNodeTypeException {
+    private void internalUnregister(Name name) throws NoSuchNodeTypeException {
         NodeTypeDef ntd = (NodeTypeDef) registeredNTDefs.get(name);
         if (ntd == null) {
             throw new NoSuchNodeTypeException(name.toString());
@@ -1339,13 +1340,13 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     private void internalUnregister(Collection ntNames)
             throws NoSuchNodeTypeException {
         for (Iterator iter = ntNames.iterator(); iter.hasNext();) {
-            QName name = (QName) iter.next();
+            Name name = (Name) iter.next();
             internalUnregister(name);
         }
     }
 
     /**
-     * Utility method for verifying that the namespace of a <code>QName</code>
+     * Utility method for verifying that the namespace of a <code>Name</code>
      * is registered; a <code>null</code> argument is silently ignored.
      *
      * @param name name whose namespace is to be checked
@@ -1353,7 +1354,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @throws RepositoryException if the namespace of the given name is not
      *                             registered or if an unspecified error occured
      */
-    private static void checkNamespace(QName name, NamespaceRegistry nsReg)
+    private static void checkNamespace(Name name, NamespaceRegistry nsReg)
             throws RepositoryException {
         if (name != null) {
             // make sure namespace uri denotes a registered namespace
@@ -1391,7 +1392,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
          */
         EffectiveNodeType ent = null;
 
-        QName name = ntd.getName();
+        Name name = ntd.getName();
         if (name == null) {
             String msg = "no name specified";
             log.debug(msg);
@@ -1400,7 +1401,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         checkNamespace(name, nsReg);
 
         // validate supertypes
-        QName[] supertypes = ntd.getSupertypes();
+        Name[] supertypes = ntd.getSupertypes();
         if (supertypes.length > 0) {
             for (int i = 0; i < supertypes.length; i++) {
                 checkNamespace(supertypes[i], nsReg);
@@ -1446,8 +1447,8 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             try {
                 EffectiveNodeType est = getEffectiveNodeType(supertypes, entCache, ntdCache);
                 // make sure that all primary types except nt:base extend from nt:base
-                if (!ntd.isMixin() && !QName.NT_BASE.equals(ntd.getName())
-                        && !est.includesNodeType(QName.NT_BASE)) {
+                if (!ntd.isMixin() && !NameConstants.NT_BASE.equals(ntd.getName())
+                        && !est.includesNodeType(NameConstants.NT_BASE)) {
                     String msg = "[" + name + "] all primary node types except"
                             + " nt:base itself must be (directly or indirectly) derived from nt:base";
                     log.debug(msg);
@@ -1566,7 +1567,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                 if (pd.getRequiredType() == PropertyType.REFERENCE) {
                     for (int j = 0; j < constraints.length; j++) {
                         ReferenceConstraint rc = (ReferenceConstraint) constraints[j];
-                        QName ntName = rc.getNodeTypeName();
+                        Name ntName = rc.getNodeTypeName();
                         if (!name.equals(ntName) && !ntdCache.containsKey(ntName)) {
                             String msg = "[" + name + "#" + pd.getName()
                                     + "] invalid REFERENCE value constraint '"
@@ -1610,7 +1611,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                 throw new InvalidNodeTypeDefException(msg);
             }
             // check default primary type
-            QName dpt = cnd.getDefaultPrimaryType();
+            Name dpt = cnd.getDefaultPrimaryType();
             checkNamespace(dpt, nsReg);
             boolean referenceToSelf = false;
             EffectiveNodeType defaultENT = null;
@@ -1669,10 +1670,10 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             }
 
             // check required primary types
-            QName[] reqTypes = cnd.getRequiredPrimaryTypes();
+            Name[] reqTypes = cnd.getRequiredPrimaryTypes();
             if (reqTypes != null && reqTypes.length > 0) {
                 for (int n = 0; n < reqTypes.length; n++) {
-                    QName rpt = reqTypes[n];
+                    Name rpt = reqTypes[n];
                     checkNamespace(rpt, nsReg);
                     referenceToSelf = false;
                     /**
@@ -1761,9 +1762,9 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
 
         // FIXME need a fake declaring node type:
         // rep:root is not quite correct but better than a non-existing node type
-        def.setDeclaringNodeType(QName.REP_ROOT);
-        def.setRequiredPrimaryTypes(new QName[]{QName.REP_ROOT});
-        def.setDefaultPrimaryType(QName.REP_ROOT);
+        def.setDeclaringNodeType(NameConstants.REP_ROOT);
+        def.setRequiredPrimaryTypes(new Name[]{NameConstants.REP_ROOT});
+        def.setDefaultPrimaryType(NameConstants.REP_ROOT);
         def.setMandatory(true);
         def.setProtected(false);
         def.setOnParentVersion(OnParentVersionAction.VERSION);
@@ -1775,7 +1776,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     /**
      * Notify the listeners that a node type <code>ntName</code> has been registered.
      */
-    private void notifyRegistered(QName ntName) {
+    private void notifyRegistered(Name ntName) {
         // copy listeners to array to avoid ConcurrentModificationException
         NodeTypeRegistryListener[] la =
                 (NodeTypeRegistryListener[]) listeners.values().toArray(
@@ -1790,7 +1791,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     /**
      * Notify the listeners that a node type <code>ntName</code> has been re-registered.
      */
-    private void notifyReRegistered(QName ntName) {
+    private void notifyReRegistered(Name ntName) {
         // copy listeners to array to avoid ConcurrentModificationException
         NodeTypeRegistryListener[] la =
                 (NodeTypeRegistryListener[]) listeners.values().toArray(
@@ -1805,7 +1806,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     /**
      * Notify the listeners that a node type <code>ntName</code> has been unregistered.
      */
-    private void notifyUnregistered(QName ntName) {
+    private void notifyUnregistered(Name ntName) {
         // copy listeners to array to avoid ConcurrentModificationException
         NodeTypeRegistryListener[] la =
                 (NodeTypeRegistryListener[]) listeners.values().toArray(

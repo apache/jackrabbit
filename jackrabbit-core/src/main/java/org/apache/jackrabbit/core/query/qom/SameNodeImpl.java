@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.query.qom;
 
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NamePathResolver;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 
 import org.apache.jackrabbit.core.query.jsr283.qom.SameNode;
 
@@ -30,7 +30,7 @@ public class SameNodeImpl extends ConstraintImpl implements SameNode {
     /**
      * The name of a selector.
      */
-    private final QName selectorName;
+    private final Name selectorName;
 
     /**
      * An absolute path.
@@ -38,7 +38,7 @@ public class SameNodeImpl extends ConstraintImpl implements SameNode {
     private final Path path;
 
     SameNodeImpl(NamePathResolver resolver,
-                 QName selectorName,
+                 Name selectorName,
                  Path path) {
         super(resolver);
         this.selectorName = selectorName;

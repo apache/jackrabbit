@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.xpath;
 
+import org.apache.jackrabbit.conversion.MalformedPathException;
+import org.apache.jackrabbit.conversion.NameResolver;
 import org.apache.jackrabbit.core.query.DerefQueryNode;
 import org.apache.jackrabbit.core.query.LocationStepQueryNode;
 import org.apache.jackrabbit.core.query.NAryQueryNode;
@@ -31,18 +33,22 @@ import org.apache.jackrabbit.core.query.TextsearchQueryNode;
 import org.apache.jackrabbit.core.query.PropertyFunctionQueryNode;
 import org.apache.jackrabbit.core.query.DefaultQueryNodeVisitor;
 import org.apache.jackrabbit.core.query.QueryNodeFactory;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.name.PathBuilder;
+import org.apache.jackrabbit.name.PathFactoryImpl;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.commons.collections.map.ReferenceMap;
 
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -54,110 +60,113 @@ import java.util.Map;
  */
 public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
 
+    private static final NameFactory NAME_FACTORY = NameFactoryImpl.getInstance();
+    private static final PathFactory PATH_FACTORY = PathFactoryImpl.getInstance();
+
     /**
      * Namespace uri for xpath functions. See also class SearchManager
      */
     static final String NS_FN_URI = "http://www.w3.org/2005/xpath-functions";
 
     /**
-     * QName for 'fn:not'
+     * Name for 'fn:not'
      */
-    static final QName FN_NOT = new QName(NS_FN_URI, "not");
+    static final Name FN_NOT = NAME_FACTORY.create(NS_FN_URI, "not");
 
     /**
-     * QName for 'fn:lower-case'
+     * Name for 'fn:lower-case'
      */
-    static final QName FN_LOWER_CASE = new QName(NS_FN_URI, "lower-case");
+    static final Name FN_LOWER_CASE = NAME_FACTORY.create(NS_FN_URI, "lower-case");
 
     /**
-     * QName for 'fn:upper-case'
+     * Name for 'fn:upper-case'
      */
-    static final QName FN_UPPER_CASE = new QName(NS_FN_URI, "upper-case");
+    static final Name FN_UPPER_CASE = NAME_FACTORY.create(NS_FN_URI, "upper-case");
 
     /**
-     * QName for 'not' as defined in XPath 1.0 (no prefix)
+     * Name for 'not' as defined in XPath 1.0 (no prefix)
      */
-    static final QName FN_NOT_10 = new QName("", "not");
+    static final Name FN_NOT_10 = NAME_FACTORY.create("", "not");
 
     /**
-     * QName for true function.
+     * Name for true function.
      */
-    static final QName FN_TRUE = new QName("", "true");
+    static final Name FN_TRUE = NAME_FACTORY.create("", "true");
 
     /**
-     * QName for false function.
+     * Name for false function.
      */
-    static final QName FN_FALSE = new QName("", "false");
+    static final Name FN_FALSE = NAME_FACTORY.create("", "false");
 
     /**
-     * QName for position function.
+     * Name for position function.
      */
-    static final QName FN_POSITION = new QName("", "position");
+    static final Name FN_POSITION = NAME_FACTORY.create("", "position");
 
     /**
-     * QName for element function.
+     * Name for element function.
      */
-    static final QName FN_ELEMENT = new QName("", "element");
+    static final Name FN_ELEMENT = NAME_FACTORY.create("", "element");
 
     /**
-     * QName for the full position function including bracket
+     * Name for the full position function including bracket
      */
-    static final QName FN_POSITION_FULL = new QName("", "position()");
+    static final Name FN_POSITION_FULL = NAME_FACTORY.create("", "position()");
 
     /**
-     * QName for jcr:xmltext
+     * Name for jcr:xmltext
      */
-    static final QName JCR_XMLTEXT = new QName(QName.NS_JCR_URI, "xmltext");
+    static final Name JCR_XMLTEXT = NAME_FACTORY.create(Name.NS_JCR_URI, "xmltext");
 
     /**
-     * QName for last function.
+     * Name for last function.
      */
-    static final QName FN_LAST = new QName("", "last");
+    static final Name FN_LAST = NAME_FACTORY.create("", "last");
 
     /**
-     * QName for first function.
+     * Name for first function.
      */
-    static final QName FN_FIRST = new QName("", "first");
+    static final Name FN_FIRST = NAME_FACTORY.create("", "first");
 
     /**
-     * QName for xs:dateTime
+     * Name for xs:dateTime
      */
-    static final QName XS_DATETIME = new QName("http://www.w3.org/2001/XMLSchema", "dateTime");
+    static final Name XS_DATETIME = NAME_FACTORY.create("http://www.w3.org/2001/XMLSchema", "dateTime");
 
     /**
-     * QName for jcr:like
+     * Name for jcr:like
      */
-    static final QName JCR_LIKE = new QName(QName.NS_JCR_URI, "like");
+    static final Name JCR_LIKE = NAME_FACTORY.create(Name.NS_JCR_URI, "like");
 
     /**
-     * QName for jcr:deref
+     * Name for jcr:deref
      */
-    static final QName JCR_DEREF = new QName(QName.NS_JCR_URI, "deref");
+    static final Name JCR_DEREF = NAME_FACTORY.create(Name.NS_JCR_URI, "deref");
 
     /**
-     * QName for jcr:contains
+     * Name for jcr:contains
      */
-    static final QName JCR_CONTAINS = new QName(QName.NS_JCR_URI, "contains");
+    static final Name JCR_CONTAINS = NAME_FACTORY.create(Name.NS_JCR_URI, "contains");
 
     /**
-     * QName for jcr:root
+     * Name for jcr:root
      */
-    static final QName JCR_ROOT = new QName(QName.NS_JCR_URI, "root");
+    static final Name JCR_ROOT = NAME_FACTORY.create(Name.NS_JCR_URI, "root");
 
     /**
-     * QName for jcr:score
+     * Name for jcr:score
      */
-    static final QName JCR_SCORE = new QName(QName.NS_JCR_URI, "score");
+    static final Name JCR_SCORE = NAME_FACTORY.create(Name.NS_JCR_URI, "score");
 
     /**
-     * QName for rep:similar
+     * Name for rep:similar
      */
-    static final QName REP_SIMILAR = new QName(QName.NS_REP_URI, "similar");
+    static final Name REP_SIMILAR = NAME_FACTORY.create(Name.NS_REP_URI, "similar");
 
     /**
-     * QName for rep:spellcheck
+     * Name for rep:spellcheck
      */
-    static final QName REP_SPELLCHECK = new QName(QName.NS_REP_URI, "spellcheck");
+    static final Name REP_SPELLCHECK = NAME_FACTORY.create(Name.NS_REP_URI, "spellcheck");
 
     /**
      * String constant for operator 'eq'
@@ -230,9 +239,9 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     private final QueryRootNode root;
 
     /**
-     * The {@link NamespaceResolver} in use
+     * The {@link NameResolver} in use
      */
-    private final NamespaceResolver resolver;
+    private final NameResolver resolver;
 
     /**
      * List of exceptions that are created while building the query tree
@@ -242,7 +251,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     /**
      * Temporary relative path
      */
-    private Path.PathBuilder tmpRelPath;
+    private PathBuilder tmpRelPath;
 
     /**
      * The query node factory.
@@ -253,12 +262,12 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      * Creates a new <code>XPathQueryBuilder</code> instance.
      *
      * @param statement the XPath statement.
-     * @param resolver  the namespace resolver to use.
+     * @param resolver  the name resolver to use.
      * @param factory   the query node factory.
      * @throws InvalidQueryException if the XPath statement is malformed.
      */
     private XPathQueryBuilder(String statement,
-                              NamespaceResolver resolver,
+                              NameResolver resolver,
                               QueryNodeFactory factory)
             throws InvalidQueryException {
         this.resolver = resolver;
@@ -309,13 +318,13 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      * passed query node <code>factory</code>.
      *
      * @param statement the XPath statement.
-     * @param resolver  the namespace resolver to use.
+     * @param resolver  the name resolver to use.
      * @param factory   the query node factory.
      * @return the <code>QueryNode</code> tree for the XPath statement.
      * @throws InvalidQueryException if the XPath statement is malformed.
      */
     public static QueryRootNode createQuery(String statement,
-                                            NamespaceResolver resolver,
+                                            NameResolver resolver,
                                             QueryNodeFactory factory)
             throws InvalidQueryException {
         return new XPathQueryBuilder(statement, resolver, factory).getRootNode();
@@ -325,12 +334,12 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      * Creates a String representation of the query node tree in XPath syntax.
      *
      * @param root     the root of the query node tree.
-     * @param resolver to resolve QNames.
+     * @param resolver to resolve <code>Name</code>s.
      * @return a String representation of the query node tree.
      * @throws InvalidQueryException if the query node tree cannot be converted
      *                               into a String representation due to restrictions in XPath.
      */
-    public static String toString(QueryRootNode root, NamespaceResolver resolver)
+    public static String toString(QueryRootNode root, NameResolver resolver)
             throws InvalidQueryException {
         return QueryFormat.toString(root, resolver);
     }
@@ -411,7 +420,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                                 null, RelationQueryNode.OPERATION_NOT_NULL);
                         node.childrenAccept(this, tmp);
                         if (tmpRelPath == null) {
-                            tmpRelPath = new Path.PathBuilder();
+                            tmpRelPath = new PathBuilder();
                         }
                         tmpRelPath.addLast(tmp.getRelativePath().getNameElement());
                     }
@@ -450,10 +459,12 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     LocationStepQueryNode loc = (LocationStepQueryNode) queryNode;
                     String ntName = ((SimpleNode) node.jjtGetChild(0)).getValue();
                     try {
-                        QName nt = NameFormat.parse(ntName, resolver);
+                        Name nt = resolver.getQName(ntName);
                         NodeTypeQueryNode nodeType = factory.createNodeTypeQueryNode(loc, nt);
                         loc.addPredicate(nodeType);
                     } catch (NameException e) {
+                        exceptions.add(new InvalidQueryException("Not a valid name: " + ntName));
+                    } catch (NamespaceException e) {
                         exceptions.add(new InvalidQueryException("Not a valid name: " + ntName));
                     }
                 }
@@ -554,7 +565,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             try {
                 Path relPath = tmpRelPath.getPath();
                 for (int i = 0; i < relPath.getLength(); i++) {
-                    node.addPathElement(relPath.getElement(i));
+                    node.addPathElement(relPath.getElements()[i]);
                 }
             } catch (MalformedPathException e) {
                 // should never happen
@@ -594,7 +605,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     }
 
     /**
-     * Assigns a QName to one of the follwing QueryNodes:
+     * Assigns a Name to one of the follwing QueryNodes:
      * {@link RelationQueryNode}, {@link DerefQueryNode}, {@link RelationQueryNode},
      * {@link PathQueryNode}, {@link OrderQueryNode}, {@link TextsearchQueryNode}.
      *
@@ -606,7 +617,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             SimpleNode child = (SimpleNode) node.jjtGetChild(0);
             if (child.getId() == JJTQNAME || child.getId() == JJTQNAMEFORITEMTYPE) {
                 try {
-                    QName name = ISO9075.decode(NameFormat.parse(child.getValue(), resolver));
+                    Name name = decode(resolver.getQName(child.getValue()));
                     if (queryNode.getType() == QueryNode.TYPE_LOCATION) {
                         if (name.equals(JCR_ROOT)) {
                             name = LocationStepQueryNode.EMPTY_NAME;
@@ -615,7 +626,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     } else if (queryNode.getType() == QueryNode.TYPE_DEREF) {
                         ((DerefQueryNode) queryNode).setRefProperty(name);
                     } else if (queryNode.getType() == QueryNode.TYPE_RELATION) {
-                        Path.PathElement element = Path.PathElement.create(name);
+                        Path.Element element = PATH_FACTORY.createElement(name);
                         ((RelationQueryNode) queryNode).addPathElement(element);
                     } else if (queryNode.getType() == QueryNode.TYPE_PATH) {
                         root.addSelectProperty(name);
@@ -623,12 +634,12 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                         root.getOrderNode().addOrderSpec(name, true);
                     } else if (queryNode.getType() == QueryNode.TYPE_TEXTSEARCH) {
                         TextsearchQueryNode ts = (TextsearchQueryNode) queryNode;
-                        ts.addPathElement(Path.PathElement.create(name));
+                        ts.addPathElement(PATH_FACTORY.createElement(name));
                         if (isAttributeNameTest(node)) {
                             ts.setReferencesProperty(true);
                         }
                     }
-                } catch (NameException e) {
+                } catch (RepositoryException e) {
                     exceptions.add(new InvalidQueryException("Illegal name: " + child.getValue()));
                 }
             } else if (child.getId() == JJTSTAR) {
@@ -636,10 +647,10 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     ((LocationStepQueryNode) queryNode).setNameTest(null);
                 } else if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                     ((RelationQueryNode) queryNode).addPathElement(
-                            Path.PathElement.create(RelationQueryNode.STAR_NAME_TEST));
+                            PATH_FACTORY.createElement(RelationQueryNode.STAR_NAME_TEST));
                 } else if (queryNode.getType() == QueryNode.TYPE_TEXTSEARCH) {
                     ((TextsearchQueryNode) queryNode).addPathElement(
-                            Path.PathElement.create(RelationQueryNode.STAR_NAME_TEST));
+                            PATH_FACTORY.createElement(RelationQueryNode.STAR_NAME_TEST));
                 }
             } else {
                 exceptions.add(new InvalidQueryException("Unsupported location for name test: " + child));
@@ -762,8 +773,8 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
         String fName = ((SimpleNode) node.jjtGetChild(0)).getValue();
         fName = fName.substring(0, fName.length() - 1);
         try {
-            if (NameFormat.format(FN_NOT, resolver).equals(fName)
-                    || NameFormat.format(FN_NOT_10, resolver).equals(fName)) {
+            if (resolver.getJCRName(FN_NOT).equals(fName)
+                    || resolver.getJCRName(FN_NOT_10).equals(fName)) {
                 if (queryNode instanceof NAryQueryNode) {
                     QueryNode not = factory.createNotQueryNode(queryNode);
                     ((NAryQueryNode) queryNode).addOperand(not);
@@ -778,7 +789,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for function fn:not"));
                 }
-            } else if (NameFormat.format(XS_DATETIME, resolver).equals(fName)) {
+            } else if (resolver.getJCRName(XS_DATETIME).equals(fName)) {
                 // check arguments
                 if (node.jjtGetNumChildren() == 2) {
                     if (queryNode instanceof RelationQueryNode) {
@@ -804,7 +815,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     // wrong number of arguments
                     exceptions.add(new InvalidQueryException("Wrong number of arguments for xs:dateTime"));
                 }
-            } else if (NameFormat.format(JCR_CONTAINS, resolver).equals(fName)) {
+            } else if (resolver.getJCRName(JCR_CONTAINS).equals(fName)) {
                 // check number of arguments
                 if (node.jjtGetNumChildren() == 3) {
                     if (queryNode instanceof NAryQueryNode) {
@@ -824,7 +835,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     // wrong number of arguments
                     exceptions.add(new InvalidQueryException("Wrong number of arguments for jcr:contains"));
                 }
-            } else if (NameFormat.format(JCR_LIKE, resolver).equals(fName)) {
+            } else if (resolver.getJCRName(JCR_LIKE).equals(fName)) {
                 // check number of arguments
                 if (node.jjtGetNumChildren() == 3) {
                     if (queryNode instanceof NAryQueryNode) {
@@ -852,35 +863,35 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     // wrong number of arguments
                     exceptions.add(new InvalidQueryException("Wrong number of arguments for jcr:like"));
                 }
-            } else if (NameFormat.format(FN_TRUE, resolver).equals(fName)) {
+            } else if (resolver.getJCRName(FN_TRUE).equals(fName)) {
                 if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                     RelationQueryNode rel = (RelationQueryNode) queryNode;
                     rel.setStringValue("true");
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for true()"));
                 }
-            } else if (NameFormat.format(FN_FALSE, resolver).equals(fName)) {
+            } else if (resolver.getJCRName(FN_FALSE).equals(fName)) {
                 if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                     RelationQueryNode rel = (RelationQueryNode) queryNode;
                     rel.setStringValue("false");
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for false()"));
                 }
-            } else if (NameFormat.format(FN_POSITION, resolver).equals(fName)) {
+            } else if (resolver.getJCRName(FN_POSITION).equals(fName)) {
                 if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                     RelationQueryNode rel = (RelationQueryNode) queryNode;
                     if (rel.getOperation() == RelationQueryNode.OPERATION_EQ_GENERAL) {
                         // set dummy value to set type of relation query node
                         // will be overwritten when the tree is furhter parsed.
                         rel.setPositionValue(1);
-                        rel.addPathElement(Path.PathElement.create(FN_POSITION_FULL));
+                        rel.addPathElement(PATH_FACTORY.createElement(FN_POSITION_FULL));
                     } else {
                         exceptions.add(new InvalidQueryException("Unsupported expression with position(). Only = is supported."));
                     }
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for position()"));
                 }
-            } else if (NameFormat.format(FN_FIRST, resolver).equals(fName)) {
+            } else if (resolver.getJCRName(FN_FIRST).equals(fName)) {
                 if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                     ((RelationQueryNode) queryNode).setPositionValue(1);
                 } else if (queryNode.getType() == QueryNode.TYPE_LOCATION) {
@@ -888,7 +899,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for first()"));
                 }
-            } else if (NameFormat.format(FN_LAST, resolver).equals(fName)) {
+            } else if (resolver.getJCRName(FN_LAST).equals(fName)) {
                 if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                     ((RelationQueryNode) queryNode).setPositionValue(LocationStepQueryNode.LAST);
                 } else if (queryNode.getType() == QueryNode.TYPE_LOCATION) {
@@ -896,7 +907,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for last()"));
                 }
-            } else if (NameFormat.format(JCR_DEREF, resolver).equals(fName)) {
+            } else if (resolver.getJCRName(JCR_DEREF).equals(fName)) {
                 // check number of arguments
                 if (node.jjtGetNumChildren() == 3) {
                     boolean descendant = false;
@@ -924,9 +935,9 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                             // strip quotes
                             value = value.substring(1, value.length() - 1);
                             if (!value.equals("*")) {
-                                QName name = null;
+                                Name name = null;
                                 try {
-                                    name = ISO9075.decode(NameFormat.parse(value, resolver));
+                                    name = decode(resolver.getQName(value));
                                 } catch (NameException e) {
                                     exceptions.add(new InvalidQueryException("Illegal name: " + value));
                                 }
@@ -954,13 +965,13 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                         exceptions.add(new InvalidQueryException("Unsupported location for jcr:deref()"));
                     }
                 }
-            } else if (NameFormat.format(JCR_SCORE, resolver).equals(fName)) {
+            } else if (resolver.getJCRName(JCR_SCORE).equals(fName)) {
                 if (queryNode.getType() == QueryNode.TYPE_ORDER) {
                     createOrderSpec(node, (OrderQueryNode) queryNode);
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for jcr:score()"));
                 }
-            } else if (NameFormat.format(FN_LOWER_CASE, resolver).equals(fName)) {
+            } else if (resolver.getJCRName(FN_LOWER_CASE).equals(fName)) {
                 if (node.jjtGetNumChildren() == 2) {
                     if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                         RelationQueryNode relNode = (RelationQueryNode) queryNode;
@@ -974,7 +985,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 } else {
                     exceptions.add(new InvalidQueryException("Wrong number of argument for fn:lower-case()"));
                 }
-            } else if (NameFormat.format(FN_UPPER_CASE, resolver).equals(fName)) {
+            } else if (resolver.getJCRName(FN_UPPER_CASE).equals(fName)) {
                 if (node.jjtGetNumChildren() == 2) {
                     if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                         RelationQueryNode relNode = (RelationQueryNode) queryNode;
@@ -988,7 +999,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for fn:upper-case()"));
                 }
-            } else if (NameFormat.format(REP_SIMILAR, resolver).equals(fName)) {
+            } else if (resolver.getJCRName(REP_SIMILAR).equals(fName)) {
                 if (node.jjtGetNumChildren() == 3) {
                     if (queryNode instanceof NAryQueryNode) {
                         NAryQueryNode parent = (NAryQueryNode) queryNode;
@@ -1013,7 +1024,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     exceptions.add(new InvalidQueryException(
                             "Wrong number of arguments for rep:similar()"));
                 }
-            } else if (NameFormat.format(REP_SPELLCHECK, resolver).equals(fName)
+            } else if (resolver.getJCRName(REP_SPELLCHECK).equals(fName)
                     && queryNode.getType() != QueryNode.TYPE_PATH) {
                 if (node.jjtGetNumChildren() == 2) {
                     if (queryNode instanceof NAryQueryNode) {
@@ -1031,7 +1042,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                         }
 
                         // set a dummy property name
-                        rel.addPathElement(Path.PathElement.create(QName.JCR_PRIMARYTYPE));
+                        rel.addPathElement(PATH_FACTORY.createElement(NameConstants.JCR_PRIMARYTYPE));
                     } else {
                         exceptions.add(new InvalidQueryException(
                                 "Unsupported location for rep:spellcheck()"));
@@ -1043,8 +1054,8 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             } else if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                 // use function name as name of a pseudo property in a relation
                 try {
-                    QName name = NameFormat.parse(fName + "()", resolver);
-                    Path.PathElement element = Path.PathElement.create(name);
+                    Name name = resolver.getQName(fName + "()");
+                    Path.Element element = PATH_FACTORY.createElement(name);
                     RelationQueryNode relNode = (RelationQueryNode) queryNode;
                     relNode.addPathElement(element);
                 } catch (NameException e) {
@@ -1053,7 +1064,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             } else if (queryNode.getType() == QueryNode.TYPE_PATH) {
                 // use function name as name of a pseudo property in select clause
                 try {
-                    QName name = NameFormat.parse(fName + "()", resolver);
+                    Name name = resolver.getQName(fName + "()");
                     root.addSelectProperty(name);
                 } catch (NameException e) {
                     exceptions.add(e);
@@ -1061,7 +1072,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             } else {
                 exceptions.add(new InvalidQueryException("Unsupported function: " + fName));
             }
-        } catch (NoPrefixDeclaredException e) {
+        } catch (NamespaceException e) {
             exceptions.add(e);
         }
         return queryNode;
@@ -1078,10 +1089,12 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 // cut off left parenthesis at end
                 propName = propName.substring(0, propName.length() - 1);
             }
-            QName name = ISO9075.decode(NameFormat.parse(propName, resolver));
+            Name name = decode(resolver.getQName(propName));
             spec = new OrderQueryNode.OrderSpec(name, true);
             queryNode.addOrderSpec(spec);
         } catch (NameException e) {
+            exceptions.add(new InvalidQueryException("Illegal name: " + child.getValue()));
+        } catch (NamespaceException e) {
             exceptions.add(new InvalidQueryException("Illegal name: " + child.getValue()));
         }
         return spec;
@@ -1112,7 +1125,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      *     At @
      *     NodeTest
      *         NameTest
-     *             QName foo
+     *             Name foo
      * </pre>
      * @param node a node with type {@link #JJTNAMETEST}.
      * @return <code>true</code> if the name test <code>node</code> is on the
@@ -1152,5 +1165,14 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             value = value.replaceAll("''", "'");
         }
         return value;
+    }
+
+    private static Name decode(Name name) {
+        String decodedLN = ISO9075.decode(name.getLocalName());
+        if (decodedLN.equals(name.getLocalName())) {
+            return name;
+        } else {
+            return NAME_FACTORY.create(name.getNamespaceURI(), decodedLN);
+        }
     }
 }

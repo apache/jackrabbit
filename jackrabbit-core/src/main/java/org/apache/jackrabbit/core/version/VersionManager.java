@@ -20,7 +20,7 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -86,7 +86,7 @@ public interface VersionManager {
      * @param versionName
      * @throws RepositoryException
      */
-    void removeVersion(VersionHistory history, QName versionName)
+    void removeVersion(VersionHistory history, Name versionName)
             throws RepositoryException;
 
     /**
@@ -104,7 +104,7 @@ public interface VersionManager {
      * @return
      * @throws RepositoryException
      */
-    Version setVersionLabel(VersionHistory history, QName version, QName label,
+    Version setVersionLabel(VersionHistory history, Name version, Name label,
                             boolean move)
             throws RepositoryException;
 

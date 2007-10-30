@@ -20,7 +20,7 @@ import org.apache.jackrabbit.core.value.InternalValue;
 
 /**
  * <code>PropDef</code> is the internal representation of
- * a property definition. It refers to <code>QName</code>s only
+ * a property definition. It refers to <code>Name</code>s only
  * and is thus isolated from session-specific namespace mappings.
  *
  * @see javax.jcr.nodetype.PropertyDefinition

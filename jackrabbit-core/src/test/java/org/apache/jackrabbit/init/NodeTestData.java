@@ -39,19 +39,19 @@ public class NodeTestData extends AbstractJCRTest {
     /** The encoding for the test resource */
     private static final String ENCODING = "UTF-8";
 
-    /** Resolved QName for nt:resource */
+    /** Resolved Name for nt:resource */
     private String ntResource;
 
-    /** Resolved QName for jcr:encoding */
+    /** Resolved Name for jcr:encoding */
     private String jcrEncoding;
 
-    /** Resolved QName for jcr:mimeType */
+    /** Resolved Name for jcr:mimeType */
     private String jcrMimeType;
 
-    /** Resolved QName for jcr:data */
+    /** Resolved Name for jcr:data */
     private String jcrData;
 
-    /** Resolved QName for jcr:lastModified */
+    /** Resolved Name for jcr:lastModified */
     private String jcrLastModified;
 
     /**

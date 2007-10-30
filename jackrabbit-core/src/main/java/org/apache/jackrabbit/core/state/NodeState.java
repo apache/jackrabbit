@@ -22,7 +22,8 @@ import org.apache.commons.collections.map.LinkedMap;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameFactoryImpl;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -51,7 +52,7 @@ public class NodeState extends ItemState {
     /**
      * the name of this node's primary type
      */
-    private QName nodeTypeName;
+    private Name nodeTypeName;
 
     /**
      * the names of this node's mixin types
@@ -86,7 +87,7 @@ public class NodeState extends ItemState {
     private boolean sharedChildNodeEntries = false;
 
     /**
-     * set of property names (QName objects)
+     * set of property names (Name objects)
      */
     private HashSet propertyNames = new HashSet();
 
@@ -124,7 +125,7 @@ public class NodeState extends ItemState {
      * @param initialStatus the initial status of the node state object
      * @param isTransient   flag indicating whether this state is transient or not
      */
-    public NodeState(NodeId id, QName nodeTypeName, NodeId parentId,
+    public NodeState(NodeId id, Name nodeTypeName, NodeId parentId,
                      int initialStatus, boolean isTransient) {
         super(initialStatus, isTransient);
         this.id = id;
@@ -202,7 +203,7 @@ public class NodeState extends ItemState {
      *
      * @return the name of this node's node type.
      */
-    public QName getNodeTypeName() {
+    public Name getNodeTypeName() {
         return nodeTypeName;
     }
 
@@ -260,11 +261,11 @@ public class NodeState extends ItemState {
      * Determines if there is a <code>ChildNodeEntry</code> with the
      * specified <code>name</code>.
      *
-     * @param name <code>QName</code> object specifying a node name
+     * @param name <code>Name</code> object specifying a node name
      * @return <code>true</code> if there is a <code>ChildNodeEntry</code> with
      *         the specified <code>name</code>.
      */
-    public synchronized boolean hasChildNodeEntry(QName name) {
+    public synchronized boolean hasChildNodeEntry(Name name) {
         return !childNodeEntries.get(name).isEmpty();
     }
 
@@ -284,24 +285,24 @@ public class NodeState extends ItemState {
      * Determines if there is a <code>ChildNodeEntry</code> with the
      * specified <code>name</code> and <code>index</code>.
      *
-     * @param name  <code>QName</code> object specifying a node name
+     * @param name  <code>Name</code> object specifying a node name
      * @param index 1-based index if there are same-name child node entries
      * @return <code>true</code> if there is a <code>ChildNodeEntry</code> with
      *         the specified <code>name</code> and <code>index</code>.
      */
-    public synchronized boolean hasChildNodeEntry(QName name, int index) {
+    public synchronized boolean hasChildNodeEntry(Name name, int index) {
         return childNodeEntries.get(name, index) != null;
     }
 
     /**
      * Determines if there is a property entry with the specified
-     * <code>QName</code>.
+     * <code>Name</code>.
      *
-     * @param propName <code>QName</code> object specifying a property name
+     * @param propName <code>Name</code> object specifying a property name
      * @return <code>true</code> if there is a property entry with the specified
-     *         <code>QName</code>.
+     *         <code>Name</code>.
      */
-    public synchronized boolean hasPropertyName(QName propName) {
+    public synchronized boolean hasPropertyName(Name propName) {
         return propertyNames.contains(propName);
     }
 
@@ -309,12 +310,12 @@ public class NodeState extends ItemState {
      * Returns the <code>ChildNodeEntry</code> with the specified name and index
      * or <code>null</code> if there's no matching entry.
      *
-     * @param nodeName <code>QName</code> object specifying a node name
+     * @param nodeName <code>Name</code> object specifying a node name
      * @param index    1-based index if there are same-name child node entries
      * @return the <code>ChildNodeEntry</code> with the specified name and index
      *         or <code>null</code> if there's no matching entry.
      */
-    public synchronized ChildNodeEntry getChildNodeEntry(QName nodeName, int index) {
+    public synchronized ChildNodeEntry getChildNodeEntry(Name nodeName, int index) {
         return childNodeEntries.get(nodeName, index);
     }
 
@@ -352,18 +353,18 @@ public class NodeState extends ItemState {
      * @see #addChildNodeEntry
      * @see #removeChildNodeEntry
      */
-    public synchronized List getChildNodeEntries(QName nodeName) {
+    public synchronized List getChildNodeEntries(Name nodeName) {
         return childNodeEntries.get(nodeName);
     }
 
     /**
      * Adds a new <code>ChildNodeEntry</code>.
      *
-     * @param nodeName <code>QName</code> object specifying the name of the new entry.
+     * @param nodeName <code>Name</code> object specifying the name of the new entry.
      * @param id the id the new entry is refering to.
      * @return the newly added <code>ChildNodeEntry</code>
      */
-    public synchronized ChildNodeEntry addChildNodeEntry(QName nodeName,
+    public synchronized ChildNodeEntry addChildNodeEntry(Name nodeName,
                                                          NodeId id) {
         if (sharedChildNodeEntries) {
             childNodeEntries = (ChildNodeEntries) childNodeEntries.clone();
@@ -377,14 +378,14 @@ public class NodeState extends ItemState {
     /**
      * Renames a new <code>ChildNodeEntry</code>.
      *
-     * @param oldName <code>QName</code> object specifying the entry's old name
+     * @param oldName <code>Name</code> object specifying the entry's old name
      * @param index   1-based index if there are same-name child node entries
-     * @param newName <code>QName</code> object specifying the entry's new name
+     * @param newName <code>Name</code> object specifying the entry's new name
      * @return <code>true</code> if the entry was sucessfully renamed;
      *         otherwise <code>false</code>
      */
-    public synchronized boolean renameChildNodeEntry(QName oldName, int index,
-                                                     QName newName) {
+    public synchronized boolean renameChildNodeEntry(Name oldName, int index,
+                                                     Name newName) {
         if (sharedChildNodeEntries) {
             childNodeEntries = (ChildNodeEntries) childNodeEntries.clone();
             sharedChildNodeEntries = false;
@@ -408,7 +409,7 @@ public class NodeState extends ItemState {
      * @return <code>true</code> if the specified child node entry was found
      *         in the list of child node entries and could be removed.
      */
-    public synchronized boolean removeChildNodeEntry(QName nodeName, int index) {
+    public synchronized boolean removeChildNodeEntry(Name nodeName, int index) {
         if (sharedChildNodeEntries) {
             childNodeEntries = (ChildNodeEntries) childNodeEntries.clone();
             sharedChildNodeEntries = false;
@@ -488,9 +489,9 @@ public class NodeState extends ItemState {
     /**
      * Adds a property name entry.
      *
-     * @param propName <code>QName</code> object specifying the property name
+     * @param propName <code>Name</code> object specifying the property name
      */
-    public synchronized void addPropertyName(QName propName) {
+    public synchronized void addPropertyName(Name propName) {
         if (sharedPropertyNames) {
             propertyNames = (HashSet) propertyNames.clone();
             sharedPropertyNames = false;
@@ -501,11 +502,11 @@ public class NodeState extends ItemState {
     /**
      * Removes a property name entry.
      *
-     * @param propName <code>QName</code> object specifying the property name
+     * @param propName <code>Name</code> object specifying the property name
      * @return <code>true</code> if the specified property name was found
      *         in the list of property name entries and could be removed.
      */
-    public synchronized boolean removePropertyName(QName propName) {
+    public synchronized boolean removePropertyName(Name propName) {
         if (sharedPropertyNames) {
             propertyNames = (HashSet) propertyNames.clone();
             sharedPropertyNames = false;
@@ -526,7 +527,7 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Sets the set of <code>QName</code> objects denoting the
+     * Sets the set of <code>Name</code> objects denoting the
      * properties of this node.
      */
     public synchronized void setPropertyNames(Set propNames) {
@@ -551,17 +552,17 @@ public class NodeState extends ItemState {
      *
      * @param nodeTypeName node type name
      */
-    public synchronized void setNodeTypeName(QName nodeTypeName) {
+    public synchronized void setNodeTypeName(Name nodeTypeName) {
         this.nodeTypeName = nodeTypeName;
     }
 
     //---------------------------------------------------------< diff methods >
     /**
-     * Returns a set of <code>QName</code>s denoting those properties that
+     * Returns a set of <code>Name</code>s denoting those properties that
      * do not exist in the overlayed node state but have been added to
      * <i>this</i> node state.
      *
-     * @return set of <code>QName</code>s denoting the properties that have
+     * @return set of <code>Name</code>s denoting the properties that have
      *         been added.
      */
     public synchronized Set getAddedPropertyNames() {
@@ -591,11 +592,11 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Returns a set of <code>QName</code>s denoting those properties that
+     * Returns a set of <code>Name</code>s denoting those properties that
      * exist in the overlayed node state but have been removed from
      * <i>this</i> node state.
      *
-     * @return set of <code>QName</code>s denoting the properties that have
+     * @return set of <code>Name</code>s denoting the properties that have
      *         been removed.
      */
     public synchronized Set getRemovedPropertyNames() {
@@ -792,7 +793,7 @@ public class NodeState extends ItemState {
      */
     public long calculateMemoryFootprint() {
         /*
-        private QName nodeTypeName;
+        private Name nodeTypeName;
         private Set mixinTypeNames = Collections.EMPTY_SET;
         private NodeId id;
         private NodeId parentId;
@@ -802,9 +803,9 @@ public class NodeState extends ItemState {
         private HashSet propertyNames = new HashSet();
         private boolean sharedPropertyNames = false;
 
-        we assume an average QName localname of 30 chars.
+        we assume an average Name localname of 30 chars.
         NodeId = 8 + UUID(24) + hashcode(4) = 36
-        QName = 8 + hash(4) + string(38+2*len) + namespace(4) + localName(38+2*len) ~ 250
+        Name = 8 + hash(4) + string(38+2*len) + namespace(4) + localName(38+2*len) ~ 250
         NodeDefId = 8 + id(4) = 12
         ChildNodeEntries = 8 + n * (name(256) + index(4) + id(36) + hashentry(16)) ~ n*300
         PropNames = 8 + n * ( name(250))
@@ -878,7 +879,7 @@ public class NodeState extends ItemState {
             return (ChildNodeEntry) entries.get(id);
         }
 
-        List get(QName nodeName) {
+        List get(Name nodeName) {
             Object obj = nameMap.get(nodeName);
             if (obj == null) {
                 return Collections.EMPTY_LIST;
@@ -892,7 +893,7 @@ public class NodeState extends ItemState {
             }
         }
 
-        ChildNodeEntry get(QName nodeName, int index) {
+        ChildNodeEntry get(Name nodeName, int index) {
             if (index < 1) {
                 throw new IllegalArgumentException("index is 1-based");
             }
@@ -916,7 +917,7 @@ public class NodeState extends ItemState {
             return null;
         }
 
-        ChildNodeEntry add(QName nodeName, NodeId id) {
+        ChildNodeEntry add(Name nodeName, NodeId id) {
             List siblings = null;
             int index = 0;
             Object obj = nameMap.get(nodeName);
@@ -951,12 +952,12 @@ public class NodeState extends ItemState {
             Iterator iter = entriesList.iterator();
             while (iter.hasNext()) {
                 ChildNodeEntry entry = (ChildNodeEntry) iter.next();
-                // delegate to add(QName, String) to maintain consistency
+                // delegate to add(Name, String) to maintain consistency
                 add(entry.getName(), entry.getId());
             }
         }
 
-        public ChildNodeEntry remove(QName nodeName, int index) {
+        public ChildNodeEntry remove(Name nodeName, int index) {
             if (index < 1) {
                 throw new IllegalArgumentException("index is 1-based");
             }
@@ -1271,7 +1272,7 @@ public class NodeState extends ItemState {
             // written in writeObject(ObjectOutputStream)
             short count = in.readShort();   // count
             for (int i = 0; i < count; i++) {
-                QName name = QName.valueOf(in.readUTF());    // name
+                Name name = NameFactoryImpl.getInstance().create(in.readUTF());    // name
                 String s = in.readUTF();   // id
                 add(name, NodeId.valueOf(s));
             }
@@ -1359,11 +1360,11 @@ public class NodeState extends ItemState {
 
         private int hash = 0;
 
-        private final QName name;
+        private final Name name;
         private final int index; // 1-based index for same-name siblings
         private final NodeId id;
 
-        private ChildNodeEntry(QName name, NodeId id, int index) {
+        private ChildNodeEntry(Name name, NodeId id, int index) {
             if (name == null) {
                 throw new IllegalArgumentException("name can not be null");
             }
@@ -1384,7 +1385,7 @@ public class NodeState extends ItemState {
             return id;
         }
 
-        public QName getName() {
+        public Name getName() {
             return name;
         }
 

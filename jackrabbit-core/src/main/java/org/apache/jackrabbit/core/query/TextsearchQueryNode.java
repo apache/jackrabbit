@@ -16,9 +16,10 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.conversion.MalformedPathException;
+import org.apache.jackrabbit.name.PathBuilder;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
 
 /**
  * Implements a query node that defines a textsearch clause.
@@ -94,7 +95,7 @@ public class TextsearchQueryNode extends QueryNode {
      * @return property name or <code>null</code>.
      * @deprecated Use {@link #getRelativePath()} instead.
      */
-    public QName getPropertyName() {
+    public Name getPropertyName() {
         return relPath == null ? null : relPath.getNameElement().getName();
     }
 
@@ -104,8 +105,8 @@ public class TextsearchQueryNode extends QueryNode {
      * @param property the name of the property.
      * @deprecated Use {@link #setRelativePath(Path)} instead.
      */
-    public void setPropertyName(QName property) {
-        Path.PathBuilder builder = new Path.PathBuilder();
+    public void setPropertyName(Name property) {
+        PathBuilder builder = new PathBuilder();
         builder.addLast(property);
         try {
             this.relPath = builder.getPath();
@@ -149,8 +150,8 @@ public class TextsearchQueryNode extends QueryNode {
      *
      * @param element the path element to append.
      */
-    public void addPathElement(Path.PathElement element) {
-        Path.PathBuilder builder = new Path.PathBuilder();
+    public void addPathElement(Path.Element element) {
+        PathBuilder builder = new PathBuilder();
         if (relPath != null) {
             builder.addAll(relPath.getElements());
         }
@@ -193,7 +194,7 @@ public class TextsearchQueryNode extends QueryNode {
         }
         return false;
     }
-    
+
     /**
      * {@inheritDoc}
      */

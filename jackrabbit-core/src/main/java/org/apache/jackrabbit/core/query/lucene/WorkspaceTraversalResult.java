@@ -18,10 +18,8 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
@@ -29,6 +27,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.NodeIterator;
 import javax.jcr.Session;
 import javax.jcr.Node;
+import javax.jcr.NamespaceException;
 import java.util.Iterator;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -49,12 +48,12 @@ public class WorkspaceTraversalResult implements QueryResult {
     /**
      * The select properties.
      */
-    private final QName[] properties;
+    private final Name[] properties;
 
     /**
      * The namespace resolver of the session.
      */
-    private final NamespaceResolver resolver;
+    private final NamePathResolver resolver;
 
     /**
      * Creates a new <code>WorkspaceTraversalResult</code>.
@@ -64,8 +63,8 @@ public class WorkspaceTraversalResult implements QueryResult {
      * @param resolver   the namespace resolver of the session.
      */
     public WorkspaceTraversalResult(Session session,
-                             QName[] properties,
-                             NamespaceResolver resolver) {
+                             Name[] properties,
+                             NamePathResolver resolver) {
         this.session = session;
         this.properties = properties;
         this.resolver = resolver;
@@ -78,12 +77,12 @@ public class WorkspaceTraversalResult implements QueryResult {
         try {
             String[] propNames = new String[properties.length];
             for (int i = 0; i < properties.length; i++) {
-                propNames[i] = NameFormat.format(properties[i], resolver);
+                propNames[i] = resolver.getJCRName(properties[i]);
             }
             return propNames;
-        } catch (NoPrefixDeclaredException npde) {
+        } catch (NamespaceException e) {
             String msg = "encountered invalid property name";
-            throw new RepositoryException(msg, npde);
+            throw new RepositoryException(msg, e);
 
         }
     }

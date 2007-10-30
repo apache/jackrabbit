@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.query.qom;
 
-import org.apache.jackrabbit.name.NamePathResolver;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 
 import org.apache.jackrabbit.core.query.jsr283.qom.SameNodeJoinCondition;
 
@@ -32,12 +32,12 @@ public class SameNodeJoinConditionImpl
     /**
      * The name of the first selector.
      */
-    private final QName selector1Name;
+    private final Name selector1Name;
 
     /**
      * The name of the second selector.
      */
-    private final QName selector2Name;
+    private final Name selector2Name;
 
     /**
      * The path relative to the second selector.
@@ -45,8 +45,8 @@ public class SameNodeJoinConditionImpl
     private final Path selector2Path;
 
     SameNodeJoinConditionImpl(NamePathResolver resolver,
-                              QName selector1Name,
-                              QName selector2Name,
+                              Name selector1Name,
+                              Name selector2Name,
                               Path selector2Path) {
         super(resolver);
         this.selector1Name = selector1Name;

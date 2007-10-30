@@ -26,7 +26,7 @@ import org.apache.jackrabbit.core.query.qom.ColumnImpl;
 import org.apache.jackrabbit.core.query.qom.OrderingImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.lucene.search.Query;
 
 import javax.jcr.Value;
@@ -50,12 +50,12 @@ public class PreparedQueryImpl
     private final QueryObjectModelTree qomTree;
 
     /**
-     * Set&lt;QName>, where QName is a variable name in the QOM tree.
+     * Set&lt;Name>, where Name is a variable name in the QOM tree.
      */
     private final Set variableNames = new HashSet();
 
     /**
-     * Binding of variable name to value. Maps {@link QName} to {@link Value}.
+     * Binding of variable name to value. Maps {@link Name} to {@link Value}.
      */
     private final Map bindValues = new HashMap();
 
@@ -108,19 +108,19 @@ public class PreparedQueryImpl
                 propReg, index.getSynonymProvider(), bindValues);
 
         ColumnImpl[] columns = qomTree.getColumns();
-        QName[] selectProps = new QName[columns.length];
+        Name[] selectProps = new Name[columns.length];
         for (int i = 0; i < columns.length; i++) {
             selectProps[i] = columns[i].getPropertyQName();
         }
         OrderingImpl[] orderings = qomTree.getOrderings();
         // TODO: there are many kinds of DynamicOperand that can be ordered by
-        QName[] orderProps = new QName[orderings.length];
+        Name[] orderProps = new Name[orderings.length];
         boolean[] orderSpecs = new boolean[orderings.length];
         for (int i = 0; i < orderings.length; i++) {
             orderSpecs[i] = orderings[i].getOrder() == QueryObjectModelConstants.ORDER_ASCENDING;
         }
         return new QueryResultImpl(index, itemMgr,
-                session.getNamespaceResolver(), session.getAccessManager(),
+                session.getNamePathResolver(), session.getAccessManager(),
                 // TODO: spell suggestion missing
                 this, query, null, selectProps, orderProps, orderSpecs,
                 getRespectDocumentOrder(), offset, limit);
@@ -138,7 +138,7 @@ public class PreparedQueryImpl
      *                                  variable in this query.
      * @throws RepositoryException      if an error occurs.
      */
-    public void bindValue(QName varName, Value value)
+    public void bindValue(Name varName, Value value)
             throws IllegalArgumentException, RepositoryException {
         if (!variableNames.contains(varName)) {
             throw new IllegalArgumentException("not a valid variable in this query");

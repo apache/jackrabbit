@@ -17,10 +17,12 @@
 package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.NameParser;
+import org.apache.jackrabbit.conversion.IllegalNameException;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.ISO9075;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +31,7 @@ import org.xml.sax.SAXException;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceException;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -70,14 +73,16 @@ class DocViewImportHandler extends TargetImportHandler {
      * @return the parsed names
      * @throws SAXException if an invalid name was encountered
      */
-    private QName[] parseNames(String value) throws SAXException {
+    private Name[] parseNames(String value) throws SAXException {
         String[] names = value.split("\\p{Space}+");
-        QName[] qnames = new QName[names.length];
+        Name[] qnames = new Name[names.length];
         for (int i = 0; i < names.length; i++) {
             try {
-                qnames[i] = NameFormat.parse(names[i], nsContext);
+                qnames[i] = resolver.getQName(names[i]);
             } catch (NameException ne) {
                 throw new SAXException("Invalid name: " + names[i], ne);
+            } catch (NamespaceException e) {
+                throw new SAXException("Invalid name: " + names[i], e);
             }
         }
         return qnames;
@@ -97,7 +102,7 @@ class DocViewImportHandler extends TargetImportHandler {
     private void appendCharacters(char[] ch, int start, int length)
             throws SAXException {
         if (textHandler == null) {
-            textHandler = new BufferedStringValue(nsContext);
+            textHandler = new BufferedStringValue(resolver);
         }
         try {
             textHandler.append(ch, start, length);
@@ -147,12 +152,12 @@ class DocViewImportHandler extends TargetImportHandler {
                 }
 
                 NodeInfo node =
-                        new NodeInfo(QName.JCR_XMLTEXT, null, null, null);
+                        new NodeInfo(NameConstants.JCR_XMLTEXT, null, null, null);
                 TextValue[] values =
                         new TextValue[]{textHandler};
                 ArrayList props = new ArrayList();
                 PropInfo prop = new PropInfo(
-                        QName.JCR_XMLCHARACTERS, PropertyType.STRING, values);
+                        NameConstants.JCR_XMLCHARACTERS, PropertyType.STRING, values);
                 props.add(prop);
                 // call Importer
                 importer.startNode(node, props);
@@ -179,14 +184,15 @@ class DocViewImportHandler extends TargetImportHandler {
      * @return the decoded and valid jcr name or the original name if it is
      *         not encoded or if the resulting decoded name would be illegal.
      */
-    private QName processName(QName name) {
-        QName decoded = ISO9075.decode(name);
-        if (decoded != name) {
+    private Name processName(Name name) {
+        String decodedLocalName = ISO9075.decode(name.getLocalName());
+        Name decoded = NameFactoryImpl.getInstance().create(name.getNamespaceURI(), decodedLocalName);
+        if (!decoded.equals(name)) {
             // only need to check format of decoded name since
             // an xml name is always a legal jcr name
             // (http://issues.apache.org/jira/browse/JCR-821)
             try {
-                NameFormat.checkFormat(decoded.getLocalName());
+                NameParser.checkFormat(decoded.getLocalName());
                 return decoded;
             } catch (IllegalNameException ine) {
                 // decoded name would be illegal according to jsr 170,
@@ -214,23 +220,23 @@ class DocViewImportHandler extends TargetImportHandler {
         processCharacters();
 
         try {
-            QName nodeName = new QName(namespaceURI, localName);
+            Name nodeName = NameFactoryImpl.getInstance().create(namespaceURI, localName);
             // process node name
             nodeName = processName(nodeName);
 
             // properties
             NodeId id = null;
-            QName nodeTypeName = null;
-            QName[] mixinTypes = null;
+            Name nodeTypeName = null;
+            Name[] mixinTypes = null;
 
             ArrayList props = new ArrayList(atts.getLength());
             for (int i = 0; i < atts.getLength(); i++) {
-                if (atts.getURI(i).equals(QName.NS_XMLNS_URI)) {
+                if (atts.getURI(i).equals(Name.NS_XMLNS_URI)) {
                     // skip namespace declarations reported as attributes
                     // see http://issues.apache.org/jira/browse/JCR-620#action_12448164
                     continue;
                 }
-                QName propName = new QName(atts.getURI(i), atts.getLocalName(i));
+                Name propName = NameFactoryImpl.getInstance().create(atts.getURI(i), atts.getLocalName(i));
                 // process property name
                 propName = processName(propName);
 
@@ -244,22 +250,22 @@ class DocViewImportHandler extends TargetImportHandler {
                 // see also DocViewSAXEventGenerator#leavingProperties(Node, int)
                 // todo proper multi-value serialization support
                 propValues = new TextValue[1];
-                propValues[0] = new StringValue(attrValue, nsContext);
+                propValues[0] = new StringValue(attrValue, resolver);
 
-                if (propName.equals(QName.JCR_PRIMARYTYPE)) {
+                if (propName.equals(NameConstants.JCR_PRIMARYTYPE)) {
                     // jcr:primaryType
                     if (attrValue.length() > 0) {
                         try {
-                            nodeTypeName = NameFormat.parse(attrValue, nsContext);
+                            nodeTypeName = resolver.getQName(attrValue);
                         } catch (NameException ne) {
                             throw new SAXException("illegal jcr:primaryType value: "
                                     + attrValue, ne);
                         }
                     }
-                } else if (propName.equals(QName.JCR_MIXINTYPES)) {
+                } else if (propName.equals(NameConstants.JCR_MIXINTYPES)) {
                     // jcr:mixinTypes
                     mixinTypes = parseNames(attrValue);
-                } else if (propName.equals(QName.JCR_UUID)) {
+                } else if (propName.equals(NameConstants.JCR_UUID)) {
                     // jcr:uuid
                     if (attrValue.length() > 0) {
                         id = NodeId.valueOf(attrValue);

@@ -34,9 +34,10 @@ import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.nodetype.ItemDef;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.ISO9075;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 
 /**
  * Prints node type defs in a compact notation
@@ -63,6 +64,11 @@ public class CompactNodeTypeDefWriter {
     private final NamespaceResolver resolver;
 
     /**
+     * the current name/path resolver
+     */
+    private final NamePathResolver npResolver;
+
+    /**
      * the underlying writer
      */
     private Writer out;
@@ -82,9 +88,10 @@ public class CompactNodeTypeDefWriter {
      *
      * @param out the underlying writer
      * @param r the namespace resolver
+     * @param npResolver
      */
-    public CompactNodeTypeDefWriter(Writer out, NamespaceResolver r) {
-        this(out, r, false);
+    public CompactNodeTypeDefWriter(Writer out, NamespaceResolver r, NamePathResolver npResolver) {
+        this(out, r, npResolver, false);
     }
 
     /**
@@ -92,11 +99,12 @@ public class CompactNodeTypeDefWriter {
      *
      * @param out the underlaying writer
      * @param r the naespace resolver
+     * @param npResolver
      * @param includeNS if <code>true</code> all used namespace decl. are also
-     *        written.
      */
-    public CompactNodeTypeDefWriter(Writer out, NamespaceResolver r, boolean includeNS) {
+    public CompactNodeTypeDefWriter(Writer out, NamespaceResolver r, NamePathResolver npResolver, boolean includeNS) {
         this.resolver = r;
+        this.npResolver = npResolver;
         if (includeNS) {
             this.out = new StringWriter();
             this.nsWriter = out;
@@ -112,12 +120,13 @@ public class CompactNodeTypeDefWriter {
      *
      * @param l
      * @param r
+     * @param npResolver
      * @param out
      * @throws IOException
      */
-    public static void write(List l, NamespaceResolver r, Writer out)
+    public static void write(List l, NamespaceResolver r, NamePathResolver npResolver, Writer out)
             throws IOException {
-        CompactNodeTypeDefWriter w = new CompactNodeTypeDefWriter(out, r, true);
+        CompactNodeTypeDefWriter w = new CompactNodeTypeDefWriter(out, r, npResolver, true);
         Iterator iter = l.iterator();
         while (iter.hasNext()) {
             NodeTypeDef def = (NodeTypeDef) iter.next();
@@ -172,7 +181,7 @@ public class CompactNodeTypeDefWriter {
      * write supertypes
      */
     private void writeSupertypes(NodeTypeDef ntd) throws IOException {
-        QName[] sta = ntd.getSupertypes();
+        Name[] sta = ntd.getSupertypes();
         String delim = " > ";
         for (int i = 0; i < sta.length; i++) {
             out.write(delim);
@@ -260,7 +269,7 @@ public class CompactNodeTypeDefWriter {
             for (int i = 0; i < dva.length; i++) {
                 out.write(delim);
                 try {
-                    out.write(escape(dva[i].toJCRValue(resolver).getString()));
+                    out.write(escape(dva[i].toJCRValue(npResolver).getString()));
                 } catch (RepositoryException e) {
                     out.write(escape(dva[i].toString()));
                 }
@@ -276,12 +285,12 @@ public class CompactNodeTypeDefWriter {
      */
     private void writeValueConstraints(ValueConstraint[] vca) throws IOException {
         if (vca != null && vca.length > 0) {
-            String vc = vca[0].getDefinition(resolver);
+            String vc = vca[0].getDefinition(npResolver);
             out.write(" < '");
             out.write(escape(vc));
             out.write("'");
             for (int i = 1; i < vca.length; i++) {
-                vc = vca[i].getDefinition(resolver);
+                vc = vca[i].getDefinition(npResolver);
                 out.write(", '");
                 out.write(escape(vc));
                 out.write("'");
@@ -296,7 +305,7 @@ public class CompactNodeTypeDefWriter {
     private void writeNodeDef(NodeTypeDef ntd, NodeDef nd) throws IOException {
         out.write("\n" + INDENT + "+ ");
 
-        QName name = nd.getName();
+        Name name = nd.getName();
         if (name.equals(ItemDef.ANY_NAME)) {
             out.write('*');
         } else {
@@ -328,14 +337,14 @@ public class CompactNodeTypeDefWriter {
      * @param name
      * @throws IOException
      */
-    private void writeItemDefName(QName name) throws IOException {
+    private void writeItemDefName(Name name) throws IOException {
         out.write(resolve(name));
     }
     /**
      * write required types
      * @param reqTypes
      */
-    private void writeRequiredTypes(QName[] reqTypes) throws IOException {
+    private void writeRequiredTypes(Name[] reqTypes) throws IOException {
         if (reqTypes != null && reqTypes.length > 0) {
             String delim = " (";
             for (int i = 0; i < reqTypes.length; i++) {
@@ -351,7 +360,7 @@ public class CompactNodeTypeDefWriter {
      * write default types
      * @param defType
      */
-    private void writeDefaultType(QName defType) throws IOException {
+    private void writeDefaultType(Name defType) throws IOException {
         if (defType != null && !defType.getLocalName().equals("*")) {
             out.write(" = ");
             out.write(resolve(defType));
@@ -363,13 +372,13 @@ public class CompactNodeTypeDefWriter {
      * @param qname
      * @return the resolved name
      */
-    private String resolve(QName qname) throws IOException {
+    private String resolve(Name qname) throws IOException {
         if (qname == null) {
             return "";
         }
         try {
             String prefix = resolver.getPrefix(qname.getNamespaceURI());
-            if (prefix != null && !prefix.equals(QName.NS_EMPTY_PREFIX)) {
+            if (prefix != null && !prefix.equals(Name.NS_EMPTY_PREFIX)) {
                 // check for writing namespaces
                 if (nsWriter != null) {
                     if (!usedNamespaces.contains(prefix)) {
@@ -384,7 +393,8 @@ public class CompactNodeTypeDefWriter {
                 prefix += ":";
             }
 
-            String resolvedName = prefix + ISO9075.encode(qname).getLocalName();
+            String encLocalName = ISO9075.encode(qname.getLocalName());
+            String resolvedName = prefix + encLocalName;
 
             // check for '-' and '+'
             if (resolvedName.indexOf('-') >= 0 || resolvedName.indexOf('+') >= 0) {

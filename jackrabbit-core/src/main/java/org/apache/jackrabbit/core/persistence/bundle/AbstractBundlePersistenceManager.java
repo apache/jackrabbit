@@ -42,7 +42,8 @@ import org.apache.jackrabbit.core.persistence.bundle.util.NodePropBundle;
 import org.apache.jackrabbit.core.persistence.bundle.util.BundleCache;
 import org.apache.jackrabbit.core.persistence.bundle.util.LRUNodeIdCache;
 import org.apache.jackrabbit.core.persistence.bundle.util.HashMapIndex;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -406,12 +407,12 @@ public abstract class AbstractBundlePersistenceManager implements
 
         // init prop defs
         if (context.getNodeTypeRegistry() != null) {
-            idJcrUUID = context.getNodeTypeRegistry().getEffectiveNodeType(QName.MIX_REFERENCEABLE).getApplicablePropertyDef(
-                    QName.JCR_UUID, PropertyType.STRING, false).getId();
-            idJcrPrimaryType = context.getNodeTypeRegistry().getEffectiveNodeType(QName.NT_BASE).getApplicablePropertyDef(
-                    QName.JCR_PRIMARYTYPE, PropertyType.NAME, false).getId();
-            idJcrMixinTypes = context.getNodeTypeRegistry().getEffectiveNodeType(QName.NT_BASE).getApplicablePropertyDef(
-                    QName.JCR_MIXINTYPES, PropertyType.NAME, true).getId();
+            idJcrUUID = context.getNodeTypeRegistry().getEffectiveNodeType(NameConstants.MIX_REFERENCEABLE).getApplicablePropertyDef(
+                    NameConstants.JCR_UUID, PropertyType.STRING, false).getId();
+            idJcrPrimaryType = context.getNodeTypeRegistry().getEffectiveNodeType(NameConstants.NT_BASE).getApplicablePropertyDef(
+                    NameConstants.JCR_PRIMARYTYPE, PropertyType.NAME, false).getId();
+            idJcrMixinTypes = context.getNodeTypeRegistry().getEffectiveNodeType(NameConstants.NT_BASE).getApplicablePropertyDef(
+                    NameConstants.JCR_MIXINTYPES, PropertyType.NAME, true).getId();
         }
     }
 
@@ -443,25 +444,25 @@ public abstract class AbstractBundlePersistenceManager implements
         PropertyState state = bundle.createPropertyState(this, id.getName());
         if (state == null) {
             // check if autocreated property state
-            if (id.getName().equals(QName.JCR_UUID)) {
+            if (id.getName().equals(NameConstants.JCR_UUID)) {
                 state = createNew(id);
                 state.setType(PropertyType.STRING);
                 state.setDefinitionId(idJcrUUID);
                 state.setMultiValued(false);
                 state.setValues(new InternalValue[]{InternalValue.create(id.getParentId().getUUID().toString())});
-            } else if (id.getName().equals(QName.JCR_PRIMARYTYPE)) {
+            } else if (id.getName().equals(NameConstants.JCR_PRIMARYTYPE)) {
                 state = createNew(id);
                 state.setType(PropertyType.NAME);
                 state.setDefinitionId(idJcrPrimaryType);
                 state.setMultiValued(false);
                 state.setValues(new InternalValue[]{InternalValue.create(bundle.getNodeTypeName())});
-            } else if (id.getName().equals(QName.JCR_MIXINTYPES)) {
+            } else if (id.getName().equals(NameConstants.JCR_MIXINTYPES)) {
                 Set mixins = bundle.getMixinTypeNames();
                 state = createNew(id);
                 state.setType(PropertyType.NAME);
                 state.setDefinitionId(idJcrMixinTypes);
                 state.setMultiValued(true);
-                state.setValues(InternalValue.create((QName[]) mixins.toArray(new QName[mixins.size()])));
+                state.setValues(InternalValue.create((Name[]) mixins.toArray(new Name[mixins.size()])));
             } else {
                 throw new NoSuchItemStateException(id.toString());
             }
@@ -557,9 +558,9 @@ public abstract class AbstractBundlePersistenceManager implements
             } else {
                 PropertyId id = (PropertyId) state.getId();
                 // skip primaryType pr mixinTypes properties
-                if (id.getName().equals(QName.JCR_PRIMARYTYPE)
-                    || id.getName().equals(QName.JCR_MIXINTYPES)
-                    || id.getName().equals(QName.JCR_UUID)) {
+                if (id.getName().equals(NameConstants.JCR_PRIMARYTYPE)
+                    || id.getName().equals(NameConstants.JCR_MIXINTYPES)
+                    || id.getName().equals(NameConstants.JCR_UUID)) {
                     continue;
                 }
                 NodeId nodeId = id.getParentId();
@@ -609,9 +610,9 @@ public abstract class AbstractBundlePersistenceManager implements
             if (!state.isNode()) {
                 PropertyId id = (PropertyId) state.getId();
                 // skip primaryType pr mixinTypes properties
-                if (id.getName().equals(QName.JCR_PRIMARYTYPE)
-                    || id.getName().equals(QName.JCR_MIXINTYPES)
-                    || id.getName().equals(QName.JCR_UUID)) {
+                if (id.getName().equals(NameConstants.JCR_PRIMARYTYPE)
+                    || id.getName().equals(NameConstants.JCR_MIXINTYPES)
+                    || id.getName().equals(NameConstants.JCR_UUID)) {
                     continue;
                 }
                 NodeId nodeId = id.getParentId();

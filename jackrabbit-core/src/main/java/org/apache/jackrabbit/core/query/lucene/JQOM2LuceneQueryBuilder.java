@@ -57,10 +57,10 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.HierarchyManagerImpl;
 import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.BooleanQuery;
@@ -121,6 +121,11 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
     private final NamespaceMappings nsMappings;
 
     /**
+     * NamePathResolver to map namespace mappings to internal prefixes
+     */
+    private final NamePathResolver npResolver;
+
+    /**
      * The analyzer instance to use for contains function query parsing
      */
     private final Analyzer analyzer;
@@ -142,7 +147,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
 
     /**
      * The selector queries that have already been translated into lucene
-     * queries. Key=QName (selectorName).
+     * queries. Key=Name (selectorName).
      */
     private final Map selectors = new HashMap();
 
@@ -176,6 +181,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
         this.sharedItemMgr = sharedItemMgr;
         this.hmgr = hmgr;
         this.nsMappings = nsMappings;
+        this.npResolver = NamePathResolverImpl.create(nsMappings);
         this.analyzer = analyzer;
         this.propRegistry = propReg;
         this.synonymProvider = synonymProvider;
@@ -292,12 +298,12 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
                 stringValue = LongField.longToString(v.getLong());
                 break;
             case PropertyType.NAME:
-                stringValue = nsMappings.translatePropertyName(
-                        v.getString(), session.getNamespaceResolver());
+                Name n = session.getQName(v.getString());
+                stringValue = nsMappings.translatePropertyName(n);
                 break;
             case PropertyType.PATH:
-                Path p = PathFormat.parse(v.getString(), session.getNamespaceResolver());
-                stringValue = PathFormat.format(p, nsMappings);
+                Path p = session.getQPath(v.getString());
+                stringValue = npResolver.getJCRPath(p);
                 break;
             case PropertyType.REFERENCE:
                 stringValue = v.getString();
@@ -316,7 +322,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
         return ((DynamicOperandImpl) node.getOperand1()).accept(
                 new DefaultTraversingQOMTreeVisitor() {
             public Object visit(PropertyValueImpl node, Object data) throws Exception {
-                String propName = NameFormat.format(node.getPropertyQName(), nsMappings);
+                String propName = npResolver.getJCRName(node.getPropertyQName());
                 String text = FieldNames.createNamedValue(propName, stringValue);
                 switch (operator) {
                     case QueryObjectModelConstants.OPERATOR_EQUAL_TO:
@@ -446,7 +452,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
             fieldname = FieldNames.FULLTEXT;
         } else {
             // final path element is a property name
-            QName propName = node.getPropertyQName();
+            Name propName = node.getPropertyQName();
             StringBuffer tmp = new StringBuffer();
             tmp.append(nsMappings.getPrefix(propName.getNamespaceURI()));
             tmp.append(":").append(FieldNames.FULLTEXT_PREFIX);
@@ -545,7 +551,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
     }
 
     public Object visit(PropertyExistenceImpl node, Object data) throws Exception {
-        String propName = NameFormat.format(node.getPropertyQName(), nsMappings);
+        String propName = npResolver.getJCRName(node.getPropertyQName());
         return new MatchAllQuery(propName);
     }
 
@@ -580,8 +586,8 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
 
     public Object visit(SelectorImpl node, Object data) throws Exception {
         List terms = new ArrayList();
-        String mixinTypesField = NameFormat.format(QName.JCR_MIXINTYPES, nsMappings);
-        String primaryTypeField = NameFormat.format(QName.JCR_PRIMARYTYPE, nsMappings);
+        String mixinTypesField = npResolver.getJCRName(NameConstants.JCR_MIXINTYPES);
+        String primaryTypeField = npResolver.getJCRName(NameConstants.JCR_PRIMARYTYPE);
 
         NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
         NodeType base = null;
@@ -595,13 +601,13 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
             // search for nodes where jcr:mixinTypes is set to this mixin
             Term t = new Term(FieldNames.PROPERTIES,
                     FieldNames.createNamedValue(mixinTypesField,
-                            NameFormat.format(node.getNodeTypeQName(), nsMappings)));
+                            npResolver.getJCRName(node.getNodeTypeQName())));
             terms.add(t);
         } else {
             // search for nodes where jcr:primaryType is set to this type
             Term t = new Term(FieldNames.PROPERTIES,
                     FieldNames.createNamedValue(primaryTypeField,
-                            NameFormat.format(node.getNodeTypeQName(), nsMappings)));
+                            npResolver.getJCRName(node.getNodeTypeQName())));
             terms.add(t);
         }
 
@@ -612,8 +618,8 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
                 NodeType nt = allTypes.nextNodeType();
                 NodeType[] superTypes = nt.getSupertypes();
                 if (Arrays.asList(superTypes).contains(base)) {
-                    String ntName = nsMappings.translatePropertyName(nt.getName(),
-                            session.getNamespaceResolver());
+                    Name n = session.getQName(nt.getName());
+                    String ntName = nsMappings.translatePropertyName(n);
                     Term t;
                     if (nt.isMixin()) {
                         // search on jcr:mixinTypes

@@ -19,8 +19,8 @@ package org.apache.jackrabbit.core.journal;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 
 /**
  * Record interface.
@@ -97,20 +97,20 @@ public interface Record {
     public void readFully(byte[] b) throws JournalException;
 
     /**
-     * Read a <code>QName</code> frmo the underlying stream.
+     * Read a <code>Name</code> frmo the underlying stream.
      *
      * @return name name
      * @throws JournalException if an error occurs
      */
-    public QName readQName() throws JournalException;
+    public Name readQName() throws JournalException;
 
     /**
-     * Read a <code>Path.PathElement</code> from the underlying stream.
+     * Read a <code>Path.Element</code> from the underlying stream.
      *
      * @return path element
      * @throws JournalException if an error occurs
      */
-    public Path.PathElement readPathElement() throws JournalException;
+    public Path.Element readPathElement() throws JournalException;
 
     /**
      * Read a <code>Path</code> from the underlying stream.
@@ -193,20 +193,20 @@ public interface Record {
     public void write(byte[] b) throws JournalException;
 
     /**
-     * Write a <code>QName</code> to the underlying stream.
+     * Write a <code>Name</code> to the underlying stream.
      *
      * @param name name
      * @throws JournalException if an error occurs
      */
-    public void writeQName(QName name) throws JournalException;
+    public void writeQName(Name name) throws JournalException;
 
     /**
-     * Write a <code>Path.PathElement</code> to the underlying stream.
+     * Write a <code>Path.Element</code> to the underlying stream.
      *
      * @param element path element
      * @throws JournalException if an error occurs
      */
-    public void writePathElement(Path.PathElement element) throws JournalException;
+    public void writePathElement(Path.Element element) throws JournalException;
 
     /**
      * Write a <code>Path</code> to the underlying stream.

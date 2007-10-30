@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.conversion.IllegalNameException;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.Name;
 
 /**
  * The class <code>NamespaceMappings</code> holds a namespace mapping that is
@@ -31,11 +31,8 @@ public interface NamespaceMappings extends NamespaceResolver {
      * Translates a property name from a session local namespace mapping into a
      * search index private namespace mapping.
      *
-     * @param name     the property name to translate
-     * @param resolver the <code>NamespaceResolver</code> of the local session.
-     * @return the translated property name
+     * @param qName     the property name to translate
+     * @return the translated JCR property name
      */
-    public String translatePropertyName(String name,
-                                        NamespaceResolver resolver)
-            throws IllegalNameException, UnknownPrefixException;
+    public String translatePropertyName(Name qName) throws IllegalNameException;
 }

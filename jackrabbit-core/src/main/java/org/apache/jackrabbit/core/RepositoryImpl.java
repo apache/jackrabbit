@@ -61,8 +61,8 @@ import org.apache.jackrabbit.core.util.RepositoryLock;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
@@ -613,7 +613,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                 obsMgr.addEventListener(systemSearchMgr, Event.NODE_ADDED
                         | Event.NODE_REMOVED | Event.PROPERTY_ADDED
                         | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED,
-                        "/" + defSysSession.getJCRName(QName.JCR_SYSTEM),
+                        "/" + defSysSession.getJCRName(NameConstants.JCR_SYSTEM),
                         true, null, null, false);
             }
         }

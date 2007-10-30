@@ -31,18 +31,21 @@ import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
 import org.apache.jackrabbit.core.query.PropertyFunctionQueryNode;
 import org.apache.jackrabbit.core.query.QueryNodeFactory;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.name.PathBuilder;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.conversion.MalformedPathException;
+import org.apache.jackrabbit.conversion.NameResolver;
 import org.apache.jackrabbit.util.ISO8601;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.commons.collections.map.ReferenceMap;
 
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.NamespaceException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -88,7 +91,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     /**
      * To resolve QNames
      */
-    private NamespaceResolver resolver;
+    private NameResolver resolver;
 
     /**
      * Query node to gather the constraints defined in the WHERE clause
@@ -96,9 +99,9 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     private final AndQueryNode constraintNode;
 
     /**
-     * The QName of the node type in the from clause.
+     * The Name of the node type in the from clause.
      */
-    private QName nodeTypeName;
+    private Name nodeTypeName;
 
     /**
      * List of PathQueryNode constraints that need to be merged
@@ -119,7 +122,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
      * @param factory   the query node factory.
      */
     private JCRSQLQueryBuilder(ASTQuery statement,
-                               NamespaceResolver resolver,
+                               NameResolver resolver,
                                QueryNodeFactory factory) {
         this.stmt = statement;
         this.resolver = resolver;
@@ -137,7 +140,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
      * @throws InvalidQueryException if <code>statement</code> is malformed.
      */
     public static QueryRootNode createQuery(String statement,
-                                            NamespaceResolver resolver,
+                                            NameResolver resolver,
                                             QueryNodeFactory factory)
             throws InvalidQueryException {
         try {
@@ -147,7 +150,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 parser = (JCRSQLParser) parsers.get(resolver);
                 if (parser == null) {
                     parser = new JCRSQLParser(new StringReader(statement));
-                    parser.setNamespaceResolver(resolver);
+                    parser.setNameResolver(resolver);
                     parsers.put(resolver, parser);
                 }
             }
@@ -178,7 +181,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
      * @throws InvalidQueryException if the query node tree cannot be converted
      *                               into a String representation due to restrictions in SQL.
      */
-    public static String toString(QueryRootNode root, NamespaceResolver resolver)
+    public static String toString(QueryRootNode root, NameResolver resolver)
             throws InvalidQueryException {
         return QueryFormat.toString(root, resolver);
     }
@@ -286,7 +289,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             }
 
             public Object visit(ASTExcerptFunction node, Object data) {
-                root.addSelectProperty(new QName(QName.NS_REP_URI, "excerpt(.)"));
+                root.addSelectProperty(NameFactoryImpl.getInstance().create(Name.NS_REP_URI, "excerpt(.)"));
                 return data;
             }
         }, root);
@@ -299,7 +302,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
         return node.childrenAccept(new DefaultParserVisitor() {
             public Object visit(ASTIdentifier node, Object data) {
-                if (!node.getName().equals(QName.NT_BASE)) {
+                if (!node.getName().equals(NameConstants.NT_BASE)) {
                     // node is either primary or mixin node type
                     nodeTypeName = node.getName();
                 }
@@ -319,7 +322,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         QueryNode predicateNode;
 
         try {
-            final QName[] tmp = new QName[2];
+            final Name[] tmp = new Name[2];
             final ASTLiteral[] value = new ASTLiteral[1];
             node.childrenAccept(new DefaultParserVisitor() {
                 public Object visit(ASTIdentifier node, Object data) {
@@ -360,9 +363,9 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                     }
                 }
             }, data);
-            QName identifier = tmp[0];
+            Name identifier = tmp[0];
 
-            if (identifier != null && identifier.equals(QName.JCR_PATH)) {
+            if (identifier != null && identifier.equals(NameConstants.JCR_PATH)) {
                 if (tmp[1] != null) {
                     // simply ignore, this is a join of a mixin node type
                 } else {
@@ -437,7 +440,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 predicateNode = createRelationQueryNode(parent, identifier, type, literal);
             } else if (type == QueryConstants.OPERATION_SPELLCHECK) {
                 predicateNode = createRelationQueryNode(parent,
-                        QName.JCR_PRIMARYTYPE, type,
+                        NameConstants.JCR_PRIMARYTYPE, type,
                         (ASTLiteral) node.children[0]);
             } else {
                 throw new IllegalArgumentException("Unknown operation type: " + type);
@@ -514,7 +517,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     public Object visit(ASTOrderSpec node, Object data) {
         OrderQueryNode order = (OrderQueryNode) data;
 
-        final QName[] identifier = new QName[1];
+        final Name[] identifier = new Name[1];
 
         // collect identifier
         node.childrenAccept(new DefaultParserVisitor() {
@@ -548,7 +551,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         try {
             Path relPath = null;
             if (node.getPropertyName() != null) {
-                Path.PathBuilder builder = new Path.PathBuilder();
+                PathBuilder builder = new PathBuilder();
                 builder.addLast(node.getPropertyName());
                 relPath = builder.getPath();
             }
@@ -601,7 +604,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
      *                                  to its type. E.g. a malformed String representation of a date.
      */
     private RelationQueryNode createRelationQueryNode(QueryNode parent,
-                                                      QName propertyName,
+                                                      Name propertyName,
                                                       int operationType,
                                                       ASTLiteral literal)
             throws IllegalArgumentException {
@@ -612,7 +615,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         try {
             Path relPath = null;
             if (propertyName != null) {
-                Path.PathBuilder builder = new Path.PathBuilder();
+                PathBuilder builder = new PathBuilder();
                 builder.addLast(propertyName);
                 relPath = builder.getPath();
             }
@@ -721,10 +724,12 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                         index = 1;
                     }
                 }
-                QName qName = null;
+                Name qName = null;
                 if (name != null) {
                     try {
-                        qName = NameFormat.parse(name, resolver);
+                        qName = resolver.getQName(name);
+                    } catch (NamespaceException e) {
+                        throw new IllegalArgumentException("Illegal name: " + name);
                     } catch (NameException e) {
                         throw new IllegalArgumentException("Illegal name: " + name);
                     }

@@ -24,8 +24,8 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.ZombieHierarchyManager;
 import org.apache.jackrabbit.core.util.Dumpable;
-import org.apache.jackrabbit.name.PathResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.conversion.PathResolver;
+import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -234,14 +234,14 @@ public class SessionItemStateManager
     /**
      * {@inheritDoc}
      */
-    public NodeState createNew(NodeId id, QName nodeTypeName,
+    public NodeState createNew(NodeId id, Name nodeTypeName,
                                NodeId parentId)
             throws IllegalStateException {
         return stateMgr.createNew(id, nodeTypeName, parentId);
     }
 
     /**
-     * Customized variant of {@link #createNew(NodeId, QName, NodeId)} that
+     * Customized variant of {@link #createNew(NodeId, Name, NodeId)} that
      * connects the newly created persistent state with the transient state.
      */
     public NodeState createNew(NodeState transientState)
@@ -257,13 +257,13 @@ public class SessionItemStateManager
     /**
      * {@inheritDoc}
      */
-    public PropertyState createNew(QName propName, NodeId parentId)
+    public PropertyState createNew(Name propName, NodeId parentId)
             throws IllegalStateException {
         return stateMgr.createNew(propName, parentId);
     }
 
     /**
-     * Customized variant of {@link #createNew(QName, NodeId)} that
+     * Customized variant of {@link #createNew(Name, NodeId)} that
      * connects the newly created persistent state with the transient state.
      */
     public PropertyState createNew(PropertyState transientState)
@@ -553,7 +553,7 @@ public class SessionItemStateManager
      * @return
      * @throws ItemStateException
      */
-    public NodeState createTransientNodeState(NodeId id, QName nodeTypeName, NodeId parentId, int initialStatus)
+    public NodeState createTransientNodeState(NodeId id, Name nodeTypeName, NodeId parentId, int initialStatus)
             throws ItemStateException {
 
         // check map; synchronized to ensure an entry is not created twice.
@@ -607,7 +607,7 @@ public class SessionItemStateManager
      * @return
      * @throws ItemStateException
      */
-    public PropertyState createTransientPropertyState(NodeId parentId, QName propName, int initialStatus)
+    public PropertyState createTransientPropertyState(NodeId parentId, Name propName, int initialStatus)
             throws ItemStateException {
 
         PropertyId id = new PropertyId(parentId, propName);
@@ -875,7 +875,7 @@ public class SessionItemStateManager
      * Pass notification to listeners if a transient state was modified
      * or if the local state is not overlayed.
      */
-    public void nodeAdded(NodeState state, QName name, int index, NodeId id) {
+    public void nodeAdded(NodeState state, Name name, int index, NodeId id) {
         if (state.getContainer() == this || !transientStore.contains(state.getId())) {
             dispatcher.notifyNodeAdded(state, name, index, id);
         }
@@ -911,7 +911,7 @@ public class SessionItemStateManager
      * Pass notification to listeners if a transient state was modified
      * or if the local state is not overlayed.
      */
-    public void nodeRemoved(NodeState state, QName name, int index, NodeId id) {
+    public void nodeRemoved(NodeState state, Name name, int index, NodeId id) {
         if (state.getContainer() == this || !transientStore.contains(state.getId())) {
             dispatcher.notifyNodeRemoved(state, name, index, id);
         }

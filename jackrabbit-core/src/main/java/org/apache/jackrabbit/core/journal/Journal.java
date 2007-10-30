@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.journal;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
 
 /**
  * Generic journal interface.

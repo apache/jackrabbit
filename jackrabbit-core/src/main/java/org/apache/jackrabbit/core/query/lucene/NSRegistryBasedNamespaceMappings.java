@@ -16,14 +16,11 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.name.AbstractNamespaceResolver;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.UnknownPrefixException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.conversion.IllegalNameException;
+import org.apache.jackrabbit.conversion.NameResolver;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.NamespaceException;
 
@@ -40,6 +37,11 @@ public class NSRegistryBasedNamespaceMappings
      */
     private final NamespaceRegistryImpl nsReg;
 
+        /**
+     * The name resolver used to translate the qualified name to JCR name
+     */
+    private final NameResolver nameResolver;
+
     /**
      * Creates a new <code>NSRegistryBasedNamespaceMappings</code>.
      *
@@ -47,6 +49,7 @@ public class NSRegistryBasedNamespaceMappings
      */
     NSRegistryBasedNamespaceMappings(NamespaceRegistryImpl nsReg) {
         this.nsReg = nsReg;
+        this.nameResolver = NamePathResolverImpl.create(this);
     }
 
     //-------------------------------< NamespaceResolver >----------------------
@@ -75,13 +78,11 @@ public class NSRegistryBasedNamespaceMappings
     /**
      * {@inheritDoc}
      */
-    public String translatePropertyName(String name,
-                                        NamespaceResolver resolver)
-            throws IllegalNameException, UnknownPrefixException {
-        QName qName = NameFormat.parse(name, resolver);
+    public String translatePropertyName(Name qName)
+            throws IllegalNameException {
         try {
-            return NameFormat.format(qName, this);
-        } catch (NoPrefixDeclaredException e) {
+            return nameResolver.getJCRName(qName);
+        } catch (NamespaceException e) {
             // should never happen actually, there is always a stable index
             // prefix for a known namespace uri
             throw new IllegalNameException("Internal error.", e);

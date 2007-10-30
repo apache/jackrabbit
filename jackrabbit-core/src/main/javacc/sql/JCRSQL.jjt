@@ -41,31 +41,33 @@ PARSER_BEGIN(JCRSQLParser)
  */
 package org.apache.jackrabbit.core.query.sql;
 
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.NameResolver;
 import org.apache.jackrabbit.core.query.QueryConstants;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.Name;
+
+import javax.jcr.NamespaceException;
 
 public class JCRSQLParser {
 
   private String statement;
 
-  private NamespaceResolver resolver;
+  private NameResolver resolver;
 
   public static void main(String args[]) throws ParseException {
   	JCRSQLParser parser = new JCRSQLParser(System.in);
   	parser.Query().dump("");
   }
 
-  public static ASTQuery parse(String statement, NamespaceResolver resolver) throws ParseException {
+  public static ASTQuery parse(String statement, NameResolver resolver) throws ParseException {
   	java.io.StringReader sReader = new java.io.StringReader(statement);
   	JCRSQLParser parser = new JCRSQLParser(sReader);
-  	parser.setNamespaceResolver(resolver);
+  	parser.setNameResolver(resolver);
   	return parser.Query();
   }
 
-  void setNamespaceResolver(NamespaceResolver resolver) {
+  void setNameResolver(NameResolver resolver) {
         this.resolver = resolver;
   }
 
@@ -307,7 +309,7 @@ void WhereClause() :
 void Predicate() :
 {
   int operationType;
-  QName identifier;
+  Name identifier;
   String value;
   String escapeString;
 }
@@ -394,9 +396,9 @@ void Predicate() :
   )
 }
 
-QName PropertyFunction() #void :
+Name PropertyFunction() #void :
 {
-  QName identifier;
+  Name identifier;
 }
 {
   (
@@ -408,9 +410,9 @@ QName PropertyFunction() #void :
   }
 }
 
-QName LowerFunction() :
+Name LowerFunction() :
 {
-  QName identifier;
+  Name identifier;
 }
 {
   (
@@ -421,9 +423,9 @@ QName LowerFunction() :
   }
 }
 
-QName UpperFunction() :
+Name UpperFunction() :
 {
-  QName identifier;
+  Name identifier;
 }
 {
   (
@@ -513,7 +515,7 @@ void BracketExpression() :
 void ContainsExpression() :
 {
   Token t = null;
-  QName name = null;
+  Name name = null;
 }
 {
   <CONTAINS>
@@ -585,10 +587,10 @@ String CharStringLiteral() #void :
   }
 }
 
-QName Identifier() :
+Name Identifier() :
 {
   Token t = null;
-  QName name = null;
+  Name name = null;
   boolean pseudoProperty = false;
 }
 {
@@ -600,8 +602,10 @@ QName Identifier() :
           if (pseudoProperty) {
             jcrName += "()";
           }
-          jjtThis.setName(NameFormat.parse(jcrName, resolver));
+          jjtThis.setName(resolver.getQName(jcrName));
         } catch (NameException e) {
+          throw new ParseException(e.getMessage());
+        } catch (NamespaceException e) {
           throw new ParseException(e.getMessage());
         }
       }
@@ -609,8 +613,10 @@ QName Identifier() :
     t = <DELIMITED_IDENTIFIER>
       {
         try {
-          jjtThis.setName(NameFormat.parse(t.image.substring(1, t.image.length()-1), resolver));
+          jjtThis.setName(resolver.getQName(t.image.substring(1, t.image.length()-1)));
         } catch (NameException e) {
+          throw new ParseException(e.getMessage());
+        } catch (NamespaceException e) {
           throw new ParseException(e.getMessage());
         }
       }
@@ -634,8 +640,10 @@ QName Identifier() :
       )
       {
         try {
-          jjtThis.setName(NameFormat.parse(t.image, resolver));
+          jjtThis.setName(resolver.getQName(t.image));
         } catch (NameException e) {
+          throw new ParseException(e.getMessage());
+        } catch (NamespaceException e) {
           throw new ParseException(e.getMessage());
         }
       }
@@ -646,12 +654,12 @@ QName Identifier() :
   }
 }
 
-QName ExcerptFunction() :
+Name ExcerptFunction() :
 {}
 {
   <EXCERPT> "(" <PERIOD> ")"
   {
-    return new QName(QName.NS_REP_URI, "excerpt(.)");
+    return NameFactoryImpl.getInstance().create(Name.NS_REP_URI, "excerpt(.)");
   }
 }
 

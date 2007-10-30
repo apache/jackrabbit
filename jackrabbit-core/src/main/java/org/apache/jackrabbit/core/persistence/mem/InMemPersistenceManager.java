@@ -36,7 +36,7 @@ import org.apache.jackrabbit.core.persistence.util.FileSystemBLOBStore;
 import org.apache.jackrabbit.core.persistence.util.Serializer;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -147,7 +147,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
         this.persistent = Boolean.valueOf(persistent).booleanValue();
     }
 
-    protected static String buildBlobFilePath(String parentUUID, QName propName, int index) {
+    protected static String buildBlobFilePath(String parentUUID, Name propName, int index) {
         StringBuffer sb = new StringBuffer();
         char[] chars = parentUUID.toCharArray();
         int cnt = 0;

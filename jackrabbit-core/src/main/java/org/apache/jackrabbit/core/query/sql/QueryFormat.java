@@ -32,14 +32,14 @@ import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
 import org.apache.jackrabbit.core.query.PropertyFunctionQueryNode;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.util.ISO8601;
+import org.apache.jackrabbit.conversion.NameResolver;
 
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.NamespaceException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
@@ -54,7 +54,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
     /**
      * Will be used to resolve QNames
      */
-    private final NamespaceResolver resolver;
+    private final NameResolver resolver;
 
     /**
      * The String representation of the query node tree
@@ -71,7 +71,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
      */
     private List nodeTypes = new ArrayList();
 
-    private QueryFormat(QueryRootNode root, NamespaceResolver resolver)
+    private QueryFormat(QueryRootNode root, NameResolver resolver)
             throws InvalidQueryException {
         this.resolver = resolver;
         statement = root.accept(this, new StringBuffer()).toString();
@@ -91,7 +91,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
      * @throws InvalidQueryException the query node tree cannot be represented
      *                               as a SQL <code>String</code>.
      */
-    public static String toString(QueryRootNode root, NamespaceResolver resolver)
+    public static String toString(QueryRootNode root, NameResolver resolver)
             throws InvalidQueryException {
         return new QueryFormat(root, resolver).toString();
     }
@@ -112,7 +112,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         try {
             sb.append("SELECT");
 
-            QName[] selectProps = node.getSelectProperties();
+            Name[] selectProps = node.getSelectProperties();
             if (selectProps.length == 0) {
                 sb.append(" *");
             } else {
@@ -151,7 +151,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
             String comma = "";
             int ntCount = 0;
             for (Iterator it = nodeTypes.iterator(); it.hasNext(); ntCount++) {
-                QName nt = (QName) it.next();
+                Name nt = (Name) it.next();
                 sb.append(comma).append(" ");
                 appendName(nt, resolver, sb);
                 comma = ",";
@@ -159,7 +159,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
 
             if (ntCount == 0) {
                 sb.append(" ");
-                sb.append(NameFormat.format(QName.NT_BASE, resolver));
+                sb.append(resolver.getJCRName(NameConstants.NT_BASE));
             }
 
             // append WHERE clause
@@ -181,7 +181,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 }
                 node.getLocationNode().accept(this, sb);
             }
-        } catch (NoPrefixDeclaredException e) {
+        } catch (NamespaceException e) {
             exceptions.add(e);
         }
 
@@ -259,7 +259,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         StringBuffer sb = (StringBuffer) data;
         try {
             appendName(node.getPropertyName(), resolver, sb);
-        } catch (NoPrefixDeclaredException e) {
+        } catch (NamespaceException e) {
             exceptions.add(e);
         }
         sb.append("='").append(node.getValue()).append("'");
@@ -285,7 +285,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
             } else {
                 try {
                     appendName(node.getRelativePath().getNameElement().getName(), resolver, sb);
-                } catch (NoPrefixDeclaredException e) {
+                } catch (NamespaceException e) {
                     exceptions.add(e);
                 }
             }
@@ -300,7 +300,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         try {
             if (containsDescendantOrSelf(node)) {
                 sb.append("(");
-                sb.append(NameFormat.format(QName.JCR_PATH, resolver));
+                sb.append(resolver.getJCRName(NameConstants.JCR_PATH));
                 sb.append(" LIKE '");
                 LocationStepQueryNode[] steps = node.getPathSteps();
                 for (int i = 0; i < steps.length; i++) {
@@ -315,7 +315,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 }
                 sb.append('\'');
                 sb.append(" OR ");
-                sb.append(NameFormat.format(QName.JCR_PATH, resolver));
+                sb.append(resolver.getJCRName(NameConstants.JCR_PATH));
                 sb.append(" LIKE '");
                 for (int i = 0; i < steps.length; i++) {
                     if (steps[i].getNameTest() == null
@@ -328,7 +328,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 }
                 sb.append("')");
             } else if (containsAllChildrenMatch(node)) {
-                sb.append(NameFormat.format(QName.JCR_PATH, resolver));
+                sb.append(resolver.getJCRName(NameConstants.JCR_PATH));
                 sb.append(" LIKE '");
                 StringBuffer path = new StringBuffer();
                 LocationStepQueryNode[] steps = node.getPathSteps();
@@ -342,12 +342,12 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 sb.append(path);
                 sb.append('\'');
                 sb.append(" AND NOT ");
-                sb.append(NameFormat.format(QName.JCR_PATH, resolver));
+                sb.append(resolver.getJCRName(NameConstants.JCR_PATH));
                 sb.append(" LIKE '");
                 sb.append(path).append("/%").append('\'');
             } else {
                 // just do a best effort
-                sb.append(NameFormat.format(QName.JCR_PATH, resolver));
+                sb.append(resolver.getJCRName(NameConstants.JCR_PATH));
                 sb.append(" LIKE '");
                 LocationStepQueryNode[] steps = node.getPathSteps();
                 for (int i = 0; i < steps.length; i++) {
@@ -359,7 +359,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 }
                 sb.append('\'');
             }
-        } catch (NoPrefixDeclaredException e) {
+        } catch (NamespaceException e) {
             exceptions.add(e);
         }
         return sb;
@@ -372,8 +372,8 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         } else {
             if (node.getNameTest().getLocalName().length() > 0) {
                 try {
-                    sb.append(NameFormat.format(node.getNameTest(), resolver));
-                } catch (NoPrefixDeclaredException e) {
+                    sb.append(resolver.getJCRName(node.getNameTest()));
+                } catch (NamespaceException e) {
                     exceptions.add(e);
                 }
                 if (node.getIndex() == LocationStepQueryNode.NONE) {
@@ -462,7 +462,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
             if (node.getOperation() == OPERATION_LIKE && node.getStringValue().indexOf('\\') > -1) {
                 sb.append(" ESCAPE '\\'");
             }
-        } catch (NoPrefixDeclaredException e) {
+        } catch (NamespaceException e) {
             exceptions.add(e);
         }
         return sb;
@@ -483,7 +483,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                     }
                     comma = ",";
                 }
-            } catch (NoPrefixDeclaredException e) {
+            } catch (NamespaceException e) {
                 exceptions.add(e);
             }
         } else {
@@ -513,21 +513,21 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
      * <code>resolver</code>. The <code>name</code> is put in double quotes
      * if the local part of <code>name</code> contains a space character.
      *
-     * @param name     the <code>QName</code> to print.
+     * @param name     the <code>Name</code> to print.
      * @param resolver to resolve <code>name</code>.
      * @param b        where to output the <code>name</code>.
-     * @throws NoPrefixDeclaredException if <code>name</code> contains a uri
+     * @throws NamespaceException if <code>name</code> contains a uri
      *                                   that is not declared in <code>resolver</code>.
      */
-    private static void appendName(QName name,
-                                   NamespaceResolver resolver,
+    private static void appendName(Name name,
+                                   NameResolver resolver,
                                    StringBuffer b)
-            throws NoPrefixDeclaredException {
+            throws NamespaceException {
         boolean quote = name.getLocalName().indexOf(' ') > -1;
         if (quote) {
             b.append('"');
         }
-        b.append(NameFormat.format(name, resolver));
+        b.append(resolver.getJCRName(name));
         if (quote) {
             b.append('"');
         }

@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.query.qom;
 
-import org.apache.jackrabbit.name.NamePathResolver;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.NamespaceException;
 
@@ -52,7 +52,7 @@ public abstract class AbstractQOMNode {
      * @return the prefixed JCR name or <code>name.toString()</code> if an
      *         unknown namespace URI is encountered.
      */
-    protected String getJCRName(QName name) {
+    protected String getJCRName(Name name) {
         if (name == null) {
             return null;
         }

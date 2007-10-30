@@ -21,7 +21,7 @@ import java.util.Calendar;
 import junit.framework.TestCase;
 
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
 
 public class VersionIteratorImplTest extends TestCase {
@@ -48,11 +48,11 @@ public class VersionIteratorImplTest extends TestCase {
 
         public Calendar getCreated() {return null;}
         public InternalFrozenNode getFrozenNode() {return null;}
-        public QName[] getLabels() {return null;}
-        public QName getName() {return null;}
+        public Name[] getLabels() {return null;}
+        public Name getName() {return null;}
         public InternalVersion[] getPredecessors() {return null;}
         public InternalVersionHistory getVersionHistory() {return null;}
-        public boolean hasLabel(QName label) {return false;}
+        public boolean hasLabel(Name label) {return false;}
         public boolean isMoreRecent(InternalVersion v) {return false;}
         public boolean isRootVersion() {return false;}
         public InternalVersionItem getParent() {return null;}

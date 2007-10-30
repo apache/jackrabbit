@@ -39,8 +39,10 @@ import org.apache.jackrabbit.core.persistence.util.ResourceBasedBLOBStore;
 import org.apache.jackrabbit.core.util.DOMWalker;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.name.NameFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -129,11 +131,14 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
      */
     private String nodePathTemplate = "xxxx/xxxx/xxxxxxxxxxxxxxxxxxxxxxxx";
 
+    private final NameFactory factory;
+
     /**
      * Creates a new <code>XMLPersistenceManager</code> instance.
      */
     public XMLPersistenceManager() {
         initialized = false;
+        factory = NameFactoryImpl.getInstance();
     }
 
     /**
@@ -225,7 +230,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         }
         // check nodetype
         String ntName = walker.getAttribute(NODETYPE_ATTRIBUTE);
-        if (!QName.valueOf(ntName).equals(state.getNodeTypeName())) {
+        if (!factory.create(ntName).equals(state.getNodeTypeName())) {
             String msg = "invalid serialized state: nodetype mismatch";
             log.debug(msg);
             throw new ItemStateException(msg);
@@ -251,7 +256,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         if (walker.enterElement(MIXINTYPES_ELEMENT)) {
             Set mixins = new HashSet();
             while (walker.iterateElements(MIXINTYPE_ELEMENT)) {
-                mixins.add(QName.valueOf(walker.getAttribute(NAME_ATTRIBUTE)));
+                mixins.add(factory.create(walker.getAttribute(NAME_ATTRIBUTE)));
             }
             if (mixins.size() > 0) {
                 state.setMixinTypeNames(mixins);
@@ -264,7 +269,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             while (walker.iterateElements(PROPERTY_ELEMENT)) {
                 String propName = walker.getAttribute(NAME_ATTRIBUTE);
                 // @todo deserialize type and values
-                state.addPropertyName(QName.valueOf(propName));
+                state.addPropertyName(factory.create(propName));
             }
             walker.leaveElement();
         }
@@ -274,7 +279,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             while (walker.iterateElements(NODE_ELEMENT)) {
                 String childName = walker.getAttribute(NAME_ATTRIBUTE);
                 String childUUID = walker.getAttribute(UUID_ATTRIBUTE);
-                state.addChildNodeEntry(QName.valueOf(childName), NodeId.valueOf(childUUID));
+                state.addChildNodeEntry(factory.create(childName), NodeId.valueOf(childUUID));
             }
             walker.leaveElement();
         }
@@ -290,7 +295,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             throw new ItemStateException(msg);
         }
         // check name
-        if (!state.getName().equals(QName.valueOf(walker.getAttribute(NAME_ATTRIBUTE)))) {
+        if (!state.getName().equals(factory.create(walker.getAttribute(NAME_ATTRIBUTE)))) {
             String msg = "invalid serialized state: name mismatch";
             log.debug(msg);
             throw new ItemStateException(msg);
@@ -479,7 +484,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 String ntName = walker.getAttribute(NODETYPE_ATTRIBUTE);
 
                 NodeState state = createNew(id);
-                state.setNodeTypeName(QName.valueOf(ntName));
+                state.setNodeTypeName(factory.create(ntName));
                 readState(walker, state);
                 return state;
             } finally {
@@ -582,7 +587,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 writer.write("\t<" + PROPERTIES_ELEMENT + ">\n");
                 iter = state.getPropertyNames().iterator();
                 while (iter.hasNext()) {
-                    QName propName = (QName) iter.next();
+                    Name propName = (Name) iter.next();
                     writer.write("\t\t<" + PROPERTY_ELEMENT + " "
                             + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(propName.toString()) + "\">\n");
                     // @todo serialize type, definition id and values

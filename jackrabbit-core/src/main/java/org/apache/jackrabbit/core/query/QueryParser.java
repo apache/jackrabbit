@@ -16,9 +16,10 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
 
 import javax.jcr.query.InvalidQueryException;
+
+import org.apache.jackrabbit.conversion.NameResolver;
 
 /**
  * This class acts as the central entry point for parsing query statements from
@@ -48,7 +49,7 @@ public class QueryParser {
      */
     public static QueryRootNode parse(String statement,
                                       String language,
-                                      NamespaceResolver resolver,
+                                      NameResolver resolver,
                                       QueryNodeFactory factory)
             throws InvalidQueryException {
 
@@ -77,7 +78,7 @@ public class QueryParser {
      */
     public static String toString(QueryRootNode root,
                                   String language,
-                                  NamespaceResolver resolver)
+                                  NameResolver resolver)
             throws InvalidQueryException {
 
         QueryTreeBuilder builder = QueryTreeBuilderRegistry.getQueryTreeBuilder(language);

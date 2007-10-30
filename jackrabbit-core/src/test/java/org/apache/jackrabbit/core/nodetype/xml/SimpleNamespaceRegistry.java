@@ -20,7 +20,7 @@ import java.util.Properties;
 
 import javax.jcr.NamespaceRegistry;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 /**
  * Simple utility implementation of the NamespaceRegistry interface.
@@ -38,11 +38,11 @@ class SimpleNamespaceRegistry implements NamespaceRegistry {
      * Creates a simple namespace registry.
      */
     public SimpleNamespaceRegistry() {
-        registerNamespace(QName.NS_JCR_PREFIX, QName.NS_JCR_URI);
-        registerNamespace(QName.NS_MIX_PREFIX, QName.NS_MIX_URI);
-        registerNamespace(QName.NS_NT_PREFIX, QName.NS_NT_URI);
-        registerNamespace(QName.NS_REP_PREFIX, QName.NS_REP_URI);
-        registerNamespace(QName.NS_EMPTY_PREFIX, QName.NS_EMPTY_PREFIX);
+        registerNamespace(Name.NS_JCR_PREFIX, Name.NS_JCR_URI);
+        registerNamespace(Name.NS_MIX_PREFIX, Name.NS_MIX_URI);
+        registerNamespace(Name.NS_NT_PREFIX, Name.NS_NT_URI);
+        registerNamespace(Name.NS_REP_PREFIX, Name.NS_REP_URI);
+        registerNamespace(Name.NS_EMPTY_PREFIX, Name.NS_EMPTY_PREFIX);
     }
 
     /** {@inheritDoc} */

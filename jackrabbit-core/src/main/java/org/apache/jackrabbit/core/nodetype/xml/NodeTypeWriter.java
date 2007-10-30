@@ -22,14 +22,15 @@ import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.util.DOMBuilder;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceException;
 import javax.jcr.version.OnParentVersionAction;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
@@ -65,7 +66,7 @@ public final class NodeTypeWriter {
             writer.write(xml);
         } catch (ParserConfigurationException e) {
             throw new IOException(e.getMessage());
-        } catch (NoPrefixDeclaredException e) {
+        } catch (NamespaceException e) {
             throw new RepositoryException(
                     "Invalid namespace reference in a node type definition", e);
         }
@@ -75,7 +76,7 @@ public final class NodeTypeWriter {
     private final DOMBuilder builder;
 
     /** The namespace resolver. */
-    private final NamespaceResolver resolver;
+    private final NamePathResolver resolver;
 
     /**
      * Creates a node type definition file writer. The given namespace
@@ -99,7 +100,8 @@ public final class NodeTypeWriter {
             }
         }
 
-        resolver = new AdditionalNamespaceResolver(registry);
+        NamespaceResolver nsResolver = new AdditionalNamespaceResolver(registry);
+        resolver = new DefaultNamePathResolver(nsResolver);
     }
 
     /**
@@ -108,16 +110,16 @@ public final class NodeTypeWriter {
      * @param def node type definition
      * @throws RepositoryException       if the default property values
      *                                   cannot be serialized
-     * @throws NoPrefixDeclaredException if the node type definition contains
+     * @throws NamespaceException if the node type definition contains
      *                                   invalid namespace references
      */
     private void addNodeTypeDef(NodeTypeDef def)
-            throws RepositoryException, NoPrefixDeclaredException {
+            throws NamespaceException, RepositoryException {
         builder.startElement(Constants.NODETYPE_ELEMENT);
 
         // simple attributes
         builder.setAttribute(
-                Constants.NAME_ATTRIBUTE, NameFormat.format(def.getName(), resolver));
+                Constants.NAME_ATTRIBUTE, resolver.getJCRName(def.getName()));
         builder.setAttribute(
                 Constants.ISMIXIN_ATTRIBUTE, def.isMixin());
         builder.setAttribute(
@@ -125,23 +127,23 @@ public final class NodeTypeWriter {
                 def.hasOrderableChildNodes());
 
         // primary item name
-        QName item = def.getPrimaryItemName();
+        Name item = def.getPrimaryItemName();
         if (item != null) {
             builder.setAttribute(
                     Constants.PRIMARYITEMNAME_ATTRIBUTE,
-                    NameFormat.format(item, resolver));
+                    resolver.getJCRName(item));
         } else {
             builder.setAttribute(Constants.PRIMARYITEMNAME_ATTRIBUTE, "");
         }
 
         // supertype declarations
-        QName[] supertypes = def.getSupertypes();
+        Name[] supertypes = def.getSupertypes();
         if (supertypes.length > 0) {
             builder.startElement(Constants.SUPERTYPES_ELEMENT);
             for (int i = 0; i < supertypes.length; i++) {
                 builder.addContentElement(
                         Constants.SUPERTYPE_ELEMENT,
-                        NameFormat.format(supertypes[i], resolver));
+                        resolver.getJCRName(supertypes[i]));
             }
             builder.endElement();
         }
@@ -167,16 +169,16 @@ public final class NodeTypeWriter {
      * @param def property definition
      * @throws RepositoryException       if the default values cannot
      *                                   be serialized
-     * @throws NoPrefixDeclaredException if the property definition contains
+     * @throws NamespaceException if the property definition contains
      *                                   invalid namespace references
      */
     private void addPropDef(PropDef def)
-            throws RepositoryException, NoPrefixDeclaredException {
+            throws NamespaceException, RepositoryException {
         builder.startElement(Constants.PROPERTYDEFINITION_ELEMENT);
 
         // simple attributes
         builder.setAttribute(
-                Constants.NAME_ATTRIBUTE, NameFormat.format(def.getName(), resolver));
+                Constants.NAME_ATTRIBUTE, resolver.getJCRName(def.getName()));
         builder.setAttribute(
                 Constants.AUTOCREATED_ATTRIBUTE, def.isAutoCreated());
         builder.setAttribute(
@@ -223,16 +225,16 @@ public final class NodeTypeWriter {
      * Builds a child node definition element under the current element.
      *
      * @param def child node definition
-     * @throws NoPrefixDeclaredException if the child node definition contains
+     * @throws NamespaceException if the child node definition contains
      *                                   invalid namespace references
      */
     private void addChildNodeDef(NodeDef def)
-            throws NoPrefixDeclaredException {
+            throws NamespaceException {
         builder.startElement(Constants.CHILDNODEDEFINITION_ELEMENT);
 
         // simple attributes
         builder.setAttribute(
-                Constants.NAME_ATTRIBUTE, NameFormat.format(def.getName(), resolver));
+                Constants.NAME_ATTRIBUTE, resolver.getJCRName(def.getName()));
         builder.setAttribute(
                 Constants.AUTOCREATED_ATTRIBUTE, def.isAutoCreated());
         builder.setAttribute(
@@ -246,22 +248,22 @@ public final class NodeTypeWriter {
                 Constants.SAMENAMESIBLINGS_ATTRIBUTE, def.allowsSameNameSiblings());
 
         // default primary type
-        QName type = def.getDefaultPrimaryType();
+        Name type = def.getDefaultPrimaryType();
         if (type != null) {
             builder.setAttribute(
                     Constants.DEFAULTPRIMARYTYPE_ATTRIBUTE,
-                    NameFormat.format(type, resolver));
+                    resolver.getJCRName(type));
         } else {
             builder.setAttribute(Constants.DEFAULTPRIMARYTYPE_ATTRIBUTE, "");
         }
 
         // required primary types
-        QName[] requiredTypes = def.getRequiredPrimaryTypes();
+        Name[] requiredTypes = def.getRequiredPrimaryTypes();
         builder.startElement(Constants.REQUIREDPRIMARYTYPES_ELEMENT);
         for (int i = 0; i < requiredTypes.length; i++) {
             builder.addContentElement(
                     Constants.REQUIREDPRIMARYTYPE_ELEMENT,
-                    NameFormat.format(requiredTypes[i], resolver));
+                    resolver.getJCRName(requiredTypes[i]));
         }
         builder.endElement();
 

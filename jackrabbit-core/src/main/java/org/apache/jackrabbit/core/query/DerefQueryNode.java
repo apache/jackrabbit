@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 /**
  * Represents query node that dereferences a reference property into a node and
@@ -25,7 +25,7 @@ import org.apache.jackrabbit.name.QName;
 public class DerefQueryNode extends LocationStepQueryNode {
 
     /** The name of the reference property */
-    private QName refProperty;
+    private Name refProperty;
 
     /**
      * Creates a new <code>DerefQueryNode</code> without a name set for the
@@ -36,7 +36,7 @@ public class DerefQueryNode extends LocationStepQueryNode {
      * @param descendants if <code>true</code> this location step uses the
      *   descendant-or-self axis; otherwise the child axis.
      */
-    protected DerefQueryNode(QueryNode parent, QName nameTest, boolean descendants) {
+    protected DerefQueryNode(QueryNode parent, Name nameTest, boolean descendants) {
         super(parent);
         setNameTest(nameTest);
         setIncludeDescendants(descendants);
@@ -46,7 +46,7 @@ public class DerefQueryNode extends LocationStepQueryNode {
      * Sets a new name for the reference property.
      * @param propertyName the name of the reference property.
      */
-    public void setRefProperty(QName propertyName) {
+    public void setRefProperty(Name propertyName) {
         refProperty = propertyName;
     }
 
@@ -56,7 +56,7 @@ public class DerefQueryNode extends LocationStepQueryNode {
      * @return the name of the reference property or <code>null</code> if
      * none is set.
      */
-    public QName getRefProperty() {
+    public Name getRefProperty() {
         return refProperty;
     }
 

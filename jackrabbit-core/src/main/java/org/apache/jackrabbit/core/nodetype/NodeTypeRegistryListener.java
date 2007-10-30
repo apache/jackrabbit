@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 /**
  * The <code>NodeTypeRegistryListener</code> interface allows an implementing
@@ -32,19 +32,19 @@ public interface NodeTypeRegistryListener {
      *
      * @param ntName name of the node type that has been registered
      */
-    void nodeTypeRegistered(QName ntName);
+    void nodeTypeRegistered(Name ntName);
 
     /**
      * Called when a node type has been re-registered.
      *
      * @param ntName name of the node type that has been registered
      */
-    void nodeTypeReRegistered(QName ntName);
+    void nodeTypeReRegistered(Name ntName);
 
     /**
      * Called when a node type has been deregistered.
      *
      * @param ntName name of the node type that has been unregistered
      */
-    void nodeTypeUnregistered(QName ntName);
+    void nodeTypeUnregistered(Name ntName);
 }

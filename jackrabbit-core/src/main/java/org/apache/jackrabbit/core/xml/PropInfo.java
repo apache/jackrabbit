@@ -33,8 +33,8 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +58,7 @@ public class PropInfo {
     /**
      * Name of the property being imported.
      */
-    private final QName name;
+    private final Name name;
 
     /**
      * Type of the property being imported.
@@ -77,7 +77,7 @@ public class PropInfo {
      * @param type type of the property being imported
      * @param values value(s) of the property being imported
      */
-    public PropInfo(QName name, int type, TextValue[] values) {
+    public PropInfo(Name name, int type, TextValue[] values) {
         this.name = name;
         this.type = type;
         this.values = values;
@@ -115,7 +115,7 @@ public class PropInfo {
     }
 
     public void apply(
-            NodeImpl node, NamespaceResolver resolver,
+            NodeImpl node, NamePathResolver resolver,
             ReferenceChangeTracker refTracker) throws RepositoryException {
         // find applicable definition
         PropDef def = getApplicablePropertyDef(node.getEffectiveNodeType());

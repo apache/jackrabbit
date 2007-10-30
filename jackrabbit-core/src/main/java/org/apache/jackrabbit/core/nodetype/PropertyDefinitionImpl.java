@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +28,7 @@ import javax.jcr.nodetype.PropertyDefinition;
 /**
  * This class implements the <code>PropertyDefinition</code> interface.
  * All method calls are delegated to the wrapped {@link PropDef},
- * performing the translation from <code>QName</code>s to JCR names
+ * performing the translation from <code>Name</code>s to JCR names
  * (and vice versa) where necessary.
  */
 public class PropertyDefinitionImpl extends ItemDefinitionImpl
@@ -44,11 +44,11 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
      *
      * @param propDef    property definition
      * @param ntMgr      node type manager
-     * @param nsResolver namespace resolver
+     * @param resolver
      */
     PropertyDefinitionImpl(PropDef propDef, NodeTypeManagerImpl ntMgr,
-                           NamespaceResolver nsResolver) {
-        super(propDef, ntMgr, nsResolver);
+                           NamePathResolver resolver) {
+        super(propDef, ntMgr, resolver);
     }
 
     /**
@@ -72,7 +72,7 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
         Value[] values = new Value[defVals.length];
         for (int i = 0; i < defVals.length; i++) {
             try {
-                values[i] = defVals[i].toJCRValue(nsResolver);
+                values[i] = defVals[i].toJCRValue(resolver);
             } catch (RepositoryException re) {
                 // should never get here
                 String propName = (getName() == null) ? "[null]" : getName();
@@ -102,7 +102,7 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
         }
         String[] vca = new String[constraints.length];
         for (int i = 0; i < constraints.length; i++) {
-            vca[i] = constraints[i].getDefinition(nsResolver);
+            vca[i] = constraints[i].getDefinition(resolver);
         }
         return vca;
     }

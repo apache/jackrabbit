@@ -20,7 +20,7 @@ import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.ReferentialIntegrityException;
 
@@ -227,7 +227,7 @@ public class LocalItemStateManager
     /**
      * {@inheritDoc}
      */
-    public NodeState createNew(NodeId id, QName nodeTypeName,
+    public NodeState createNew(NodeId id, Name nodeTypeName,
                                NodeId parentId)
             throws IllegalStateException {
         if (!editMode) {
@@ -244,7 +244,7 @@ public class LocalItemStateManager
     /**
      * {@inheritDoc}
      */
-    public PropertyState createNew(QName propName, NodeId parentId)
+    public PropertyState createNew(Name propName, NodeId parentId)
             throws IllegalStateException {
         if (!editMode) {
             throw new IllegalStateException("Not in edit mode");
@@ -488,7 +488,7 @@ public class LocalItemStateManager
      * Optimization: shared state manager we're listening to does not deliver node state changes, therefore the state
      * concerned must be a local state.
      */
-    public void nodeAdded(NodeState state, QName name, int index, NodeId id) {
+    public void nodeAdded(NodeState state, Name name, int index, NodeId id) {
         dispatcher.notifyNodeAdded(state, name, index, id);
     }
 
@@ -518,7 +518,7 @@ public class LocalItemStateManager
      * Optimization: shared state manager we're listening to does not deliver node state changes, therefore the state
      * concerned must be a local state.
      */
-    public void nodeRemoved(NodeState state, QName name, int index, NodeId id) {
+    public void nodeRemoved(NodeState state, Name name, int index, NodeId id) {
         dispatcher.notifyNodeRemoved(state, name, index, id);
     }
 }

@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.qom;
 
-import org.apache.jackrabbit.name.NamePathResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.Name;
 
 import org.apache.jackrabbit.core.query.jsr283.qom.NodeLocalName;
 
@@ -31,9 +31,9 @@ public class NodeLocalNameImpl
     /**
      * The name of the selector against which to evaluate this operand.
      */
-    private final QName selectorName;
+    private final Name selectorName;
 
-    NodeLocalNameImpl(NamePathResolver resolver, QName selectorName) {
+    NodeLocalNameImpl(NamePathResolver resolver, Name selectorName) {
         super(resolver);
         this.selectorName = selectorName;
     }

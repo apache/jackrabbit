@@ -26,9 +26,11 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistryListener;
 import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
 import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.name.PathBuilder;
+import org.apache.jackrabbit.conversion.MalformedPathException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,10 +59,10 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
 
     static {
         try {
-            Path.PathBuilder builder = new Path.PathBuilder();
+            PathBuilder builder = new PathBuilder();
             builder.addRoot();
-            builder.addLast(QName.JCR_SYSTEM);
-            builder.addLast(QName.JCR_NODETYPES);
+            builder.addLast(NameConstants.JCR_SYSTEM);
+            builder.addLast(NameConstants.JCR_NODETYPES);
             NODE_TYPES_PATH = builder.getPath();
         } catch (MalformedPathException e) {
             // will not happen. path is always valid
@@ -141,7 +143,7 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
     /**
      * {@inheritDoc}
      */
-    public void nodeTypeRegistered(QName ntName) {
+    public void nodeTypeRegistered(Name ntName) {
         try {
             if (virtProvider != null) {
                 // allow provider to update
@@ -163,7 +165,7 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
     /**
      * {@inheritDoc}
      */
-    public void nodeTypeReRegistered(QName ntName) {
+    public void nodeTypeReRegistered(Name ntName) {
         // lazy implementation
         nodeTypeUnregistered(ntName);
         nodeTypeRegistered(ntName);
@@ -172,7 +174,7 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
     /**
      * {@inheritDoc}
      */
-    public void nodeTypeUnregistered(QName ntName) {
+    public void nodeTypeUnregistered(Name ntName) {
         try {
             if (systemSession != null) {
                 // generated observation events

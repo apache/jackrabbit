@@ -16,21 +16,20 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.NamespaceException;
 
 /**
  * This class implements the <code>ItemDefinition</code> interface.
  * All method calls are delegated to the wrapped {@link ItemDef},
- * performing the translation from <code>QName</code>s to JCR names
+ * performing the translation from <code>Name</code>s to JCR names
  * (and vice versa) where necessary.
  */
 abstract class ItemDefinitionImpl implements ItemDefinition {
@@ -51,9 +50,9 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
     protected final NodeTypeManagerImpl ntMgr;
 
     /**
-     * The namespace resolver used to translate qualified names to JCR names.
+     * The name/path resolver used to translate qualified names to JCR names.
      */
-    protected final NamespaceResolver nsResolver;
+    protected final NamePathResolver resolver;
 
     /**
      * The wrapped item definition.
@@ -65,13 +64,13 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
      *
      * @param itemDef    item definition
      * @param ntMgr      node type manager
-     * @param nsResolver namespace resolver
+     * @param resolver
      */
     ItemDefinitionImpl(ItemDef itemDef, NodeTypeManagerImpl ntMgr,
-                       NamespaceResolver nsResolver) {
+                       NamePathResolver resolver) {
         this.itemDef = itemDef;
         this.ntMgr = ntMgr;
-        this.nsResolver = nsResolver;
+        this.resolver = resolver;
     }
 
     /**
@@ -84,13 +83,13 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
     }
 
     /**
-     * Gets the <code>QName</code> of the child item. It is an error to
+     * Gets the <code>Name</code> of the child item. It is an error to
      * call this method if this is a residual item definition.
      *
-     * @return the <code>QName</code> of the child item.
+     * @return the <code>Name</code> of the child item.
      * @see #getName()
      */
-    public QName getQName() {
+    public Name getQName() {
         return itemDef.getName();
     }
 
@@ -116,11 +115,11 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
             return ANY_NAME;
         } else {
             try {
-                return NameFormat.format(itemDef.getName(), nsResolver);
-            } catch (NoPrefixDeclaredException npde) {
+                return resolver.getJCRName(itemDef.getName());
+            } catch (NamespaceException e) {
                 // should never get here
                 log.error("encountered unregistered namespace in item name",
-                        npde);
+                        e);
                 // not correct, but an acceptable fallback
                 return itemDef.getName().toString();
             }

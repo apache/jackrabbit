@@ -17,13 +17,12 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.util.IteratorHelper;
-import org.apache.jackrabbit.util.name.NamespaceMapping;
+import org.apache.jackrabbit.namespace.NamespaceMapping;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.data.DataStore;
@@ -36,6 +35,7 @@ import org.xml.sax.SAXException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.NamespaceException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
@@ -81,9 +81,14 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
     private final NodeDefinitionImpl rootNodeDef;
 
     /**
-     * The namespace resolver used to translate qualified names to JCR names.
+     * The namespace resolver
      */
     private final NamespaceResolver nsResolver;
+
+    /**
+     * The resolver used to translate qualified names to JCR names.
+     */
+    private final NamePathResolver resolver;
 
     /**
      * A cache for <code>NodeType</code> instances created by this
@@ -110,12 +115,13 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      *
      * @param ntReg      node type registry
      * @param nsReg      namespace registry
-     * @param nsResolver namespace resolver
+     * @param resolver
      */
     public NodeTypeManagerImpl(
             NodeTypeRegistry ntReg, NamespaceRegistryImpl nsReg,
-            NamespaceResolver nsResolver, DataStore store) {
+            NamespaceResolver nsResolver, NamePathResolver resolver, DataStore store) {
         this.nsResolver = nsResolver;
+        this.resolver = resolver;
         this.ntReg = ntReg;
         this.nsReg = nsReg;
         this.ntReg.addListener(this);
@@ -128,7 +134,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
         ndCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
 
         rootNodeDef = new NodeDefinitionImpl(ntReg.getRootNodeDef(), this,
-                nsResolver);
+                resolver);
         ndCache.put(rootNodeDef.unwrap().getId(), rootNodeDef);
     }
 
@@ -149,7 +155,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
             if (ndi == null) {
                 NodeDef nd = ntReg.getNodeDef(id);
                 if (nd != null) {
-                    ndi = new NodeDefinitionImpl(nd, this, nsResolver);
+                    ndi = new NodeDefinitionImpl(nd, this, resolver);
                     ndCache.put(id, ndi);
                 }
             }
@@ -167,7 +173,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
             if (pdi == null) {
                 PropDef pd = ntReg.getPropDef(id);
                 if (pd != null) {
-                    pdi = new PropertyDefinitionImpl(pd, this, nsResolver);
+                    pdi = new PropertyDefinitionImpl(pd, this, resolver);
                     pdCache.put(id, pdi);
                 }
             }
@@ -180,13 +186,13 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      * @return
      * @throws NoSuchNodeTypeException
      */
-    public NodeTypeImpl getNodeType(QName name) throws NoSuchNodeTypeException {
+    public NodeTypeImpl getNodeType(Name name) throws NoSuchNodeTypeException {
         synchronized (ntCache) {
             NodeTypeImpl nt = (NodeTypeImpl) ntCache.get(name);
             if (nt == null) {
                 EffectiveNodeType ent = ntReg.getEffectiveNodeType(name);
                 NodeTypeDef def = ntReg.getNodeTypeDef(name);
-                nt = new NodeTypeImpl(ent, def, this, nsResolver, store);
+                nt = new NodeTypeImpl(ent, def, this, resolver, store);
                 ntCache.put(name, nt);
             }
             return nt;
@@ -307,14 +313,14 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
     /**
      * {@inheritDoc}
      */
-    public void nodeTypeRegistered(QName ntName) {
+    public void nodeTypeRegistered(Name ntName) {
         // not interested, ignore
     }
 
     /**
      * {@inheritDoc}
      */
-    public void nodeTypeReRegistered(QName ntName) {
+    public void nodeTypeReRegistered(Name ntName) {
         // flush all affected cache entries
         ntCache.remove(ntName);
         synchronized (pdCache) {
@@ -340,7 +346,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
     /**
      * {@inheritDoc}
      */
-    public void nodeTypeUnregistered(QName ntName) {
+    public void nodeTypeUnregistered(Name ntName) {
         // flush all affected cache entries
         ntCache.remove(ntName);
         synchronized (pdCache) {
@@ -368,7 +374,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      * {@inheritDoc}
      */
     public NodeTypeIterator getAllNodeTypes() throws RepositoryException {
-        QName[] ntNames = ntReg.getRegisteredNodeTypes();
+        Name[] ntNames = ntReg.getRegisteredNodeTypes();
         ArrayList list = new ArrayList(ntNames.length);
         for (int i = 0; i < ntNames.length; i++) {
             list.add(getNodeType(ntNames[i]));
@@ -380,7 +386,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      * {@inheritDoc}
      */
     public NodeTypeIterator getPrimaryNodeTypes() throws RepositoryException {
-        QName[] ntNames = ntReg.getRegisteredNodeTypes();
+        Name[] ntNames = ntReg.getRegisteredNodeTypes();
         ArrayList list = new ArrayList(ntNames.length);
         for (int i = 0; i < ntNames.length; i++) {
             NodeType nt = getNodeType(ntNames[i]);
@@ -395,7 +401,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      * {@inheritDoc}
      */
     public NodeTypeIterator getMixinNodeTypes() throws RepositoryException {
-        QName[] ntNames = ntReg.getRegisteredNodeTypes();
+        Name[] ntNames = ntReg.getRegisteredNodeTypes();
         ArrayList list = new ArrayList(ntNames.length);
         for (int i = 0; i < ntNames.length; i++) {
             NodeType nt = getNodeType(ntNames[i]);
@@ -412,8 +418,10 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
     public NodeType getNodeType(String nodeTypeName)
             throws NoSuchNodeTypeException {
         try {
-            return getNodeType(NameFormat.parse(nodeTypeName, nsResolver));
+            return getNodeType(resolver.getQName(nodeTypeName));
         } catch (NameException e) {
+            throw new NoSuchNodeTypeException(nodeTypeName, e);
+        } catch (NamespaceException e) {
             throw new NoSuchNodeTypeException(nodeTypeName, e);
         }
     }
@@ -490,9 +498,9 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      */
     public boolean hasNodeType(String name) throws RepositoryException {
         try {
-            QName qname = NameFormat.parse(name, nsResolver);
+            Name qname = resolver.getQName(name);
             return getNodeTypeRegistry().isRegistered(qname);
-        } catch (UnknownPrefixException e) {
+        } catch (NamespaceException e) {
             return false;
         } catch (NameException e) {
            throw new RepositoryException("Invalid name: " + name, e);

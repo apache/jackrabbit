@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.PropertyType;
 import java.util.Arrays;
@@ -117,7 +117,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
     /**
      * {@inheritDoc}
      */
-    public void setDeclaringNodeType(QName declaringNodeType) {
+    public void setDeclaringNodeType(Name declaringNodeType) {
         // reset id field in order to force lazy recomputation of identifier
         id = null;
         super.setDeclaringNodeType(declaringNodeType);
@@ -126,7 +126,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
     /**
      * {@inheritDoc}
      */
-    public void setName(QName name) {
+    public void setName(Name name) {
         // reset id field in order to force lazy recomputation of identifier
         id = null;
         super.setName(name);

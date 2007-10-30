@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,7 +88,7 @@ public class EffectiveNodeType implements Cloneable {
             throws NodeTypeConflictException, NoSuchNodeTypeException {
         // create empty effective node type instance
         EffectiveNodeType ent = new EffectiveNodeType();
-        QName ntName = ntd.getName();
+        Name ntName = ntd.getName();
 
         // prepare new instance
         ent.mergedNodeTypes.add(ntName);
@@ -122,7 +122,7 @@ public class EffectiveNodeType implements Cloneable {
                 ent.unnamedItemDefs.add(cnda[i]);
             } else {
                 // named node definition
-                QName name = cnda[i].getName();
+                Name name = cnda[i].getName();
                 List defs = (List) ent.namedItemDefs.get(name);
                 if (defs == null) {
                     defs = new ArrayList();
@@ -170,7 +170,7 @@ public class EffectiveNodeType implements Cloneable {
                 ent.unnamedItemDefs.add(pda[i]);
             } else {
                 // named property definition
-                QName name = pda[i].getName();
+                Name name = pda[i].getName();
                 List defs = (List) ent.namedItemDefs.get(name);
                 if (defs == null) {
                     defs = new ArrayList();
@@ -197,7 +197,7 @@ public class EffectiveNodeType implements Cloneable {
         }
 
         // resolve supertypes recursively
-        QName[] supertypes = ntd.getSupertypes();
+        Name[] supertypes = ntd.getSupertypes();
         if (supertypes.length > 0) {
             EffectiveNodeType base =
                     NodeTypeRegistry.getEffectiveNodeType(supertypes, entCache, ntdCache);
@@ -218,16 +218,16 @@ public class EffectiveNodeType implements Cloneable {
         return new EffectiveNodeType();
     }
 
-    public QName[] getMergedNodeTypes() {
-        return (QName[]) mergedNodeTypes.toArray(new QName[mergedNodeTypes.size()]);
+    public Name[] getMergedNodeTypes() {
+        return (Name[]) mergedNodeTypes.toArray(new Name[mergedNodeTypes.size()]);
     }
 
-    public QName[] getInheritedNodeTypes() {
-        return (QName[]) inheritedNodeTypes.toArray(new QName[inheritedNodeTypes.size()]);
+    public Name[] getInheritedNodeTypes() {
+        return (Name[]) inheritedNodeTypes.toArray(new Name[inheritedNodeTypes.size()]);
     }
 
-    public QName[] getAllNodeTypes() {
-        return (QName[]) allNodeTypes.toArray(new QName[allNodeTypes.size()]);
+    public Name[] getAllNodeTypes() {
+        return (Name[]) allNodeTypes.toArray(new Name[allNodeTypes.size()]);
     }
 
     public ItemDef[] getAllItemDefs() {
@@ -268,11 +268,11 @@ public class EffectiveNodeType implements Cloneable {
         return (ItemDef[]) unnamedItemDefs.toArray(new ItemDef[unnamedItemDefs.size()]);
     }
 
-    public boolean hasNamedItemDef(QName name) {
+    public boolean hasNamedItemDef(Name name) {
         return namedItemDefs.containsKey(name);
     }
 
-    public ItemDef[] getNamedItemDefs(QName name) {
+    public ItemDef[] getNamedItemDefs(Name name) {
         List defs = (List) namedItemDefs.get(name);
         if (defs == null || defs.size() == 0) {
             return ItemDef.EMPTY_ARRAY;
@@ -331,7 +331,7 @@ public class EffectiveNodeType implements Cloneable {
         return (NodeDef[]) defs.toArray(new NodeDef[defs.size()]);
     }
 
-    public NodeDef[] getNamedNodeDefs(QName name) {
+    public NodeDef[] getNamedNodeDefs(Name name) {
         List list = (List) namedItemDefs.get(name);
         if (list == null || list.size() == 0) {
             return NodeDef.EMPTY_ARRAY;
@@ -443,7 +443,7 @@ public class EffectiveNodeType implements Cloneable {
         return (PropDef[]) defs.toArray(new PropDef[defs.size()]);
     }
 
-    public PropDef[] getNamedPropDefs(QName name) {
+    public PropDef[] getNamedPropDefs(Name name) {
         List list = (List) namedItemDefs.get(name);
         if (list == null || list.size() == 0) {
             return PropDef.EMPTY_ARRAY;
@@ -560,7 +560,7 @@ public class EffectiveNodeType implements Cloneable {
      * @return <code>true</code> if the given node type is included, otherwise
      *         <code>false</code>
      */
-    public boolean includesNodeType(QName nodeTypeName) {
+    public boolean includesNodeType(Name nodeTypeName) {
         return allNodeTypes.contains(nodeTypeName);
     }
 
@@ -572,7 +572,7 @@ public class EffectiveNodeType implements Cloneable {
      * @return <code>true</code> if all of the given node types are included,
      *         otherwise <code>false</code>
      */
-    public boolean includesNodeTypes(QName[] nodeTypeNames) {
+    public boolean includesNodeTypes(Name[] nodeTypeNames) {
         return allNodeTypes.containsAll(Arrays.asList(nodeTypeNames));
     }
 
@@ -631,7 +631,7 @@ public class EffectiveNodeType implements Cloneable {
      * @param name
      * @throws ConstraintViolationException
      */
-    public void checkAddNodeConstraints(QName name)
+    public void checkAddNodeConstraints(Name name)
             throws ConstraintViolationException {
         try {
             getApplicableChildNodeDef(name, null, null);
@@ -649,7 +649,7 @@ public class EffectiveNodeType implements Cloneable {
      * @throws ConstraintViolationException
      * @throws NoSuchNodeTypeException
      */
-    public void checkAddNodeConstraints(QName name, QName nodeTypeName,
+    public void checkAddNodeConstraints(Name name, Name nodeTypeName,
                                         NodeTypeRegistry ntReg)
             throws ConstraintViolationException, NoSuchNodeTypeException {
         NodeDef nd = getApplicableChildNodeDef(name, nodeTypeName, ntReg);
@@ -674,7 +674,7 @@ public class EffectiveNodeType implements Cloneable {
      * @throws ConstraintViolationException if no applicable child node definition
      *                                      could be found
      */
-    public NodeDef getApplicableChildNodeDef(QName name, QName nodeTypeName,
+    public NodeDef getApplicableChildNodeDef(Name name, Name nodeTypeName,
                                              NodeTypeRegistry ntReg)
             throws NoSuchNodeTypeException, ConstraintViolationException {
         EffectiveNodeType entTarget;
@@ -752,7 +752,7 @@ public class EffectiveNodeType implements Cloneable {
      * @throws ConstraintViolationException if no applicable property definition
      *                                      could be found
      */
-    public PropDef getApplicablePropertyDef(QName name, int type,
+    public PropDef getApplicablePropertyDef(Name name, int type,
                                             boolean multiValued)
             throws ConstraintViolationException {
         // try named property definitions first
@@ -777,7 +777,7 @@ public class EffectiveNodeType implements Cloneable {
      * Returns the applicable property definition for a property with the
      * specified name and type. The multiValued flag is not taken into account
      * in the selection algorithm. Other than
-     * <code>{@link #getApplicablePropertyDef(QName, int, boolean)}</code>
+     * <code>{@link #getApplicablePropertyDef(Name, int, boolean)}</code>
      * this method does not take the multiValued flag into account in the
      * selection algorithm. If there more than one applicable definitions then
      * the following rules are applied:
@@ -794,7 +794,7 @@ public class EffectiveNodeType implements Cloneable {
      * @throws ConstraintViolationException if no applicable property definition
      *                                      could be found
      */
-    public PropDef getApplicablePropertyDef(QName name, int type)
+    public PropDef getApplicablePropertyDef(Name name, int type)
             throws ConstraintViolationException {
         // try named property definitions first
         PropDef match = getMatchingPropDef(getNamedPropDefs(name), type);
@@ -886,7 +886,7 @@ public class EffectiveNodeType implements Cloneable {
      * @param name
      * @throws ConstraintViolationException
      */
-    public void checkRemoveItemConstraints(QName name) throws ConstraintViolationException {
+    public void checkRemoveItemConstraints(Name name) throws ConstraintViolationException {
         /**
          * as there might be multiple definitions with the same name and we
          * don't know which one is applicable, we check all of them
@@ -908,7 +908,7 @@ public class EffectiveNodeType implements Cloneable {
      * @param name
      * @throws ConstraintViolationException
      */
-    public void checkRemoveNodeConstraints(QName name) throws ConstraintViolationException {
+    public void checkRemoveNodeConstraints(Name name) throws ConstraintViolationException {
         /**
          * as there might be multiple definitions with the same name and we
          * don't know which one is applicable, we check all of them
@@ -930,7 +930,7 @@ public class EffectiveNodeType implements Cloneable {
      * @param name
      * @throws ConstraintViolationException
      */
-    public void checkRemovePropertyConstraints(QName name) throws ConstraintViolationException {
+    public void checkRemovePropertyConstraints(Name name) throws ConstraintViolationException {
         /**
          * as there might be multiple definitions with the same name and we
          * don't know which one is applicable, we check all of them
@@ -982,7 +982,7 @@ public class EffectiveNodeType implements Cloneable {
      */
     private synchronized void internalMerge(EffectiveNodeType other, boolean supertype)
             throws NodeTypeConflictException {
-        QName[] nta = other.getAllNodeTypes();
+        Name[] nta = other.getAllNodeTypes();
         int includedCount = 0;
         for (int i = 0; i < nta.length; i++) {
             if (includesNodeType(nta[i])) {
@@ -1004,7 +1004,7 @@ public class EffectiveNodeType implements Cloneable {
                 // ignore redundant definitions
                 continue;
             }
-            QName name = def.getName();
+            Name name = def.getName();
             List existingDefs = (List) namedItemDefs.get(name);
             if (existingDefs != null) {
                 if (existingDefs.size() > 0) {

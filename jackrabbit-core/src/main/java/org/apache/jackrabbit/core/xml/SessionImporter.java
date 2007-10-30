@@ -20,9 +20,11 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.value.ReferenceValue;
 import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,9 +83,9 @@ public class SessionImporter implements Importer {
     }
 
     protected NodeImpl createNode(NodeImpl parent,
-                                  QName nodeName,
-                                  QName nodeTypeName,
-                                  QName[] mixinNames,
+                                  Name nodeName,
+                                  Name nodeTypeName,
+                                  Name[] mixinNames,
                                   NodeId id)
             throws RepositoryException {
         NodeImpl node;
@@ -102,9 +104,9 @@ public class SessionImporter implements Importer {
                 // assume this property has been imported as well;
                 // rename conflicting property
                 // @todo use better reversible escaping scheme to create unique name
-                QName newName = new QName(nodeName.getNamespaceURI(), nodeName.getLocalName() + "_");
+                Name newName = NameFactoryImpl.getInstance().create(nodeName.getNamespaceURI(), nodeName.getLocalName() + "_");
                 if (parent.hasProperty(newName)) {
-                    newName = new QName(newName.getNamespaceURI(), newName.getLocalName() + "_");
+                    newName = NameFactoryImpl.getInstance().create(newName.getNamespaceURI(), newName.getLocalName() + "_");
                 }
 
                 if (conflicting.getDefinition().isMultiple()) {
@@ -138,7 +140,7 @@ public class SessionImporter implements Importer {
             node = createNode(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(), null);
             // remember uuid mapping
-            if (node.isNodeType(QName.MIX_REFERENCEABLE)) {
+            if (node.isNodeType(NameConstants.MIX_REFERENCEABLE)) {
                 refTracker.mappedUUID(nodeInfo.getId().getUUID(), node.getNodeId().getUUID());
             }
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW) {
@@ -197,9 +199,9 @@ public class SessionImporter implements Importer {
 
         NodeImpl node = null;
         NodeId id = nodeInfo.getId();
-        QName nodeName = nodeInfo.getName();
-        QName ntName = nodeInfo.getNodeTypeName();
-        QName[] mixins = nodeInfo.getMixinNames();
+        Name nodeName = nodeInfo.getName();
+        Name ntName = nodeInfo.getNodeTypeName();
+        Name[] mixins = nodeInfo.getMixinNames();
 
         if (parent == null) {
             // parent node was skipped, skip this child node too
@@ -264,7 +266,7 @@ public class SessionImporter implements Importer {
         Iterator iter = propInfos.iterator();
         while (iter.hasNext()) {
             PropInfo pi = (PropInfo) iter.next();
-            pi.apply(node, session.getNamespaceResolver(), refTracker);
+            pi.apply(node, session.getNamePathResolver(), refTracker);
         }
 
         parents.push(node);

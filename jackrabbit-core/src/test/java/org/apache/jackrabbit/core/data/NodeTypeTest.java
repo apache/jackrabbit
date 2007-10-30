@@ -19,8 +19,8 @@ package org.apache.jackrabbit.core.data;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
-import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.name.NameFactoryImpl;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -63,7 +63,7 @@ public class NodeTypeTest extends AbstractJCRTest {
             List ntdList = cndReader.getNodeTypeDefs();
             NodeTypeManagerImpl ntmgr = (NodeTypeManagerImpl) ws.getNodeTypeManager();
             NodeTypeRegistry ntreg = ntmgr.getNodeTypeRegistry();
-            if (!ntreg.isRegistered(new QName("http://namespace.com/ns", "foo" + len))) {
+            if (!ntreg.isRegistered(NameFactoryImpl.getInstance().create("http://namespace.com/ns", "foo" + len))) {
                 ntreg.registerNodeTypes(ntdList);
             }
             Node root = session.getRootNode();

@@ -18,26 +18,25 @@ package org.apache.jackrabbit.core.lock;
 
 import EDU.oswego.cs.dl.util.concurrent.ReentrantLock;
 import org.apache.commons.collections.map.LinkedMap;
+import org.apache.jackrabbit.conversion.MalformedPathException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.util.PathMap;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
-import org.apache.jackrabbit.core.util.Dumpable;
+import org.apache.jackrabbit.core.cluster.ClusterOperation;
 import org.apache.jackrabbit.core.cluster.LockEventChannel;
 import org.apache.jackrabbit.core.cluster.LockEventListener;
-import org.apache.jackrabbit.core.cluster.ClusterOperation;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.core.util.Dumpable;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.name.PathMap;
+import org.apache.jackrabbit.spi.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,9 +100,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     private boolean savingDisabled;
 
     /**
-     * Namespace resolver
+     * Name and Path resolver
      */
-    private final NamespaceResolver nsResolver;
+    private final NamePathResolver resolver;
 
     /**
      * Lock event channel.
@@ -121,7 +120,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             throws RepositoryException {
 
         this.session = session;
-        this.nsResolver = session.getNamespaceResolver();
+        this.resolver = session.getNamePathResolver();
         this.locksFile = new FileSystemResource(fs, FileSystem.SEPARATOR + LOCKS_FILE);
 
         session.getWorkspace().getObservationManager().
@@ -185,8 +184,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             Path path = getPath(lockToken.id);
 
             LockInfo info = new LockInfo(lockToken, false,
-                    node.getProperty(QName.JCR_LOCKISDEEP).getBoolean(),
-                    node.getProperty(QName.JCR_LOCKOWNER).getString());
+                    node.getProperty(NameConstants.JCR_LOCKISDEEP).getBoolean(),
+                    node.getProperty(NameConstants.JCR_LOCKOWNER).getString());
             info.setLive(true);
             lockMap.put(path, info);
         } catch (RepositoryException e) {
@@ -826,7 +825,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
 
             try {
                 he = new HierarchyEvent(event.getChildId(),
-                        PathFormat.parse(event.getPath(), nsResolver).getNormalizedPath(),
+                        resolver.getQPath(event.getPath()).getNormalizedPath(),
                         event.getType());
             } catch (MalformedPathException e) {
                 log.info("Unable to get event's path: " + e.getMessage());
@@ -954,7 +953,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
 
     /**
      * Contains information about a lock and gets placed inside the child
-     * information of a {@link org.apache.jackrabbit.util.PathMap}.
+     * information of a {@link org.apache.jackrabbit.name.PathMap}.
      */
     class LockInfo extends AbstractLockInfo implements SessionListener {
 

@@ -16,13 +16,10 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.UnknownPrefixException;
-import org.apache.jackrabbit.name.AbstractNamespaceResolver;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.conversion.IllegalNameException;
+import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,6 +61,11 @@ public class FileBasedNamespaceMappings
     private final File storage;
 
     /**
+     * The name resolver used to translate the qualified name to JCR name
+     */
+    private final NameResolver nameResolver;
+
+    /**
      * Map of uris indexed by prefixes
      */
     private Map prefixToURI = new HashMap();
@@ -89,6 +91,7 @@ public class FileBasedNamespaceMappings
     public FileBasedNamespaceMappings(File file) throws IOException {
         storage = file;
         load();
+        nameResolver = NamePathResolverImpl.create(this);
     }
 
     /**
@@ -142,16 +145,14 @@ public class FileBasedNamespaceMappings
      * Translates a property name from a session local namespace mapping
      * into a search index private namespace mapping.
      *
-     * @param name     the property name to translate
-     * @param resolver the <code>NamespaceResolver</code> of the local session.
+     * @param qName     the property name to translate
      * @return the translated property name
      */
-    public String translatePropertyName(String name, NamespaceResolver resolver)
-            throws IllegalNameException, UnknownPrefixException {
-        QName qName = NameFormat.parse(name, resolver);
+    public String translatePropertyName(Name qName)
+            throws IllegalNameException {
         try {
-            return NameFormat.format(qName, this);
-        } catch (NoPrefixDeclaredException e) {
+            return nameResolver.getJCRName(qName);
+        } catch (NamespaceException e) {
             // should never happen actually, because we create yet unknown
             // uri mappings on the fly.
             throw new IllegalNameException("Internal error.", e);

@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
 import org.apache.jackrabbit.core.nodetype.xml.NodeTypeWriter;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
@@ -82,7 +82,7 @@ public class NodeTypeDefStore {
      * @param name
      * @return
      */
-    public boolean remove(QName name) {
+    public boolean remove(Name name) {
         return (ntDefs.remove(name) != null);
     }
 
@@ -97,7 +97,7 @@ public class NodeTypeDefStore {
      * @param name
      * @return
      */
-    public boolean contains(QName name) {
+    public boolean contains(Name name) {
         return ntDefs.containsKey(name);
     }
 
@@ -105,7 +105,7 @@ public class NodeTypeDefStore {
      * @param name
      * @return
      */
-    public NodeTypeDef get(QName name) {
+    public NodeTypeDef get(Name name) {
         return (NodeTypeDef) ntDefs.get(name);
     }
 

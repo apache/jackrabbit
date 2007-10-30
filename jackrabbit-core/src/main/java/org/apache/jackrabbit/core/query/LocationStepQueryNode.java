@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.Name;
 
 /**
  * Defines a location step for querying the path of a node.
@@ -42,7 +43,7 @@ public class LocationStepQueryNode extends NAryQueryNode {
      * specific constant as the empty name is not a valid JCR name.
      * TODO: The root location step should be refactored somehow
      */
-    public static final QName EMPTY_NAME = new QName("", "");
+    public static final Name EMPTY_NAME = NameFactoryImpl.getInstance().create("", "");
 
     /** Empty <code>QueryNode</code> array for us as return value */
     private static final QueryNode[] EMPTY = new QueryNode[0];
@@ -51,7 +52,7 @@ public class LocationStepQueryNode extends NAryQueryNode {
      * Name test for this location step. A <code>null</code> value indicates
      * a '*' name test.
      */
-    private QName nameTest;
+    private Name nameTest;
 
     /**
      * If set to <code>true</code> this location step uses the descendant-or-self
@@ -80,7 +81,7 @@ public class LocationStepQueryNode extends NAryQueryNode {
      * if the name test is '*'.
      * @return the label of the node for this location step.
      */
-    public QName getNameTest() {
+    public Name getNameTest() {
         return nameTest;
     }
 
@@ -88,7 +89,7 @@ public class LocationStepQueryNode extends NAryQueryNode {
      * Sets a new name test.
      * @param nameTest the name test or <code>null</code> to match all names.
      */
-    public void setNameTest(QName nameTest) {
+    public void setNameTest(Name nameTest) {
         this.nameTest = nameTest;
     }
 

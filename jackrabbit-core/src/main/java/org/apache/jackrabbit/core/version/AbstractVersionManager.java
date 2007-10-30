@@ -24,8 +24,10 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.name.NameFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -300,14 +302,14 @@ abstract class AbstractVersionManager implements VersionManager {
             String uuid = node.getNodeId().getUUID().toString();
             NodeStateEx root = historyRoot;
             for (int i = 0; i < 3; i++) {
-                QName name = new QName(QName.NS_DEFAULT_URI, uuid.substring(i * 2, i * 2 + 2));
+                Name name = NameFactoryImpl.getInstance().create(Name.NS_DEFAULT_URI, uuid.substring(i * 2, i * 2 + 2));
                 if (!root.hasNode(name)) {
-                    root.addNode(name, QName.REP_VERSIONSTORAGE, null, false);
+                    root.addNode(name, NameConstants.REP_VERSIONSTORAGE, null, false);
                     root.store();
                 }
                 root = root.getNode(name, 1);
             }
-            QName historyNodeName = new QName(QName.NS_DEFAULT_URI, uuid);
+            Name historyNodeName = NameFactoryImpl.getInstance().create(Name.NS_DEFAULT_URI, uuid);
             if (root.hasNode(historyNodeName)) {
                 // already exists
                 return null;
@@ -345,13 +347,13 @@ abstract class AbstractVersionManager implements VersionManager {
         String uuid = node.getNodeId().getUUID().toString();
         NodeStateEx n = historyRoot;
         for (int i = 0; i < 3; i++) {
-            QName name = new QName(QName.NS_DEFAULT_URI, uuid.substring(i * 2, i * 2 + 2));
+            Name name = NameFactoryImpl.getInstance().create(Name.NS_DEFAULT_URI, uuid.substring(i * 2, i * 2 + 2));
             if (!n.hasNode(name)) {
                 return null;
             }
             n = n.getNode(name, 1);
         }
-        QName historyNodeName = new QName(QName.NS_DEFAULT_URI, uuid);
+        Name historyNodeName = NameFactoryImpl.getInstance().create(Name.NS_DEFAULT_URI, uuid);
         if (!n.hasNode(historyNodeName)) {
             return null;
         }
@@ -372,7 +374,7 @@ abstract class AbstractVersionManager implements VersionManager {
         WriteOperation operation = startWriteOperation();
         try {
             String versionName = calculateCheckinVersionName(history, node);
-            InternalVersionImpl v = history.checkin(new QName("", versionName), node);
+            InternalVersionImpl v = history.checkin(NameFactoryImpl.getInstance().create("", versionName), node);
             operation.save();
             return v;
         } catch (ItemStateException e) {
@@ -427,7 +429,7 @@ abstract class AbstractVersionManager implements VersionManager {
                                                  NodeImpl node)
             throws RepositoryException {
         // 1. search a predecessor, suitable for generating the new name
-        Value[] values = node.getProperty(QName.JCR_PREDECESSORS).getValues();
+        Value[] values = node.getProperty(NameConstants.JCR_PREDECESSORS).getValues();
         InternalVersion best = null;
         for (int i = 0; i < values.length; i++) {
             InternalVersion pred = history.getVersion(NodeId.valueOf(values[i].getString()));
@@ -442,7 +444,7 @@ abstract class AbstractVersionManager implements VersionManager {
         if (pos > 0) {
             String newVersionName = versionName.substring(0, pos + 1)
                 + (Integer.parseInt(versionName.substring(pos + 1)) + 1);
-            while (history.hasVersion(new QName("", newVersionName))) {
+            while (history.hasVersion(NameFactoryImpl.getInstance().create("", newVersionName))) {
                 versionName += ".0";
                 newVersionName = versionName;
             }
@@ -462,7 +464,7 @@ abstract class AbstractVersionManager implements VersionManager {
      *  not have a version with <code>name</code>.
      * @throws javax.jcr.RepositoryException if any other error occurs.
      */
-    protected void removeVersion(InternalVersionHistoryImpl history, QName name)
+    protected void removeVersion(InternalVersionHistoryImpl history, Name name)
             throws VersionException, RepositoryException {
         WriteOperation operation = startWriteOperation();
         try {
@@ -485,7 +487,7 @@ abstract class AbstractVersionManager implements VersionManager {
      * @throws RepositoryException if an error occurs
      */
     protected InternalVersion setVersionLabel(InternalVersionHistoryImpl history,
-                                              QName version, QName label,
+                                              Name version, Name label,
                                               boolean move)
             throws RepositoryException {
         WriteOperation operation = startWriteOperation();

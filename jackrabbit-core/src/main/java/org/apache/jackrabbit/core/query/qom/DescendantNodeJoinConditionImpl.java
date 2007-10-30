@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.qom;
 
-import org.apache.jackrabbit.name.NamePathResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.Name;
 
 import org.apache.jackrabbit.core.query.jsr283.qom.DescendantNodeJoinCondition;
 
@@ -31,16 +31,16 @@ public class DescendantNodeJoinConditionImpl
     /**
      * Name of the descendant selector.
      */
-    private final QName descendantSelectorName;
+    private final Name descendantSelectorName;
 
     /**
      * Name of the ancestor selector.
      */
-    private final QName ancestorSelectorName;
+    private final Name ancestorSelectorName;
 
     DescendantNodeJoinConditionImpl(NamePathResolver resolver,
-                                    QName descendantSelectorName,
-                                    QName ancestorSelectorName) {
+                                    Name descendantSelectorName,
+                                    Name ancestorSelectorName) {
         super(resolver);
         this.descendantSelectorName = descendantSelectorName;
         this.ancestorSelectorName = ancestorSelectorName;

@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.qom;
 
-import org.apache.jackrabbit.name.NamePathResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.Name;
 
 import org.apache.jackrabbit.core.query.jsr283.qom.ChildNodeJoinCondition;
 
@@ -31,16 +31,16 @@ public class ChildNodeJoinConditionImpl
     /**
      * The name of the child selector.
      */
-    private final QName childSelectorName;
+    private final Name childSelectorName;
 
     /**
      * The name of the parent selector.
      */
-    private final QName parentSelectorName;
+    private final Name parentSelectorName;
 
     ChildNodeJoinConditionImpl(NamePathResolver resolver,
-                               QName childSelectorName,
-                               QName parentSelectorName) {
+                               Name childSelectorName,
+                               Name parentSelectorName) {
         super(resolver);
         this.childSelectorName = childSelectorName;
         this.parentSelectorName = parentSelectorName;

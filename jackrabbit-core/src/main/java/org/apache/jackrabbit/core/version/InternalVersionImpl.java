@@ -19,7 +19,8 @@ package org.apache.jackrabbit.core.version;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -53,7 +54,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * the version name
      */
-    private final QName name;
+    private final Name name;
 
     /**
      * the version history
@@ -67,17 +68,17 @@ class InternalVersionImpl extends InternalVersionItemImpl
      *
      * @param node
      */
-    public InternalVersionImpl(InternalVersionHistoryImpl vh, NodeStateEx node, QName name) {
+    public InternalVersionImpl(InternalVersionHistoryImpl vh, NodeStateEx node, Name name) {
         super(vh.getVersionManager(), node);
         this.versionHistory = vh;
         this.name = name;
 
         // init internal values
-        InternalValue[] values = node.getPropertyValues(QName.JCR_CREATED);
+        InternalValue[] values = node.getPropertyValues(NameConstants.JCR_CREATED);
         if (values != null) {
             created = values[0].getDate();
         }
-        isRoot = name.equals(QName.JCR_ROOTVERSION);
+        isRoot = name.equals(NameConstants.JCR_ROOTVERSION);
     }
 
     /**
@@ -97,7 +98,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
-    public QName getName() {
+    public Name getName() {
         return name;
     }
 
@@ -107,7 +108,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     public InternalFrozenNode getFrozenNode() {
         // get frozen node
         try {
-            NodeState.ChildNodeEntry entry = node.getState().getChildNodeEntry(QName.JCR_FROZENNODE, 1);
+            NodeState.ChildNodeEntry entry = node.getState().getChildNodeEntry(NameConstants.JCR_FROZENNODE, 1);
             if (entry == null) {
                 throw new InternalError("version has no frozen node: " + getId());
             }
@@ -130,7 +131,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     public InternalVersion[] getSuccessors() {
         vMgr.acquireReadLock();
         try {
-            InternalValue[] values = node.getPropertyValues(QName.JCR_SUCCESSORS);
+            InternalValue[] values = node.getPropertyValues(NameConstants.JCR_SUCCESSORS);
             if (values != null) {
                 InternalVersion[] versions = new InternalVersion[values.length];
                 for (int i = 0; i < values.length; i++) {
@@ -150,7 +151,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * {@inheritDoc}
      */
     public InternalVersion[] getPredecessors() {
-        InternalValue[] values = node.getPropertyValues(QName.JCR_PREDECESSORS);
+        InternalValue[] values = node.getPropertyValues(NameConstants.JCR_PREDECESSORS);
         if (values != null) {
             InternalVersion[] versions = new InternalVersion[values.length];
             for (int i = 0; i < values.length; i++) {
@@ -187,14 +188,14 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
-    public boolean hasLabel(QName label) {
+    public boolean hasLabel(Name label) {
         return internalHasLabel(label);
     }
 
     /**
      * {@inheritDoc}
      */
-    public QName[] getLabels() {
+    public Name[] getLabels() {
         return internalGetLabels();
     }
 
@@ -217,7 +218,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      *
      * @throws RepositoryException
      */
-    private void storeXCessors(List cessors, QName propname, boolean store)
+    private void storeXCessors(List cessors, Name propname, boolean store)
             throws RepositoryException {
         InternalValue[] values = new InternalValue[cessors.size()];
         for (int i = 0; i < values.length; i++) {
@@ -277,7 +278,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
         List l = new ArrayList(Arrays.asList(getSuccessors()));
         if (!l.contains(succ)) {
             l.add(succ);
-            storeXCessors(l, QName.JCR_SUCCESSORS, store);
+            storeXCessors(l, NameConstants.JCR_SUCCESSORS, store);
         }
     }
 
@@ -297,7 +298,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
 
         // attach v's predecessors
         l.addAll(Arrays.asList(v.getPredecessors()));
-        storeXCessors(l, QName.JCR_PREDECESSORS, store);
+        storeXCessors(l, NameConstants.JCR_PREDECESSORS, store);
     }
 
     /**
@@ -316,7 +317,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
 
         // attach v's successors
         l.addAll(Arrays.asList(v.getSuccessors()));
-        storeXCessors(l, QName.JCR_SUCCESSORS, store);
+        storeXCessors(l, NameConstants.JCR_SUCCESSORS, store);
     }
 
     /**
@@ -325,7 +326,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * @param label
      * @return <code>true</code> if the label was added
      */
-    boolean internalAddLabel(QName label) {
+    boolean internalAddLabel(Name label) {
         if (labelCache == null) {
             labelCache = new HashSet();
         }
@@ -338,7 +339,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * @param label
      * @return <code>true</code> if the label was removed
      */
-    boolean internalRemoveLabel(QName label) {
+    boolean internalRemoveLabel(Name label) {
         if (labelCache == null) {
             return false;
         } else {
@@ -352,7 +353,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * @param label
      * @return <code>true</code> if the label exists
      */
-    boolean internalHasLabel(QName label) {
+    boolean internalHasLabel(Name label) {
         if (labelCache == null) {
             return false;
         } else {
@@ -365,11 +366,11 @@ class InternalVersionImpl extends InternalVersionItemImpl
      *
      * @return the internal labels
      */
-    QName[] internalGetLabels() {
+    Name[] internalGetLabels() {
         if (labelCache == null) {
-            return new QName[0];
+            return new Name[0];
         } else {
-            return (QName[]) labelCache.toArray(new QName[labelCache.size()]);
+            return (Name[]) labelCache.toArray(new Name[labelCache.size()]);
         }
     }
 
@@ -386,7 +387,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * @throws RepositoryException
      */
     void legacyResolveSuccessors() throws RepositoryException {
-        InternalValue[] values = node.getPropertyValues(QName.JCR_PREDECESSORS);
+        InternalValue[] values = node.getPropertyValues(NameConstants.JCR_PREDECESSORS);
         if (values != null) {
             for (int i = 0; i < values.length; i++) {
                 NodeId vId = new NodeId(values[i].getUUID());

@@ -23,11 +23,13 @@ import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateListener;
 import org.apache.jackrabbit.core.util.Dumpable;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathResolver;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.util.PathMap;
+import org.apache.jackrabbit.conversion.MalformedPathException;
+import org.apache.jackrabbit.conversion.PathResolver;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.PathMap;
+import org.apache.jackrabbit.name.PathBuilder;
+import org.apache.jackrabbit.name.PathFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,8 +120,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
         if (state.isNode() && !isCached(state.getId())) {
             try {
-                Path.PathBuilder builder = new Path.PathBuilder();
-                Path.PathElement[] elements = path.getElements();
+                PathBuilder builder = new PathBuilder();
+                Path.Element[] elements = path.getElements();
                 for (int i = 0; i < next; i++) {
                     builder.addLast(elements[i]);
                 }
@@ -140,14 +142,14 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * being used. If no mapping is found, the item is cached instead after
      * the base implementation has been invoked.
      */
-    protected void buildPath(Path.PathBuilder builder, ItemState state)
+    protected void buildPath(PathBuilder builder, ItemState state)
             throws ItemStateException, RepositoryException {
 
         if (state.isNode()) {
             PathMap.Element element = get(state.getId());
             if (element != null) {
                 try {
-                    Path.PathElement[] elements = element.getPath().getElements();
+                    Path.Element[] elements = element.getPath().getElements();
                     for (int i = elements.length - 1; i >= 0; i--) {
                         builder.addFirst(elements[i]);
                     }
@@ -227,7 +229,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     /**
      * {@inheritDoc}
      */
-    public QName getName(ItemId id)
+    public Name getName(ItemId id)
             throws ItemNotFoundException, RepositoryException {
 
         if (id.denotesNode()) {
@@ -351,12 +353,12 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     /**
      * {@inheritDoc}
      */
-    public void nodeAdded(NodeState state, QName name, int index, NodeId id) {
+    public void nodeAdded(NodeState state, Name name, int index, NodeId id) {
         // Optimization: ignore notifications for nodes that are not in the cache
         synchronized (cacheMonitor) {
             if (idCache.containsKey(state.getNodeId())) {
                 try {
-                    Path path = Path.create(getPath(state.getNodeId()), name, index, true);
+                    Path path = PathFactoryImpl.getInstance().create(getPath(state.getNodeId()), name, index, true);
                     insert(path, id);
                 } catch (PathNotFoundException e) {
                     log.warn("Unable to get path of node " + state.getNodeId()
@@ -415,7 +417,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                      * whether their position changed or not - as we might need
                      * to reorder them later on.
                      */
-                    Path.PathElement newNameIndex = Path.PathElement.create(
+                    Path.Element newNameIndex = PathFactoryImpl.getInstance().createElement(
                             cne.getName(), cne.getIndex());
                     newChildrenOrder.put(newNameIndex, child);
 
@@ -435,12 +437,12 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     /**
      * {@inheritDoc}
      */
-    public void nodeRemoved(NodeState state, QName name, int index, NodeId id) {
+    public void nodeRemoved(NodeState state, Name name, int index, NodeId id) {
         // Optimization: ignore notifications for nodes that are not in the cache
         synchronized (cacheMonitor) {
             if (idCache.containsKey(state.getNodeId())) {
                 try {
-                    Path path = Path.create(getPath(state.getNodeId()), name, index, true);
+                    Path path = PathFactoryImpl.getInstance().create(getPath(state.getNodeId()), name, index, true);
                     remove(path, id);
                 } catch (PathNotFoundException e) {
                     log.warn("Unable to get path of node " + state.getNodeId()

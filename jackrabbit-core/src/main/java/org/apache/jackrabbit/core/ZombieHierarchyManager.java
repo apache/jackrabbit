@@ -21,7 +21,7 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import java.util.Iterator;
 
@@ -96,7 +96,7 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
      * Also allows for removed/renamed child node entries.
      */
     protected NodeState.ChildNodeEntry getChildNodeEntry(NodeState parent,
-                                                         QName name,
+                                                         Name name,
                                                          int index) {
         // check removed child node entries first
         Iterator iter = parent.getRemovedChildNodeEntries().iterator();

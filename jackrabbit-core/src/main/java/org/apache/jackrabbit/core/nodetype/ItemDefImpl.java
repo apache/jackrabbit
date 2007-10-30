@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.version.OnParentVersionAction;
 
@@ -30,12 +30,12 @@ public abstract class ItemDefImpl implements ItemDef {
     /**
      * The name of the child item.
      */
-    private QName name = ItemDef.ANY_NAME;
+    private Name name = ItemDef.ANY_NAME;
 
     /**
      * The name of the declaring node type.
      */
-    protected QName declaringNodeType = null;
+    protected Name declaringNodeType = null;
 
     /**
      * The 'autoCreated' flag.
@@ -69,7 +69,7 @@ public abstract class ItemDefImpl implements ItemDef {
      * @param declaringNodeType name of the declaring node type (must not be
      *                          <code>null</code>)
      */
-    public void setDeclaringNodeType(QName declaringNodeType) {
+    public void setDeclaringNodeType(Name declaringNodeType) {
         if (declaringNodeType == null) {
             throw new IllegalArgumentException("declaringNodeType can not be null");
         }
@@ -81,7 +81,7 @@ public abstract class ItemDefImpl implements ItemDef {
      *
      * @param name name of child item (must not be  <code>null</code>)
      */
-    public void setName(QName name) {
+    public void setName(Name name) {
         if (name == null) {
             throw new IllegalArgumentException("name can not be null");
         }
@@ -136,14 +136,14 @@ public abstract class ItemDefImpl implements ItemDef {
     /**
      * {@inheritDoc}
      */
-    public QName getDeclaringNodeType() {
+    public Name getDeclaringNodeType() {
         return declaringNodeType;
     }
 
     /**
      * {@inheritDoc}
      */
-    public QName getName() {
+    public Name getName() {
         return name;
     }
 
