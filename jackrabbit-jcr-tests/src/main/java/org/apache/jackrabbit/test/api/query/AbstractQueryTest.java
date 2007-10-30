@@ -39,27 +39,27 @@ import java.util.ArrayList;
 public abstract class AbstractQueryTest extends AbstractJCRTest {
 
     /**
-     * Resolved QName for jcr:score
+     * Resolved Name for jcr:score
      */
     protected String jcrScore;
 
     /**
-     * Resolved QName for jcr:path
+     * Resolved Name for jcr:path
      */
     protected String jcrPath;
 
     /**
-     * Resolved QName for jcr:root
+     * Resolved Name for jcr:root
      */
     protected String jcrRoot;
 
     /**
-     * Resolved QName for jcr:contains
+     * Resolved Name for jcr:contains
      */
     protected String jcrContains;
 
     /**
-     * Resolved QName for jcr:deref
+     * Resolved Name for jcr:deref
      */
     protected String jcrDeref;
 
