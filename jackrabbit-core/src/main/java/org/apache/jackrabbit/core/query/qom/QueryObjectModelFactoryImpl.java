@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.query.qom;
 
-import org.apache.jackrabbit.name.NamePathResolver;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.spi.Path;
 
 import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelFactory;
 import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModel;
@@ -213,7 +213,7 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
      */
     public Selector selector(String nodeTypeName)                                 // CM
             throws InvalidQueryException, RepositoryException {
-        QName ntName = checkNodeTypeName(nodeTypeName);
+        Name ntName = checkNodeTypeName(nodeTypeName);
         return new SelectorImpl(resolver, ntName, ntName);
     }
 
@@ -533,7 +533,7 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
                                          String fullTextSearchExpression)
             throws InvalidQueryException, RepositoryException                          // CM
     {
-        QName propName = null;
+        Name propName = null;
         if (propertyName != null) {
             propName = checkPropertyName(propertyName);
         }
@@ -559,7 +559,7 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
                                          String propertyName,
                                          String fullTextSearchExpression)
             throws InvalidQueryException, RepositoryException {
-        QName propName = null;
+        Name propName = null;
         if (propertyName != null) {
             propName = checkPropertyName(propertyName);
         }
@@ -941,7 +941,7 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
      */
     public Column column(String propertyName)                                     // CM
             throws InvalidQueryException, RepositoryException {
-        QName propName = null;
+        Name propName = null;
         if (propertyName != null) {
             try {
                 propName = resolver.getQName(propertyName);
@@ -974,7 +974,7 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
             throw new RepositoryException(
                     "columnName must be null if propertyName is null");
         }
-        QName propName = null;
+        Name propName = null;
         if (propertyName != null) {
             try {
                 propName = resolver.getQName(propertyName);
@@ -982,7 +982,7 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
                 throw new InvalidQueryException(e.getMessage());
             }
         }
-        QName colName = null;
+        Name colName = null;
         if (columnName != null) {
             try {
                 colName = resolver.getQName(columnName);
@@ -1016,7 +1016,7 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
             throw new RepositoryException(
                     "columnName must be null if propertyName is null");
         }
-        QName propName = null;
+        Name propName = null;
         if (propertyName != null) {
             try {
                 propName = resolver.getQName(propertyName);
@@ -1024,7 +1024,7 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
                 throw new InvalidQueryException(e.getMessage());
             }
         }
-        QName colName = null;
+        Name colName = null;
         if (columnName != null) {
             try {
                 colName = resolver.getQName(columnName);
@@ -1038,7 +1038,7 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
 
     //------------------------------< internal >--------------------------------
 
-    private QName checkSelectorName(String selectorName)
+    private Name checkSelectorName(String selectorName)
             throws RepositoryException {
         if (selectorName == null) {
             // TODO: correct exception?
@@ -1051,7 +1051,7 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
         }
     }
 
-    private QName checkNodeTypeName(String nodeTypeName)
+    private Name checkNodeTypeName(String nodeTypeName)
             throws RepositoryException {
         if (nodeTypeName == null) {
             // TODO: correct exception?
@@ -1076,7 +1076,7 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
         }
     }
 
-    private QName checkPropertyName(String propertyName)
+    private Name checkPropertyName(String propertyName)
             throws RepositoryException {
         if (propertyName == null) {
             // TODO: correct exception?

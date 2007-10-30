@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.qom;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NamePathResolver;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 
 import org.apache.jackrabbit.core.query.jsr283.qom.EquiJoinCondition;
 
@@ -31,28 +31,28 @@ public class EquiJoinConditionImpl
     /**
      * Name of the first selector.
      */
-    private final QName selector1Name;
+    private final Name selector1Name;
 
     /**
      * Property name in the first selector.
      */
-    private final QName property1Name;
+    private final Name property1Name;
 
     /**
      * Name of the second selector.
      */
-    private final QName selector2Name;
+    private final Name selector2Name;
 
     /**
      * Property name in the second selector.
      */
-    private final QName property2Name;
+    private final Name property2Name;
 
     EquiJoinConditionImpl(NamePathResolver resolver,
-                          QName selector1Name,
-                          QName property1Name,
-                          QName selector2Name,
-                          QName property2Name) {
+                          Name selector1Name,
+                          Name property1Name,
+                          Name selector2Name,
+                          Name property2Name) {
         super(resolver);
         this.selector1Name = selector1Name;
         this.property1Name = property1Name;

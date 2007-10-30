@@ -28,8 +28,8 @@ import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.PathResolver;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.conversion.PathResolver;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;

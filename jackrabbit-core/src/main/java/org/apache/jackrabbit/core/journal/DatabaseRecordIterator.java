@@ -16,15 +16,16 @@
  */
 package org.apache.jackrabbit.core.journal;
 
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.name.NamespaceResolver;
 
-import java.util.NoSuchElementException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.NoSuchElementException;
 
 /**
  * RecordIterator interface.
@@ -47,6 +48,11 @@ class DatabaseRecordIterator implements RecordIterator {
     private final NamespaceResolver resolver;
 
     /**
+     * Name and Path resolver.
+     */
+    private final NamePathResolver npResolver;
+
+    /**
      * Current record.
      */
     private ReadRecord record;
@@ -64,9 +70,10 @@ class DatabaseRecordIterator implements RecordIterator {
     /**
      * Create a new instance of this class.
      */
-    public DatabaseRecordIterator(ResultSet rs, NamespaceResolver resolver) {
+    public DatabaseRecordIterator(ResultSet rs, NamespaceResolver resolver, NamePathResolver npResolver) {
         this.rs = rs;
         this.resolver = resolver;
+        this.npResolver = npResolver;
     }
 
     /**
@@ -131,7 +138,7 @@ class DatabaseRecordIterator implements RecordIterator {
             String journalId = rs.getString(2);
             String producerId = rs.getString(3);
             DataInputStream dataIn = new DataInputStream(rs.getBinaryStream(4));
-            record = new ReadRecord(journalId, producerId, revision, dataIn, 0, resolver);
+            record = new ReadRecord(journalId, producerId, revision, dataIn, 0, resolver, npResolver);
         } else {
             isEOF = true;
         }

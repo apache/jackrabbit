@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
-
 import java.util.Arrays;
+
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 
 /**
  * Utility class to dump a {@link QueryNode} tree to a StringBuffer.
@@ -68,7 +68,7 @@ public class QueryTreeDump implements QueryNodeVisitor {
         buffer.append("+ Root node");
         buffer.append("\n");
         // select properties
-        QName[] select = node.getSelectProperties();
+        Name[] select = node.getSelectProperties();
         buffer.append("+ Select properties: ");
         if (select.length == 0) {
             buffer.append("*");
@@ -147,7 +147,7 @@ public class QueryTreeDump implements QueryNodeVisitor {
         if (relPath == null) {
             buffer.append(".");
         } else {
-            Path.PathElement[] elements = relPath.getElements();
+            Path.Element[] elements = relPath.getElements();
             String slash = "";
             for (int i = 0; i < elements.length; i++) {
                 buffer.append(slash);
@@ -246,7 +246,7 @@ public class QueryTreeDump implements QueryNodeVisitor {
         if (relPath == null) {
             buffer.append(relPath);
         } else {
-            Path.PathElement[] elements = relPath.getElements();
+            Path.Element[] elements = relPath.getElements();
             String slash = "";
             for (int i = 0; i < elements.length; i++) {
                 buffer.append(slash);

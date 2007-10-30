@@ -18,14 +18,11 @@ package org.apache.jackrabbit.core.value;
 
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.conversion.MalformedPathException;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.BinaryValue;
@@ -37,6 +34,8 @@ import org.apache.jackrabbit.value.NameValue;
 import org.apache.jackrabbit.value.PathValue;
 import org.apache.jackrabbit.value.ReferenceValue;
 import org.apache.jackrabbit.value.StringValue;
+import org.apache.jackrabbit.name.PathFactoryImpl;
+import org.apache.jackrabbit.name.NameFactoryImpl;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -62,7 +61,7 @@ import java.util.Calendar;
  * <tr>DOUBLE<td></td><td>Double</td></tr>
  * <tr>DATE<td></td><td>Calendar</td></tr>
  * <tr>BOOLEAN<td></td><td>Boolean</td></tr>
- * <tr>NAME<td></td><td>QName</td></tr>
+ * <tr>NAME<td></td><td>Name</td></tr>
  * <tr>PATH<td></td><td>Path</td></tr>
  * <tr>BINARY<td></td><td>BLOBFileValue</td></tr>
  * <tr>REFERENCE<td></td><td>UUID</td></tr>
@@ -96,12 +95,12 @@ public class InternalValue {
      * Large binary values are stored in a temporary file.
      * 
      * @param value the JCR value
-     * @param nsResolver the namespace resolver
+     * @param resolver
      * @return the created internal value
      */
-    public static InternalValue create(Value value, NamespaceResolver nsResolver)
+    public static InternalValue create(Value value, NamePathResolver resolver)
             throws ValueFormatException, RepositoryException {
-        return create(value, nsResolver, null);
+        return create(value, resolver, null);
     }
 
     /**
@@ -109,11 +108,11 @@ public class InternalValue {
      * If the data store is enabled, large binary values are stored in the data store.
      * 
      * @param value the JCR value
-     * @param nsResolver the namespace resolver
+     * @param resolver
      * @param store the data store
      * @return the created internal value
      */
-    public static InternalValue create(Value value, NamespaceResolver nsResolver, DataStore store)
+    public static InternalValue create(Value value, NamePathResolver resolver, DataStore store)
             throws ValueFormatException, RepositoryException {
         if (value == null) {
             throw new IllegalArgumentException("null value");
@@ -153,13 +152,13 @@ public class InternalValue {
                 return create(new UUID(value.getString()));
             case PropertyType.NAME:
                 try {
-                    return create(NameFormat.parse(value.getString(), nsResolver));
+                    return create(resolver.getQName(value.getString()));
                 } catch (NameException e) {
                     throw new ValueFormatException(e.getMessage());
                 }
             case PropertyType.PATH:
                 try {
-                    return create(PathFormat.parse(value.getString(), nsResolver));
+                    return create(resolver.getQPath(value.getString()));
                 } catch (MalformedPathException mpe) {
                     throw new ValueFormatException(mpe.getMessage());
                 }
@@ -302,7 +301,7 @@ public class InternalValue {
      * @param value
      * @return the created value
      */
-    public static InternalValue create(QName value) {
+    public static InternalValue create(Name value) {
         return new InternalValue(value);
     }
 
@@ -310,7 +309,7 @@ public class InternalValue {
      * @param values
      * @return the created value
      */
-    public static InternalValue[] create(QName[] values) {
+    public static InternalValue[] create(Name[] values) {
         InternalValue[] ret = new InternalValue[values.length];
         for (int i = 0; i < values.length; i++) {
             ret[i] = new InternalValue(values[i]);
@@ -348,11 +347,11 @@ public class InternalValue {
 
     //----------------------------------------------------< conversions, etc. >
     /**
-     * @param nsResolver
+     * @param resolver
      * @return
      * @throws RepositoryException
      */
-    public Value toJCRValue(NamespaceResolver nsResolver)
+    public Value toJCRValue(NamePathResolver resolver)
             throws RepositoryException {
         switch (type) {
             case PropertyType.BINARY:
@@ -368,14 +367,9 @@ public class InternalValue {
             case PropertyType.REFERENCE:
                 return ReferenceValue.valueOf(val.toString());
             case PropertyType.PATH:
-                try {
-                    return PathValue.valueOf(PathFormat.format((Path) val, nsResolver));
-                } catch (NoPrefixDeclaredException npde) {
-                    // should never get here...
-                    throw new RepositoryException("internal error: encountered unregistered namespace", npde);
-                }
+                return PathValue.valueOf(resolver.getJCRPath((Path) val));
             case PropertyType.NAME:
-                return NameValue.valueOf((QName) val, nsResolver);
+                return NameValue.valueOf(resolver.getJCRName((Name) val));
             case PropertyType.STRING:
                 return new StringValue((String) val);
             default:
@@ -406,9 +400,9 @@ public class InternalValue {
         return ((Boolean) val).booleanValue();
     }    
 
-    public QName getQName() {
+    public Name getQName() {
         assert val != null && type == PropertyType.NAME;
-        return (QName) val;
+        return (Name) val;
     }
     
     public Path getPath() {
@@ -501,9 +495,9 @@ public class InternalValue {
             case PropertyType.REFERENCE:
                 return create(new UUID(s));
             case PropertyType.PATH:
-                return create(Path.valueOf(s));
+                return create(PathFactoryImpl.getInstance().create(s));
             case PropertyType.NAME:
-                return create(QName.valueOf(s));
+                return create(NameFactoryImpl.getInstance().create(s));
             case PropertyType.STRING:
                 return create(s);
 
@@ -556,7 +550,7 @@ public class InternalValue {
         type = PropertyType.STRING;
     }
 
-    private InternalValue(QName value) {
+    private InternalValue(Name value) {
         val = value;
         type = PropertyType.NAME;
     }

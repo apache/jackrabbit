@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 /**
  * <code>NodeDef</code> is the internal representation of
- * a node definition. It refers to <code>QName</code>s only
+ * a node definition. It refers to <code>Name</code>s only
  * and is thus isolated from session-specific namespace mappings.
  *
  * @see javax.jcr.nodetype.NodeDefinition
@@ -41,14 +41,14 @@ public interface NodeDef extends ItemDef {
      *
      * @return the name of the default primary type.
      */
-    QName getDefaultPrimaryType();
+    Name getDefaultPrimaryType();
 
     /**
      * Returns the array of names of the required primary types.
      *
      * @return the array of names of the required primary types.
      */
-    QName[] getRequiredPrimaryTypes();
+    Name[] getRequiredPrimaryTypes();
 
     /**
      * Reports whether this node can have same-name siblings.

@@ -28,7 +28,7 @@ import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.RepositoryException;
 
@@ -84,7 +84,7 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
      * @inheritDoc
      */
     public VirtualPropertyState createPropertyState(VirtualNodeState parent,
-                                                    QName name, int type,
+                                                    Name name, int type,
                                                     boolean multiValued)
             throws RepositoryException {
         throw new IllegalStateException("VersionManager should never create a VirtualPropertyState");
@@ -93,8 +93,8 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
     /**
      * @inheritDoc
      */
-    public VirtualNodeState createNodeState(VirtualNodeState parent, QName name,
-                                            NodeId id, QName nodeTypeName)
+    public VirtualNodeState createNodeState(VirtualNodeState parent, Name name,
+                                            NodeId id, Name nodeTypeName)
             throws RepositoryException {
         throw new IllegalStateException("VersionManager should never create a VirtualNodeState");
     }

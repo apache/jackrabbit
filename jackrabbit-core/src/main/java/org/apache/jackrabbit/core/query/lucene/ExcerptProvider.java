@@ -17,7 +17,8 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameFactoryImpl;
 import org.apache.lucene.search.Query;
 
 import java.io.IOException;
@@ -29,9 +30,9 @@ import java.io.IOException;
 public interface ExcerptProvider {
 
     /**
-     * QName of the rep:excerpt function.
+     * Name of the rep:excerpt function.
      */
-    public final QName REP_EXCERPT = new QName(QName.NS_REP_URI, "excerpt(.)");
+    public final Name REP_EXCERPT = NameFactoryImpl.getInstance().create(Name.NS_REP_URI, "excerpt(.)");
 
     /**
      * Initializes this excerpt provider.

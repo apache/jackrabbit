@@ -21,8 +21,8 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.BooleanValue;
 import org.apache.jackrabbit.value.DateValue;
@@ -30,6 +30,7 @@ import org.apache.jackrabbit.value.DoubleValue;
 import org.apache.jackrabbit.value.LongValue;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
+import org.apache.jackrabbit.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -168,7 +169,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                 return value.toString().length();
 
             case PropertyType.NAME:
-                QName name = value.getQName();
+                Name name = value.getQName();
                 return session.getJCRName(name).length();
 
             case PropertyType.PATH:
@@ -291,7 +292,7 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     /**
      * Same as <code>{@link Property#setValue(String)}</code> except that
-     * this method takes a <code>QName</code> instead of a <code>String</code>
+     * this method takes a <code>Name</code> instead of a <code>String</code>
      * value.
      *
      * @param name
@@ -301,7 +302,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @throws ConstraintViolationException
      * @throws RepositoryException
      */
-    public void setValue(QName name)
+    public void setValue(Name name)
             throws ValueFormatException, VersionException,
             LockException, ConstraintViolationException,
             RepositoryException {
@@ -326,10 +327,10 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (reqType != PropertyType.NAME) {
             // type conversion required
             Value targetValue = ValueHelper.convert(
-                    InternalValue.create(name).toJCRValue(session.getNamespaceResolver()),
+                    InternalValue.create(name).toJCRValue(session.getNamePathResolver()),
                     reqType,
                     ValueFactoryImpl.getInstance());
-            internalValue = InternalValue.create(targetValue, session.getNamespaceResolver(), rep.getDataStore());
+            internalValue = InternalValue.create(targetValue, session.getNamePathResolver(), rep.getDataStore());
         } else {
             // no type conversion required
             internalValue = InternalValue.create(name);
@@ -340,7 +341,7 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     /**
      * Same as <code>{@link Property#setValue(String[])}</code> except that
-     * this method takes an array of <code>QName</code> instead of
+     * this method takes an array of <code>Name</code> instead of
      * <code>String</code> values.
      *
      * @param names
@@ -350,7 +351,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @throws ConstraintViolationException
      * @throws RepositoryException
      */
-    public void setValue(QName[] names)
+    public void setValue(Name[] names)
             throws ValueFormatException, VersionException,
             LockException, ConstraintViolationException,
             RepositoryException {
@@ -371,16 +372,16 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (names != null) {
             internalValues = new InternalValue[names.length];
             for (int i = 0; i < names.length; i++) {
-                QName name = names[i];
+                Name name = names[i];
                 InternalValue internalValue = null;
                 if (name != null) {
                     if (reqType != PropertyType.NAME) {
                         // type conversion required
                         Value targetValue = ValueHelper.convert(
-                                InternalValue.create(name).toJCRValue(session.getNamespaceResolver()),
+                                InternalValue.create(name).toJCRValue(session.getNamePathResolver()),
                                 reqType,
                                 ValueFactoryImpl.getInstance());
-                        internalValue = InternalValue.create(targetValue, session.getNamespaceResolver(), rep.getDataStore());
+                        internalValue = InternalValue.create(targetValue, session.getNamePathResolver(), rep.getDataStore());
                     } else {
                         // no type conversion required
                         internalValue = InternalValue.create(name);
@@ -396,7 +397,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * {@inheritDoc}
      */
-    public QName getQName() {
+    public Name getQName() {
         return ((PropertyId) id).getName();
     }
 
@@ -458,7 +459,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         InternalValue[] internalValues = state.getValues();
         Value[] values = new Value[internalValues.length];
         for (int i = 0; i < internalValues.length; i++) {
-            values[i] = internalValues[i].toJCRValue(session.getNamespaceResolver());
+            values[i] = internalValues[i].toJCRValue(session.getNamePathResolver());
         }
         return values;
     }
@@ -479,7 +480,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         PropertyState state = (PropertyState) getItemState();
         try {
             InternalValue val = state.getValues()[0];
-            return val.toJCRValue(session.getNamespaceResolver());
+            return val.toJCRValue(session.getNamePathResolver());
         } catch (RepositoryException e) {
             throw e;
         } catch (Exception e) {
@@ -542,7 +543,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             return val.getLong();
         }
         // not a LONG value, delegate conversion to Value object
-        return val.toJCRValue(session.getNamespaceResolver()).getLong();
+        return val.toJCRValue(session.getNamePathResolver()).getLong();
     }
 
     /**
@@ -566,7 +567,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             return val.getDouble();
         }
         // not a DOUBLE value, delegate conversion to Value object
-        return val.toJCRValue(session.getNamespaceResolver()).getDouble();
+        return val.toJCRValue(session.getNamePathResolver()).getDouble();
     }
 
     /**
@@ -590,7 +591,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             return val.getDate();
         }
         // not a DATE value, delegate conversion to Value object
-        return val.toJCRValue(session.getNamespaceResolver()).getDate();
+        return val.toJCRValue(session.getNamePathResolver()).getDate();
     }
 
     /**
@@ -614,7 +615,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             return val.getBoolean();
         }
         // not a BOOLEAN value, delegate conversion to Value object
-        return val.toJCRValue(session.getNamespaceResolver()).getBoolean();
+        return val.toJCRValue(session.getNamePathResolver()).getBoolean();
     }
 
     /**
@@ -671,7 +672,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             Value targetVal = ValueHelper.convert(
                     new DateValue(date), reqType,
                     ValueFactoryImpl.getInstance());
-            value = InternalValue.create(targetVal, session.getNamespaceResolver(), rep.getDataStore());
+            value = InternalValue.create(targetVal, session.getNamePathResolver(), rep.getDataStore());
         } else {
             // no type conversion required
             value = InternalValue.create(date);
@@ -705,7 +706,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             Value targetVal = ValueHelper.convert(
                     new DoubleValue(number), reqType,
                     ValueFactoryImpl.getInstance());
-            value = InternalValue.create(targetVal, session.getNamespaceResolver(), rep.getDataStore());
+            value = InternalValue.create(targetVal, session.getNamePathResolver(), rep.getDataStore());
         } else {
             // no type conversion required
             value = InternalValue.create(number);
@@ -743,10 +744,10 @@ public class PropertyImpl extends ItemImpl implements Property {
             value = InternalValue.createTemporary(stream, rep.getDataStore());
             if (reqType != PropertyType.BINARY) {
                 // type conversion required
-                Value jcrValue = value.toJCRValue(session.getNamespaceResolver());
+                Value jcrValue = value.toJCRValue(session.getNamePathResolver());
                 Value targetVal = ValueHelper.convert(
                         jcrValue, reqType, ValueFactoryImpl.getInstance());
-                value = InternalValue.create(targetVal, session.getNamespaceResolver(), rep.getDataStore());
+                value = InternalValue.create(targetVal, session.getNamePathResolver(), rep.getDataStore());
             }
         } catch (IOException ioe) {
             String msg = "failed to spool stream to internal storage";
@@ -787,7 +788,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             Value targetValue = ValueHelper.convert(
                     string, reqType,
                     ValueFactoryImpl.getInstance());
-            internalValue = InternalValue.create(targetValue, session.getNamespaceResolver(), rep.getDataStore());
+            internalValue = InternalValue.create(targetValue, session.getNamePathResolver(), rep.getDataStore());
         } else {
             // no type conversion required
             internalValue = InternalValue.create(string);
@@ -827,7 +828,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                         Value targetValue = ValueHelper.convert(
                                 string, reqType,
                                 ValueFactoryImpl.getInstance());
-                        internalValue = InternalValue.create(targetValue, session.getNamespaceResolver(), rep.getDataStore());
+                        internalValue = InternalValue.create(targetValue, session.getNamePathResolver(), rep.getDataStore());
                     } else {
                         // no type conversion required
                         internalValue = InternalValue.create(string);
@@ -865,7 +866,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             Value targetVal = ValueHelper.convert(
                     new BooleanValue(b), reqType,
                     ValueFactoryImpl.getInstance());
-            value = InternalValue.create(targetVal, session.getNamespaceResolver(), rep.getDataStore());
+            value = InternalValue.create(targetVal, session.getNamePathResolver(), rep.getDataStore());
         } else {
             // no type conversion required
             value = InternalValue.create(b);
@@ -901,7 +902,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (reqType == PropertyType.REFERENCE) {
             if (target instanceof NodeImpl) {
                 NodeImpl targetNode = (NodeImpl) target;
-                if (targetNode.isNodeType(QName.MIX_REFERENCEABLE)) {
+                if (targetNode.isNodeType(NameConstants.MIX_REFERENCEABLE)) {
                     InternalValue value = InternalValue.create(new UUID(targetNode.getUUID()));
                     internalSetValue(new InternalValue[]{value}, reqType);
                 } else {
@@ -941,7 +942,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             Value targetVal = ValueHelper.convert(
                     new LongValue(number), reqType,
                     ValueFactoryImpl.getInstance());
-            value = InternalValue.create(targetVal, session.getNamespaceResolver(), rep.getDataStore());
+            value = InternalValue.create(targetVal, session.getNamePathResolver(), rep.getDataStore());
         } else {
             // no type conversion required
             value = InternalValue.create(number);
@@ -984,10 +985,10 @@ public class PropertyImpl extends ItemImpl implements Property {
             Value targetVal = ValueHelper.convert(
                     value, reqType,
                     ValueFactoryImpl.getInstance());
-            internalValue = InternalValue.create(targetVal, session.getNamespaceResolver(), rep.getDataStore());
+            internalValue = InternalValue.create(targetVal, session.getNamePathResolver(), rep.getDataStore());
         } else {
             // no type conversion required
-            internalValue = InternalValue.create(value, session.getNamespaceResolver(), rep.getDataStore());
+            internalValue = InternalValue.create(value, session.getNamePathResolver(), rep.getDataStore());
         }
         internalSetValue(new InternalValue[]{internalValue}, reqType);
     }
@@ -1044,10 +1045,10 @@ public class PropertyImpl extends ItemImpl implements Property {
                         Value targetVal = ValueHelper.convert(
                                 value, reqType,
                                 ValueFactoryImpl.getInstance());
-                        internalValue = InternalValue.create(targetVal, session.getNamespaceResolver(), rep.getDataStore());
+                        internalValue = InternalValue.create(targetVal, session.getNamePathResolver(), rep.getDataStore());
                     } else {
                         // no type conversion required
-                        internalValue = InternalValue.create(value, session.getNamespaceResolver(), rep.getDataStore());
+                        internalValue = InternalValue.create(value, session.getNamePathResolver(), rep.getDataStore());
                     }
                 }
                 internalValues[i] = internalValue;

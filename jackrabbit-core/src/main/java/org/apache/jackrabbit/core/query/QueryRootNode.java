@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.name.QName;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.jackrabbit.spi.Name;
 
 /**
  * Implements the root node of a query tree.
@@ -32,7 +32,7 @@ public class QueryRootNode extends QueryNode {
     private PathQueryNode locationNode;
 
     /**
-     * The list of property names (as {@link org.apache.jackrabbit.name.QName}s
+     * The list of property names (as {@link org.apache.jackrabbit.spi.Name}s
      * to select.
      */
     private List selectProperties = new ArrayList();
@@ -74,7 +74,7 @@ public class QueryRootNode extends QueryNode {
      *
      * @param propName the name of the property to select.
      */
-    public void addSelectProperty(QName propName) {
+    public void addSelectProperty(Name propName) {
         selectProperties.add(propName);
     }
 
@@ -83,8 +83,8 @@ public class QueryRootNode extends QueryNode {
      *
      * @return an array of select properties.
      */
-    public QName[] getSelectProperties() {
-        return (QName[]) selectProperties.toArray(new QName[selectProperties.size()]);
+    public Name[] getSelectProperties() {
+        return (Name[]) selectProperties.toArray(new Name[selectProperties.size()]);
     }
 
     /**

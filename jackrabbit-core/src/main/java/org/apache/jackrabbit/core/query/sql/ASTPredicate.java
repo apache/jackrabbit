@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.sql;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 public class ASTPredicate extends SimpleNode {
 
@@ -24,7 +24,7 @@ public class ASTPredicate extends SimpleNode {
 
     private boolean negate = false;
 
-    private QName identifier;
+    private Name identifier;
 
     private String identifierOperand;
 
@@ -54,11 +54,11 @@ public class ASTPredicate extends SimpleNode {
         return this.negate;
     }
 
-    public void setIdentifier(QName identifier) {
+    public void setIdentifier(Name identifier) {
         this.identifier = identifier;
     }
 
-    public QName getIdentifier() {
+    public Name getIdentifier() {
         return identifier;
     }
 

@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.query;
 
 import java.util.List;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 /**
  * Default implementetation of a {@link QueryNodeFactory}.
@@ -43,7 +43,7 @@ public class DefaultQueryNodeFactory implements QueryNodeFactory {
      * {@inheritDoc}
      */
     public NodeTypeQueryNode createNodeTypeQueryNode(QueryNode parent,
-                                                     QName nodeType) {
+                                                     Name nodeType) {
         return new NodeTypeQueryNode(parent, nodeType);
     }
 
@@ -65,7 +65,7 @@ public class DefaultQueryNodeFactory implements QueryNodeFactory {
      * {@inheritDoc}
      */
     public DerefQueryNode createDerefQueryNode(QueryNode parent,
-                                               QName nameTest,
+                                               Name nameTest,
                                                boolean descendants) {
         return new DerefQueryNode(parent, nameTest, descendants);
     }

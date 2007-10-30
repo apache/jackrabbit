@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.query.xpath;
 import org.apache.jackrabbit.core.query.QueryTreeBuilder;
 import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.QueryNodeFactory;
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.conversion.NameResolver;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
@@ -33,7 +33,7 @@ public class QueryBuilder implements QueryTreeBuilder {
      * @inheritDoc
      */
     public QueryRootNode createQueryTree(String statement,
-                                         NamespaceResolver resolver,
+                                         NameResolver resolver,
                                          QueryNodeFactory factory)
             throws InvalidQueryException {
         return XPathQueryBuilder.createQuery(statement, resolver, factory);
@@ -57,7 +57,7 @@ public class QueryBuilder implements QueryTreeBuilder {
     /**
      * @inheritDoc
      */
-    public String toString(QueryRootNode root, NamespaceResolver resolver)
+    public String toString(QueryRootNode root, NameResolver resolver)
             throws InvalidQueryException {
         return XPathQueryBuilder.toString(root, resolver);
     }

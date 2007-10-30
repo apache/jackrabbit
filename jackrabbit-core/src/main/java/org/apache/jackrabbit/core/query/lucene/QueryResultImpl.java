@@ -20,10 +20,8 @@ import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.lucene.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +30,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
+import javax.jcr.NamespaceException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import java.io.IOException;
@@ -60,9 +59,9 @@ public class QueryResultImpl implements QueryResult {
     private final ItemManager itemMgr;
 
     /**
-     * The namespace resolver of the session executing the query
+     * The name and path resolver of the session executing the query
      */
-    protected final NamespaceResolver resolver;
+    protected final NamePathResolver resolver;
 
     /**
      * The access manager of the session that executes the query.
@@ -87,12 +86,12 @@ public class QueryResultImpl implements QueryResult {
     /**
      * The select properties
      */
-    protected final QName[] selectProps;
+    protected final Name[] selectProps;
 
     /**
      * The names of properties to use for ordering the result set.
      */
-    protected final QName[] orderProps;
+    protected final Name[] orderProps;
 
     /**
      * The order specifier for each of the order properties.
@@ -165,13 +164,13 @@ public class QueryResultImpl implements QueryResult {
      */
     public QueryResultImpl(SearchIndex index,
                            ItemManager itemMgr,
-                           NamespaceResolver resolver,
+                           NamePathResolver resolver,
                            AccessManager accessMgr,
                            AbstractQueryImpl queryImpl,
                            Query query,
                            SpellSuggestion spellSuggestion,
-                           QName[] selectProps,
-                           QName[] orderProps,
+                           Name[] selectProps,
+                           Name[] orderProps,
                            boolean[] orderSpecs,
                            boolean documentOrder,
                            long offset,
@@ -200,14 +199,13 @@ public class QueryResultImpl implements QueryResult {
         try {
             String[] propNames = new String[selectProps.length];
             for (int i = 0; i < selectProps.length; i++) {
-                propNames[i] = NameFormat.format(selectProps[i], resolver);
+                propNames[i] = resolver.getJCRName(selectProps[i]);
             }
             return propNames;
-        } catch (NoPrefixDeclaredException npde) {
+        } catch (NamespaceException npde) {
             String msg = "encountered invalid property name";
             log.debug(msg);
             throw new RepositoryException(msg, npde);
-
         }
     }
 

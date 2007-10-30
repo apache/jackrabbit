@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.state.ChangeLog;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

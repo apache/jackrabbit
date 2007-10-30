@@ -18,7 +18,8 @@ package org.apache.jackrabbit.core.query;
 
 import java.util.List;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.Name;
 
 /**
  * Implements a query node that defines a path restriction.
@@ -52,7 +53,7 @@ public class PathQueryNode extends NAryQueryNode {
     }
 
     /**
-     * Returns a list of valid node types under /jcr:system. List&lt;QName>.
+     * Returns a list of valid node types under /jcr:system. List&lt;Name>.
      *
      * @return a list of valid node types under /jcr:system.
      */
@@ -142,7 +143,7 @@ public class PathQueryNode extends NAryQueryNode {
             return true;
         }
 
-        QName firstPathStepName = pathSteps[0].getNameTest();
+        Name firstPathStepName = pathSteps[0].getNameTest();
         if (firstPathStepName == null) {
             // If the first operand of the path steps is a node type query
             // we do not need to include the system index if the node type is
@@ -163,7 +164,7 @@ public class PathQueryNode extends NAryQueryNode {
         
         // Calculate the first workspace relative location step
         LocationStepQueryNode firstWorkspaceRelativeStep = pathSteps[0];
-        if (firstPathStepName.equals(QName.ROOT)) {
+        if (firstPathStepName.equals(NameConstants.ROOT)) {
             // path starts with "/jcr:root"
             if (pathSteps.length > 1) {
                 firstWorkspaceRelativeStep = pathSteps[1];
@@ -176,9 +177,9 @@ public class PathQueryNode extends NAryQueryNode {
 
         // If the first workspace relative location step is jcr:system we need 
         // to include the system tree
-        QName firstWorkspaceRelativeName = firstWorkspaceRelativeStep.getNameTest();
+        Name firstWorkspaceRelativeName = firstWorkspaceRelativeStep.getNameTest();
         if (firstWorkspaceRelativeName == null
-                || firstWorkspaceRelativeName.equals(QName.JCR_SYSTEM)) {
+                || firstWorkspaceRelativeName.equals(NameConstants.JCR_SYSTEM)) {
             return true;
         }
         

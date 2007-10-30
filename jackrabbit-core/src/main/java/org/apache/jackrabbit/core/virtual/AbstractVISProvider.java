@@ -33,9 +33,10 @@ import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateReferenceMap;
 import org.apache.jackrabbit.core.state.ItemStateListener;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.util.WeakIdentityCollection;
+import org.apache.jackrabbit.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -251,7 +252,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
      * {@inheritDoc}
      */
     public VirtualPropertyState createPropertyState(VirtualNodeState parent,
-                                                    QName name, int type,
+                                                    Name name, int type,
                                                     boolean multiValued)
             throws RepositoryException {
         PropDef def = getApplicablePropertyDef(parent, name, type, multiValued);
@@ -266,8 +267,8 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     /**
      * {@inheritDoc}
      */
-    public VirtualNodeState createNodeState(VirtualNodeState parent, QName name,
-                                            NodeId id, QName nodeTypeName)
+    public VirtualNodeState createNodeState(VirtualNodeState parent, Name name,
+                                            NodeId id, Name nodeTypeName)
             throws RepositoryException {
 
         NodeDefId def;
@@ -276,7 +277,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
         } catch (RepositoryException re) {
             // hack, use nt:unstructured as parent
             NodeTypeRegistry ntReg = getNodeTypeRegistry();
-            EffectiveNodeType ent = ntReg.getEffectiveNodeType(QName.NT_UNSTRUCTURED);
+            EffectiveNodeType ent = ntReg.getEffectiveNodeType(NameConstants.NT_UNSTRUCTURED);
             NodeDef cnd = ent.getApplicableChildNodeDef(name, nodeTypeName, ntReg);
             ntReg.getNodeDef(cnd.getId());
             def = cnd.getId();
@@ -287,7 +288,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
         if (id == null) {
             id = new NodeId(UUID.randomUUID());
         }
-        state = new VirtualNodeState(this, parent.getNodeId(), id, nodeTypeName, new QName[0]);
+        state = new VirtualNodeState(this, parent.getNodeId(), id, nodeTypeName, new Name[0]);
         state.setDefinitionId(def);
 
         cache(state);
@@ -376,7 +377,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
      * @return
      * @throws RepositoryException
      */
-    protected PropDef getApplicablePropertyDef(NodeState parent, QName propertyName,
+    protected PropDef getApplicablePropertyDef(NodeState parent, Name propertyName,
                                                int type, boolean multiValued)
             throws RepositoryException {
         return getEffectiveNodeType(parent).getApplicablePropertyDef(propertyName, type, multiValued);
@@ -390,7 +391,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
      * @return
      * @throws RepositoryException
      */
-    protected NodeDef getApplicableChildNodeDef(NodeState parent, QName nodeName, QName nodeTypeName)
+    protected NodeDef getApplicableChildNodeDef(NodeState parent, Name nodeName, Name nodeTypeName)
             throws RepositoryException {
         return getEffectiveNodeType(parent).getApplicableChildNodeDef(
                 nodeName, nodeTypeName, getNodeTypeRegistry());
@@ -411,7 +412,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
         // primary type
         set.add(parent.getNodeTypeName());
         try {
-            return ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
+            return ntReg.getEffectiveNodeType((Name[]) set.toArray(new Name[set.size()]));
         } catch (NodeTypeConflictException ntce) {
             String msg = "internal error: failed to build effective node type for node " + parent.getNodeId();
             throw new RepositoryException(msg, ntce);

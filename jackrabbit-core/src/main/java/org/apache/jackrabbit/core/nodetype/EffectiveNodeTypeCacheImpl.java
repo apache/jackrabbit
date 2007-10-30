@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -55,7 +55,7 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
     /**
      * {@inheritDoc}
      */
-    public Key getKey(QName[] ntNames) {
+    public Key getKey(Name[] ntNames) {
         return new WeightedKey(ntNames);
     }
 
@@ -124,7 +124,7 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
     /**
      * {@inheritDoc}
      */
-    public void invalidate(QName name) {
+    public void invalidate(Name name) {
         // remove all affected effective node types from aggregates cache
         // (copy keys first to prevent ConcurrentModificationException)
         ArrayList keys = new ArrayList(sortedKeys);
@@ -220,7 +220,7 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
         /**
          * array of node type names, sorted in ascending order
          */
-        private final QName[] names;
+        private final Name[] names;
 
         /**
          * the weight of this key
@@ -230,7 +230,7 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
         /**
          * @param ntNames
          */
-        WeightedKey(QName[] ntNames) {
+        WeightedKey(Name[] ntNames) {
             this(ntNames, ntNames.length);
         }
 
@@ -238,9 +238,9 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
          * @param ntNames
          * @param weight
          */
-        WeightedKey(QName[] ntNames, int weight) {
+        WeightedKey(Name[] ntNames, int weight) {
             this.weight = weight;
-            names = new QName[ntNames.length];
+            names = new Name[ntNames.length];
             System.arraycopy(ntNames, 0, names, 0, names.length);
             Arrays.sort(names);
         }
@@ -257,13 +257,13 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
          * @param weight
          */
         WeightedKey(Collection ntNames, int weight) {
-            this((QName[]) ntNames.toArray(new QName[ntNames.size()]), weight);
+            this((Name[]) ntNames.toArray(new Name[ntNames.size()]), weight);
         }
 
         /**
          * @return the node type names of this key
          */
-        public QName[] getNames() {
+        public Name[] getNames() {
             return names;
         }
 
@@ -316,8 +316,8 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
             int len = Math.min(len1, len2);
 
             for (int i = 0; i < len; i++) {
-                QName name1 = names[i];
-                QName name2 = other.names[i];
+                Name name1 = names[i];
+                Name name2 = other.names[i];
                 int result = name1.compareTo(name2);
                 if (result != 0) {
                     return result;

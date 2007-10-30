@@ -204,8 +204,6 @@ public class RepositorySetup {
                     throw new RepositoryException(e.getMessage());
                 } catch (InvalidNodeTypeDefException e) {
                     throw new RepositoryException(e.getMessage());
-                } catch (org.apache.jackrabbit.name.NameException e) {
-                    throw new RepositoryException(e.getMessage());
                 } finally {
                     try {
                         is.close();

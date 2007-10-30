@@ -18,9 +18,8 @@ package org.apache.jackrabbit.core.query;
 
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.spi.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +34,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
 import org.apache.jackrabbit.core.query.qom.QueryObjectModelTree;
+import org.apache.jackrabbit.name.NameConstants;
 
 import javax.jcr.version.VersionException;
 import java.text.NumberFormat;
@@ -141,11 +141,11 @@ public class QueryImpl extends AbstractQueryImpl {
         this.node = node;
         this.handler = handler;
 
-        if (!node.isNodeType(session.getJCRName(QName.NT_QUERY))) {
+        if (!node.isNodeType(session.getJCRName(NameConstants.NT_QUERY))) {
             throw new InvalidQueryException("node is not of type nt:query");
         }
-        statement = node.getProperty(session.getJCRName(QName.JCR_STATEMENT)).getString();
-        language = node.getProperty(session.getJCRName(QName.JCR_LANGUAGE)).getString();
+        statement = node.getProperty(session.getJCRName(NameConstants.JCR_STATEMENT)).getString();
+        language = node.getProperty(session.getJCRName(NameConstants.JCR_LANGUAGE)).getString();
         query = handler.createExecutableQuery(session, itemMgr, statement, language);
         setInitialized();
     }
@@ -234,10 +234,10 @@ public class QueryImpl extends AbstractQueryImpl {
 
             String relPath = session.getJCRPath(p).substring(1);
             Node queryNode = session.getRootNode().addNode(
-                    relPath, session.getJCRName(QName.NT_QUERY));
+                    relPath, session.getJCRName(NameConstants.NT_QUERY));
             // set properties
-            queryNode.setProperty(session.getJCRName(QName.JCR_LANGUAGE), language);
-            queryNode.setProperty(session.getJCRName(QName.JCR_STATEMENT), statement);
+            queryNode.setProperty(session.getJCRName(NameConstants.JCR_LANGUAGE), language);
+            queryNode.setProperty(session.getJCRName(NameConstants.JCR_STATEMENT), statement);
             node = queryNode;
             return node;
         } catch (NameException e) {

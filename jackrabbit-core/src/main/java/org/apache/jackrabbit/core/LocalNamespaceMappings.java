@@ -16,16 +16,10 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.name.AbstractNamespaceResolver;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NameResolver;
-import org.apache.jackrabbit.name.NamespaceListener;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.ParsingNameResolver;
-import org.apache.jackrabbit.name.ParsingPathResolver;
-import org.apache.jackrabbit.name.PathResolver;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameCache;
+import org.apache.jackrabbit.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.namespace.NamespaceListener;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.XMLChar;
 
 import javax.jcr.NamespaceException;
@@ -49,7 +43,7 @@ import java.util.HashSet;
  * underlying namespace registry.
  */
 class LocalNamespaceMappings extends AbstractNamespaceResolver
-        implements NamespaceListener, NameCache {
+        implements NamespaceListener {
 
     /** The underlying global and persistent namespace registry. */
     private final NamespaceRegistryImpl nsReg;
@@ -60,10 +54,6 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
     /** URI to prefix mappings of local namespaces. */
     private final HashMap uriToPrefix = new HashMap();
 
-    private final NameResolver nameResolver;
-
-    private final PathResolver pathResolver;
-
     /**
      * Creates a local namespace manager with the given underlying
      * namespace registry.
@@ -73,8 +63,6 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
     LocalNamespaceMappings(NamespaceRegistryImpl nsReg) {
         this.nsReg = nsReg;
         this.nsReg.addListener(this);
-        nameResolver = new ParsingNameResolver(this);
-        pathResolver = new ParsingPathResolver(nameResolver);
     }
 
     /**
@@ -90,16 +78,16 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
         if (prefix == null || uri == null) {
             throw new IllegalArgumentException("prefix/uri can not be null");
         }
-        if (QName.NS_EMPTY_PREFIX.equals(prefix)
-                || QName.NS_DEFAULT_URI.equals(uri)) {
+        if (Name.NS_EMPTY_PREFIX.equals(prefix)
+                || Name.NS_DEFAULT_URI.equals(uri)) {
             throw new NamespaceException("default namespace is reserved and can not be changed");
         }
         // special case: xml namespace
-        if (uri.equals(QName.NS_XML_URI)) {
+        if (uri.equals(Name.NS_XML_URI)) {
             throw new NamespaceException("xml namespace is reserved and can not be changed.");
         }
         // special case: prefixes xml*
-        if (prefix.toLowerCase().startsWith(QName.NS_XML_PREFIX)) {
+        if (prefix.toLowerCase().startsWith(Name.NS_XML_PREFIX)) {
             throw new NamespaceException("reserved prefix: " + prefix);
         }
         // check if the prefix is a valid XML prefix
@@ -166,60 +154,6 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
      */
     void dispose() {
         nsReg.removeListener(this);
-    }
-
-    public NameResolver getNameResolver() {
-        if (prefixToURI.isEmpty()) {
-            return nsReg.getNameResolver();
-        } else {
-            return nameResolver;
-        }
-    }
-
-    public PathResolver getPathResolver() {
-        if (prefixToURI.isEmpty()) {
-            return nsReg.getPathResolver();
-        } else {
-            return pathResolver;
-        }
-    }
-
-    //-------------------------------------------------------------< NameCache >
-
-    /**
-     * {@inheritDoc}
-     */
-    public QName retrieveName(String jcrName) {
-        try {
-            return getNameResolver().getQName(jcrName);
-        } catch (NameException e) {
-            return null;
-        } catch (NamespaceException e) {
-            return null;
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String retrieveName(QName name) {
-        try {
-            return getNameResolver().getJCRName(name);
-        } catch (NamespaceException e) {
-            return null;
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void cacheName(String jcrName, QName name) {
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void evictAllNames() {
     }
 
     //-----------------------------------------------------< NamespaceResolver >

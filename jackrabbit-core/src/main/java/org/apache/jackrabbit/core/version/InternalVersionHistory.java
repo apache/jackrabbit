@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.uuid.UUID;
 
@@ -40,7 +40,7 @@ public interface InternalVersionHistory extends InternalVersionItem {
      *
      * @see javax.jcr.version.VersionHistory#getVersion(java.lang.String)
      */
-    InternalVersion getVersion(QName versionName) throws VersionException;
+    InternalVersion getVersion(Name versionName) throws VersionException;
 
     /**
      * Checks if the version with the given name exists in this version history.
@@ -49,7 +49,7 @@ public interface InternalVersionHistory extends InternalVersionItem {
      * @return <code>true</code> if the version exists;
      *         <code>false</code> otherwise.
      */
-    boolean hasVersion(QName versionName);
+    boolean hasVersion(Name versionName);
 
     /**
      * Checks if the version for the given uuid exists in this history.
@@ -75,7 +75,7 @@ public interface InternalVersionHistory extends InternalVersionItem {
      *
      * @see javax.jcr.version.VersionHistory#getVersionByLabel(java.lang.String)
      */
-    InternalVersion getVersionByLabel(QName label);
+    InternalVersion getVersionByLabel(Name label);
 
     /**
      * Returns an iterator over all versions (not ordered yet), including the
@@ -105,7 +105,7 @@ public interface InternalVersionHistory extends InternalVersionItem {
      *
      * @return the labels
      */
-    QName[] getVersionLabels();
+    Name[] getVersionLabels();
 
     /**
      * Returns the Id of the version labels node.

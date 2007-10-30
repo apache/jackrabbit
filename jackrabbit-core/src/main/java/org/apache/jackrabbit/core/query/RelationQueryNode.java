@@ -16,11 +16,15 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.MalformedPathException;
-
 import java.util.Date;
+
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.conversion.MalformedPathException;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.name.PathBuilder;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 
 /**
  * Implements a query node that defines property value relation.
@@ -29,10 +33,10 @@ public class RelationQueryNode extends NAryQueryNode implements QueryConstants {
 
     /**
      * Acts as an syntetic placeholder for a location step that matches any
-     * name. This is required becase a JCR path does not allow a QName with
+     * name. This is required becase a JCR path does not allow a Name with
      * a single '*' (star) character.
      */
-    public static final QName STAR_NAME_TEST = new QName(QName.NS_REP_URI, "__star__");
+    public static final Name STAR_NAME_TEST = NameFactoryImpl.getInstance().create(Name.NS_REP_URI, "__star__");
 
     /**
      * The relative path to the property.
@@ -141,7 +145,7 @@ public class RelationQueryNode extends NAryQueryNode implements QueryConstants {
      * @return the name of the property in this relation query node.
      * @deprecated Use {@link #getRelativePath()} instead.
      */
-    public QName getProperty() {
+    public Name getProperty() {
         return relPath == null ? null : relPath.getNameElement().getName();
     }
 
@@ -151,8 +155,8 @@ public class RelationQueryNode extends NAryQueryNode implements QueryConstants {
      * @param name the new property name.
      * @deprecated Use {@link #setRelativePath(Path)} instead.
      */
-    public void setProperty(QName name) {
-        Path.PathBuilder builder = new Path.PathBuilder();
+    public void setProperty(Name name) {
+        PathBuilder builder = new PathBuilder();
         builder.addLast(name);
         try {
             this.relPath = builder.getPath();
@@ -187,21 +191,22 @@ public class RelationQueryNode extends NAryQueryNode implements QueryConstants {
      *
      * @param element the path element to append.
      */
-    public void addPathElement(Path.PathElement element) {
-        Path.PathBuilder builder = new Path.PathBuilder();
+    public void addPathElement(Path.Element element) {
+        PathBuilder builder = new PathBuilder();
         if (relPath != null) {
             builder.addAll(relPath.getElements());
         }
         builder.addLast(element);
         try {
             relPath = builder.getPath();
-        } catch (MalformedPathException e) {
+        } 
+        catch (MalformedPathException e) {
             // path is always valid
         }
         // try to normalize the path
         try {
-            relPath = relPath.getNormalizedPath();
-        } catch (MalformedPathException e) {
+          relPath = relPath.getNormalizedPath();
+        } catch (RepositoryException e) {
             // just keep the original in that case
         }
     }

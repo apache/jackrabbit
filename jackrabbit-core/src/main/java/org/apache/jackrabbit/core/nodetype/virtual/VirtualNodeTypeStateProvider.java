@@ -29,8 +29,9 @@ import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.AbstractVISProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.name.NameConstants;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -72,10 +73,10 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
      * currently we have no dynamic ones, we just recreate the entire nodetypes tree
      */
     protected VirtualNodeState createRootNodeState() throws RepositoryException {
-        VirtualNodeState root = new VirtualNodeState(this, parentId, rootNodeId, QName.REP_NODETYPES, null);
-        NodeDefId id = ntReg.getEffectiveNodeType(QName.REP_SYSTEM).getApplicableChildNodeDef(QName.JCR_NODETYPES, QName.REP_NODETYPES, ntReg).getId();
+        VirtualNodeState root = new VirtualNodeState(this, parentId, rootNodeId, NameConstants.REP_NODETYPES, null);
+        NodeDefId id = ntReg.getEffectiveNodeType(NameConstants.REP_SYSTEM).getApplicableChildNodeDef(NameConstants.JCR_NODETYPES, NameConstants.REP_NODETYPES, ntReg).getId();
         root.setDefinitionId(id);
-        QName[] ntNames = ntReg.getRegisteredNodeTypes();
+        Name[] ntNames = ntReg.getRegisteredNodeTypes();
         for (int i = 0; i < ntNames.length; i++) {
             NodeTypeDef ntDef = ntReg.getNodeTypeDef(ntNames[i]);
             VirtualNodeState ntState = createNodeTypeState(root, ntDef);
@@ -103,7 +104,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
     /**
      * {@inheritDoc}
      */
-    public void onNodeTypeAdded(QName ntName) throws RepositoryException {
+    public void onNodeTypeAdded(Name ntName) throws RepositoryException {
         try {
             VirtualNodeState root = (VirtualNodeState) getRootState();
             NodeTypeDef ntDef = ntReg.getNodeTypeDef(ntName);
@@ -121,7 +122,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
     /**
      * {@inheritDoc}
      */
-    public void onNodeTypeModified(QName ntName) throws RepositoryException {
+    public void onNodeTypeModified(Name ntName) throws RepositoryException {
         // todo: do more efficient reloading
         try {
             getRootState().discard();
@@ -133,7 +134,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
     /**
      * {@inheritDoc}
      */
-    public void onNodeTypeRemoved(QName ntName) throws RepositoryException {
+    public void onNodeTypeRemoved(Name ntName) throws RepositoryException {
         // todo: do more efficient reloading
         try {
             getRootState().discard();
@@ -154,22 +155,22 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
                                                  NodeTypeDef ntDef)
             throws RepositoryException {
         NodeId id = new NodeId(calculateStableUUID(ntDef.getName().toString()));
-        VirtualNodeState ntState = createNodeState(parent, ntDef.getName(), id, QName.NT_NODETYPE);
+        VirtualNodeState ntState = createNodeState(parent, ntDef.getName(), id, NameConstants.NT_NODETYPE);
 
         // add properties
-        ntState.setPropertyValue(QName.JCR_NODETYPENAME, InternalValue.create(ntDef.getName()));
-        ntState.setPropertyValues(QName.JCR_SUPERTYPES, PropertyType.NAME, InternalValue.create(ntDef.getSupertypes()));
-        ntState.setPropertyValue(QName.JCR_ISMIXIN, InternalValue.create(ntDef.isMixin()));
-        ntState.setPropertyValue(QName.JCR_HASORDERABLECHILDNODES, InternalValue.create(ntDef.hasOrderableChildNodes()));
+        ntState.setPropertyValue(NameConstants.JCR_NODETYPENAME, InternalValue.create(ntDef.getName()));
+        ntState.setPropertyValues(NameConstants.JCR_SUPERTYPES, PropertyType.NAME, InternalValue.create(ntDef.getSupertypes()));
+        ntState.setPropertyValue(NameConstants.JCR_ISMIXIN, InternalValue.create(ntDef.isMixin()));
+        ntState.setPropertyValue(NameConstants.JCR_HASORDERABLECHILDNODES, InternalValue.create(ntDef.hasOrderableChildNodes()));
         if (ntDef.getPrimaryItemName() != null) {
-            ntState.setPropertyValue(QName.JCR_PRIMARYITEMNAME, InternalValue.create(ntDef.getPrimaryItemName()));
+            ntState.setPropertyValue(NameConstants.JCR_PRIMARYITEMNAME, InternalValue.create(ntDef.getPrimaryItemName()));
         }
 
         // add property defs
         PropDef[] propDefs = ntDef.getPropertyDefs();
         for (int i = 0; i < propDefs.length; i++) {
             VirtualNodeState pdState = createPropertyDefState(ntState, propDefs[i], ntDef, i);
-            ntState.addChildNodeEntry(QName.JCR_PROPERTYDEFINITION, pdState.getNodeId());
+            ntState.addChildNodeEntry(NameConstants.JCR_PROPERTYDEFINITION, pdState.getNodeId());
             // add as hard reference
             ntState.addStateReference(pdState);
         }
@@ -178,7 +179,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
         NodeDef[] cnDefs = ntDef.getChildNodeDefs();
         for (int i = 0; i < cnDefs.length; i++) {
             VirtualNodeState cnState = createChildNodeDefState(ntState, cnDefs[i], ntDef, i);
-            ntState.addChildNodeEntry(QName.JCR_CHILDNODEDEFINITION, cnState.getNodeId());
+            ntState.addChildNodeEntry(NameConstants.JCR_CHILDNODEDEFINITION, cnState.getNodeId());
             // add as hard reference
             ntState.addStateReference(cnState);
         }
@@ -199,26 +200,26 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
                                                     NodeTypeDef ntDef, int n)
             throws RepositoryException {
         NodeId id = new NodeId(calculateStableUUID(
-                ntDef.getName().toString() + "/" + QName.JCR_PROPERTYDEFINITION.toString() + "/" + n));
-        VirtualNodeState pState = createNodeState(parent, QName.JCR_PROPERTYDEFINITION, id, QName.NT_PROPERTYDEFINITION);
+                ntDef.getName().toString() + "/" + NameConstants.JCR_PROPERTYDEFINITION.toString() + "/" + n));
+        VirtualNodeState pState = createNodeState(parent, NameConstants.JCR_PROPERTYDEFINITION, id, NameConstants.NT_PROPERTYDEFINITION);
         // add properties
         if (!propDef.definesResidual()) {
-            pState.setPropertyValue(QName.JCR_NAME, InternalValue.create(propDef.getName()));
+            pState.setPropertyValue(NameConstants.JCR_NAME, InternalValue.create(propDef.getName()));
         }
-        pState.setPropertyValue(QName.JCR_AUTOCREATED, InternalValue.create(propDef.isAutoCreated()));
-        pState.setPropertyValue(QName.JCR_MANDATORY, InternalValue.create(propDef.isMandatory()));
-        pState.setPropertyValue(QName.JCR_ONPARENTVERSION,
+        pState.setPropertyValue(NameConstants.JCR_AUTOCREATED, InternalValue.create(propDef.isAutoCreated()));
+        pState.setPropertyValue(NameConstants.JCR_MANDATORY, InternalValue.create(propDef.isMandatory()));
+        pState.setPropertyValue(NameConstants.JCR_ONPARENTVERSION,
                 InternalValue.create(OnParentVersionAction.nameFromValue(propDef.getOnParentVersion())));
-        pState.setPropertyValue(QName.JCR_PROTECTED, InternalValue.create(propDef.isProtected()));
-        pState.setPropertyValue(QName.JCR_MULTIPLE, InternalValue.create(propDef.isMultiple()));
-        pState.setPropertyValue(QName.JCR_REQUIREDTYPE, InternalValue.create(PropertyType.nameFromValue(propDef.getRequiredType()).toUpperCase()));
-        pState.setPropertyValues(QName.JCR_DEFAULTVALUES, PropertyType.STRING, propDef.getDefaultValues());
+        pState.setPropertyValue(NameConstants.JCR_PROTECTED, InternalValue.create(propDef.isProtected()));
+        pState.setPropertyValue(NameConstants.JCR_MULTIPLE, InternalValue.create(propDef.isMultiple()));
+        pState.setPropertyValue(NameConstants.JCR_REQUIREDTYPE, InternalValue.create(PropertyType.nameFromValue(propDef.getRequiredType()).toUpperCase()));
+        pState.setPropertyValues(NameConstants.JCR_DEFAULTVALUES, PropertyType.STRING, propDef.getDefaultValues());
         ValueConstraint[] vc = propDef.getValueConstraints();
         InternalValue[] vals = new InternalValue[vc.length];
         for (int i = 0; i < vc.length; i++) {
             vals[i] = InternalValue.create(vc[i].getDefinition());
         }
-        pState.setPropertyValues(QName.JCR_VALUECONSTRAINTS, PropertyType.STRING, vals);
+        pState.setPropertyValues(NameConstants.JCR_VALUECONSTRAINTS, PropertyType.STRING, vals);
         return pState;
     }
 
@@ -235,23 +236,23 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
                                                      NodeTypeDef ntDef, int n)
             throws RepositoryException {
         NodeId id = new NodeId(calculateStableUUID(
-                ntDef.getName().toString() + "/" + QName.JCR_CHILDNODEDEFINITION.toString() + "/" + n));
-        VirtualNodeState pState = createNodeState(parent, QName.JCR_CHILDNODEDEFINITION, id, QName.NT_CHILDNODEDEFINITION);
+                ntDef.getName().toString() + "/" + NameConstants.JCR_CHILDNODEDEFINITION.toString() + "/" + n));
+        VirtualNodeState pState = createNodeState(parent, NameConstants.JCR_CHILDNODEDEFINITION, id, NameConstants.NT_CHILDNODEDEFINITION);
         // add properties
         if (!cnDef.definesResidual()) {
-            pState.setPropertyValue(QName.JCR_NAME, InternalValue.create(cnDef.getName()));
+            pState.setPropertyValue(NameConstants.JCR_NAME, InternalValue.create(cnDef.getName()));
         }
-        pState.setPropertyValue(QName.JCR_AUTOCREATED, InternalValue.create(cnDef.isAutoCreated()));
-        pState.setPropertyValue(QName.JCR_MANDATORY, InternalValue.create(cnDef.isMandatory()));
-        pState.setPropertyValue(QName.JCR_ONPARENTVERSION,
+        pState.setPropertyValue(NameConstants.JCR_AUTOCREATED, InternalValue.create(cnDef.isAutoCreated()));
+        pState.setPropertyValue(NameConstants.JCR_MANDATORY, InternalValue.create(cnDef.isMandatory()));
+        pState.setPropertyValue(NameConstants.JCR_ONPARENTVERSION,
                 InternalValue.create(OnParentVersionAction.nameFromValue(cnDef.getOnParentVersion())));
-        pState.setPropertyValue(QName.JCR_PROTECTED, InternalValue.create(cnDef.isProtected()));
-        pState.setPropertyValues(QName.JCR_REQUIREDPRIMARYTYPES,
+        pState.setPropertyValue(NameConstants.JCR_PROTECTED, InternalValue.create(cnDef.isProtected()));
+        pState.setPropertyValues(NameConstants.JCR_REQUIREDPRIMARYTYPES,
                 PropertyType.NAME, InternalValue.create(cnDef.getRequiredPrimaryTypes()));
         if (cnDef.getDefaultPrimaryType() != null) {
-            pState.setPropertyValue(QName.JCR_DEFAULTPRIMARYTYPE, InternalValue.create(cnDef.getDefaultPrimaryType()));
+            pState.setPropertyValue(NameConstants.JCR_DEFAULTPRIMARYTYPE, InternalValue.create(cnDef.getDefaultPrimaryType()));
         }
-        pState.setPropertyValue(QName.JCR_SAMENAMESIBLINGS, InternalValue.create(cnDef.allowsSameNameSiblings()));
+        pState.setPropertyValue(NameConstants.JCR_SAMENAMESIBLINGS, InternalValue.create(cnDef.allowsSameNameSiblings()));
         return pState;
     }
 

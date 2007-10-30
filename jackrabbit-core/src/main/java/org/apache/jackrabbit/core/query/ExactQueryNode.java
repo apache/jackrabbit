@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 /**
  * Implements a query node that defines an exact match of a property and a
@@ -27,12 +27,12 @@ public class ExactQueryNode extends QueryNode {
     /**
      * The name of the property to match
      */
-    private final QName property;
+    private final Name property;
 
     /**
      * The value of the property to match
      */
-    private final QName value;
+    private final Name value;
 
     /**
      * Creates a new <code>ExactQueryNode</code> instance.
@@ -41,7 +41,7 @@ public class ExactQueryNode extends QueryNode {
      * @param property the name of the property to match.
      * @param value    the value of the property to match.
      */
-    public ExactQueryNode(QueryNode parent, QName property, QName value) {
+    public ExactQueryNode(QueryNode parent, Name property, Name value) {
         super(parent);
         if (parent == null) {
             throw new NullPointerException("parent");
@@ -69,7 +69,7 @@ public class ExactQueryNode extends QueryNode {
      *
      * @return the name of the property to match.
      */
-    public QName getPropertyName() {
+    public Name getPropertyName() {
         return property;
     }
 
@@ -78,7 +78,7 @@ public class ExactQueryNode extends QueryNode {
      *
      * @return the value of the property to match.
      */
-    public QName getValue() {
+    public Name getValue() {
         return value;
     }
 

@@ -16,17 +16,18 @@
  */
 package org.apache.jackrabbit.core.journal;
 
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.name.NamespaceResolver;
 
-import java.io.File;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.FileInputStream;
 import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -223,7 +224,7 @@ class FileRecordLog {
      * @return file record
      * @throws java.io.IOException if an I/O error occurs
      */
-    public ReadRecord read(NamespaceResolver resolver) throws IOException {
+    public ReadRecord read(NamespaceResolver resolver, NamePathResolver npResolver) throws IOException {
         String journalId = in.readUTF();
         String producerId = in.readUTF();
         int length = in.readInt();
@@ -233,7 +234,7 @@ class FileRecordLog {
                 4 + length;
 
         long revision = previousRevision + position;
-        return new ReadRecord(journalId, producerId, revision, in, length, resolver);
+        return new ReadRecord(journalId, producerId, revision, in, length, resolver, npResolver);
     }
 
     /**

@@ -25,7 +25,7 @@ import org.apache.jackrabbit.core.query.lucene.hits.ScorerHits;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -389,7 +389,7 @@ class ChildAxisQuery extends Query {
                                 return false;
                             } else {
                                 // only use the last one
-                                QName name = entry.getName();
+                                Name name = entry.getName();
                                 List childNodes = state.getChildNodeEntries(name);
                                 if (childNodes.size() == 0
                                         || !((NodeState.ChildNodeEntry) childNodes.get(childNodes.size() - 1))

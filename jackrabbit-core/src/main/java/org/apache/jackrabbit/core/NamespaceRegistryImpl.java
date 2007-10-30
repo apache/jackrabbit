@@ -20,16 +20,10 @@ import org.apache.jackrabbit.core.cluster.NamespaceEventChannel;
 import org.apache.jackrabbit.core.cluster.NamespaceEventListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.name.AbstractNamespaceResolver;
-import org.apache.jackrabbit.name.CachingNameResolver;
-import org.apache.jackrabbit.name.CachingPathResolver;
-import org.apache.jackrabbit.name.NameCache;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NameResolver;
-import org.apache.jackrabbit.name.ParsingNameResolver;
-import org.apache.jackrabbit.name.ParsingPathResolver;
-import org.apache.jackrabbit.name.PathResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.conversion.PathResolver;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.XMLChar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +45,7 @@ import javax.jcr.UnsupportedRepositoryOperationException;
  * A <code>NamespaceRegistryImpl</code> ...
  */
 public class NamespaceRegistryImpl extends AbstractNamespaceResolver
-        implements NamespaceRegistry, NameCache, NamespaceEventListener {
+        implements NamespaceRegistry, NamespaceEventListener {
 
     private static Logger log = LoggerFactory.getLogger(NamespaceRegistryImpl.class);
 
@@ -63,23 +57,23 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
 
     static {
         // reserved prefixes
-        reservedPrefixes.add(QName.NS_XML_PREFIX);
-        reservedPrefixes.add(QName.NS_XMLNS_PREFIX);
+        reservedPrefixes.add(Name.NS_XML_PREFIX);
+        reservedPrefixes.add(Name.NS_XMLNS_PREFIX);
         // predefined (e.g. built-in) prefixes
-        reservedPrefixes.add(QName.NS_REP_PREFIX);
-        reservedPrefixes.add(QName.NS_JCR_PREFIX);
-        reservedPrefixes.add(QName.NS_NT_PREFIX);
-        reservedPrefixes.add(QName.NS_MIX_PREFIX);
-        reservedPrefixes.add(QName.NS_SV_PREFIX);
+        reservedPrefixes.add(Name.NS_REP_PREFIX);
+        reservedPrefixes.add(Name.NS_JCR_PREFIX);
+        reservedPrefixes.add(Name.NS_NT_PREFIX);
+        reservedPrefixes.add(Name.NS_MIX_PREFIX);
+        reservedPrefixes.add(Name.NS_SV_PREFIX);
         // reserved namespace URI's
-        reservedURIs.add(QName.NS_XML_URI);
-        reservedURIs.add(QName.NS_XMLNS_URI);
+        reservedURIs.add(Name.NS_XML_URI);
+        reservedURIs.add(Name.NS_XMLNS_URI);
         // predefined (e.g. built-in) namespace URI's
-        reservedURIs.add(QName.NS_REP_URI);
-        reservedURIs.add(QName.NS_JCR_URI);
-        reservedURIs.add(QName.NS_NT_URI);
-        reservedURIs.add(QName.NS_MIX_URI);
-        reservedURIs.add(QName.NS_SV_URI);
+        reservedURIs.add(Name.NS_REP_URI);
+        reservedURIs.add(Name.NS_JCR_URI);
+        reservedURIs.add(Name.NS_NT_URI);
+        reservedURIs.add(Name.NS_MIX_URI);
+        reservedURIs.add(Name.NS_SV_URI);
     }
 
     private HashMap prefixToURI = new HashMap();
@@ -112,7 +106,6 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         super(true); // enable listener support
         this.nsRegStore = nsRegStore;
         load();
-        evictAllNames();
     }
 
     /**
@@ -169,21 +162,21 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
                 clear();
 
                 // default namespace (if no prefix is specified)
-                map(QName.NS_EMPTY_PREFIX, QName.NS_DEFAULT_URI);
+                map(Name.NS_EMPTY_PREFIX, Name.NS_DEFAULT_URI);
 
                 // declare the predefined mappings
                 // rep:
-                map(QName.NS_REP_PREFIX, QName.NS_REP_URI);
+                map(Name.NS_REP_PREFIX, Name.NS_REP_URI);
                 // jcr:
-                map(QName.NS_JCR_PREFIX, QName.NS_JCR_URI);
+                map(Name.NS_JCR_PREFIX, Name.NS_JCR_URI);
                 // nt:
-                map(QName.NS_NT_PREFIX, QName.NS_NT_URI);
+                map(Name.NS_NT_PREFIX, Name.NS_NT_URI);
                 // mix:
-                map(QName.NS_MIX_PREFIX, QName.NS_MIX_URI);
+                map(Name.NS_MIX_PREFIX, Name.NS_MIX_URI);
                 // sv:
-                map(QName.NS_SV_PREFIX, QName.NS_SV_URI);
+                map(Name.NS_SV_PREFIX, Name.NS_SV_URI);
                 // xml:
-                map(QName.NS_XML_PREFIX, QName.NS_XML_URI);
+                map(Name.NS_XML_PREFIX, Name.NS_XML_URI);
 
                 // persist mappings
                 store();
@@ -342,7 +335,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
             // ... it is not, try to find a unique prefix.
 
             // First, check and replace troublesome prefix hints.
-            if (prefixHint.toLowerCase().startsWith(QName.NS_XML_PREFIX)
+            if (prefixHint.toLowerCase().startsWith(Name.NS_XML_PREFIX)
                     || !XMLChar.isValidNCName(prefixHint)) {
                 prefixHint = "_pre";
             }
@@ -413,7 +406,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         if (prefix == null || uri == null) {
             throw new IllegalArgumentException("prefix/uri can not be null");
         }
-        if (QName.NS_EMPTY_PREFIX.equals(prefix) || QName.NS_DEFAULT_URI.equals(uri)) {
+        if (Name.NS_EMPTY_PREFIX.equals(prefix) || Name.NS_DEFAULT_URI.equals(uri)) {
             throw new NamespaceException("default namespace is reserved and can not be changed");
         }
         if (reservedURIs.contains(uri)) {
@@ -425,7 +418,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
                     + prefix + " -> " + uri + ": reserved prefix");
         }
         // special case: prefixes xml*
-        if (prefix.toLowerCase().startsWith(QName.NS_XML_PREFIX)) {
+        if (prefix.toLowerCase().startsWith(Name.NS_XML_PREFIX)) {
             throw new NamespaceException("failed to register namespace "
                     + prefix + " -> " + uri + ": reserved prefix");
         }
@@ -461,9 +454,6 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
 
         // add new prefix mapping
         map(prefix, uri);
-
-        // Clear cache
-        evictAllNames();
 
         if (eventChannel != null) {
             eventChannel.remapped(oldPrefix, prefix, uri);
@@ -541,37 +531,6 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         return prefix;
     }
 
-    //------------------------------------------------------------< NameCache >
-    /**
-     * {@inheritDoc}
-     */
-    public QName retrieveName(String jcrName) {
-        try {
-            return nameResolver.getQName(jcrName);
-        } catch (NameException e) {
-            return null;
-        } catch (NamespaceException e) {
-            return null;
-        }
-    }
-
-    public String retrieveName(QName name) {
-        try {
-            return nameResolver.getJCRName(name);
-        } catch (NamespaceException e) {
-            return null;
-        }
-    }
-
-    public void cacheName(String jcrName, QName name) {
-    }
-
-    public void evictAllNames() {
-        nameResolver = new CachingNameResolver(new ParsingNameResolver(this));
-        pathResolver =
-            new CachingPathResolver(new ParsingPathResolver(nameResolver));
-    }
-
     //-----------------------------------------------< NamespaceEventListener >
 
     /**
@@ -597,9 +556,6 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
 
         // add new prefix mapping
         map(newPrefix, uri);
-
-        // Clear cache
-        evictAllNames();
 
         // persist mappings
         store();

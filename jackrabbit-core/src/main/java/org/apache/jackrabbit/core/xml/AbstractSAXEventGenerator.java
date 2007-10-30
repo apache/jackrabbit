@@ -19,11 +19,12 @@ package org.apache.jackrabbit.core.xml;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.SessionNamespaceResolver;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.namespace.SessionNamespaceResolver;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
@@ -36,6 +37,7 @@ import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.NamespaceException;
 
 /**
  * <code>AbstractSAXEventGenerator</code> serves as the base class for
@@ -65,6 +67,8 @@ abstract class AbstractSAXEventGenerator {
      * the session's namespace resolver
      */
     protected final NamespaceResolver nsResolver;
+
+    protected final NamePathResolver resolver;
 
     /**
      * the content handler to feed the SAX events to
@@ -130,16 +134,18 @@ abstract class AbstractSAXEventGenerator {
         // start with an empty set of known prefixes
         this.namespaces = new NamespaceStack(null);
 
+        resolver = new DefaultNamePathResolver(nsResolver);
+
         // resolve the names of some wellknown properties
         // allowing for session-local prefix mappings
         try {
-            jcrPrimaryType = NameFormat.format(QName.JCR_PRIMARYTYPE, nsResolver);
-            jcrMixinTypes = NameFormat.format(QName.JCR_MIXINTYPES, nsResolver);
-            jcrUUID = NameFormat.format(QName.JCR_UUID, nsResolver);
-            jcrRoot = NameFormat.format(QName.JCR_ROOT, nsResolver);
-            jcrXMLText = NameFormat.format(QName.JCR_XMLTEXT, nsResolver);
-            jcrXMLCharacters = NameFormat.format(QName.JCR_XMLCHARACTERS, nsResolver);
-        } catch (NameException e) {
+            jcrPrimaryType = resolver.getJCRName(NameConstants.JCR_PRIMARYTYPE);
+            jcrMixinTypes = resolver.getJCRName(NameConstants.JCR_MIXINTYPES);
+            jcrUUID = resolver.getJCRName(NameConstants.JCR_UUID);
+            jcrRoot = resolver.getJCRName(NameConstants.JCR_ROOT);
+            jcrXMLText = resolver.getJCRName(NameConstants.JCR_XMLTEXT);
+            jcrXMLCharacters = resolver.getJCRName(NameConstants.JCR_XMLCHARACTERS);
+        } catch (NamespaceException e) {
             // should never get here...
             String msg = "internal error: failed to resolve namespace mappings";
             log.error(msg, e);
@@ -177,7 +183,7 @@ abstract class AbstractSAXEventGenerator {
         String[] prefixes = session.getNamespacePrefixes();
         for (int i = 0; i < prefixes.length; i++) {
             String prefix = prefixes[i];
-            if (QName.NS_XML_PREFIX.equals(prefix)) {
+            if (Name.NS_XML_PREFIX.equals(prefix)) {
                 // skip 'xml' prefix as this would be an illegal namespace declaration
                 continue;
             }
@@ -196,7 +202,7 @@ abstract class AbstractSAXEventGenerator {
         String[] prefixes = session.getNamespacePrefixes();
         for (int i = 0; i < prefixes.length; i++) {
             String prefix = prefixes[i];
-            if (QName.NS_XML_PREFIX.equals(prefix)) {
+            if (Name.NS_XML_PREFIX.equals(prefix)) {
                 // skip 'xml' prefix as this would be an illegal namespace declaration
                 continue;
             }
@@ -224,7 +230,7 @@ abstract class AbstractSAXEventGenerator {
             String prefix = prefixes[i];
 
             if (prefix.length() > 0
-                    && !QName.NS_XML_PREFIX.equals(prefix)) {
+                    && !Name.NS_XML_PREFIX.equals(prefix)) {
                 String uri = session.getNamespaceURI(prefix);
 
                 // get the matching namespace from previous declarations
@@ -233,9 +239,9 @@ abstract class AbstractSAXEventGenerator {
                 if (!uri.equals(mappedToNs)) {
                     // when not the same, add a declaration
                     attributes.addAttribute(
-                        QName.NS_XMLNS_URI,
+                        Name.NS_XMLNS_URI,
                         prefix,
-                        QName.NS_XMLNS_PREFIX + ":" + prefix,
+                        Name.NS_XMLNS_PREFIX + ":" + prefix,
                         "CDATA",
                         uri);
 

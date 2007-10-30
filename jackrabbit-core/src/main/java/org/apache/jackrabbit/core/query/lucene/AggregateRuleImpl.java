@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.name.PathBuilder;
+import org.apache.jackrabbit.conversion.IllegalNameException;
+import org.apache.jackrabbit.conversion.MalformedPathException;
+import org.apache.jackrabbit.conversion.NameResolver;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -34,6 +34,7 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.CharacterData;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
@@ -48,14 +49,14 @@ import java.util.Iterator;
 class AggregateRuleImpl implements AggregateRule {
 
     /**
-     * A namespace resolver for parsing QNames in the configuration.
+     * A name resolver for parsing QNames in the configuration.
      */
-    private final NamespaceResolver nsResolver;
+    private final NameResolver resolver;
 
     /**
      * The node type of the root node of the indexing aggregate.
      */
-    private final QName nodeTypeName;
+    private final Name nodeTypeName;
 
     /**
      * The rules that define this indexing aggregate.
@@ -76,23 +77,22 @@ class AggregateRuleImpl implements AggregateRule {
      * Creates a new indexing aggregate using the given <code>config</code>.
      *
      * @param config     the configuration for this indexing aggregate.
-     * @param nsResolver the namespace resolver for parsing QNames within the
-     *                   config.
+     * @param resolver   the name resolver for parsing Names within the config.
      * @param ism        the item state manager of the workspace.
      * @param hmgr       a hierarchy manager for the item state manager.
      * @throws MalformedPathException if a path in the configuration is
      *                                malformed.
      * @throws IllegalNameException   if a node type name contains illegal
      *                                characters.
-     * @throws UnknownPrefixException if a node type contains an unknown
+     * @throws NamespaceException if a node type contains an unknown
      *                                prefix.
      */
     AggregateRuleImpl(Node config,
-                      NamespaceResolver nsResolver,
+                      NameResolver resolver,
                       ItemStateManager ism,
                       HierarchyManager hmgr)
-            throws MalformedPathException, IllegalNameException, UnknownPrefixException {
-        this.nsResolver = nsResolver;
+            throws MalformedPathException, IllegalNameException, NamespaceException {
+        this.resolver = resolver;
         this.nodeTypeName = getNodeTypeName(config);
         this.rules = getRules(config);
         this.ism = ism;
@@ -155,13 +155,13 @@ class AggregateRuleImpl implements AggregateRule {
      * @return the name of the node type.
      * @throws IllegalNameException   if the node type name contains illegal
      *                                characters.
-     * @throws UnknownPrefixException if the node type contains an unknown
+     * @throws NamespaceException if the node type contains an unknown
      *                                prefix.
      */
-    private QName getNodeTypeName(Node config)
-            throws IllegalNameException, UnknownPrefixException {
+    private Name getNodeTypeName(Node config)
+            throws IllegalNameException, NamespaceException {
         String ntString = config.getAttributes().getNamedItem("primaryType").getNodeValue();
-        return NameFormat.parse(ntString, nsResolver);
+        return resolver.getQName(ntString);
     }
 
     /**
@@ -173,28 +173,28 @@ class AggregateRuleImpl implements AggregateRule {
      *                                malformed.
      * @throws IllegalNameException   if the node type name contains illegal
      *                                characters.
-     * @throws UnknownPrefixException if the node type contains an unknown
+     * @throws NamespaceException if the node type contains an unknown
      *                                prefix.
      */
     private Rule[] getRules(Node config)
-            throws MalformedPathException, IllegalNameException, UnknownPrefixException {
+            throws MalformedPathException, IllegalNameException, NamespaceException {
         List rules = new ArrayList();
         NodeList childNodes = config.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node n = childNodes.item(i);
             if (n.getNodeName().equals("include")) {
-                QName ntName = null;
+                Name ntName = null;
                 Node ntAttr = n.getAttributes().getNamedItem("primaryType");
                 if (ntAttr != null) {
-                    ntName = NameFormat.parse(ntAttr.getNodeValue(), nsResolver);
+                    ntName = resolver.getQName(ntAttr.getNodeValue());
                 }
                 String[] elements = Text.explode(getTextContent(n), '/');
-                Path.PathBuilder builder = new Path.PathBuilder();
+                PathBuilder builder = new PathBuilder();
                 for (int j = 0; j < elements.length; j++) {
                     if (elements[j].equals("*")) {
-                        builder.addLast(new QName("", "*"));
+                        builder.addLast(NameConstants.ANY_NAME);
                     } else {
-                        builder.addLast(NameFormat.parse(elements[j], nsResolver));
+                        builder.addLast(resolver.getQName(elements[j]));
                     }
                 }
                 rules.add(new Rule(builder.getPath(), ntName));
@@ -226,7 +226,7 @@ class AggregateRuleImpl implements AggregateRule {
         /**
          * Optional node type name.
          */
-        private final QName nodeTypeName;
+        private final Name nodeTypeName;
 
         /**
          * A relative path pattern.
@@ -241,7 +241,7 @@ class AggregateRuleImpl implements AggregateRule {
          *                     types are allowed.
          * @param pattern      a relative path pattern.
          */
-        private Rule(Path pattern, QName nodeTypeName) {
+        private Rule(Path pattern, Name nodeTypeName) {
             this.nodeTypeName = nodeTypeName;
             this.pattern = pattern;
         }
@@ -261,7 +261,7 @@ class AggregateRuleImpl implements AggregateRule {
             if (nodeTypeName == null ||
                     nodeState.getNodeTypeName().equals(nodeTypeName)) {
                 // check pattern
-                Path.PathElement[] elements = pattern.getElements();
+                Path.Element[] elements = pattern.getElements();
                 for (int e = elements.length - 1; e >= 0; e--) {
                     NodeId parentId = nodeState.getParentId();
                     if (parentId == null) {
@@ -274,7 +274,7 @@ class AggregateRuleImpl implements AggregateRule {
                         nodeState = parent;
                     } else {
                         // check name
-                        QName name = hmgr.getName(nodeState.getId());
+                        Name name = hmgr.getName(nodeState.getId());
                         if (elements[e].getName().equals(name)) {
                             nodeState = parent;
                         } else {
@@ -317,7 +317,7 @@ class AggregateRuleImpl implements AggregateRule {
          */
         private void resolve(NodeState nodeState, List collector, int offset)
                 throws ItemStateException {
-            QName currentName = pattern.getElement(offset).getName();
+            Name currentName = pattern.getElements()[offset].getName();
             List cne;
             if (currentName.getLocalName().equals("*")) {
                 // matches all

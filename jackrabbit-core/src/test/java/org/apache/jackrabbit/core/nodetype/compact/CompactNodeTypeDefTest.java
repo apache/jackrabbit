@@ -25,8 +25,12 @@ import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.PropDefImpl;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.util.name.NamespaceMapping;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.namespace.NamespaceMapping;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.DefaultNamePathResolver;
 
 import javax.jcr.PropertyType;
 import javax.jcr.version.OnParentVersionAction;
@@ -40,21 +44,22 @@ public class CompactNodeTypeDefTest extends TestCase {
     private static final String TEST_FILE = "cnd-reader-test-input.cnd";
     private static final String NS_PREFIX = "ex";
     private static final String NS_URI = "http://example.org/jackrabbit/example";
+    private static final NameFactory FACTORY = NameFactoryImpl.getInstance();
 
-    private static final QName NODE_TYPE_NAME = new QName(NS_URI, "NodeType");
-    private static final QName PARENT_NODE_TYPE_1 = new QName(NS_URI, "ParentNodeType1");
-    private static final QName PARENT_NODE_TYPE_2 = new QName(NS_URI, "ParentNodeType2");
-    private static final QName[] SUPERTYPES = new QName[]{PARENT_NODE_TYPE_1, PARENT_NODE_TYPE_2};
+    private static final Name NODE_TYPE_NAME = FACTORY.create(NS_URI, "NodeType");
+    private static final Name PARENT_NODE_TYPE_1 = FACTORY.create(NS_URI, "ParentNodeType1");
+    private static final Name PARENT_NODE_TYPE_2 = FACTORY.create(NS_URI, "ParentNodeType2");
+    private static final Name[] SUPERTYPES = new Name[]{PARENT_NODE_TYPE_1, PARENT_NODE_TYPE_2};
 
-    private static final QName PROPERTY_NAME = new QName(NS_URI, "property");
+    private static final Name PROPERTY_NAME = FACTORY.create(NS_URI, "property");
     private static final long DEFAULT_VALUE_1 = 1;
     private static final long DEFAULT_VALUE_2 = 2;
     private static final String VALUE_CONSTRAINT = "[1,10]";
 
-    private static final QName CHILD_NODE_NAME = new QName(NS_URI, "node");
-    private static final QName REQUIRED_NODE_TYPE_1 = new QName(NS_URI, "RequiredNodeType1");
-    private static final QName REQUIRED_NODE_TYPE_2 = new QName(NS_URI, "RequiredNodeType2");
-    private static final QName[] REQUIRED_NODE_TYPES = new QName[]{REQUIRED_NODE_TYPE_1, REQUIRED_NODE_TYPE_2};
+    private static final Name CHILD_NODE_NAME = FACTORY.create(NS_URI, "node");
+    private static final Name REQUIRED_NODE_TYPE_1 = FACTORY.create(NS_URI, "RequiredNodeType1");
+    private static final Name REQUIRED_NODE_TYPE_2 = FACTORY.create(NS_URI, "RequiredNodeType2");
+    private static final Name[] REQUIRED_NODE_TYPES = new Name[]{REQUIRED_NODE_TYPE_1, REQUIRED_NODE_TYPE_2};
 
     private NodeTypeDef modelNodeTypeDef;
 
@@ -63,7 +68,9 @@ public class CompactNodeTypeDefTest extends TestCase {
         namespaceMapping.setMapping(NS_PREFIX, NS_URI);
         InternalValue dv1 = InternalValue.create(DEFAULT_VALUE_1);
         InternalValue dv2 = InternalValue.create(DEFAULT_VALUE_2);
-        ValueConstraint vc = ValueConstraint.create(PropertyType.LONG, VALUE_CONSTRAINT, namespaceMapping);
+
+        NamePathResolver resolver = new DefaultNamePathResolver(namespaceMapping);
+        ValueConstraint vc = ValueConstraint.create(PropertyType.LONG, VALUE_CONSTRAINT, resolver);
         InternalValue[] defaultValues = new InternalValue[]{dv1, dv2};
         ValueConstraint[] valueConstraints = new ValueConstraint[]{vc};
 
@@ -109,6 +116,7 @@ public class CompactNodeTypeDefTest extends TestCase {
             new CompactNodeTypeDefReader(reader, TEST_FILE);
         List ntdList = cndReader.getNodeTypeDefs();
         NamespaceMapping nsm = cndReader.getNamespaceMapping();
+        NamePathResolver resolver = new DefaultNamePathResolver(nsm);
         NodeTypeDef ntd = (NodeTypeDef)ntdList.get(0);
 
         // Test CND Reader by comparing imported NTD with model NTD.
@@ -119,7 +127,7 @@ public class CompactNodeTypeDefTest extends TestCase {
 
         // Put imported node type def back into CND form with CND writer
         StringWriter sw = new StringWriter();
-        CompactNodeTypeDefWriter.write(ntdList, nsm, sw);
+        CompactNodeTypeDefWriter.write(ntdList, nsm, resolver, sw);
 
         // Rerun the reader on the product of the writer
         cndReader = new CompactNodeTypeDefReader(new StringReader(sw.toString()), TEST_FILE);

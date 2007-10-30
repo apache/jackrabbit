@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.qom;
 
-import org.apache.jackrabbit.name.NamePathResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.Name;
 
 import org.apache.jackrabbit.core.query.jsr283.qom.Selector;
 
@@ -29,16 +29,16 @@ public class SelectorImpl extends SourceImpl implements Selector {
     /**
      * The name of the required node type.
      */
-    private final QName nodeTypeName;
+    private final Name nodeTypeName;
 
     /**
      * The selector name.
      */
-    private final QName selectorName;
+    private final Name selectorName;
 
     SelectorImpl(NamePathResolver resolver,
-                 QName nodeTypeName,
-                 QName selectorName) {
+                 Name nodeTypeName,
+                 Name selectorName) {
         super(resolver);
         this.nodeTypeName = nodeTypeName;
         this.selectorName = selectorName;
@@ -49,7 +49,7 @@ public class SelectorImpl extends SourceImpl implements Selector {
      *
      * @return the node type name; non-null
      */
-    public QName getNodeTypeQName() {
+    public Name getNodeTypeQName() {
         return nodeTypeName;
     }
 
@@ -61,7 +61,7 @@ public class SelectorImpl extends SourceImpl implements Selector {
      *
      * @return the selector name; non-null
      */
-    public QName getSelectorQName() {
+    public Name getSelectorQName() {
         return selectorName;
     }
 

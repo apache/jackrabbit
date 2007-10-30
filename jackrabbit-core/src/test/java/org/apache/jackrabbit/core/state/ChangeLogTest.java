@@ -17,10 +17,11 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFactoryImpl;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.spi.NameFactory;
 
 import java.util.Iterator;
 
@@ -30,13 +31,20 @@ import java.util.Iterator;
  */
 public class ChangeLogTest extends AbstractJCRTest {
 
+    private NameFactory factory;
+
+    protected void setUp() throws Exception {
+        super.setUp();
+        factory = NameFactoryImpl.getInstance();
+    }
+
     /**
      * Add an item state and then delete it. Make sure there is no
      * entry in either the added nor the removed states
      */
     public void testAddDelete() throws Exception {
         PropertyId id = new PropertyId(
-                new NodeId(UUID.randomUUID()), new QName("", "a"));
+                new NodeId(UUID.randomUUID()), factory.create("", "a"));
         ItemState state = new PropertyState(id, ItemState.STATUS_NEW, false);
 
         ChangeLog log = new ChangeLog();
@@ -56,7 +64,7 @@ public class ChangeLogTest extends AbstractJCRTest {
      */
     public void testAddModify() throws Exception {
         PropertyId id = new PropertyId(
-                new NodeId(UUID.randomUUID()), new QName("", "a"));
+                new NodeId(UUID.randomUUID()), factory.create("", "a"));
         ItemState state = new PropertyState(id, ItemState.STATUS_NEW, false);
 
         ChangeLog log = new ChangeLog();
@@ -78,7 +86,7 @@ public class ChangeLogTest extends AbstractJCRTest {
         ItemState[] states = new ItemState[10];
         for (int i = 0; i < states.length; i++) {
             PropertyId id = new PropertyId(
-                    new NodeId(UUID.randomUUID()), new QName("", "a" + i));
+                    new NodeId(UUID.randomUUID()), factory.create("", "a" + i));
             states[i] = new PropertyState(id, ItemState.STATUS_NEW, false);
         }
 

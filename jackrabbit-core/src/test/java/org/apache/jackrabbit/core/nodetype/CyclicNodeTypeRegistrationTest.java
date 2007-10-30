@@ -16,8 +16,11 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.name.NameConstants;
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -54,6 +57,11 @@ public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
     private Collection ntDefCollection;
 
     /**
+     * The name factory
+     */
+    private NameFactory nameFactory;
+
+    /**
      * Sets up the fixture for the test cases.
      */
     protected void setUp() throws Exception {
@@ -62,6 +70,7 @@ public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
 
         session = helper.getReadOnlySession();
         manager = session.getWorkspace().getNodeTypeManager();
+        nameFactory = NameFactoryImpl.getInstance();
 
         // Get the NodeTypeManager from the Workspace.
         // Note that it must be cast from the generic JCR NodeTypeManager to the
@@ -98,21 +107,21 @@ public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
          * + myFooInBar (foo)
          */
         final NodeTypeDef foo = new NodeTypeDef();
-        foo.setName(new QName("", "foo"));
-        foo.setSupertypes(new QName[]{QName.NT_BASE});
+        foo.setName(nameFactory.create("", "foo"));
+        foo.setSupertypes(new Name[]{NameConstants.NT_BASE});
 
         final NodeTypeDef bar = new NodeTypeDef();
-        bar.setName(new QName("", "bar"));
-        bar.setSupertypes(new QName[]{QName.NT_BASE});
+        bar.setName(nameFactory.create("", "bar"));
+        bar.setSupertypes(new Name[]{NameConstants.NT_BASE});
 
         NodeDefImpl myBarInFoo = new NodeDefImpl();
-        myBarInFoo.setRequiredPrimaryTypes(new QName[]{bar.getName()});
-        myBarInFoo.setName(new QName("", "myBarInFoo"));
+        myBarInFoo.setRequiredPrimaryTypes(new Name[]{bar.getName()});
+        myBarInFoo.setName(nameFactory.create("", "myBarInFoo"));
         myBarInFoo.setDeclaringNodeType(foo.getName());
 
         NodeDefImpl myFooInBar = new NodeDefImpl();
-        myFooInBar.setRequiredPrimaryTypes(new QName[]{foo.getName()});
-        myFooInBar.setName(new QName("", "myFooInBar"));
+        myFooInBar.setRequiredPrimaryTypes(new Name[]{foo.getName()});
+        myFooInBar.setName(nameFactory.create("", "myFooInBar"));
         myFooInBar.setDeclaringNodeType(bar.getName());
 
         foo.setChildNodeDefs(new NodeDefImpl[]{myBarInFoo});
@@ -146,13 +155,13 @@ public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
          *
          */
         final NodeTypeDef foo = new NodeTypeDef();
-        foo.setName(new QName("", "foo"));
-        foo.setSupertypes(new QName[]{QName.NT_BASE});
+        foo.setName(nameFactory.create("", "foo"));
+        foo.setSupertypes(new Name[]{NameConstants.NT_BASE});
 
 
         NodeDefImpl myBarInFoo = new NodeDefImpl();
-        myBarInFoo.setRequiredPrimaryTypes(new QName[]{new QName("", "I_am_an_invalid_required_primary_type")});
-        myBarInFoo.setName(new QName("", "myNTInFoo"));
+        myBarInFoo.setRequiredPrimaryTypes(new Name[]{nameFactory.create("", "I_am_an_invalid_required_primary_type")});
+        myBarInFoo.setName(nameFactory.create("", "myNTInFoo"));
         myBarInFoo.setDeclaringNodeType(foo.getName());
 
         foo.setChildNodeDefs(new NodeDefImpl[]{myBarInFoo});
@@ -190,38 +199,38 @@ public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
          */
 
         final NodeTypeDef folder = new NodeTypeDef();
-        folder.setName(new QName("", "Folder"));
+        folder.setName(nameFactory.create("", "Folder"));
 
         final NodeTypeDef cmsObject = new NodeTypeDef();
-        cmsObject.setName(new QName("", "CmsObject"));
-        cmsObject.setSupertypes(new QName[]{QName.NT_BASE});
+        cmsObject.setName(nameFactory.create("", "CmsObject"));
+        cmsObject.setSupertypes(new Name[]{NameConstants.NT_BASE});
         NodeDefImpl parentFolder = new NodeDefImpl();
-        parentFolder.setRequiredPrimaryTypes(new QName[]{folder.getName()});
-        parentFolder.setName(new QName("", "parentFolder"));
+        parentFolder.setRequiredPrimaryTypes(new Name[]{folder.getName()});
+        parentFolder.setName(nameFactory.create("", "parentFolder"));
         parentFolder.setDeclaringNodeType(cmsObject.getName());
         cmsObject.setChildNodeDefs(new NodeDefImpl[]{parentFolder});
 
 
         final NodeTypeDef document = new NodeTypeDef();
-        document.setName(new QName("", "Document"));
-        document.setSupertypes(new QName[]{cmsObject.getName()});
+        document.setName(nameFactory.create("", "Document"));
+        document.setSupertypes(new Name[]{cmsObject.getName()});
         PropDefImpl sizeProp = new PropDefImpl();
-        sizeProp.setName(new QName("", "size"));
+        sizeProp.setName(nameFactory.create("", "size"));
         sizeProp.setRequiredType(PropertyType.LONG);
         sizeProp.setDeclaringNodeType(document.getName());
         document.setPropertyDefs(new PropDef[]{sizeProp});
 
 
-        folder.setSupertypes(new QName[]{cmsObject.getName()});
+        folder.setSupertypes(new Name[]{cmsObject.getName()});
 
         NodeDefImpl folders = new NodeDefImpl();
-        folders.setRequiredPrimaryTypes(new QName[]{folder.getName()});
-        folders.setName(new QName("", "folders"));
+        folders.setRequiredPrimaryTypes(new Name[]{folder.getName()});
+        folders.setName(nameFactory.create("", "folders"));
         folders.setDeclaringNodeType(folder.getName());
 
         NodeDefImpl documents = new NodeDefImpl();
-        documents.setRequiredPrimaryTypes(new QName[]{document.getName()});
-        documents.setName(new QName("", "documents"));
+        documents.setRequiredPrimaryTypes(new Name[]{document.getName()});
+        documents.setName(nameFactory.create("", "documents"));
         documents.setDeclaringNodeType(folder.getName());
 
         folder.setChildNodeDefs(new NodeDefImpl[]{folders, documents});

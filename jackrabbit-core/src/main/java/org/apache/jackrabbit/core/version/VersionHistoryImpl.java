@@ -22,8 +22,8 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,7 +102,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public Version getVersion(String versionName)
             throws VersionException, RepositoryException {
         try {
-            QName name = session.getQName(versionName);
+            Name name = session.getQName(versionName);
             InternalVersion v = getInternalVersionHistory().getVersion(name);
             if (v == null) {
                 throw new VersionException("No version with name '" + versionName + "' exists in this version history.");
@@ -118,7 +118,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public Version getVersionByLabel(String label) throws RepositoryException {
         try {
-            QName qLabel = session.getQName(label);
+            Name qLabel = session.getQName(label);
             InternalVersion v =
                 getInternalVersionHistory().getVersionByLabel(qLabel);
             if (v == null) {
@@ -164,7 +164,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see javax.jcr.version.VersionHistory#getVersionLabels
      */
     public String[] getVersionLabels() throws RepositoryException {
-        QName[] labels = getInternalVersionHistory().getVersionLabels();
+        Name[] labels = getInternalVersionHistory().getVersionLabels();
         String[] ret = new String[labels.length];
         for (int i = 0; i < labels.length; i++) {
             ret[i] = session.getJCRName(labels[i]);
@@ -178,7 +178,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public String[] getVersionLabels(Version version)
             throws VersionException, RepositoryException {
         checkOwnVersion(version);
-        QName[] labels = ((VersionImpl) version).getInternalVersion().getLabels();
+        Name[] labels = ((VersionImpl) version).getInternalVersion().getLabels();
         String[] ret = new String[labels.length];
         for (int i = 0; i < labels.length; i++) {
             ret[i] = session.getJCRName(labels[i]);
@@ -191,7 +191,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public boolean hasVersionLabel(String label) throws RepositoryException {
         try {
-            QName qLabel = session.getQName(label);
+            Name qLabel = session.getQName(label);
             return getInternalVersionHistory().getVersionByLabel(qLabel) != null;
         } catch (NameException e) {
             throw new IllegalArgumentException("Unable to resolve label: " + e);
@@ -205,7 +205,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             throws VersionException, RepositoryException {
         checkOwnVersion(version);
         try {
-            QName qLabel = session.getQName(label);
+            Name qLabel = session.getQName(label);
             return ((VersionImpl) version).getInternalVersion().hasLabel(qLabel);
         } catch (NameException e) {
             throw new VersionException(e);

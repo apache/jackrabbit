@@ -16,10 +16,12 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.name.NameResolver;
-import org.apache.jackrabbit.name.ParsingNameResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.conversion.ParsingNameResolver;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.name.NameConstants;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -52,8 +54,8 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
     private static final Attributes ATTRS_BINARY_ENCODED_VALUE;
     static {
         AttributesImpl attrs = new AttributesImpl();
-        attrs.addAttribute(QName.NS_XMLNS_URI, NS_XMLSCHEMA_INSTANCE_PREFIX, "xmlns:" + NS_XMLSCHEMA_INSTANCE_PREFIX, CDATA_TYPE, NS_XMLSCHEMA_INSTANCE_URI);
-        attrs.addAttribute(QName.NS_XMLNS_URI, NS_XMLSCHEMA_PREFIX, "xmlns:" + NS_XMLSCHEMA_PREFIX, CDATA_TYPE, NS_XMLSCHEMA_URI);
+        attrs.addAttribute(Name.NS_XMLNS_URI, NS_XMLSCHEMA_INSTANCE_PREFIX, "xmlns:" + NS_XMLSCHEMA_INSTANCE_PREFIX, CDATA_TYPE, NS_XMLSCHEMA_INSTANCE_URI);
+        attrs.addAttribute(Name.NS_XMLNS_URI, NS_XMLSCHEMA_PREFIX, "xmlns:" + NS_XMLSCHEMA_PREFIX, CDATA_TYPE, NS_XMLSCHEMA_URI);
         attrs.addAttribute(NS_XMLSCHEMA_INSTANCE_URI, "type", NS_XMLSCHEMA_INSTANCE_PREFIX + ":type", "CDATA", NS_XMLSCHEMA_PREFIX + ":base64Binary");
         ATTRS_BINARY_ENCODED_VALUE = attrs;
     }
@@ -79,7 +81,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
                                     ContentHandler contentHandler)
             throws RepositoryException {
         super(node, noRecurse, skipBinary, contentHandler);
-        resolver = new ParsingNameResolver(nsResolver);
+        resolver = new ParsingNameResolver(NameFactoryImpl.getInstance(), nsResolver);
     }
 
     /**
@@ -99,9 +101,9 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
             nodeName = node.getName();
         }
 
-        addAttribute(attrs, QName.SV_NAME, CDATA_TYPE, nodeName);
+        addAttribute(attrs, NameConstants.SV_NAME, CDATA_TYPE, nodeName);
         // start node element
-        startElement(QName.SV_NODE, attrs);
+        startElement(NameConstants.SV_NODE, attrs);
     }
 
     /**
@@ -126,7 +128,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
     protected void leaving(Node node, int level)
             throws RepositoryException, SAXException {
         // end node element
-        endElement(QName.SV_NODE);
+        endElement(NameConstants.SV_NODE);
     }
 
     /**
@@ -136,11 +138,11 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
             throws RepositoryException, SAXException {
         AttributesImpl attrs = new AttributesImpl();
         // name attribute
-        addAttribute(attrs, QName.SV_NAME, CDATA_TYPE, prop.getName());
+        addAttribute(attrs, NameConstants.SV_NAME, CDATA_TYPE, prop.getName());
         // type attribute
         try {
             String typeName = PropertyType.nameFromValue(prop.getType());
-            addAttribute(attrs, QName.SV_TYPE, ENUMERATION_TYPE, typeName);
+            addAttribute(attrs, NameConstants.SV_TYPE, ENUMERATION_TYPE, typeName);
         } catch (IllegalArgumentException e) {
             // should never be getting here
             throw new RepositoryException(
@@ -148,13 +150,13 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
         }
 
         // start property element
-        startElement(QName.SV_PROPERTY, attrs);
+        startElement(NameConstants.SV_PROPERTY, attrs);
 
         // values
         if (prop.getType() == PropertyType.BINARY && skipBinary) {
             // empty value element
-            startElement(QName.SV_VALUE, new AttributesImpl());
-            endElement(QName.SV_VALUE);
+            startElement(NameConstants.SV_VALUE, new AttributesImpl());
+            endElement(NameConstants.SV_VALUE);
         } else {
             boolean multiValued = prop.getDefinition().isMultiple();
             Value[] vals;
@@ -186,7 +188,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
                 }
 
                 // start value element
-                startElement(QName.SV_VALUE, attributes);
+                startElement(NameConstants.SV_VALUE, attributes);
 
                 // characters
                 Writer writer = new Writer() {
@@ -220,7 +222,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
                 }
 
                 // end value element
-                endElement(QName.SV_VALUE);
+                endElement(NameConstants.SV_VALUE);
 
                 if (mustSendBinary) {
                     contentHandler.endPrefixMapping(NS_XMLSCHEMA_INSTANCE_PREFIX);
@@ -235,14 +237,14 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
      */
     protected void leaving(Property prop, int level)
             throws RepositoryException, SAXException {
-        endElement(QName.SV_PROPERTY);
+        endElement(NameConstants.SV_PROPERTY);
     }
 
     //-------------------------------------------------------------< private >
 
     /**
      * Adds an attribute to the given XML attribute set. The local part of
-     * the given {@link QName} is assumed to be a valid XML NCName, i.e. it
+     * the given {@link Name} is assumed to be a valid XML NCName, i.e. it
      * won't be encoded.
      *
      * @param attributes the XML attribute set
@@ -252,7 +254,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
      * @throws NamespaceException if the namespace of the attribute is not found
      */
     private void addAttribute(
-            AttributesImpl attributes, QName name, String type, String value)
+            AttributesImpl attributes, Name name, String type, String value)
             throws NamespaceException {
         attributes.addAttribute(
                 name.getNamespaceURI(), name.getLocalName(),
@@ -260,14 +262,14 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
     }
 
     /**
-     * Starts an XML element. The local part of the given {@link QName} is
+     * Starts an XML element. The local part of the given {@link Name} is
      * assumed to be a valid XML NCName, i.e. it won't be encoded.
      *
      * @param name name of the element
      * @param attributes XML attributes
      * @throws NamespaceException if the namespace of the element is not found
      */
-    private void startElement(QName name, Attributes attributes)
+    private void startElement(Name name, Attributes attributes)
             throws NamespaceException, SAXException {
         contentHandler.startElement(
                 name.getNamespaceURI(), name.getLocalName(),
@@ -275,13 +277,13 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
     }
 
     /**
-     * Ends an XML element. The local part of the given {@link QName} is
+     * Ends an XML element. The local part of the given {@link Name} is
      * assumed to be a valid XML NCName, i.e. it won't be encoded.
      *
      * @param name name of the element
      * @throws NamespaceException if the namespace of the element is not found
      */
-    private void endElement(QName name)
+    private void endElement(Name name)
             throws NamespaceException, SAXException {
         contentHandler.endElement(
                 name.getNamespaceURI(), name.getLocalName(),

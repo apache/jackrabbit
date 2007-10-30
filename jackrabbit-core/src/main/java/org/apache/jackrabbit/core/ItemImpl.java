@@ -34,10 +34,11 @@ import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.state.StaleItemStateException;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -524,7 +525,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                 PropDef[] pda = ent.getMandatoryPropDefs();
                 for (int i = 0; i < pda.length; i++) {
                     PropDef pd = pda[i];
-                    if (pd.getDeclaringNodeType().equals(QName.MIX_VERSIONABLE)) {
+                    if (pd.getDeclaringNodeType().equals(NameConstants.MIX_VERSIONABLE)) {
                         /**
                          * todo FIXME workaround for mix:versionable:
                          * the mandatory properties are initialized at a
@@ -767,8 +768,8 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             if (itemState.isNode()) {
                 NodeState nodeState = (NodeState) itemState;
                 EffectiveNodeType nt = validator.getEffectiveNodeType(nodeState);
-                if (nt.includesNodeType(QName.MIX_VERSIONABLE)) {
-                    if (!nodeState.hasPropertyName(QName.JCR_VERSIONHISTORY)) {
+                if (nt.includesNodeType(NameConstants.MIX_VERSIONABLE)) {
+                    if (!nodeState.hasPropertyName(NameConstants.JCR_VERSIONHISTORY)) {
                         NodeImpl node = (NodeImpl) itemMgr.getItem(itemState.getId());
                         VersionManager vMgr = session.getVersionManager();
                         /**
@@ -783,10 +784,10 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                         if (vh == null) {
                             vh = vMgr.createVersionHistory(session, nodeState);
                         }
-                        node.internalSetProperty(QName.JCR_VERSIONHISTORY, InternalValue.create(new UUID(vh.getUUID())));
-                        node.internalSetProperty(QName.JCR_BASEVERSION, InternalValue.create(new UUID(vh.getRootVersion().getUUID())));
-                        node.internalSetProperty(QName.JCR_ISCHECKEDOUT, InternalValue.create(true));
-                        node.internalSetProperty(QName.JCR_PREDECESSORS,
+                        node.internalSetProperty(NameConstants.JCR_VERSIONHISTORY, InternalValue.create(new UUID(vh.getUUID())));
+                        node.internalSetProperty(NameConstants.JCR_BASEVERSION, InternalValue.create(new UUID(vh.getRootVersion().getUUID())));
+                        node.internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));
+                        node.internalSetProperty(NameConstants.JCR_PREDECESSORS,
                                 new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
                         createdTransientState = true;
                     }
@@ -822,7 +823,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         // check state of this instance
         sanityCheck();
 
-        Path.PathElement thisName = getPrimaryPath().getNameElement();
+        Path.Element thisName = getPrimaryPath().getNameElement();
 
         // check if protected
         if (isNode()) {
@@ -883,13 +884,13 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
     /**
      * Same as <code>{@link Item#getName()}</code> except that
-     * this method returns a <code>QName</code> instead of a
+     * this method returns a <code>Name</code> instead of a
      * <code>String</code>.
      *
-     * @return the name of this item as <code>QName</code>
+     * @return the name of this item as <code>Name</code>
      * @throws RepositoryException if an error occurs.
      */
-    public abstract QName getQName() throws RepositoryException;
+    public abstract Name getQName() throws RepositoryException;
 
     //----------------------------------------------------< ItemStateListener >
     /**

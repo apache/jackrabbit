@@ -20,7 +20,7 @@ import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import junit.framework.TestCase;
 
@@ -96,7 +96,7 @@ public class NamespaceRegistryImplTest extends TestCase {
             fail("safeRegisterNamespace() fails to reregister a namespace");
         }
         try {
-            registry.safeRegisterNamespace(QName.NS_XML_PREFIX, URI3);
+            registry.safeRegisterNamespace(Name.NS_XML_PREFIX, URI3);
         } catch (NamespaceException e) {
             fail("safeRegisterNamespace() fails to handle a reserved prefix");
         }

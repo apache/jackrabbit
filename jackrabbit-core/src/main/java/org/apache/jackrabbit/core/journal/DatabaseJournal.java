@@ -16,21 +16,21 @@
  */
 package org.apache.jackrabbit.core.journal;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.DatabaseMetaData;
 import java.sql.Statement;
 
 /**
@@ -292,7 +292,7 @@ public class DatabaseJournal extends AbstractJournal {
             selectRevisionsStmt.execute();
 
             return new DatabaseRecordIterator(
-                    selectRevisionsStmt.getResultSet(), getResolver());
+                    selectRevisionsStmt.getResultSet(), getResolver(), getNamePathResolver());
         } catch (SQLException e) {
             close(true);
 

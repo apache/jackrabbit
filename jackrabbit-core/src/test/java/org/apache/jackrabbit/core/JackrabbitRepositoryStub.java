@@ -109,6 +109,7 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
 
                 repository = (Repository) ctx.lookup(repName);
             } catch (Exception e) {
+                e.printStackTrace();
                 throw new RepositoryStubException(e.toString());
             }
         }

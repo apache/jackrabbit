@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 /**
  * Information about a node being imported. This class is used
@@ -33,17 +33,17 @@ public class NodeInfo {
     /**
      * Name of the node being imported.
      */
-    private final QName name;
+    private final Name name;
 
     /**
      * Name of the primary type of the node being imported.
      */
-    private final QName nodeTypeName;
+    private final Name nodeTypeName;
 
     /**
      * Names of the mixin types of the node being imported.
      */
-    private final QName[] mixinNames;
+    private final Name[] mixinNames;
 
     /**
      * Identifier of the node being imported.
@@ -58,7 +58,7 @@ public class NodeInfo {
      * @param mixinNames names of the mixin types of the node being imported
      * @param id identifier of the node being imported
      */
-    public NodeInfo(QName name, QName nodeTypeName, QName[] mixinNames,
+    public NodeInfo(Name name, Name nodeTypeName, Name[] mixinNames,
                     NodeId id) {
         this.name = name;
         this.nodeTypeName = nodeTypeName;
@@ -71,7 +71,7 @@ public class NodeInfo {
      *
      * @return node name
      */
-    public QName getName() {
+    public Name getName() {
         return name;
     }
 
@@ -80,7 +80,7 @@ public class NodeInfo {
      *
      * @return primary type name
      */
-    public QName getNodeTypeName() {
+    public Name getNodeTypeName() {
         return nodeTypeName;
     }
 
@@ -89,7 +89,7 @@ public class NodeInfo {
      *
      * @return mixin type names
      */
-    public QName[] getMixinNames() {
+    public Name[] getMixinNames() {
         return mixinNames;
     }
 

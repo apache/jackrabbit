@@ -32,10 +32,12 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,7 +158,7 @@ public class WorkspaceImporter implements Importer {
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(), null);
             // remember uuid mapping
             EffectiveNodeType ent = itemOps.getEffectiveNodeType(node);
-            if (ent.includesNodeType(QName.MIX_REFERENCEABLE)) {
+            if (ent.includesNodeType(NameConstants.MIX_REFERENCEABLE)) {
                 refTracker.mappedUUID(nodeInfo.getId().getUUID(), node.getNodeId().getUUID());
             }
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW) {
@@ -293,7 +295,7 @@ public class WorkspaceImporter implements Importer {
          * todo FIXME delegate to 'node type instance handler'
          */
         EffectiveNodeType ent = itemOps.getEffectiveNodeType(node);
-        if (ent.includesNodeType(QName.MIX_VERSIONABLE)) {
+        if (ent.includesNodeType(NameConstants.MIX_VERSIONABLE)) {
             /**
              * check if there's already a version history for that
              * node; this would e.g. be the case if a versionable node
@@ -310,22 +312,22 @@ public class WorkspaceImporter implements Importer {
 
             // jcr:versionHistory
             conditionalAddProperty(
-                    node, QName.JCR_VERSIONHISTORY, PropertyType.REFERENCE, false,
+                    node, NameConstants.JCR_VERSIONHISTORY, PropertyType.REFERENCE, false,
                     InternalValue.create(new UUID(history.getUUID())));
 
             // jcr:baseVersion
             conditionalAddProperty(
-                    node, QName.JCR_BASEVERSION, PropertyType.REFERENCE, false,
+                    node, NameConstants.JCR_BASEVERSION, PropertyType.REFERENCE, false,
                     InternalValue.create(new UUID(rootVersion.getUUID())));
 
             // jcr:predecessors
             conditionalAddProperty(
-                    node, QName.JCR_PREDECESSORS, PropertyType.REFERENCE, true,
+                    node, NameConstants.JCR_PREDECESSORS, PropertyType.REFERENCE, true,
                     InternalValue.create(new UUID(rootVersion.getUUID())));
 
             // jcr:isCheckedOut
             conditionalAddProperty(
-                    node, QName.JCR_ISCHECKEDOUT, PropertyType.BOOLEAN, false,
+                    node, NameConstants.JCR_ISCHECKEDOUT, PropertyType.BOOLEAN, false,
                     InternalValue.create(true));
         }
     }
@@ -342,7 +344,7 @@ public class WorkspaceImporter implements Importer {
      * @throws RepositoryException if the property could not be added
      */
     private void conditionalAddProperty(
-            NodeState node, QName name, int type, boolean multiple,
+            NodeState node, Name name, int type, boolean multiple,
             InternalValue value)
             throws RepositoryException {
         if (!node.hasPropertyName(name)) {
@@ -392,9 +394,9 @@ public class WorkspaceImporter implements Importer {
 
             NodeState node = null;
             NodeId id = nodeInfo.getId();
-            QName nodeName = nodeInfo.getName();
-            QName ntName = nodeInfo.getNodeTypeName();
-            QName[] mixins = nodeInfo.getMixinNames();
+            Name nodeName = nodeInfo.getName();
+            Name ntName = nodeInfo.getNodeTypeName();
+            Name[] mixins = nodeInfo.getMixinNames();
 
             if (parent == null) {
                 // parent node was skipped, skip this child node too
@@ -534,7 +536,7 @@ public class WorkspaceImporter implements Importer {
      * @param name name of the node being imported
      * @throws RepositoryException
      */
-    private void resolvePropertyNameConflict(NodeState parent, QName name)
+    private void resolvePropertyNameConflict(NodeState parent, Name name)
             throws RepositoryException {
         PropertyId propId = new PropertyId(parent.getNodeId(), name);
         PropertyState conflicting = itemOps.getPropertyState(propId);
@@ -542,9 +544,9 @@ public class WorkspaceImporter implements Importer {
             // assume this property has been imported as well;
             // rename conflicting property
             // @todo use better reversible escaping scheme to create unique name
-            QName newName = new QName(name.getNamespaceURI(), name.getLocalName() + "_");
+            Name newName = NameFactoryImpl.getInstance().create(name.getNamespaceURI(), name.getLocalName() + "_");
             while (parent.hasPropertyName(newName)) {
-                newName = new QName(newName.getNamespaceURI(), newName.getLocalName() + "_");
+                newName = NameFactoryImpl.getInstance().create(newName.getNamespaceURI(), newName.getLocalName() + "_");
             }
             InternalValue[] values = conflicting.getValues();
             PropertyState newProp = itemOps.createPropertyState(

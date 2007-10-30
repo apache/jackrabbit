@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.core.query.sql;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 public class ASTContainsExpression extends SimpleNode {
 
     private String query;
 
-    private QName property;
+    private Name property;
 
     public ASTContainsExpression(int id) {
         super(id);
@@ -40,11 +40,11 @@ public class ASTContainsExpression extends SimpleNode {
         this.query = query;
     }
 
-    public QName getPropertyName() {
+    public Name getPropertyName() {
         return property;
     }
 
-    public void setPropertyName(QName property) {
+    public void setPropertyName(Name property) {
         this.property = property;
     }
 

@@ -33,7 +33,8 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
 
 /**
  * This Class provides a simple structure to hold the nodestate and related
@@ -57,7 +58,7 @@ public class NodePropBundle {
     /**
      * the nodetype name
      */
-    private QName nodeTypeName;
+    private Name nodeTypeName;
 
     /**
      * the mixintype names
@@ -129,7 +130,7 @@ public class NodePropBundle {
         nodeTypeName = state.getNodeTypeName();
         mixinTypeNames = state.getMixinTypeNames();
         nodeDefId = state.getDefinitionId();
-        isReferenceable = state.hasPropertyName(QName.JCR_UUID);
+        isReferenceable = state.hasPropertyName(NameConstants.JCR_UUID);
         modCount = state.getModCount();
         List list = state.getChildNodeEntries();
         Iterator iter = list.iterator();
@@ -160,13 +161,13 @@ public class NodePropBundle {
         state.setPropertyNames(properties.keySet());
 
         // add fake property entries
-        state.addPropertyName(QName.JCR_PRIMARYTYPE);
+        state.addPropertyName(NameConstants.JCR_PRIMARYTYPE);
         if (mixinTypeNames.size()>0) {
-            state.addPropertyName(QName.JCR_MIXINTYPES);
+            state.addPropertyName(NameConstants.JCR_MIXINTYPES);
         }
         // uuid is special...only if 'referenceable'
         if (isReferenceable) {
-            state.addPropertyName(QName.JCR_UUID);
+            state.addPropertyName(NameConstants.JCR_UUID);
         }
 
         return state;
@@ -178,7 +179,7 @@ public class NodePropBundle {
      * @param name the name of the new property
      * @return the new property state
      */
-    public PropertyState createPropertyState(PersistenceManager pMgr, QName name) {
+    public PropertyState createPropertyState(PersistenceManager pMgr, Name name) {
         PropertyEntry p = getPropertyEntry(name);
         if (p == null) {
             return null;
@@ -236,7 +237,7 @@ public class NodePropBundle {
      * Returns the nodetype name of this bundle
      * @return the nodetype name of this bundle
      */
-    public QName getNodeTypeName() {
+    public Name getNodeTypeName() {
         return nodeTypeName;
     }
 
@@ -244,7 +245,7 @@ public class NodePropBundle {
      * Sets the node type name
      * @param nodeTypeName the nodetype name
      */
-    public void setNodeTypeName(QName nodeTypeName) {
+    public void setNodeTypeName(Name nodeTypeName) {
         this.nodeTypeName = nodeTypeName;
     }
 
@@ -326,7 +327,7 @@ public class NodePropBundle {
      * @param name the name of the entry.
      * @param id the id of the entry
      */
-    public void addChildNodeEntry(QName name, NodeId id) {
+    public void addChildNodeEntry(Name name, NodeId id) {
         childNodeEntries.add(new ChildNodeEntry(name, id));
     }
 
@@ -355,11 +356,11 @@ public class NodePropBundle {
      * @return <code>true</code> if the property exists;
      *         <code>false</code> otherwise.
      */
-    public boolean hasProperty(QName name) {
+    public boolean hasProperty(Name name) {
         return properties.containsKey(name)
-                || name.equals(QName.JCR_PRIMARYTYPE)
-                || (isReferenceable && name.equals(QName.JCR_UUID))
-                || (mixinTypeNames.size()>0 && name.equals(QName.JCR_MIXINTYPES));
+                || name.equals(NameConstants.JCR_PRIMARYTYPE)
+                || (isReferenceable && name.equals(NameConstants.JCR_UUID))
+                || (mixinTypeNames.size()>0 && name.equals(NameConstants.JCR_MIXINTYPES));
     }
 
     /**
@@ -383,7 +384,7 @@ public class NodePropBundle {
      * @param name the name of the property entry
      * @return the desired property entry or <code>null</code>
      */
-    public PropertyEntry getPropertyEntry(QName name) {
+    public PropertyEntry getPropertyEntry(Name name) {
         return (PropertyEntry) properties.get(name);
     }
 
@@ -393,7 +394,7 @@ public class NodePropBundle {
     public void removeAllProperties() {
         Iterator iter = properties.keySet().iterator();
         while (iter.hasNext()) {
-            QName name = (QName) iter.next();
+            Name name = (Name) iter.next();
             removeProperty(name);
             iter = properties.keySet().iterator();
         }
@@ -403,7 +404,7 @@ public class NodePropBundle {
      * Removes the proprty with the given name from this bundle.
      * @param name the name of the property
      */
-    public void removeProperty(QName name) {
+    public void removeProperty(Name name) {
         PropertyEntry pe = (PropertyEntry) properties.remove(name);
         if (pe != null) {
             pe.destroy();
@@ -452,7 +453,7 @@ public class NodePropBundle {
         /**
          * the name of the entry
          */
-        private final QName name;
+        private final Name name;
 
         /**
          * the id of the entry
@@ -464,7 +465,7 @@ public class NodePropBundle {
          * @param name the name
          * @param id the id
          */
-        public ChildNodeEntry(QName name, NodeId id) {
+        public ChildNodeEntry(Name name, NodeId id) {
             this.name = name;
             this.id = id;
         }
@@ -473,7 +474,7 @@ public class NodePropBundle {
          * Returns the name.
          * @return the name.
          */
-        public QName getName() {
+        public Name getName() {
             return name;
         }
 
@@ -565,7 +566,7 @@ public class NodePropBundle {
          * Returns the property name
          * @return the property name
          */
-        public QName getName() {
+        public Name getName() {
             return id.getName();
         }
 

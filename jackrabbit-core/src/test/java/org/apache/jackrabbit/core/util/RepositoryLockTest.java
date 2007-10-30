@@ -21,8 +21,6 @@ import java.io.IOException;
 
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.core.util.RepositoryLock;
-
 import junit.framework.TestCase;
 
 /**

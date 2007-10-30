@@ -44,13 +44,13 @@ import org.apache.jackrabbit.core.query.DefaultQueryNodeVisitor;
 import org.apache.jackrabbit.core.query.lucene.fulltext.QueryParser;
 import org.apache.jackrabbit.core.query.lucene.fulltext.ParseException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.PathFormat;
-import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.name.PathBuilder;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.MalformedPathException;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.XMLChar;
 import org.apache.jackrabbit.util.ISO9075;
@@ -115,6 +115,11 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
     private NamespaceMappings nsMappings;
 
     /**
+     * Name and Path resolver
+     */
+    private NamePathResolver resolver;
+
+    /**
      * The analyzer instance to use for contains function query parsing
      */
     private Analyzer analyzer;
@@ -173,6 +178,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         this.propRegistry = propReg;
         this.synonymProvider = synonymProvider;
         this.indexFormatVersion = indexFormatVersion;
+
+        this.resolver = NamePathResolverImpl.create(nsMappings);
     }
 
     /**
@@ -285,9 +292,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         String field = "";
         String value = "";
         try {
-            field = NameFormat.format(node.getPropertyName(), nsMappings);
-            value = NameFormat.format(node.getValue(), nsMappings);
-        } catch (NoPrefixDeclaredException e) {
+            field = resolver.getJCRName(node.getPropertyName());
+            value = resolver.getJCRName(node.getValue());
+        } catch (NamespaceException e) {
             // will never happen, prefixes are created when unknown
         }
         return new TermQuery(new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, value)));
@@ -297,8 +304,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 
         List terms = new ArrayList();
         try {
-            String mixinTypesField = NameFormat.format(QName.JCR_MIXINTYPES, nsMappings);
-            String primaryTypeField = NameFormat.format(QName.JCR_PRIMARYTYPE, nsMappings);
+            String mixinTypesField = resolver.getJCRName(NameConstants.JCR_MIXINTYPES);
+            String primaryTypeField = resolver.getJCRName(NameConstants.JCR_PRIMARYTYPE);
 
             NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
             NodeType base = ntMgr.getNodeType(session.getJCRName(node.getValue()));
@@ -307,13 +314,13 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 // search for nodes where jcr:mixinTypes is set to this mixin
                 Term t = new Term(FieldNames.PROPERTIES,
                         FieldNames.createNamedValue(mixinTypesField,
-                                NameFormat.format(node.getValue(), nsMappings)));
+                                resolver.getJCRName(node.getValue())));
                 terms.add(t);
             } else {
                 // search for nodes where jcr:primaryType is set to this type
                 Term t = new Term(FieldNames.PROPERTIES,
                         FieldNames.createNamedValue(primaryTypeField,
-                                NameFormat.format(node.getValue(), nsMappings)));
+                                resolver.getJCRName(node.getValue())));
                 terms.add(t);
             }
 
@@ -323,8 +330,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 NodeType nt = allTypes.nextNodeType();
                 NodeType[] superTypes = nt.getSupertypes();
                 if (Arrays.asList(superTypes).contains(base)) {
-                    String ntName = nsMappings.translatePropertyName(nt.getName(),
-                            session.getNamespaceResolver());
+                    Name n = session.getQName(nt.getName());
+                    String ntName = nsMappings.translatePropertyName(n);
                     Term t;
                     if (nt.isMixin()) {
                         // search on jcr:mixinTypes
@@ -366,7 +373,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 fieldname = FieldNames.FULLTEXT;
             } else {
                 // final path element is a property name
-                QName propName = relPath.getNameElement().getName();
+                Name propName = relPath.getNameElement().getName();
                 StringBuffer tmp = new StringBuffer();
                 tmp.append(nsMappings.getPrefix(propName.getNamespaceURI()));
                 tmp.append(":").append(FieldNames.FULLTEXT_PREFIX);
@@ -408,11 +415,11 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             Query context = parser.parse(query.toString());
             if (relPath != null && (!node.getReferencesProperty() || relPath.getLength() > 1)) {
                 // text search on some child axis
-                Path.PathElement[] elements = relPath.getElements();
+                Path.Element[] elements = relPath.getElements();
                 for (int i = elements.length - 1; i >= 0; i--) {
                     String name = null;
                     if (!elements[i].getName().equals(RelationQueryNode.STAR_NAME_TEST)) {
-                        name = NameFormat.format(elements[i].getName(), nsMappings);;
+                        name = resolver.getJCRName(elements[i].getName());
                     }
                     // join text search with name test
                     // if path references property that's elements.length - 2
@@ -439,8 +446,6 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             exceptions.add(e);
         } catch (ParseException e) {
             exceptions.add(e);
-        } catch (NoPrefixDeclaredException e) {
-            exceptions.add(e);
         }
         return null;
     }
@@ -451,7 +456,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         if (steps.length > 0) {
             if (node.isAbsolute() && !steps[0].getIncludeDescendants()) {
                 // eat up first step
-                QName nameTest = steps[0].getNameTest();
+                Name nameTest = steps[0].getNameTest();
                 if (nameTest == null) {
                     // this is equivalent to the root node
                     context = new TermQuery(new Term(FieldNames.PARENT, ""));
@@ -463,8 +468,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     // will never match anything!
                     String name = "";
                     try {
-                        name = NameFormat.format(nameTest, nsMappings);
-                    } catch (NoPrefixDeclaredException e) {
+                        name = resolver.getJCRName(nameTest);
+                    } catch (NamespaceException e) {
                         exceptions.add(e);
                     }
                     BooleanQuery and = new BooleanQuery();
@@ -525,9 +530,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         TermQuery nameTest = null;
         if (node.getNameTest() != null) {
             try {
-                String internalName = NameFormat.format(node.getNameTest(), nsMappings);
+                String internalName = resolver.getJCRName(node.getNameTest());
                 nameTest = new TermQuery(new Term(FieldNames.LABEL, internalName));
-            } catch (NoPrefixDeclaredException e) {
+            } catch (NamespaceException e) {
                 // should never happen
                 exceptions.add(e);
             }
@@ -554,8 +559,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     // todo this will traverse the whole index, optimize!
                     Query subQuery = null;
                     try {
-                        subQuery = createMatchAllQuery(NameFormat.format(QName.JCR_PRIMARYTYPE, nsMappings));
-                    } catch (NoPrefixDeclaredException e) {
+                        subQuery = createMatchAllQuery(resolver.getJCRName(NameConstants.JCR_PRIMARYTYPE));
+                    } catch (NamespaceException e) {
                         // will never happen, prefixes are created when unknown
                     }
                     // only use descendant axis if path is not //*
@@ -588,10 +593,10 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         }
 
         try {
-            String refProperty = NameFormat.format(node.getRefProperty(), nsMappings);
+            String refProperty = resolver.getJCRName(node.getRefProperty());
             String nameTest = null;
             if (node.getNameTest() != null) {
-                nameTest = NameFormat.format(node.getNameTest(), nsMappings);
+                nameTest = resolver.getJCRName(node.getNameTest());
             }
 
             if (node.getIncludeDescendants()) {
@@ -612,7 +617,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 context = andQuery;
             }
 
-        } catch (NoPrefixDeclaredException e) {
+        } catch (NamespaceException e) {
             // should never happen
             exceptions.add(e);
         }
@@ -642,7 +647,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         || node.getOperation() == QueryConstants.OPERATION_NE_GENERAL
                         || node.getOperation() == QueryConstants.OPERATION_NE_VALUE) {
                     // only use coercing on non-range operations
-                    QName propertyName = node.getRelativePath().getNameElement().getName();
+                    Name propertyName = node.getRelativePath().getNameElement().getName();
                     stringValues = getStringValues(propertyName, node.getStringValue());
                 } else {
                     stringValues[0] = node.getStringValue();
@@ -682,13 +687,13 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             // add the name of a dummy property because relPath actually
             // references a property. whereas the relPath of the similar
             // operation references a node
-            Path.PathBuilder builder;
+            PathBuilder builder;
             if (relPath == null) {
-                builder = new Path.PathBuilder();
+                builder = new PathBuilder();
             } else {
-                builder = new Path.PathBuilder(relPath);
+                builder = new PathBuilder(relPath);
             }
-            builder.addLast(QName.JCR_PRIMARYTYPE);
+            builder.addLast(NameConstants.JCR_PRIMARYTYPE);
             try {
                 relPath = builder.getPath();
             } catch (MalformedPathException e) {
@@ -697,14 +702,14 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         }
         String field = "";
         try {
-            field = NameFormat.format(relPath.getNameElement().getName(), nsMappings);
-        } catch (NoPrefixDeclaredException e) {
+            field = resolver.getJCRName(relPath.getNameElement().getName());
+        } catch (NamespaceException e) {
             // should never happen
             exceptions.add(e);
         }
 
         // support for fn:name()
-        QName propName = relPath.getNameElement().getName();
+        Name propName = relPath.getNameElement().getName();
         if (propName.getNamespaceURI().equals(SearchManager.NS_FN_URI) &&
                 propName.getLocalName().equals("name()")) {
             if (node.getValueType() != QueryConstants.TYPE_STRING) {
@@ -718,16 +723,18 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         "only be used in conjunction with an equals operator"));
                 return data;
             }
-            // check if string literal is a valid XML QName
+            // check if string literal is a valid XML Name
             if (XMLChar.isValidName(node.getStringValue())) {
-                // parse string literal as JCR QName
+                // parse string literal as JCR Name
                 try {
-                    String translatedQName = nsMappings.translatePropertyName(
-                            ISO9075.decode(node.getStringValue()),
-                            session.getNamespaceResolver());
+                    Name n = session.getQName(ISO9075.decode(node.getStringValue()));
+                    String translatedQName = nsMappings.translatePropertyName(n);
                     Term t = new Term(FieldNames.LABEL, translatedQName);
                     query = new TermQuery(t);
                 } catch (NameException e) {
+                    exceptions.add(e);
+                    return data;
+                } catch (NamespaceException e) {
                     exceptions.add(e);
                     return data;
                 }
@@ -900,13 +907,13 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         if (relPath.getLength() > 1) {
             try {
                 // child axis in relation
-                Path.PathElement[] elements = relPath.getElements();
+                Path.Element[] elements = relPath.getElements();
                 // elements.length - 1 = property name
                 // elements.length - 2 = last child axis name test
                 for (int i = elements.length - 2; i >= 0; i--) {
                     String name = null;
                     if (!elements[i].getName().equals(RelationQueryNode.STAR_NAME_TEST)) {
-                        name = NameFormat.format(elements[i].getName(), nsMappings);
+                        name = resolver.getJCRName(elements[i].getName());
                     }
                     if (i == elements.length - 2) {
                         // join name test with property query if there is one
@@ -923,7 +930,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         query = new ParentAxisQuery(query, name);
                     }
                 }
-            } catch (NoPrefixDeclaredException e) {
+            } catch (NamespaceException e) {
                 // should never happen
                 exceptions.add(e);
             }
@@ -980,7 +987,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
      * @param literal      the String literal in the relation.
      * @return the String values to use as term for the query.
      */
-    private String[] getStringValues(QName propertyName, String literal) {
+    private String[] getStringValues(Name propertyName, String literal) {
         PropertyTypeRegistry.TypeMapping[] types = propRegistry.getPropertyTypes(propertyName);
         List values = new ArrayList();
         for (int i = 0; i < types.length; i++) {
@@ -988,9 +995,12 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 case PropertyType.NAME:
                     // try to translate name
                     try {
-                        values.add(nsMappings.translatePropertyName(literal, session.getNamespaceResolver()));
+                        Name n = session.getQName(literal);
+                        values.add(nsMappings.translatePropertyName(n));
                         log.debug("Coerced " + literal + " into NAME.");
                     } catch (NameException e) {
+                        log.warn("Unable to coerce '" + literal + "' into a NAME: " + e.toString());
+                    } catch (NamespaceException e) {
                         log.warn("Unable to coerce '" + literal + "' into a NAME: " + e.toString());
                     }
                     break;
@@ -998,7 +1008,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     // try to translate path
                     try {
                         Path p = session.getQPath(literal);
-                        values.add(PathFormat.format(p, nsMappings));
+                        values.add(resolver.getJCRPath(p));
                         log.debug("Coerced " + literal + " into PATH.");
                     } catch (NameException e) {
                         log.warn("Unable to coerce '" + literal + "' into a PATH: " + e.toString());
@@ -1050,8 +1060,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             if (literal.indexOf('/') > -1) {
                 // might be a path
                 try {
-                    values.add(PathFormat.format(
-                            session.getQPath(literal), nsMappings));
+                    values.add(resolver.getJCRPath(session.getQPath(literal)));
                     log.debug("Coerced " + literal + " into PATH.");
                 } catch (Exception e) {
                     // not a path
@@ -1060,7 +1069,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             if (XMLChar.isValidName(literal)) {
                 // might be a name
                 try {
-                    values.add(nsMappings.translatePropertyName(literal, session.getNamespaceResolver()));
+                    Name n = session.getQName(literal);
+                    values.add(nsMappings.translatePropertyName(n));
                     log.debug("Coerced " + literal + " into NAME.");
                 } catch (Exception e) {
                     // not a name

@@ -16,9 +16,8 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.slf4j.Logger;
@@ -69,9 +68,9 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
         props = new ArrayList();
     }
 
-    private QName getQName(String rawName) throws RepositoryException {
+    private Name getQName(String rawName) throws RepositoryException {
         try {
-            return NameFormat.parse(rawName, nsResolver);
+            return resolver.getQName(rawName);
         } catch (NameException e) {
             // should never get here...
             String msg = "internal error: failed to resolve namespace mappings";
@@ -154,7 +153,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
 
                 // attribute name (encode property name to make sure it's a valid xml name)
                 String attrName = ISO9075.encode(propName);
-                QName qName = getQName(attrName);
+                Name qName = getQName(attrName);
 
                 // attribute value
                 if (prop.getType() == PropertyType.BINARY && skipBinary) {
@@ -172,7 +171,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
             }
 
             // start element (node)
-            QName qName = getQName(elemName);
+            Name qName = getQName(elemName);
             contentHandler.startElement(qName.getNamespaceURI(),
                     qName.getLocalName(), elemName, attrs);
         }
@@ -200,7 +199,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
         }
 
         // end element (node)
-        QName qName = getQName(elemName);
+        Name qName = getQName(elemName);
         contentHandler.endElement(qName.getNamespaceURI(), qName.getLocalName(),
                 elemName);
     }

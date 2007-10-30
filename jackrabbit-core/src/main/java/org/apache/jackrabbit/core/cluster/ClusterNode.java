@@ -35,8 +35,8 @@ import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import EDU.oswego.cs.dl.util.concurrent.Mutex;
 
 import javax.jcr.RepositoryException;
@@ -848,7 +848,7 @@ public class ClusterNode implements Runnable,
      * Process one or more node type registrations.
      *
      * @param c collection of node type definitions, if this is a register
-     *          operation; collection of <code>QName</code>s if this is
+     *          operation; collection of <code>Name</code>s if this is
      *          an unregister operation
      * @param register <code>true</code>, if this is a register operation;
      *                 <code>false</code> otherwise
@@ -986,8 +986,8 @@ public class ClusterNode implements Runnable,
                     NodeId parentId = record.readNodeId();
                     Path parentPath = record.readPath();
                     NodeId childId = record.readNodeId();
-                    Path.PathElement childRelPath = record.readPathElement();
-                    QName ntName = record.readQName();
+                    Path.Element childRelPath = record.readPathElement();
+                    Name ntName = record.readQName();
 
                     Set mixins = new HashSet();
                     int mixinCount = record.readInt();
@@ -1078,8 +1078,8 @@ public class ClusterNode implements Runnable,
      * @return event
      */
     private EventState createEventState(int type, NodeId parentId, Path parentPath,
-                                        NodeId childId, Path.PathElement childRelPath,
-                                        QName ntName, Set mixins, String userId) {
+                                        NodeId childId, Path.Element childRelPath,
+                                        Name ntName, Set mixins, String userId) {
         switch (type) {
             case Event.NODE_ADDED:
                 return EventState.childNodeAdded(parentId, parentPath, childId, childRelPath,
@@ -1180,7 +1180,7 @@ public class ClusterNode implements Runnable,
             if (register) {
                 record.writeNodeTypeDef((NodeTypeDef) iter.next());
             } else {
-                record.writeQName((QName) iter.next());
+                record.writeQName((Name) iter.next());
             }
         }
     }
@@ -1233,7 +1233,7 @@ public class ClusterNode implements Runnable,
         record.writeInt(mixins.size());
         Iterator iter = mixins.iterator();
         while (iter.hasNext()) {
-            record.writeQName((QName) iter.next());
+            record.writeQName((Name) iter.next());
         }
         record.writeString(event.getUserId());
     }

@@ -18,15 +18,16 @@ package org.apache.jackrabbit.core.journal;
 
 import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
-
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.io.InputStream;
-
+import org.apache.jackrabbit.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.name.NamespaceResolver;
+
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Base journal implementation.
@@ -47,6 +48,11 @@ public abstract class AbstractJournal implements Journal {
      * Namespace resolver.
      */
     private NamespaceResolver resolver;
+
+    /**
+     * NamePathResolver
+     */
+    private NamePathResolver npResolver;
 
     /**
      * Map of registered consumers.
@@ -70,6 +76,7 @@ public abstract class AbstractJournal implements Journal {
     public void init(String id, NamespaceResolver resolver) throws JournalException {
         this.id = id;
         this.resolver = resolver;
+        this.npResolver = new DefaultNamePathResolver(resolver, true);
     }
 
     /**
@@ -319,5 +326,14 @@ public abstract class AbstractJournal implements Journal {
      */
     public NamespaceResolver getResolver() {
         return resolver;
+    }
+
+    /**
+     * Return this journal's NamePathResolver.
+     *
+     * @return name and path resolver
+     */
+    public NamePathResolver getNamePathResolver() {
+        return npResolver;
     }
 }

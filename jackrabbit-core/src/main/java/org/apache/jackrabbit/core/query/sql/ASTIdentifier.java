@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.core.query.sql;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 public class ASTIdentifier extends SimpleNode {
 
-    private QName name;
+    private Name name;
 
     public ASTIdentifier(int id) {
     super(id);
@@ -30,11 +30,11 @@ public class ASTIdentifier extends SimpleNode {
     super(p, id);
   }
 
-    public void setName(QName name) {
+    public void setName(Name name) {
         this.name = name;
     }
 
-    public QName getName() {
+    public Name getName() {
         return name;
     }
 

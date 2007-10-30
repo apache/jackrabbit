@@ -27,9 +27,10 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.PathFactoryImpl;
+import org.apache.jackrabbit.name.PathBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,8 +102,8 @@ public final class EventStateCollection {
      *                   if no prefix should be used.
      */
     public EventStateCollection(EventDispatcher dispatcher,
-                         SessionImpl session,
-                         Path pathPrefix) {
+                                SessionImpl session,
+                                Path pathPrefix) {
         this.dispatcher = dispatcher;
         this.session = session;
         this.pathPrefix = pathPrefix;
@@ -234,11 +235,11 @@ public final class EventStateCollection {
                                 Path oldPath;
                                 try {
                                     if (moved.getIndex() == 0) {
-                                        oldPath = Path.create(parentPath, moved.getName(), false);
+                                        oldPath = PathFactoryImpl.getInstance().create(parentPath, moved.getName(), false);
                                     } else {
-                                        oldPath = Path.create(parentPath, moved.getName(), moved.getIndex(), false);
+                                        oldPath = PathFactoryImpl.getInstance().create(parentPath, moved.getName(), moved.getIndex(), false);
                                     }
-                                } catch (MalformedPathException e) {
+                                } catch (RepositoryException e) {
                                     // should never happen actually
                                     String msg = "Malformed path for item: " + state.getId();
                                     log.error(msg);
@@ -272,10 +273,10 @@ public final class EventStateCollection {
                     // reorder
                     for (Iterator ro = reordered.iterator(); ro.hasNext();) {
                         NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) ro.next();
-                        QName name = child.getName();
+                        Name name = child.getName();
                         int index = (child.getIndex() != 1) ? child.getIndex() : 0;
                         Path parentPath = getPath(n.getNodeId(), hmgr);
-                        Path.PathElement addedElem = Path.create(name, index).getNameElement();
+                        Path.Element addedElem = PathFactoryImpl.getInstance().create(name, index).getNameElement();
                         // get removed index
                         NodeState overlayed = (NodeState) n.getOverlayedState();
                         NodeState.ChildNodeEntry entry = overlayed.getChildNodeEntry(child.getId());
@@ -283,7 +284,7 @@ public final class EventStateCollection {
                             throw new ItemStateException("Unable to retrieve old child index for item: " + child.getId());
                         }
                         int oldIndex = (entry.getIndex() != 1) ? entry.getIndex() : 0;
-                        Path.PathElement removedElem = Path.create(name, oldIndex).getNameElement();
+                        Path.Element removedElem = PathFactoryImpl.getInstance().create(name, oldIndex).getNameElement();
 
                         events.add(EventState.childNodeRemoved(n.getNodeId(),
                                 parentPath,
@@ -552,18 +553,14 @@ public final class EventStateCollection {
         if (pathPrefix == null) {
             return p;
         }
-        Path.PathBuilder builder = new Path.PathBuilder(pathPrefix.getElements());
-        Path.PathElement[] elements = p.getElements();
+        PathBuilder builder = new PathBuilder(pathPrefix.getElements());
+        Path.Element[] elements = p.getElements();
         for (int i = 0; i < elements.length; i++) {
             if (elements[i].denotesRoot()) {
                 continue;
             }
             builder.addLast(elements[i]);
         }
-        try {
-            return builder.getPath();
-        } catch (MalformedPathException e) {
-            throw new RepositoryException(e);
-        }
+        return builder.getPath();
     }
 }

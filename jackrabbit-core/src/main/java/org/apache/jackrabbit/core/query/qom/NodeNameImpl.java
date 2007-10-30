@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.qom;
 
-import org.apache.jackrabbit.name.NamePathResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.Name;
 
 import org.apache.jackrabbit.core.query.jsr283.qom.NodeName;
 
@@ -29,9 +29,9 @@ public class NodeNameImpl extends DynamicOperandImpl implements NodeName {
     /**
      * The name of the selector against which to evaluate this operand.
      */
-    private final QName selectorName;
+    private final Name selectorName;
 
-    NodeNameImpl(NamePathResolver resolver, QName selectorName) {
+    NodeNameImpl(NamePathResolver resolver, Name selectorName) {
         super(resolver);
         this.selectorName = selectorName;
     }

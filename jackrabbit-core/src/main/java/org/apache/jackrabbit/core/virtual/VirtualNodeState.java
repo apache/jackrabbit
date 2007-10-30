@@ -21,7 +21,8 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -60,14 +61,14 @@ public class VirtualNodeState extends NodeState {
     public VirtualNodeState(AbstractVISProvider stateMgr,
                             NodeId parentId,
                             NodeId id,
-                            QName nodeTypeName,
-                            QName[] mixins)
+                            Name nodeTypeName,
+                            Name[] mixins)
             throws RepositoryException {
         super(id, nodeTypeName, parentId, ItemState.STATUS_EXISTING, false);
         this.stateMgr = stateMgr;
         setContainer(stateMgr);
         // add default properties
-        setPropertyValue(QName.JCR_PRIMARYTYPE, InternalValue.create(nodeTypeName));
+        setPropertyValue(NameConstants.JCR_PRIMARYTYPE, InternalValue.create(nodeTypeName));
         setMixinNodeTypes(mixins);
     }
 
@@ -87,7 +88,7 @@ public class VirtualNodeState extends NodeState {
      * @param name
      * @return the values
      */
-    public InternalValue[] getPropertyValues(QName name) throws NoSuchItemStateException {
+    public InternalValue[] getPropertyValues(Name name) throws NoSuchItemStateException {
         VirtualPropertyState ps = getProperty(name);
         if (ps == null) {
             return null;
@@ -102,7 +103,7 @@ public class VirtualNodeState extends NodeState {
      * @param name
      * @return the value
      */
-    public InternalValue getPropertyValue(QName name) throws NoSuchItemStateException {
+    public InternalValue getPropertyValue(Name name) throws NoSuchItemStateException {
         VirtualPropertyState ps = getProperty(name);
         if (ps == null || ps.getValues().length == 0) {
             return null;
@@ -118,7 +119,7 @@ public class VirtualNodeState extends NodeState {
      * @return
      * @throws NoSuchItemStateException
      */
-    public VirtualPropertyState getProperty(QName name) throws NoSuchItemStateException {
+    public VirtualPropertyState getProperty(Name name) throws NoSuchItemStateException {
         return (VirtualPropertyState) properties.get(name);
     }
 
@@ -129,7 +130,7 @@ public class VirtualNodeState extends NodeState {
      * @param value
      * @throws javax.jcr.RepositoryException
      */
-    public void setPropertyValue(QName name, InternalValue value)
+    public void setPropertyValue(Name name, InternalValue value)
             throws RepositoryException {
         setPropertyValues(name, value.getType(), new InternalValue[]{value}, false);
     }
@@ -142,7 +143,7 @@ public class VirtualNodeState extends NodeState {
      * @param values
      * @throws RepositoryException
      */
-    public void setPropertyValues(QName name, int type, InternalValue[] values)
+    public void setPropertyValues(Name name, int type, InternalValue[] values)
             throws RepositoryException {
         setPropertyValues(name, type, values, true);
     }
@@ -155,7 +156,7 @@ public class VirtualNodeState extends NodeState {
      * @param values
      * @throws RepositoryException
      */
-    public void setPropertyValues(QName name, int type, InternalValue[] values, boolean multiple)
+    public void setPropertyValues(Name name, int type, InternalValue[] values, boolean multiple)
             throws RepositoryException {
         VirtualPropertyState prop = getOrCreatePropertyState(name, type, multiple);
         prop.setValues(values);
@@ -170,7 +171,7 @@ public class VirtualNodeState extends NodeState {
      * @return
      * @throws RepositoryException
      */
-    protected VirtualPropertyState getOrCreatePropertyState(QName name, int type, boolean multiValued)
+    protected VirtualPropertyState getOrCreatePropertyState(Name name, int type, boolean multiValued)
             throws RepositoryException {
 
         VirtualPropertyState prop = (VirtualPropertyState) properties.get(name);
@@ -188,7 +189,7 @@ public class VirtualNodeState extends NodeState {
      * @param mixins
      * @throws RepositoryException
      */
-    public void setMixinNodeTypes(QName[] mixins) throws RepositoryException {
+    public void setMixinNodeTypes(Name[] mixins) throws RepositoryException {
         if (mixins != null) {
             HashSet set = new HashSet();
             InternalValue[] values = new InternalValue[mixins.length];
@@ -197,7 +198,7 @@ public class VirtualNodeState extends NodeState {
                 values[i] = InternalValue.create(mixins[i]);
             }
             setMixinTypeNames(set);
-            setPropertyValues(QName.JCR_MIXINTYPES, PropertyType.NAME, values);
+            setPropertyValues(NameConstants.JCR_MIXINTYPES, PropertyType.NAME, values);
         }
     }
 

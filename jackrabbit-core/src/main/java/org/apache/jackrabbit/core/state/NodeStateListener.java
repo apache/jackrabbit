@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.core.NodeId;
 
 /**
@@ -34,7 +34,7 @@ public interface NodeStateListener extends ItemStateListener {
      * @param id    id of new node
      */
     void nodeAdded(NodeState state,
-                   QName name, int index, NodeId id);
+                   Name name, int index, NodeId id);
 
     /**
      * Called when a node has been modified, typically as a result of removal
@@ -63,5 +63,5 @@ public interface NodeStateListener extends ItemStateListener {
      * @param index index of removed node
      * @param id    id of removed node
      */
-    void nodeRemoved(NodeState state, QName name, int index, NodeId id);
+    void nodeRemoved(NodeState state, Name name, int index, NodeId id);
 }

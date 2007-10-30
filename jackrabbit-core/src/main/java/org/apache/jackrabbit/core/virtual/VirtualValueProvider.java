@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.virtual;
 
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 /**
  * A <code>VirtualValueProvider</code> is used for virtual properties that
@@ -30,6 +30,6 @@ public interface VirtualValueProvider {
      * @param propName the name of the property
      * @return the values
      */
-    InternalValue[] getVirtualValues(QName propName);
+    InternalValue[] getVirtualValues(Name propName);
 
 }

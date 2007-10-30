@@ -23,11 +23,10 @@ import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.observation.Event;
 
 /**
  * The <code>EventFilter</code> class implements the filter logic based

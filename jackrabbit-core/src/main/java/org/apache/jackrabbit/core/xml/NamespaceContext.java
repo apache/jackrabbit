@@ -16,12 +16,7 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
 
 import javax.jcr.NamespaceException;
 import java.util.HashMap;
@@ -122,16 +117,4 @@ class NamespaceContext implements NamespaceResolver {
             throw new NamespaceException("Unknown URI: " + uri);
         }
     }
-
-    /** {@inheritDoc} */
-    public String getJCRName(QName name) throws NoPrefixDeclaredException {
-        return NameFormat.format(name, this);
-    }
-
-    /** {@inheritDoc} */
-    public QName getQName(String name)
-            throws IllegalNameException, UnknownPrefixException {
-        return NameFormat.parse(name, this);
-    }
-
 }

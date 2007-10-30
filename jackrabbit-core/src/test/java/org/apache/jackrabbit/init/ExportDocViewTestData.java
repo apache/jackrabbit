@@ -43,29 +43,29 @@ public class ExportDocViewTestData extends AbstractJCRTest {
      */
     private static final String ENCODING = "UTF-8";
     /**
-     * Resolved QName for jcr:encoding
+     * Resolved Name for jcr:encoding
      */
     private String jcrEncoding;
     /**
-     * Resolved QName for jcr:mimeType
+     * Resolved Name for jcr:mimeType
      */
     private String jcrMimeType;
     /**
-     * Resolved QName for jcr:lastModified
+     * Resolved Name for jcr:lastModified
      */
     private String jcrLastModified;
 
 
     /**
-     * Resolved QName for nt:unstructured
+     * Resolved Name for nt:unstructured
      */
     private String ntUnstructured;
     /**
-     * Resolved QName for jcr:xmltext
+     * Resolved Name for jcr:xmltext
      */
     private String xmlText;
     /**
-     * Resolved QName for jcr:xmlcharacters
+     * Resolved Name for jcr:xmlcharacters
      */
     private String xmlCharacters;
 

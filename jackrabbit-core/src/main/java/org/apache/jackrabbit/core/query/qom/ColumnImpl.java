@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.qom;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NamePathResolver;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 
 import org.apache.jackrabbit.core.query.jsr283.qom.Column;
 
@@ -34,22 +34,22 @@ public class ColumnImpl extends AbstractQOMNode implements Column {
     /**
      * The name of the selector.
      */
-    private final QName selectorName;
+    private final Name selectorName;
 
     /**
      * The name of the property.
      */
-    private final QName propertyName;
+    private final Name propertyName;
 
     /**
      * The name of the column.
      */
-    private final QName columnName;
+    private final Name columnName;
 
     ColumnImpl(NamePathResolver resolver,
-               QName selectorName,
-               QName propertyName,
-               QName columnName) {
+               Name selectorName,
+               Name propertyName,
+               Name columnName) {
         super(resolver);
         this.selectorName = selectorName;
         this.propertyName = propertyName;
@@ -61,7 +61,7 @@ public class ColumnImpl extends AbstractQOMNode implements Column {
      *
      * @return the selector name; non-null
      */
-    public QName getSelectorQName() {
+    public Name getSelectorQName() {
         return selectorName;
     }
 
@@ -71,7 +71,7 @@ public class ColumnImpl extends AbstractQOMNode implements Column {
      * @return the property name, or null to include a column for each
      *         single-value non-residual property of the selector's node type
      */
-    public QName getPropertyQName() {
+    public Name getPropertyQName() {
         return propertyName;
     }
 
@@ -82,7 +82,7 @@ public class ColumnImpl extends AbstractQOMNode implements Column {
      * @return the column name; must be null if <code>getPropertyName</code> is
      *         null and non-null otherwise
      */
-    public QName getColumnQName() {
+    public Name getColumnQName() {
         return columnName;
     }
 

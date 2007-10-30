@@ -33,8 +33,9 @@ import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -440,7 +441,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         Iterator iter = nodeState.getPropertyNames().iterator();
 
         while (iter.hasNext()) {
-            QName propName = (QName) iter.next();
+            Name propName = (Name) iter.next();
             // check read access
             if (session.getAccessManager().isGranted(new PropertyId(parentId, propName), AccessManager.READ)) {
                 return true;
@@ -473,7 +474,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         Iterator iter = nodeState.getPropertyNames().iterator();
 
         while (iter.hasNext()) {
-            QName propName = (QName) iter.next();
+            Name propName = (Name) iter.next();
             PropertyId id = new PropertyId(parentId, propName);
             // check read access
             if (session.getAccessManager().isGranted(id, AccessManager.READ)) {
@@ -519,10 +520,10 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
 
         // check special nodes
-        if (state.getNodeTypeName().equals(QName.NT_VERSION)) {
+        if (state.getNodeTypeName().equals(NameConstants.NT_VERSION)) {
             return createVersionInstance(id, state, def, listeners);
 
-        } else if (state.getNodeTypeName().equals(QName.NT_VERSIONHISTORY)) {
+        } else if (state.getNodeTypeName().equals(NameConstants.NT_VERSIONHISTORY)) {
             return createVersionHistoryInstance(id, state, def, listeners);
 
         } else {

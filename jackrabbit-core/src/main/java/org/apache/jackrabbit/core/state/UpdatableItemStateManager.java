@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.core.NodeId;
 
 import javax.jcr.ReferentialIntegrityException;
@@ -58,7 +58,7 @@ public interface UpdatableItemStateManager extends ItemStateManager {
      * @return a node state
      * @throws IllegalStateException if the manager is not in edit mode.
      */
-    NodeState createNew(NodeId id, QName nodeTypeName,
+    NodeState createNew(NodeId id, Name nodeTypeName,
                         NodeId parentId) throws IllegalStateException;
 
     /**
@@ -71,7 +71,7 @@ public interface UpdatableItemStateManager extends ItemStateManager {
      * @return a property state
      * @throws IllegalStateException if the manager is not in edit mode.
      */
-    PropertyState createNew(QName propName, NodeId parentId)
+    PropertyState createNew(Name propName, NodeId parentId)
             throws IllegalStateException;
 
     /**

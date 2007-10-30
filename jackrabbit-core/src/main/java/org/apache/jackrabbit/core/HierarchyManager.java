@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
@@ -57,7 +57,7 @@ public interface HierarchyManager {
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    QName getName(ItemId id) throws ItemNotFoundException, RepositoryException;
+    Name getName(ItemId id) throws ItemNotFoundException, RepositoryException;
 
     /**
      * Returns the depth of the specified item which is equivalent to

@@ -21,7 +21,7 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 
 /**
  * <code>TextValue</code> represents a serialized property value read
@@ -29,7 +29,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
  */
 public interface TextValue {
 
-    Value getValue(int type, NamespaceResolver resolver)
+    Value getValue(int type, NamePathResolver resolver)
         throws ValueFormatException, RepositoryException;
 
     InternalValue getInternalValue(int type)

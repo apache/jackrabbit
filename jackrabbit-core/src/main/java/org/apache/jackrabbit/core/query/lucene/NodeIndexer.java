@@ -26,11 +26,10 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.extractor.TextExtractor;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
 import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +79,11 @@ public class NodeIndexer {
     protected final NamespaceMappings mappings;
 
     /**
+     * Name and Path resolver.
+     */
+    protected final NamePathResolver resolver;
+
+    /**
      * Content extractor.
      */
     protected final TextExtractor extractor;
@@ -115,6 +119,7 @@ public class NodeIndexer {
         this.node = node;
         this.stateProvider = stateProvider;
         this.mappings = mappings;
+        this.resolver = NamePathResolverImpl.create(mappings);
         this.extractor = extractor;
     }
 
@@ -185,21 +190,21 @@ public class NodeIndexer {
                     throw new RepositoryException("Missing child node entry " +
                             "for node with id: " + node.getNodeId());
                 }
-                String name = NameFormat.format(child.getName(), mappings);
+                String name = resolver.getJCRName(child.getName());
                 doc.add(new Field(FieldNames.LABEL, name, Field.Store.NO, Field.Index.NO_NORMS, Field.TermVector.NO));
             }
         } catch (NoSuchItemStateException e) {
             throwRepositoryException(e);
         } catch (ItemStateException e) {
             throwRepositoryException(e);
-        } catch (NoPrefixDeclaredException e) {
+        } catch (NamespaceException e) {
             // will never happen, because this.mappings will dynamically add
             // unknown uri<->prefix mappings
         }
 
         Set props = node.getPropertyNames();
         for (Iterator it = props.iterator(); it.hasNext();) {
-            QName propName = (QName) it.next();
+            Name propName = (Name) it.next();
             PropertyId id = new PropertyId(node.getNodeId(), propName);
             try {
                 PropertyState propState = (PropertyState) stateProvider.getItemState(id);
@@ -248,11 +253,11 @@ public class NodeIndexer {
      * @param doc  the lucene document.
      * @param name the name of the multi-value property.
      */
-    private void addMVPName(Document doc, QName name) {
+    private void addMVPName(Document doc, Name name) {
         try {
-            String propName = NameFormat.format(name, mappings);
+            String propName = resolver.getJCRName(name);
             doc.add(new Field(FieldNames.MVP, propName, Field.Store.NO, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
-        } catch (NoPrefixDeclaredException e) {
+        } catch (NamespaceException e) {
             // will never happen, prefixes are created dynamically
         }
     }
@@ -264,11 +269,11 @@ public class NodeIndexer {
      * @param value the internal jackrabbit value.
      * @param name  the name of the property.
      */
-    private void addValue(Document doc, InternalValue value, QName name) {
+    private void addValue(Document doc, InternalValue value, Name name) {
         String fieldName = name.getLocalName();
         try {
-            fieldName = NameFormat.format(name, mappings);
-        } catch (NoPrefixDeclaredException e) {
+            fieldName = resolver.getJCRName(name);
+        } catch (NamespaceException e) {
             // will never happen
         }
         switch (value.getType()) {
@@ -310,7 +315,7 @@ public class NodeIndexer {
             case PropertyType.STRING:
                 if (isIndexed(name)) {
                     // never fulltext index jcr:uuid String
-                    if (name.equals(QName.JCR_UUID)) {
+                    if (name.equals(NameConstants.JCR_UUID)) {
                         addStringValue(doc, fieldName, value.getString(),
                                 false, false, DEFAULT_BOOST);
                     } else {
@@ -324,8 +329,8 @@ public class NodeIndexer {
                 // jcr:primaryType and jcr:mixinTypes are required for correct
                 // node type resolution in queries
                 if (isIndexed(name) ||
-                        name.equals(QName.JCR_PRIMARYTYPE) ||
-                        name.equals(QName.JCR_MIXINTYPES)) {
+                        name.equals(NameConstants.JCR_PRIMARYTYPE) ||
+                        name.equals(NameConstants.JCR_MIXINTYPES)) {
                     addNameValue(doc, fieldName, value.getQName());
                 }
                 break;
@@ -340,11 +345,11 @@ public class NodeIndexer {
      * @param doc  the document.
      * @param name the name of the property.
      */
-    private void addPropertyName(Document doc, QName name) {
+    private void addPropertyName(Document doc, Name name) {
         String fieldName = name.getLocalName();
         try {
-            fieldName = NameFormat.format(name, mappings);
-        } catch (NoPrefixDeclaredException e) {
+            fieldName = resolver.getJCRName(name);
+        } catch (NamespaceException e) {
             // will never happen
         }
         doc.add(new Field(FieldNames.PROPERTIES_SET, fieldName, Field.Store.NO, Field.Index.NO_NORMS));
@@ -366,19 +371,19 @@ public class NodeIndexer {
                                   Object internalValue) {
         // 'check' if node is of type nt:resource
         try {
-            String jcrData = mappings.getPrefix(QName.NS_JCR_URI) + ":data";
+            String jcrData = mappings.getPrefix(Name.NS_JCR_URI) + ":data";
             if (!jcrData.equals(fieldName)) {
                 // don't know how to index
                 return;
             }
 
-            InternalValue typeValue = getValue(QName.JCR_MIMETYPE);
+            InternalValue typeValue = getValue(NameConstants.JCR_MIMETYPE);
             if (typeValue != null) {
                 String type = typeValue.getString();
 
                 // jcr:encoding is not mandatory
                 String encoding = null;
-                InternalValue encodingValue = getValue(QName.JCR_ENCODING);
+                InternalValue encodingValue = getValue(NameConstants.JCR_ENCODING);
                 if (encodingValue != null) {
                     encoding = encodingValue.getString();
                 }
@@ -404,7 +409,7 @@ public class NodeIndexer {
      * @return value of the named property, or <code>null</code>
      * @throws ItemStateException if the property can not be accessed
      */
-    protected InternalValue getValue(QName name) throws ItemStateException {
+    protected InternalValue getValue(Name name) throws ItemStateException {
         try {
             PropertyId id = new PropertyId(node.getNodeId(), name);
             PropertyState property =
@@ -524,8 +529,8 @@ public class NodeIndexer {
         Path path = (Path) internalValue;
         String pathString = path.toString();
         try {
-            pathString = PathFormat.format(path, mappings);
-        } catch (NoPrefixDeclaredException e) {
+            pathString = resolver.getJCRPath(path);
+        } catch (NamespaceException e) {
             // will never happen
         }
         doc.add(createFieldWithoutNorms(fieldName, pathString, false));
@@ -617,7 +622,7 @@ public class NodeIndexer {
      * @param internalValue The value for the field to add to the document.
      */
     protected void addNameValue(Document doc, String fieldName, Object internalValue) {
-        QName qualiName = (QName) internalValue;
+        Name qualiName = (Name) internalValue;
         String normValue = qualiName.toString();
         try {
             normValue = mappings.getPrefix(qualiName.getNamespaceURI())
@@ -692,7 +697,7 @@ public class NodeIndexer {
      * @return <code>true</code> if the property should be fulltext indexed;
      *         <code>false</code> otherwise.
      */
-    protected boolean isIndexed(QName propertyName) {
+    protected boolean isIndexed(Name propertyName) {
         if (indexingConfig == null) {
             return true;
         } else {
@@ -708,7 +713,7 @@ public class NodeIndexer {
      * @return <code>true</code> if it should be added to the node scope index;
      *         <code>false</code> otherwise.
      */
-    protected boolean isIncludedInNodeIndex(QName propertyName) {
+    protected boolean isIncludedInNodeIndex(Name propertyName) {
         if (indexingConfig == null) {
             return true;
         } else {
@@ -722,7 +727,7 @@ public class NodeIndexer {
      * @param propertyName the name of a property.
      * @return the boost value for the given property name.
      */
-    protected float getPropertyBoost(QName propertyName) {
+    protected float getPropertyBoost(Name propertyName) {
         if (indexingConfig == null) {
             return DEFAULT_BOOST;
         } else {

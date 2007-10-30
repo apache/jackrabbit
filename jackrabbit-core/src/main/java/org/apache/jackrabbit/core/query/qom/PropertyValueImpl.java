@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.qom;
 
-import org.apache.jackrabbit.name.NamePathResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.Name;
 
 import org.apache.jackrabbit.core.query.jsr283.qom.PropertyValue;
 
@@ -31,16 +31,16 @@ public class PropertyValueImpl
     /**
      * The name of the selector against which to apply this constraint.
      */
-    private final QName selectorName;
+    private final Name selectorName;
 
     /**
      * The name of the property.
      */
-    private final QName propertyName;
+    private final Name propertyName;
 
     PropertyValueImpl(NamePathResolver resolver,
-                      QName selectorName,
-                      QName propertyName) {
+                      Name selectorName,
+                      Name propertyName) {
         super(resolver);
         this.selectorName = selectorName;
         this.propertyName = propertyName;
@@ -51,7 +51,7 @@ public class PropertyValueImpl
      *
      * @return the selector name; non-null
      */
-    public QName getSelectorQName() {
+    public Name getSelectorQName() {
         return selectorName;
     }
 
@@ -60,7 +60,7 @@ public class PropertyValueImpl
      *
      * @return the property name; non-null
      */
-    public QName getPropertyQName() {
+    public Name getPropertyQName() {
         return propertyName;
     }
 

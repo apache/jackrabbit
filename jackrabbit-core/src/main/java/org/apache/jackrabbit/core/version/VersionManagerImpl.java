@@ -42,9 +42,11 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.name.PathBuilder;
+import org.apache.jackrabbit.conversion.MalformedPathException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,10 +79,10 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
 
     static {
         try {
-            Path.PathBuilder builder = new Path.PathBuilder();
+            PathBuilder builder = new PathBuilder();
             builder.addRoot();
-            builder.addLast(QName.JCR_SYSTEM);
-            builder.addLast(QName.JCR_VERSIONSTORAGE);
+            builder.addLast(NameConstants.JCR_SYSTEM);
+            builder.addLast(NameConstants.JCR_VERSIONSTORAGE);
             VERSION_STORAGE_PATH = builder.getPath();
         } catch (MalformedPathException e) {
             // will not happen. path is always valid
@@ -142,15 +144,15 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
             if (!pMgr.exists(rootId)) {
                 NodeState root = pMgr.createNew(rootId);
                 root.setParentId(rootParentId);
-                root.setDefinitionId(ntReg.getEffectiveNodeType(QName.REP_SYSTEM).getApplicableChildNodeDef(
-                        QName.JCR_VERSIONSTORAGE, QName.REP_VERSIONSTORAGE, ntReg).getId());
-                root.setNodeTypeName(QName.REP_VERSIONSTORAGE);
-                PropertyState pt = pMgr.createNew(new PropertyId(rootId, QName.JCR_PRIMARYTYPE));
-                pt.setDefinitionId(ntReg.getEffectiveNodeType(QName.REP_SYSTEM).getApplicablePropertyDef(
-                        QName.JCR_PRIMARYTYPE, PropertyType.NAME, false).getId());
+                root.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_SYSTEM).getApplicableChildNodeDef(
+                        NameConstants.JCR_VERSIONSTORAGE, NameConstants.REP_VERSIONSTORAGE, ntReg).getId());
+                root.setNodeTypeName(NameConstants.REP_VERSIONSTORAGE);
+                PropertyState pt = pMgr.createNew(new PropertyId(rootId, NameConstants.JCR_PRIMARYTYPE));
+                pt.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_SYSTEM).getApplicablePropertyDef(
+                        NameConstants.JCR_PRIMARYTYPE, PropertyType.NAME, false).getId());
                 pt.setMultiValued(false);
                 pt.setType(PropertyType.NAME);
-                pt.setValues(new InternalValue[]{InternalValue.create(QName.REP_VERSIONSTORAGE)});
+                pt.setValues(new InternalValue[]{InternalValue.create(NameConstants.REP_VERSIONSTORAGE)});
                 root.addPropertyName(pt.getName());
                 ChangeLog cl = new ChangeLog();
                 cl.added(root);
@@ -163,7 +165,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
             stateMgr.addListener(this);
 
             NodeState nodeState = (NodeState) stateMgr.getItemState(rootId);
-            historyRoot = new NodeStateEx(stateMgr, ntReg, nodeState, QName.JCR_VERSIONSTORAGE);
+            historyRoot = new NodeStateEx(stateMgr, ntReg, nodeState, NameConstants.JCR_VERSIONSTORAGE);
 
             // create the virtual item state provider
             versProvider = new VersionItemStateProvider(
@@ -249,14 +251,14 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
                         NodeStateEx pNode = new NodeStateEx(stateMgr, ntReg, state, null);
                         NodeId parentId = pNode.getParentId();
                         InternalVersionItem parent = getItem(parentId);
-                        QName ntName = state.getNodeTypeName();
-                        if (ntName.equals(QName.NT_FROZENNODE)) {
+                        Name ntName = state.getNodeTypeName();
+                        if (ntName.equals(NameConstants.NT_FROZENNODE)) {
                             item = new InternalFrozenNodeImpl(this, pNode, parent);
-                        } else if (ntName.equals(QName.NT_VERSIONEDCHILD)) {
+                        } else if (ntName.equals(NameConstants.NT_VERSIONEDCHILD)) {
                             item = new InternalFrozenVHImpl(this, pNode, parent);
-                        } else if (ntName.equals(QName.NT_VERSION)) {
+                        } else if (ntName.equals(NameConstants.NT_VERSION)) {
                             item = ((InternalVersionHistory) parent).getVersion(id);
-                        } else if (ntName.equals(QName.NT_VERSIONHISTORY)) {
+                        } else if (ntName.equals(NameConstants.NT_VERSIONHISTORY)) {
                             item = new InternalVersionHistoryImpl(this, pNode);
                         } else {
                             return null;
@@ -285,7 +287,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
         InternalVersion version = (InternalVersion)
                 escFactory.doSourced((SessionImpl) node.getSession(), new SourcedTarget(){
             public Object run() throws RepositoryException {
-                String histUUID = node.getProperty(QName.JCR_VERSIONHISTORY).getString();
+                String histUUID = node.getProperty(NameConstants.JCR_VERSIONHISTORY).getString();
                 return checkin((InternalVersionHistoryImpl)
                         getVersionHistory(NodeId.valueOf(histUUID)), node);
             }
@@ -301,7 +303,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
-    public void removeVersion(VersionHistory history, final QName name)
+    public void removeVersion(VersionHistory history, final Name name)
             throws VersionException, RepositoryException {
 
         final VersionHistoryImpl historyImpl = (VersionHistoryImpl) history;
@@ -327,7 +329,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      * item-reading listeners in the observation thread.
      */
     public Version setVersionLabel(final VersionHistory history,
-                                   final QName version, final QName label,
+                                   final Name version, final Name label,
                                    final boolean move)
             throws RepositoryException {
 

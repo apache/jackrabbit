@@ -26,8 +26,9 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.name.NameFactoryImpl;
 
 import javax.jcr.PropertyType;
 import java.io.DataInputStream;
@@ -94,7 +95,7 @@ public final class Serializer {
         c = state.getPropertyNames();
         out.writeInt(c.size()); // count
         for (Iterator iter = c.iterator(); iter.hasNext();) {
-            QName propName = (QName) iter.next();
+            Name propName = (Name) iter.next();
             out.writeUTF(propName.toString());   // name
         }
         // child nodes (list of name/uuid pairs)
@@ -122,7 +123,7 @@ public final class Serializer {
 
         // primaryType
         String s = in.readUTF();
-        state.setNodeTypeName(QName.valueOf(s));
+        state.setNodeTypeName(NameFactoryImpl.getInstance().create(s));
         // parentUUID (may be null)
         byte[] uuidBytes = new byte[UUID.UUID_BYTE_LENGTH];
         in.readFully(uuidBytes);
@@ -136,7 +137,7 @@ public final class Serializer {
         int count = in.readInt();   // count
         Set set = new HashSet(count);
         for (int i = 0; i < count; i++) {
-            set.add(QName.valueOf(in.readUTF())); // name
+            set.add(NameFactoryImpl.getInstance().create(in.readUTF())); // name
         }
         if (set.size() > 0) {
             state.setMixinTypeNames(set);
@@ -147,12 +148,12 @@ public final class Serializer {
         // properties (names)
         count = in.readInt();   // count
         for (int i = 0; i < count; i++) {
-            state.addPropertyName(QName.valueOf(in.readUTF())); // name
+            state.addPropertyName(NameFactoryImpl.getInstance().create(in.readUTF())); // name
         }
         // child nodes (list of name/uuid pairs)
         count = in.readInt();   // count
         for (int i = 0; i < count; i++) {
-            QName name = QName.valueOf(in.readUTF());    // name
+            Name name = NameFactoryImpl.getInstance().create(in.readUTF());    // name
             // uuid
             in.readFully(uuidBytes);
             state.addChildNodeEntry(name, new NodeId(new UUID(uuidBytes)));

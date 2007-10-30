@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
 
 import javax.jcr.version.VersionException;
@@ -57,14 +57,14 @@ public interface InternalFrozenNode extends InternalFreeze {
      *
      * @return the name of the frozen primary type.
      */
-    QName getFrozenPrimaryType();
+    Name getFrozenPrimaryType();
 
     /**
      * Returns the list of names of the frozen mixin types.
      *
      * @return the list of names of the frozen mixin types.
      */
-    QName[] getFrozenMixinTypes();
+    Name[] getFrozenMixinTypes();
 
     /**
      * Checks if this frozen node has the frozen version history

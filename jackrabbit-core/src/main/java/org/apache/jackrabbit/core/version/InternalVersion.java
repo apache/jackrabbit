@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.version.Version;
 import java.util.Calendar;
@@ -31,7 +31,7 @@ public interface InternalVersion extends InternalVersionItem {
      *
      * @return the name of this version.
      */
-    QName getName();
+    Name getName();
 
     /**
      * Returns the frozen node of this version or <code>null</code> if this is
@@ -95,12 +95,12 @@ public interface InternalVersion extends InternalVersionItem {
      * @return <code>true</code> if the label is assigned to this version;
      *         <code>false</code> otherwise.
      */
-    boolean hasLabel(QName label);
+    boolean hasLabel(Name label);
 
     /**
      * returns the labels that are assigned to this version
      *
      * @return a string array of labels.
      */
-    QName[] getLabels();
+    Name[] getLabels();
 }

@@ -22,8 +22,8 @@ import java.util.Map;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
@@ -175,7 +175,7 @@ public class ImportHandler extends DefaultHandler {
         if (targetHandler == null) {
             // the namespace of the first element determines the type of XML
             // (system view/document view)
-            if (QName.NS_SV_URI.equals(namespaceURI)) {
+            if (Name.NS_SV_URI.equals(namespaceURI)) {
                 targetHandler = new SysViewImportHandler(importer);
             } else {
                 targetHandler = new DocViewImportHandler(importer);

@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core.xml;
 
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.DefaultNamePathResolver;
 
 import java.util.Map;
 
@@ -40,6 +42,8 @@ abstract class TargetImportHandler extends DefaultHandler {
      * that is currently being processed.
      */
     protected NamespaceContext nsContext;
+
+    protected NamePathResolver resolver;
 
     protected TargetImportHandler(Importer importer) {
         this.importer = importer;
@@ -87,6 +91,7 @@ abstract class TargetImportHandler extends DefaultHandler {
      */
     public final void startNamespaceContext(Map mappings) {
         nsContext = new NamespaceContext(nsContext, mappings);
+        resolver = new DefaultNamePathResolver(nsContext);
     }
 
     /**

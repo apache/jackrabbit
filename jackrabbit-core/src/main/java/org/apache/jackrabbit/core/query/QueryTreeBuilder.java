@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
-
 import javax.jcr.query.InvalidQueryException;
+
+import org.apache.jackrabbit.conversion.NameResolver;
 
 /**
  * Specifies an interface for a query tree builder.
@@ -30,14 +30,14 @@ public interface QueryTreeBuilder {
      * query node factory.
      *
      * @param statement the statement.
-     * @param resolver  the namespace resolver to use.
+     * @param resolver  the name resolver to use.
      * @param factory   the query node factory to use.
      * @return the <code>QueryNode</code> tree for the statement.
      * @throws javax.jcr.query.InvalidQueryException
      *          if the statement is malformed.
      */
     QueryRootNode createQueryTree(String statement,
-                                  NamespaceResolver resolver,
+                                  NameResolver resolver,
                                   QueryNodeFactory factory)
             throws InvalidQueryException;
 
@@ -50,7 +50,7 @@ public interface QueryTreeBuilder {
      *         <code>false</code> otherwise.
      */
     boolean canHandle(String language);
-    
+
     /**
      * Returns the set of query languages supported by this builder.
      * 
@@ -63,13 +63,13 @@ public interface QueryTreeBuilder {
      * <code>QueryTreeBuilder</code> can handle.
      *
      * @param root     the root of the query node tree.
-     * @param resolver to resolve QNames.
+     * @param resolver to resolve Names.
      * @return a String representation of the query node tree.
      * @throws InvalidQueryException if the query node tree cannot be converted
      *                               into a String representation due to
      *                               restrictions in this syntax.
      */
-    String toString(QueryRootNode root, NamespaceResolver resolver)
+    String toString(QueryRootNode root, NameResolver resolver)
             throws InvalidQueryException;
 
 }

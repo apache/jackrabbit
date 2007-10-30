@@ -22,7 +22,7 @@ import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -148,7 +148,7 @@ public class PropertyState extends ItemState {
      *
      * @return the name of this property.
      */
-    public QName getName() {
+    public Name getName() {
         return id.getName();
     }
 
@@ -237,7 +237,7 @@ public class PropertyState extends ItemState {
         private boolean multiValued;
         private PropDefId defId;
 
-        we assume an average QName localname of 30 chars.
+        we assume an average Name localname of 30 chars.
         PropertyId = 8 + nodeId(36) * name(250) + hash(4) ~ 300;
         NodeDefId = 8 + id(4) = 12
         InternalValue = 8 + n * (values) ~ 8 + n*100;
