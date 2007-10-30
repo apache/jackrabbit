@@ -78,11 +78,11 @@ public class ExportDocViewTest extends AbstractJCRTest {
     private final boolean NORECURSE = true, RECURSE = false;
 
     /**
-     * Resolved QName for jcr:xmltext
+     * Resolved Name for jcr:xmltext
      */
     private String JCR_XMLTEXT;
     /**
-     * Resolved QName for jcr:xmlcharacters
+     * Resolved Name for jcr:xmlcharacters
      */
     private String JCR_XMLDATA;
     /**
