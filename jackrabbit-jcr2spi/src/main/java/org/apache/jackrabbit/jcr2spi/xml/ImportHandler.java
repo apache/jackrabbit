@@ -16,24 +16,24 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
+import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.conversion.ParsingNameResolver;
 import org.apache.jackrabbit.namespace.AbstractNamespaceResolver;
 import org.apache.jackrabbit.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
-import org.apache.jackrabbit.conversion.NameResolver;
-import org.apache.jackrabbit.conversion.ParsingNameResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.NamespaceSupport;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 
 import javax.jcr.NamespaceException;
-import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceRegistry;
+import javax.jcr.RepositoryException;
 
 /**
  * An <code>ImportHandler</code> instance can be used to import serialized

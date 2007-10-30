@@ -16,17 +16,17 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.name.NameConstants;
 import org.apache.jackrabbit.conversion.NameException;
 import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.Name;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
 import javax.jcr.InvalidSerializedDataException;
+import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.NamespaceException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;

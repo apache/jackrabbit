@@ -20,11 +20,11 @@ import org.apache.jackrabbit.conversion.NameException;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.value.ValueHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 
 import javax.jcr.Node;
 import javax.jcr.Property;

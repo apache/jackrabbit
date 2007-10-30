@@ -16,21 +16,20 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
+import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
-import org.apache.jackrabbit.name.NameConstants;
-import org.apache.jackrabbit.conversion.NameResolver;
 import org.apache.jackrabbit.util.ISO9075;
-import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 
+import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.NamespaceException;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;

@@ -16,11 +16,10 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.RepositoryException;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.util.List;
