@@ -46,7 +46,7 @@ import javax.jcr.Repository;
  */
 public class TextNodeTest extends AbstractQueryTest {
 
-    /** Resolved QName for jcr:xmltext */
+    /** Resolved Name for jcr:xmltext */
     private String jcrXMLText;
 
     private String jcrXMLCharacters;
