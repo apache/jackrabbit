@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.xpath;
 
+import org.apache.jackrabbit.conversion.IllegalNameException;
 import org.apache.jackrabbit.conversion.MalformedPathException;
 import org.apache.jackrabbit.conversion.NameResolver;
 import org.apache.jackrabbit.core.query.DerefQueryNode;
@@ -770,11 +771,12 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      */
     private QueryNode createFunction(SimpleNode node, QueryNode queryNode) {
         // find out function name
-        String fName = ((SimpleNode) node.jjtGetChild(0)).getValue();
-        fName = fName.substring(0, fName.length() - 1);
+        String tmp = ((SimpleNode) node.jjtGetChild(0)).getValue();
+        String fName = tmp.substring(0, tmp.length() - 1);
         try {
-            if (resolver.getJCRName(FN_NOT).equals(fName)
-                    || resolver.getJCRName(FN_NOT_10).equals(fName)) {
+            Name funName = resolver.getQName(fName);
+            
+            if (FN_NOT.equals(funName) || FN_NOT_10.equals(funName)) {
                 if (queryNode instanceof NAryQueryNode) {
                     QueryNode not = factory.createNotQueryNode(queryNode);
                     ((NAryQueryNode) queryNode).addOperand(not);
@@ -789,7 +791,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for function fn:not"));
                 }
-            } else if (resolver.getJCRName(XS_DATETIME).equals(fName)) {
+            } else if (XS_DATETIME.equals(funName)) {
                 // check arguments
                 if (node.jjtGetNumChildren() == 2) {
                     if (queryNode instanceof RelationQueryNode) {
@@ -815,7 +817,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     // wrong number of arguments
                     exceptions.add(new InvalidQueryException("Wrong number of arguments for xs:dateTime"));
                 }
-            } else if (resolver.getJCRName(JCR_CONTAINS).equals(fName)) {
+            } else if (JCR_CONTAINS.equals(funName)) {
                 // check number of arguments
                 if (node.jjtGetNumChildren() == 3) {
                     if (queryNode instanceof NAryQueryNode) {
@@ -835,7 +837,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     // wrong number of arguments
                     exceptions.add(new InvalidQueryException("Wrong number of arguments for jcr:contains"));
                 }
-            } else if (resolver.getJCRName(JCR_LIKE).equals(fName)) {
+            } else if (JCR_LIKE.equals(funName)) {
                 // check number of arguments
                 if (node.jjtGetNumChildren() == 3) {
                     if (queryNode instanceof NAryQueryNode) {
@@ -863,21 +865,21 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     // wrong number of arguments
                     exceptions.add(new InvalidQueryException("Wrong number of arguments for jcr:like"));
                 }
-            } else if (resolver.getJCRName(FN_TRUE).equals(fName)) {
+            } else if (FN_TRUE.equals(funName)) {
                 if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                     RelationQueryNode rel = (RelationQueryNode) queryNode;
                     rel.setStringValue("true");
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for true()"));
                 }
-            } else if (resolver.getJCRName(FN_FALSE).equals(fName)) {
+            } else if (FN_FALSE.equals(funName)) {
                 if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                     RelationQueryNode rel = (RelationQueryNode) queryNode;
                     rel.setStringValue("false");
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for false()"));
                 }
-            } else if (resolver.getJCRName(FN_POSITION).equals(fName)) {
+            } else if (FN_POSITION.equals(funName)) {
                 if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                     RelationQueryNode rel = (RelationQueryNode) queryNode;
                     if (rel.getOperation() == RelationQueryNode.OPERATION_EQ_GENERAL) {
@@ -891,7 +893,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for position()"));
                 }
-            } else if (resolver.getJCRName(FN_FIRST).equals(fName)) {
+            } else if (FN_FIRST.equals(funName)) {
                 if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                     ((RelationQueryNode) queryNode).setPositionValue(1);
                 } else if (queryNode.getType() == QueryNode.TYPE_LOCATION) {
@@ -899,7 +901,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for first()"));
                 }
-            } else if (resolver.getJCRName(FN_LAST).equals(fName)) {
+            } else if (FN_LAST.equals(funName)) {
                 if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                     ((RelationQueryNode) queryNode).setPositionValue(LocationStepQueryNode.LAST);
                 } else if (queryNode.getType() == QueryNode.TYPE_LOCATION) {
@@ -907,7 +909,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for last()"));
                 }
-            } else if (resolver.getJCRName(JCR_DEREF).equals(fName)) {
+            } else if (JCR_DEREF.equals(funName)) {
                 // check number of arguments
                 if (node.jjtGetNumChildren() == 3) {
                     boolean descendant = false;
@@ -965,13 +967,13 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                         exceptions.add(new InvalidQueryException("Unsupported location for jcr:deref()"));
                     }
                 }
-            } else if (resolver.getJCRName(JCR_SCORE).equals(fName)) {
+            } else if (JCR_SCORE.equals(funName)) {
                 if (queryNode.getType() == QueryNode.TYPE_ORDER) {
                     createOrderSpec(node, (OrderQueryNode) queryNode);
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for jcr:score()"));
                 }
-            } else if (resolver.getJCRName(FN_LOWER_CASE).equals(fName)) {
+            } else if (FN_LOWER_CASE.equals(funName)) {
                 if (node.jjtGetNumChildren() == 2) {
                     if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                         RelationQueryNode relNode = (RelationQueryNode) queryNode;
@@ -985,7 +987,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 } else {
                     exceptions.add(new InvalidQueryException("Wrong number of argument for fn:lower-case()"));
                 }
-            } else if (resolver.getJCRName(FN_UPPER_CASE).equals(fName)) {
+            } else if (FN_UPPER_CASE.equals(funName)) {
                 if (node.jjtGetNumChildren() == 2) {
                     if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                         RelationQueryNode relNode = (RelationQueryNode) queryNode;
@@ -999,7 +1001,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for fn:upper-case()"));
                 }
-            } else if (resolver.getJCRName(REP_SIMILAR).equals(fName)) {
+            } else if (REP_SIMILAR.equals(funName)) {
                 if (node.jjtGetNumChildren() == 3) {
                     if (queryNode instanceof NAryQueryNode) {
                         NAryQueryNode parent = (NAryQueryNode) queryNode;
@@ -1024,7 +1026,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     exceptions.add(new InvalidQueryException(
                             "Wrong number of arguments for rep:similar()"));
                 }
-            } else if (resolver.getJCRName(REP_SPELLCHECK).equals(fName)
+            } else if (REP_SPELLCHECK.equals(funName)
                     && queryNode.getType() != QueryNode.TYPE_PATH) {
                 if (node.jjtGetNumChildren() == 2) {
                     if (queryNode instanceof NAryQueryNode) {
@@ -1073,6 +1075,8 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 exceptions.add(new InvalidQueryException("Unsupported function: " + fName));
             }
         } catch (NamespaceException e) {
+            exceptions.add(e);
+        } catch (IllegalNameException e) {
             exceptions.add(e);
         }
         return queryNode;
