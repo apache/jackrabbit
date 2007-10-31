@@ -16,16 +16,19 @@
  */
 package org.apache.jackrabbit.value;
 
+import org.apache.jackrabbit.name.NameConstants;
 import org.apache.jackrabbit.name.PathFactoryImpl;
 import org.apache.jackrabbit.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.jackrabbit.util.ISO8601;
+import org.apache.jackrabbit.uuid.UUID;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
@@ -185,6 +188,24 @@ public final class QValueFactoryImpl implements QValueFactory {
             throw new IllegalArgumentException("Cannot create QValue from null value.");
         }
         return new BinaryQValue(value);
+    }
+
+    /**
+     * @see QValueFactory#computeAutoValues(QPropertyDefinition)
+     */
+    public QValue[] computeAutoValues(QPropertyDefinition propertyDefinition) throws RepositoryException {
+        Name nodeType = propertyDefinition.getDeclaringNodeType();
+        Name name = propertyDefinition.getName();
+
+        if (NameConstants.NT_HIERARCHYNODE.equals(nodeType) && NameConstants.JCR_CREATED.equals(name)) {
+            return new QValue[] { create(Calendar.getInstance()) };
+        } else if (NameConstants.NT_RESOURCE.equals(nodeType) && NameConstants.JCR_LASTMODIFIED.equals(name)) {
+            return new QValue[] { create(Calendar.getInstance()) };
+        } else if (NameConstants.MIX_REFERENCEABLE.equals(nodeType) && NameConstants.JCR_UUID.equals(name)) {
+            return new QValue[] { create(UUID.randomUUID().toString(), PropertyType.STRING) };
+        } else {
+            throw new RepositoryException("createFromDefinition not implemented for: " + name);
+        }
     }
 
     //--------------------------------------------------------< Inner Class >---

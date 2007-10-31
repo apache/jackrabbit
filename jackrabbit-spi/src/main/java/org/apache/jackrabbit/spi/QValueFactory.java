@@ -114,4 +114,15 @@ public interface QValueFactory {
      * @throws IOException
      */
     public QValue create(File value) throws RepositoryException, IOException;
+    
+    /**
+     * Given the <code>QPropertyDefinition</code> of an <em>autocreated</em>
+     * property, compute suitable values to be used in transient space until
+     * the newly created node gets saved.
+     * 
+     * @param propertyDefinition definition of property for which values should be created
+     * @return computed value
+     * @throws RepositoryException
+     */
+    public QValue[] computeAutoValues(QPropertyDefinition propertyDefinition) throws RepositoryException;
 }
