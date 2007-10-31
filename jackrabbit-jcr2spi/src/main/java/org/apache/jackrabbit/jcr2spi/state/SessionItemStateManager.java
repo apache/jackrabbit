@@ -54,7 +54,6 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.name.NameConstants;
 
 import javax.jcr.InvalidItemStateException;
@@ -74,7 +73,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.lock.LockException;
 import java.util.Iterator;
-import java.util.Calendar;
 import java.io.InputStream;
 
 /**
@@ -712,31 +710,18 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             // properties without default values
             Name declaringNT = def.getDeclaringNodeType();
             Name name = def.getName();
-            if (NameConstants.MIX_REFERENCEABLE.equals(declaringNT) && NameConstants.JCR_UUID.equals(name)) {
-                // mix:referenceable node type defines jcr:uuid
-                genValues = getQValues(parent.getUniqueID(), qValueFactory);
-            } else if (NameConstants.NT_BASE.equals(declaringNT)) {
-                // nt:base node type
-                if (NameConstants.JCR_PRIMARYTYPE.equals(name)) {
-                    // jcr:primaryType property
-                    genValues = new QValue[]{qValueFactory.create(parent.getNodeTypeName())};
-                } else if (NameConstants.JCR_MIXINTYPES.equals(name)) {
-                    // jcr:mixinTypes property
-                    Name[] mixins = parent.getMixinTypeNames();
-                    genValues = getQValues(mixins, qValueFactory);
-                }
-            } else if (NameConstants.NT_HIERARCHYNODE.equals(declaringNT) && NameConstants.JCR_CREATED.equals(name)) {
-                // nt:hierarchyNode node type defines jcr:created property
-                genValues = new QValue[]{qValueFactory.create(Calendar.getInstance())};
-            } else if (NameConstants.NT_RESOURCE.equals(declaringNT) && NameConstants.JCR_LASTMODIFIED.equals(name)) {
-                // nt:resource node type defines jcr:lastModified property
-                genValues = new QValue[]{qValueFactory.create(Calendar.getInstance())};
-            } else if (NameConstants.NT_VERSION.equals(declaringNT) && NameConstants.JCR_CREATED.equals(name)) {
-                // nt:version node type defines jcr:created property
-                genValues = new QValue[]{qValueFactory.create(Calendar.getInstance())};
-            } else {
-                // TODO: TOBEFIXED. other nodetype -> build some default value
-                log.warn("Missing implementation. Nodetype " + def.getDeclaringNodeType() + " defines autocreated property " + def.getName() + " without default value.");
+
+            if (NameConstants.NT_BASE.equals(declaringNT) && NameConstants.JCR_PRIMARYTYPE.equals(name)) {
+                // jcr:primaryType property
+                genValues = new QValue[]{qValueFactory.create(parent.getNodeTypeName())};
+            } else if (NameConstants.NT_BASE.equals(declaringNT) && NameConstants.JCR_MIXINTYPES.equals(name)) {
+                // jcr:mixinTypes property
+                Name[] mixins = parent.getMixinTypeNames();
+                genValues = getQValues(mixins, qValueFactory);
+            }
+            else {
+                // ask the SPI implementation for advice
+                genValues = qValueFactory.computeAutoValues(def);
             }
         }
         return genValues;
@@ -756,9 +741,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     }
 
     private static QValue[] getQValues(String uniqueID, QValueFactory factory) throws RepositoryException {
-        if (uniqueID == null) {
-            uniqueID = UUID.randomUUID().toString();
-        }
         return new QValue[] {factory.create(uniqueID, PropertyType.STRING)};
     }
 }
