@@ -101,6 +101,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>javacc-maven-plugin</artifactId>
+	<version>2.1</version>
         <executions>
           <execution>
             <id>fulltext-jjtree</id>
