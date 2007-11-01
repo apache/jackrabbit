@@ -416,7 +416,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             // read ddl from resources
             InputStream in = BundleDbPersistenceManager.class.getResourceAsStream(schema + ".ddl");
             if (in == null) {
-                String msg = "Configuration error: unknown schema '" + schema + "'";
+                String msg = "Configuration error: The resource '" + schema + ".ddl' could not be found";
                 log.debug(msg);
                 throw new RepositoryException(msg);
             }
@@ -435,7 +435,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                     sql = reader.readLine();
                 }
             } catch (IOException e) {
-                String msg = "Configuration error: unable to read schema '" + schema + "': " + e;
+                String msg = "Configuration error: unable to read the resource '" + schema + ".ddl': " + e;
                 log.debug(msg);
                 throw new RepositoryException(msg, e);
             } finally {
