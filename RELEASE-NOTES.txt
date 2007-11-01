@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 1.3
+Release Notes -- Apache Jackrabbit -- Version 1.4
 
 Introduction
 ------------
@@ -10,11 +10,9 @@ content, full text search, versioning, transactions, observation, and
 more. Typical applications that use content repositories include content
 management, document management, and records management systems.
 
-Apache Jackrabbit 1.3 is an incremental feature release. The most notable
-changes in this release are support for query result highlighting,
-performance improvements thanks to a new bundle persistence manager,
-and a new classloader component for loading Java classes from a content
-repository. Many smaller improvements and bug fixes are also included.
+Apache Jackrabbit 1.4 is an incremental feature release. The most notable
+changes in this release are ... Many smaller improvements and bug fixes
+are also included.
 
 See the Apache Jackrabbit website at http://jackrabbit.apache.org/ for more
 information.
@@ -24,93 +22,9 @@ Changes in this release
 
 New features
 
-  [JCR-650] - SimpleJbossAccessManager
-  [JCR-755] - Add Bundle Persistence Managers
-  [JCR-757] - Allow multiple producers to feed/consume journal
-  [JCR-820] - Add support for query result highlighting
-  [JCR-837] - MatchAllQuery does not implement extractTerms()
-  [JCR-850] - Promote the classloader component from contrib
-
 Improvements
 
-  [JCR-390] - Move text extraction into a background thread
-  [JCR-415] - Enhance indexing of binary content
-  [JCR-689] - Minimize calls to PersistenceManager
-  [JCR-694] - Remove query handler idleTime
-  [JCR-697] - .war distribution should be configurable, prompting you ...
-  [JCR-701] - Upgrade to Xerces 2.8.1
-  [JCR-704] - Enable maven-source-plugin
-  [JCR-706] - RTFTextExtractor should also support mime type text/rtf
-  [JCR-717] - Upgrade to SLF4J 1.3
-  [JCR-725] - Configuration of CacheManager memory sizes
-  [JCR-726] - Improve NodeTypeRegistry.effectiveNodeType()
-  [JCR-734] - Update namespace uri for prefix fn
-  [JCR-749] - Add myqsql ddl for clustering (DatabaseJournal)
-  [JCR-760] - Default blob size for mysql ddl too small
-  [JCR-765] - DatabasePersistenceManager: don't log exceptions for each ...
-  [JCR-766] - Remove Maven 1 files
-  [JCR-767] - Use Maven dependency management
-  [JCR-770] - Path should implement Serializable
-  [JCR-776] - More verbose message on reference constraint violation
-  [JCR-791] - Improve performance of MatchAllScorer
-  [JCR-801] - Support for single-workspace repositories
-  [JCR-803] - Improve performance of DescendantSelfAxisQuery
-  [JCR-804] - Avoid using MultiTermDocs
-  [JCR-805] - Introduce a temprary cache for intermediate query results
-  [JCR-807] - UUIDDocId should check IndexReader using equals()
-  [JCR-808] - Better error message for non-trivial nodetype changes
-  [JCR-809] - Misleading method names in SetValueBinaryTest
-  [JCR-810] - Typos in method names in test classes ...
-  [JCR-818] - test granularity for calendar (date) properties
-  [JCR-830] - SetValueBinaryTest: some repositories have constraints on ...
-  [JCR-846] - support for DB2 in BundleDbPersistenceManager
-
 Bug fixes
-
-  [JCR-622] - Auto Reconnect for RMI Repository
-  [JCR-692] - XMLPersistenceManager fails after creating too many ...
-  [JCR-700] - Tests fail with NoClassDefFoundError: org/w3c/dom/...
-  [JCR-705] - PdfTextExtractor does not close temp file in case of ...
-  [JCR-719] - XPath parser ignores parent axis
-  [JCR-720] - TCK: NodeReadMethodsTest#testGetPrimaryItemItemNot...
-  [JCR-724] - PropertyReadMethodsTest.testIsSame leaks session
-  [JCR-727] - NamespaceRegistryTest uses an invalid URI as namespace URI
-  [JCR-737] - unexpected session is used in XATest.testAddNodeCommit()
-  [JCR-739] - String literal must not interpret entity references
-  [JCR-743] - XA Transaction Recovery
-  [JCR-745] - TCK: more tests assuming that 'addMixin' immediately ...
-  [JCR-746] - TCK: check for wrong repository descriptor. should be ...
-  [JCR-747] - TCK: observation tests are too restrictive
-  [JCR-753] - Creation of JavaDoc fails on jackrabbit-jcr-server
-  [JCR-756] - Concurrent add/remove child node operations in a ...
-  [JCR-773] - Under heavy load, database journal may contain empty ...
-  [JCR-780] - Simultaneous updates by multiple sessions might not ...
-  [JCR-782] - TCK: LockTest.testGetLock compares Nodes with equals
-  [JCR-783] - TCK: SerializationTest.helpTestSaxException casts ...
-  [JCR-785] - Updates to multiple workspaces (e.g. in a transaction) ...
-  [JCR-786] - OracleBundlePersistenceManager needs special blob ...
-  [JCR-787] - Missing equals and hashcode preventing the re-use of ...
-  [JCR-792] - after enabling access manager, I can't createNode and ...
-  [JCR-795] - Sessions are not logged out in case of exceptions
-  [JCR-796] - AbstractQueryTest does not handle unknown result size ...
-  [JCR-797] - Typo in the deploy/jboss/4.x/jcr-ds.xml file
-  [JCR-798] - ConcurrentModificationException during logout
-  [JCR-806] - Scorer.skipTo() does not initialize hits
-  [JCR-814] - Oracle bundle PM fails checking schema if 2 users use ...
-  [JCR-815] - SQLException with OracleBundle PM in name index
-  [JCR-816] - MSSql and MySQL bunlde PM schemas missing definition for ...
-  [JCR-821] - Document View Import: ISO 9075-encoded element/attribute ...
-  [JCR-824] - Problems with File Copy using WebDAV
-  [JCR-825] - WebDAV: LocatorFactoryImplEx doesn't properly evaluate ...
-  [JCR-827] - SetValueFormatExceptiontest.testNode() relies on ...
-  [JCR-828] - CheckPermissionTest-testCheckPermission() doesn't allow ...
-  [JCR-831] - NPE Exception Thrown By AbstractJournal During Commit Operation
-  [JCR-835] - Java 1.4 compile error in Eclipse
-  [JCR-838] - bad assumptions/error handling in SetValueVersionExceptionTest:
-  [JCR-841] - BundleDbPersistenceManager does not work with MySQL
-  [JCR-844] - ArrayStoreException while reregistering existing node types
-  [JCR-842] - support stores where binary properties are mandatory ...
-  [JCR-849] - Bundle persistence name index not case-sensitive in MySQL ...
 
 Release Contents
 ----------------
@@ -118,65 +32,65 @@ Release Contents
 The release consists of a single source archive and a number of
 pre-compiled binary component archives.
 
-    * Jackrabbit source code (jackrabbit-1.3-src.jar)
+    * Jackrabbit source code (jackrabbit-1.4-src.jar)
 
-        The main source archive contains a "jackrabbit-1.3-src" directory
+        The main source archive contains a "jackrabbit-1.4-src" directory
         with the full released source code and build environment. Use the
         following commands (or the equivalent in your system) to build all
         the released components with Maven 2:
 
-          $ jar xf jackrabbit-1.3-src.jar
-          $ cd jackrabbit-1.3-src
+          $ jar xf jackrabbit-1.4-src.jar
+          $ cd jackrabbit-1.4-src
           $ mvn install
 
 The components contained in the released source archive are listed below
 (with the pre-compiled binary archives in parenthesis):
 
-    * Jackrabbit API (jackrabbit-api-1.3.jar)
+    * Jackrabbit API (jackrabbit-api-1.4.jar)
 
         Interface extensions that Apache Jackrabbit supports in
         addition to the standard JCR API.
 
-    * Jackrabbit JCR Commons (jackrabbit-jcr-commons-1.3.jar)
+    * Jackrabbit JCR Commons (jackrabbit-jcr-commons-1.4.jar)
 
         General-purpose classes for use with the JCR API.
 
-    * Jackrabbit JCR Tests (jackrabbit-jcr-tests-1.3.jar)
+    * Jackrabbit JCR Tests (jackrabbit-jcr-tests-1.4.jar)
 
         Set of JCR API test cases designed for testing the compliance
         of an implementation. Note that this is not the official JCR TCK!
 
-    * Jackrabbit Core (jackrabbit-core-1.3.jar)
+    * Jackrabbit Core (jackrabbit-core-1.4.jar)
 
         Core of the Apache Jackrabbit content repository implementation.
 
-    * Jackrabbit Index Filters (jackrabbit-index-filters-1.3.jar)
+    * Jackrabbit Index Filters (jackrabbit-index-filters-1.4.jar)
 
         Text indexing filters for Jackrabbit. Includes example filters
         for Adobe PDF and MS Excel, PowerPoint, and Word.
 
-    * Jackrabbit JCR-RMI (jackrabbit-jcr-rmi-1.3.jar)
+    * Jackrabbit JCR-RMI (jackrabbit-jcr-rmi-1.4.jar)
 
         RMI network layer for the JCR API.
 
-    * Jackrabbit WebDAV Library (jackrabbit-webdav-1.3.jar)
+    * Jackrabbit WebDAV Library (jackrabbit-webdav-1.4.jar)
 
         Interfaces and common utility classes used for building a
         WebDAV server or client.
 
-    * Jackrabbit JCR Server (jackrabbit-jcr-server-1.3.jar)
+    * Jackrabbit JCR Server (jackrabbit-jcr-server-1.4.jar)
 
         WebDAV servlet implementations based on JCR.
 
-    * Jackrabbit Repository Classloader (jackrabbit-classloader-1.3.jar)
+    * Jackrabbit Repository Classloader (jackrabbit-classloader-1.4.jar)
 
         Java classloader for loading classes from JCR content repositories.
 
-    * Jackrabbit Web Application (jackrabbit-webapp-1.3.war)
+    * Jackrabbit Web Application (jackrabbit-webapp-1.4.war)
 
         Deployable Jackrabbit installation with WebDAV support for JCR.
 
-    * Jackrabbit JCA Resource Adapter (jackrabbit-jca-1.3.rar)
+    * Jackrabbit JCA Resource Adapter (jackrabbit-jca-1.4.rar)
 
         J2EE Connector Architecture (JCA) resource adapter for Jackrabbit.
 
