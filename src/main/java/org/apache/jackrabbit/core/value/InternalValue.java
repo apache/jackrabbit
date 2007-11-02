@@ -119,26 +119,22 @@ public class InternalValue {
         }
         switch (value.getType()) {
             case PropertyType.BINARY:
-                try {
-                    if (USE_DATA_STORE) {
-                        return new InternalValue(getBLOBFileValue(store, value.getStream()));
-                    }
-                    if (value instanceof BLOBFileValue) {
-                        return new InternalValue((BLOBFileValue) value);
-                    } else {
-                        InputStream stream = value.getStream();
+                if (USE_DATA_STORE) {
+                    return new InternalValue(getBLOBFileValue(store, value.getStream()));
+                }
+                if (value instanceof BLOBFileValue) {
+                    return new InternalValue((BLOBFileValue) value);
+                } else {
+                    InputStream stream = value.getStream();
+                    try {
+                        return createTemporary(stream);
+                    } finally {
                         try {
-                            return createTemporary(stream);
-                        } finally {
-                            try {
-                                stream.close();
-                            } catch (IOException e) {
-                                // ignore
-                            }
+                            stream.close();
+                        } catch (IOException e) {
+                            // ignore
                         }
                     }
-                } catch (IOException ioe) {
-                    throw new ValueFormatException(ioe.getMessage());
                 }
             case PropertyType.BOOLEAN:
                 return create(value.getBoolean());
@@ -227,11 +223,15 @@ public class InternalValue {
      * @param store the data store
      * @return the internal value
      */
-    public static InternalValue createTemporary(InputStream value) throws IOException {
+    public static InternalValue createTemporary(InputStream value) throws RepositoryException {
         if (USE_DATA_STORE) {        
             return new InternalValue(getBLOBFileValue(null, value));
         }
-        return new InternalValue(new BLOBValue(value, true));
+        try {
+            return new InternalValue(new BLOBValue(value, true));
+        } catch (IOException e) {
+            throw new RepositoryException("Error creating temporary file", e);
+        }
     }
     
     /**
@@ -243,11 +243,15 @@ public class InternalValue {
      * @param store the data store or null to use a temporary file
      * @return the internal value
      */
-    public static InternalValue createTemporary(InputStream value, DataStore store) throws IOException {
+    public static InternalValue createTemporary(InputStream value, DataStore store) throws RepositoryException {
         if (USE_DATA_STORE) {
             return new InternalValue(getBLOBFileValue(store, value));
         }
-        return new InternalValue(new BLOBValue(value, true));
+        try {
+            return new InternalValue(new BLOBValue(value, true));
+        } catch (IOException e) {
+            throw new RepositoryException("Error creating temporary file", e);
+        }
     }
 
     /**
@@ -256,11 +260,15 @@ public class InternalValue {
      * @return
      * @throws IOException
      */
-    public static InternalValue create(InputStream value) throws IOException {
+    public static InternalValue create(InputStream value) throws RepositoryException {
         if (USE_DATA_STORE) {
             return new InternalValue(getBLOBFileValue(null, value));
         }
-        return new InternalValue(new BLOBValue(value, false));
+        try {
+            return new InternalValue(new BLOBValue(value, false));
+        } catch (IOException e) {
+            throw new RepositoryException("Error creating file", e);
+        }
     }
 
     /**
@@ -447,19 +455,15 @@ public class InternalValue {
         }
         if (type == PropertyType.BINARY) {
             // return a copy since the wrapped BLOBFileValue instance is mutable
+            InputStream stream = ((BLOBFileValue) val).getStream();
             try {
-                InputStream stream = ((BLOBFileValue) val).getStream();
+                return createTemporary(stream);
+            } finally {
                 try {
-                    return createTemporary(stream);
-                } finally {
-                    try {
-                        stream.close();
-                    } catch (IOException e) {
-                        // ignore
-                    }
+                    stream.close();
+                } catch (IOException e) {
+                    // ignore
                 }
-            } catch (IOException ioe) {
-                throw new RepositoryException("failed to copy binary value", ioe);
             }
         } else {
             // for all other types it's safe to return 'this' because the
@@ -590,7 +594,7 @@ public class InternalValue {
         type = PropertyType.REFERENCE;
     }
     
-    private static BLOBFileValue getBLOBFileValue(DataStore store, InputStream in) throws IOException {
+    private static BLOBFileValue getBLOBFileValue(DataStore store, InputStream in) throws RepositoryException {
         int maxMemorySize;
         if (store != null) {
             maxMemorySize = store.getMinRecordLength() - 1;
@@ -600,13 +604,17 @@ public class InternalValue {
         maxMemorySize = Math.max(0, maxMemorySize);
         byte[] buffer = new byte[maxMemorySize];
         int pos = 0, len = maxMemorySize;
-        while (pos < maxMemorySize) {
-            int l = in.read(buffer, pos, len);
-            if (l < 0) {
-                break;
+        try {
+            while (pos < maxMemorySize) {
+                int l = in.read(buffer, pos, len);
+                if (l < 0) {
+                    break;
+                }
+                pos += l;
+                len -= l;
             }
-            pos += l;
-            len -= l;
+        } catch (IOException e) {
+            throw new RepositoryException("Could not read from stream", e);
         }
         if (pos < maxMemorySize) {
             // shrink the buffer

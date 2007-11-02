@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.data;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 
@@ -42,10 +41,10 @@ public interface DataStore {
      *
      * @param identifier data identifier
      * @return identified data record
-     * @throws IOException if the data store could not be accessed,
+     * @throws DataStoreException if the data store could not be accessed,
      *                     or if the given identifier is invalid
      */
-    DataRecord getRecord(DataIdentifier identifier) throws IOException;
+    DataRecord getRecord(DataIdentifier identifier) throws DataStoreException;
 
     /**
      * Creates a new data record. The given binary stream is consumed and
@@ -67,9 +66,9 @@ public interface DataStore {
      *
      * @param stream binary stream
      * @return data record that contains the given stream
-     * @throws IOException if the data store could not be accessed
+     * @throws DataStoreException if the data store could not be accessed
      */
-    DataRecord addRecord(InputStream stream) throws IOException;
+    DataRecord addRecord(InputStream stream) throws DataStoreException;
 
     /**
      * From now on, update the modified date of an object even when reading from it.

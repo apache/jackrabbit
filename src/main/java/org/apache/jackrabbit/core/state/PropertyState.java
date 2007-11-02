@@ -23,6 +23,8 @@ import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -35,6 +37,9 @@ import java.io.ObjectOutputStream;
  * <code>PropertyState</code> represents the state of a <code>Property</code>.
  */
 public class PropertyState extends ItemState {
+    
+    /** Logger instance */
+    private static Logger log = LoggerFactory.getLogger(PropertyState.class);
 
     /**
      * Serialization UID of this class.
@@ -305,51 +310,62 @@ public class PropertyState extends ItemState {
                     final long length = in.readLong();
                     final InputStream stream = in;
                     // create InputStream wrapper of size 'length'
-                    values[i] = InternalValue.create(new InputStream() {
-
-                        private long consumed = 0;
-
-                        public int read() throws IOException {
-                            if (consumed >= length) {
-                                return -1;  // eof
-                            }
-                            int b = stream.read();
-                            consumed++;
-                            return b;
-                        }
-
-                        public int read(byte[] b, int off, int len) throws IOException {
-                            if (consumed >= length) {
-                                return -1;  // eof
-                            }
-                            if ((consumed + len) > length) {
-                                len = (int) (length - consumed);
-                            }
-                            int read = stream.read(b, off, len);
-                            consumed += read;
-                            return read;
-                        }
-
-                        public long skip(long n) throws IOException {
-                            if (consumed >= length && n > 0) {
-                                return -1;  // eof
-                            }
-                            if ((consumed + n) > length) {
-                                n = length - consumed;
-                            }
-                            long skipped = stream.skip(n);
-                            consumed += skipped;
-                            return skipped;
-                        }
-
-                        public void close() {
-                            // nop
-                        }
-                    });
+                    try {
+                        values[i] = createInternalValueFromInputStream(stream, length);
+                    } catch (RepositoryException e) {
+                        String msg = "Failed to create internal value: " + e.getMessage();
+                        log.error(msg, e);
+                        throw new IOException(msg);
+                    }
+                    
                 } else {
                     values[i] = InternalValue.valueOf(in.readUTF(), type);
                 }
             }
         }
+    }
+    
+    private InternalValue createInternalValueFromInputStream(final InputStream stream, final long length) throws RepositoryException {
+        return InternalValue.create(new InputStream() {
+            
+            private long consumed = 0;
+
+            public int read() throws IOException {
+                if (consumed >= length) {
+                    return -1;  // eof
+                }
+                int b = stream.read();
+                consumed++;
+                return b;
+            }
+
+            public int read(byte[] b, int off, int len) throws IOException {
+                if (consumed >= length) {
+                    return -1;  // eof
+                }
+                if ((consumed + len) > length) {
+                    len = (int) (length - consumed);
+                }
+                int read = stream.read(b, off, len);
+                consumed += read;
+                return read;
+            }
+
+            public long skip(long n) throws IOException {
+                if (consumed >= length && n > 0) {
+                    return -1;  // eof
+                }
+                if ((consumed + n) > length) {
+                    n = length - consumed;
+                }
+                long skipped = stream.skip(n);
+                consumed += skipped;
+                return skipped;
+            }
+
+            public void close() {
+                // nop
+            }
+        });
     }
 }
