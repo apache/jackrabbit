@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import javax.jcr.NamespaceException;
-import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 
