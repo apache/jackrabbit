@@ -62,27 +62,15 @@
             <phase>process-test-resources</phase>
             <configuration>
               <tasks>
-                <ant
-                  antfile="${basedir}/build.xml"
-                  inheritRefs="true">
-                  <target name="prepareTestRepository" />
-                </ant>
-              </tasks>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>clean</id>
-            <phase>clean</phase>
-            <configuration>
-              <tasks>
-                <ant
-                  antfile="${basedir}/build.xml"
-                  inheritRefs="true">
-                  <target name="cleanTestData" />
-                </ant>
+                <copy todir="${project.build.directory}/repository">
+                  <fileset dir="${basedir}/src/test/repository"/>
+                </copy>
+                <copy file="${basedir}/src/test/repository/repository/namespaces/ns_reg.properties.install"
+                      tofile="${project.build.directory}/repository/repository/namespaces/ns_reg.properties"
+                      overwrite="true" />
+                <copy file="${basedir}/src/test/repository/repository/nodetypes/custom_nodetypes.xml.install"
+                      tofile="${project.build.directory}/repository/repository/nodetypes/custom_nodetypes.xml"
+                      overwrite="true" />
               </tasks>
             </configuration>
             <goals>
