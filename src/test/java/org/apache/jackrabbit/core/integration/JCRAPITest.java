@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.test;
+package org.apache.jackrabbit.core.integration;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -23,7 +23,7 @@ import org.apache.jackrabbit.test.JCRTestSuite;
 /**
  * Test suite that includes all test suites from jackrabbit-jcr-tests.
  */
-public class TestAll extends TestCase {
+public class JCRAPITest extends TestCase {
 
     public static Test suite() {
         return new JCRTestSuite();
