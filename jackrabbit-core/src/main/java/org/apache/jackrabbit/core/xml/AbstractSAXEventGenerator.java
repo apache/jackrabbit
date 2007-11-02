@@ -17,7 +17,10 @@
 package org.apache.jackrabbit.core.xml;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.conversion.DefaultNamePathResolver;
@@ -272,37 +275,32 @@ abstract class AbstractSAXEventGenerator {
         // enter properties
         enteringProperties(node, level);
 
+        // Collect all properties (and sort them, see JCR-1084)
+        SortedMap properties = new TreeMap();
+        PropertyIterator propIter = node.getProperties();
+        while (propIter.hasNext()) {
+            Property property = propIter.nextProperty();
+            properties.put(property.getName(), property);
+        }
+
         // serialize jcr:primaryType, jcr:mixinTypes & jcr:uuid first:
-        // jcr:primaryType
-        if (node.hasProperty(jcrPrimaryType)) {
-            process(node.getProperty(jcrPrimaryType), level + 1);
+        if (properties.containsKey(jcrPrimaryType)) {
+            process((Property) properties.remove(jcrPrimaryType), level + 1);
         } else {
-            String msg = "internal error: missing jcr:primaryType property on node "
-                    + node.getPath();
-            log.debug(msg);
-            throw new RepositoryException(msg);
+            throw new RepositoryException(
+                    "Missing jcr:primaryType property: " + node.getPath());
         }
-        // jcr:mixinTypes
-        if (node.hasProperty(jcrMixinTypes)) {
-            process(node.getProperty(jcrMixinTypes), level + 1);
+        if (properties.containsKey(jcrMixinTypes)) {
+            process((Property) properties.remove(jcrMixinTypes), level + 1);
         }
-        // jcr:uuid
-        if (node.hasProperty(jcrUUID)) {
-            process(node.getProperty(jcrUUID), level + 1);
+        if (properties.containsKey(jcrUUID)) {
+            process((Property) properties.remove(jcrUUID), level + 1);
         }
 
         // serialize remaining properties
-        PropertyIterator propIter = node.getProperties();
-        while (propIter.hasNext()) {
-            Property prop = propIter.nextProperty();
-            String name = prop.getName();
-            if (jcrPrimaryType.equals(name)
-                    || jcrMixinTypes.equals(name)
-                    || jcrUUID.equals(name)) {
-                continue;
-            }
-            // serialize property
-            process(prop, level + 1);
+        Iterator iterator = properties.values().iterator();
+        while (iterator.hasNext()) {
+            process((Property) iterator.next(), level + 1);
         }
 
         // leaving properties
