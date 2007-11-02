@@ -16,73 +16,56 @@
  */
 package org.apache.jackrabbit.core.data;
 
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
+import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.name.NameFactoryImpl;
 
-import java.io.InputStream;
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.List;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
-import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.Workspace;
+import javax.jcr.Value;
 
 public class NodeTypeTest extends AbstractJCRTest {
+
     
     /**
      * Test a node type with a binary default value
      * @throws RepositoryException 
      */
-    public void testNodeTypesWithBinaryDefaultValue() throws RepositoryException {
-        Session session = helper.getReadWriteSession();
-        NamespaceRegistry reg = session.getWorkspace().getNamespaceRegistry();
-        reg.registerNamespace("ns", "http://namespace.com/ns");
-        
+    public void testNodeTypesWithBinaryDefaultValue()
+            throws RepositoryException, IOException {
         doTestNodeTypesWithBinaryDefaultValue(0);
         doTestNodeTypesWithBinaryDefaultValue(10);
         doTestNodeTypesWithBinaryDefaultValue(10000);
     }
     
-    public void doTestNodeTypesWithBinaryDefaultValue(int len) {
-        try {
-            Session session = helper.getReadWriteSession();
-            Workspace ws = session.getWorkspace();
-            String d = new String(new char[len]).replace('\0', 'a');
-            Reader reader = new StringReader(
-                    "<ns = 'http://namespace.com/ns'>\n"
-                    + "[ns:foo"+len+"] \n" 
-                    + "- ns:bar(binary) = '" + d + "' m a");
-            CompactNodeTypeDefReader cndReader = new CompactNodeTypeDefReader(
-                    reader, "test");
-            List ntdList = cndReader.getNodeTypeDefs();
-            NodeTypeManagerImpl ntmgr = (NodeTypeManagerImpl) ws.getNodeTypeManager();
-            NodeTypeRegistry ntreg = ntmgr.getNodeTypeRegistry();
-            if (!ntreg.isRegistered(NameFactoryImpl.getInstance().create("http://namespace.com/ns", "foo" + len))) {
-                ntreg.registerNodeTypes(ntdList);
-            }
-            Node root = session.getRootNode();
-            Node f = root.addNode("testfoo" + len, "ns:foo" + len);
-            InputStream in = f.getProperty("ns:bar").getValue().getStream();
-            StringBuffer buff = new StringBuffer();
-            while (true) {
-                int x = in.read();
-                if (x < 0) {
-                    break;
-                }
-                buff.append((char) x);
-            }
-            String d2 = buff.toString();
-            assertEquals(d, d2);
-        } catch (Exception e) {
-            e.printStackTrace();
-            assertFalse(e.getMessage(), true);
+    public void doTestNodeTypesWithBinaryDefaultValue(int len)
+            throws RepositoryException, IOException {
+        char[] chars = new char[len];
+        for (int i = 0; i < chars.length; i++) {
+            chars[i] = 'a';
         }
+        String def = new String(chars);
+
+        String type = "test:foo" + len;
+        String cnd =
+            "<test='http://www.apache.org/jackrabbit/test'>\n"
+            + "[" + type + "]\n - value(binary) = '" + def + "' m a";
+        JackrabbitNodeTypeManager manager = (JackrabbitNodeTypeManager)
+            superuser.getWorkspace().getNodeTypeManager();
+        if (!manager.hasNodeType(type)) {
+            manager.registerNodeTypes(
+                    new ByteArrayInputStream(cnd.getBytes("UTF-8")),
+                    JackrabbitNodeTypeManager.TEXT_X_JCR_CND);
+        }
+
+        Node root = superuser.getRootNode();
+        Node node = root.addNode("testfoo" + len, type);
+        Value value = node.getProperty("value").getValue();
+        assertEquals(PropertyType.BINARY, value.getType());
+        assertEquals(def, value.getString());
     }
 
 }
