@@ -172,8 +172,7 @@
           <excludes>
             <exclude>**</exclude>
           </excludes>
-          <forkMode>once</forkMode>
-          <argLine>-Xmx128m -enableassertions</argLine>
+          <argLine>-Xmx128m</argLine>
           <systemProperties>
             <property>
               <name>derby.system.durability</name>
@@ -194,7 +193,7 @@
             <phase>pre-integration-test</phase>
             <configuration>
               <includes>
-                <include>org/apache/jackrabbit/core/integration/init/*TestData.java</include>
+                <include>**/PrepareTestRepository.java</include>
               </includes>
               <excludes>
                 <exclude>**/*TestAll.java</exclude>
