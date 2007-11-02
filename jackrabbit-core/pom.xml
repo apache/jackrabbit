@@ -191,9 +191,10 @@
         <executions>
           <execution>
             <id>do_init</id>
+            <phase>pre-integration-test</phase>
             <configuration>
               <includes>
-                <include>**/init/*</include>
+                <include>org/apache/jackrabbit/core/integration/init/*TestData.java</include>
               </includes>
               <excludes>
                 <exclude>**/*TestAll.java</exclude>
@@ -205,6 +206,7 @@
           </execution>
           <execution>
             <id>do_test</id>
+            <phase>integration-test</phase>
             <configuration>
               <excludes>
                 <exclude>**/init/*</exclude>
