@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.integration;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Calendar;
 
 import javax.jcr.Node;
@@ -27,6 +28,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 
+import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
@@ -40,6 +42,15 @@ public class PrepareTestRepository extends AbstractJCRTest {
 
     public void testPrepareTestRepository()
             throws RepositoryException, IOException {
+        InputStream xml = getClass().getResourceAsStream("test-nodetypes.xml");
+        try {
+            JackrabbitNodeTypeManager manager = (JackrabbitNodeTypeManager)
+            superuser.getWorkspace().getNodeTypeManager();
+            manager.registerNodeTypes(xml, JackrabbitNodeTypeManager.TEXT_XML);
+        } finally {
+            xml.close();
+        }
+
         Node data = getOrAddNode(superuser.getRootNode(), "testdata");
         addPropertyTestData(getOrAddNode(data, "property"));
         addQueryTestData(getOrAddNode(data, "query"));

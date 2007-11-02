@@ -16,8 +16,13 @@
  */
 package org.apache.jackrabbit.core.query;
 
+import javax.jcr.NamespaceException;
+import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
+
+import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
+
 import java.io.ByteArrayInputStream;
 import java.util.Calendar;
 
@@ -25,6 +30,21 @@ import java.util.Calendar;
  * Tests if mixin types are queried correctly when using element test: element()
  */
 public class MixinTest extends AbstractQueryTest {
+
+    protected void setUp() throws Exception {
+        super.setUp();
+
+        JackrabbitNodeTypeManager manager = (JackrabbitNodeTypeManager)
+            superuser.getWorkspace().getNodeTypeManager();
+        if (!manager.hasNodeType("test:referenceable")) {
+            String cnd =
+                "<test='http://www.apache.org/jackrabbit/test'>\n"
+                + "[test:referenceable] > mix:referenceable mixin";
+            manager.registerNodeTypes(
+                    new ByteArrayInputStream(cnd.getBytes()),
+                    JackrabbitNodeTypeManager.TEXT_X_JCR_CND);
+        }
+    }
 
     public void testBuiltInMixin() throws RepositoryException {
         // nt:resoure is referenceable by its node type definition
