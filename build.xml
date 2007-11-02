@@ -19,39 +19,6 @@
 				<include name="SimpleNode.java" />
 			</fileset>
 		</delete>
-		<delete includeEmptyDirs="true">
-			<fileset dir="applications/test/workspaces">
-				<include name="**/*" />
-				<exclude name="**/workspace.xml" />
-			</fileset>
-		</delete>
-		<delete dir="applications/test/tx" />
-		<delete dir="applications/test/version" />
-		<delete file="applications/test/.lock" />
-	</target>
-
-	<target name="prepareTestRepository">
-		<copy file="applications/test/repository/namespaces/ns_reg.properties.install" tofile="applications/test/repository/namespaces/ns_reg.properties" overwrite="true" />
-		<copy file="applications/test/repository/nodetypes/custom_nodetypes.xml.install" tofile="applications/test/repository/nodetypes/custom_nodetypes.xml" overwrite="true" />
-	</target>
-
-	<target name="cleanTestData">
-		<delete includeEmptyDirs="true">
-			<fileset dir="applications/test/repository">
-				<include name="**/*" />
-				<exclude name="**/custom_nodetypes.xml.install" />
-				<exclude name="**/ns_reg.properties.install" />
-			</fileset>
-		</delete>
-		<delete includeEmptyDirs="true">
-			<fileset dir="applications/test/workspaces">
-				<include name="**/*" />
-				<exclude name="**/workspace.xml" />
-			</fileset>
-		</delete>
-		<delete dir="applications/test/tx" />
-		<delete dir="applications/test/version" />
-		<delete file="applications/test/.lock" />
 	</target>
 </project>
 
