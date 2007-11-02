@@ -242,16 +242,4 @@
     </childNodeDefinition>
   </nodeType>
 
-
-  <!-- ======================================================== -->
-  <!-- Node type definitions only required for jackrabbit core  -->
-  <!-- (internal) test cases.                                   -->
-  <!-- ======================================================== -->
-
-  <!-- Defines a mixin node type that extends mix:referenceable -->
-  <nodeType isMixin="true" name="test:referenceable" hasOrderableChildNodes="false" primaryItemName="">
-    <supertypes>
-      <supertype>mix:referenceable</supertype>
-    </supertypes>
-  </nodeType>
 </nodeTypes>
