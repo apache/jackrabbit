@@ -57,10 +57,14 @@ class FileDataRecord extends AbstractDataRecord {
      * Returns an input stream for reading the file.
      *
      * @return file input stream
-     * @throws IOException if the file could not be opened
+     * @throws DataStoreException if the file could not be opened
      */
-    public InputStream getStream() throws IOException {
-        return new FileInputStream(file);
+    public InputStream getStream() throws DataStoreException {
+        try {
+            return new FileInputStream(file);
+        } catch (IOException e) {
+            throw new DataStoreException("Error opening input stream of " + file.getAbsolutePath(), e);
+        }
     }
 
 }

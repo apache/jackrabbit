@@ -19,10 +19,10 @@ package org.apache.jackrabbit.core.value;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataRecord;
 import org.apache.jackrabbit.core.data.DataStore;
+import org.apache.jackrabbit.core.data.DataStoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 import javax.jcr.RepositoryException;
@@ -83,18 +83,14 @@ public class BLOBInDataStore extends BLOBFileValue {
     public long getLength() {
         try {
             return getDataRecord().getLength();
-        } catch (IOException e) {
+        } catch (DataStoreException e) {
             log.warn("getLength for " + identifier + " failed", e);
             return -1;
         }
     }
 
     public InputStream getStream() throws RepositoryException {
-        try {
-            return getDataRecord().getStream();
-        } catch (IOException e) {
-            throw new RepositoryException(e);
-        }
+        return getDataRecord().getStream();
     }
 
     /**
@@ -113,7 +109,7 @@ public class BLOBInDataStore extends BLOBFileValue {
         return new BLOBInDataStore(store, identifier);
     }
     
-    static BLOBInDataStore getInstance(DataStore store, InputStream in) throws IOException {
+    static BLOBInDataStore getInstance(DataStore store, InputStream in) throws DataStoreException {
         DataRecord rec = store.addRecord(in);
         DataIdentifier identifier = rec.getIdentifier();
         return new BLOBInDataStore(store, identifier);
@@ -128,7 +124,7 @@ public class BLOBInDataStore extends BLOBFileValue {
         return s.startsWith(PREFIX);
     }    
     
-    private DataRecord getDataRecord() throws IOException {
+    private DataRecord getDataRecord() throws DataStoreException {
         // may not keep the record, otherwise garbage collection doesn't work
         return store.getRecord(identifier);
     }

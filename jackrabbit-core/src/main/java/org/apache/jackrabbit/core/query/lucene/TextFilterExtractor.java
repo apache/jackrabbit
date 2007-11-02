@@ -96,8 +96,10 @@ public class TextFilterExtractor implements TextExtractor {
      */
     public Reader extractText(InputStream stream, String type, String encoding)
             throws IOException {
-        final InternalValue value = InternalValue.createTemporary(stream);
+        InternalValue v = null;
         try {
+            v = InternalValue.createTemporary(stream);
+            final InternalValue value = v;
             PropertyState state = new PropertyState(
                     (PropertyId) null, ItemState.STATUS_EXISTING, true);
             state.setValues(new InternalValue[] { value });
@@ -115,7 +117,9 @@ public class TextFilterExtractor implements TextExtractor {
                 return new StringReader("");
             }
         } catch (RepositoryException e) {
-            value.getBLOBFileValue().discard();
+            if (v != null) {
+                v.getBLOBFileValue().discard();
+            }
             return new StringReader("");
         }
     }
