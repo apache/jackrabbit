@@ -169,9 +169,9 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <excludes>
-            <exclude>**</exclude>
-          </excludes>
+          <includes>
+            <include>**/*TestAll.java</include>
+          </includes>
           <argLine>-Xmx128m</argLine>
           <systemProperties>
             <property>
@@ -193,11 +193,8 @@
             <phase>pre-integration-test</phase>
             <configuration>
               <includes>
-                <include>**/PrepareTestRepository.java</include>
+                <include>**/integration/PrepareTestRepository.java</include>
               </includes>
-              <excludes>
-                <exclude>**/*TestAll.java</exclude>
-              </excludes>
             </configuration>
             <goals>
               <goal>test</goal>
@@ -207,11 +204,8 @@
             <id>do_test</id>
             <phase>integration-test</phase>
             <configuration>
-              <excludes>
-                <exclude>**/init/*</exclude>
-              </excludes>
               <includes>
-                <include>**/*TestAll.java</include>
+                <include>**/integration/*Test.java</include>
               </includes>
             </configuration>
             <goals>
