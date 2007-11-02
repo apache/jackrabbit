@@ -152,11 +152,12 @@ public class FileDataStore implements DataStore {
      *
      * @param input binary stream
      * @return data record that contains the given stream
-     * @throws IOException if the record could not be created
+     * @throws DataStoreException if the record could not be created
      */
-    public DataRecord addRecord(InputStream input) throws IOException {
-        File temporary = newTemporaryFile();
+    public DataRecord addRecord(InputStream input) throws DataStoreException {
+        File temporary = null;
         try {
+            temporary = newTemporaryFile();
             // Copy the stream to the temporary file and calculate the
             // stream length and the message digest of the stream
             long length = 0;
@@ -205,9 +206,13 @@ public class FileDataStore implements DataStore {
 
             return new FileDataRecord(identifier, file);
         } catch (NoSuchAlgorithmException e) {
-            throw new IOException(DIGEST + " not available: " + e.getMessage());
+            throw new DataStoreException(DIGEST + " not available", e);
+        } catch (IOException e) {
+            throw new DataStoreException("Could not add record", e);
         } finally {
-            temporary.delete();
+            if (temporary != null) {
+                temporary.delete();
+            }
         }
     }
 
@@ -241,8 +246,7 @@ public class FileDataStore implements DataStore {
         if (!directory.isDirectory()) {
             directory.mkdirs();
         }
-        File temporary = File.createTempFile(TMP, null, directory);
-        return temporary;
+        return File.createTempFile(TMP, null, directory);
     }
 
     /**

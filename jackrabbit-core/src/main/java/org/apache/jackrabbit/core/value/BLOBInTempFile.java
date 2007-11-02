@@ -44,11 +44,12 @@ public class BLOBInTempFile extends BLOBFileValue {
     
     /**
      * Creates a new instance from a stream.
+     * The input stream is always closed by this method.
      *
      * @param in the input stream
      * @throws IOException 
      */    
-    private BLOBInTempFile(InputStream in, boolean temp) throws IOException {
+    private BLOBInTempFile(InputStream in, boolean temp) throws RepositoryException {
         this.temp = temp;
         OutputStream out = null;
         try {
@@ -64,11 +65,21 @@ public class BLOBInTempFile extends BLOBFileValue {
                 out.write(buffer, 0, len);
                 length += len;                
             }
+        } catch (IOException e) {
+            throw new RepositoryException("Error creating temporary file", e); 
         } finally {
-            if (out != null) {
-                out.close();
+            try {
+                in.close();
+            } catch (IOException e) {
+                // ignore
             }
-            in.close();
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException e) {
+                    throw new RepositoryException("Error creating temporary file", e); 
+                }
+            }
         }
     }
 
@@ -88,7 +99,7 @@ public class BLOBInTempFile extends BLOBFileValue {
      *
      * @param in the stream
      */    
-    static BLOBInTempFile getInstance(InputStream in, boolean temp) throws IOException {
+    static BLOBInTempFile getInstance(InputStream in, boolean temp) throws RepositoryException {
         return new BLOBInTempFile(in, temp);
     }
     

@@ -48,7 +48,6 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.version.VersionException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -739,20 +738,13 @@ public class PropertyImpl extends ItemImpl implements Property {
             return;
         }
 
-        InternalValue value;
-        try {
-            value = InternalValue.createTemporary(stream, rep.getDataStore());
-            if (reqType != PropertyType.BINARY) {
-                // type conversion required
-                Value jcrValue = value.toJCRValue(session.getNamePathResolver());
-                Value targetVal = ValueHelper.convert(
-                        jcrValue, reqType, ValueFactoryImpl.getInstance());
-                value = InternalValue.create(targetVal, session.getNamePathResolver(), rep.getDataStore());
-            }
-        } catch (IOException ioe) {
-            String msg = "failed to spool stream to internal storage";
-            log.debug(msg);
-            throw new RepositoryException(msg, ioe);
+        InternalValue value = InternalValue.createTemporary(stream, rep.getDataStore());
+        if (reqType != PropertyType.BINARY) {
+            // type conversion required
+            Value jcrValue = value.toJCRValue(session.getNamePathResolver());
+            Value targetVal = ValueHelper.convert(
+                    jcrValue, reqType, ValueFactoryImpl.getInstance());
+            value = InternalValue.create(targetVal, session.getNamePathResolver(), rep.getDataStore());
         }
 
         internalSetValue(new InternalValue[]{value}, reqType);

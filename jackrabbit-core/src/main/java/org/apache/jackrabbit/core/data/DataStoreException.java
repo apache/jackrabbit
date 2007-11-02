@@ -16,34 +16,31 @@
  */
 package org.apache.jackrabbit.core.data;
 
-import java.io.InputStream;
+import javax.jcr.RepositoryException;
 
 /**
- * Immutable data record that consists of a binary stream.
+ * Exception thrown by the Data Store module.
  */
-public interface DataRecord {
+public class DataStoreException extends RepositoryException {
 
     /**
-     * Returns the identifier of this record.
+     * Constructs a new instance of this class with the specified detail
+     * message.
      *
-     * @return data identifier
+     * @param message the detailed message.
      */
-    DataIdentifier getIdentifier();
+    public DataStoreException(String message) {
+        super(message);
+    }
 
     /**
-     * Returns the length of the binary stream in this record.
+     * Constructs a new instance of this class with the specified detail
+     * message and root cause.
      *
-     * @return length of the binary stream
-     * @throws DataStoreException if the record could not be accessed
+     * @param message the detailed message.
+     * @param rootCause root failure cause
      */
-    long getLength() throws DataStoreException;
-
-    /**
-     * Returns the the binary stream in this record.
-     *
-     * @return binary stream
-     * @throws DataStoreException if the record could not be accessed
-     */
-    InputStream getStream() throws DataStoreException;
-
+    public DataStoreException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
