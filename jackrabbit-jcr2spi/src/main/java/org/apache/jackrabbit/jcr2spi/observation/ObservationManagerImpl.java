@@ -75,12 +75,6 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
     private Map readOnlySubscriptions;
 
     /**
-     * Indicates if this observation manager is registered as an internal event
-     * listener on the workspace manager.
-     */
-    private boolean isRegistered = false;
-
-    /**
      * Creates a new observation manager for <code>session</code>.
      * @param wspManager the WorkspaceManager.
      * @param resolver
@@ -135,9 +129,10 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
             readOnlySubscriptions = null;
         }
 
-        if (!isRegistered) {
+        if (subscriptions.size() == 1) {
             wspManager.addEventListener(this);
-            isRegistered = true;
+        } else {
+            wspManager.updateEventFilters();
         }
     }
 
@@ -149,6 +144,11 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
             if (subscriptions.remove(listener) != null) {
                 readOnlySubscriptions = null;
             }
+        }
+        if (subscriptions.size() == 0) {
+            wspManager.removeEventListener(this);
+        } else {
+            wspManager.updateEventFilters();
         }
     }
 

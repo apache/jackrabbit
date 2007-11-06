@@ -24,8 +24,10 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Subscription;
 import org.apache.jackrabbit.spi.commons.EventImpl;
 import org.apache.jackrabbit.spi.commons.EventBundleImpl;
+import org.apache.jackrabbit.spi.commons.EventFilterImpl;
 import org.apache.jackrabbit.conversion.NameException;
 import org.apache.jackrabbit.conversion.NameResolver;
 import org.apache.jackrabbit.conversion.NamePathResolver;
@@ -33,20 +35,24 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import javax.jcr.observation.EventListener;
+import javax.jcr.observation.ObservationManager;
 import javax.jcr.Session;
 import javax.jcr.Node;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.NamespaceException;
+import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Iterator;
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * <code>EventSubscription</code> listens for JCR events and creates SPI event
  * bundles for them.
  */
-class EventSubscription implements EventListener {
+class EventSubscription implements Subscription, EventListener {
 
     /**
      * Logger instance for this class.
@@ -68,13 +74,83 @@ class EventSubscription implements EventListener {
 
     private final SessionInfoImpl sessionInfo;
 
+    /**
+     * Current list of filters. Copy on write is performed on this list.
+     */
+    private volatile List filters;
+
+    /**
+     * The resolver of the underlying session.
+     */
     private final NamePathResolver resolver;
 
-    EventSubscription(IdFactory idFactory, SessionInfoImpl sessionInfo) {
+    /**
+     * Set to <code>true</code> if this subscription has been disposed.
+     */
+    private volatile boolean disposed = false;
+
+    /**
+     * Creates a new subscription for the passed session.
+     *
+     * @param idFactory   the id factory.
+     * @param sessionInfo the session info.
+     * @param filters     the filters that should be applied to the generated
+     *                    events.
+     * @throws RepositoryException if an error occurs while an event listener is
+     *                             registered with the session.
+     */
+    EventSubscription(IdFactory idFactory,
+                      SessionInfoImpl sessionInfo,
+                      EventFilter[] filters) throws RepositoryException {
         this.idFactory = idFactory;
         this.sessionInfo = sessionInfo;
         this.resolver = sessionInfo.getNamePathResolver();
+        setFilters(filters);
+        ObservationManager obsMgr = sessionInfo.getSession().getWorkspace().getObservationManager();
+        obsMgr.addEventListener(this, EventSubscription.ALL_EVENTS,
+                "/", true, null, null, true);
     }
+
+    /**
+     * @return the session info associated with this event subscription.
+     */
+    SessionInfoImpl getSessionInfo() {
+        return sessionInfo;
+    }
+
+    /**
+     * Sets a new list of event filters for this subscription.
+     *
+     * @param filters the new filters.
+     * @throws RepositoryException if the filters array contains a unknown
+     *                             implementation of EventFilters.
+     */
+    void setFilters(EventFilter[] filters) throws RepositoryException {
+        // check type
+        for (int i = 0; i < filters.length; i++) {
+            if (!(filters[i] instanceof EventFilterImpl)) {
+                throw new RepositoryException("Unknown filter implementation");
+            }
+        }
+        List tmp = new ArrayList(Arrays.asList(filters));
+        this.filters = Collections.unmodifiableList(tmp);
+
+    }
+
+    /**
+     * Removes this subscription as a listener from the observation manager and
+     * marks itself as disposed.
+     */
+    void dispose() throws RepositoryException {
+        sessionInfo.removeSubscription(this);
+        sessionInfo.getSession().getWorkspace().getObservationManager().removeEventListener(this);
+        disposed = true;
+        synchronized (eventBundles) {
+            eventBundles.notify();
+        }
+    }
+
+    //--------------------------< EventListener >-------------------------------
 
     /**
      * Adds the events to the list of pending event bundles.
@@ -100,10 +176,10 @@ class EventSubscription implements EventListener {
     /**
      * @return all the pending event bundles.
      */
-    EventBundle[] getEventBundles(EventFilter[] filters, long timeout) {
+    EventBundle[] getEventBundles(long timeout) {
         EventBundle[] bundles;
         synchronized (eventBundles) {
-            while (eventBundles.isEmpty()) {
+            if (eventBundles.isEmpty()) {
                 try {
                     eventBundles.wait(timeout);
                 } catch (InterruptedException e) {
@@ -113,17 +189,19 @@ class EventSubscription implements EventListener {
             bundles = (EventBundle[]) eventBundles.toArray(new EventBundle[eventBundles.size()]);
             eventBundles.clear();
         }
+        EventFilter[] eventFilters = (EventFilter[]) filters.toArray(
+                new EventFilter[filters.size()]);
         // apply filters to bundles
         for (int i = 0; i < bundles.length; i++) {
             List filteredEvents = new ArrayList();
             for (Iterator it = bundles[i].getEvents(); it.hasNext(); ) {
                 Event e = (Event) it.next();
                 // TODO: this is actually not correct. if filters are empty no event should go out
-                if (filters == null || filters.length == 0) {
+                if (eventFilters == null || eventFilters.length == 0) {
                     filteredEvents.add(e);
                 } else {
-                    for (int j = 0; j < filters.length; j++) {
-                        if (filters[j].accept(e, bundles[i].isLocal())) {
+                    for (int j = 0; j < eventFilters.length; j++) {
+                        if (eventFilters[j].accept(e, bundles[i].isLocal())) {
                             filteredEvents.add(e);
                             break;
                         }
@@ -139,6 +217,10 @@ class EventSubscription implements EventListener {
 
     private void createEventBundle(javax.jcr.observation.EventIterator events,
                                    boolean isLocal) {
+        // do not create events when disposed
+        if (disposed) {
+            return;
+        }
         List spiEvents = new ArrayList();
         while (events.hasNext()) {
             try {

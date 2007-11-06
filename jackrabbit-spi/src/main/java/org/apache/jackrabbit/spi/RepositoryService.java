@@ -821,52 +821,100 @@ public interface RepositoryService {
             throws UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
-     * Retrieves the events that occurred since the last call to this
-     * method. When this method returns without an exception the bundle
-     * identfier in <code>sessionInfo</code> will be updated to reference the
-     * most recent event bundle returned by this call. In case an empty array is
-     * supplied as event filters it may also happen that the bundle identifier
-     * is updated even though no event bundle had been returned.
-     * <p/>
-     * An implementation is required to accept at least event filter instances
-     * created by {@link #createEventFilter}. Optionally an implementation may
-     * also support event filters instanciated by the client itself. An
-     * implementation may require special deployment in that case, e.g. to make
-     * the event filter implementation class available to the repository
-     * server.<p/>
-     * Note, that an SPI implementation may support observation even if
-     * the corresponding {@link javax.jcr.Repository#OPTION_OBSERVATION_SUPPORTED repository descriptor}
-     * does return 'false'.
+     * Creates a new {@link Subscription} for events with an initial set of
+     * {@link EventFilter}s. The returned subscription must provide events from
+     * the time when the subscription was created. If an empty array of filters
+     * is passed no events will be available through the created subscription
+     * unless the filters are later updated by calling
+     * {@link RepositoryService#updateEventFilters(Subscription, EventFilter[])}.
      *
      * @param sessionInfo the session info.
-     * @param timeout     a timeout in milliseconds to wait at most for an
-     *                    event bundle. If <code>timeout</code> is up
-     *                    and no event occurred meanwhile an empty array is
-     *                    returned.
-     * @param filters     the filters that are applied to the events as
-     *                    they occurred on the repository. An event is included
-     *                    in an event bundle if it is {@link EventFilter#accept(Event, boolean)
-     *                    accept}ed by at least one of the supplied filters. If
-     *                    an empty array is passed none of the potential events
-     *                    are include in an event bundle. This allows a client
-     *                    to skip or ignore events for a certain period of time.
-     *                    If <code>null</code> is passed no filtering is done
-     *                    and all events are included in the event bundle.
-     * @return an array of <code>EventBundle</code>s representing the external
-     *         events that occurred.
-     * @throws RepositoryException  if an error occurs while retrieving the
-     *                              event bundles or the currently set bundle
-     *                              identifier in <code>sessionInfo</code>
-     *                              references an unknown or outdated event
-     *                              bundle.
-     * @throws UnsupportedRepositoryOperationException If this SPI implementation
-     * does not support observation.
-     * @throws InterruptedException if the calling thread is interrupted while
-     * waiting for events within the specified <code>timeout</code>.
+     * @param filters the initial event filters for the subscription.
+     * @return
+     * @throws UnsupportedRepositoryOperationException
+     *                             if this SPI implementation does not support
+     *                             observation.
+     * @throws RepositoryException if an error occurs while creating the
+     *                             Subscription.
      */
-    public EventBundle[] getEvents(SessionInfo sessionInfo, long timeout,
+    public Subscription createSubscription(SessionInfo sessionInfo,
+                                           EventFilter[] filters)
+            throws UnsupportedRepositoryOperationException, RepositoryException;
+
+    /**
+     * Updates events filters on the subscription. When this method returns all
+     * events that go through the passed subscription and have been generated
+     * after this method call must be filtered using the passed
+     * <code>filters</code>.
+     * <p/>
+     * An implementation is required to accept at least event filter instances
+     * created by {@link RepositoryService#createEventFilter}. Optionally an
+     * implementation may also support event filters instanciated by the client
+     * itself. An implementation may require special deployment in that case,
+     * e.g. to make the event filter implementation class available to the
+     * repository server.
+     * <p/>
+     * <b>Note on thread-safety:</b> it is permissible to call this methods
+     * while another thread is blocked in calling {@link
+     * RepositoryService#getEvents(Subscription, long)} using the same
+     * subscription instance as a parameter.
+     *
+     * @param subscription the subscription where the event filters are
+     *                     applied.
+     * @param filters the filters that are applied to the events as they
+     *                occurred on the repository. An event is included in an
+     *                event bundle if it is {@link EventFilter#accept(Event,
+     *                boolean) accept}ed by at least one of the supplied
+     *                filters. If an empty array is passed none of the potential
+     *                events are include in an event bundle. This allows a
+     *                client to skip or ignore events for a certain period of
+     *                time.
+     * @throws RepositoryException  if an error occurs while updating the event
+     *                              filters.
+     */
+    public void updateEventFilters(Subscription subscription,
                                    EventFilter[] filters)
-            throws RepositoryException, UnsupportedRepositoryOperationException, InterruptedException;
+            throws RepositoryException;
+
+    /**
+     * Retrieves the events that occurred since the last call to this method for
+     * the passed subscription.
+     * <p/>
+     * Note, that an SPI implementation may support observation even if the
+     * corresponding {@link javax.jcr.Repository#OPTION_OBSERVATION_SUPPORTED
+     * repository descriptor} does return 'false'.
+     * <p/>
+     * An implementation should un-block a calling thread and let it return if
+     * the associated subscription is disposed by another thread.
+     *
+     * @param subscription a subscription.
+     * @param timeout      a timeout in milliseconds to wait at most for an
+     *                     event bundle. If <code>timeout</code> is up and no
+     *                     event occurred meanwhile an empty array is returned.
+     * @return an array of <code>EventBundle</code>s representing the events
+     *         that occurred.
+     * @throws RepositoryException  if an error occurs while retrieving the
+     *                              event bundles.
+     * @throws InterruptedException if the calling thread is interrupted while
+     *                              waiting for events within the specified
+     *                              <code>timeout</code>.
+     */
+    public EventBundle[] getEvents(Subscription subscription,
+                                   long timeout)
+            throws RepositoryException, InterruptedException;
+
+    /**
+     * Indicates that the passed subscription is no longer needed.
+     * <p/>
+     * <b>Note on thread-safety:</b> it is permissible to call this methods
+     * while another thread is blocked in calling {@link
+     * RepositoryService#getEvents(Subscription, long)} using the same
+     * subscription instance as a parameter.
+     *
+     * @throws RepositoryException if an error occurs while the subscription is
+     *                             disposed.
+     */
+    public void dispose(Subscription subscription) throws RepositoryException;
 
     //---------------------------------------------------------< Namespaces >---
     /**

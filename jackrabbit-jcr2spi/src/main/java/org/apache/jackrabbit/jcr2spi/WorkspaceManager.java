@@ -83,6 +83,7 @@ import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.Subscription;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -111,6 +112,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Collection;
 
 import EDU.oswego.cs.dl.util.concurrent.Sync;
 import EDU.oswego.cs.dl.util.concurrent.Mutex;
@@ -124,6 +126,8 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
     private final RepositoryService service;
     private final SessionInfo sessionInfo;
+    private final NameFactory nameFactory;
+    private final PathFactory pathFactory;
 
     private final ItemStateFactory isf;
     private final HierarchyManager hierarchyManager;
@@ -153,6 +157,11 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      */
     private final Set listeners = new HashSet();
 
+    /**
+     * The current subscription for change events if there are listeners.
+     */
+    private Subscription subscription;
+
     public WorkspaceManager(RepositoryService service, SessionInfo sessionInfo,
                             CacheBehaviour cacheBehaviour, int pollTimeout,
                             boolean enableObservation)
@@ -160,6 +169,8 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         this.service = service;
         this.sessionInfo = sessionInfo;
         this.cacheBehaviour = cacheBehaviour;
+        this.nameFactory = service.getNameFactory();
+        this.pathFactory = service.getPathFactory();
 
         idFactory = service.getIdFactory();
         nsRegistry = createNamespaceRegistry(NamespaceCache.getInstance(service));
@@ -202,11 +213,11 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     }
 
     public NameFactory getNameFactory() throws RepositoryException {
-        return service.getNameFactory();
+        return nameFactory;
     }
 
     public PathFactory getPathFactory() throws RepositoryException {
-        return service.getPathFactory();
+        return pathFactory;
     }
 
     public ItemStateFactory getItemStateFactory() {
@@ -312,11 +323,31 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * local and external changes.
      *
      * @param listener the new listener.
+     * @throws RepositoryException if the listener cannot be registered.
      */
-    public void addEventListener(InternalEventListener listener) {
+    public void addEventListener(InternalEventListener listener)
+            throws RepositoryException {
         synchronized (listeners) {
             listeners.add(listener);
+            EventFilter[] filters = getEventFilters(listeners);
+            if (listeners.size() == 1) {
+                subscription = service.createSubscription(sessionInfo, filters);
+            } else {
+                service.updateEventFilters(subscription, filters);
+            }
             listeners.notify();
+        }
+    }
+
+    /**
+     * Updates the event filters on the subscription. The filters are retrieved
+     * from the current list of internal event listeners.
+     *
+     * @throws RepositoryException
+     */
+    public void updateEventFilters() throws RepositoryException {
+        synchronized (listeners) {
+            service.updateEventFilters(subscription, getEventFilters(listeners));
         }
     }
 
@@ -324,9 +355,16 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      *
      * @param listener
      */
-    public void removeEventListener(InternalEventListener listener) {
+    public void removeEventListener(InternalEventListener listener)
+            throws RepositoryException {
         synchronized (listeners) {
             listeners.remove(listener);
+            if (listeners.isEmpty()) {
+                service.dispose(subscription);
+                subscription = null;
+            } else {
+                service.updateEventFilters(subscription, getEventFilters(listeners));
+            }
         }
     }
 
@@ -352,6 +390,21 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         return service.createEventFilter(sessionInfo, eventTypes, path, isDeep, uuids, nodeTypes, noLocal);
     }
     //--------------------------------------------------------------------------
+
+    /**
+     * Gets the event filters from the passed listener list.
+     *
+     * @param listeners the internal event listeners.
+     */
+    private static EventFilter[] getEventFilters(Collection listeners) {
+        List filters = new ArrayList();
+        for (Iterator it = listeners.iterator(); it.hasNext(); ) {
+            InternalEventListener listener = (InternalEventListener) it.next();
+            filters.addAll(listener.getEventFilters());
+        }
+        return (EventFilter[]) filters.toArray(new EventFilter[filters.size()]);
+    }
+
     /**
      *
      * @return
@@ -504,6 +557,9 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                 changeFeed.interrupt();
             }
             hierarchyManager.dispose();
+            if (subscription != null) {
+                service.dispose(subscription);
+            }
             service.dispose(sessionInfo);
         } catch (Exception e) {
             log.warn("Exception while disposing WorkspaceManager: " + e);
@@ -970,23 +1026,19 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         public void run() {
             while (!Thread.interrupted()) {
                 try {
-                    // get filters from listeners
-                    List filters = new ArrayList();
                     InternalEventListener[] iel;
+                    Subscription subscr;
                     synchronized (listeners) {
                         while (listeners.isEmpty()) {
                             listeners.wait();
                         }
                         iel = (InternalEventListener[]) listeners.toArray(new InternalEventListener[0]);
+                        subscr = subscription;
                     }
-                    for (int i = 0; i < iel.length; i++) {
-                        filters.addAll(iel[i].getEventFilters());
-                    }
-                    EventFilter[] filtArr = (EventFilter[]) filters.toArray(new EventFilter[filters.size()]);
 
                     log.debug("calling getEvents() (Workspace={})",
                             sessionInfo.getWorkspaceName());
-                    EventBundle[] bundles = service.getEvents(sessionInfo, pollTimeout, filtArr);
+                    EventBundle[] bundles = service.getEvents(subscr, pollTimeout);
                     log.debug("returned from getEvents() (Workspace={})",
                             sessionInfo.getWorkspaceName());
                     // check if thread had been interrupted while

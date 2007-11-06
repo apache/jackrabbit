@@ -31,7 +31,7 @@ public interface EventFilter extends Serializable {
     /**
      * If an implementation returns <code>true</code> the <code>event</code>
      * will be included in the event bundle returned by {@link
-     * RepositoryService#getEvents(SessionInfo, long, EventFilter[])}. A return
+     * RepositoryService#getEvents(Subscription, long)}. A return
      * value of <code>false</code> indicates that the client is not interested
      * in the <code>event</code>.
      *

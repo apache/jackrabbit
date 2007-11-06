@@ -37,6 +37,7 @@ import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Subscription;
 import org.apache.jackrabbit.spi.commons.EventFilterImpl;
 import org.apache.jackrabbit.name.NameFactoryImpl;
 import org.apache.jackrabbit.name.PathFactoryImpl;
@@ -97,8 +98,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Arrays;
-import java.util.IdentityHashMap;
 import java.util.Collections;
+import java.util.Collection;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
@@ -125,11 +126,6 @@ public class RepositoryServiceImpl implements RepositoryService {
      * The id factory.
      */
     private final IdFactoryImpl idFactory = (IdFactoryImpl) IdFactoryImpl.getInstance();
-
-    /**
-     * Maps session info instances to {@link EventSubscription}s.
-     */
-    private final Map subscriptions = Collections.synchronizedMap(new IdentityHashMap());
 
     /**
      * Set to <code>true</code> if the underlying JCR repository supports
@@ -227,10 +223,12 @@ public class RepositoryServiceImpl implements RepositoryService {
      * {@inheritDoc}
      */
     public void dispose(SessionInfo sessionInfo) throws RepositoryException {
-        synchronized (sessionInfo) {
-            subscriptions.remove(sessionInfo);
-            getSessionInfoImpl(sessionInfo).getSession().logout();
+        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        for (Iterator it = sInfo.getSubscriptions().iterator(); it.hasNext(); ) {
+            EventSubscription s = (EventSubscription) it.next();
+            s.dispose();
         }
+        sInfo.getSession().logout();
     }
 
     /**
@@ -908,9 +906,6 @@ public class RepositoryServiceImpl implements RepositoryService {
                                          Name[] nodeTypeName,
                                          boolean noLocal)
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        // make sure there is an event subscription for this session info
-        getSubscription(sessionInfo);
-
         Set ntNames = null;
         if (nodeTypeName != null) {
             ntNames = new HashSet(Arrays.asList(nodeTypeName));
@@ -921,11 +916,39 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public EventBundle[] getEvents(SessionInfo sessionInfo,
-                                   long timeout,
-                                   EventFilter[] filters)
+    public Subscription createSubscription(SessionInfo sessionInfo,
+                                           EventFilter[] filters)
+            throws UnsupportedRepositoryOperationException, RepositoryException {
+        return getSessionInfoImpl(sessionInfo).createSubscription(idFactory, filters);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public EventBundle[] getEvents(Subscription subscription, long timeout)
             throws RepositoryException, UnsupportedRepositoryOperationException, InterruptedException {
-        return getSubscription(sessionInfo).getEventBundles(filters, timeout);
+        if (subscription instanceof EventSubscription) {
+            return ((EventSubscription) subscription).getEventBundles(timeout);
+        } else {
+            throw new RepositoryException("Unknown subscription implementation: "
+                    + subscription.getClass().getName());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void updateEventFilters(Subscription subscription,
+                                   EventFilter[] filters)
+            throws RepositoryException {
+        getEventSubscription(subscription).setFilters(filters);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void dispose(Subscription subscription) throws RepositoryException {
+        getEventSubscription(subscription).dispose();
     }
 
     /**
@@ -1027,25 +1050,6 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     //----------------------------< internal >----------------------------------
-
-    private EventSubscription getSubscription(SessionInfo sessionInfo)
-            throws RepositoryException {
-        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        EventSubscription subscr;
-        synchronized (sInfo) {
-            subscr = (EventSubscription) subscriptions.get(sInfo);
-            if (subscr == null) {
-                subscr = new EventSubscription(idFactory, sInfo);
-                if (sInfo.getSession().isLive()) {
-                    ObservationManager obsMgr = sInfo.getSession().getWorkspace().getObservationManager();
-                    obsMgr.addEventListener(subscr, EventSubscription.ALL_EVENTS,
-                            "/", true, null, null, true);
-                }
-                subscriptions.put(sInfo, subscr);
-            }
-        }
-        return subscr;
-    }
 
     private final class BatchImpl implements Batch {
 
@@ -1351,6 +1355,16 @@ public class RepositoryServiceImpl implements RepositoryService {
         }
     }
 
+    private EventSubscription getEventSubscription(Subscription subscription)
+            throws RepositoryException {
+        if (subscription instanceof EventSubscription) {
+            return (EventSubscription) subscription;
+        } else {
+            throw new RepositoryException("Unknown Subscription implementation: "
+                    + subscription.getClass().getName());
+        }
+    }
+
     private String getDestinationPath(NodeId destParentNodeId, Name destName, SessionInfoImpl sessionInfo) throws RepositoryException {
         StringBuffer destPath = new StringBuffer(pathForId(destParentNodeId, sessionInfo));
         if (destPath.length() > 1) {
@@ -1464,16 +1478,27 @@ public class RepositoryServiceImpl implements RepositoryService {
             throws RepositoryException {
         if (supportsObservation) {
             // register local event listener
-            EventSubscription subscr = (EventSubscription) subscriptions.get(sInfo);
-            if (subscr != null) {
+            Collection subscr = sInfo.getSubscriptions();
+            if (subscr.size() != 0) {
                 ObservationManager obsMgr = sInfo.getSession().getWorkspace().getObservationManager();
-                EventListener listener = subscr.getLocalEventListener();
-                obsMgr.addEventListener(listener, EventSubscription.ALL_EVENTS,
-                        "/", true, null, null, false);
+                List listeners = new ArrayList(subscr.size());
                 try {
+                    for (Iterator it = subscr.iterator(); it.hasNext(); ) {
+                        EventSubscription s = (EventSubscription) it.next();
+                        EventListener listener = s.getLocalEventListener();
+                        listeners.add(listener);
+                        obsMgr.addEventListener(listener, EventSubscription.ALL_EVENTS,
+                                "/", true, null, null, false);
+                    }
                     return call.run();
                 } finally {
-                    obsMgr.removeEventListener(listener);
+                    for (Iterator it = listeners.iterator(); it.hasNext(); ) {
+                        try {
+                            obsMgr.removeEventListener((EventListener) it.next());
+                        } catch (RepositoryException e) {
+                            // ignore and remove next
+                        }
+                    }
                 }
             }
         }
