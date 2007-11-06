@@ -19,6 +19,9 @@ package org.apache.jackrabbit.spi2jcr;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.Subscription;
+import org.apache.jackrabbit.spi.EventFilter;
+import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.namespace.NamespaceResolver;
 import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.conversion.ParsingNameResolver;
@@ -37,6 +40,10 @@ import java.io.ObjectInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * <code>SessionInfoImpl</code> implements a session info based on a JCR
@@ -58,6 +65,16 @@ class SessionInfoImpl implements SessionInfo {
      * A copy of the credentials that were used to obtain the JCR session.
      */
     private Credentials credentials;
+
+    /**
+     * The subscriptions that are currently in place for this session info.
+     */
+    private List subscriptions = Collections.EMPTY_LIST;
+
+    /**
+     * Monitor object for subscription changes.
+     */
+    private Object subscriptionChange = new Object();
 
     /**
      * Creates a new session info based on the given <code>session</code>.
@@ -123,6 +140,44 @@ class SessionInfoImpl implements SessionInfo {
     Credentials getCredentials() throws RepositoryException {
         // return a duplicate
         return duplicateCredentials(credentials);
+    }
+
+    Collection getSubscriptions() {
+        synchronized (subscriptionChange) {
+            return subscriptions;
+        }
+    }
+
+    /**
+     * Creates a subscriptions for this session info.
+     *
+     * @param idFactory the id factory.
+     * @param filters the initial list of filters.
+     * @return a subscription.
+     * @throws RepositoryException
+     */
+    Subscription createSubscription(IdFactory idFactory, EventFilter[] filters)
+            throws RepositoryException {
+        synchronized (subscriptionChange) {
+            List tmp = new ArrayList(subscriptions);
+            EventSubscription s = new EventSubscription(idFactory, this, filters);
+            tmp.add(s);
+            subscriptions = Collections.unmodifiableList(tmp);
+            return s;
+        }
+    }
+
+    /**
+     * Removes the subscription from this session info is it exists.
+     *
+     * @param subscription the subscription to remove.
+     */
+    void removeSubscription(Subscription subscription) {
+        synchronized (subscriptionChange) {
+            List tmp = new ArrayList(subscriptions);
+            tmp.remove(subscription);
+            subscriptions = Collections.unmodifiableList(tmp);
+        }
     }
 
     /**
