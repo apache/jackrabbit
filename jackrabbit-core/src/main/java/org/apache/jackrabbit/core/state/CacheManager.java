@@ -53,8 +53,8 @@ public class CacheManager implements CacheAccessListener {
     /** The set of caches (weakly referenced). */
     private WeakHashMap caches = new WeakHashMap();
 
-    /** Rebalance the caches each ... milliseconds at most. */
-    private static final int SLEEP = 1000;
+    /** The default minimum resize interval (in ms). */
+    private static final int DEFAULT_MIN_RESIZE_INTERVAL = 1000;
 
     /** The size of a big object, to detect if a cache is full or not. */
     private static final int BIG_OBJECT_SIZE = 16 * 1024;
@@ -67,9 +67,12 @@ public class CacheManager implements CacheAccessListener {
 
     /** The maximum memory per cache (unless, there is some unused memory). */
     private long maxMemoryPerCache = DEFAULT_MAX_MEMORY_PER_CACHE;
-
-    /** The last time the caches where resized. */
-    private volatile long nextResize = System.currentTimeMillis() + SLEEP;
+    
+    /** The minimum resize interval time */
+    private long minResizeInterval = DEFAULT_MIN_RESIZE_INTERVAL;
+     
+        /** The last time the caches where resized. */
+    private volatile long nextResize = System.currentTimeMillis() + DEFAULT_MIN_RESIZE_INTERVAL;
 
     
     public long getMaxMemory() {
@@ -96,6 +99,13 @@ public class CacheManager implements CacheAccessListener {
         this.minMemoryPerCache = minMemoryPerCache;
     }
     
+    public long getMinResizeInterval() {
+        return minResizeInterval;
+    }
+
+    public void setMinResizeInterval(long minResizeInterval) {
+        this.minResizeInterval = minResizeInterval;
+    }
 
     /**
      * After one of the caches is accessed a number of times, this method is called.
@@ -112,9 +122,9 @@ public class CacheManager implements CacheAccessListener {
             if (now < nextResize) {
                 return;
             }
-            nextResize = now + SLEEP;
+            nextResize = now + minResizeInterval;
             resizeAll();
-            nextResize = System.currentTimeMillis() + SLEEP;
+            nextResize = System.currentTimeMillis() + minResizeInterval;
         }
     }
 
