@@ -78,14 +78,6 @@ public interface InternalVersionHistory extends InternalVersionItem {
     InternalVersion getVersionByLabel(Name label);
 
     /**
-     * Returns an iterator over all versions (not ordered yet), including the
-     * root version.
-     *
-     * @return an iterator over {@link InternalVersion} objects.
-     */
-    Iterator getVersions();
-
-    /**
      * Returns the number of versions in this version history.
      *
      * @return the number of versions, including the root version.
