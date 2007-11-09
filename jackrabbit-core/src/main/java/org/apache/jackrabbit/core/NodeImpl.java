@@ -3020,10 +3020,13 @@ public class NodeImpl extends ItemImpl implements Node {
         // check lock status
         checkLock();
 
-        internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));
-        internalSetProperty(NameConstants.JCR_PREDECESSORS, new InternalValue[] { 
-                    InternalValue.create(new UUID(getBaseVersion().getUUID())) });
-        save();
+        Property prop = internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));
+        prop.save();
+        prop = internalSetProperty(NameConstants.JCR_PREDECESSORS,
+                new InternalValue[]{
+                    InternalValue.create(new UUID(getBaseVersion().getUUID()))
+                });
+        prop.save();
     }
 
     /**
