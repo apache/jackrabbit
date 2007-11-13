@@ -35,12 +35,12 @@ public class UUID implements Constants, Serializable, Comparable {
     static final long serialVersionUID = 2526142433736157231L;
 
     /**
-     * the least siginificant 64 bits of the uuid (bytes 8-15)
+     * the least significant 64 bits of the uuid (bytes 8-15)
      */
     private final long lsb;
 
     /**
-     * the most siginificant 64 bits of the uuid (bytes 0-7)
+     * the most significant 64 bits of the uuid (bytes 0-7)
      */
     private final long msb;
 
@@ -59,7 +59,7 @@ public class UUID implements Constants, Serializable, Comparable {
     public UUID(byte[] b) throws IllegalArgumentException {
         if (b.length != UUID_BYTE_LENGTH) {
             throw new IllegalArgumentException(
-                    "UUID must be contructed using a 16 byte array.");
+                    "UUID must be constructed using a 16 byte array.");
         }
         msb = ((((long) b[7]) & 0xFF)
                 + ((((long) b[6]) & 0xFF) << 8)
@@ -248,38 +248,38 @@ public class UUID implements Constants, Serializable, Comparable {
     public byte[] getRawBytes() {
         byte[] b = new byte[UUID_BYTE_LENGTH];
         long n = msb;
-        b[7] = (byte) (n);
+        b[7] = (byte) n;
         n >>>= 8;
-        b[6] = (byte) (n);
+        b[6] = (byte) n;
         n >>>= 8;
-        b[5] = (byte) (n);
+        b[5] = (byte) n;
         n >>>= 8;
-        b[4] = (byte) (n);
+        b[4] = (byte) n;
         n >>>= 8;
-        b[3] = (byte) (n);
+        b[3] = (byte) n;
         n >>>= 8;
-        b[2] = (byte) (n);
+        b[2] = (byte) n;
         n >>>= 8;
-        b[1] = (byte) (n);
+        b[1] = (byte) n;
         n >>>= 8;
-        b[0] = (byte) (n);
+        b[0] = (byte) n;
 
         n = lsb;
-        b[15] = (byte) (n);
+        b[15] = (byte) n;
         n >>>= 8;
-        b[14] = (byte) (n);
+        b[14] = (byte) n;
         n >>>= 8;
-        b[13] = (byte) (n);
+        b[13] = (byte) n;
         n >>>= 8;
-        b[12] = (byte) (n);
+        b[12] = (byte) n;
         n >>>= 8;
-        b[11] = (byte) (n);
+        b[11] = (byte) n;
         n >>>= 8;
-        b[10] = (byte) (n);
+        b[10] = (byte) n;
         n >>>= 8;
-        b[9] = (byte) (n);
+        b[9] = (byte) n;
         n >>>= 8;
-        b[8] = (byte) (n);
+        b[8] = (byte) n;
 
         return b;
     }
@@ -290,6 +290,6 @@ public class UUID implements Constants, Serializable, Comparable {
      * @return a new version 4 UUID, based upon Random bits.
      */
     public static UUID randomUUID() {
-        return (UUID) versionFourGenereator.nextIdentifier();
+        return versionFourGenereator.nextIdentifier();
     }
 }
