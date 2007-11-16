@@ -17,7 +17,7 @@
   -->
 <document>
  <properties>
-  <title>Query implementation</title>
+  <title>QueryManager implementation details</title>
  </properties>
  <body>
 <section name="Overview">
@@ -83,6 +83,10 @@ allows Jackrabbit to implement a query engine which is (to a certain
 extent) independent of the query syntax used (XPath or SQL).
 The AQT consists of the classes that are derived from:
 <code>org.apache.jackrabbit.core.query.QueryNode</code>
+</p>
+<p>
+Please note that the AQT is Jackrabbit internal and not exposed to a client
+using the JCR API!
 </p>
 </section>
 
