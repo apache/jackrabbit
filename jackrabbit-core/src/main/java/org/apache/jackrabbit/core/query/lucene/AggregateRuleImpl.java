@@ -330,7 +330,7 @@ class AggregateRuleImpl implements AggregateRule {
                 for (Iterator it = cne.iterator(); it.hasNext(); ) {
                     NodeId id = ((NodeState.ChildNodeEntry) it.next()).getId();
                     NodeState ns = (NodeState) ism.getItemState(id);
-                    if (ns.getNodeTypeName().equals(nodeTypeName)) {
+                    if (nodeTypeName != null || ns.getNodeTypeName().equals(nodeTypeName)) {
                         collector.add(ns);
                     }
                 }
