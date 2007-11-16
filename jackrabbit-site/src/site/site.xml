@@ -60,6 +60,7 @@
         <item name="How Jackrabbit works"       href="/doc/arch/operate/index.html"/>
         <item name="Start-up, Initialize"       href="/doc/arch/operate/startup.html"/>
         <item name="QueryManager"               href="/doc/arch/operate/query.html"/>
+        <item name="Index internals"            href="/doc/arch/operate/index-readers.html"/>
       </item>
       <item name="Deployment&#xA0;Models"     href="/doc/deploy.html" collapse="true">
         <item name="Application"              href="/doc/deploy/howto-client.html"/>
