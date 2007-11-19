@@ -175,9 +175,14 @@ abstract class DocId {
     private static final class UUIDDocId extends DocId {
 
         /**
-         * The node uuid.
+         * The least significant 64 bits of the uuid (bytes 8-15)
          */
-        private final UUID uuid;
+        private final long lsb;
+
+        /**
+         * The most significant 64 bits of the uuid (bytes 0-7)
+         */
+        private final long msb;
 
         /**
          * The index reader that was used to calculate the document number.
@@ -199,7 +204,9 @@ abstract class DocId {
          *                                  malformed.
          */
         UUIDDocId(String uuid) {
-            this.uuid = UUID.fromString(uuid);
+            UUID tmp = UUID.fromString(uuid);
+            this.lsb = tmp.getLeastSignificantBits();
+            this.msb = tmp.getMostSignificantBits();
         }
 
         /**
@@ -211,7 +218,7 @@ abstract class DocId {
                     return docNumber;
                 }
             }
-            Term id = new Term(FieldNames.UUID, uuid.toString());
+            Term id = new Term(FieldNames.UUID, new UUID(msb, lsb).toString());
             TermDocs docs = reader.termDocs(id);
             int doc = -1;
             try {
@@ -254,7 +261,7 @@ abstract class DocId {
          * @return a String representation for this <code>DocId</code>.
          */
         public String toString() {
-            return "UUIDDocId(" + uuid + ")";
+            return "UUIDDocId(" + new UUID(msb, lsb) + ")";
         }
     }
 }
