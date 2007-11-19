@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
+import org.apache.jackrabbit.uuid.UUID;
 
 import java.io.IOException;
 import java.util.BitSet;
@@ -174,9 +175,9 @@ abstract class DocId {
     private static final class UUIDDocId extends DocId {
 
         /**
-         * The node uuid or <code>null</code> if not set.
+         * The node uuid.
          */
-        private final String uuid;
+        private final UUID uuid;
 
         /**
          * The index reader that was used to calculate the document number.
@@ -194,9 +195,11 @@ abstract class DocId {
          * Creates a <code>DocId</code> based on a Node uuid.
          *
          * @param uuid the Node uuid.
+         * @throws IllegalArgumentException if the <code>uuid</code> is
+         *                                  malformed.
          */
         UUIDDocId(String uuid) {
-            this.uuid = uuid;
+            this.uuid = UUID.fromString(uuid);
         }
 
         /**
@@ -208,7 +211,7 @@ abstract class DocId {
                     return docNumber;
                 }
             }
-            Term id = new Term(FieldNames.UUID, uuid);
+            Term id = new Term(FieldNames.UUID, uuid.toString());
             TermDocs docs = reader.termDocs(id);
             int doc = -1;
             try {
