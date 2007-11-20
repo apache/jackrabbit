@@ -623,54 +623,56 @@ public class MultiIndex {
      *                   deleted in <code>index</code>.
      * @throws IOException if an exception occurs while replacing the indexes.
      */
-    synchronized void replaceIndexes(String[] obsoleteIndexes,
-                                     PersistentIndex index,
-                                     Collection deleted)
+    void replaceIndexes(String[] obsoleteIndexes,
+                        PersistentIndex index,
+                        Collection deleted)
             throws IOException {
 
-        synchronized (updateMonitor) {
-            updateInProgress = true;
-        }
-        try {
-            // if we are reindexing there is already an active transaction
-            if (!reindexing) {
-                executeAndLog(new Start(Action.INTERNAL_TRANS_REPL_INDEXES));
-            }
-            // delete obsolete indexes
-            Set names = new HashSet(Arrays.asList(obsoleteIndexes));
-            for (Iterator it = names.iterator(); it.hasNext();) {
-                // do not try to delete indexes that are already gone
-                String indexName = (String) it.next();
-                if (indexNames.contains(indexName)) {
-                    executeAndLog(new DeleteIndex(getTransactionId(), indexName));
-                }
-            }
-
-            // Index merger does not log an action when it creates the target
-            // index of the merge. We have to do this here.
-            executeAndLog(new CreateIndex(getTransactionId(), index.getName()));
-
-            executeAndLog(new AddIndex(getTransactionId(), index.getName()));
-
-            // delete documents in index
-            for (Iterator it = deleted.iterator(); it.hasNext();) {
-                Term id = (Term) it.next();
-                index.removeDocument(id);
-            }
-            index.commit();
-
-            if (!reindexing) {
-                // only commit if we are not reindexing
-                // when reindexing the final commit is done at the very end
-                executeAndLog(new Commit(getTransactionId()));
-            }
-        } finally {
+        synchronized (this) {
             synchronized (updateMonitor) {
-                updateInProgress = false;
-                updateMonitor.notifyAll();
-                if (multiReader != null) {
-                    multiReader.close();
-                    multiReader = null;
+                updateInProgress = true;
+            }
+            try {
+                // if we are reindexing there is already an active transaction
+                if (!reindexing) {
+                    executeAndLog(new Start(Action.INTERNAL_TRANS_REPL_INDEXES));
+                }
+                // delete obsolete indexes
+                Set names = new HashSet(Arrays.asList(obsoleteIndexes));
+                for (Iterator it = names.iterator(); it.hasNext();) {
+                    // do not try to delete indexes that are already gone
+                    String indexName = (String) it.next();
+                    if (indexNames.contains(indexName)) {
+                        executeAndLog(new DeleteIndex(getTransactionId(), indexName));
+                    }
+                }
+
+                // Index merger does not log an action when it creates the target
+                // index of the merge. We have to do this here.
+                executeAndLog(new CreateIndex(getTransactionId(), index.getName()));
+
+                executeAndLog(new AddIndex(getTransactionId(), index.getName()));
+
+                // delete documents in index
+                for (Iterator it = deleted.iterator(); it.hasNext();) {
+                    Term id = (Term) it.next();
+                    index.removeDocument(id);
+                }
+                index.commit();
+
+                if (!reindexing) {
+                    // only commit if we are not reindexing
+                    // when reindexing the final commit is done at the very end
+                    executeAndLog(new Commit(getTransactionId()));
+                }
+            } finally {
+                synchronized (updateMonitor) {
+                    updateInProgress = false;
+                    updateMonitor.notifyAll();
+                    if (multiReader != null) {
+                        multiReader.close();
+                        multiReader = null;
+                    }
                 }
             }
         }
@@ -846,8 +848,10 @@ public class MultiIndex {
         indexNames.removeName(index.getName());
         // during recovery it may happen that an index had already been marked
         // deleted, so we need to check if it is already marked deleted.
-        if (!deletable.contains(index.getName())) {
-            deletable.addName(index.getName());
+        synchronized (deletable) {
+            if (!deletable.contains(index.getName())) {
+                deletable.addName(index.getName());
+            }
         }
     }
 
@@ -857,33 +861,35 @@ public class MultiIndex {
      *
      * @throws IOException if the flush fails.
      */
-    synchronized void flush() throws IOException {
-        // commit volatile index
-        executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
-        commitVolatileIndex();
+    void flush() throws IOException {
+        synchronized (this) {
+            // commit volatile index
+            executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
+            commitVolatileIndex();
 
-        // commit persistent indexes
-        for (int i = indexes.size() - 1; i >= 0; i--) {
-            PersistentIndex index = (PersistentIndex) indexes.get(i);
-            // only commit indexes we own
-            // index merger also places PersistentIndex instances in indexes,
-            // but does not make them public by registering the name in indexNames
-            if (indexNames.contains(index.getName())) {
-                index.commit();
-                // check if index still contains documents
-                if (index.getNumDocuments() == 0) {
-                    executeAndLog(new DeleteIndex(getTransactionId(), index.getName()));
+            // commit persistent indexes
+            for (int i = indexes.size() - 1; i >= 0; i--) {
+                PersistentIndex index = (PersistentIndex) indexes.get(i);
+                // only commit indexes we own
+                // index merger also places PersistentIndex instances in indexes,
+                // but does not make them public by registering the name in indexNames
+                if (indexNames.contains(index.getName())) {
+                    index.commit();
+                    // check if index still contains documents
+                    if (index.getNumDocuments() == 0) {
+                        executeAndLog(new DeleteIndex(getTransactionId(), index.getName()));
+                    }
                 }
             }
+            executeAndLog(new Commit(getTransactionId()));
+
+            indexNames.write(indexDir);
+
+            // reset redo log
+            redoLog.clear();
+
+            lastFlushTime = System.currentTimeMillis();
         }
-        executeAndLog(new Commit(getTransactionId()));
-
-        indexNames.write(indexDir);
-
-        // reset redo log
-        redoLog.clear();
-
-        lastFlushTime = System.currentTimeMillis();
 
         // delete obsolete indexes
         attemptDelete();
@@ -1022,19 +1028,21 @@ public class MultiIndex {
      * Attempts to delete all files recorded in {@link #deletable}.
      */
     private void attemptDelete() {
-        for (int i = deletable.size() - 1; i >= 0; i--) {
-            String indexName = deletable.getName(i);
-            File dir = new File(indexDir, indexName);
-            if (deleteIndex(dir)) {
-                deletable.removeName(i);
-            } else {
-                log.info("Unable to delete obsolete index: " + indexName);
+        synchronized (deletable) {
+            for (int i = deletable.size() - 1; i >= 0; i--) {
+                String indexName = deletable.getName(i);
+                File dir = new File(indexDir, indexName);
+                if (deleteIndex(dir)) {
+                    deletable.removeName(i);
+                } else {
+                    log.info("Unable to delete obsolete index: " + indexName);
+                }
             }
-        }
-        try {
-            deletable.write(indexDir);
-        } catch (IOException e) {
-            log.warn("Exception while writing deletable indexes: " + e);
+            try {
+                deletable.write(indexDir);
+            } catch (IOException e) {
+                log.warn("Exception while writing deletable indexes: " + e);
+            }
         }
     }
 
