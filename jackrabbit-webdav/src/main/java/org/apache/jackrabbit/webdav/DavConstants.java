@@ -34,7 +34,7 @@ public interface DavConstants {
      */
     public static final Namespace NAMESPACE = Namespace.getNamespace("D", "DAV:");
 
-    //---< Headers (Names and Value Constants) >--------------------------------
+    //--------------------------------< Headers (Names and Value Constants) >---
     public static final String HEADER_DAV = "DAV";
     public static final String HEADER_DESTINATION = "Destination";
     public static final String HEADER_IF = "If";
@@ -102,7 +102,7 @@ public interface DavConstants {
     public static final String XML_WRITE = "write";
     public static final String XML_OWNER = "owner";
 
-    //---< Property Names >-----------------------------------------------------
+    //-----------------------------------------------------< Property Names >---
     /*
      * Webdav property names as defined by RFC 2518<br>
      * Note: Microsoft webdav clients as well as Webdrive request additional
@@ -122,12 +122,17 @@ public interface DavConstants {
     public static final String PROPERTY_SOURCE = "source";
     public static final String PROPERTY_SUPPORTEDLOCK = "supportedlock";
 
-    //---< PropFind Constants >-------------------------------------------------
+    //-------------------------------------------------< PropFind Constants >---
     public static final int PROPFIND_BY_PROPERTY = 0;
     public static final int PROPFIND_ALL_PROP = 1;
     public static final int PROPFIND_PROPERTY_NAMES = 2;
 
-    //---< Date Format Constants >----------------------------------------------
+    //----------------------------------------------< Date Format Constants >---
+    /**
+     * Marker for undefined modification or creation time.
+     */
+    public static long UNDEFINED_TIME = -1;
+
     /**
      * modificationDate date format per RFC 1123
      */
