@@ -85,6 +85,8 @@ import java.util.List;
 /**
  * <code>AbstractWebdavServlet</code>
  * <p/>
+ *
+ * @deprecated Use org.apache.jackrabbit.webdav.server.AbstractWebdavServlet instead.
  */
 abstract public class AbstractWebdavServlet extends HttpServlet implements DavConstants {
 
