@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.j2ee;
 
-import org.apache.jackrabbit.server.AbstractWebdavServlet;
 import org.apache.jackrabbit.server.BasicCredentialsProvider;
 import org.apache.jackrabbit.server.CredentialsProvider;
 import org.apache.jackrabbit.server.SessionProvider;
@@ -28,6 +27,7 @@ import org.apache.jackrabbit.webdav.DavSessionProvider;
 import org.apache.jackrabbit.webdav.WebdavRequest;
 import org.apache.jackrabbit.webdav.lock.LockManager;
 import org.apache.jackrabbit.webdav.lock.SimpleLockManager;
+import org.apache.jackrabbit.webdav.server.AbstractWebdavServlet;
 import org.apache.jackrabbit.webdav.simple.DavSessionProviderImpl;
 import org.apache.jackrabbit.webdav.simple.LocatorFactoryImplEx;
 import org.apache.jackrabbit.webdav.simple.ResourceConfig;
