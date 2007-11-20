@@ -1523,7 +1523,7 @@ public class MultiIndex {
                 }
             }
             if (doc != null) {
-                index.volatileIndex.addDocument(doc);
+                index.volatileIndex.addDocuments(new Document[]{doc});
             }
         }
 

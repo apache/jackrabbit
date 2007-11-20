@@ -55,6 +55,9 @@ abstract class AbstractIndex {
     /** PrintStream that pipes all calls to println(String) into log.info() */
     private static final LoggingPrintStream STREAM_LOGGER = new LoggingPrintStream();
 
+    /** Executor with a pool size equal to the number of available processors */
+    private static final DynamicPooledExecutor EXECUTOR = new DynamicPooledExecutor();
+
     /** The currently set IndexWriter or <code>null</code> if none is set */
     private IndexWriter indexWriter;
 
@@ -136,16 +139,53 @@ abstract class AbstractIndex {
     }
 
     /**
-     * Adds a document to this index and invalidates the shared reader.
+     * Adds documents to this index and invalidates the shared reader.
      *
-     * @param doc the document to add.
+     * @param docs the documents to add.
      * @throws IOException if an error occurs while writing to the index.
      */
-    void addDocument(Document doc) throws IOException {
-        // check if text extractor completed its work
-        doc = getFinishedDocument(doc);
-        getIndexWriter().addDocument(doc);
+    void addDocuments(Document[] docs) throws IOException {
+        final IndexWriter writer = getIndexWriter();
+        DynamicPooledExecutor.Command commands[] =
+                new DynamicPooledExecutor.Command[docs.length];
+        for (int i = 0; i < docs.length; i++) {
+            // check if text extractor completed its work
+            final Document doc = getFinishedDocument(docs[i]);
+            // create a command for inverting the document
+            commands[i] = new DynamicPooledExecutor.Command() {
+                public Object call() throws Exception {
+                    long time = System.currentTimeMillis();
+                    writer.addDocument(doc);
+                    return new Long(System.currentTimeMillis() - time);
+                }
+            };
+        }
+        DynamicPooledExecutor.Result results[] = EXECUTOR.executeAndWait(commands);
         invalidateSharedReader();
+        IOException ex = null;
+        for (int i = 0; i < results.length; i++) {
+            if (results[i].getException() != null) {
+                Throwable cause = results[i].getException().getCause();
+                if (ex == null) {
+                    // only throw the first exception
+                    if (cause instanceof IOException) {
+                        ex = (IOException) cause;
+                    } else {
+                        IOException e = new IOException();
+                        e.initCause(cause);
+                        ex = e;
+                    }
+                } else {
+                    // all others are logged
+                    log.warn("Exception while inverting document", cause);
+                }
+            } else {
+                log.debug("Inverted document in {} ms", results[i].get());
+            }
+        }
+        if (ex != null) {
+            throw ex;
+        }
     }
 
     /**
