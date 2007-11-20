@@ -64,22 +64,24 @@ class VolatileIndex extends AbstractIndex {
     }
 
     /**
-     * Overwrites the default implementation by adding the document to a
+     * Overwrites the default implementation by adding the documents to a
      * pending list and commits the pending list if needed.
      *
-     * @param doc the document to add to the index.
+     * @param docs the documents to add to the index.
      * @throws IOException if an error occurs while writing to the index.
      */
-    void addDocument(Document doc) throws IOException {
-        Document old = (Document) pending.put(doc.get(FieldNames.UUID), doc);
-        if (old != null) {
-            Util.disposeDocument(old);
-        }
-        if (pending.size() >= bufferSize) {
-            commitPending();
+    void addDocuments(Document[] docs) throws IOException {
+        for (int i = 0; i < docs.length; i++) {
+            Document old = (Document) pending.put(docs[i].get(FieldNames.UUID), docs[i]);
+            if (old != null) {
+                Util.disposeDocument(old);
+            }
+            if (pending.size() >= bufferSize) {
+                commitPending();
+            }
+            numDocs++;
         }
         invalidateSharedReader();
-        numDocs++;
     }
 
     /**
@@ -152,10 +154,8 @@ class VolatileIndex extends AbstractIndex {
      * Commits pending documents to the index.
      */
     private void commitPending() throws IOException {
-        for (Iterator it = pending.values().iterator(); it.hasNext();) {
-            Document doc = (Document) it.next();
-            super.addDocument(doc);
-            it.remove();
-        }
+        super.addDocuments((Document[]) pending.values().toArray(
+                new Document[pending.size()]));
+        pending.clear();
     }
 }
