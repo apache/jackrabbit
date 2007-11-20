@@ -41,7 +41,7 @@ public class IOUtil {
     /**
      * Constant for undefined modification/creation time
      */
-    public static final long UNDEFINED_TIME = -1;
+    public static final long UNDEFINED_TIME = DavConstants.UNDEFINED_TIME;
 
     /**
      * Constant for undefined content length
