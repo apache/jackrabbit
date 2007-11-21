@@ -14,52 +14,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.data;
+package org.apache.jackrabbit.core.data.db;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import org.apache.jackrabbit.core.data.AbstractDataRecord;
+import org.apache.jackrabbit.core.data.DataIdentifier;
+import org.apache.jackrabbit.core.data.DataStoreException;
+
 import java.io.InputStream;
 
-
 /**
- * Data record that is based on a normal file.
+ * Data record that is stored in a database
  */
-class FileDataRecord extends AbstractDataRecord {
+public class DbDataRecord extends AbstractDataRecord {
+    
+    private final DbDataStore store;
+    private final long length;
+    private long lastModified;
 
     /**
-     * The file that contains the binary stream.
-     */
-    private final File file;
-
-    /**
-     * Creates a data record based on the given identifier and file.
+     * Creates a data record based on the given identifier and length.
      *
      * @param identifier data identifier
+     * @param length the length
      * @param file file that contains the binary stream
      */
-    public FileDataRecord(DataIdentifier identifier, File file) {
+    public DbDataRecord(DbDataStore store, DataIdentifier identifier, long length, long lastModified) {
         super(identifier);
-        assert file.isFile();
-        this.file = file;
+        this.store = store;
+        this.length = length;
+        this.lastModified = lastModified;
     }
 
     /**
      * {@inheritDoc}
      */
-    public long getLength() {
-        return file.length();
+    public long getLength() throws DataStoreException {
+        lastModified = store.touch(getIdentifier(), lastModified);
+        return length;
     }
 
     /**
      * {@inheritDoc}
      */
     public InputStream getStream() throws DataStoreException {
-        try {
-            return new FileInputStream(file);
-        } catch (IOException e) {
-            throw new DataStoreException("Error opening input stream of " + file.getAbsolutePath(), e);
-        }
+        lastModified = store.touch(getIdentifier(), lastModified);
+        return store.getInputStream(getIdentifier());
     }
 
 }
