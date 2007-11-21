@@ -98,6 +98,9 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
      * {@inheritDoc}
      */
     public NodeType getDeclaringNodeType() {
+        if (ntMgr == null) {
+            return null;
+        }
         try {
             return ntMgr.getNodeType(itemDef.getDeclaringNodeType());
         } catch (NoSuchNodeTypeException e) {

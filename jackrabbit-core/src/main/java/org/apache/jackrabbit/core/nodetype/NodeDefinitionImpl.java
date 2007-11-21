@@ -140,10 +140,9 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
                 }
                 return names;
             }
-        } catch (NamespaceException npde) {
+        } catch (NamespaceException e) {
             // should never get here
-            log.error("encountered unregistered namespace in node type name",
-                    npde);
+            log.error("encountered unregistered namespace in node type name", e);
             return new String[0];
         }
     }
@@ -172,10 +171,9 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
 
         try {
             return resolver.getJCRName(ntName);
-        } catch (NamespaceException npde) {
+        } catch (NamespaceException e) {
             // should never get here
-            log.error("encountered unregistered namespace in node type name",
-                    npde);
+            log.error("encountered unregistered namespace in node type name", e);
             // not correct, but an acceptable fallback
             return ntName.toString();
         }
