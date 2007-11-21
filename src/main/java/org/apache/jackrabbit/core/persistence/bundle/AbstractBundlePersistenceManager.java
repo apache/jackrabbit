@@ -63,16 +63,16 @@ import javax.jcr.RepositoryException;
  * included in the bundle since they are addressed by the target id.
  * <p/>
  * Some strings like namespaces and local names are additionally managed by
- * seperate indexes. only the index number is serialized to the records which
+ * separate indexes. only the index number is serialized to the records which
  * reduces the amount of memory used.
  * <p/>
  * Special treatment is performed for the properties "jcr:uuid", "jcr:primaryType"
  * and "jcr:mixinTypes". As they are also stored in the node state they are not
  * included in the bundle but generated when required.
  * <p/>
- * In order to increase performance, there are 2 caches maintained. One ist the
+ * In order to increase performance, there are 2 caches maintained. One is the
  * {@link BundleCache} that caches already loaded bundles. The other is the
- * {@link LRUNodeIdCache} that caches non-existent bundles. This is usefull
+ * {@link LRUNodeIdCache} that caches non-existent bundles. This is useful
  * because a lot of {@link #exists(NodeId)} calls are issued that would result
  * in a useless SQL execution if the desired bundle does not exist.
  * <p/>
@@ -111,7 +111,7 @@ public abstract class AbstractBundlePersistenceManager implements
     /** the cache of loaded bundles */
     private BundleCache bundles;
 
-    /** the cahce of non-existent bundles */
+    /** the cache of non-existent bundles */
     private LRUNodeIdCache missing;
 
     /** definition id of the jcr:uuid property */
@@ -126,7 +126,7 @@ public abstract class AbstractBundlePersistenceManager implements
     /** the persistence manager context */
     protected PMContext context;
 
-    /** default size of the bunlde cache */
+    /** default size of the bundle cache */
     private long bundleCacheSize = 8 * 1024 * 1024;
 
     /**
@@ -331,7 +331,7 @@ public abstract class AbstractBundlePersistenceManager implements
      * Loads a bundle from the underlying system.
      *
      * @param id the node id of the bundle
-     * @return the loaded bunlde or <code>null</code> if the bundle does not
+     * @return the loaded bundle or <code>null</code> if the bundle does not
      *         exist.
      * @throws ItemStateException if an error while loading occurs.
      */
@@ -375,7 +375,7 @@ public abstract class AbstractBundlePersistenceManager implements
             throws NoSuchItemStateException, ItemStateException;
 
     /**
-     * Deletes the node references from the undelying system.
+     * Deletes the node references from the underlying system.
      *
      * @param refs the node references to destroy.
      * @throws ItemStateException if an error while destroying occurs.
@@ -484,7 +484,7 @@ public abstract class AbstractBundlePersistenceManager implements
     /**
      * {@inheritDoc}
      *
-     * Checks the existance via the appropriate NodePropBundle.
+     * Checks the existence via the appropriate NodePropBundle.
      */
     public synchronized boolean exists(NodeId id) throws ItemStateException {
         // anticipating a load followed by a exists
@@ -653,7 +653,7 @@ public abstract class AbstractBundlePersistenceManager implements
      * Gets the bundle for the given nodeid.
      *
      * @param id the id of the bundle to retrieve.
-     * @return the bundle or <code>null</code> if the bunlde does not exist
+     * @return the bundle or <code>null</code> if the bundle does not exist
      *
      * @throws ItemStateException if an error occurs.
      */

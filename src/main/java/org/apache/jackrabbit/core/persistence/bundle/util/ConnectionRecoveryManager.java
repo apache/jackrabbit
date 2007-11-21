@@ -101,7 +101,7 @@ public class ConnectionRecoveryManager {
      * Number of reconnection attempts per method call. Only
      * used if <code>block == false</code>.
      */
-    private static final int TRIALS = 20;
+    public static final int TRIALS = 20;
 
     /**
      * The map of prepared statements (key: SQL stmt, value: prepared stmt).
@@ -234,7 +234,7 @@ public class ConnectionRecoveryManager {
      * @throws SQLException if an error occurs
      * @throws RepositoryException if the database driver could not be loaded
      */
-    public Statement executeStmt(String sql, Object[] params) throws SQLException, RepositoryException {
+    public PreparedStatement executeStmt(String sql, Object[] params) throws SQLException, RepositoryException {
         return executeStmt(sql, params, false, 0);
     }    
 
@@ -249,7 +249,7 @@ public class ConnectionRecoveryManager {
      * @throws SQLException if an error occurs
      * @throws RepositoryException if the database driver could not be loaded
      */
-    public synchronized Statement executeStmt(String sql, Object[] params, boolean returnGeneratedKeys, int maxRows) throws SQLException, RepositoryException {
+    public synchronized PreparedStatement executeStmt(String sql, Object[] params, boolean returnGeneratedKeys, int maxRows) throws SQLException, RepositoryException {
         int trials = 2;
         SQLException lastException  = null;
         do {
@@ -274,7 +274,7 @@ public class ConnectionRecoveryManager {
      * @throws SQLException if an error occurs
      * @throws RepositoryException if the database driver could not be loaded
      */
-    private Statement executeStmtInternal(String sql, Object[] params, boolean returnGeneratedKeys, int maxRows) throws SQLException, RepositoryException {
+    private PreparedStatement executeStmtInternal(String sql, Object[] params, boolean returnGeneratedKeys, int maxRows) throws SQLException, RepositoryException {
         try {
             String key = sql;
             if (returnGeneratedKeys) {
@@ -326,11 +326,13 @@ public class ConnectionRecoveryManager {
      */
     private void setupConnection() throws SQLException, RepositoryException {
         try {
-            Class driverClass = Class.forName(driver);
-            // Workaround for Apache Derby:
-            // The JDBC specification recommends the Class.ForName method without the .newInstance() method call, 
-            // but adding the newInstance() guarantees that Derby will be booted on any Java Virtual Machine.
-            driverClass.newInstance();
+            if (driver != null && driver.length() > 0) {
+                Class driverClass = Class.forName(driver);
+                // Workaround for Apache Derby:
+                // The JDBC specification recommends the Class.ForName method without the .newInstance() method call, 
+                // but adding the newInstance() guarantees that Derby will be booted on any Java Virtual Machine.
+                driverClass.newInstance();
+            }
         } catch (Throwable e) {
             throw new RepositoryException("Could not load or initialize the database driver class " + driver, e);
         }
@@ -356,13 +358,17 @@ public class ConnectionRecoveryManager {
      * @return the executed Statement
      * @throws SQLException on error
      */
-    private Statement executeStmtInternal(Object[] params, PreparedStatement stmt) throws SQLException {
-        for (int i = 0; i < params.length; i++) {
-            if (params[i] instanceof StreamWrapper) {
-                StreamWrapper wrapper = (StreamWrapper) params[i];
+    private PreparedStatement executeStmtInternal(Object[] params, PreparedStatement stmt) throws SQLException {
+        for (int i = 0; params != null && i < params.length; i++) {
+            Object p = params[i];
+            if (p instanceof StreamWrapper) {
+                StreamWrapper wrapper = (StreamWrapper) p;
                 stmt.setBinaryStream(i + 1, wrapper.stream, (int) wrapper.size);
+            } else if (p instanceof InputStream) {
+                InputStream stream = (InputStream) p;
+                stmt.setBinaryStream(i + 1, stream, -1);
             } else {
-                stmt.setObject(i + 1, params[i]);
+                stmt.setObject(i + 1, p);
             }
         }
         stmt.execute();
@@ -464,7 +470,7 @@ public class ConnectionRecoveryManager {
 
         /**
          * Creates a wrapper for the given InputStream that can
-         * savely be passed as a parameter to the <code>executeStmt</code>
+         * safely be passed as a parameter to the <code>executeStmt</code>
          * methods in the {@link ConnectionRecoveryManager} class.
          *
          * @param in the InputStream to wrap
@@ -473,6 +479,16 @@ public class ConnectionRecoveryManager {
         public StreamWrapper(InputStream in, long size) {
             this.stream = in;
             this.size = size;
+        }
+    }
+
+    public void closeSilently(ResultSet rs) {
+        if (rs != null) {
+            try {
+                rs.close();
+            } catch (SQLException e) {
+                // ignore
+            }
         }
     }
 }

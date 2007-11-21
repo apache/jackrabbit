@@ -19,6 +19,8 @@ package org.apache.jackrabbit.core.data;
 import java.io.InputStream;
 import java.util.Iterator;
 
+import javax.jcr.RepositoryException;
+
 /**
  * Append-only store for binary streams. A data store consists of a number
  * of identifiable data records that each contain a distinct binary stream.
@@ -71,33 +73,39 @@ public interface DataStore {
     DataRecord addRecord(InputStream stream) throws DataStoreException;
 
     /**
-     * From now on, update the modified date of an object even when reading from it.
+     * From now on, update the modified date of an object even when accessing it.
      * Usually, the modified date is only updated when creating a new object, 
-     * or when a new link is added to an existing object.
+     * or when a new link is added to an existing object. When this setting is enabled,
+     * even getLength() will update the modified date.
      * 
      * @param before - update the modified date to the current time if it is older than this value
      */
-    void updateModifiedDateOnRead(long before);
+    void updateModifiedDateOnAccess(long before);
 
     /**
      * Delete objects that have a modified date older than the specified date.
      * 
-     * @param min
+     * @param min the minimum time
      * @return the number of data records deleted
+     * @throws DataStoreException 
      */
-    int deleteAllOlderThan(long min);
+    int deleteAllOlderThan(long min) throws DataStoreException;
     
     /**
      * Get all identifiers.
+     * 
+     * @return an iterator over all DataIdentifier objects
+     * @throws DataStoreException if the list could not be read
      */
-    Iterator getAllIdentifiers();
+    Iterator getAllIdentifiers() throws DataStoreException;
     
     /**
      * Initialized the data store
      * 
      * @param homeDir the home directory of the repository
+     * @throws RepositoryException 
      */
-    void init(String homeDir);
+    void init(String homeDir) throws RepositoryException;
 
     /**
      * Get the minimum size of an object that should be stored in this data store.
@@ -106,5 +114,18 @@ public interface DataStore {
      * @return the minimum size
      */
     int getMinRecordLength();
+
+    /**
+     * Close the data store
+     * 
+     * @throws DataStoreException if a problem occured
+     */
+    void close() throws DataStoreException;
+    
+    /**
+     * Clear the in-use list. This is only used for testing to make the the garbage collection
+     * think that objects are no longer in use.
+     */
+    void clearInUse();
 
 }

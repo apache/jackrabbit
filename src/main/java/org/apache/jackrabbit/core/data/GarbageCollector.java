@@ -32,7 +32,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.Value;
 import javax.jcr.Workspace;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
@@ -43,7 +42,7 @@ import javax.jcr.observation.ObservationManager;
  * nodes and reads the binary properties. To detect nodes that are moved while
  * the scan runs, event listeners are started. Like the well known garbage
  * collection in Java, the items that are still in use are marked. Currently
- * this achived by updating the modified date of the entries. Newly added
+ * this achieved by updating the modified date of the entries. Newly added
  * entries are detected because the modified date is changed when they are
  * added.
  * 
@@ -93,7 +92,7 @@ public class GarbageCollector {
             RepositoryImpl rep = (RepositoryImpl) session.getRepository();
             store = rep.getDataStore();
             startScanTimestamp = now;
-            store.updateModifiedDateOnRead(startScanTimestamp);
+            store.updateModifiedDateOnAccess(startScanTimestamp);
         }
 
         // add a listener to get 'new' nodes
@@ -161,12 +160,9 @@ public class GarbageCollector {
                     rememberNode(n.getPath());
                 }
                 if (p.getDefinition().isMultiple()) {
-                    Value[] list = p.getValues();
-                    for (int i = 0; i < list.length; i++) {
-                        list[i].getStream().close();
-                    }
+                    p.getLengths();
                 } else {
-                    p.getStream().close();
+                    p.getLength();
                 }
             }
         }

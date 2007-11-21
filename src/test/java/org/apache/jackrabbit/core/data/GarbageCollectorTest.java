@@ -74,7 +74,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         LOG.debug("stop scanning; currently " + count + " identifiers");
         gc.stopScan();
         LOG.debug("deleting...");
-        ((FileDataStore) gc.getDataStore()).clearInUse();
+        gc.getDataStore().clearInUse();
         assertTrue(gc.deleteUnused() > 0);
         int count2 = listIdentifiers(gc);
         assertEquals(count - 1, count2);
@@ -88,12 +88,12 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         gc.scan(session);
         gc.stopScan();
         if (all) {
-            ((FileDataStore) gc.getDataStore()).clearInUse();
+            gc.getDataStore().clearInUse();
         }
         gc.deleteUnused();
     }
     
-    private int listIdentifiers(GarbageCollector gc) {
+    private int listIdentifiers(GarbageCollector gc) throws DataStoreException {
         LOG.debug("identifiers:");
         Iterator it = gc.getDataStore().getAllIdentifiers();
         int count = 0;

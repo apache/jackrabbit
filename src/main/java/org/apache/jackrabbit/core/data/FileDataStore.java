@@ -252,7 +252,7 @@ public class FileDataStore implements DataStore {
     /**
      * {@inheritDoc}
      */
-    public void updateModifiedDateOnRead(long before) {
+    public void updateModifiedDateOnAccess(long before) {
         minModifiedDate = before;
     }
     
@@ -313,8 +313,7 @@ public class FileDataStore implements DataStore {
     }
     
     /**
-     * Clear the in-use list. This is only used for testing to make the the garbage collection
-     * think that objects are no longer in use.
+     * {@inheritDoc}
      */
     public void clearInUse() {
         inUse.clear();
@@ -352,6 +351,12 @@ public class FileDataStore implements DataStore {
      */
     public void setMinRecordLength(int minRecordLength) {
         this.minRecordLength = minRecordLength;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void close() {
     }
 
 }
