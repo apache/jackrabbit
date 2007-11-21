@@ -16,20 +16,21 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.data.DataStore;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.conversion.NameException;
 import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.core.data.DataStore;
+import org.apache.jackrabbit.core.nodetype.jsr283.NodeTypeDefinition;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
+import org.apache.jackrabbit.value.ValueHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.NamespaceException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
@@ -41,7 +42,7 @@ import java.util.HashSet;
 /**
  * A <code>NodeTypeImpl</code> ...
  */
-public class NodeTypeImpl implements NodeType {
+public class NodeTypeImpl implements NodeType, NodeTypeDefinition {
 
     private static Logger log = LoggerFactory.getLogger(NodeTypeImpl.class);
 
@@ -210,7 +211,7 @@ public class NodeTypeImpl implements NodeType {
         return (NodeType[]) inherited.toArray(new NodeType[inherited.size()]);
     }
 
-    //-------------------------------------------------------------< NodeType >
+    //---------------------------------------------------< NodeTypeDefinition >
     /**
      * {@inheritDoc}
      */
@@ -222,6 +223,67 @@ public class NodeTypeImpl implements NodeType {
             log.error("encountered unregistered namespace in node type name", e);
             return ntd.getName().toString();
         }
+    }
+
+    /**
+     * Returns the names of the supertypes actually declared in this node type.
+     * <p/>
+     * In implementations that support node type registration, if this
+     * <code>NodeTypeDefinition</code> object is actually a newly-created empty
+     * <code>NodeTypeTemplate</code>, then this method will return an array
+     * containing a single string indicating the node type
+     * <code>nt:base</code>.
+     *
+     * @return an array of <code>String</code>s
+     * @since JCR 2.0
+     */
+    public String[] getDeclaredSupertypeNames() {
+        Name[] ntNames = ntd.getSupertypes();
+        String[] supertypes = new String[ntNames.length];
+        for (int i = 0; i < ntNames.length; i++) {
+            try {
+                supertypes[i] = resolver.getJCRName(ntd.getName());
+            } catch (NamespaceException e) {
+                // should never get here
+                log.error("encountered unregistered namespace in node type name", e);
+                supertypes[i] = ntd.getName().toString();
+            }
+        }
+        return supertypes;
+    }
+
+    /**
+     * Returns <code>true</code> if this is an abstract node type; returns
+     * <code>false</code> otherwise.
+     * <p/>
+     * An abstract node type is one that cannot be assigned as the primary or
+     * mixin type of a node but can be used in the definitions of other node
+     * types as a superclass.
+     * <p/>
+     * In implementations that support node type registration, if this
+     * <code>NodeTypeDefinition</code> object is actually a newly-created empty
+     * <code>NodeTypeTemplate</code>, then this method will return
+     * <code>false</code>.
+     *
+     * @return a <code>boolean</code>
+     * @since JCR 2.0
+     */
+    public boolean isAbstract() {
+        return ntd.isAbstract();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isMixin() {
+        return ntd.isMixin();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean hasOrderableChildNodes() {
+        return ntd.hasOrderableChildNodes();
     }
 
     /**
@@ -245,10 +307,34 @@ public class NodeTypeImpl implements NodeType {
     /**
      * {@inheritDoc}
      */
-    public boolean isMixin() {
-        return ntd.isMixin();
+    public NodeType[] getDeclaredSupertypes() {
+        Name[] ntNames = ntd.getSupertypes();
+        NodeType[] supertypes = new NodeType[ntNames.length];
+        for (int i = 0; i < ntNames.length; i++) {
+            try {
+                supertypes[i] = ntMgr.getNodeType(ntNames[i]);
+            } catch (NoSuchNodeTypeException e) {
+                // should never get here
+                log.error("undefined supertype", e);
+                return new NodeType[0];
+            }
+        }
+        return supertypes;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public NodeDefinition[] getDeclaredChildNodeDefinitions() {
+        NodeDef[] cnda = ntd.getChildNodeDefs();
+        NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
+        for (int i = 0; i < cnda.length; i++) {
+            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i].getId());
+        }
+        return nodeDefs;
+    }
+
+    //-------------------------------------------------------------< NodeType >
     /**
      * {@inheritDoc}
      */
@@ -264,13 +350,6 @@ public class NodeTypeImpl implements NodeType {
             return false;
         }
         return (getQName().equals(ntName) || isDerivedFrom(ntName));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean hasOrderableChildNodes() {
-        return ntd.hasOrderableChildNodes();
     }
 
     /**
@@ -313,36 +392,6 @@ public class NodeTypeImpl implements NodeType {
             propDefs[i] = ntMgr.getPropertyDefinition(pda[i].getId());
         }
         return propDefs;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public NodeType[] getDeclaredSupertypes() {
-        Name[] ntNames = ntd.getSupertypes();
-        NodeType[] supertypes = new NodeType[ntNames.length];
-        for (int i = 0; i < ntNames.length; i++) {
-            try {
-                supertypes[i] = ntMgr.getNodeType(ntNames[i]);
-            } catch (NoSuchNodeTypeException e) {
-                // should never get here
-                log.error("undefined supertype", e);
-                return new NodeType[0];
-            }
-        }
-        return supertypes;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public NodeDefinition[] getDeclaredChildNodeDefinitions() {
-        NodeDef[] cnda = ntd.getChildNodeDefs();
-        NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
-        for (int i = 0; i < cnda.length; i++) {
-            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i].getId());
-        }
-        return nodeDefs;
     }
 
     /**
