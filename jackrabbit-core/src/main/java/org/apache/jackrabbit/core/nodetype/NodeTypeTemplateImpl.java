@@ -18,19 +18,20 @@ package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.commons.collections.list.TypedList;
 import org.apache.jackrabbit.core.nodetype.jsr283.NodeDefinitionTemplate;
+import org.apache.jackrabbit.core.nodetype.jsr283.NodeTypeDefinition;
 import org.apache.jackrabbit.core.nodetype.jsr283.NodeTypeTemplate;
 import org.apache.jackrabbit.core.nodetype.jsr283.PropertyDefinitionTemplate;
 
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.PropertyDefinition;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * A <code>NodeTypeTemplateImpl</code> ...
  */
 public class NodeTypeTemplateImpl implements NodeTypeTemplate {
-
 
     private String name;
     private String[] superTypeNames;
@@ -42,13 +43,35 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
     private List propertyDefinitionTemplates;
 
     /**
-     * Default constructor
+     * Package private constructor
      */
-    public NodeTypeTemplateImpl() {
+    NodeTypeTemplateImpl() {
         nodeDefinitionTemplates = TypedList.decorate(
                 new ArrayList(), NodeDefinitionTemplate.class);
         propertyDefinitionTemplates = TypedList.decorate(
                 new ArrayList(), PropertyDefinitionTemplate.class);
+    }
+
+    /**
+     * Package private constructor
+     *
+     * @param def
+     */
+    NodeTypeTemplateImpl(NodeTypeDefinition def) {
+        name = def.getName();
+        superTypeNames = def.getDeclaredSupertypeNames();
+        primaryItemName = def.getPrimaryItemName();
+        abstractStatus = def.isAbstract();
+        mixin = def.isMixin();
+        orderableChildNodes = def.hasOrderableChildNodes();
+        NodeDefinition[] nodeDefs = def.getDeclaredChildNodeDefinitions();
+        for (int i = 0; i < nodeDefs.length; i++) {
+            nodeDefinitionTemplates.add(new NodeDefinitionTemplateImpl(nodeDefs[i])) ;
+        }
+        PropertyDefinition[] propDefs = def.getDeclaredPropertyDefinitions();
+        for (int i = 0; i < propDefs.length; i++) {
+            propertyDefinitionTemplates.add(new PropertyDefinitionTemplateImpl(propDefs[i]));
+        }
     }
 
     //-----------------------------------------------------< NodeTypeTemplate >
