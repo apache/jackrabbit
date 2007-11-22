@@ -31,10 +31,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Repository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Date;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.OutputStreamWriter;
 
 /**
  * <code>RootCollection</code> represent the WebDAV root resource that does not
@@ -123,8 +127,44 @@ public class RootCollection extends AbstractResource {
      * @throws IOException
      */
     public void spool(OutputContext outputContext) throws IOException {
-        outputContext.setContentLength(0);
-        outputContext.setModificationTime(getModificationTime());
+        if (outputContext.hasStream()) {
+            Session session = getRepositorySession();
+            Repository rep = session.getRepository();
+            String repName = rep.getDescriptor(Repository.REP_NAME_DESC);
+            String repURL = rep.getDescriptor(Repository.REP_VENDOR_URL_DESC);
+            String repVersion = rep.getDescriptor(Repository.REP_VERSION_DESC);
+            String repostr = repName + " " + repVersion;
+
+            StringBuffer sb = new StringBuffer();
+            sb.append("<html><head><title>");
+            sb.append(repostr);
+            sb.append("</title></head>");
+            sb.append("<body><h2>").append(repostr).append("</h2>");
+            sb.append("<h3>Available Workspace Resources:</h3><ul>");
+
+            DavResourceIterator it = getMembers();
+            while (it.hasNext()) {
+                DavResource res = it.nextResource();
+                sb.append("<li><a href=\"");
+                sb.append(res.getHref());
+                sb.append("\">");
+                sb.append(res.getDisplayName());
+                sb.append("</a></li>");
+            }
+            sb.append("</ul><hr size=\"1\"><em>Powered by <a href=\"");
+            sb.append(repURL).append("\">").append(repName);
+            sb.append("</a> ").append(repVersion);
+            sb.append("</em></body></html>");
+
+            outputContext.setContentLength(sb.length());
+            outputContext.setModificationTime(getModificationTime());
+            PrintWriter writer = new PrintWriter(new OutputStreamWriter(outputContext.getOutputStream(), "utf8"));
+            writer.print(sb.toString());
+            writer.close();
+        } else {
+            outputContext.setContentLength(0);
+            outputContext.setModificationTime(getModificationTime());
+        }
     }
 
     /**
