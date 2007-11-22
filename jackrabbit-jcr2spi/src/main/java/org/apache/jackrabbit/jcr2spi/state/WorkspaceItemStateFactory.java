@@ -258,6 +258,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
 
         // now build the nodestate itself
         NodeState state = new NodeState(entry, info, this, definitionProvider);
+        state.setMixinTypeNames(info.getMixins());
 
         // update NodeEntry from the information present in the NodeInfo (prop entries)
         List propNames = new ArrayList();
