@@ -46,61 +46,39 @@
         }
         %>
 <html>
-  <head><title>Search within results</title>
-    <link rel="shortcut icon" href="<%= request.getContextPath() %>/images/favicon.ico" type="image/vnd.microsoft.icon">
-    <style><!--
-div,td{color:#000}
-.f{color:#666}
-.flc,.fl:link{color:#77c}
-a:link,.w,a.w:link,.w a:link,.q:visited,.q:link,.q:active,.q{color:#00c}
-a:visited,.fl:visited{color:#551a8b}
-a:active,.fl:active{color:red}
-.t{background:#e5ecf9;color:#000}
-.bb{border-bottom:1px solid #36c}
-.bt{border-top:1px solid #36c}
-.j{width:34em}
-.h{color:#36c}
-.i,.i:link{color:#a90a08}
-.a,.a:link{color:green}
-.z{display:none}
-div.n{margin-top:1ex}
-.n a{font-size:10pt;color:#000}
-.n .i{font-size:10pt;font-weight:bold}
-.b a{font-size:12pt;color:#00c;font-weight:bold}
-#np,#nn,.nr,#logo span,.ch{cursor:pointer;cursor:hand}
-.tas{padding:3px 3px 3px 5px}
-.taf{padding:3px 3px 6px 5px}
-.tam{padding:6px 3px 6px 5px}
-.tal{padding:6px 3px 3px 5px}
-.sl,.r{font-weight:normal;margin:0;display:inline}
-.sl{font-size:84%}
-.r{font-size:1em}
-.e{margin:.75em 0}
-.bl{display:none}
-.fl2,.fl2:link,.fl2:visited{color:#77c}
-.fl2:active{color:red}
-#navbar div,#logo span{background:url(<%= request.getContextPath() %>/images/jackrabbitlogo.gif) no-repeat;overflow:hidden;height:26px}
-#logo{display:block;width:150px;height:52px;position:relative;overflow:hidden;margin:15px 0 12px}
-#logo span{background-position:0 -26px;position:absolute;top:0;left:0;width:100%;height:100%}
-body,td,div,.p,a{font-family:arial,sans-serif}
-.g{margin:1em 0}
-#sd{font-size:113%;font-weight:bold}
-#ap{font-size:64%}
---></style></head>
-  <body bgcolor=#ffffff text=#000000 onload=document.f.as_q.focus() link=#0000cc vlink=#551A8B alink=#ff0000>
+<head>
+<title>Welcome to Apache Jackrabbit - Search within results</title>
+<link rel="shortcut icon" href="<%= request.getContextPath() %>/images/favicon.ico" type="image/vnd.microsoft.icon">
+<style type="text/css" media="all">
+      @import url("<%= request.getContextPath() %>/css/default.css");
+</style>
+</head>
+  <body>
+  <div id="bodyColumn">
+  <a href="http://jackrabbit.apache.org"><img src="<%= request.getContextPath() %>/images/jackrabbitlogo.gif" alt="" /></a><br>
+  <h2>Search within results</h2>
+</head>
+  <body onload=document.f.as_q.focus()>
     <form name=f action="search.jsp">
       <table border=0 cellpadding=0 cellspacing=0 width=100%>
-        <tr><td valign=top><a href=/><img border=0 src="<%= request.getContextPath() %>/images/jackrabbitlogo.gif" width=320 height=83 alt=Jackrabbit></a><br><center><font face=arial,sans-serif color=green><b>Search&nbsp;within&nbsp;results</b></font></center></td><td><table border=0 width=100%><tr><td><font face=arial,sans-serif><br>There were about <b><%= numResults %></b> results for <b><%= q %></b>.<br>Use the search box below to search within these results.<br><br></font></td></tr></table></td></tr><tr><td width=205 align=right>&nbsp;</td><td valign=middle><INPUT type=hidden name=q value="<%= q %>"><INPUT type=text name=as_q size=31 maxlength=256 value=""><INPUT type=submit VALUE="Search&nbsp;within&nbsp;results"></font></td></tr>
+        <tr><table border=0 width=100%><tr><td><br>There were about <b><%= numResults %></b> results for <b><%= q %></b>.<br>
+        Use the search box below to search within these results.<br><br></td></tr></table>
+        </td></tr>
+        <tr><td valign=middle>
+        <table border=0 width=100%><tr><td>
+        <INPUT type=hidden name=q value="<%= q %>">
+        <INPUT type=text name=as_q size=31 maxlength=256 value="">
+        <INPUT type=submit VALUE="Search&nbsp;within&nbsp;results">
+        </td></tr></table>
+        </td></tr>
       </table>
     </form>
     <br>
-    <center>
-      <p><hr class=z>
-      <table border=0 cellpadding=2 cellspacing=0 width=100% class="t n bt">
-        <tr><td align=center><font size=-1><a href="http://jackrabbit.apache.org">Jackrabbit&nbsp;Home</a></td></tr>
-      </table>
-      <br><font size=-1 class=p>&copy;<%= Calendar.getInstance().get(Calendar.YEAR) %> Apache Jackrabbit</font>
-    </center>
+  
+  </div>
+  <div id="footer">
+  <em>Powered by <a href="<%= rep.getDescriptor(Repository.REP_VENDOR_URL_DESC) %>"><%= rep.getDescriptor(Repository.REP_NAME_DESC)%></a> version <%= rep.getDescriptor(Repository.REP_VERSION_DESC) %>.</em>
+  </div>
 
   </body>
 
