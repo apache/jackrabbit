@@ -75,8 +75,13 @@
             }
         }
 %><html>
-  <head><title>Populate workspace: <%= wspName %></title><script><!--
-
+<head>
+<title>Welcome to Apache Jackrabbit - Populate workspace: <%= wspName %></title>
+<link rel="shortcut icon" href="<%= request.getContextPath() %>/images/favicon.ico" type="image/vnd.microsoft.icon">
+<style type="text/css" media="all">
+      @import url("<%= request.getContextPath() %>/css/default.css");
+</style>
+<script><!--
 function draw() {
 	// draw the bar
 	document.write('<table cellspacing="0" cellpadding="0" style="border-color:' + this.borderColor + '; border-width:' + this.borderWidth + '; border-style:' + this.borderStyle + '">');
@@ -127,17 +132,19 @@ ProgressBar.prototype.borderStyle = "groove";
 ProgressBar.prototype.borderWidth = "2px";
 
 // -->
-</script></head>
+</script>
+</head>
   <body>
-    <h2>Populate workspace: <%= wspName %></h2>
+  <div id="bodyColumn">
+  <a href="http://jackrabbit.apache.org"><img src="<%= request.getContextPath() %>/images/jackrabbitlogo.gif" alt="" /></a><br>
+  <h2>Populate workspace: "<%= wspName %>"</h2><br>
     <%
         if (seedWord != null && numDocs > 0 && filetypes.size() > 0) {
     %>
-    Overall progress:
-    <p/>
+    <h6>Overall progress</h6>
     <script>var pb = new ProgressBar(<%= numDocs %>, 300, 30);pb.draw();</script>
-    Downloading document:
-    <p/>
+    
+    <br><h6>Downloading document</h6>
     <script>var dp = new ProgressBar(1000, 300, 30);dp.draw();</script>
     <%
             Node root = jcrSession.getRootNode();
@@ -255,14 +262,18 @@ from the Internet.</p>
     <%
         }
     %>
-    <p/>
     <form>
-      <table border=0 cellpadding=5 cellspacing=0 width=100%>
+      <table>
       <tr><td>Seed word:</td><td><input name="seed" type="text" size="30" value="<%= seedWord == null ? "download" : seedWord %>"/></td></tr>
       <tr><td>Number of documents:</td><td><input name="num" type="text" size="30" value="<%= numDocs == 0 ? 100 : numDocs %>"/></td></tr>
       <tr valign="top"><td>Document types:</td><td><input name="filetype" type="checkbox" value="pdf" <%= filetypes.contains("pdf") ? "checked" : "" %>/> Adobe Acrobat PDF<br/><input name="filetype" type="checkbox" value="rtf" <%= filetypes.contains("rtf") ? "checked" : "" %>/> Rich Text Format<br/><input name="filetype" type="checkbox" value="doc" <%= filetypes.contains("doc") ? "checked" : "" %>/> Microsoft Word<br/><input name="filetype" type="checkbox" value="ppt" <%= filetypes.contains("ppt") ? "checked" : "" %>/> Microsoft PowerPoint<br/><input name="filetype" type="checkbox" value="xls" <%= filetypes.contains("xls") ? "checked" : "" %>/> Microsoft Excel<br/></td></tr>
       <tr><td>&nbsp;</td><td><input type="submit" value="Populate!"/></td></tr>
+      </table>
     </form>
+  </div>
+  <div id="footer">
+  <em>Powered by <a href="<%= rep.getDescriptor(Repository.REP_VENDOR_URL_DESC) %>"><%= rep.getDescriptor(Repository.REP_NAME_DESC)%></a> version <%= rep.getDescriptor(Repository.REP_VERSION_DESC) %>.</em>
+  </div>
   </body>
 </html><%
     } finally {

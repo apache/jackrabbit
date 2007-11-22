@@ -127,85 +127,23 @@
             }
         }
 %><html>
-  <head>
-    <title>Jackrabbit Search</title>
-    <link rel="shortcut icon" href="<%= request.getContextPath() %>/images/favicon.ico" type="image/vnd.microsoft.icon">
-    <style><!--
-div,td{color:#000}
-.f{color:#666}
-.flc,.fl:link{color:#77c}
-a:link,.w,a.w:link,.w a:link,.q:visited,.q:link,.q:active,.q{color:#00c}
-a:visited,.fl:visited{color:#551a8b}
-a:active,.fl:active{color:red}
-.t{background:#e5ecf9;color:#000}
-.bb{border-bottom:1px solid #36c}
-.bt{border-top:1px solid #36c}
-.j{width:34em}
-.h{color:#36c}
-.i,.i:link{color:#a90a08}
-.a,.a:link{color:green}
-.z{display:none}
-div.n{margin-top:1ex}
-.n a{font-size:10pt;color:#000}
-.n .i{font-size:10pt;font-weight:bold}
-.b a{font-size:12pt;color:#00c;font-weight:bold}
-#np,#nn,.nr,#logo span,.ch{cursor:pointer;cursor:hand}
-.tas{padding:3px 3px 3px 5px}
-.taf{padding:3px 3px 6px 5px}
-.tam{padding:6px 3px 6px 5px}
-.tal{padding:6px 3px 3px 5px}
-.sl,.r{font-weight:normal;margin:0;display:inline}
-.sl{font-size:84%}
-.r{font-size:1em}
-.e{margin:.75em 0}
-.mblink:visited{color:#00c}
-.sm{display:block;margin:0;margin-left:40px}
-.bl{display:none}
-.fl2,.fl2:link,.fl2:visited{color:#77c}
-.fl2:active{color:red}
-#navbar div,#logo span{background:url(<%= request.getContextPath() %>/images/jackrabbitlogo.gif) no-repeat;overflow:hidden;height:83px}
-#navbar .nr{background-position:-235px 0;width:22px}
-#navbar #np{background-position:-95px;width:140px}
-#navbar #nf{background-position:-95px 0;width:140px}
-#navbar #nc{background-position:-235px 0;width:22px}
-#navbar #nn{background-position:-279px 0;width:66px;margin-right:34px}
-#navbar #nl{background-position:-279px 0;width:46px}
-#logo{display:block;width:320px;height:83px;position:relative;overflow:hidden}
-#logo span{background-position:0 0px;position:absolute;top:0;left:0;width:100%;height:100%}
-body,td,div,.p,a{font-family:arial,sans-serif}
-.g{margin:1em 0}
-#sd{font-size:113%;font-weight:bold}
-#ap{font-size:64%}
---></style></head>
-  <bodybgcolor="#ffffff" topmargin="3" marginheight="3">
-  <table border=0 cellpadding=0 cellspacing=0 width=100% style=clear:left>
+<head>
+<title>Welcome to Apache Jackrabbit - Search</title>
+<link rel="shortcut icon" href="<%= request.getContextPath() %>/images/favicon.ico" type="image/vnd.microsoft.icon">
+<style type="text/css" media="all">
+      @import url("<%= request.getContextPath() %>/css/default.css");
+</style>
+</head>
+  <body>
+  <div id="bodyColumn">
+  <a href="http://jackrabbit.apache.org"><img src="<%= request.getContextPath() %>/images/jackrabbitlogo.gif" alt="" /></a><br>
+  <h2>Jackrabbit Search</h2>
+  <br><h5>Workspace: <%= wspName %></h5>
+  <table>
     <tr><form name=gs method=GET>
-      <td valign=top><a id=logo href="http://jackrabbit.apache.org/" title="Go to Jackrabbit Home">Jackrabbit<span></span></a></td>
-      <td>&nbsp;&nbsp;</td>
-      <td valign=top width=100% style="padding-top:8px">
-        <table cellpadding=0 cellspacing=0 border=0>
-          <tr>
-            <td height=14 valign=bottom>
-              <img align=right alt="" height=1 width=1><style>#lgpd{display:none}</style>
-              <table border=0 cellspacing=0 cellpadding=4>
-                <tr>
-                  <td nowrap><font size=-1><b>Workspace: <%= wspName %></b></font></td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <table border=0 cellpadding=0 cellspacing=0>
-                <tr>
-                  <td nowrap>
-                    <input type=text name=q size=41 maxlength=2048 value="<%= q %>" title="Search"><font size=-1> <input type=submit value="Search"><span id=hf></span></font>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
+      <td valign=top width=100%"><br>
+        <input type=text name=q size=41 maxlength=2048 value="<%= q %>" title="Search">
+        <input type=submit value="Search"><br><br>
       </td></form>
     </tr>
   </table>
@@ -213,9 +151,6 @@ body,td,div,.p,a{font-family:arial,sans-serif}
   <%
     if (rows != null && rows.getSize() == 0) {
   %>
-  <table border=0 cellpadding=0 cellspacing=0 width=100% class="t bt">
-    <tr><td nowrap><span id=sd>&nbsp;Workspace: <%= wspName %>&nbsp;</span></td></tr>
-  </table>
   <%
       if (suggestedQuery != null) {
         %><p><font class="p" color="#cc0000">Did you mean: </font><a href="search.jsp?q=<%= suggestedQuery %>" class="p"><b><i><%= suggestedQuery %></i></b></a>&nbsp;&nbsp;<br></p><%
@@ -228,14 +163,14 @@ body,td,div,.p,a{font-family:arial,sans-serif}
     } else if (rows != null) {
   %>
   <table border=0 cellpadding=0 cellspacing=0 width=100% class="t bt">
-    <tr><td nowrap><span id=sd>&nbsp;Workspace: <%= wspName %>&nbsp;</span></td><td align=right nowrap><font size=-1>Results <b><%= from + 1 %></b> - <b><%= to %></b> of about <b><%= totalResults %></b> <%= queryTerms %>. (<b><%= executedIn %></b> seconds)&nbsp;</font></td></tr>
+    <tr><td><font size=-1>Results <b><%= from + 1 %></b> - <b><%= to %></b> of about <b><%= totalResults %></b> <%= queryTerms %>. (<b><%= executedIn %></b> seconds)&nbsp;</font></td></tr>
   </table>
   <%
       if (suggestedQuery != null) {
         %><p><font class="p" color="#cc0000">Did you mean: </font><a href="search.jsp?q=<%= suggestedQuery %>" class="p"><b><i><%= suggestedQuery %></i></b></a>&nbsp;&nbsp;<br></p><%
       }
   %>
-  <div id=res>
+  <div>
     <%
       while (rows.hasNext() && rows.getPosition() < to) {
           Row r = rows.nextRow();
@@ -249,13 +184,12 @@ body,td,div,.p,a{font-family:arial,sans-serif}
           DateFormat df = SimpleDateFormat.getDateInstance(SimpleDateFormat.LONG);
           String lastModified = df.format(resource.getProperty("jcr:lastModified").getDate().getTime());
     %>
-    <div class=g><h2 class=r><a href="<%= request.getContextPath() %>/repository/<%= wspName %><%= file.getPath() %>" class=l><%= file.getName() %></a></h2>
+    <h6><a href="<%= request.getContextPath() %>/repository/<%= wspName %><%= file.getPath() %>" class=l><%= file.getName() %></a></h6>
       <table border=0 cellpadding=0 cellspacing=0>
-        <tr><td class="j"><font size=-1><%= r.getValue("rep:excerpt(jcr:content)").getString() %>
-          <span class=a><%= file.getPath() %> - <%= size %> - <%= lastModified %> - </span><nobr><a class=fl href="<%= request.getContextPath() %>/search.jsp?q=related:<%= URLEncoder.encode(file.getPath(), "UTF-8") %>">Similar pages</a></nobr></font><!--n--></td>
+        <tr><td><font><%= r.getValue("rep:excerpt(jcr:content)").getString() %>
+          <%= file.getPath() %> - <%= size %> - <%= lastModified %> - <nobr><a href="<%= request.getContextPath() %>/search.jsp?q=related:<%= URLEncoder.encode(file.getPath(), "UTF-8") %>">Similar pages</a></nobr></font></td>
         </tr>
       </table>
-    </div>
     <%
       } // while
     %>
@@ -265,28 +199,28 @@ body,td,div,.p,a{font-family:arial,sans-serif}
   <%
     if (indexes.size() > 1) {
   %>
-  <div id=navbar class=n>
-    <table border=0 cellpadding=0 width=1% cellspacing=0 align=center>
-      <tr align=center style=text-align:center valign=top>
-        <td valign=bottom nowrap><font size=-1>Result&nbsp;Page:&nbsp;</font>
+  <div>
+    <table border=0 cellpadding=0 cellspacing=0 align=center>
+      <tr>
+        <td><font size=-1>Result&nbsp;Page:&nbsp;
         <%
         if (currentPageIndex != ((Long) indexes.get(0)).longValue()) {
-            %><td nowrap align=right class=b><a href=search.jsp?q=<%= q %>&start=<%= (currentPageIndex - 1) * 10 %>><div id=np></div>Previous</a><%
+            %><td nowrap align=right><a href=search.jsp?q=<%= q %>&start=<%= (currentPageIndex - 1) * 10 %>>Previous</a><%
         } else {
-            %><td nowrap ><div id=nf></div><%
+            %><td nowrap ><font size=-1><%
         }
         for (Iterator it = indexes.iterator(); it.hasNext(); ) {
             long pageIdx = ((Long) it.next()).longValue();
             if (pageIdx == currentPageIndex) {
-                %><td nowrap><div id=nc></div><span class=i><%= pageIdx + 1 %></span><%
+                %><td nowrap><font size=-1><%= pageIdx + 1 %><%
             } else {
-                %><td nowrap><a href=search.jsp?q=<%= q %>&start=<%= pageIdx * 10 %>><div class=nr></div><%= pageIdx + 1 %></a><%
+                %><td nowrap><font size=-1><a href=search.jsp?q=<%= q %>&start=<%= pageIdx * 10 %>><%= pageIdx + 1 %></a><%
             }
         }
         if (currentPageIndex < (maxPage - 1)) {
-            %><td nowrap class=b><a href=search.jsp?q=<%= q %>&start=<%= (currentPageIndex + 1) * 10 %>><div id=nn></div>Next</a><%
+            %><td nowrap><font size=-1><a href=search.jsp?q=<%= q %>&start=<%= (currentPageIndex + 1) * 10 %>>Next</a><%
         } else {
-            %><td nowrap ><div id=nl></div><%
+            %><td nowrap ><%
         }
         %>
     </table>
@@ -295,20 +229,17 @@ body,td,div,.p,a{font-family:arial,sans-serif}
     }
   %>
 
-  <center>
+
     <br clear=all><br>
-    <table border=0 cellpadding=0 cellspacing=0 width=100% class="ft t bb bt">
-      <tr><td align=center>&nbsp;<br>
-        <table border=0 cellpadding=0 cellspacing=0 align=center><form method=GET action=<%= request.getContextPath() %>/search.jsp><tr><td nowrap>
+    <table>
+      <tr><td><br><form method=GET action=<%= request.getContextPath() %>/search.jsp>
           <font size=-1><input type=text name=q size=31 maxlength=2048 value="<%= q %>" title="Search"> <input type=submit value="Search">
-          </font></td></tr></form>
-        </table>
+          </font></form>
         <br><font size=-1>
         <a href="<%= request.getContextPath() %>/swr.jsp?q=<%= q %>&swrnum=<%= rows.getSize() %>">Search&nbsp;within&nbsp;results</a> | <a href="http://issues.apache.org/jira/browse/JCR" target=_blank>Dissatisfied? Help us improve</a></font><br>
         <br>
       </td></tr>
     </table>
-  </center>
 
   <%
     } // if (rows != null)
@@ -318,14 +249,10 @@ body,td,div,.p,a{font-family:arial,sans-serif}
         tableClass = " class=\"t n bt\"";
     }
   %>
-
-  <center>
-    <p><hr class=z>
-    <table border=0 cellpadding=2 cellspacing=0 width=100%<%= tableClass %>>
-      <tr><td align=center><font size=-1><a href="http://jackrabbit.apache.org/">Jackrabbit&nbsp;Home</a></font></td></tr>
-    </table>
-    <br><font size=-1 class=p>&copy;<%= Calendar.getInstance().get(Calendar.YEAR) %> Apache Jackrabbit</font>
-  </center>
+  </div>
+  <div id="footer">
+  <em>Powered by <a href="<%= rep.getDescriptor(Repository.REP_VENDOR_URL_DESC) %>"><%= rep.getDescriptor(Repository.REP_NAME_DESC)%></a> version <%= rep.getDescriptor(Repository.REP_VERSION_DESC) %>.</em>
+  </div>
   </body>
 </html><%
     } finally {
