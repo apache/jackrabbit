@@ -438,7 +438,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @return
      */
     private NamespaceRegistryImpl createNamespaceRegistry(NamespaceCache nsCache) throws RepositoryException {
-        return new NamespaceRegistryImpl(this, nsCache, getNameFactory(), getPathFactory());
+        return new NamespaceRegistryImpl(this, nsCache);
     }
 
     /**
