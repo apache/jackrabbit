@@ -249,7 +249,7 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
      * returned.
      *
      * @return the resource factory
-     * @see org.apache.jackrabbit.server.AbstractWebdavServlet#getResourceFactory()
+     * @see AbstractWebdavServlet#getResourceFactory()
      */
     public DavResourceFactory getResourceFactory() {
         if (resourceFactory == null) {
@@ -312,7 +312,7 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
      * is returned.
      *
      * @return the session provider
-     * @see org.apache.jackrabbit.server.AbstractWebdavServlet#getDavSessionProvider()
+     * @see AbstractWebdavServlet#getDavSessionProvider()
      */
     public synchronized DavSessionProvider getDavSessionProvider() {
         if (davSessionProvider == null) {
@@ -339,7 +339,7 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
      *
      * @return the header value retrieved from the corresponding init parameter
      * or {@link #DEFAULT_AUTHENTICATE_HEADER}.
-     * @see org.apache.jackrabbit.server.AbstractWebdavServlet#getAuthenticateHeaderValue()
+     * @see AbstractWebdavServlet#getAuthenticateHeaderValue()
      */
     public String getAuthenticateHeaderValue() {
         return authenticate_header;
