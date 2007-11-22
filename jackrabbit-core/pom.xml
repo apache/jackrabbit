@@ -46,11 +46,16 @@
             <phase>process-sources</phase>
             <configuration>
               <tasks>
-                <ant
-                  antfile="${basedir}/build.xml"
-                  inheritRefs="true">
-                  <target name="deleteSources" />
-                </ant>
+                <echo>Remove files that have been customized in Jackrabbit</echo>
+                <delete>
+                  <fileset dir="${project.build.directory}/generated-src/main/java/org/apache/jackrabbit/core/query">
+                    <include name="sql/ASTLiteral.java"/>
+                    <include name="sql/ASTContainsExpression.java"/>
+                    <include name="sql/ASTPredicate.java"/>
+                    <include name="sql/ASTIdentifier.java"/>
+                    <include name="xpath/SimpleNode.java"/>
+                  </fileset>
+                </delete>
               </tasks>
             </configuration>
             <goals>
