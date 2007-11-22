@@ -135,7 +135,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     /** initial size of buffer used to serialize objects */
     protected static final int INITIAL_BUFFER_SIZE = 1024;
 
-    /** inidicates if uses (filesystem) blob store */
+    /** indicates if uses (filesystem) blob store */
     protected boolean externalBLOBs;
 
     /** indicates whether to block if the database connection is lost */
@@ -264,7 +264,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
 
     /**
      * Sets the schema object prefix. This string is used to prefix all schema
-     * objects, like tables and indexes. this is usefull, if several persistence
+     * objects, like tables and indexes. this is useful, if several persistence
      * managers use the same database.
      *
      * @param schemaObjectPrefix the prefix for schema objects.
@@ -312,7 +312,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
 
     /**
      * Checks if consistency check is enabled.
-     * @return <code>true</code> if consistenct check is enabled.
+     * @return <code>true</code> if consistent check is enabled.
      */
     public String getConsistencyCheck() {
         return Boolean.toString(consistencyCheck);
@@ -345,15 +345,15 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     /**
-     * Returns the miminum blob size in bytes.
-     * @return the miminum blob size in bytes.
+     * Returns the minimum blob size in bytes.
+     * @return the minimum blob size in bytes.
      */
     public String getMinBlobSize() {
         return String.valueOf(minBlobSize);
     }
 
     /**
-     * Sets the minumum blob size. This size defines the threshhold of which
+     * Sets the minimum blob size. This size defines the threshold of which
      * size a property is included in the bundle or is stored in the blob store.
      *
      * @param minBlobSize the minimum blobsize in bytes.
@@ -502,7 +502,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      *
-     * Basically wrapps a JDBC transaction around super.store().
+     * Basically wraps a JDBC transaction around super.store().
      */
     public synchronized void store(ChangeLog changeLog) throws ItemStateException {
         int trials = 2;
@@ -612,7 +612,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     /**
-     * Retruns a new instance of a DbNameIndex.
+     * Returns a new instance of a DbNameIndex.
      * @return a new instance of a DbNameIndex.
      * @throws SQLException if an SQL error occurs.
      */
@@ -1083,7 +1083,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * This method uses shared <code>PreparedStatements</code>, which must
      * be used strictly sequentially. Because this method synchronizes on the
      * persistence manager instance, there is no need to synchronize on the
-     * shared statement. If the method would not be sychronized, the shared
+     * shared statement. If the method would not be synchronized, the shared
      * statement must be synchronized.
      *
      * @see AbstractPersistenceManager#store(NodeReferences)
@@ -1196,7 +1196,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
 
     /**
      * closes the input stream
-     * @param ins the inputs stream
+     * @param ins the input stream
      */
     protected void closeStream(InputStream ins) {
         if (ins != null) {
@@ -1210,7 +1210,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
 
     /**
      * closes the statement
-     * @param stmt the statemenet
+     * @param stmt the statement
      */
     protected void closeStatement(PreparedStatement stmt) {
         if (stmt != null) {
