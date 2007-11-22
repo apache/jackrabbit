@@ -692,7 +692,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      */
     public PropertyEntry addPropertyEntry(Name propName) throws ItemExistsException {
         // TODO: check for existing prop.
-        return internalAddPropertyEntry(propName);
+        return internalAddPropertyEntry(propName, true);
     }
 
     /**
@@ -700,15 +700,16 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * exists.
      *
      * @param propName
+     * @param notifySpecial
      * @return
      */
-    private PropertyEntry internalAddPropertyEntry(Name propName) {
+    private PropertyEntry internalAddPropertyEntry(Name propName, boolean notifySpecial) {
         PropertyEntry entry = factory.createPropertyEntry(this, propName);
         properties.add(entry);
 
         // if property-name is jcr:uuid or jcr:mixin this affects this entry
         // and the attached nodeState.
-        if (StateUtility.isUuidOrMixin(propName)) {
+        if (notifySpecial && StateUtility.isUuidOrMixin(propName)) {
             notifyUUIDorMIXINModified(entry);
         }
         return entry;
@@ -727,7 +728,12 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         for (Iterator it = propNames.iterator(); it.hasNext();) {
             Name propName = (Name) it.next();
             if (!properties.contains(propName)) {
-                addPropertyEntry(propName);
+                // TODO: check again.
+                // addPropertyEntries is used by WorkspaceItemStateFactory upon
+                // creating a NodeState, in which case the uuid/mixins are set
+                // anyway and not need exists to explicitely load the corresponding
+                // property state in order to retrieve the values.
+                internalAddPropertyEntry(propName, false);
             }
         }
 
@@ -905,7 +911,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 // added by some earlier 'add' event
                 HierarchyEntry child = lookupEntry(childEvent.getItemId(), childEvent.getPath());
                 if (child == null) {
-                    internalAddPropertyEntry(eventName);
+                    internalAddPropertyEntry(eventName, true);
                 } else {
                     child.reload(false, true);
                 }
@@ -923,7 +929,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 child = lookupEntry(childEvent.getItemId(), childEvent.getPath());
                 if (child == null) {
                     // prop-Entry has not been loaded yet -> add propEntry
-                    internalAddPropertyEntry(eventName);
+                    internalAddPropertyEntry(eventName, true);
                 } else if (child.isAvailable()) {
                     // Reload data from server and try to merge them with the
                     // current session-state. if the latter is transiently

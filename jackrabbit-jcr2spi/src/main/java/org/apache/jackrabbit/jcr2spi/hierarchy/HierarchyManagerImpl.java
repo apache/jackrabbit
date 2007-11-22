@@ -42,7 +42,8 @@ public class HierarchyManagerImpl implements HierarchyManager {
     private final UniqueIdResolver uniqueIdResolver;
     private final IdFactory idFactory;
 
-    public HierarchyManagerImpl(TransientItemStateFactory isf, IdFactory idFactory, PathFactory pathFactory) {
+    public HierarchyManagerImpl(TransientItemStateFactory isf, IdFactory idFactory,
+                                PathFactory pathFactory) {
         uniqueIdResolver = new UniqueIdResolver(isf);
         rootEntry = new EntryFactory(isf, idFactory, uniqueIdResolver, pathFactory).createRootEntry();
         this.idFactory = idFactory;
