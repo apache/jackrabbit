@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.index.FilterIndexReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.CorruptIndexException;
 
 import java.io.IOException;
 
@@ -28,13 +29,35 @@ import java.io.IOException;
 class CommittableIndexReader extends FilterIndexReader {
 
     /**
+     * A modification count on this index reader. Initialied with
+     * {@link IndexReader#getVersion()} and incremented with every call to
+     * {@link #doDelete(int)}.
+     */
+    private volatile long modCount;
+
+    /**
      * Creates a new <code>CommittableIndexReader</code> based on <code>in</code>.
      *
      * @param in the <code>IndexReader</code> to wrap.
      */
     CommittableIndexReader(IndexReader in) {
         super(in);
+        modCount = in.getVersion();
     }
+
+    //------------------------< FilterIndexReader >-----------------------------
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Increments the modification count.
+     */
+    protected void doDelete(int n) throws CorruptIndexException, IOException {
+        super.doDelete(n);
+        modCount++;
+    }
+
+    //------------------------< additional methods >----------------------------
 
     /**
      * Commits the documents marked as deleted to disc.
@@ -43,5 +66,12 @@ class CommittableIndexReader extends FilterIndexReader {
      */
     void commitDeleted() throws IOException {
         commit();
+    }
+
+    /**
+     * @return the modification count of this index reader.
+     */
+    long getModificationCount() {
+        return modCount;
     }
 }

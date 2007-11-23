@@ -94,6 +94,11 @@ abstract class AbstractIndex {
     private SharedIndexReader sharedReader;
 
     /**
+     * The most recent read-only reader if there is any.
+     */
+    private ReadOnlyIndexReader readOnlyReader;
+
+    /**
      * The indexing queue.
      */
     private IndexingQueue indexingQueue;
@@ -208,7 +213,7 @@ abstract class AbstractIndex {
      * @return an <code>IndexReader</code> on this index.
      * @throws IOException if the reader cannot be obtained.
      */
-    protected synchronized IndexReader getIndexReader() throws IOException {
+    protected synchronized CommittableIndexReader getIndexReader() throws IOException {
         if (indexWriter != null) {
             indexWriter.close();
             log.debug("closing IndexWriter.");
@@ -232,7 +237,30 @@ abstract class AbstractIndex {
     synchronized ReadOnlyIndexReader getReadOnlyIndexReader()
             throws IOException {
         // get current modifiable index reader
-        IndexReader modifiableReader = getIndexReader();
+        CommittableIndexReader modifiableReader = getIndexReader();
+        long modCount = modifiableReader.getModificationCount();
+        if (readOnlyReader != null) {
+            if (readOnlyReader.getDeletedDocsVersion() == modCount) {
+                // reader up-to-date
+                readOnlyReader.incrementRefCount();
+                return readOnlyReader;
+            } else {
+                // reader outdated
+                if (readOnlyReader.getRefCount() == 1) {
+                    // not in use, except by this index
+                    // update the reader
+                    readOnlyReader.updateDeletedDocs(modifiableReader);
+                    readOnlyReader.incrementRefCount();
+                    return readOnlyReader;
+                } else {
+                    // cannot update reader, it is still in use
+                    // need to create a new instance
+                    readOnlyReader.close();
+                    readOnlyReader = null;
+                }
+            }
+        }
+        // if we get here there is no up-to-date read-only reader
         // capture snapshot of deleted documents
         BitSet deleted = new BitSet(modifiableReader.maxDoc());
         for (int i = 0; i < modifiableReader.maxDoc(); i++) {
@@ -245,7 +273,9 @@ abstract class AbstractIndex {
             CachingIndexReader cr = new CachingIndexReader(IndexReader.open(getDirectory()), cache);
             sharedReader = new SharedIndexReader(cr);
         }
-        return new ReadOnlyIndexReader(sharedReader, deleted);
+        readOnlyReader = new ReadOnlyIndexReader(sharedReader, deleted, modCount);
+        readOnlyReader.incrementRefCount();
+        return readOnlyReader;
     }
 
     /**
@@ -330,6 +360,13 @@ abstract class AbstractIndex {
             }
             indexReader = null;
         }
+        if (readOnlyReader != null) {
+            try {
+                readOnlyReader.close();
+            } catch (IOException e) {
+                log.warn("Exception closing index reader: " + e.toString());
+            }
+        }
         if (sharedReader != null) {
             try {
                 sharedReader.close();
@@ -352,6 +389,11 @@ abstract class AbstractIndex {
      * @throws IOException if an error occurs while closing the reader.
      */
     protected synchronized void invalidateSharedReader() throws IOException {
+        // also close the read-only reader
+        if (readOnlyReader != null) {
+            readOnlyReader.close();
+            readOnlyReader = null;
+        }
         // invalidate shared reader
         if (sharedReader != null) {
             sharedReader.close();
