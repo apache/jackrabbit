@@ -44,18 +44,78 @@ class ReadOnlyIndexReader extends FilterIndexReader {
     private final BitSet deleted;
 
     /**
+     * The version of the index reader from where the deleted BitSet was
+     * obtained from.
+     */
+    private long deletedDocsVersion;
+
+    /**
+     * A reference counter. When constructed the refCount is one.
+     */
+    private int refCount = 1;
+
+    /**
      * Creates a new index reader based on <code>reader</code> at
      * <code>modificationTick</code>.
-     * @param reader the underlying <code>IndexReader</code>.
-     * @param deleted the documents that are deleted in <code>reader</code>.
+     *
+     * @param reader             the underlying <code>IndexReader</code>.
+     * @param deleted            the documents that are deleted in
+     *                           <code>reader</code>.
+     * @param deletedDocsVersion the version of the index reader from where the
+     *                           deleted BitSet was obtained from.
      */
     public ReadOnlyIndexReader(SharedIndexReader reader,
-                               BitSet deleted) {
+                               BitSet deleted,
+                               long deletedDocsVersion) {
         super(reader);
         this.reader = reader;
         this.deleted = deleted;
+        this.deletedDocsVersion = deletedDocsVersion;
         // register this
         reader.addClient(this);
+    }
+
+    /**
+     * Increments the reference count on this index reader. The reference count
+     * is decremented on {@link #close()}.
+     */
+    synchronized void incrementRefCount() {
+        refCount++;
+    }
+
+    /**
+     * @return the current reference count value.
+     */
+    synchronized int getRefCount() {
+        return refCount;
+    }
+
+    /**
+     * @return version of the deleted docs.
+     */
+    long getDeletedDocsVersion() {
+        return deletedDocsVersion;
+    }
+
+    /**
+     * Updates the deleted documents in this index reader. When this method
+     * returns this index reader will have the same documents marked as deleted
+     * as the passed <code>reader</code>.
+     * <p/>
+     * This method is not thread-safe! Make sure no other thread is concurrently
+     * using this reader at the same time.
+     *
+     * @param reader the reader from where to obtain the deleted documents
+     *               info.
+     */
+    void updateDeletedDocs(CommittableIndexReader reader) {
+        int maxDoc = reader.maxDoc();
+        for (int i = 0; i < maxDoc; i++) {
+            if (reader.isDeleted(i)) {
+                deleted.set(i);
+            }
+        }
+        deletedDocsVersion = reader.getModificationCount();
     }
 
     /**
@@ -131,13 +191,19 @@ class ReadOnlyIndexReader extends FilterIndexReader {
     }
 
     /**
-     * Unregisters this reader from the shared index reader. Specifically, this
-     * method does <b>not</b> close the underlying index reader, because it is
-     * shared by multiple <code>ReadOnlyIndexReader</code>s.
+     * Unregisters this reader from the shared index reader if the reference
+     * count for this reader drops to zero. Specifically, this method does
+     * <b>not</b> close the underlying index reader, because it is shared by
+     * multiple <code>ReadOnlyIndexReader</code>s.
+     *
      * @throws IOException if an error occurs while closing the reader.
      */
     protected void doClose() throws IOException {
-        reader.removeClient(this);
+        synchronized (this) {
+            if (--refCount == 0) {
+                reader.removeClient(this);
+            }
+        }
     }
 
     /**
