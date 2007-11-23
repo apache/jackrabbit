@@ -76,7 +76,6 @@
     <plugins>
       <!-- Use Java 1.4 everywhere -->
       <plugin>
-        <inherited>true</inherited>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
           <target>1.4</target>
@@ -85,7 +84,6 @@
       </plugin>
       <!-- JCR-704: Enable maven-source-plugin -->
       <plugin>
-        <inherited>true</inherited>
         <artifactId>maven-source-plugin</artifactId>
         <executions>
           <execution>
@@ -98,7 +96,6 @@
       </plugin>
       <!-- Interoperate with Maven 1 -->
       <plugin>
-        <inherited>true</inherited>
         <artifactId>maven-one-plugin</artifactId>
         <executions>
           <execution>
@@ -157,7 +154,6 @@
       <build>
         <plugins>
           <plugin>
-            <inherited>true</inherited>
             <artifactId>maven-antrun-plugin</artifactId>
             <executions>
               <!-- Include the project metadata files in META-INF -->
@@ -207,7 +203,6 @@
       <build>
         <plugins>
           <plugin>
-            <inherited>true</inherited>
             <artifactId>maven-antrun-plugin</artifactId>
             <executions>
               <execution>

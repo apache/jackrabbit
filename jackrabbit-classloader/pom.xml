@@ -30,7 +30,6 @@
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit</artifactId>
     <version>1.4-SNAPSHOT</version>
-    <relativePath>..</relativePath>
   </parent>
   <artifactId>jackrabbit-classloader</artifactId>
   <name>Jackrabbit Repository Classloader</name>

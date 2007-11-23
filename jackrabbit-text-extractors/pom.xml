@@ -30,7 +30,6 @@
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit</artifactId>
     <version>1.4-SNAPSHOT</version>
-    <relativePath>..</relativePath>
   </parent>
   <artifactId>jackrabbit-text-extractors</artifactId>
   <name>Jackrabbit Text Extractors</name>
