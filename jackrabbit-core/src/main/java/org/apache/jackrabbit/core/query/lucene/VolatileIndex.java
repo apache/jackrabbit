@@ -123,7 +123,7 @@ class VolatileIndex extends AbstractIndex {
      * @return the index reader for this index.
      * @throws IOException if an error occurs building a reader.
      */
-    protected synchronized IndexReader getIndexReader() throws IOException {
+    protected synchronized CommittableIndexReader getIndexReader() throws IOException {
         commitPending();
         return super.getIndexReader();
     }
