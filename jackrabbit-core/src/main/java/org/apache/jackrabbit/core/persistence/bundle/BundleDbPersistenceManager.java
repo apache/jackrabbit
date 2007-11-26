@@ -312,7 +312,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
 
     /**
      * Checks if consistency check is enabled.
-     * @return <code>true</code> if consistent check is enabled.
+     * @return <code>true</code> if consistency check is enabled.
      */
     public String getConsistencyCheck() {
         return Boolean.toString(consistencyCheck);
