@@ -28,31 +28,31 @@ Jackrabbit Text Extractors
    The following document formats and MIME types are currently supported:
 
      * Microsoft Word
-       [org.apache.jackrabbit.core.query.MsWordTextFilter]
+       [org.apache.jackrabbit.extractor.MsWordTextExtractor]
 
        * <<<application/vnd.ms-word>>>
 
        * <<<application/msword>>>
 
      * Microsoft Excel
-       [org.apache.jackrabbit.core.query.MsExcelTextFilter]
+       [org.apache.jackrabbit.extractor.MsExcelTextExtractor]
 
        * <<<application/vnd.ms-excel>>>
 
      * Microsoft PowerPoint
-       [org.apache.jackrabbit.core.query.MsPowerPointTextFilter] 
+       [org.apache.jackrabbit.extractor.MsPowerPointTextExtractor] 
 
        * <<<application/vnd.ms-powerpoint>>>
 
        * <<<application/mspowerpoint>>>
 
      * Portable Document Format (PDF)
-       [org.apache.jackrabbit.core.query.PdfTextFilter]
+       [org.apache.jackrabbit.extractor.PdfTextExtractor]
 
        * <<<application/pdf>>>
 
      * OpenOffice.org
-       [org.apache.jackrabbit.core.query.OpenOfficeTextFilter]
+       [org.apache.jackrabbit.extractor.OpenOfficeTextExtractor]
 
        * <<<application/vnd.oasis.opendocument.database>>>
 
@@ -67,17 +67,17 @@ Jackrabbit Text Extractors
        * <<<application/vnd.oasis.opendocument.text>>>
 
      * Rich Text Format (RTF)
-       [org.apache.jackrabbit.core.query.RTFTextFilter]
+       [org.apache.jackrabbit.extractor.RTFTextExtractor]
 
        * <<<application/rtf>>>
 
      * HyperText Markup Language (HTML)
-       [org.apache.jackrabbit.core.query.HTMLTextFilter]
+       [org.apache.jackrabbit.extractor.HTMLTextExtractor]
 
        * <<<text/html>>>
 
      * Extensible Markup Language (XML)
-       [org.apache.jackrabbit.core.query.XMLTextFilter]
+       [org.apache.jackrabbit.extractor.XMLTextExtractor]
 
        * <<<text/xml>>>
 
