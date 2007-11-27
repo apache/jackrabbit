@@ -56,6 +56,56 @@ public class QValueTest extends TestCase {
 
     private static final QValueFactory factory = QValueFactoryImpl.getInstance();
 
+    public void testIllegalType() throws RepositoryException {
+        try {
+            factory.create("any", 54);
+            fail("54 is not a valid property type");
+        } catch (IllegalArgumentException e) {
+            // ok
+        }
+    }
+
+    //-------------------------------------------------------------< DOUBLE >---
+    public void testCreateInvalidDoubleValue() throws RepositoryException {
+        try {
+            factory.create("any", PropertyType.DOUBLE);
+            fail("'any' cannot be converted to a valid double value.");
+        } catch (ValueFormatException e) {
+            // ok
+        }
+    }
+
+    public void testGetDoubleOnBooleanValue() throws RepositoryException {
+        try {
+            QValue v = factory.create(Boolean.TRUE.toString(), PropertyType.BOOLEAN);
+            v.getDouble();
+            fail("'true' cannot be converted to a valid double value.");
+        } catch (ValueFormatException e) {
+            // ok
+        }
+    }
+
+    //---------------------------------------------------------------< LONG >---
+
+    public void testCreateInvalidLongValue() throws RepositoryException {
+        try {
+            factory.create("any", PropertyType.LONG);
+            fail("'any' cannot be converted to a valid long value.");
+        } catch (ValueFormatException e) {
+            // ok
+        }
+    }
+
+    public void testGetLongOnBooleanValue() throws RepositoryException {
+        try {
+            QValue v = factory.create(Boolean.TRUE.toString(), PropertyType.BOOLEAN);
+            v.getLong();
+            fail("'true' cannot be converted to a valid long value.");
+        } catch (ValueFormatException e) {
+            // ok
+        }
+    }
+
     //---------------------------------------------------------------< DATE >---
     public void testNullDateValue() throws IOException, RepositoryException {
         try {
@@ -123,7 +173,7 @@ public class QValueTest extends TestCase {
 
 
     //---------------------------------------------------------------< Name >---
-    public void testNullQNameValue() throws IOException, RepositoryException {
+    public void testNullNameValue() throws IOException, RepositoryException {
         try {
             factory.create((Name) null);
             fail();
@@ -132,25 +182,48 @@ public class QValueTest extends TestCase {
         }
     }
 
-    public void testQNameValueType() throws IOException, RepositoryException {
+    public void testNameValueType() throws IOException, RepositoryException {
         QValue v = factory.create(NameConstants.JCR_DATA);
         assertTrue(v.getType() == PropertyType.NAME);
         v = factory.create(NameConstants.JCR_DATA.toString(), PropertyType.NAME);
         assertTrue(v.getType() == PropertyType.NAME);
     }
 
-    public void testQNameValueEquality() throws IOException, RepositoryException {
+    public void testNameValueEquality() throws IOException, RepositoryException {
         QValue v = factory.create(NameConstants.JCR_DATA);
         QValue v2 = factory.create(NameConstants.JCR_DATA.toString(), PropertyType.NAME);
         assertTrue(v.equals(v2));
     }
 
-    public void testQNameValueGetString() throws IOException, RepositoryException {
+    public void testNameValueGetString() throws IOException, RepositoryException {
         QValue v = factory.create(NameConstants.JCR_DATA);
         assertTrue(v.getString().equals(NameConstants.JCR_DATA.toString()));
     }
 
-    //--------------------------------------------------------------< QPath >---
+    public void testNameValueGetName() throws RepositoryException {
+        QValue v = factory.create(NameConstants.JCR_DATA);
+        assertTrue(v.getName().equals(NameConstants.JCR_DATA));
+    }
+
+    public void testInvalidNameValue() throws RepositoryException {
+        try {
+            factory.create("abc", PropertyType.NAME);
+            fail("'abc' is not a valid Name -> creating QValue should fail.");
+        } catch (ValueFormatException e) {
+            // ok
+        }
+    }
+
+    public void testAnyValueGetName() throws RepositoryException {
+        try {
+            factory.create(12345).getName();
+            fail("12345 is not a valid Name value -> QValue.getName() should fail.");
+        } catch (ValueFormatException e) {
+            // ok
+        }
+    }
+
+    //---------------------------------------------------------------< Path >---
     public void testNullPathValue() throws IOException, RepositoryException {
         try {
             factory.create((Path) null);
@@ -179,6 +252,28 @@ public class QValueTest extends TestCase {
         assertTrue(v.getString().equals(ROOT_PATH.toString()));
     }
 
+    public void testPathValueGetPath() throws RepositoryException {
+        QValue v = factory.create(ROOT_PATH);
+        assertTrue(v.getPath().equals(ROOT_PATH));
+    }
+
+    public void testInvalidPathValue() throws RepositoryException {
+        try {
+            factory.create("abc", PropertyType.PATH);
+            fail("'abc' is not a valid Path -> creating QValue should fail.");
+        } catch (ValueFormatException e) {
+            // ok
+        }
+    }
+
+    public void testAnyValueGetPath() throws RepositoryException {
+        try {
+            factory.create(12345).getPath();
+            fail("12345 is not a valid Path value -> QValue.getPath() should fail.");
+        } catch (ValueFormatException e) {
+            // ok
+        }
+    }
     //-------------------------------------------------------------< BINARY >---
     public void testNullBinaryValue() throws IOException, RepositoryException {
         try {
