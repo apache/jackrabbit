@@ -42,13 +42,15 @@ public class PrepareTestRepository extends AbstractJCRTest {
 
     public void testPrepareTestRepository()
             throws RepositoryException, IOException {
-        InputStream xml = getClass().getResourceAsStream("test-nodetypes.xml");
-        try {
-            JackrabbitNodeTypeManager manager = (JackrabbitNodeTypeManager)
+        JackrabbitNodeTypeManager manager = (JackrabbitNodeTypeManager)
             superuser.getWorkspace().getNodeTypeManager();
-            manager.registerNodeTypes(xml, JackrabbitNodeTypeManager.TEXT_XML);
-        } finally {
-            xml.close();
+        if (!manager.hasNodeType("test:versionable")) {
+            InputStream xml = getClass().getResourceAsStream("test-nodetypes.xml");
+            try {
+                manager.registerNodeTypes(xml, JackrabbitNodeTypeManager.TEXT_XML);
+            } finally {
+                xml.close();
+            }
         }
 
         Node data = getOrAddNode(superuser.getRootNode(), "testdata");
