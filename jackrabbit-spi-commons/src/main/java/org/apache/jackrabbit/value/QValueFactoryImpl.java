@@ -105,14 +105,17 @@ public final class QValueFactoryImpl implements QValueFactory {
                     return new QValueImpl(value, type);
                 case PropertyType.BINARY:
                     return new BinaryQValue(value.getBytes(DEFAULT_ENCODING));
-                default:
-                    throw new IllegalArgumentException("illegal type");
+                // default: invalid type specified -> see below.
             }
-        } catch (NumberFormatException ex) {
+        } catch (IllegalArgumentException ex) {
+            // given String value cannot be converted to Long/Double/Path/Name
             throw new ValueFormatException(ex);
         } catch (UnsupportedEncodingException ex) {
             throw new RepositoryException(ex);
         }
+
+        // invalid type specified:
+        throw new IllegalArgumentException("illegal type " + type);
     }
 
     /**
@@ -298,7 +301,11 @@ public final class QValueFactoryImpl implements QValueFactory {
             if (type == PropertyType.NAME) {
                 return (Name) val;
             } else {
-                return NAME_FACTORY.create(getString());
+                try {
+                    return NAME_FACTORY.create(getString());
+                } catch (IllegalArgumentException e) {
+                    throw new ValueFormatException("not a valid Name value: " + getString(), e);
+                }
             }
         }
 
@@ -370,7 +377,11 @@ public final class QValueFactoryImpl implements QValueFactory {
             if (type == PropertyType.PATH) {
                 return (Path) val;
             } else {
-                return PATH_FACTORY.create(getString());
+                try {
+                    return PATH_FACTORY.create(getString());
+                } catch (IllegalArgumentException e) {
+                    throw new ValueFormatException("not a valid Path: " + getString(), e);
+                }
             }
         }
 
