@@ -38,6 +38,9 @@ public interface QValueFactory {
      * that the given String must never be <code>null</code>.
      * @param type A valid {@link javax.jcr.PropertyType type}.
      * @return a new <code>QValue</code>.
+     * @throws ValueFormatException If the given <code>value</code> cannot be
+     * converted to the specified <code>type</code>.
+     * @throws RepositoryException If another error occurs.
      * @see QValue#getType()
      */
     public QValue create(String value, int type) throws ValueFormatException, RepositoryException;
