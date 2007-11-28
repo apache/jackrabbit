@@ -135,8 +135,8 @@ class IndexMerger extends Thread implements IndexListener {
         synchronized (lock) {
             // initially create buckets
             if (indexBuckets.size() == 0) {
-                int lower = 0;
-                int upper = minMergeDocs;
+                long lower = 0;
+                long upper = minMergeDocs;
                 while (upper < maxMergeDocs) {
                     indexBuckets.add(new IndexBucket(lower, upper, true));
                     lower = upper + 1;
@@ -145,7 +145,7 @@ class IndexMerger extends Thread implements IndexListener {
                 // one with upper = maxMergeDocs
                 indexBuckets.add(new IndexBucket(lower, maxMergeDocs, false));
                 // and another one as overflow, just in case...
-                indexBuckets.add(new IndexBucket(maxMergeDocs + 1, Integer.MAX_VALUE, false));
+                indexBuckets.add(new IndexBucket(maxMergeDocs + 1, Long.MAX_VALUE, false));
             }
 
             // put index in bucket
@@ -451,12 +451,12 @@ class IndexMerger extends Thread implements IndexListener {
         /**
          * The lower document limit.
          */
-        private final int lower;
+        private final long lower;
 
         /**
          * The upper document limit.
          */
-        private final int upper;
+        private final long upper;
 
         /**
          * Flag indicating if indexes in this bucket can be merged.
@@ -470,7 +470,7 @@ class IndexMerger extends Thread implements IndexListener {
          * @param upper document limit.
          * @param allowMerge if indexes in this bucket can be merged.
          */
-        IndexBucket(int lower, int upper, boolean allowMerge) {
+        IndexBucket(long lower, long upper, boolean allowMerge) {
             this.lower = lower;
             this.upper = upper;
             this.allowMerge = allowMerge;
@@ -483,7 +483,7 @@ class IndexMerger extends Thread implements IndexListener {
          * @param numDocs the number of documents.
          * @return <code>true</code> if <code>numDocs</code> fit.
          */
-        boolean fits(int numDocs) {
+        boolean fits(long numDocs) {
             return numDocs >= lower && numDocs <= upper;
         }
 
