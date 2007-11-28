@@ -30,6 +30,10 @@ import java.util.Collections;
  * <code>IteratorHelper</code> is a utility class which
  * wraps an iterator and implements the various typed iterator
  * interfaces.
+ *
+ * @deprecated The {@link org.apache.jackrabbit.commons.iterator}
+ *             package contains a set of more feature rich and type safe
+ *             classes for implementing the JCR iterator interfaces
  */
 public class IteratorHelper
         implements NodeIterator, PropertyIterator, NodeTypeIterator {
