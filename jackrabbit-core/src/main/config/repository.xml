@@ -83,6 +83,7 @@
             - volatileIdleTime: idle time in seconds until the volatile index is
               moved to persistent index even though minMergeDocs is not reached.
             - maxMergeDocs: maximum number of nodes in segments that will be merged
+              Default value: Integer.MAX_VALUE
             - mergeFactor: determines how often segment indices are merged
             - maxFieldLength: the number of words that are fulltext indexed at most per property.
             - bufferSize: maximum number of documents that are held in a pending
@@ -130,7 +131,7 @@
             <param name="useCompoundFile" value="true"/>
             <param name="minMergeDocs" value="100"/>
             <param name="volatileIdleTime" value="3"/>
-            <param name="maxMergeDocs" value="100000"/>
+            <param name="maxMergeDocs" value="2147483647"/>
             <param name="mergeFactor" value="10"/>
             <param name="maxFieldLength" value="10000"/>
             <param name="bufferSize" value="10"/>
