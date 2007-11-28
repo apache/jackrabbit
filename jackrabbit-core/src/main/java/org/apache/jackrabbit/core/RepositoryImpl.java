@@ -22,6 +22,7 @@ import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.WriterPreferenceReadWriteLock;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.api.JackrabbitRepository;
+import org.apache.jackrabbit.commons.AbstractRepository;
 import org.apache.jackrabbit.core.cluster.ClusterContext;
 import org.apache.jackrabbit.core.cluster.ClusterException;
 import org.apache.jackrabbit.core.cluster.ClusterNode;
@@ -99,8 +100,8 @@ import javax.security.auth.Subject;
 /**
  * A <code>RepositoryImpl</code> ...
  */
-public class RepositoryImpl implements JackrabbitRepository, SessionListener,
-        EventListener {
+public class RepositoryImpl extends AbstractRepository
+        implements JackrabbitRepository, SessionListener, EventListener {
 
     private static Logger log = LoggerFactory.getLogger(RepositoryImpl.class);
 
@@ -1234,29 +1235,6 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         } finally {
             shutdownLock.readLock().release();
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Session login(String workspaceName)
-            throws LoginException, NoSuchWorkspaceException, RepositoryException {
-        return login(null, workspaceName);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Session login() throws LoginException, RepositoryException {
-        return login(null, null);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Session login(Credentials credentials)
-            throws LoginException, RepositoryException {
-        return login(credentials, null);
     }
 
     /**

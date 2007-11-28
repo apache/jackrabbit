@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
+import org.apache.jackrabbit.commons.iterator.NodeTypeIteratorAdapter;
 import org.apache.jackrabbit.conversion.NameException;
 import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
@@ -36,7 +37,6 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.namespace.NamespaceMapping;
 import org.apache.jackrabbit.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.util.IteratorHelper;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -57,7 +57,6 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -391,7 +390,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
         for (int i = 0; i < ntNames.length; i++) {
             list.add(getNodeType(ntNames[i]));
         }
-        return new IteratorHelper(Collections.unmodifiableCollection(list));
+        return new NodeTypeIteratorAdapter(list);
     }
 
     /**
@@ -406,7 +405,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
                 list.add(nt);
             }
         }
-        return new IteratorHelper(Collections.unmodifiableCollection(list));
+        return new NodeTypeIteratorAdapter(list);
     }
 
     /**
@@ -421,7 +420,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
                 list.add(nt);
             }
         }
-        return new IteratorHelper(Collections.unmodifiableCollection(list));
+        return new NodeTypeIteratorAdapter(list);
     }
 
     /**
@@ -716,7 +715,8 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
                 ntReg.reregisterNodeType(nodeTypeDef);
                 result.add(getNodeType(nodeTypeDef.getName()));
             }
-            return new IteratorHelper(result);
+
+            return new NodeTypeIteratorAdapter(result);
         } catch (InvalidNodeTypeDefException e) {
             throw new InvalidNodeTypeDefinitionException(e.getMessage());
         }

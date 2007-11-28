@@ -17,9 +17,6 @@
 package org.apache.jackrabbit.core;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.security.AccessControlException;
 import java.security.Principal;
@@ -34,7 +31,6 @@ import java.util.Set;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
 import javax.jcr.InvalidItemStateException;
-import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.Item;
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -59,12 +55,6 @@ import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.version.VersionException;
 import javax.security.auth.Subject;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.sax.SAXTransformerFactory;
-import javax.xml.transform.sax.TransformerHandler;
-import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.collections.map.ReferenceMap;
@@ -86,9 +76,9 @@ import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
 import org.apache.jackrabbit.core.xml.ImportHandler;
-import org.apache.jackrabbit.core.xml.SAXParserProvider;
 import org.apache.jackrabbit.core.xml.SessionImporter;
 import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
+import org.apache.jackrabbit.commons.AbstractSession;
 import org.apache.jackrabbit.conversion.NameException;
 import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.conversion.DefaultNamePathResolver;
@@ -108,7 +98,8 @@ import org.xml.sax.SAXException;
 /**
  * A <code>SessionImpl</code> ...
  */
-public class SessionImpl implements Session, NamePathResolver, Dumpable {
+public class SessionImpl extends AbstractSession
+        implements NamePathResolver, Dumpable {
 
     private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
 
@@ -1114,36 +1105,6 @@ public class SessionImpl implements Session, NamePathResolver, Dumpable {
     /**
      * {@inheritDoc}
      */
-    public void importXML(String parentAbsPath, InputStream in,
-                          int uuidBehavior)
-            throws IOException, PathNotFoundException, ItemExistsException,
-            ConstraintViolationException, VersionException,
-            InvalidSerializedDataException, LockException, RepositoryException {
-        // check sanity of this session
-        sanityCheck();
-
-        ImportHandler handler = (ImportHandler)
-                getImportContentHandler(parentAbsPath, uuidBehavior);
-        try {
-            SAXParserProvider.getParser().parse(new InputSource(in), handler);
-        } catch (SAXException se) {
-            // check for wrapped repository exception
-            Exception e = se.getException();
-            if (e != null && e instanceof RepositoryException) {
-                throw (RepositoryException) e;
-            } else {
-                String msg = "failed to parse XML stream";
-                log.debug(msg);
-                throw new InvalidSerializedDataException(msg, se);
-            }
-        } catch (ParserConfigurationException e) {
-            throw new RepositoryException("SAX parser configuration error", e);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public void exportDocumentView(String absPath, ContentHandler contentHandler,
                                    boolean skipBinary, boolean noRecurse)
             throws PathNotFoundException, SAXException, RepositoryException {
@@ -1162,30 +1123,6 @@ public class SessionImpl implements Session, NamePathResolver, Dumpable {
     /**
      * {@inheritDoc}
      */
-    public void exportDocumentView(String absPath, OutputStream out,
-                                   boolean skipBinary, boolean noRecurse)
-            throws IOException, PathNotFoundException, RepositoryException {
-
-        SAXTransformerFactory stf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
-
-        try {
-            TransformerHandler th = stf.newTransformerHandler();
-            th.getTransformer().setOutputProperty(OutputKeys.METHOD, "xml");
-            th.getTransformer().setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-            th.getTransformer().setOutputProperty(OutputKeys.INDENT, "no");
-            th.setResult(new StreamResult(out));
-
-            exportDocumentView(absPath, th, skipBinary, noRecurse);
-        } catch (TransformerException te) {
-            throw new RepositoryException(te);
-        } catch (SAXException se) {
-            throw new RepositoryException(se);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public void exportSystemView(String absPath, ContentHandler contentHandler,
                                  boolean skipBinary, boolean noRecurse)
             throws PathNotFoundException, SAXException, RepositoryException {
@@ -1199,29 +1136,6 @@ public class SessionImpl implements Session, NamePathResolver, Dumpable {
         }
         new SysViewSAXEventGenerator((Node) item, noRecurse, skipBinary,
                 contentHandler).serialize();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void exportSystemView(String absPath, OutputStream out,
-                                 boolean skipBinary, boolean noRecurse)
-            throws IOException, PathNotFoundException, RepositoryException {
-
-        SAXTransformerFactory stf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
-        try {
-            TransformerHandler th = stf.newTransformerHandler();
-            th.getTransformer().setOutputProperty(OutputKeys.METHOD, "xml");
-            th.getTransformer().setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-            th.getTransformer().setOutputProperty(OutputKeys.INDENT, "no");
-            th.setResult(new StreamResult(out));
-
-            exportSystemView(absPath, th, skipBinary, noRecurse);
-        } catch (TransformerException te) {
-            throw new RepositoryException(te);
-        } catch (SAXException se) {
-            throw new RepositoryException(se);
-        }
     }
 
     /**
