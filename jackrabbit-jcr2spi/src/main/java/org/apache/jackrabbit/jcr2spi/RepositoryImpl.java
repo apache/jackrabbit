@@ -35,18 +35,15 @@ import javax.naming.Referenceable;
 import javax.naming.StringRefAddr;
 import javax.naming.spi.ObjectFactory;
 
+import org.apache.jackrabbit.commons.AbstractRepository;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.XASessionInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * <code>RepositoryImpl</code>...
  */
-public class RepositoryImpl implements Repository, Referenceable {
-
-    private static Logger log = LoggerFactory.getLogger(RepositoryImpl.class);
+public class RepositoryImpl extends AbstractRepository implements Referenceable {
 
     // configuration of the repository
     private final RepositoryConfig config;
@@ -94,27 +91,6 @@ public class RepositoryImpl implements Repository, Referenceable {
             config.getRepositoryService().dispose(info);
             throw ex;
         }
-    }
-
-    /**
-     * @see Repository#login(javax.jcr.Credentials)
-     */
-    public Session login(Credentials credentials) throws LoginException, NoSuchWorkspaceException, RepositoryException {
-        return login(credentials, null);
-    }
-
-    /**
-     * @see Repository#login(String)
-     */
-    public Session login(String workspaceName) throws LoginException, NoSuchWorkspaceException, RepositoryException {
-        return login(null, workspaceName);
-    }
-
-    /**
-     * @see Repository#login()
-     */
-    public Session login() throws LoginException, NoSuchWorkspaceException, RepositoryException {
-        return login(null, null);
     }
 
     //---------------------------------------------------------< Rereferencable >---

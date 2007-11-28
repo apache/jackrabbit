@@ -17,9 +17,10 @@
 package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.jackrabbit.util.ChildrenCollectorFilter;
-import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFormat;
+import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
+import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
 import org.apache.jackrabbit.conversion.NameException;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -80,7 +81,6 @@ import javax.jcr.version.VersionHistory;
 import java.io.InputStream;
 import java.util.Calendar;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -438,7 +438,7 @@ public class NodeImpl extends ItemImpl implements Node {
         ArrayList nodes = new ArrayList();
         // traverse children using a special filtering 'collector'
         accept(new ChildrenCollectorFilter(namePattern, nodes, true, false, 1));
-        return new IteratorHelper(Collections.unmodifiableList(nodes));
+        return new NodeIteratorAdapter(nodes);
     }
 
     /**
@@ -485,7 +485,7 @@ public class NodeImpl extends ItemImpl implements Node {
         ArrayList properties = new ArrayList();
         // traverse children using a special filtering 'collector'
         accept(new ChildrenCollectorFilter(namePattern, properties, false, true, 1));
-        return new IteratorHelper(Collections.unmodifiableList(properties));
+        return new PropertyIteratorAdapter(properties);
     }
 
     /**
@@ -539,7 +539,7 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeReferences refs = getNodeState().getNodeReferences();
         if (refs.isEmpty()) {
             // there are no references, return empty iterator
-            return IteratorHelper.EMPTY;
+            return PropertyIteratorAdapter.EMPTY;
         } else {
             return new LazyItemIterator(itemMgr, session.getHierarchyManager(), refs.iterator());
         }
@@ -884,7 +884,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // if same workspace, ignore
         if (session.getWorkspace().getName().equals(srcWorkspace)) {
-            return IteratorHelper.EMPTY;
+            return NodeIteratorAdapter.EMPTY;
         }
         // make sure the workspace exists and is accessible for this session.
         session.checkAccessibleWorkspace(srcWorkspace);

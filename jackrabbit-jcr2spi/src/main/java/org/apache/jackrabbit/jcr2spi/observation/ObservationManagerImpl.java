@@ -22,7 +22,7 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
-import org.apache.jackrabbit.util.IteratorHelper;
+import org.apache.jackrabbit.commons.iterator.EventListenerIteratorAdapter;
 import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.conversion.NameException;
 import org.slf4j.Logger;
@@ -161,7 +161,7 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
             ensureReadOnlyMap();
             activeListeners = readOnlySubscriptions;
         }
-        return new ListenerIterator(activeListeners.keySet());
+        return new EventListenerIteratorAdapter(activeListeners.keySet());
     }
 
     //-----------------------< InternalEventListener >--------------------------
@@ -212,15 +212,4 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
         }
     }
 
-    private static final class ListenerIterator extends IteratorHelper
-            implements EventListenerIterator {
-
-        public ListenerIterator(Collection c) {
-            super(c);
-        }
-
-        public EventListener nextEventListener() {
-            return (EventListener) next();
-        }
-    }
 }
