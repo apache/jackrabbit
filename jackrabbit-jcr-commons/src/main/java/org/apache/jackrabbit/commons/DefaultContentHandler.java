@@ -26,6 +26,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
@@ -38,6 +40,12 @@ import org.xml.sax.helpers.DefaultHandler;
  * {@link DefaultHandler} object.
  */
 class DefaultContentHandler extends DefaultHandler {
+
+    /**
+     * Logger instance.
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(DefaultContentHandler.class);
 
     /**
      * The adapted content handler instance.
@@ -69,6 +77,8 @@ class DefaultContentHandler extends DefaultHandler {
                     "http://xml.org/sax/features/namespace-prefixes", false);
 
             SAXParser parser = factory.newSAXParser();
+            // JCR-984 & JCR-985: Log the name of the SAXParser class
+            logger.debug("Using SAX parser " + parser.getClass().getName());
             parser.parse(new InputSource(in), this);
         } catch (FactoryConfigurationError e) {
             throw new RepositoryException(
