@@ -318,11 +318,6 @@ abstract class AbstractIndex {
      * @throws IOException if an error occurs while commiting changes.
      */
     protected synchronized void commit(boolean optimize) throws IOException {
-        // if index is not locked there are no pending changes
-        if (!IndexReader.isLocked(getDirectory())) {
-            return;
-        }
-
         if (indexReader != null) {
             indexReader.commitDeleted();
         }
