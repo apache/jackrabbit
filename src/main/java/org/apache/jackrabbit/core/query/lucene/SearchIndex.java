@@ -115,7 +115,7 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * The default value for property {@link #maxMergeDocs}.
      */
-    public static final int DEFAULT_MAX_MERGE_DOCS = 100000;
+    public static final int DEFAULT_MAX_MERGE_DOCS = Integer.MAX_VALUE;
 
     /**
      * the default value for property {@link #mergeFactor}.
