@@ -22,7 +22,6 @@ import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.util.IteratorHelper;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -92,18 +91,25 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
             }
             NodeId nodeId = nodeInfo.getId();
             nodeId = idFactory.createNodeId(nodeId.getUniqueID(), nodeId.getPath());
+            final Iterator propIds = nodeInfo.getPropertyIds();
             return new NodeInfoImpl(parentId, nodeInfo.getName(),
                     nodeInfo.getPath(), nodeId,
                     nodeInfo.getIndex(), nodeInfo.getNodetype(),
                     nodeInfo.getMixins(), serRefs.iterator(),
-                    new IteratorHelper(nodeInfo.getPropertyIds()) {
+                    new Iterator() {
+                        public boolean hasNext() {
+                            return propIds.hasNext();
+                        }
                         public Object next() {
-                            PropertyId propId = (PropertyId) super.next();
+                            PropertyId propId = (PropertyId) propIds.next();
                             NodeId parentId = propId.getParentId();
                             idFactory.createNodeId(
                                     parentId.getUniqueID(), parentId.getPath());
                             return idFactory.createPropertyId(
                                     parentId, propId.getName());
+                        }
+                        public void remove() {
+                            throw new UnsupportedOperationException();
                         }
                     });
         }
