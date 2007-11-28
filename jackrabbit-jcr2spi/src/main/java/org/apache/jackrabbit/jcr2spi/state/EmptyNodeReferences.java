@@ -16,10 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.util.IteratorHelper;
-
+import java.util.Collections;
 import java.util.Iterator;
 
 /**
@@ -27,7 +24,6 @@ import java.util.Iterator;
  */
 class EmptyNodeReferences implements NodeReferences {
 
-    private static Logger log = LoggerFactory.getLogger(EmptyNodeReferences.class);
     private static NodeReferences INSTANCE;
 
     private EmptyNodeReferences() {
@@ -46,6 +42,6 @@ class EmptyNodeReferences implements NodeReferences {
     }
 
     public Iterator iterator() {
-        return IteratorHelper.EMPTY;
+        return Collections.EMPTY_LIST.iterator();
     }
 }

@@ -30,7 +30,6 @@ import org.apache.jackrabbit.jcr2spi.operation.Move;
 import org.apache.jackrabbit.jcr2spi.operation.Copy;
 import org.apache.jackrabbit.jcr2spi.operation.Clone;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.jcr2spi.operation.WorkspaceImport;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.apache.jackrabbit.jcr2spi.lock.LockManager;
 import org.apache.jackrabbit.jcr2spi.lock.LockManagerImpl;
@@ -48,6 +47,7 @@ import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.commons.AbstractWorkspace;
 import org.apache.jackrabbit.conversion.NameResolver;
 import org.apache.jackrabbit.conversion.PathResolver;
 import org.apache.jackrabbit.conversion.NamePathResolver;
@@ -63,7 +63,6 @@ import javax.jcr.version.VersionException;
 import javax.jcr.version.Version;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.Workspace;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.AccessDeniedException;
@@ -74,15 +73,12 @@ import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.NamespaceRegistry;
-import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.ValueFactory;
-import java.io.InputStream;
-import java.io.IOException;
 
 /**
  * <code>WorkspaceImpl</code>...
  */
-public class WorkspaceImpl implements Workspace, ManagerProvider {
+public class WorkspaceImpl extends AbstractWorkspace implements ManagerProvider {
 
     private static Logger log = LoggerFactory.getLogger(WorkspaceImpl.class);
 
@@ -324,32 +320,6 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
 
             // build the content handler
             return new WorkspaceContentHandler(this, parentAbsPath, uuidBehavior);
-        } else {
-            throw new PathNotFoundException("No node at path " + parentAbsPath);
-        }
-    }
-
-    /**
-     * @see javax.jcr.Workspace#importXML(String, InputStream, int)
-     */
-    public void importXML(String parentAbsPath, InputStream in, int uuidBehavior)
-        throws IOException, PathNotFoundException, ItemExistsException,
-        ConstraintViolationException, InvalidSerializedDataException,
-        LockException, RepositoryException {
-
-        session.checkSupportedOption(Repository.LEVEL_2_SUPPORTED);
-        session.checkIsAlive();
-
-        Path parentPath = session.getQPath(parentAbsPath);
-        ItemState itemState = getHierarchyManager().getItemState(parentPath);
-        if (itemState.isNode()) {
-            // make sure the given import target is accessible, not locked and checked out.
-            NodeState parentState = (NodeState) itemState;
-            int options = ItemStateValidator.CHECK_ACCESS | ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
-            getValidator().checkIsWritable(parentState, options);
-
-            // run the import
-            wspManager.execute(WorkspaceImport.create(parentState, in, uuidBehavior));
         } else {
             throw new PathNotFoundException("No node at path " + parentAbsPath);
         }

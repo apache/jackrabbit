@@ -18,10 +18,10 @@ package org.apache.jackrabbit.jcr2spi.nodetype;
 
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.commons.iterator.NodeTypeIteratorAdapter;
 import org.apache.jackrabbit.conversion.NameException;
 import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.spi.QNodeDefinition;
@@ -43,7 +43,6 @@ import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.NodeDefinition;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.io.PrintStream;
@@ -290,7 +289,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
         for (int i = 0; i < ntNames.length; i++) {
             list.add(getNodeType(ntNames[i]));
         }
-        return new IteratorHelper(Collections.unmodifiableCollection(list));
+        return new NodeTypeIteratorAdapter(list);
     }
 
     /**
@@ -305,7 +304,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
                 list.add(nt);
             }
         }
-        return new IteratorHelper(Collections.unmodifiableCollection(list));
+        return new NodeTypeIteratorAdapter(list);
     }
 
     /**
@@ -320,7 +319,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
                 list.add(nt);
             }
         }
-        return new IteratorHelper(Collections.unmodifiableCollection(list));
+        return new NodeTypeIteratorAdapter(list);
     }
 
     /**
