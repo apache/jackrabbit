@@ -109,7 +109,7 @@
           in your application's <code>context.xml</code> or
           <code>$CATALINA_HOME/conf/[enginename]/[hostname]/[webappname].xml</code>.
           If you prefer central configuration, you can add the configuration
-          to the Host Context section in the <code>server.xml</code>.
+          to <code>$CATALINA_HOME/conf/context.xml</code>.
         </p>
         <source><![CDATA[
 <ResourceLink name="jcr/repository"
