@@ -42,12 +42,13 @@ import org.apache.jackrabbit.core.version.VersionSelector;
 import org.apache.jackrabbit.core.version.DateVersionSelector;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.lock.LockManager;
+import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
+import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
 import org.apache.jackrabbit.conversion.MalformedPathException;
 import org.apache.jackrabbit.conversion.NameException;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.ChildrenCollectorFilter;
-import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.name.NameConstants;
@@ -92,7 +93,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -2816,7 +2816,7 @@ public class NodeImpl extends ItemImpl implements Node {
         ArrayList nodes = new ArrayList();
         // traverse children using a special filtering 'collector'
         accept(new ChildrenCollectorFilter(namePattern, nodes, true, false, 1));
-        return new IteratorHelper(Collections.unmodifiableList(nodes));
+        return new NodeIteratorAdapter(nodes);
     }
 
     /**
@@ -2830,7 +2830,7 @@ public class NodeImpl extends ItemImpl implements Node {
         ArrayList properties = new ArrayList();
         // traverse children using a special filtering 'collector'
         accept(new ChildrenCollectorFilter(namePattern, properties, false, true, 1));
-        return new IteratorHelper(Collections.unmodifiableList(properties));
+        return new PropertyIteratorAdapter(properties);
     }
 
     /**
@@ -4322,7 +4322,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 return new LazyItemIterator(itemMgr, idList);
             } else {
                 // there are no references, return empty iterator
-                return IteratorHelper.EMPTY;
+                return PropertyIteratorAdapter.EMPTY;
             }
         } catch (ItemStateException e) {
             String msg = "Unable to retrieve REFERENCE properties that refer to " + id;

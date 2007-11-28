@@ -30,19 +30,17 @@ import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.VersionSelector;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.Importer;
-import org.apache.jackrabbit.core.xml.SAXParserProvider;
 import org.apache.jackrabbit.core.xml.WorkspaceImporter;
+import org.apache.jackrabbit.commons.AbstractWorkspace;
 import org.apache.jackrabbit.conversion.NameException;
 import org.apache.jackrabbit.spi.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
-import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.NamespaceRegistry;
@@ -59,17 +57,15 @@ import javax.jcr.query.QueryManager;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
-import javax.xml.parsers.ParserConfigurationException;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 
 /**
  * A <code>WorkspaceImpl</code> ...
  */
-public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionFactory {
+public class WorkspaceImpl extends AbstractWorkspace
+        implements JackrabbitWorkspace, EventStateCollectionFactory {
 
     private static Logger log = LoggerFactory.getLogger(WorkspaceImpl.class);
 
@@ -811,34 +807,6 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
                 rep.getNodeTypeRegistry(), uuidBehavior);
         return new ImportHandler(importer, session.getNamespaceResolver(),
                 rep.getNamespaceRegistry());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void importXML(String parentAbsPath, InputStream in,
-                          int uuidBehavior)
-            throws IOException, PathNotFoundException, ItemExistsException,
-            ConstraintViolationException, InvalidSerializedDataException,
-            LockException, RepositoryException {
-
-        ImportHandler handler =
-                (ImportHandler) getImportContentHandler(parentAbsPath, uuidBehavior);
-        try {
-            SAXParserProvider.getParser().parse(new InputSource(in), handler);
-        } catch (SAXException se) {
-            // check for wrapped repository exception
-            Exception e = se.getException();
-            if (e != null && e instanceof RepositoryException) {
-                throw (RepositoryException) e;
-            } else {
-                String msg = "failed to parse XML stream";
-                log.debug(msg);
-                throw new InvalidSerializedDataException(msg, se);
-            }
-        } catch (ParserConfigurationException e) {
-            throw new RepositoryException("SAX parser configuration error", e);
-        }
     }
 
     /**
