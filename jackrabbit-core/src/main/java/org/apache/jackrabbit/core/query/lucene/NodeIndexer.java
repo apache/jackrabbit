@@ -622,15 +622,14 @@ public class NodeIndexer {
      * @param internalValue The value for the field to add to the document.
      */
     protected void addNameValue(Document doc, String fieldName, Object internalValue) {
-        Name qualiName = (Name) internalValue;
-        String normValue = qualiName.toString();
         try {
-            normValue = mappings.getPrefix(qualiName.getNamespaceURI())
+            Name qualiName = (Name) internalValue;
+            String normValue = mappings.getPrefix(qualiName.getNamespaceURI())
                     + ":" + qualiName.getLocalName();
+            doc.add(createFieldWithoutNorms(fieldName, normValue, false));
         } catch (NamespaceException e) {
             // will never happen
         }
-        doc.add(createFieldWithoutNorms(fieldName, normValue, false));
     }
 
     /**
