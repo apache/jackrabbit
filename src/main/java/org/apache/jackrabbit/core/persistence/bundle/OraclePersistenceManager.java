@@ -128,7 +128,7 @@ public class OraclePersistenceManager extends BundleDbPersistenceManager {
     }
 
     /**
-     * Retruns a new instance of a NGKDbNameIndex.
+     * Returns a new instance of a NGKDbNameIndex.
      * @return a new instance of a NGKDbNameIndex.
      * @throws SQLException if an SQL error occurs.
      */
