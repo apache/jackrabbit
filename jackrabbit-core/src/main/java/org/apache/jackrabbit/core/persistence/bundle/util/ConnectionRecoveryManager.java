@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.persistence.bundle.util;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -326,18 +325,7 @@ public class ConnectionRecoveryManager {
      */
     private void setupConnection() throws SQLException, RepositoryException {
         try {
-            if (driver != null && driver.length() > 0) {
-                Class driverClass = Class.forName(driver);
-                // Workaround for Apache Derby:
-                // The JDBC specification recommends the Class.ForName method without the .newInstance() method call, 
-                // but adding the newInstance() guarantees that Derby will be booted on any Java Virtual Machine.
-                driverClass.newInstance();
-            }
-        } catch (Throwable e) {
-            throw new RepositoryException("Could not load or initialize the database driver class " + driver, e);
-        }
-        try {
-            connection = DriverManager.getConnection(url, user, password);
+            connection = ConnectionFactory.getConnection(driver, url, user, password);
         } catch (SQLException e) {
             log.warn("Could not connect; driver: " + driver + " url: " + url + " user: " + user + " error: " + e.toString(), e);
             throw e;

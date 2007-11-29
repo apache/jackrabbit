@@ -197,7 +197,12 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     /**
-     * Sets the JDBC connection url.
+     * Sets the JDBC connection URL.
+     * The connection can be created using a JNDI Data Source as well. 
+     * To do that, the driver class name must reference a javax.naming.Context class 
+     * (for example javax.naming.InitialContext), and the URL must be the JNDI URL 
+     * (for example java:comp/env/jdbc/Test).
+     * 
      * @param url the url to set.
      */
     public void setUrl(String url) {
@@ -247,6 +252,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * Sets the class name of the JDBC driver. The driver class will be loaded
      * during {@link #init(PMContext) init} in order to assure the existence.
+     * If no driver is specified, the default driver for the database is used.
      *
      * @param driver the class name of the driver
      */
