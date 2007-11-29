@@ -18,10 +18,14 @@ package org.apache.jackrabbit.jcr2spi.xml;
 
 import org.apache.jackrabbit.conversion.NameResolver;
 import org.apache.jackrabbit.conversion.ParsingNameResolver;
+import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.conversion.ParsingPathResolver;
 import org.apache.jackrabbit.namespace.AbstractNamespaceResolver;
 import org.apache.jackrabbit.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.PathFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
@@ -65,7 +69,7 @@ public class ImportHandler extends DefaultHandler {
     private boolean initialized;
 
     private final NamespaceContext nsContext;
-    private final NameResolver nameResolver;
+    private final NamePathResolver resolver;
 
     /**
      * this flag is used to determine whether a namespace context needs to be
@@ -77,14 +81,16 @@ public class ImportHandler extends DefaultHandler {
     protected boolean nsContextStarted;
 
     public ImportHandler(Importer importer, NamespaceResolver nsResolver,
-                         NamespaceRegistry nsReg, NameFactory nameFactory) {
+                         NamespaceRegistry nsReg, NameFactory nameFactory,
+                         PathFactory pathFactory) {
         this.importer = importer;
         this.nsResolver = nsResolver;
         this.nsReg = nsReg;
         this.nameFactory = nameFactory;
 
         nsContext = new NamespaceContext();
-        nameResolver = new ParsingNameResolver(nameFactory, nsContext);
+        NameResolver nr = new ParsingNameResolver(nameFactory, nsContext);
+        resolver = new DefaultNamePathResolver(nr, new ParsingPathResolver(pathFactory, nr));
     }
 
     //---------------------------------------------------------< ErrorHandler >
@@ -228,9 +234,9 @@ public class ImportHandler extends DefaultHandler {
             systemViewXML = Name.NS_SV_URI.equals(namespaceURI);
 
             if (systemViewXML) {
-                targetHandler = new SysViewImportHandler(importer, nsContext, nameResolver);
+                targetHandler = new SysViewImportHandler(importer, resolver);
             } else {
-                targetHandler = new DocViewImportHandler(importer, nsContext, nameResolver, nameFactory);
+                targetHandler = new DocViewImportHandler(importer, resolver, nameFactory);
             }
             targetHandler.startDocument();
             initialized = true;

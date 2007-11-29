@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 
 import javax.jcr.RepositoryException;
 import java.io.IOException;
@@ -37,10 +37,11 @@ public interface Importer {
     /**
      * @param nodeInfo
      * @param propInfos list of <code>PropInfo</code> instances
-     * @param nsContext prefix mappings of current context
+     * @param resolver NamePathResolver dealing with prefix mappings of current
+     * context.
      * @throws RepositoryException
      */
-    void startNode(NodeInfo nodeInfo, List propInfos, NamespaceResolver nsContext)
+    void startNode(NodeInfo nodeInfo, List propInfos, NamePathResolver resolver)
             throws RepositoryException;
 
     /**

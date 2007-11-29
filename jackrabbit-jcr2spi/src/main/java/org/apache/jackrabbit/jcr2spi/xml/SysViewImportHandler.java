@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.xml;
 
 import org.apache.jackrabbit.conversion.NameException;
-import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.name.NameConstants;
 import org.apache.jackrabbit.spi.Name;
 import org.xml.sax.Attributes;
@@ -60,8 +60,8 @@ class SysViewImportHandler extends TargetImportHandler {
      * @param importer
      * @param nsContext
      */
-    SysViewImportHandler(Importer importer, org.apache.jackrabbit.namespace.NamespaceResolver nsContext, NameResolver nameResolver) {
-        super(importer, nsContext, nameResolver);
+    SysViewImportHandler(Importer importer, NamePathResolver resolver) {
+        super(importer, resolver);
     }
 
     private void processNode(ImportState state, boolean start, boolean end)
@@ -81,7 +81,7 @@ class SysViewImportHandler extends TargetImportHandler {
         // call Importer
         try {
             if (start) {
-                importer.startNode(nodeInfo, state.props, nsContext);
+                importer.startNode(nodeInfo, state.props, resolver);
                 // dispose temporary property values
                 for (Iterator iter = state.props.iterator(); iter.hasNext();) {
                     Importer.PropInfo pi = (Importer.PropInfo) iter.next();
@@ -132,7 +132,7 @@ class SysViewImportHandler extends TargetImportHandler {
             // push new ImportState instance onto the stack
             ImportState state = new ImportState();
             try {
-                state.nodeName = nameResolver.getQName(name);
+                state.nodeName = resolver.getQName(name);
             } catch (NameException e) {
                 throw new SAXException(new InvalidSerializedDataException("illegal node name: " + name, e));
             } catch (NamespaceException e) {
@@ -152,8 +152,8 @@ class SysViewImportHandler extends TargetImportHandler {
                         "missing mandatory sv:name attribute of element sv:property"));
             }
             try {
-                currentPropName = nameResolver.getQName(name);
-            } catch (org.apache.jackrabbit.conversion.NameException e) {
+                currentPropName = resolver.getQName(name);
+            } catch (NameException e) {
                 throw new SAXException(new InvalidSerializedDataException("illegal property name: " + name, e));
             } catch (NamespaceException e) {
                 throw new SAXException(new InvalidSerializedDataException("illegal property name: " + name, e));
@@ -240,10 +240,10 @@ class SysViewImportHandler extends TargetImportHandler {
                 String s = null;
                 try {
                     s = val.retrieve();
-                    state.nodeTypeName = nameResolver.getQName(s);
+                    state.nodeTypeName = resolver.getQName(s);
                 } catch (IOException ioe) {
                     throw new SAXException("error while retrieving value", ioe);
-                } catch (org.apache.jackrabbit.conversion.NameException e) {
+                } catch (NameException e) {
                     throw new SAXException(new InvalidSerializedDataException("illegal node type name: " + s, e));
                 } catch (NamespaceException e) {
                     throw new SAXException(new InvalidSerializedDataException("illegal node type name: " + s, e));
@@ -258,11 +258,11 @@ class SysViewImportHandler extends TargetImportHandler {
                     String s = null;
                     try {
                         s = val.retrieve();
-                        Name mixin = nameResolver.getQName(s);
+                        Name mixin = resolver.getQName(s);
                         state.mixinNames.add(mixin);
                     } catch (IOException ioe) {
                         throw new SAXException("error while retrieving value", ioe);
-                    } catch (org.apache.jackrabbit.conversion.NameException e) {
+                    } catch (NameException e) {
                         throw new SAXException(new InvalidSerializedDataException("illegal mixin type name: " + s, e));
                     } catch (NamespaceException e) {
                         throw new SAXException(new InvalidSerializedDataException("illegal mixin type name: " + s, e));

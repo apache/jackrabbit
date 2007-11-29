@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.name.NameConstants;
-import org.apache.jackrabbit.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.util.ISO9075;
@@ -59,9 +59,9 @@ class DocViewImportHandler extends TargetImportHandler {
      * @param importer
      * @param nsContext
      */
-    DocViewImportHandler(Importer importer, NamespaceResolver nsContext,
-                         NameResolver nameResolver, NameFactory nameFactory) {
-        super(importer, nsContext, nameResolver);
+    DocViewImportHandler(Importer importer, NamePathResolver resolver,
+                         NameFactory nameFactory) {
+        super(importer, resolver);
         this.nameFactory = nameFactory;
     }
 
@@ -137,7 +137,7 @@ class DocViewImportHandler extends TargetImportHandler {
                         new Importer.PropInfo(NameConstants.JCR_XMLCHARACTERS, PropertyType.STRING, values);
                 props.add(prop);
                 // call Importer
-                importer.startNode(node, props, nsContext);
+                importer.startNode(node, props, resolver);
                 importer.endNode(node);
 
                 // reset handler
@@ -193,8 +193,8 @@ class DocViewImportHandler extends TargetImportHandler {
                     // jcr:primaryType
                     if (attrValue.length() > 0) {
                         try {
-                            nodeTypeName = nameResolver.getQName(attrValue);
-                        } catch (org.apache.jackrabbit.conversion.NameException ne) {
+                            nodeTypeName = resolver.getQName(attrValue);
+                        } catch (NameException ne) {
                             throw new SAXException("illegal jcr:primaryType value: "
                                     + attrValue, ne);
                         }
@@ -221,7 +221,7 @@ class DocViewImportHandler extends TargetImportHandler {
 
             Importer.NodeInfo node = new Importer.NodeInfo(nodeName, nodeTypeName, mixinTypes, uuid);
             // all information has been collected, now delegate to importer
-            importer.startNode(node, props, nsContext);
+            importer.startNode(node, props, resolver);
             // push current node data onto stack
             stack.push(node);
         } catch (RepositoryException re) {
@@ -244,8 +244,8 @@ class DocViewImportHandler extends TargetImportHandler {
         Name[] qnames = new Name[names.length];
         for (int i = 0; i < names.length; i++) {
             try {
-                qnames[i] = nameResolver.getQName(names[i]);
-            } catch (org.apache.jackrabbit.conversion.NameException ne) {
+                qnames[i] = resolver.getQName(names[i]);
+            } catch (NameException ne) {
                 throw new SAXException("Invalid name: " + names[i], ne);
             } catch (NamespaceException e) {
                 throw new SAXException("Invalid name: " + names[i], e);
