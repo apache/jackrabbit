@@ -60,6 +60,13 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
     /** Iterator over HierarchyEntry elements */
     private final Iterator iter;
 
+    /**
+     * The number of items.
+     * Note, that the size may change over the time due to the lazy behaviour
+     * of this iterator that may only upon iteration found out, that a
+     * hierarchy entry has been invalidated or removed in the mean time.
+     */
+    private long size;
     /** the position of the next item */
     private int pos;
 
@@ -75,8 +82,13 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
     public LazyItemIterator(ItemManager itemMgr, Iterator hierarchyEntryIterator) {
         this.itemMgr = itemMgr;
         this.iter = hierarchyEntryIterator;
-        // prefetch first item
+        if (hierarchyEntryIterator instanceof RangeIterator) {
+            size = ((RangeIterator) hierarchyEntryIterator).getSize();
+        } else {
+            size = UNDEFINED_SIZE;
+        }
         pos = 0;
+        // prefetch first item
         next = prefetchNext();
     }
 
@@ -96,10 +108,10 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
             ItemId id = (ItemId) itemIds.next();
             entries.add(hierarchyMgr.getHierarchyEntry(id));
         }
-        this.iter = entries.iterator();
-
-        // prefetch first item
+        iter = entries.iterator();
+        size = entries.size();
         pos = 0;
+        // prefetch first item
         next = prefetchNext();
     }
 
@@ -117,10 +129,12 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
                 nextItem = itemMgr.getItem(entry);
             } catch (ItemNotFoundException e) {
                 log.debug("Ignoring nonexistent item " + entry);
-                // try the next
+                // reduce the size ... and try the next one
+                size--;
             } catch (RepositoryException e) {
                 log.error("failed to fetch item " + entry + ", skipping...", e);
-                // try the next
+                // reduce the size... and try the next one
+                size--;
             }
         }
         return nextItem;
@@ -163,16 +177,21 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
     }
 
     /**
-     * Always returns -1.
+     * Returns the number of <code>Item</code>s in this iterator or -1 if the
+     * size is unkown.
+     * </p>
+     * Note: The number returned by this method may differ from the number
+     * of <code>Item</code>s actually returned by calls to hasNext() / getNextNode().
+     * This is caused by the lazy instantiation behaviour of this iterator,
+     * that may detect only upon iteration that an Item has been invalidated
+     * or removed in the mean time. As soon as an invalid <code>Item</code> is
+     * detected, the size of this iterator is adjusted.
      *
-     * @return always returns -1.
+     * @return the number of <code>Item</code>s in this iterator.
      * @see RangeIterator#getSize()
      */
     public long getSize() {
-        // Always returns -1, since the entry-iterator may contains items that
-        // are not accessible due to access constraints. -1 seems preferable
-        // to returning a size that is not correct.
-        return LazyItemIterator.UNDEFINED_SIZE;
+        return size;
     }
 
     /**

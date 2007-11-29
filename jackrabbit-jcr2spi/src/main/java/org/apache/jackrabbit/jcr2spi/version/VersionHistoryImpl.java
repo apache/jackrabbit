@@ -30,6 +30,7 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.conversion.NameException;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.Version;
@@ -119,7 +120,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
                 versionEntries.add(entry);
             }
         }
-        return new LazyItemIterator(itemMgr, versionEntries.iterator());
+        return new LazyItemIterator(itemMgr, new RangeIteratorAdapter(versionEntries));
     }
 
     /**

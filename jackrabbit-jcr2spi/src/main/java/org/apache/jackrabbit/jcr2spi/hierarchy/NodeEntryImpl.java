@@ -35,6 +35,7 @@ import org.apache.jackrabbit.jcr2spi.state.ItemStateLifeCycleListener;
 import org.apache.jackrabbit.jcr2spi.util.StateUtility;
 import org.apache.jackrabbit.name.NameConstants;
 import org.apache.jackrabbit.name.PathBuilder;
+import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -563,7 +564,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 entries.add(entry);
             }
         }
-        return Collections.unmodifiableCollection(entries).iterator();
+        return new RangeIteratorAdapter(Collections.unmodifiableCollection(entries));
     }
 
     /**
@@ -683,7 +684,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             // no need to filter out properties, there are no removed properties
             props = properties.getPropertyEntries();
         }
-        return Collections.unmodifiableCollection(props).iterator();
+        return new RangeIteratorAdapter(Collections.unmodifiableCollection(props));
     }
 
     /**

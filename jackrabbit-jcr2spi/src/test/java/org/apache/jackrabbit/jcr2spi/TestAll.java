@@ -82,6 +82,7 @@ public class TestAll extends TestCase {
         // various
         suite.addTestSuite(ReplaceNode.class);
         suite.addTestSuite(HierarchyNodeTest.class);
+        suite.addTestSuite(LazyItemIteratorTest.class);
 
         return suite;
     }
