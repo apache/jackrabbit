@@ -334,6 +334,7 @@ public class WorkspaceImpl extends AbstractWorkspace
      *                    <li><code>CLONE</code></li>
      *                    <li><code>CLONE_REMOVE_EXISTING</code></li>
      *                    </ul>
+     * @return the path of the node at its new position
      * @throws ConstraintViolationException
      * @throws AccessDeniedException
      * @throws VersionException
@@ -342,7 +343,7 @@ public class WorkspaceImpl extends AbstractWorkspace
      * @throws LockException
      * @throws RepositoryException
      */
-    private void internalCopy(String srcAbsPath,
+    private String internalCopy(String srcAbsPath,
                               WorkspaceImpl srcWsp,
                               String destAbsPath,
                               int flag)
@@ -389,12 +390,13 @@ public class WorkspaceImpl extends AbstractWorkspace
         boolean succeeded = false;
 
         try {
-            ops.copy(srcPath, srcWsp.getItemStateManager(),
+            NodeId id = ops.copy(srcPath, srcWsp.getItemStateManager(),
                     srcWsp.getHierarchyManager(),
                     ((SessionImpl) srcWsp.getSession()).getAccessManager(),
                     destPath, flag);
             ops.update();
             succeeded = true;
+            return session.getJCRPath(hierMgr.getPath(id));
         } finally {
             if (!succeeded) {
                 // update operation failed, cancel all modifications
@@ -464,45 +466,7 @@ public class WorkspaceImpl extends AbstractWorkspace
             throws NoSuchWorkspaceException, ConstraintViolationException,
             VersionException, AccessDeniedException, PathNotFoundException,
             ItemExistsException, LockException, RepositoryException {
-
-        // check state of this instance
-        sanityCheck();
-
-        // check workspace name
-        if (getName().equals(srcWorkspace)) {
-            // same as current workspace
-            String msg = srcWorkspace + ": illegal workspace (same as current)";
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
-
-        // check authorization for specified workspace
-        if (!session.getAccessManager().canAccess(srcWorkspace)) {
-            throw new AccessDeniedException("not authorized to access " + srcWorkspace);
-        }
-
-        // clone (i.e. pull) subtree at srcAbsPath from srcWorkspace
-        // to 'this' workspace at destAbsPath
-
-        SessionImpl srcSession = null;
-        try {
-            // create session on other workspace for current subject
-            // (may throw NoSuchWorkspaceException and AccessDeniedException)
-            srcSession = rep.createSession(session.getSubject(), srcWorkspace);
-            WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
-
-            // do cross-workspace copy
-            int mode = BatchedItemOperations.CLONE;
-            if (removeExisting) {
-                mode = BatchedItemOperations.CLONE_REMOVE_EXISTING;
-            }
-            internalCopy(srcAbsPath, srcWsp, destAbsPath, mode);
-        } finally {
-            if (srcSession != null) {
-                // we don't need the other session anymore, logout
-                srcSession.logout();
-            }
-        }
+        clone283(srcWorkspace, srcAbsPath, destAbsPath, removeExisting);
     }
 
     /**
@@ -512,12 +476,7 @@ public class WorkspaceImpl extends AbstractWorkspace
             throws ConstraintViolationException, VersionException,
             AccessDeniedException, PathNotFoundException, ItemExistsException,
             LockException, RepositoryException {
-
-        // check state of this instance
-        sanityCheck();
-
-        // do intra-workspace copy
-        internalCopy(srcAbsPath, this, destAbsPath, BatchedItemOperations.COPY);
+        copy283(srcAbsPath, destAbsPath);
     }
 
     /**
@@ -527,40 +486,7 @@ public class WorkspaceImpl extends AbstractWorkspace
             throws NoSuchWorkspaceException, ConstraintViolationException,
             VersionException, AccessDeniedException, PathNotFoundException,
             ItemExistsException, LockException, RepositoryException {
-
-        // check state of this instance
-        sanityCheck();
-
-        // check workspace name
-        if (getName().equals(srcWorkspace)) {
-            // same as current workspace, delegate to intra-workspace copy method
-            copy(srcAbsPath, destAbsPath);
-            return;
-        }
-
-        // check authorization for specified workspace
-        if (!session.getAccessManager().canAccess(srcWorkspace)) {
-            throw new AccessDeniedException("not authorized to access " + srcWorkspace);
-        }
-
-        // copy (i.e. pull) subtree at srcAbsPath from srcWorkspace
-        // to 'this' workspace at destAbsPath
-
-        SessionImpl srcSession = null;
-        try {
-            // create session on other workspace for current subject
-            // (may throw NoSuchWorkspaceException and AccessDeniedException)
-            srcSession = rep.createSession(session.getSubject(), srcWorkspace);
-            WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
-
-            // do cross-workspace copy
-            internalCopy(srcAbsPath, srcWsp, destAbsPath, BatchedItemOperations.COPY);
-        } finally {
-            if (srcSession != null) {
-                // we don't need the other session anymore, logout
-                srcSession.logout();
-            }
-        }
+        copy283(srcWorkspace, srcAbsPath, destAbsPath);
     }
 
     /**
@@ -570,60 +496,7 @@ public class WorkspaceImpl extends AbstractWorkspace
             throws ConstraintViolationException, VersionException,
             AccessDeniedException, PathNotFoundException, ItemExistsException,
             LockException, RepositoryException {
-
-        // check state of this instance
-        sanityCheck();
-
-        // intra-workspace move...
-
-        Path srcPath;
-        try {
-            srcPath = session.getQPath(srcAbsPath).getNormalizedPath();
-        } catch (NameException e) {
-            String msg = "invalid path: " + srcAbsPath;
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
-        if (!srcPath.isAbsolute()) {
-            throw new RepositoryException("not an absolute path: " + srcAbsPath);
-        }
-
-        Path destPath;
-        try {
-            destPath = session.getQPath(destAbsPath).getNormalizedPath();
-        } catch (NameException e) {
-            String msg = "invalid path: " + destAbsPath;
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
-        if (!destPath.isAbsolute()) {
-            throw new RepositoryException("not an absolute path: " + destAbsPath);
-        }
-
-        BatchedItemOperations ops = new BatchedItemOperations(
-                stateMgr, rep.getNodeTypeRegistry(), session.getLockManager(),
-                session, hierMgr);
-
-        try {
-            ops.edit();
-        } catch (IllegalStateException e) {
-            String msg = "unable to start edit operation";
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
-
-        boolean succeeded = false;
-
-        try {
-            ops.move(srcPath, destPath);
-            ops.update();
-            succeeded = true;
-        } finally {
-            if (!succeeded) {
-                // update operation failed, cancel all modifications
-                ops.cancel();
-            }
-        }
+        move283(srcAbsPath, destAbsPath);
     }
 
     /**
@@ -819,8 +692,502 @@ public class WorkspaceImpl extends AbstractWorkspace
         return new LocalItemStateManager(shared, this, rep.getItemStateCacheFactory());
     }
 
-    //------------------------------------------< EventStateCollectionFactory >
+    //---------------------------------< Workspace methods changed in JSR 283 >
+    /**
+     * This method copies the node at <code>srcAbsPath</code> to the new
+     * location at <code>destAbsPath</code>. Returns the path of the node at its
+     * new position. Note that the returned path will indicate the resulting
+     * same-name sibling index of the destination, if necessary, unlike the
+     * supplied <code>destAbsPath</code> parameter (see below).
+     * <p/>
+     * This operation is performed entirely within the persistent workspace, it
+     * does not involve transient storage and therefore does not require a
+     * <code>save</code>.
+     * <p/>
+     * The new copies of nodes are automatically given new identifiers and
+     * referenceable nodes in particular are always given new referenceable
+     * identifiers.
+     * <p/>
+     * When the source subtree in a <code>copy</code> operation includes both a reference
+     * property (<code>P</code>) and the node to which it refers (<code>N</code>)
+     * then not only does the new copy of the referenceable node (<code>N'<code>)
+     * get a new identifier but the new copy of the reference property (<code>P'</code>)
+     * is changed so that it points to <code>N'</code>, thus preserving the
+     * reference within the subtree.
+     * <p/>
+     * The <code>destAbsPath</code> provided must not have an index on its final
+     * element. If it does then a <code>RepositoryException</code> is thrown.
+     * Strictly speaking, the <code>destAbsPath</code> parameter is actually an
+     * <i>absolute path</i> to the parent node of the new location, appended
+     * with the new <i>name</i> desired for the copied node. It does not specify
+     * a position within the child node ordering. If ordering is supported by
+     * the node type of the parent node of the new location, then the new copy
+     * of the node is appended to the end of the child node list. The resulting
+     * position within a same-name sibling set can, however, be determined from
+     * the path returned by this method, which will include an index if one is
+     * required.
+     * <p/>
+     * This method cannot be used to copy just an individual property by itself.
+     * It copies an entire node and its subtree (including, of course, any properties contained therein).
+     * <p/>
+     * A <code>ConstraintViolationException</code> is thrown if the operation would violate a node-type
+     * or other implementation-specific constraint.
+     * <p/>
+     * A <code>VersionException</code> is thrown if the parent node of <code>destAbsPath</code> is
+     * versionable and checked-in, or is non-versionable but its nearest versionable ancestor is
+     * checked-in.
+     * <p/>
+     * An <code>AccessDeniedException</code> is thrown if the current session (i.e. the session that
+     * was used to acquire this <code>Workspace</code> object) does not have sufficient access rights
+     * to complete the operation.
+     * <p/>
+     * A <code>PathNotFoundException</code> is thrown if the node at <code>srcAbsPath</code> or the
+     * parent of <code>destAbsPath</code> does not exist.
+     * <p/>
+     * An <code>ItemExistException</code> is thrown if a node already exists at
+     * <code>destAbsPath</code> and same-name siblings are not allowed. Note that
+     * if a property already exists at <code>destAbsPath</code>, the operation
+     * succeeds, since a node may have a child node and property with the same name.
+     * <p/>
+     * A <code>LockException</code> is thrown if a lock prevents the copy.
+     *
+     * @param srcAbsPath the path of the node to be copied.
+     * @param destAbsPath the location to which the node at <code>srcAbsPath</code>
+     * is to be copied.
+     * @return the path of the node at its new position.
+     * @throws ConstraintViolationException if the operation would violate a
+     * node-type or other implementation-specific constraint.
+     * @throws VersionException if the parent node of <code>destAbsPath</code> is
+     * versionable and checked-in, or is non-versionable but its nearest versionable ancestor is
+     * checked-in.
+     * @throws AccessDeniedException if the current session does not have
+     * sufficient access rights to complete the operation.
+     * @throws PathNotFoundException if the node at <code>srcAbsPath</code> or
+     * the parent of <code>destAbsPath</code> does not exist.
+     * @throws ItemExistsException if a node already exists at
+     * <code>destAbsPath</code> and same-name siblings are not allowed.
+     * @throws LockException if a lock prevents the copy.
+     * @throws RepositoryException if the last element of <code>destAbsPath</code>
+     * has an index or if another error occurs.
+     */
+    public String copy283(String srcAbsPath, String destAbsPath)
+            throws ConstraintViolationException, VersionException,
+            AccessDeniedException, PathNotFoundException, ItemExistsException,
+            LockException, RepositoryException {
+        // check state of this instance
+        sanityCheck();
 
+        // do intra-workspace copy
+        return internalCopy(srcAbsPath, this, destAbsPath, BatchedItemOperations.COPY);
+    }
+
+    /**
+     * This method copies the subtree at <code>srcAbsPath</code> in <code>srcWorkspace</code>
+     * to <code>destAbsPath</code> in <code>this</code> workspace. Returns the
+     * path of the node at its new position. Note that the returned path will
+     * indicate the resulting same-name sibling index of the destination,
+     * if necessary, unlike the supplied <code>destAbsPath</code> parameter
+     * (see below).
+     * <p/>
+     * Unlike <code>clone</code>, this method does assign new referenceable
+     * identifiers to the new copies of referenceable nodes. In the case of
+     * non-referenceable nodes, this method <i>may</i> assign new identifiers. This
+     * operation is performed entirely within the persistent workspace, it does
+     * not involve transient storage and therefore does not require a <code>save</code>.
+     * <p/>
+     * When the source subtree in a <code>copy</code> operation includes both a reference
+     * property (<code>P</code>) and the node to which it refers (<code>N</code>)
+     * then not only does the new copy of the referenceable node (<code>N'<code>)
+     * get a new identifier but the new copy of the reference property (<code>P'</code>)
+     * is changed so that it points to <code>N'</code>, thus preserving the
+     * reference within the subtree.
+     * <p/>
+     * The <code>destAbsPath</code> provided must not have an index on its final
+     * element. If it does then a <code>RepositoryException</code> is thrown.
+     * Strictly speaking, the <code>destAbsPath</code> parameter is actually an
+     * <i>absolute path</i> to the parent node of the new location, appended
+     * with the new <i>name</i> desired for the copied node. It does not specify
+     * a position within the child node ordering. If ordering is supported by
+     * the node type of the parent node of the new location, then the new copy
+     * of the node is appended to the end of the child node list. The resulting
+     * position within a same-name sibling set can, however, be determined from
+     * the path returned by this method, which will include an index if one is
+     * required.
+     * <p/>
+     * This method cannot be used to copy just an individual property by itself.
+     * It copies an entire node and its subtree (including, of course, any properties contained therein).
+     * <p/>
+     * A <code>NoSuchWorkspaceException</code> is thrown if <code>srcWorkspace</code> does not
+     * exist or if the current Session does not have permission to access it.
+     * <p/>
+     * A <code>ConstraintViolationException</code> is thrown if the operation would violate a node-type
+     * or other implementation-specific constraint.
+     * <p/>
+     * A <code>VersionException</code> is thrown if the parent node of <code>destAbsPath</code> is
+     * versionable and checked-in, or is non-versionable but its nearest versionable ancestor is
+     * checked-in.
+     * <p/>
+     * An <code>AccessDeniedException</code> is thrown if the current session (i.e. the session that
+     * was used to acquire this <code>Workspace</code> object) does not have sufficient access rights
+     * to complete the operation.
+     * <p/>
+     * A <code>PathNotFoundException</code> is thrown if the node at <code>srcAbsPath</code> in
+     * <code>srcWorkspace</code> or the parent of <code>destAbsPath</code> in this workspace does not exist.
+     * <p/>
+     * An <code>ItemExistException</code> is thrown if a node already exists at
+     * <code>destAbsPath</code> and same-name siblings are not allowed. Note that
+     * if a property already exists at <code>destAbsPath</code>, the operation
+     * succeeds, since a node may have a child node and property with the same name.
+     * <p/>
+     * A <code>LockException</code> is thrown if a lock prevents the copy.
+     *
+     * @param srcWorkspace the name of the workspace from which the copy is to be made.
+     * @param srcAbsPath the path of the node to be copied.
+     * @param destAbsPath the location to which the node at <code>srcAbsPath</code>
+     * is to be copied in <code>this</code> workspace.
+     * @return the path of the node at its new position.
+     * @throws NoSuchWorkspaceException if <code>srcWorkspace</code> does not
+     * exist or if the current <code>Session</code> does not have permission to access it.
+     * @throws ConstraintViolationException if the operation would violate a
+     * node-type or other implementation-specific constraint
+     * @throws VersionException if the parent node of <code>destAbsPath</code> is
+     * versionable and checked-in, or is non-versionable but its nearest versionable ancestor is
+     * checked-in.
+     * @throws AccessDeniedException if the current session does have permission to access
+     * <code>srcWorkspace</code> but otherwise does not have sufficient access rights to
+     * complete the operation.
+     * @throws PathNotFoundException if the node at <code>srcAbsPath</code> in <code>srcWorkspace</code> or
+     * the parent of <code>destAbsPath</code> in this workspace does not exist.
+     * @throws ItemExistsException if a node already exists at <code>destAbsPath</code>
+     * and same-name siblings are not allowed.
+     * @throws LockException if a lock prevents the copy.
+     * @throws RepositoryException if the last element of <code>destAbsPath</code>
+     * has an index or if another error occurs.
+     */
+    public String copy283(String srcWorkspace, String srcAbsPath, String destAbsPath)
+            throws NoSuchWorkspaceException, ConstraintViolationException,
+            VersionException, AccessDeniedException, PathNotFoundException,
+            ItemExistsException, LockException, RepositoryException {
+
+        // check state of this instance
+        sanityCheck();
+
+        // check workspace name
+        if (getName().equals(srcWorkspace)) {
+            // same as current workspace, delegate to intra-workspace copy method
+            return copy283(srcAbsPath, destAbsPath);
+        }
+
+        // check authorization for specified workspace
+        if (!session.getAccessManager().canAccess(srcWorkspace)) {
+            throw new AccessDeniedException("not authorized to access " + srcWorkspace);
+        }
+
+        // copy (i.e. pull) subtree at srcAbsPath from srcWorkspace
+        // to 'this' workspace at destAbsPath
+
+        SessionImpl srcSession = null;
+        try {
+            // create session on other workspace for current subject
+            // (may throw NoSuchWorkspaceException and AccessDeniedException)
+            srcSession = rep.createSession(session.getSubject(), srcWorkspace);
+            WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
+
+            // do cross-workspace copy
+            return internalCopy(srcAbsPath, srcWsp, destAbsPath, BatchedItemOperations.COPY);
+        } finally {
+            if (srcSession != null) {
+                // we don't need the other session anymore, logout
+                srcSession.logout();
+            }
+        }
+    }
+
+    /**
+     * Clones the subtree at the node <code>srcAbsPath</code> in <code>srcWorkspace</code> to the new location at
+     * <code>destAbsPath</code> in <code>this</code> workspace. Returns the path
+     * of the node at its new position. Note that the returned
+     * path will indicate the resulting same-name sibling index of the
+     * destination, if necessary, unlike the supplied <code>destAbsPath</code>
+     * parameter (see below).
+     * <p/>
+     * Unlike the signature of <code>copy</code> that copies between workspaces,
+     * this method <i>does not</i> assign new identifiers to the newly cloned nodes
+     * but preserves the identifiers of their respective source nodes. This applies
+     * to both referenceable and non-referenceable nodes.
+     * <p/>
+     * In some implementations there may be cases where preservation of a
+     * non-referenceable identifier is not possible, due to how non-referenceable
+     * identifiers are constructed in that implementation. In such a case this
+     * method will throw a <code>RepositoryException</code>.
+     * <p/>
+     * If <code>removeExisting</code> is true and an existing node in this workspace
+     * (the destination workspace) has the same identifier as a node being cloned from
+     * <code>srcWorkspace</code>, then the incoming node takes precedence, and the
+     * existing node (and its subtree) is removed. If <code>removeExisting</code>
+     * is false then an identifier collision causes this method to throw a
+     * <code>ItemExistsException</code> and no changes are made.
+     * <p/>
+     * If successful, the change is persisted immediately, there is no need to call <code>save</code>.
+     * <p/>
+     * The <code>destAbsPath</code> provided must not have an index on its final
+     * element. If it does then a <code>RepositoryException</code> is thrown.
+     * Strictly speaking, the <code>destAbsPath</code> parameter is actually an
+     * <i>absolute path</i> to the parent node of the new location, appended
+     * with the new <i>name</i> desired for the cloned node. It does not specify
+     * a position within the child node ordering. If ordering is supported by
+     * the node type of the parent node of the new location, then the new clone
+     * of the node is appended to the end of the child node list. The resulting
+     * position within a same-name sibling set can, however, be determined from
+     * the path returned by this method, which will include an index, if one is
+     * required.
+     * <p/>
+     * This method cannot be used to clone just an individual property by itself. It clones an
+     * entire node and its subtree (including, of course, any properties contained therein).
+     * <p/>
+     * A <code>NoSuchWorkspaceException</code> is thrown if <code>srcWorkspace</code> does not
+     * exist or if the current <code>Session</code> does not have permission to access it.
+     * <p/>
+     * A <code>ConstraintViolationException</code> is thrown if the operation would violate a node-type
+     * or other implementation-specific constraint or if <code>srcWorkspace</code> is the name of this workspace.
+     * In other words, if an attempt is made to clone a subtree into the same workspace.
+     * <p/>
+     * A <code>VersionException</code> is thrown if the parent node of <code>destAbsPath</code> is
+     * versionable and checked-in, or is non-versionable but its nearest versionable ancestor is
+     * checked-in. This exception will also be thrown if <code>removeExisting</code> is <code>true</code>,
+     * and an identifier conflict occurs that would require the moving and/or altering of a node that is checked-in.
+     * <p/>
+     * An <code>AccessDeniedException</code> is thrown if the current session (i.e. the session that
+     * was used to acquire this <code>Workspace</code> object) does not have sufficient access rights
+     * to complete the operation.
+     * <p/>
+     * A <code>PathNotFoundException</code> is thrown if the node at <code>srcAbsPath</code> in
+     * <code>srcWorkspace</code> or the parent of <code>destAbsPath</code> in this workspace does not exist.
+     * <p/>
+     * An <code>ItemExistsException</code> is thrown if a node or property already exists at
+     * <code>destAbsPath</code>
+     * <p/>
+     * An <code>ItemExistException</code> is thrown if a node already exists at
+     * <code>destAbsPath</code> and same-name siblings are not allowed or if
+     * <code>removeExisting</code> is <code>false</code> and an identifier conflict occurs.
+     * <p/>
+     * Note that if a property already exists at <code>destAbsPath</code>, the
+     * operation succeeds, since a node may have a child node and property with
+     * the same name.
+     * <p/>
+     * A <code>LockException</code> is thrown if a lock prevents the clone.
+     *
+     * @param srcWorkspace The name of the workspace from which the node is to be copied.
+     * @param srcAbsPath the path of the node to be copied in <code>srcWorkspace</code>.
+     * @param destAbsPath the location to which the node at <code>srcAbsPath</code>
+     * is to be copied in <code>this</code> workspace.
+     * @param removeExisting if <code>false</code> then this method throws an
+     * <code>ItemExistsException</code> on identifier conflict with an incoming node.
+     * If <code>true</code> then a identifier conflict is resolved by removing the existing node
+     * from its location in this workspace and cloning (copying in) the one from
+     * <code>srcWorkspace</code>.
+     * @return the path of the node at its new position.
+     * @throws NoSuchWorkspaceException if <code>destWorkspace</code> does not exist.
+     * @throws ConstraintViolationException if the operation would violate a
+     * node-type or other implementation-specific constraint.
+     * @throws VersionException if the parent node of <code>destAbsPath</code> is
+     * versionable and checked-in, or is non-versionable but its nearest versionable ancestor is
+     * checked-in. This exception will also be thrown if <code>removeExisting</code> is <code>true</code>,
+     * and an identifier conflict occurs that would require the moving and/or altering of a node that is checked-in.
+     * @throws AccessDeniedException if the current session does not have
+     * sufficient access rights to complete the operation.
+     * @throws PathNotFoundException if the node at <code>srcAbsPath</code> in
+     * <code>srcWorkspace</code> or the parent of <code>destAbsPath</code> in this workspace does not exist.
+     * @throws ItemExistsException if a node already exists at
+     * <code>destAbsPath</code> and same-name siblings are not allowed or if
+     * <code>removeExisting</code> is <code>false</code> and an identifier conflict occurs.
+     * @throws LockException if a lock prevents the clone.
+     * @throws RepositoryException if the last element of <code>destAbsPath</code>
+     * has an index or if another error occurs.
+     */
+    public String clone283(String srcWorkspace, String srcAbsPath,
+                           String destAbsPath, boolean removeExisting)
+            throws NoSuchWorkspaceException, ConstraintViolationException,
+            VersionException, AccessDeniedException, PathNotFoundException,
+            ItemExistsException, LockException, RepositoryException {
+
+        // check state of this instance
+        sanityCheck();
+
+        // check workspace name
+        if (getName().equals(srcWorkspace)) {
+            // same as current workspace
+            String msg = srcWorkspace + ": illegal workspace (same as current)";
+            log.debug(msg);
+            throw new RepositoryException(msg);
+        }
+
+        // check authorization for specified workspace
+        if (!session.getAccessManager().canAccess(srcWorkspace)) {
+            throw new AccessDeniedException("not authorized to access " + srcWorkspace);
+        }
+
+        // clone (i.e. pull) subtree at srcAbsPath from srcWorkspace
+        // to 'this' workspace at destAbsPath
+
+        SessionImpl srcSession = null;
+        try {
+            // create session on other workspace for current subject
+            // (may throw NoSuchWorkspaceException and AccessDeniedException)
+            srcSession = rep.createSession(session.getSubject(), srcWorkspace);
+            WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
+
+            // do cross-workspace copy
+            int mode = BatchedItemOperations.CLONE;
+            if (removeExisting) {
+                mode = BatchedItemOperations.CLONE_REMOVE_EXISTING;
+            }
+            return internalCopy(srcAbsPath, srcWsp, destAbsPath, mode);
+        } finally {
+            if (srcSession != null) {
+                // we don't need the other session anymore, logout
+                srcSession.logout();
+            }
+        }
+    }
+
+    /**
+     * Moves the node at <code>srcAbsPath</code> (and its entire subtree) to the
+     * new location at <code>destAbsPath</code>. Returns the path of the node at
+     * its new position. Note that the returned path will indicate the resulting
+     * same-name sibling index of the destination, if necessary, unlike the
+     * supplied <code>destAbsPath</code> parameter (see below).
+     * <p/>
+     * If successful,
+     * the change is persisted immediately, there is no need to call <code>save</code>.
+     * Note that this is in contrast to {@link Session#move} which operates within the
+     * transient space and hence requires a <code>save</code>.
+     * <p/>
+     * The identifiers of referenceable nodes must not be changed by a <code>move</code>.
+     * The identifiers of non-referenceable nodes <i>may</i> change.
+     * <p/>
+     * The <code>destAbsPath</code> provided must not
+     * have an index on its final element. If it does then a <code>RepositoryException</code>
+     * is thrown. Strictly speaking, the <code>destAbsPath</code> parameter is actually an <i>absolute path</i>
+     * to the parent node of the new location, appended with the new <i>name</i> desired for the
+     * moved node. It does not specify a position within the child node
+     * ordering. If ordering is supported by the node type of
+     * the parent node of the new location, then the newly moved node is appended to the end of the
+     * child node list. The resulting position within a same-name sibling set can,
+     * however, be determined from the path returned by this method,
+     * which will include an index if one is required.
+     * <p/>
+     * This method cannot be used to move just an individual property by itself.
+     * It moves an entire node and its subtree (including, of course, any properties contained therein).
+     * <p/>
+     * The identifiers of referenceable nodes must not be changed by a <code>move</code>.
+     * The identifiers of non-referenceable nodes may change.
+     * <p/>
+     * A <code>ConstraintViolationException</code> is thrown if the operation would violate a node-type
+     * or other implementation-specific constraint.
+     * <p/>
+     * A <code>VersionException</code> is thrown if the parent node of <code>destAbsPath</code>
+     * or the parent node of <code>srcAbsPath</code> is versionable and checked-in, or is
+     * non-versionable but its nearest versionable ancestor is checked-in.
+     * <p/>
+     * An <code>AccessDeniedException</code> is thrown if the current session (i.e. the session that
+     * was used to acquire this <code>Workspace</code> object) does not have sufficient access rights
+     * to complete the operation.
+     * <p/>
+     * A <code>PathNotFoundException</code> is thrown if the node at <code>srcAbsPath</code> or the
+     * parent of <code>destAbsPath</code> does not exist.
+     * <p/>
+     * An <code>ItemExistException</code> is thrown if a node already exists at
+     * <code>destAbsPath</code> and same-name siblings are not allowed.
+     * <p/>
+     * Note that if a property already exists at <code>destAbsPath</code>, the
+     * operation succeeds, since a node may have a child node and property with
+     * the same name
+     * <p/>
+     * A <code>LockException</code> if a lock prevents the move.
+     *
+     * @param srcAbsPath the path of the node to be moved.
+     * @param destAbsPath the location to which the node at <code>srcAbsPath</code>
+     * is to be moved.
+     * @return the path of the node at its new position.
+     * @throws ConstraintViolationException if the operation would violate a
+     * node-type or other implementation-specific constraint
+     * @throws VersionException if the parent node of <code>destAbsPath</code>
+     * or the parent node of <code>srcAbsPath</code> is versionable and checked-in,
+     * or is non-versionable but its nearest versionable ancestor is checked-in.
+     * @throws AccessDeniedException if the current session (i.e. the session that
+     * was used to aqcuire this <code>Workspace</code> object) does not have
+     * sufficient access rights to complete the operation.
+     * @throws PathNotFoundException if the node at <code>srcAbsPath</code> or
+     * the parent of <code>destAbsPath</code> does not exist.
+     * @throws ItemExistsException if a node already exists at
+     * <code>destAbsPath</code> and same-name siblings are not allowed.
+     * @throws LockException if a lock prevents the move.
+     * @throws RepositoryException if the last element of <code>destAbsPath</code>
+     *         has an index or if another error occurs.
+     */
+    public String move283(String srcAbsPath, String destAbsPath)
+            throws ConstraintViolationException, VersionException,
+            AccessDeniedException, PathNotFoundException, ItemExistsException,
+            LockException, RepositoryException {
+
+        // check state of this instance
+        sanityCheck();
+
+        // intra-workspace move...
+
+        Path srcPath;
+        try {
+            srcPath = session.getQPath(srcAbsPath).getNormalizedPath();
+        } catch (NameException e) {
+            String msg = "invalid path: " + srcAbsPath;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+        if (!srcPath.isAbsolute()) {
+            throw new RepositoryException("not an absolute path: " + srcAbsPath);
+        }
+
+        Path destPath;
+        try {
+            destPath = session.getQPath(destAbsPath).getNormalizedPath();
+        } catch (NameException e) {
+            String msg = "invalid path: " + destAbsPath;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+        if (!destPath.isAbsolute()) {
+            throw new RepositoryException("not an absolute path: " + destAbsPath);
+        }
+
+        BatchedItemOperations ops = new BatchedItemOperations(
+                stateMgr, rep.getNodeTypeRegistry(), session.getLockManager(),
+                session, hierMgr);
+
+        try {
+            ops.edit();
+        } catch (IllegalStateException e) {
+            String msg = "unable to start edit operation";
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+
+        boolean succeeded = false;
+
+        try {
+            NodeId id = ops.move(srcPath, destPath);
+            ops.update();
+            succeeded = true;
+            return session.getJCRPath(hierMgr.getPath(id));
+        } finally {
+            if (!succeeded) {
+                // update operation failed, cancel all modifications
+                ops.cancel();
+            }
+        }
+    }
+
+    //------------------------------------------< EventStateCollectionFactory >
     /**
      * {@inheritDoc}
      * <p/>
