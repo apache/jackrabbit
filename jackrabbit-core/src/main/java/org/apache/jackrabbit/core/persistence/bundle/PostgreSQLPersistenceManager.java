@@ -72,7 +72,7 @@ public class PostgreSQLPersistenceManager extends BundleDbPersistenceManager {
     }
 
     /**
-     * Retruns a new instance of a DbNameIndex.
+     * Returns a new instance of a DbNameIndex.
      * @return a new instance of a DbNameIndex.
      * @throws java.sql.SQLException if an SQL error occurs.
      */
