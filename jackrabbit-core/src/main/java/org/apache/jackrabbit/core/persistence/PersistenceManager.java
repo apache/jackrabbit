@@ -74,7 +74,7 @@ public interface PersistenceManager {
      * should be discarded.
      *
      * @param context persistence manager context
-     * @throws Exception if the persistence manager intialization failed
+     * @throws Exception if the persistence manager initialization failed
      */
     void init(PMContext context) throws Exception;
 
