@@ -34,7 +34,7 @@ import java.io.File;
 public class PMContext {
 
     /**
-     * the physcial home dir
+     * the physical home dir
      */
     private final File physicalHomeDir;
 
