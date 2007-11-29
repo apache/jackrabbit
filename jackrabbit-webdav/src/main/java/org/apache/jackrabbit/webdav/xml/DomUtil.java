@@ -538,7 +538,7 @@ public class DomUtil {
      * @return 'timeout' Xml element
      */
     public static Element timeoutToXml(long timeout, Document factory) {
-        String expString = "Second-"+ timeout/1000;;
+        String expString = "Second-"+ timeout/1000;
         Element exp = createElement(factory, DavConstants.XML_TIMEOUT, DavConstants.NAMESPACE, expString);
         return exp;
     }
