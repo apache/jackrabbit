@@ -156,7 +156,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     /**
-     * Sets the block size of the blob fs and controlls how blobs are handled.
+     * Sets the block size of the blob fs and controls how blobs are handled.
      * <br>
      * If the size is > 0, it must be a power of 2 and is used as blocksize
      * for the cqfs. blobs are then stored within that cqfs. A call to
@@ -166,7 +166,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
      * within the workspace's physical filesystem. A call to
      * {@link #useLocalFsBlobStore()} will return <code>true</code>.
      * <br>
-     * If the size is &lt; 0, the cqfs is not used at all, and the blobls are
+     * If the size is &lt; 0, the cqfs is not used at all, and the blobs are
      * stored within the item filesystem. A call to
      * {@link #useItemBlobStore()} will return <code>true</code>.
      * <br>
@@ -205,8 +205,8 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     /**
-     * Returns the configured inital cache size of the blobfs.
-     * @return the configured inital cache size of the blobfs.
+     * Returns the configured initial cache size of the blobfs.
+     * @return the configured initial cache size of the blobfs.
      */
     public String getBlobFSInitialCacheSize() {
         return String.valueOf(blobFSInitialCache);
@@ -265,8 +265,8 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     /**
-     * Returns the configured inital cache size of the itemfs.
-     * @return the configured inital cache size of the itemfs.
+     * Returns the configured initial cache size of the itemfs.
+     * @return the configured initial cache size of the itemfs.
      */
     public String getItemFSInitialCacheSize() {
         return String.valueOf(itemFSInitialCache);
@@ -292,7 +292,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
 
     /**
      * Sets the maximal cache size of the item fs. This only applies to cqfs
-     * base item storea.
+     * base item store.
      * @param size the maximal size
      */
     public void setItemFSMaximumCacheSize(String size) {
@@ -300,15 +300,15 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     /**
-     * Returns the miminum blob size.
-     * @return the miminum blob size.
+     * Returns the mininum blob size.
+     * @return the mininum blob size.
      */
     public int getMinBlobSize() {
         return minBlobSize;
     }
 
     /**
-     * Sets the minumum blob size. This size defines the threshhold of which
+     * Sets the minimum blob size. This size defines the threshold of which
      * size a property is included in the bundle or is stored in the blob store.
      *
      * @param minBlobSize
