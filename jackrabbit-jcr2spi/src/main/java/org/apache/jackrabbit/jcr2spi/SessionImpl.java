@@ -380,7 +380,7 @@ public class SessionImpl extends AbstractSession implements ManagerProvider {
         // NOTE: check if path corresponds to Node and is writable is performed
         // within the SessionImporter.
         Importer importer = new SessionImporter(parentPath, this, itemStateManager, uuidBehavior);
-        return new ImportHandler(importer, getNamespaceResolver(), workspace.getNamespaceRegistry(), getNameFactory());
+        return new ImportHandler(importer, getNamespaceResolver(), workspace.getNamespaceRegistry(), getNameFactory(), getPathFactory());
     }
 
     /**

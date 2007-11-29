@@ -16,8 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.conversion.NameResolver;
-import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.util.TransientFileFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,13 +43,11 @@ abstract class TargetImportHandler extends DefaultHandler {
     private static Logger log = LoggerFactory.getLogger(TargetImportHandler.class);
 
     protected final Importer importer;
-    protected final NamespaceResolver nsContext;
-    protected final NameResolver nameResolver;
+    protected final NamePathResolver resolver;
 
-    protected TargetImportHandler(Importer importer, NamespaceResolver nsContext, org.apache.jackrabbit.conversion.NameResolver nameResolver) {
+    protected TargetImportHandler(Importer importer, NamePathResolver resolver) {
         this.importer = importer;
-        this.nsContext = nsContext;
-        this.nameResolver = nameResolver;
+        this.resolver = resolver;
     }
 
     /**

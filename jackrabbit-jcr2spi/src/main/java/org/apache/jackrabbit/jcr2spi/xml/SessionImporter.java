@@ -38,7 +38,6 @@ import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.name.NameConstants;
-import org.apache.jackrabbit.namespace.NamespaceResolver;
 import org.apache.jackrabbit.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
@@ -51,6 +50,7 @@ import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.ValueFormat;
 import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -157,7 +157,7 @@ public class SessionImporter implements Importer, SessionListener {
    /**
      * {@inheritDoc}
      */
-    public void startNode(NodeInfo nodeInfo, List propInfos, NamespaceResolver nsContext)
+    public void startNode(NodeInfo nodeInfo, List propInfos, NamePathResolver resolver)
             throws RepositoryException {
        if (isClosed()) {
            // workspace-importer only: ignore if import has been aborted before.
@@ -235,7 +235,7 @@ public class SessionImporter implements Importer, SessionListener {
            Iterator iter = propInfos.iterator();
            while (iter.hasNext()) {
                PropInfo pi = (PropInfo) iter.next();
-               importProperty(pi, nodeState, nsContext);
+               importProperty(pi, nodeState, resolver);
            }
        }
 
@@ -477,7 +477,7 @@ public class SessionImporter implements Importer, SessionListener {
      * @throws RepositoryException
      * @throws ConstraintViolationException
      */
-    private void importProperty(PropInfo pi, NodeState parentState, org.apache.jackrabbit.namespace.NamespaceResolver nsResolver) throws RepositoryException, ConstraintViolationException {
+    private void importProperty(PropInfo pi, NodeState parentState, NamePathResolver resolver) throws RepositoryException, ConstraintViolationException {
         Name propName = pi.getName();
         TextValue[] tva = pi.getValues();
         int infoType = pi.getType();
@@ -539,7 +539,7 @@ public class SessionImporter implements Importer, SessionListener {
             }
         }
 
-        QValue[] values = getPropertyValues(pi, targetType, def.isMultiple(), nsResolver);
+        QValue[] values = getPropertyValues(pi, targetType, def.isMultiple(), resolver);
         if (propState == null) {
             // create new property
             Operation ap = AddProperty.create(parentState, propName, targetType, def, values);
@@ -566,7 +566,7 @@ public class SessionImporter implements Importer, SessionListener {
      * @return
      * @throws RepositoryException
      */
-    private QValue[] getPropertyValues(PropInfo propertyInfo, int targetType, boolean isMultiple, org.apache.jackrabbit.namespace.NamespaceResolver nsResolver) throws RepositoryException {
+    private QValue[] getPropertyValues(PropInfo propertyInfo, int targetType, boolean isMultiple, NamePathResolver resolver) throws RepositoryException {
         TextValue[] tva = propertyInfo.getValues();
         // check multi-valued characteristic
         if ((tva.length == 0 || tva.length > 1) && !isMultiple) {
@@ -575,7 +575,7 @@ public class SessionImporter implements Importer, SessionListener {
         // convert serialized values to QValue objects
         QValue[] iva = new QValue[tva.length];
         for (int i = 0; i < tva.length; i++) {
-            iva[i] = buildQValue(tva[i], targetType, nsResolver);
+            iva[i] = buildQValue(tva[i], targetType, resolver);
         }
         return iva;
     }
@@ -588,7 +588,7 @@ public class SessionImporter implements Importer, SessionListener {
      * @return
      * @throws RepositoryException
      */
-    private QValue buildQValue(TextValue tv, int targetType, org.apache.jackrabbit.namespace.NamespaceResolver nsResolver) throws RepositoryException {
+    private QValue buildQValue(TextValue tv, int targetType, NamePathResolver resolver) throws RepositoryException {
         QValue iv;
         try {
             switch (targetType) {
@@ -620,7 +620,7 @@ public class SessionImporter implements Importer, SessionListener {
                 default:
                     // build iv using namespace context of xml document
                     Value v = ValueHelper.convert(tv.retrieve(), targetType, session.getValueFactory());
-                    iv = ValueFormat.getQValue(v, session.getNamePathResolver(), session.getQValueFactory());
+                    iv = ValueFormat.getQValue(v, resolver, session.getQValueFactory());
                     break;
             }
             return iv;
