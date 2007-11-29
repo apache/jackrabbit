@@ -26,7 +26,7 @@ import org.apache.jackrabbit.core.persistence.PMContext;
  * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
  * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/>
  * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="16384"/>
- * <li>&lt;param name="{@link #setDriver(String) driver}" value="org.gjt.mm.mysql.Drive"/>
+ * <li>&lt;param name="{@link #setDriver(String) driver}" value="org.gjt.mm.mysql.Driver"/>
  * <li>&lt;param name="{@link #setUrl(String) url}" value=""/>
  * <li>&lt;param name="{@link #setUser(String) user}" value=""/>
  * <li>&lt;param name="{@link #setPassword(String) password}" value=""/>
