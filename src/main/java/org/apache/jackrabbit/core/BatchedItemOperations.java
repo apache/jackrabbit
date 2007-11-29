@@ -201,7 +201,7 @@ public class BatchedItemOperations extends ItemValidator {
     //-------------------------------------------< high-level item operations >
     /**
      * Copies the tree at <code>srcPath</code> to the new location at
-     * <code>destPath</code>.
+     * <code>destPath</code>. Returns the id of the node at its new position.
      * <p/>
      * <b>Precondition:</b> the state manager needs to be in edit mode.
      *
@@ -213,6 +213,7 @@ public class BatchedItemOperations extends ItemValidator {
      *                 <li><code>CLONE</code></li>
      *                 <li><code>CLONE_REMOVE_EXISTING</code></li>
      *                 </ul>
+     * @return the id of the node at its new position
      * @throws ConstraintViolationException
      * @throws AccessDeniedException
      * @throws VersionException
@@ -221,16 +222,17 @@ public class BatchedItemOperations extends ItemValidator {
      * @throws LockException
      * @throws RepositoryException
      */
-    public void copy(Path srcPath, Path destPath, int flag)
+    public NodeId copy(Path srcPath, Path destPath, int flag)
             throws ConstraintViolationException, AccessDeniedException,
             VersionException, PathNotFoundException, ItemExistsException,
             LockException, RepositoryException {
-        copy(srcPath, stateMgr, hierMgr, session.getAccessManager(), destPath, flag);
+        return copy(srcPath, stateMgr, hierMgr, session.getAccessManager(), destPath, flag);
     }
 
     /**
      * Copies the tree at <code>srcPath</code> retrieved using the specified
      * <code>srcStateMgr</code> to the new location at <code>destPath</code>.
+     * Returns the id of the node at its new position.
      * <p/>
      * <b>Precondition:</b> the state manager needs to be in edit mode.
      *
@@ -245,6 +247,7 @@ public class BatchedItemOperations extends ItemValidator {
      *                     <li><code>CLONE</code></li>
      *                     <li><code>CLONE_REMOVE_EXISTING</code></li>
      *                     </ul>
+     * @return the id of the node at its new position
      * @throws ConstraintViolationException
      * @throws AccessDeniedException
      * @throws VersionException
@@ -254,12 +257,12 @@ public class BatchedItemOperations extends ItemValidator {
      * @throws RepositoryException
      * @throws IllegalStateException        if the state mananger is not in edit mode
      */
-    public void copy(Path srcPath,
-                     ItemStateManager srcStateMgr,
-                     HierarchyManager srcHierMgr,
-                     AccessManager srcAccessMgr,
-                     Path destPath,
-                     int flag)
+    public NodeId copy(Path srcPath,
+                       ItemStateManager srcStateMgr,
+                       HierarchyManager srcHierMgr,
+                       AccessManager srcAccessMgr,
+                       Path destPath,
+                       int flag)
             throws ConstraintViolationException, AccessDeniedException,
             VersionException, PathNotFoundException, ItemExistsException,
             LockException, RepositoryException, IllegalStateException {
@@ -352,16 +355,18 @@ public class BatchedItemOperations extends ItemValidator {
         // store states
         stateMgr.store(newState);
         stateMgr.store(destParentState);
+        return newState.getNodeId();
     }
 
     /**
      * Moves the tree at <code>srcPath</code> to the new location at
-     * <code>destPath</code>.
+     * <code>destPath</code>. Returns the id of the moved node.
      * <p/>
      * <b>Precondition:</b> the state manager needs to be in edit mode.
      *
      * @param srcPath
      * @param destPath
+     * @return the id of the moved node
      * @throws ConstraintViolationException
      * @throws VersionException
      * @throws AccessDeniedException
@@ -371,7 +376,7 @@ public class BatchedItemOperations extends ItemValidator {
      * @throws RepositoryException
      * @throws IllegalStateException        if the state mananger is not in edit mode
      */
-    public void move(Path srcPath, Path destPath)
+    public NodeId move(Path srcPath, Path destPath)
             throws ConstraintViolationException, VersionException,
             AccessDeniedException, PathNotFoundException, ItemExistsException,
             LockException, RepositoryException, IllegalStateException {
@@ -457,6 +462,7 @@ public class BatchedItemOperations extends ItemValidator {
             stateMgr.store(destParent);
             stateMgr.store(srcParent);
         }
+        return target.getNodeId();
     }
 
     /**
