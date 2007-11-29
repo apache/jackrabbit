@@ -52,7 +52,6 @@ import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.value.ValueFactoryQImpl;
-import org.apache.jackrabbit.commons.AbstractSession;
 import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.conversion.NameException;
 import org.apache.jackrabbit.conversion.PathResolver;
@@ -62,6 +61,7 @@ import org.apache.commons.collections.map.ReferenceMap;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.xml.sax.ContentHandler;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import javax.jcr.AccessDeniedException;
@@ -86,14 +86,25 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.Version;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.TransformerException;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.ParserConfigurationException;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.AccessControlException;
 import java.util.Map;
 
 /**
  * <code>SessionImpl</code>...
  */
-public class SessionImpl extends AbstractSession implements ManagerProvider {
+public class SessionImpl implements Session, ManagerProvider {
 
     private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
 
@@ -384,6 +395,35 @@ public class SessionImpl extends AbstractSession implements ManagerProvider {
     }
 
     /**
+     * @see javax.jcr.Session#importXML(String, java.io.InputStream, int)
+     */
+    public void importXML(String parentAbsPath, InputStream in, int uuidBehavior) throws IOException, PathNotFoundException, ItemExistsException, ConstraintViolationException, VersionException, InvalidSerializedDataException, LockException, RepositoryException {
+        // NOTE: checks are performed by 'getImportContentHandler'
+        ImportHandler handler = (ImportHandler) getImportContentHandler(parentAbsPath, uuidBehavior);
+        try {
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            factory.setFeature(
+                    "http://xml.org/sax/features/namespace-prefixes", false);
+
+            SAXParser parser = factory.newSAXParser();
+            parser.parse(new InputSource(in), handler);
+        } catch (SAXException se) {
+            // check for wrapped repository exception
+            Exception e = se.getException();
+            if (e != null && e instanceof RepositoryException) {
+                throw (RepositoryException) e;
+            } else {
+                String msg = "failed to parse XML stream";
+                log.debug(msg);
+                throw new InvalidSerializedDataException(msg, se);
+            }
+        } catch (ParserConfigurationException e) {
+            throw new RepositoryException("SAX parser configuration error", e);
+        }
+    }
+
+    /**
      * @see javax.jcr.Session#exportSystemView(String, org.xml.sax.ContentHandler, boolean, boolean)
      */
     public void exportSystemView(String absPath, ContentHandler contentHandler, boolean skipBinary, boolean noRecurse) throws PathNotFoundException, SAXException, RepositoryException {
@@ -397,6 +437,26 @@ public class SessionImpl extends AbstractSession implements ManagerProvider {
     }
 
     /**
+     * @see javax.jcr.Session#exportSystemView(String, OutputStream, boolean, boolean)
+     */
+    public void exportSystemView(String absPath, OutputStream out, boolean skipBinary, boolean noRecurse) throws IOException, PathNotFoundException, RepositoryException {
+        SAXTransformerFactory stf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
+        try {
+            TransformerHandler th = stf.newTransformerHandler();
+            th.getTransformer().setOutputProperty(OutputKeys.METHOD, "xml");
+            th.getTransformer().setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            th.getTransformer().setOutputProperty(OutputKeys.INDENT, "no");
+            th.setResult(new StreamResult(out));
+
+            exportSystemView(absPath, th, skipBinary, noRecurse);
+        } catch (TransformerException te) {
+            throw new RepositoryException(te);
+        } catch (SAXException se) {
+            throw new RepositoryException(se);
+        }
+    }
+
+    /**
      * @see javax.jcr.Session#exportDocumentView(String, org.xml.sax.ContentHandler, boolean, boolean)
      */
     public void exportDocumentView(String absPath, ContentHandler contentHandler, boolean skipBinary, boolean noRecurse) throws InvalidSerializedDataException, PathNotFoundException, SAXException, RepositoryException {
@@ -407,6 +467,26 @@ public class SessionImpl extends AbstractSession implements ManagerProvider {
             throw new PathNotFoundException(absPath);
         }
         new DocViewSAXEventGenerator((Node) item, noRecurse, skipBinary, contentHandler).serialize();
+    }
+
+    /**
+     * @see javax.jcr.Session#exportDocumentView(String, OutputStream, boolean, boolean)
+     */
+    public void exportDocumentView(String absPath, OutputStream out, boolean skipBinary, boolean noRecurse) throws InvalidSerializedDataException, IOException, PathNotFoundException, RepositoryException {
+        SAXTransformerFactory stf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
+        try {
+            TransformerHandler th = stf.newTransformerHandler();
+            th.getTransformer().setOutputProperty(OutputKeys.METHOD, "xml");
+            th.getTransformer().setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            th.getTransformer().setOutputProperty(OutputKeys.INDENT, "no");
+            th.setResult(new StreamResult(out));
+
+            exportDocumentView(absPath, th, skipBinary, noRecurse);
+        } catch (TransformerException te) {
+            throw new RepositoryException(te);
+        } catch (SAXException se) {
+            throw new RepositoryException(se);
+        }
     }
 
     /**
