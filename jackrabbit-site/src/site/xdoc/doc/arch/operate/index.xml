@@ -48,8 +48,7 @@ transient Items are promoted into the Transactional ISM.
 The modifications are still only visible within the scope
 of this transaction, meaning that other sessions will not
 see the modification until they are committed. The commit
-may haven implicitly in case the Content Repository is not 
-running in an XA environment.
+is implicit if the Content Repository is not running in an XA environment.
 </li>
 
 <li><b>Shared Item State Manager</b>
