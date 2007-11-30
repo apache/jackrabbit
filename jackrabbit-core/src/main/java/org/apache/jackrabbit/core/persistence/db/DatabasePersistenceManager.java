@@ -286,20 +286,26 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
                     ise = e;
                 }
 
-                if (ise != null && ise.getCause() instanceof SQLException
-                        && --trials > 0) {
-                    // a SQLException has been thrown, try to reconnect
-                    log.warn("storing changes failed, about to reconnect...", ise.getCause());
+                if (ise != null && ise.getCause() instanceof SQLException) {
+                    // a SQLException has been thrown
+                    if (--trials > 0) {
+                        // try to reconnect
+                        log.warn("storing changes failed, about to reconnect...", ise.getCause());
 
-                    // try to reconnect
-                    if (reestablishConnection()) {
-                        // now let's give it another try
-                        ise = null;
-                        continue;
-                    } else {
-                        // reconnect failed, proceed with error processing
-                        break;
+                        // try to reconnect
+                        if (reestablishConnection()) {
+                            // now let's give it another try
+                            ise = null;
+                            continue;
+                        } else {
+                            // reconnect failed, proceed with error processing
+                            break;
+                        }
                     }
+                } else {
+                    // a non-SQLException has been thrown, 
+                    // proceed with error processing
+                    break;
                 }
             }
 
