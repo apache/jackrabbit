@@ -1,0 +1,93 @@
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+<body>
+<p>
+This package contains classes and utilities used to build a WebDAV client
+implementation.<br>
+Currently it consists of DAV-specific extensions to the
+<a href="http://jakarta.apache.org/httpcomponents/httpclient-3.x/" target="_blank">Jakarta Commons HttpClient</a>,
+namely a set of methods.
+</p>
+
+<p>
+<h3>How to use Jakarta Commons HttpClient</h3>
+Please refer to the
+    <a href="http://jakarta.apache.org/httpcomponents/httpclient-3.x/tutorial.html" target="_blank">tutorial</a>
+    present with Jakarta Commons HttpClient for detailed
+instructions.
+</p>
+
+<p>
+<h4>Simple Example</h4>
+The following simple example illustrates the additional functionality exposed
+    by the <strong>DavMethod</strong> which serves as basic interface for all
+    WebDAV specific extensions:<br><br>
+
+First you need to create the HostConfiguration which at least
+    must define the uri pointing to your WebDAV enabled server
+<pre>
+    String uri = "http://your-webdav-server";
+    HostConfiguration hostConfig = new HostConfiguration();
+    hostConfig.setHost(uri);
+</pre>
+
+Define a HttpConnectionManager, which also is responsible
+    for eventual multithreading support:
+<pre>
+    HttpConnectionManager connectionManager = new MultiThreadedHttpConnectionManager();
+    HttpConnectionManagerParams params = new HttpConnectionManagerParams();
+    int maxHostConnections = 20;
+    params.setMaxConnectionsPerHost(hostConfig, maxHostConnections);
+    connectionManager.setParams(params);
+</pre>
+
+Create the HttpClient object and eventually pass the Credentials:
+<pre>
+    HttpClient client = new HttpClient(connectionManager);
+    client.setHostConfiguration(hostConfig);
+    Credentials creds = new UsernamePasswordCredentials("userId", "pw");
+    client.getState().setCredentials(AuthScope.ANY, creds);
+</pre>
+
+In order to execute a WebDAV request, choose the appropriate DavMethod.
+    For example, a PROPFIND request could look as follows:
+<pre>
+    String propfindUri = "http://your-webdav-server/anyresource";
+    DavMethod method = new PropFindMethod(propfindUri, DavConstants.PROPFIND_ALL_PROP, DavConstants.DEPTH_1);
+    client.executeMethod(method);
+</pre>
+
+The DavMethod interface defines two methods that allows you to determine if the
+    request was successfully executed without need to evaluate the status line and
+    knowing about the required status codes:
+    <ul>
+        <li>DavMethod.checkSuccess()</li>
+        <li>DavMethod.succeeded()</li>
+    </ul>
+
+<pre>
+    method.checkSuccess();
+</pre>
+
+In case of success you can retrieve the response body in an appropriate formate
+    and process it according to you needs,<br>
+    For a PROPFIND request use e.g. DavMethod.getResponseBodyAsMultiStatus():
+<pre>
+    MultiStatus multiStatus = method.getResponseBodyAsMultiStatus();
+</pre>
+</p>
+</body>
