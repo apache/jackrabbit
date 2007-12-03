@@ -56,13 +56,7 @@ import java.util.NoSuchElementException;
  * <p/>
  * Configuration:<br>
  * <ul>
- * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
  * <li>&lt;param name="{@link #setBlobFSBlockSize(String) blobFSBlockSize}" value="0"/>
- * <li>&lt;param name="{@link #setBlobFSInitialCacheSize(String) blobFSInitialCacheSize}" value="100"/>
- * <li>&lt;param name="{@link #setBlobFSMaximumCacheSize(String) blobFSMaximumCacheSize}" value="4000"/>
- * <li>&lt;param name="{@link #setItemFSBlockSize(String) blobFSBlockSize}" value="0"/>
- * <li>&lt;param name="{@link #setItemFSInitialCacheSize(String) blobFSInitialCacheSize}" value="100"/>
- * <li>&lt;param name="{@link #setItemFSMaximumCacheSize(String) blobFSMaximumCacheSize}" value="4000"/>
  * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="4096"/>
  * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/>
  * </ul>
@@ -78,9 +72,6 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     /** flag indicating if this manager was initialized */
     protected boolean initialized = false;
 
-    /** initial size of buffer used to serialize objects */
-    protected static final int INITIAL_BUFFER_SIZE = 1024;
-
     /** file system where BLOB data is stored */
     protected BundleFsPersistenceManager.CloseableBLOBStore blobStore;
 
@@ -89,36 +80,6 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
      * @see #setBlobFSBlockSize(String)
      */
     private int blobFSBlockSize = 0;
-
-    /**
-     * Default initial cache size for BLOB filesystem: 100, req. 25KB
-     * @see #setBlobFSInitialCacheSize(String)
-     */
-    private int blobFSInitialCache = 100;
-
-    /**
-     * Default max cache size for BLOB filesystem: 4000, req. 1000KB
-     * @see #setBlobFSMaximumCacheSize(String)
-     */
-    private int blobFSMaximumCache = 4000;
-
-    /**
-     * Default blocksize for item filesystem:
-     * @see #setItemFSBlockSize(String)
-     */
-    private int itemFSBlockSize = 0;
-
-    /**
-     * Default initial cache size for item filesystem: 100, req. 25KB
-     * @see #setItemFSInitialCacheSize(String)
-     */
-    private int itemFSInitialCache = 100;
-
-    /**
-     * Default max cache size for item filesystem: 4000, req. 1000KB
-     * @see #setItemFSMaximumCacheSize(String)
-     */
-    private int itemFSMaximumCache = 4000;
 
     /**
      * the minimum size of a property until it gets written to the blob store
@@ -158,17 +119,9 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * Sets the block size of the blob fs and controls how blobs are handled.
      * <br>
-     * If the size is > 0, it must be a power of 2 and is used as blocksize
-     * for the cqfs. blobs are then stored within that cqfs. A call to
-     * {@link #useCqFsBlobStore()} will return <code>true</code>.
+     * If the size is 0, the blobs are stored within the workspace's physical filesystem.
      * <br>
-     * If the size is 0, the cqfs is not used at all, and the blobs are stored
-     * within the workspace's physical filesystem. A call to
-     * {@link #useLocalFsBlobStore()} will return <code>true</code>.
-     * <br>
-     * If the size is &lt; 0, the cqfs is not used at all, and the blobs are
-     * stored within the item filesystem. A call to
-     * {@link #useItemBlobStore()} will return <code>true</code>.
+     * Otherwise, the blobs are stored within the item filesystem.
      * <br>
      * Please note that not all binary properties are considered as blobs. They
      * are only stored in the respective blob store, if their size exceeds
@@ -181,122 +134,11 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     /**
-     * Returns <code>true</code> if the blobs are stored in the DB.
-     * @return <code>true</code> if the blobs are stored in the DB.
-     */
-    public boolean useItemBlobStore() {
-        return blobFSBlockSize < 0;
-    }
-
-    /**
      * Returns <code>true</code> if the blobs are stored in the local fs.
      * @return <code>true</code> if the blobs are stored in the local fs.
      */
     public boolean useLocalFsBlobStore() {
         return blobFSBlockSize == 0;
-    }
-
-    /**
-     * Returns <code>true</code> if the blobs are stored in the cqfs.
-     * @return <code>true</code> if the blobs are stored in the cqfs.
-     */
-    public boolean useCqFsBlobStore() {
-        return blobFSBlockSize > 0;
-    }
-
-    /**
-     * Returns the configured initial cache size of the blobfs.
-     * @return the configured initial cache size of the blobfs.
-     */
-    public String getBlobFSInitialCacheSize() {
-        return String.valueOf(blobFSInitialCache);
-    }
-
-    /**
-     * Sets the initial cache size of the blob fs. This only applies to cqfs
-     * base blobstores, i.e. if {@link #useCqFsBlobStore()} returns
-     * <code>true</code>.
-     * @param size the initial size
-     */
-    public void setBlobFSInitialCacheSize(String size) {
-        this.blobFSInitialCache = Integer.decode(size).intValue();
-    }
-
-    /**
-     * Returns the configured maximal size of the blobfs.
-     * @return the configured maximal size of the blobfs.
-     */
-    public String getBlobFSMaximumCacheSize() {
-        return String.valueOf(blobFSMaximumCache);
-    }
-
-    /**
-     * Sets the maximal cache size of the blob fs. This only applies to cqfs
-     * base blobstores, i.e. if {@link #useCqFsBlobStore()} returns
-     * <code>true</code>.
-     * @param size the maximal size
-     */
-    public void setBlobFSMaximumCacheSize(String size) {
-        this.blobFSMaximumCache = Integer.decode(size).intValue();
-    }
-
-
-    /**
-     * Returns the configured block size of the item cqfs
-     * @return the block size.
-     */
-    public String getItemFSBlockSize() {
-        return String.valueOf(itemFSBlockSize);
-    }
-
-    /**
-     * Sets the block size of the item fs.
-     * <br>
-     * If the size is > 0, it must be a power of 2 and is used as blocksize
-     * for the cqfs. items are then stored within that cqfs.
-     * <br>
-     * If the size is 0, the cqfs is not used at all, and the items are stored
-     * within the workspace's physical filesystem.
-     *
-     * @param size the block size
-     */
-    public void setItemFSBlockSize(String size) {
-        this.itemFSBlockSize = Integer.decode(size).intValue();
-    }
-
-    /**
-     * Returns the configured initial cache size of the itemfs.
-     * @return the configured initial cache size of the itemfs.
-     */
-    public String getItemFSInitialCacheSize() {
-        return String.valueOf(itemFSInitialCache);
-    }
-
-    /**
-     * Sets the initial cache size of the item fs. This only applies to cqfs
-     * based item stores.
-     *
-     * @param size the initial size
-     */
-    public void setItemFSInitialCacheSize(String size) {
-        this.itemFSInitialCache = Integer.decode(size).intValue();
-    }
-
-    /**
-     * Returns the configured maximal size of the itemfs.
-     * @return the configured maximal size of the itemfs.
-     */
-    public String getItemFSMaximumCacheSize() {
-        return String.valueOf(itemFSMaximumCache);
-    }
-
-    /**
-     * Sets the maximal cache size of the item fs. This only applies to cqfs
-     * base item store.
-     * @param size the maximal size
-     */
-    public void setItemFSMaximumCacheSize(String size) {
-        this.itemFSMaximumCache = Integer.decode(size).intValue();
     }
 
     /**
@@ -310,6 +152,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * Sets the minimum blob size. This size defines the threshold of which
      * size a property is included in the bundle or is stored in the blob store.
+     * Very high values decrease the performance.
      *
      * @param minBlobSize
      */
@@ -347,21 +190,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
         this.name = context.getHomeDir().getName();
 
         // create item fs
-        if (itemFSBlockSize == 0) {
-            itemFs = new BasedFileSystem(context.getFileSystem(), "items");
-        } else {
-            /*
-            CQFileSystem cqfs = new CQFileSystem();
-            cqfs.setPath(new File(context.getHomeDir(), "items.dat").getCanonicalPath());
-            cqfs.setAutoRepair(false);
-            cqfs.setAutoSync(false);
-            cqfs.setBlockSize(itemFSBlockSize);
-            cqfs.setCacheInitialBlocks(itemFSInitialCache);
-            cqfs.setCacheMaximumBlocks(itemFSMaximumCache);
-            cqfs.init();
-            itemFs = cqfs;
-            */
-        }
+        itemFs = new BasedFileSystem(context.getFileSystem(), "items");
 
         // create correct blob store
         if (useLocalFsBlobStore()) {
@@ -369,10 +198,8 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             blobFS.setRoot(new File(context.getHomeDir(), "blobs"));
             blobFS.init();
             blobStore = new BundleFsPersistenceManager.FSBlobStore(blobFS);
-        } else if (useItemBlobStore()) {
+        } else {
             blobStore = new BundleFsPersistenceManager.FSBlobStore(itemFs);
-        } else /* useCqFsBlobStore() */ {
-//blobStore = createCQFSBlobStore(context);
         }
 
         // load namespaces
