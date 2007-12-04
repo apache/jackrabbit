@@ -139,6 +139,11 @@ public class DatabaseJournal extends AbstractJournal {
      * Statement appending a new record.
      */
     private PreparedStatement insertRevisionStmt;
+    
+    /**
+     * Auto commit level.
+     */
+    private int lockLevel;
 
     /**
      * Locked revision.
@@ -315,8 +320,9 @@ public class DatabaseJournal extends AbstractJournal {
 
         try {
             checkConnection();
-
-            connection.setAutoCommit(false);
+            if (lockLevel++ == 0) {
+                setAutoCommit(connection, false);
+            }
         } catch (SQLException e) {
             close(true);
 
@@ -348,8 +354,7 @@ public class DatabaseJournal extends AbstractJournal {
         } finally {
             close(rs);
             if (!succeeded) {
-                rollback(connection);
-                setAutoCommit(connection, true);
+                doUnlock(false);
             }
         }
     }
@@ -358,10 +363,14 @@ public class DatabaseJournal extends AbstractJournal {
      * {@inheritDoc}
      */
     protected void doUnlock(boolean successful) {
-        if (!successful) {
-            rollback(connection);
+        if (--lockLevel == 0) {
+            if (successful) {
+                commit(connection);
+            } else {
+                rollback(connection);
+            }
+            setAutoCommit(connection, true);
         }
-        setAutoCommit(connection, true);
     }
 
     /**
@@ -384,19 +393,14 @@ public class DatabaseJournal extends AbstractJournal {
         try {
             checkConnection();
 
-            try {
-                insertRevisionStmt.clearParameters();
-                insertRevisionStmt.clearWarnings();
-                insertRevisionStmt.setLong(1, record.getRevision());
-                insertRevisionStmt.setString(2, getId());
-                insertRevisionStmt.setString(3, record.getProducerId());
-                insertRevisionStmt.setBinaryStream(4, in, length);
-                insertRevisionStmt.execute();
+            insertRevisionStmt.clearParameters();
+            insertRevisionStmt.clearWarnings();
+            insertRevisionStmt.setLong(1, record.getRevision());
+            insertRevisionStmt.setString(2, getId());
+            insertRevisionStmt.setString(3, record.getProducerId());
+            insertRevisionStmt.setBinaryStream(4, in, length);
+            insertRevisionStmt.execute();
 
-                connection.commit();
-            } finally {
-                setAutoCommit(connection, true);
-            }
         } catch (SQLException e) {
             close(true);
 
@@ -455,6 +459,23 @@ public class DatabaseJournal extends AbstractJournal {
         }
     }
 
+    /**
+     * Commit a connection. Does nothing if the connection passed is
+     * <code>null</code> and logs any exception as warning.
+     *
+     * @param connection connection.
+     */
+    private static void commit(Connection connection) {
+        if (connection != null) {
+            try {
+                connection.commit();
+            } catch (SQLException e) {
+                String msg = "Error while committing connection: " + e.getMessage();
+                log.warn(msg);
+            }
+        }
+    }
+    
     /**
      * Rollback a connection. Does nothing if the connection passed is
      * <code>null</code> and logs any exception as warning.
