@@ -16,15 +16,10 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermDocs;
 import org.apache.jackrabbit.uuid.UUID;
 
 import java.io.IOException;
 import java.util.BitSet;
-import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
 
 /**
  * Implements a document id which can be based on a Node uuid or a lucene
@@ -43,7 +38,7 @@ abstract class DocId {
          * @param reader the index reader.
          * @return always <code>-1</code>.
          */
-        final int getDocumentNumber(IndexReader reader) {
+        final int getDocumentNumber(MultiIndexReader reader) {
             return -1;
         }
 
@@ -75,7 +70,7 @@ abstract class DocId {
      *         if it is invalid (e.g. does not exist).
      * @throws IOException if an error occurs while reading from the index.
      */
-    abstract int getDocumentNumber(IndexReader reader) throws IOException;
+    abstract int getDocumentNumber(MultiIndexReader reader) throws IOException;
 
     /**
      * Applies an offset to this <code>DocId</code>. The returned <code>DocId</code>
@@ -141,7 +136,7 @@ abstract class DocId {
         /**
          * @inheritDoc
          */
-        int getDocumentNumber(IndexReader reader) {
+        int getDocumentNumber(MultiIndexReader reader) {
             return docNumber;
         }
 
@@ -185,17 +180,10 @@ abstract class DocId {
         private final long msb;
 
         /**
-         * The index reader that was used to calculate the document number.
-         * If <code>null</code> then the document number has not yet been
-         * calculated.
+         * The previously calculated foreign segment document id.
          */
-        private Reference reader;
-
-        /**
-         * The previously calculated document number.
-         */
-        private int docNumber;
-
+        private ForeignSegmentDocId doc;
+        
         /**
          * Creates a <code>DocId</code> based on a Node uuid.
          *
@@ -212,32 +200,26 @@ abstract class DocId {
         /**
          * @inheritDoc
          */
-        int getDocumentNumber(IndexReader reader) throws IOException {
-            synchronized (this) {
-                if (this.reader != null && reader.equals(this.reader.get())) {
-                    return docNumber;
+        int getDocumentNumber(MultiIndexReader reader) throws IOException {
+            int realDoc = -1;
+            ForeignSegmentDocId segDocId = doc;
+            if (segDocId != null) {
+                realDoc = reader.getDocumentNumber(segDocId);
+            }
+            if (realDoc == -1) {
+                // Cached doc was invalid => create new one
+                segDocId = reader.createDocId(new UUID(msb, lsb));
+                if (segDocId != null) {
+                    realDoc = reader.getDocumentNumber(segDocId);
+                    doc = segDocId;
                 }
             }
-            Term id = new Term(FieldNames.UUID, new UUID(msb, lsb).toString());
-            TermDocs docs = reader.termDocs(id);
-            int doc = -1;
-            try {
-                if (docs.next()) {
-                    doc = docs.doc();
-                }
-            } finally {
-                docs.close();
-            }
-            synchronized (this) {
-                docNumber = doc;
-                this.reader = new WeakReference(reader);
-            }
-            return doc;
+            return realDoc;
         }
 
         /**
          * This implementation will return <code>this</code>. Document number is
-         * not known until resolved in {@link #getDocumentNumber(IndexReader)}.
+         * not known until resolved in {@link #getDocumentNumber(MultiIndexReader)}.
          *
          * @inheritDoc
          */
