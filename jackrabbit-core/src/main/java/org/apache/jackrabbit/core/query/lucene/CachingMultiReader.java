@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
@@ -24,6 +25,7 @@ import org.apache.lucene.index.IndexReader;
 import java.io.IOException;
 import java.util.Map;
 import java.util.IdentityHashMap;
+import java.util.HashMap;
 
 /**
  * Extends a <code>MultiReader</code> with support for cached <code>TermDocs</code>
@@ -42,6 +44,11 @@ public final class CachingMultiReader
      * Map of OffsetReaders, identified by caching reader they are based on.
      */
     private final Map readersByBase = new IdentityHashMap();
+
+    /**
+     * Map of {@link OffsetReader}s, identified by creation tick.
+     */
+    private final Map readersByCreationTick = new HashMap();
 
     /**
      * Document number cache if available. May be <code>null</code>.
@@ -79,6 +86,8 @@ public final class CachingMultiReader
             maxDoc += subReaders[i].maxDoc();
             OffsetReader offsetReader = new OffsetReader(subReaders[i], starts[i]);
             readersByBase.put(subReaders[i].getBase().getBase(), offsetReader);
+            readersByCreationTick.put(
+                    Long.valueOf(subReaders[i].getCreationTick()), offsetReader);
         }
         starts[subReaders.length] = maxDoc;
     }
@@ -176,8 +185,40 @@ public final class CachingMultiReader
         return readers;
     }
 
-    //------------------------< internal >--------------------------------------
+    /**
+     * {@inheritDoc}
+     */
+    public ForeignSegmentDocId createDocId(UUID uuid) throws IOException {
+        Term id = new Term(FieldNames.UUID, uuid.toString());
+        int doc;
+        long tick;
+        for (int i = 0; i < subReaders.length; i++) {
+            TermDocs docs = subReaders[i].termDocs(id);
+            try {
+                if (docs.next()) {
+                    doc = docs.doc();
+                    tick = subReaders[i].getCreationTick();
+                    return new ForeignSegmentDocId(doc, tick);
+                }
+            } finally {
+                docs.close();
+            }
+        }
+        return null;
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+    public int getDocumentNumber(ForeignSegmentDocId docId) {
+        OffsetReader r = (OffsetReader) readersByCreationTick.get(
+                new Long(docId.getCreationTick()));
+        if (r != null && !r.reader.isDeleted(docId.getDocNumber())) {
+            return r.offset + docId.getDocNumber();
+        }
+        return -1;
+    }
+    
     /**
      * Returns the reader index for document <code>n</code>.
      * Implementation copied from lucene MultiReader class.

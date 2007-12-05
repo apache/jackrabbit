@@ -55,6 +55,16 @@ class SharedIndexReader extends FilterIndexReader {
     }
 
     /**
+     * Returns the tick value when the underlying {@link CachingIndexReader} was
+     * created.
+     *
+     * @return the creation tick for the underlying reader.
+     */
+    long getCreationTick() {
+        return getBase().getCreationTick();
+    }
+
+    /**
      * Returns the <code>DocId</code> of the parent of <code>n</code> or
      * {@link DocId#NULL} if <code>n</code> does not have a parent
      * (<code>n</code> is the root node).

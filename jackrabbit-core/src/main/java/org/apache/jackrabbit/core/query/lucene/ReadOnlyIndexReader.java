@@ -98,6 +98,16 @@ class ReadOnlyIndexReader extends FilterIndexReader {
     }
 
     /**
+     * Returns the tick value when the underlying {@link CachingIndexReader} was
+     * created.
+     *
+     * @return the creation tick for the underlying reader.
+     */
+    long getCreationTick() {
+        return reader.getCreationTick();
+    }
+
+    /**
      * Updates the deleted documents in this index reader. When this method
      * returns this index reader will have the same documents marked as deleted
      * as the passed <code>reader</code>.
