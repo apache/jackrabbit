@@ -136,7 +136,7 @@ public class MultiIndex {
      * If not <code>null</code> points to a valid <code>IndexReader</code> that
      * reads from all indexes, including volatile and persistent indexes.
      */
-    private CachingMultiReader multiReader;
+    private CachingMultiIndexReader multiReader;
 
     /**
      * Shared document number cache across all persistent indexes.
@@ -689,7 +689,7 @@ public class MultiIndex {
      * @return an <code>IndexReader</code>.
      * @throws IOException if an error occurs constructing the <code>IndexReader</code>.
      */
-    public CachingMultiReader getIndexReader() throws IOException {
+    public CachingMultiIndexReader getIndexReader() throws IOException {
         synchronized (updateMonitor) {
             if (multiReader != null) {
                 multiReader.incrementRefCount();
@@ -717,7 +717,7 @@ public class MultiIndex {
                 readerList.add(volatileIndex.getReadOnlyIndexReader());
                 ReadOnlyIndexReader[] readers =
                         (ReadOnlyIndexReader[]) readerList.toArray(new ReadOnlyIndexReader[readerList.size()]);
-                multiReader = new CachingMultiReader(readers, cache);
+                multiReader = new CachingMultiIndexReader(readers, cache);
             }
             multiReader.incrementRefCount();
             return multiReader;
