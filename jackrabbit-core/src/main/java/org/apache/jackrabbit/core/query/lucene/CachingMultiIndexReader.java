@@ -31,7 +31,7 @@ import java.util.HashMap;
  * Extends a <code>MultiReader</code> with support for cached <code>TermDocs</code>
  * on {@link FieldNames#UUID} field.
  */
-public final class CachingMultiReader
+public final class CachingMultiIndexReader
         extends MultiReader
         implements HierarchyResolver, MultiIndexReader {
 
@@ -67,13 +67,13 @@ public final class CachingMultiReader
     private int refCount = 1;
 
     /**
-     * Creates a new <code>CachingMultiReader</code> based on sub readers.
+     * Creates a new <code>CachingMultiIndexReader</code> based on sub readers.
      *
      * @param subReaders the sub readers.
      * @param cache the document number cache.
      * @throws IOException if an error occurs while reading from the indexes.
      */
-    public CachingMultiReader(ReadOnlyIndexReader[] subReaders,
+    public CachingMultiIndexReader(ReadOnlyIndexReader[] subReaders,
                               DocNumberCache cache)
             throws IOException {
         super(subReaders);

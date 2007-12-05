@@ -770,14 +770,14 @@ public class SearchIndex extends AbstractQueryHandler {
     protected IndexReader getIndexReader(boolean includeSystemIndex)
             throws IOException {
         QueryHandler parentHandler = getContext().getParentHandler();
-        CachingMultiReader parentReader = null;
+        CachingMultiIndexReader parentReader = null;
         if (parentHandler instanceof SearchIndex && includeSystemIndex) {
             parentReader = ((SearchIndex) parentHandler).index.getIndexReader();
         }
 
-        CachingMultiReader reader = index.getIndexReader();
+        CachingMultiIndexReader reader = index.getIndexReader();
         if (parentReader != null) {
-            CachingMultiReader[] readers = {reader, parentReader};
+            CachingMultiIndexReader[] readers = {reader, parentReader};
             return new CombinedIndexReader(readers);
         } else {
             return reader;
@@ -1094,7 +1094,7 @@ public class SearchIndex extends AbstractQueryHandler {
     //----------------------------< internal >----------------------------------
 
     /**
-     * Combines multiple {@link CachingMultiReader} into a <code>MultiReader</code>
+     * Combines multiple {@link CachingMultiIndexReader} into a <code>MultiReader</code>
      * with {@link HierarchyResolver} support.
      */
     protected static final class CombinedIndexReader
@@ -1104,14 +1104,14 @@ public class SearchIndex extends AbstractQueryHandler {
         /**
          * The sub readers.
          */
-        final private CachingMultiReader[] subReaders;
+        final private CachingMultiIndexReader[] subReaders;
 
         /**
          * Doc number starts for each sub reader
          */
         private int[] starts;
 
-        public CombinedIndexReader(CachingMultiReader[] indexReaders) throws IOException {
+        public CombinedIndexReader(CachingMultiIndexReader[] indexReaders) throws IOException {
             super(indexReaders);
             this.subReaders = indexReaders;
             this.starts = new int[subReaders.length + 1];
@@ -1196,7 +1196,7 @@ public class SearchIndex extends AbstractQueryHandler {
          */
         public ForeignSegmentDocId createDocId(UUID uuid) throws IOException {
             for (int i = 0; i < subReaders.length; i++) {
-                CachingMultiReader subReader = subReaders[i];
+                CachingMultiIndexReader subReader = subReaders[i];
                 ForeignSegmentDocId doc = subReader.createDocId(uuid);
                 if (doc != null) {
                     return doc;
@@ -1210,7 +1210,7 @@ public class SearchIndex extends AbstractQueryHandler {
          */
         public int getDocumentNumber(ForeignSegmentDocId docId) {
             for (int i = 0; i < subReaders.length; i++) {
-                CachingMultiReader subReader = subReaders[i];
+                CachingMultiIndexReader subReader = subReaders[i];
                 int realDoc = subReader.getDocumentNumber(docId);
                 if (realDoc >= 0) {
                     return realDoc;
