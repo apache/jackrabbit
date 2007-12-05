@@ -689,7 +689,7 @@ public class MultiIndex {
      * @return an <code>IndexReader</code>.
      * @throws IOException if an error occurs constructing the <code>IndexReader</code>.
      */
-    public IndexReader getIndexReader() throws IOException {
+    public CachingMultiReader getIndexReader() throws IOException {
         synchronized (updateMonitor) {
             if (multiReader != null) {
                 multiReader.incrementRefCount();

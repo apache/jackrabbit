@@ -770,19 +770,18 @@ public class SearchIndex extends AbstractQueryHandler {
     protected IndexReader getIndexReader(boolean includeSystemIndex)
             throws IOException {
         QueryHandler parentHandler = getContext().getParentHandler();
-        IndexReader parentReader = null;
+        CachingMultiReader parentReader = null;
         if (parentHandler instanceof SearchIndex && includeSystemIndex) {
             parentReader = ((SearchIndex) parentHandler).index.getIndexReader();
         }
 
-        IndexReader reader = index.getIndexReader();
+        CachingMultiReader reader = index.getIndexReader();
         if (parentReader != null) {
-            // todo FIXME not type safe
-            CachingMultiReader[] readers = {(CachingMultiReader) reader,
-                                            (CachingMultiReader) parentReader};
-            reader = new CombinedIndexReader(readers);
+            CachingMultiReader[] readers = {reader, parentReader};
+            return new CombinedIndexReader(readers);
+        } else {
+            return reader;
         }
-        return reader;
     }
 
     /**
@@ -1190,6 +1189,34 @@ public class SearchIndex extends AbstractQueryHandler {
                 hash = 31 * hash + subReaders[i].hashCode();
             }
             return hash;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public ForeignSegmentDocId createDocId(UUID uuid) throws IOException {
+            for (int i = 0; i < subReaders.length; i++) {
+                CachingMultiReader subReader = subReaders[i];
+                ForeignSegmentDocId doc = subReader.createDocId(uuid);
+                if (doc != null) {
+                    return doc;
+                }
+            }
+            return null;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public int getDocumentNumber(ForeignSegmentDocId docId) {
+            for (int i = 0; i < subReaders.length; i++) {
+                CachingMultiReader subReader = subReaders[i];
+                int realDoc = subReader.getDocumentNumber(docId);
+                if (realDoc >= 0) {
+                    return realDoc;
+                }
+            }
+            return -1;
         }
     }
 
