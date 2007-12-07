@@ -87,6 +87,19 @@ public class DerefTest extends AbstractQueryTest {
         testRootNode.save();
     }
 
+    protected void tearDown() throws Exception {
+        andrew = null;
+        bill = null;
+        carl = null;
+        daren = null;
+        eric = null;
+        frank = null;
+        sun = null;
+        microsoft = null;
+        ibm = null;
+        super.tearDown();
+    }
+
     /**
      * Tests various XPath queries with jcr:deref() function.
      */

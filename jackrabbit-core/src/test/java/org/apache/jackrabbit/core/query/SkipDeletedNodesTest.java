@@ -45,8 +45,10 @@ public class SkipDeletedNodesTest extends AbstractQueryTest {
         try {
             if (s2 != null) {
                 s2.logout();
+                s2 = null;
             }
         } finally {
+            qm = null;
             super.tearDown();
         }
     }

@@ -33,6 +33,14 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
         query = createXPathQuery("/jcr:root" + testRoot + "/* order by @name");
     }
 
+    protected void tearDown() throws Exception {
+        node1 = null;
+        node2 = null;
+        node3 = null;
+        query = null;
+        super.tearDown();
+    }
+
     private QueryImpl createXPathQuery(String xpath)
             throws InvalidQueryException, RepositoryException {
         QueryManager queryManager = superuser.getWorkspace().getQueryManager();

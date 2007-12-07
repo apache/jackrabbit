@@ -63,6 +63,7 @@ public class ConcurrentQueryTest extends AbstractJCRTest {
         for (Iterator it = readSessions.iterator(); it.hasNext(); ) {
             ((Session) it.next()).logout();
         }
+        readSessions.clear();
     }
 
     /**

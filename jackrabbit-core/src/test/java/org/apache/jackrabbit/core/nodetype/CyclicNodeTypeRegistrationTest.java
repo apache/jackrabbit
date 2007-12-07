@@ -89,7 +89,11 @@ public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
     protected void tearDown() throws Exception {
         if (session != null) {
             session.logout();
+            session = null;
         }
+        ntreg = null;
+        ntDefCollection = null;
+        nameFactory = null;
         super.tearDown();
     }
 

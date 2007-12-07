@@ -50,9 +50,11 @@ public class ConcurrentSaveTest extends AbstractJCRTest {
         try {
             if (addNodeSession != null) {
                 addNodeSession.logout();
+                addNodeSession = null;
             }
             if (removePropertySession != null) {
                 removePropertySession.logout();
+                removePropertySession = null;
             }
         } finally {
             super.tearDown();
