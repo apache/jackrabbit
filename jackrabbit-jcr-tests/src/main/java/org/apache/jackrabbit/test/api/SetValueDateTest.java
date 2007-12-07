@@ -72,6 +72,13 @@ public class SetValueDateTest extends AbstractJCRTest {
         superuser.save();
     }
 
+    protected void tearDown() throws Exception {
+        value = null;
+        node = null;
+        property1 = null;
+        super.tearDown();
+    }
+
     /**
      * Test the persistence of a property modified with an DateValues parameter
      * and saved from the Session

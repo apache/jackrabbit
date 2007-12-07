@@ -51,6 +51,11 @@ public class PropertyItemIsNewTest extends AbstractJCRTest {
         }
     }
 
+    protected void tearDown() throws Exception {
+        testNode = null;
+        super.tearDown();
+    }
+
     /**
      * Test if Item.isNew() returns true direct after a new PropertyItem is set
      * (before node is saved (transient)).

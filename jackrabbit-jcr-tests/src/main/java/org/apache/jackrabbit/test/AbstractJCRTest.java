@@ -383,8 +383,10 @@ public abstract class AbstractJCRTest extends JUnitTest {
                 log.println("Exception in tearDown: " + e.toString());
             } finally {
                 superuser.logout();
+                superuser = null;
             }
         }
+        testRootNode = null;
     }
     
     protected void tearDown() throws Exception {

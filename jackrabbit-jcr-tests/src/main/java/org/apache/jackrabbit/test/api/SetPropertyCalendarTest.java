@@ -48,6 +48,12 @@ public class SetPropertyCalendarTest extends AbstractJCRTest {
         vFactory = superuser.getValueFactory();
     }
 
+    protected void tearDown() throws Exception {
+        testNode = null;
+        vFactory = null;
+        super.tearDown();
+    }
+
     /**
      * Tests if adding a property with <code>Node.setProperty(String,
      * Calendar)</code> works with <code>Session.save()</code>

@@ -53,6 +53,11 @@ public abstract class AbstractOnParentVersionTest extends AbstractVersionTest {
         testRootNode.save();
     }
 
+    protected void tearDown() throws Exception {
+        p = null;
+        super.tearDown();
+    }
+
     /**
      * Add a child node to the versionable node created in the setup with the
      * name and nodetype name defined in the corresponding configuration. After

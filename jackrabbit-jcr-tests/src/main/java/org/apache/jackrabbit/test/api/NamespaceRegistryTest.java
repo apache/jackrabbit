@@ -75,6 +75,7 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
         } catch (NamespaceException e) {
             log.println("Unable to unregister name space with prefix " + namespacePrefix + ": " + e.toString());
         } finally {
+            nsp = null;
             super.tearDown();
         }
     }

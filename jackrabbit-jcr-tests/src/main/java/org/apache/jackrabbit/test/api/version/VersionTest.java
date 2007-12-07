@@ -82,7 +82,8 @@ public class VersionTest extends AbstractVersionTest {
     protected void tearDown() throws Exception {
         // check the node out, so that it can be removed
         versionableNode.checkout();
-
+        version = null;
+        version2 = null;
         super.tearDown();
     }
 

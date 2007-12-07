@@ -71,6 +71,8 @@ class TreeComparator extends AbstractJCRTest {
     }
 
     public void tearDown() throws Exception {
+        session = null;
+        workspace = null;
         super.tearDown();
     }
 

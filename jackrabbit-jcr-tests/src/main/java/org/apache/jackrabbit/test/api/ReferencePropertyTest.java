@@ -47,6 +47,11 @@ public class ReferencePropertyTest extends AbstractPropertyTest {
         referencedNode = prop.getNode();
     }
 
+    protected void tearDown() throws Exception {
+        referencedNode = null;
+        super.tearDown();
+    }
+
     /**
      * Returns {@link javax.jcr.PropertyType#REFERENCE}.
      * @return {@link javax.jcr.PropertyType#REFERENCE}.

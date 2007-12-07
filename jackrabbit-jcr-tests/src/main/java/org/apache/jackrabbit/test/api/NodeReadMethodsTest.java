@@ -81,7 +81,9 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
     protected void tearDown() throws Exception {
         if (session != null) {
             session.logout();
+            session = null;
         }
+        childNode = null;
         super.tearDown();
     }
 

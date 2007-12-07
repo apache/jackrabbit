@@ -101,10 +101,12 @@ public class SerializationTest extends AbstractJCRTest {
         }
         if (session != null && session.isLive()) {
             session.logout();
+            session = null;
         }
         if (treeComparator != null) {
             treeComparator.tearDown();
         }
+        workspace = null;
         super.tearDown();
     }
 

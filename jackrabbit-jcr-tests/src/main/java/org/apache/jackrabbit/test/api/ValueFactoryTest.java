@@ -91,7 +91,10 @@ public class ValueFactoryTest extends AbstractJCRTest {
     protected void tearDown() throws Exception {
         if (session != null) {
             session.logout();
+            session = null;
         }
+        valueFactory = null;
+        referenceNode = null;
         super.tearDown();
     }
 

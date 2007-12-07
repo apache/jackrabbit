@@ -137,7 +137,17 @@ public class WorkspaceRestoreTest extends AbstractVersionTest {
         } finally {
             if (wSuperuser != null) {
                 wSuperuser.logout();
+                wSuperuser = null;
             }
+            version = null;
+            version2 = null;
+            rootVersion = null;
+            versionableNode2 = null;
+            wTestRoot = null;
+            wVersionableNode = null;
+            wVersionableNode2 = null;
+            wVersionableChildNode = null;
+            wChildVersion = null;
             super.tearDown();
         }
     }

@@ -74,6 +74,10 @@ public class RestoreTest extends AbstractVersionTest {
             versionableNode2.remove();
             testRootNode.save();
         } finally {
+            version = null;
+            version2 = null;
+            rootVersion = null;
+            versionableNode2 = null;
             super.tearDown();
         }
     }

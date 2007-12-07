@@ -62,8 +62,10 @@ public class NamespaceRemappingTest extends AbstractJCRTest {
         try {
             if (session != null) {
                 session.logout();
+                session = null;
             }
         } finally {
+            nsr = null;
             super.tearDown();
         }
     }

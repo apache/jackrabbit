@@ -137,7 +137,10 @@ public class ExportDocViewTest extends AbstractJCRTest {
         file.delete();
         if (session != null) {
             session.logout();
+            session = null;
         }
+        workspace = null;
+        nsr = null;
         super.tearDown();
     }
 

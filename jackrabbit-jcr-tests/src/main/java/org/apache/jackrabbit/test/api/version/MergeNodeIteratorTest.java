@@ -36,6 +36,14 @@ public class MergeNodeIteratorTest extends AbstractMergeTest {
 
     Node expectedFailedNodes[] = new Node[3];
 
+    protected void tearDown() throws Exception {
+        for (int i = 0; i < expectedFailedNodes.length; i++) {
+            expectedFailedNodes[i] = null;
+
+        }
+        super.tearDown();
+    }
+
     /**
      * Tests if Node.merge() when bestEffort is true returns a NodeIterator
      * containing all nodes that received a fail.

@@ -44,6 +44,11 @@ public class MergeCheckedoutSubNodeTest extends AbstractMergeTest {
         nodeToMerge.checkout();
     }
 
+    protected void tearDown() throws Exception {
+        nodeToMerge = null;
+        super.tearDown();
+    }
+
     /**
      * Node.merge(): If V' of a versionable subnode N' in the source workspace
      * is a successor of V (the base version of a subnode N in this workspace),

@@ -83,6 +83,10 @@ public class RemoveVersionTest extends AbstractVersionTest {
         try {
             versionableNode2.remove();
         } finally {
+            versionableNode2 = null;
+            version = null;
+            version2 = null;
+            vHistory = null;
             super.tearDown();
         }
     }

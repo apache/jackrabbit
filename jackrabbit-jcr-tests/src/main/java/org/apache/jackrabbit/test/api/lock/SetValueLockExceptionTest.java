@@ -124,6 +124,8 @@ public class SetValueLockExceptionTest extends AbstractJCRTest {
         if (testNode.holdsLock()) {
             testNode.unlock();
         }
+        testNode = null;
+        referenceNode = null;
         superuser.save();
         super.tearDown();
     }

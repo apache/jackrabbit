@@ -172,6 +172,12 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
             file.delete();
             file = null;
         }
+        session = null;
+        workspace = null;
+        ntManager = null;
+        nsp = null;
+        targetNode = null;
+        refTargetNode = null;
         super.tearDown();
     }
 

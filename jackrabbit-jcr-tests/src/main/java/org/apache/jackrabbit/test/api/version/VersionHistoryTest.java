@@ -86,6 +86,12 @@ public class VersionHistoryTest extends AbstractVersionTest {
         }
     }
 
+    protected void tearDown() throws Exception {
+        vHistory = null;
+        version = null;
+        super.tearDown();
+    }
+
     /**
      * Test if initially there is an auto-created root version present in the
      * version history.

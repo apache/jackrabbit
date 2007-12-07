@@ -46,6 +46,11 @@ public class MergeCancelMergeTest extends AbstractMergeTest {
         nodeToMerge.checkout();
     }
 
+    protected void tearDown() throws Exception {
+        nodeToMerge = null;
+        super.tearDown();
+    }
+
     /**
      * Merge.cancelMerge(V): has the effect of removing the reference to V' from
      * the jcr:mergeFailed property of N. <br> without adding it to

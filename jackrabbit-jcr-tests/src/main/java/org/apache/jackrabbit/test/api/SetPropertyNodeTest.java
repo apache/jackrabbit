@@ -64,6 +64,13 @@ public class SetPropertyNodeTest extends AbstractJCRTest {
         }
     }
 
+    protected void tearDown() throws Exception {
+        testNode = null;
+        n1 = null;
+        n2 = null;
+        super.tearDown();
+    }
+
     /**
      * Tests if adding a property with <code>Node.setProperty(String,
      * Node)</code> works with <code>Session.save()</code>

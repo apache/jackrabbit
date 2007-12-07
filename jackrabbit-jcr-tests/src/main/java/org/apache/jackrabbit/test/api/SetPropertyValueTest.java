@@ -72,6 +72,27 @@ public class SetPropertyValueTest extends AbstractJCRTest {
         vArrayWithNulls[3] = superuser.getValueFactory().createValue("z");
     }
 
+    protected void tearDown() throws Exception {
+        testNode = null;
+        v1 = null;
+        v2 = null;
+        for (int i = 0; i < vArray1.length; i++) {
+            vArray1[i] = null;
+        }
+        for (int i = 0; i < vArray2.length; i++) {
+            vArray2[i] = null;
+        }
+        for (int i = 0; i < vArrayMixed.length; i++) {
+            vArrayMixed[i] = null;
+        }
+        for (int i = 0; i < vArrayNull.length; i++) {
+            vArrayNull[i] = null;
+        }
+        for (int i = 0; i < vArrayWithNulls.length; i++) {
+            vArrayWithNulls[i] = null;
+        }
+        super.tearDown();
+    }
 
     /**
      * Value

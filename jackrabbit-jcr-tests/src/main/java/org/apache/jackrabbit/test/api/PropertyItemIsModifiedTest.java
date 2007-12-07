@@ -51,6 +51,11 @@ public class PropertyItemIsModifiedTest extends AbstractJCRTest {
         }
     }
 
+    protected void tearDown() throws Exception {
+        testNode = null;
+        super.tearDown();
+    }
+
     /**
      * Test if Item.isModified() returns false after a new PropertyItem is set
      * (before node is saved (transient). That means the PropertyItem don't exists

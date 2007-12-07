@@ -99,7 +99,9 @@ public class PropertyDefTest extends AbstractJCRTest {
     protected void tearDown() throws Exception {
         if (session != null) {
             session.logout();
+            session = null;
         }
+        manager = null;
         super.tearDown();
     }
 

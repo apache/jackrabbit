@@ -75,6 +75,16 @@ public class SetPropertyStringTest extends AbstractJCRTest {
         vArray2[2] = superuser.getValueFactory().createValue("z");
     }
 
+    protected void tearDown() throws Exception {
+        testNode = null;
+        for (int i = 0; i < vArray1.length; i++) {
+            vArray1[i] = null;
+        }
+        for (int i = 0; i < vArray2.length; i++) {
+            vArray2[i] = null;
+        }
+        super.tearDown();
+    }
 
     // String
 

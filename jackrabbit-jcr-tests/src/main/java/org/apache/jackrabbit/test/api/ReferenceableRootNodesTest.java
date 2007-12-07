@@ -64,9 +64,11 @@ public class ReferenceableRootNodesTest extends AbstractJCRTest {
     protected void tearDown() throws Exception {
         if (sessionW2 != null) {
             sessionW2.logout();
+            sessionW2 = null;
         }
         if (session != null) {
             session.logout();
+            session = null;
         }
         super.tearDown();
     }

@@ -56,6 +56,11 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
         }
     }
 
+    protected void tearDown() throws Exception {
+        testNode = null;
+        super.tearDown();
+    }
+
     /**
      * Tests if adding a property with <code>Node.setProperty(String,
      * InputStream)</code> works with <code>Session.save()</code>

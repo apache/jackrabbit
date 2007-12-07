@@ -53,6 +53,9 @@ abstract class AbstractWorkspaceCopyTest extends AbstractJCRTest {
     }
 
     protected void tearDown() throws Exception {
+        node1 = null;
+        node2 = null;
+        workspace = null;
         super.tearDown();
     }
 

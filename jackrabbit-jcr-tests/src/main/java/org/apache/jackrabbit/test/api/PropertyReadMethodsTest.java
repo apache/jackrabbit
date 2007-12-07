@@ -75,7 +75,9 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
     protected void tearDown() throws Exception {
         if (session != null) {
             session.logout();
+            session = null;
         }
+        property = null;
         super.tearDown();
     }
 

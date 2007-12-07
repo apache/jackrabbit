@@ -57,6 +57,12 @@ public class GetReferencesNodeTest extends AbstractJCRTest {
         }
     }
 
+    protected void tearDown() throws Exception {
+        testRoot = null;
+        nodeToBeReferenced = null;
+        super.tearDown();
+    }
+
     /**
      * Node.getReferences() never returns a reference that is stored in a
      * version. 1. Create some test nodes 2. Create a version 1.0 with reference

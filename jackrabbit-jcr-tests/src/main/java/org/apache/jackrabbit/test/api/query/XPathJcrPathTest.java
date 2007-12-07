@@ -53,6 +53,7 @@ public class XPathJcrPathTest extends AbstractQueryTest {
     protected void tearDown() throws Exception {
         if (session != null) {
             session.logout();
+            session = null;
         }
         super.tearDown();
     }
