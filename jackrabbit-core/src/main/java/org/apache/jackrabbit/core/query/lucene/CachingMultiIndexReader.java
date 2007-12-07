@@ -86,8 +86,7 @@ public final class CachingMultiIndexReader
             maxDoc += subReaders[i].maxDoc();
             OffsetReader offsetReader = new OffsetReader(subReaders[i], starts[i]);
             readersByBase.put(subReaders[i].getBase().getBase(), offsetReader);
-            readersByCreationTick.put(
-                    Long.valueOf(subReaders[i].getCreationTick()), offsetReader);
+            readersByCreationTick.put(new Long(subReaders[i].getCreationTick()), offsetReader);
         }
         starts[subReaders.length] = maxDoc;
     }
