@@ -231,113 +231,117 @@ public class RepositoryImpl extends AbstractRepository
 
         log.info("Starting repository...");
 
-        this.repConfig = repConfig;
-
-        // Acquire a lock on the repository home
-        repLock = new RepositoryLock(repConfig.getHomeDir());
-        repLock.acquire();
-
-        // setup file systems
-        repStore = repConfig.getFileSystemConfig().createFileSystem();
-        String fsRootPath = "/meta";
         try {
-            if (!repStore.exists(fsRootPath) || !repStore.isFolder(fsRootPath)) {
-                repStore.createFolder(fsRootPath);
-            }
-        } catch (FileSystemException fse) {
-            String msg = "failed to create folder for repository meta data";
-            log.error(msg, fse);
-            throw new RepositoryException(msg, fse);
-        }
-        metaDataStore = new BasedFileSystem(repStore, fsRootPath);
+            this.repConfig = repConfig;
 
-        // init root node uuid
-        rootNodeId = loadRootNodeId(metaDataStore);
+            // Acquire a lock on the repository home
+            repLock = new RepositoryLock(repConfig.getHomeDir());
+            repLock.acquire();
 
-        // load repository properties
-        repProps = loadRepProps();
-        nodesCount = Long.parseLong(repProps.getProperty(STATS_NODE_COUNT_PROPERTY, "0"));
-        propsCount = Long.parseLong(repProps.getProperty(STATS_PROP_COUNT_PROPERTY, "0"));
-
-        // create registries
-        nsReg = createNamespaceRegistry(new BasedFileSystem(repStore, "/namespaces"));
-        ntReg = createNodeTypeRegistry(nsReg, new BasedFileSystem(repStore, "/nodetypes"));
-        
-        if (repConfig.getDataStoreConfig() != null) {
-            assert InternalValue.USE_DATA_STORE;
-            dataStore = createDataStore();
-        } else {
-            dataStore = null;            
-        }
-
-        // init workspace configs
-        Iterator iter = repConfig.getWorkspaceConfigs().iterator();
-        while (iter.hasNext()) {
-            WorkspaceConfig config = (WorkspaceConfig) iter.next();
-            WorkspaceInfo info = createWorkspaceInfo(config);
-            wspInfos.put(config.getName(), info);
-        }
-
-        // initialize optional clustering
-        // put here before setting up any other external event source that a cluster node
-        // will be interested in
-        if (repConfig.getClusterConfig() != null) {
-            clusterNode = createClusterNode();
-            nsReg.setEventChannel(clusterNode);
-            ntReg.setEventChannel(clusterNode);
-        }
-
-        // init version manager
-        vMgr = createVersionManager(repConfig.getVersioningConfig(),
-                delegatingDispatcher);
-        if (clusterNode != null) {
-            vMgr.setEventChannel(clusterNode.createUpdateChannel(null));
-        }
-
-        // init virtual node type manager
-        virtNTMgr = new VirtualNodeTypeStateManager(getNodeTypeRegistry(),
-                delegatingDispatcher, NODETYPES_NODE_ID, SYSTEM_ROOT_NODE_ID);
-
-        // initialize startup workspaces
-        initStartupWorkspaces();
-
-        // initialize system search manager
-        getSystemSearchManager(repConfig.getDefaultWorkspaceName());
-
-        // after the workspace is initialized we pass a system session to
-        // the virtual node type manager
-
-        // todo FIXME it  odd that the *global* virtual node type manager
-        // is using a session that is bound to a single specific workspace
-        virtNTMgr.setSession(getSystemSession(repConfig.getDefaultWorkspaceName()));
-
-        // now start cluster node as last step
-        if (clusterNode != null) {
+            // setup file systems
+            repStore = repConfig.getFileSystemConfig().createFileSystem();
+            String fsRootPath = "/meta";
             try {
-                clusterNode.start();
-            } catch (ClusterException e) {
-                String msg = "Unable to start clustered node, forcing shutdown...";
-                log.error(msg, e);
-                shutdown();
-                throw new RepositoryException(msg, e);
+                if (!repStore.exists(fsRootPath) || !repStore.isFolder(fsRootPath)) {
+                    repStore.createFolder(fsRootPath);
+                }
+            } catch (FileSystemException fse) {
+                String msg = "failed to create folder for repository meta data";
+                log.error(msg, fse);
+                throw new RepositoryException(msg, fse);
             }
-        }
+            metaDataStore = new BasedFileSystem(repStore, fsRootPath);
 
-        // amount of time in seconds before an idle workspace is automatically
-        // shut down
-        int maxIdleTime = repConfig.getWorkspaceMaxIdleTime();
-        if (maxIdleTime != 0) {
-            // start workspace janitor thread
-            Thread wspJanitor = new Thread(new WorkspaceJanitor(maxIdleTime * 1000));
-            wspJanitor.setName("WorkspaceJanitor");
-            wspJanitor.setPriority(Thread.MIN_PRIORITY);
-            wspJanitor.setDaemon(true);
-            wspJanitor.start();
+            // init root node uuid
+            rootNodeId = loadRootNodeId(metaDataStore);
+
+            // load repository properties
+            repProps = loadRepProps();
+            nodesCount = Long.parseLong(repProps.getProperty(STATS_NODE_COUNT_PROPERTY, "0"));
+            propsCount = Long.parseLong(repProps.getProperty(STATS_PROP_COUNT_PROPERTY, "0"));
+
+            // create registries
+            nsReg = createNamespaceRegistry(new BasedFileSystem(repStore, "/namespaces"));
+            ntReg = createNodeTypeRegistry(nsReg, new BasedFileSystem(repStore, "/nodetypes"));
+
+            if (repConfig.getDataStoreConfig() != null) {
+                assert InternalValue.USE_DATA_STORE;
+                dataStore = createDataStore();
+            } else {
+                dataStore = null;
+            }
+
+            // init workspace configs
+            Iterator iter = repConfig.getWorkspaceConfigs().iterator();
+            while (iter.hasNext()) {
+                WorkspaceConfig config = (WorkspaceConfig) iter.next();
+                WorkspaceInfo info = createWorkspaceInfo(config);
+                wspInfos.put(config.getName(), info);
+            }
+
+            // initialize optional clustering
+            // put here before setting up any other external event source that a cluster node
+            // will be interested in
+            if (repConfig.getClusterConfig() != null) {
+                clusterNode = createClusterNode();
+                nsReg.setEventChannel(clusterNode);
+                ntReg.setEventChannel(clusterNode);
+            }
+
+            // init version manager
+            vMgr = createVersionManager(repConfig.getVersioningConfig(),
+                    delegatingDispatcher);
+            if (clusterNode != null) {
+                vMgr.setEventChannel(clusterNode.createUpdateChannel(null));
+            }
+
+            // init virtual node type manager
+            virtNTMgr = new VirtualNodeTypeStateManager(getNodeTypeRegistry(),
+                    delegatingDispatcher, NODETYPES_NODE_ID, SYSTEM_ROOT_NODE_ID);
+
+            // initialize startup workspaces
+            initStartupWorkspaces();
+
+            // initialize system search manager
+            getSystemSearchManager(repConfig.getDefaultWorkspaceName());
+
+            // after the workspace is initialized we pass a system session to
+            // the virtual node type manager
+
+            // todo FIXME the *global* virtual node type manager is using a session that is bound to a single specific workspace...
+            virtNTMgr.setSession(getSystemSession(repConfig.getDefaultWorkspaceName()));
+
+            // now start cluster node as last step
+            if (clusterNode != null) {
+                try {
+                    clusterNode.start();
+                } catch (ClusterException e) {
+                    String msg = "Unable to start clustered node, forcing shutdown...";
+                    log.error(msg, e);
+                    shutdown();
+                    throw new RepositoryException(msg, e);
+                }
+            }
+
+            // amount of time in seconds before an idle workspace is automatically
+            // shut down
+            int maxIdleTime = repConfig.getWorkspaceMaxIdleTime();
+            if (maxIdleTime != 0) {
+                // start workspace janitor thread
+                Thread wspJanitor = new Thread(new WorkspaceJanitor(maxIdleTime * 1000));
+                wspJanitor.setName("WorkspaceJanitor");
+                wspJanitor.setPriority(Thread.MIN_PRIORITY);
+                wspJanitor.setDaemon(true);
+                wspJanitor.start();
+            }
+        } catch (RepositoryException e) {
+            log.error("failed to start Repository: " + e.getMessage(), e);
+            throw e;
         }
 
         log.info("Repository started");
     }
-    
+
     public DataStore getDataStore() {
         return dataStore;
     }    
