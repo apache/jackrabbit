@@ -42,6 +42,16 @@ public class XPathAxisTest extends AbstractQueryTest {
         testRootNode.save();
     }
 
+    protected void tearDown() throws Exception {
+        n1 = null;
+        n2 = null;
+        n11 = null;
+        n12 = null;
+        n21 = null;
+        n22 = null;
+        super.tearDown();
+    }
+
     public void testChildAxisRoot() throws RepositoryException {
         String xpath = "/*";
         executeXPathQuery(xpath, new Node[]{superuser.getRootNode()});

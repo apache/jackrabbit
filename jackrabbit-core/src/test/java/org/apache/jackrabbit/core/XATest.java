@@ -82,6 +82,7 @@ public class XATest extends AbstractJCRTest {
     protected void tearDown() throws Exception {
         if (otherSuperuser != null) {
             otherSuperuser.logout();
+            otherSuperuser = null;
         }
         super.tearDown();
     }
