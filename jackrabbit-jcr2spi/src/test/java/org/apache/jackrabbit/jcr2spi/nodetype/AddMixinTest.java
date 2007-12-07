@@ -45,6 +45,7 @@ public class AddMixinTest extends AbstractJCRTest {
 
     protected void tearDown() throws Exception {
         testRootNode.refresh(false);
+        ntMgr = null;
         super.tearDown();
     }
 

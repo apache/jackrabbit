@@ -81,6 +81,11 @@ public class HierarchyNodeTest extends AbstractJCRTest {
         }
     }
 
+    protected void tearDown() throws Exception {
+        fileNode = null;
+        super.tearDown();
+    }
+
     public void testGetProperties() throws RepositoryException {
         Session readSession = helper.getReadOnlySession();
         dump((Node) readSession.getItem(fileNode.getPath()));

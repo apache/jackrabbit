@@ -44,6 +44,11 @@ public class RemoveNewNodeTest extends AbstractJCRTest {
         removeNode = testRootNode.addNode(nodeName1, testNodeType);
     }
 
+    protected void tearDown() throws Exception {
+        removeNode = null;
+        super.tearDown();
+    }
+
     /**
      * Removes a transient node using {@link javax.jcr.Node#remove()}.
      */

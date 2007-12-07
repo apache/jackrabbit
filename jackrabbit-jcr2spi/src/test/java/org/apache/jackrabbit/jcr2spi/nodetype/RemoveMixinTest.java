@@ -41,6 +41,11 @@ public class RemoveMixinTest extends AbstractJCRTest {
         ntMgr = testRootNode.getSession().getWorkspace().getNodeTypeManager();
     }
 
+    protected void tearDown() throws Exception {
+        ntMgr = null;
+        super.tearDown();
+    }
+
     /**
      * Implementation specific test for 'removeMixin' only taking effect upon
      * save.

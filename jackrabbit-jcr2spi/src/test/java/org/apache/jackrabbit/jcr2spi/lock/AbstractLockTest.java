@@ -65,7 +65,11 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         }
         if (otherSession.isLive()) {
             otherSession.logout();
+            otherSession = null;
         }
+        lockedNode = null;
+        childNode = null;
+        lock = null;
         super.tearDown();
     }
 

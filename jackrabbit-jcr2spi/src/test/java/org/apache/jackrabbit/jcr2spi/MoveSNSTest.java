@@ -56,6 +56,12 @@ public class MoveSNSTest extends AbstractMoveTest {
         testRootNode.save();
     }
 
+    protected void tearDown() throws Exception {
+        sourceSibling = null;
+        destSibling = null;
+        super.tearDown();
+    }
+
     protected boolean isSessionMove() {
         return true;
     }

@@ -39,6 +39,12 @@ public class ReorderMoveTest extends AbstractJCRTest {
         testRootNode.save();
     }
 
+    protected void tearDown() throws Exception {
+        destParent = null;
+        srcParent = null;
+        super.tearDown();
+    }
+
    private Node[] createOrderableChildren(boolean sns) throws RepositoryException {
         String[] childNames;
         if (sns) {

@@ -37,6 +37,11 @@ public class RemoveSNSTest extends RemoveNodeTest {
     private Node firstSiblingNode;
     private String firstSiblingPath;
 
+    protected void tearDown() throws Exception {
+        firstSiblingNode = null;
+        super.tearDown();
+    }
+
     protected Item createRemoveItem() throws NotExecutableException, RepositoryException {
         if (testRootNode.hasNode(nodeName1)) {
             fail("Setup: Parent node must not yet contain a child node '" + nodeName1 + "'.");

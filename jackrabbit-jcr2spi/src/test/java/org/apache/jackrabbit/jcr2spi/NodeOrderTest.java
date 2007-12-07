@@ -48,6 +48,11 @@ public class NodeOrderTest extends AbstractJCRTest {
         testRootNode.save();
     }
 
+    protected void tearDown() throws Exception {
+        children = null;
+        super.tearDown();
+    }
+
     private static void checkOrder(NodeIterator it, Node[] children) throws RepositoryException {
         int i = 0;
         while (it.hasNext()) {

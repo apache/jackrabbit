@@ -55,6 +55,13 @@ abstract class AbstractMoveTest extends AbstractJCRTest {
         destinationPath = destParentNode.getPath() + "/" + nodeName2;
     }
 
+    protected void tearDown() throws Exception {
+        srcParentNode = null;
+        destParentNode = null;
+        moveNode = null;
+        super.tearDown();
+    }
+
     protected abstract boolean isSessionMove();
 
     protected void doMove(String srcPath, String destPath)

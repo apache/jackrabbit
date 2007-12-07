@@ -60,6 +60,11 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
         }
     }
 
+    protected void tearDown() throws Exception {
+        nsRegistry = null;
+        super.tearDown();
+    }
+
     /**
      * Test if a new registred namespace is immediately visible through another
      * session object.
