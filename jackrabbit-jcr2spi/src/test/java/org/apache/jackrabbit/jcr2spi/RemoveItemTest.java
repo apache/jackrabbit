@@ -48,6 +48,11 @@ public abstract class RemoveItemTest extends AbstractJCRTest {
         removePath = removeItem.getPath();
     }
 
+    protected void tearDown() throws Exception {
+        removeItem = null;
+        super.tearDown();
+    }
+
     protected abstract Item createRemoveItem() throws NotExecutableException, RepositoryException, LockException, ConstraintViolationException, ItemExistsException, NoSuchNodeTypeException, VersionException;
 
     /**

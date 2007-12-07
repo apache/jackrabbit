@@ -62,6 +62,15 @@ abstract class AbstractMoveTreeTest extends AbstractJCRTest {
         doMove(moveNode.getPath(), destinationPath);
     }
 
+    protected void tearDown() throws Exception {
+        childNode = null;
+        grandChildNode = null;
+        childProperty = null;
+        srcParentNode = null;
+        destParentNode = null;
+        super.tearDown();
+    }
+
     protected abstract boolean saveBeforeMove();
 
     protected abstract boolean isSessionMove();

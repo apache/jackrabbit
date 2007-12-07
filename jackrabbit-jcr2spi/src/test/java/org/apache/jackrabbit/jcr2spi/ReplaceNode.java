@@ -55,6 +55,11 @@ public class ReplaceNode extends AbstractJCRTest {
         uuid = removeNode.getUUID();
     }
 
+    protected void tearDown() throws Exception {
+        removeNode = null;
+        super.tearDown();
+    }
+
     public void testAddReplacementAfterRemove() throws RepositoryException {
         // transient removal of the 'removeNode'
         removeNode.remove();

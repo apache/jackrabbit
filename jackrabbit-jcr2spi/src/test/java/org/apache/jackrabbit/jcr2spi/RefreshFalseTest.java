@@ -52,6 +52,11 @@ public class RefreshFalseTest extends AbstractJCRTest {
         }
     }
 
+    protected void tearDown() throws Exception {
+        testValue = null;
+        super.tearDown();
+    }
+
     public void testNewProperty() throws RepositoryException, LockException, ConstraintViolationException, VersionException {
         Property p = testRootNode.setProperty(propertyName1, testValue);
         testRootNode.refresh(false);

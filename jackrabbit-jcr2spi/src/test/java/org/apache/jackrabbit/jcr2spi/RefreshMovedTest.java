@@ -53,6 +53,7 @@ public class RefreshMovedTest extends AbstractJCRTest {
     }
 
     protected void tearDown() throws Exception {
+        moveNode = null;
         super.tearDown();
     }
 

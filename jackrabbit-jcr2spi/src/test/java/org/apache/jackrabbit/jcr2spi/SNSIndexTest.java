@@ -63,6 +63,11 @@ public class SNSIndexTest extends AbstractJCRTest {
     }
 
     protected void tearDown() throws Exception {
+        parent = null;
+        sns1 = null;
+        sns2 = null;
+        sns3 = null;
+        sns4 = null;
         super.tearDown();
     }
 

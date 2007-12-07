@@ -40,6 +40,14 @@ public class ReorderTest extends AbstractJCRTest {
         createOrderableChildren();
     }
 
+    protected void tearDown() throws Exception {
+        child1 = null;
+        child2 = null;
+        child3 = null;
+        child4 = null;
+        super.tearDown();
+    }
+
     protected void createOrderableChildren() throws RepositoryException, LockException, ConstraintViolationException, NoSuchNodeTypeException, ItemExistsException, VersionException, NotExecutableException {
         child1 = testRootNode.addNode(nodeName1, testNodeType);
         child2 = testRootNode.addNode(nodeName2, testNodeType);

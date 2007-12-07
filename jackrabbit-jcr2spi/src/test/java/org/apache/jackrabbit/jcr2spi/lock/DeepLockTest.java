@@ -57,6 +57,9 @@ public class DeepLockTest extends AbstractJCRTest {
         } catch (RepositoryException e) {
             log.warn(e.getMessage());
         }
+        lockedNode = null;
+        childNode = null;
+        lock = null;
         super.tearDown();
     }
 
