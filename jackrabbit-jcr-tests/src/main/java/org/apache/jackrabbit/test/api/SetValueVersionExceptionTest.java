@@ -95,7 +95,13 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
         } finally {
             if (session != null) {
                 session.logout();
+                session = null;
             }
+            node = null;
+            property = null;
+            multiProperty = null;
+            value = null;
+            values = null;
             super.tearDown();
         }
     }

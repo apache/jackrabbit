@@ -39,6 +39,11 @@ public class SetPropertyBooleanTest extends AbstractJCRTest {
         testNode = testRootNode.addNode(nodeName1, testNodeType);
     }
 
+    protected void tearDown() throws Exception {
+        testNode = null;
+        super.tearDown();
+    }
+
     /**
      * Tests if adding a property with <code>Node.setProperty(String,
      * boolean)</code> works with <code>Session.save()</code>

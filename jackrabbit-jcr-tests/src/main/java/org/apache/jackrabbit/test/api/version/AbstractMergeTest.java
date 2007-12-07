@@ -123,8 +123,12 @@ public abstract class AbstractMergeTest extends AbstractJCRTest {
                 }
             } finally {
                 superuserW2.logout();
+                superuserW2 = null;
             }
         }
+        workspace = null;
+        workspaceW2 = null;
+        testRootNodeW2 = null;
 
         super.tearDown();
     }

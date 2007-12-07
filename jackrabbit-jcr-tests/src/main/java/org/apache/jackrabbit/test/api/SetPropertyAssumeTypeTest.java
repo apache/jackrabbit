@@ -89,6 +89,28 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
         stringValues = new Value[] {stringValue};
     }
 
+    protected void tearDown() throws Exception {
+        testNode = null;
+        testPropName = null;
+        binaryValue = null;
+        booleanValue = null;
+        dateValue = null;
+        doubleValue = null;
+        longValue = null;
+        nameValue = null;
+        pathValue = null;
+        stringValue = null;
+        binaryValues = null;
+        booleanValues = null;
+        dateValues = null;
+        doubleValues = null;
+        longValues = null;
+        nameValues = null;
+        pathValues = null;
+        stringValues = null;
+        super.tearDown();
+    }
+
     /**
      * Tests if <code>Node.setProperty(String, Value, int)</code> if the node
      * type of this node does not indicate a specific property type, then the

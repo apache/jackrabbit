@@ -46,6 +46,11 @@ public class MergeDoneMergeTest extends AbstractMergeTest {
 
     }
 
+    protected void tearDown() throws Exception {
+        nodeToMerge = null;
+        super.tearDown();
+    }
+
     /**
      * Node.doneMerge(V) throws VersionException if V is not among the Vs in the
      * jcr:mergeFailed prop. <br> with adding it to jcr:predecessors.<br>

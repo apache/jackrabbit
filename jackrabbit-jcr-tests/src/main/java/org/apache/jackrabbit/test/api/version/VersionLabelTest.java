@@ -81,6 +81,8 @@ public class VersionLabelTest extends AbstractVersionTest {
         } catch (RepositoryException e) {
             // ignore
         }
+        vHistory = null;
+        rootVersion = null;
         super.tearDown();
     }
 

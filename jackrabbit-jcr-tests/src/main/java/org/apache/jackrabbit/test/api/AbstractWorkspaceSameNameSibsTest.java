@@ -95,4 +95,10 @@ abstract class AbstractWorkspaceSameNameSibsTest extends AbstractWorkspaceCopyBe
         }
 
     }
+
+    protected void tearDown() throws Exception {
+        sameNameSibsTrueNodeType = null;
+        sameNameSibsFalseNodeType = null;
+        super.tearDown();
+    }
 }

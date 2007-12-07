@@ -64,6 +64,13 @@ public class NodeOrderableChildNodesTest extends AbstractJCRTest {
      */
     private Node parentNode;
 
+    protected void tearDown() throws Exception {
+        initialFirstNode = null;
+        initialSecondNode = null;
+        parentNode = null;
+        super.tearDown();
+    }
+
     /**
      * Tries to reorder child nodes using {@link Node#orderBefore(String, String)}
      * with an invalid destination reference. <br/><br/> This should

@@ -58,6 +58,11 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
         }
     }
 
+    protected void tearDown() throws Exception {
+        obsMgr = null;
+        super.tearDown();
+    }
+
     /**
      * Registers an <code>EventListener</code> for all events.
      *

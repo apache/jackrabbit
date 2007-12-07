@@ -66,7 +66,9 @@ public class NamespaceRegistryReadMethodsTest extends AbstractJCRTest {
     protected void tearDown() throws Exception {
         if (session != null) {
             session.logout();
+            session = null;
         }
+        nsr = null;
         super.tearDown();
     }
 

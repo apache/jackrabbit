@@ -46,6 +46,11 @@ public class MergeSubNodeTest extends AbstractMergeTest {
 
     }
 
+    protected void tearDown() throws Exception {
+        nodeToMerge = null;
+        super.tearDown();
+    }
+
     /**
      * Node.merge(): versionable subNode N: If N has status leave but parent is
      * update, then the subnode N is removed<br> retrieve the initialised node

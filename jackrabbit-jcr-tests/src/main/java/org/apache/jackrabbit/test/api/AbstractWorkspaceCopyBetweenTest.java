@@ -83,11 +83,17 @@ abstract class AbstractWorkspaceCopyBetweenTest extends AbstractWorkspaceCopyTes
                 }
             } finally {
                 superuserW2.logout();
+                superuserW2 = null;
             }
         }
         if (rwSessionW2 != null) {
             rwSessionW2.logout();
+            rwSessionW2 = null;
         }
+        workspaceW2 = null;
+        testRootNodeW2 = null;
+        node1W2 = null;
+        node2W2 = null;
         super.tearDown();
     }
 

@@ -76,6 +76,13 @@ public class SetValueReferenceTest extends AbstractJCRTest {
         superuser.save();
     }
 
+    protected void tearDown() throws Exception {
+        value = null;
+        node = null;
+        property1 = null;
+        super.tearDown();
+    }
+
     /**
      * Test the persistence of a property modified with an Node parameter and
      * saved from the Session Requires a Node value (node)

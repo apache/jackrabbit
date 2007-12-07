@@ -56,6 +56,11 @@ public class MergeNodeTest extends AbstractMergeTest {
 
     }
 
+    protected void tearDown() throws Exception {
+        nodeToMerge = null;
+        super.tearDown();
+    }
+
     /**
      * Node.merge(): InvalidItemStateException if unsaved changes within the
      * current Session<br>

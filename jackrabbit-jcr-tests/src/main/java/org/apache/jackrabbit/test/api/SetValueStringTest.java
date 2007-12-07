@@ -76,6 +76,17 @@ public class SetValueStringTest extends AbstractJCRTest {
         superuser.save();
     }
 
+    protected void tearDown() throws Exception {
+        property1 = null;
+        property2 = null;
+        node = null;
+        sv1 = null;
+        sv2 = null;
+        mv1 = null;
+        mv2 = null;
+        super.tearDown();
+    }
+
     // Value tests
 
     /**

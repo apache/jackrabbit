@@ -55,6 +55,7 @@ public class SimpleSelectionTest extends AbstractQueryTest {
     protected void tearDown() throws Exception {
         if (session != null) {
             session.logout();
+            session = null;
         }
         super.tearDown();
     }

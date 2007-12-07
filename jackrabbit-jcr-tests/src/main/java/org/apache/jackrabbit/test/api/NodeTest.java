@@ -69,6 +69,7 @@ public class NodeTest extends AbstractJCRTest {
         } finally {
             // log out
             superuserW2.logout();
+            superuserW2 = null;
         }
 
         super.tearDown();

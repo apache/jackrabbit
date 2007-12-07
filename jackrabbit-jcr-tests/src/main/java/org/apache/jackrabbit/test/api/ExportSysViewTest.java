@@ -67,6 +67,7 @@ public class ExportSysViewTest extends AbstractJCRTest {
         file.delete();
         if (session != null) {
             session.logout();
+            session = null;
         }
         super.tearDown();
     }

@@ -102,6 +102,10 @@ public class AbstractVersionTest extends AbstractJCRTest {
         } catch (Exception e) {
             log.println("Exception in tearDown: " + e.toString());
         } finally {
+            versionableNodeType = null;
+            nonVersionableNodeType = null;
+            versionableNode = null;
+            nonVersionableNode = null;
             super.tearDown();
         }
     }

@@ -55,7 +55,9 @@ public class RootNodeTest extends AbstractJCRTest {
     protected void tearDown() throws Exception {
         if (session != null) {
             session.logout();
+            session = null;
         }
+        rootNode = null;
         super.tearDown();
     }
 

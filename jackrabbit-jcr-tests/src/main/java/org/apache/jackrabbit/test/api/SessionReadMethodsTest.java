@@ -59,6 +59,7 @@ public class SessionReadMethodsTest extends AbstractJCRTest {
     protected void tearDown() throws Exception {
         if (session != null && session.isLive()) {
             session.logout();
+            session = null;
         }
         super.tearDown();
     }

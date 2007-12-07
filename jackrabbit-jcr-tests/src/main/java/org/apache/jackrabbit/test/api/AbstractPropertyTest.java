@@ -91,6 +91,8 @@ abstract class AbstractPropertyTest extends AbstractJCRTest {
      */
     protected void tearDown() throws Exception {
         cleanUp();
+        session = null;
+        prop = null;
         super.tearDown();
     }
 }

@@ -46,6 +46,11 @@ public class SetPropertyDoubleTest extends AbstractJCRTest {
         ensureCanSetProperty(testNode, propertyName1, testNode.getSession().getValueFactory().createValue(0.0d));
     }
 
+    protected void tearDown() throws Exception {
+        testNode = null;
+        super.tearDown();
+    }
+
     /**
      * Tests if adding a property with <code>Node.setProperty(String,
      * double)</code> works with <code>Session.save()</code>
