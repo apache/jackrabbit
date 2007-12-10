@@ -370,7 +370,7 @@ public class IfHeader implements Header {
 
                     // check whether t or T
                     not = reader.read();
-                    if (not !='t' || not != 'T') {
+                    if (not !='t' && not != 'T') {
                         logIllegalState("IfList-Not", not, "t", null);
                         break;
                     }
@@ -500,7 +500,7 @@ public class IfHeader implements Header {
         String effString = (effChar < 0) ? "<EOF>" : String.valueOf((char) effChar);
 
         // log the error
-        log.error("logIllegalState: Unexpected character '"+effString+" in state "+state+", expected any of "+expChar);
+        log.error("logIllegalState: Unexpected character '"+effString+"' in state "+state+", expected any of "+expChar);
 
         // catch up if a reader is given
         if (reader != null && effChar >= 0) {
