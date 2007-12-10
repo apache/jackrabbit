@@ -176,7 +176,7 @@ class CachingIndexReader extends FilterIndexReader {
                     // to a newer one. the cache will still contain a cache
                     // entry from the old until it is overwritten by the
                     // newer index.
-                    if (e.reader == this && !isDeleted(e.doc)) {
+                    if (e.creationTick == creationTick && !isDeleted(e.doc)) {
                         return new SingleTermDocs(e.doc);
                     }
                 }

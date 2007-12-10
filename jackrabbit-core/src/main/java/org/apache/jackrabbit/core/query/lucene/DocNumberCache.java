@@ -98,17 +98,17 @@ final class DocNumberCache {
             if (e != null) {
                 // existing entry
                 // ignore if reader is older than the one in entry
-                if (reader.getCreationTick() <= e.reader.getCreationTick()) {
+                if (reader.getCreationTick() <= e.creationTick) {
                     if (log.isDebugEnabled()) {
                         log.debug("Ignoring put(). New entry is not from a newer reader. "
-                                + "existing: " + e.reader.getCreationTick()
+                                + "existing: " + e.creationTick
                                 + ", new: " + reader.getCreationTick());
                     }
                     e = null;
                 }
             } else {
                 // entry did not exist
-                e = new Entry(reader, n);
+                e = new Entry(reader.getCreationTick(), n);
             }
 
             if (e != null) {
@@ -174,17 +174,17 @@ final class DocNumberCache {
     public static final class Entry {
 
         /**
-         * The IndexReader.
+         * The creation tick of the IndexReader.
          */
-        final CachingIndexReader reader;
+        final long creationTick;
 
         /**
          * The document number.
          */
         final int doc;
 
-        Entry(CachingIndexReader reader, int doc) {
-            this.reader = reader;
+        Entry(long creationTick, int doc) {
+            this.creationTick = creationTick;
             this.doc = doc;
         }
     }
