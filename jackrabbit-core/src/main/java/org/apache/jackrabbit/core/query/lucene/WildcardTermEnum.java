@@ -223,70 +223,82 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
                 throw new IllegalArgumentException("transform");
             }
 
-            // create range scans
-            List rangeScans = new ArrayList(2);
-            try {
-                int idx = 0;
-                while (idx < pattern.length()
-                        && Character.isLetterOrDigit(pattern.charAt(idx))) {
-                    idx++;
+            // check if pattern never matches
+            boolean neverMatches = false;
+            for (int i = 0; i < pattern.length() && !neverMatches; i++) {
+                if (transform == TRANSFORM_LOWER_CASE) {
+                    neverMatches = Character.isUpperCase(pattern.charAt(i));
+                } else if (transform == TRANSFORM_UPPER_CASE) {
+                    neverMatches = Character.isLowerCase(pattern.charAt(i));
                 }
-                String patternPrefix = pattern.substring(0, idx);
-                if (patternPrefix.length() == 0) {
-                    // scan full property range
-                    String prefix = FieldNames.createNamedValue(propName, "");
-                    String limit = FieldNames.createNamedValue(propName, "\uFFFF");
-                    rangeScans.add(new RangeScan(reader,
-                            new Term(field, prefix), new Term(field, limit)));
-                } else {
-                    // start with initial lower case
-                    StringBuffer lowerLimit = new StringBuffer(patternPrefix.toUpperCase());
-                    lowerLimit.setCharAt(0, Character.toLowerCase(lowerLimit.charAt(0)));
-                    String prefix = FieldNames.createNamedValue(propName, lowerLimit.toString());
+            }
 
-                    StringBuffer upperLimit = new StringBuffer(patternPrefix.toLowerCase());
-                    upperLimit.append('\uFFFF');
-                    String limit = FieldNames.createNamedValue(propName, upperLimit.toString());
-                    rangeScans.add(new RangeScan(reader,
-                            new Term(field, prefix), new Term(field, limit)));
+            if (!neverMatches) {
+                // create range scans
+                List rangeScans = new ArrayList(2);
+                try {
+                    int idx = 0;
+                    while (idx < pattern.length()
+                            && Character.isLetterOrDigit(pattern.charAt(idx))) {
+                        idx++;
+                    }
+                    String patternPrefix = pattern.substring(0, idx);
+                    if (patternPrefix.length() == 0) {
+                        // scan full property range
+                        String prefix = FieldNames.createNamedValue(propName, "");
+                        String limit = FieldNames.createNamedValue(propName, "\uFFFF");
+                        rangeScans.add(new RangeScan(reader,
+                                new Term(field, prefix), new Term(field, limit)));
+                    } else {
+                        // start with initial lower case
+                        StringBuffer lowerLimit = new StringBuffer(patternPrefix.toUpperCase());
+                        lowerLimit.setCharAt(0, Character.toLowerCase(lowerLimit.charAt(0)));
+                        String prefix = FieldNames.createNamedValue(propName, lowerLimit.toString());
 
-                    // second scan with upper case start
-                    prefix = FieldNames.createNamedValue(propName, patternPrefix.toUpperCase());
-                    upperLimit = new StringBuffer(patternPrefix.toLowerCase());
-                    upperLimit.setCharAt(0, Character.toUpperCase(upperLimit.charAt(0)));
-                    upperLimit.append('\uFFFF');
-                    limit = FieldNames.createNamedValue(propName, upperLimit.toString());
-                    rangeScans.add(new RangeScan(reader,
-                            new Term(field, prefix), new Term(field, limit)));
-                }
+                        StringBuffer upperLimit = new StringBuffer(patternPrefix.toLowerCase());
+                        upperLimit.append('\uFFFF');
+                        String limit = FieldNames.createNamedValue(propName, upperLimit.toString());
+                        rangeScans.add(new RangeScan(reader,
+                                new Term(field, prefix), new Term(field, limit)));
 
-                String prefix = FieldNames.createNamedValue(propName, patternPrefix);
-                // initialize with prefix as dummy value
-                OffsetCharSequence input = new OffsetCharSequence(prefix.length(), prefix, transform);
-                Matcher matcher = createRegexp(pattern.substring(idx)).matcher(input);
+                        // second scan with upper case start
+                        prefix = FieldNames.createNamedValue(propName, patternPrefix.toUpperCase());
+                        upperLimit = new StringBuffer(patternPrefix.toLowerCase());
+                        upperLimit.setCharAt(0, Character.toUpperCase(upperLimit.charAt(0)));
+                        upperLimit.append('\uFFFF');
+                        limit = FieldNames.createNamedValue(propName, upperLimit.toString());
+                        rangeScans.add(new RangeScan(reader,
+                                new Term(field, prefix), new Term(field, limit)));
+                    }
 
-                // do range scans with patter matcher
-                for (Iterator it = rangeScans.iterator(); it.hasNext(); ) {
-                    RangeScan scan = (RangeScan) it.next();
-                    do {
-                        Term t = scan.term();
-                        if (t != null) {
-                            input.setBase(t.text());
-                            if (matcher.reset().matches()) {
-                                orderedTerms.put(t, new Integer(scan.docFreq()));
+                    String prefix = FieldNames.createNamedValue(propName, patternPrefix);
+                    // initialize with prefix as dummy value
+                    OffsetCharSequence input = new OffsetCharSequence(prefix.length(), prefix, transform);
+                    Matcher matcher = createRegexp(pattern.substring(idx)).matcher(input);
+
+                    // do range scans with patter matcher
+                    for (Iterator it = rangeScans.iterator(); it.hasNext(); ) {
+                        RangeScan scan = (RangeScan) it.next();
+                        do {
+                            Term t = scan.term();
+                            if (t != null) {
+                                input.setBase(t.text());
+                                if (matcher.reset().matches()) {
+                                    orderedTerms.put(t, new Integer(scan.docFreq()));
+                                }
                             }
-                        }
-                    } while (scan.next());
-                }
+                        } while (scan.next());
+                    }
 
-            } finally {
-                // close range scans
-                for (Iterator it = rangeScans.iterator(); it.hasNext(); ) {
-                    RangeScan scan = (RangeScan) it.next();
-                    try {
-                        scan.close();
-                    } catch (IOException e) {
-                        // ignore
+                } finally {
+                    // close range scans
+                    for (Iterator it = rangeScans.iterator(); it.hasNext(); ) {
+                        RangeScan scan = (RangeScan) it.next();
+                        try {
+                            scan.close();
+                        } catch (IOException e) {
+                            // ignore
+                        }
                     }
                 }
             }
