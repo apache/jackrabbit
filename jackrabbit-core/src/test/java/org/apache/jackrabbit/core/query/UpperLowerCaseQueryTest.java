@@ -177,6 +177,13 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest {
         }
     }
 
+    public void testWrongCaseNeverMatches() throws RepositoryException {
+        Node n = testRootNode.addNode("node");
+        n.setProperty("foo", "Bar");
+        testRootNode.save();
+        executeXPathQuery(testPath + "/*[jcr:like(fn:lower-case(@foo), 'BA%')]", new Node[]{});
+    }
+
     //----------------------------< internal >----------------------------------
 
     private void check(String[] values, String operation, String queryTerm, boolean[] matches)
