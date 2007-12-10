@@ -26,11 +26,7 @@ import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Weight;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -231,6 +227,11 @@ class DescendantSelfAxisQuery extends Query {
         private boolean contextHitsCalculated = false;
 
         /**
+         * Remember document numbers of ancestors during validation
+         */
+        private int[] ancestorDocs = new int[2];
+
+        /**
          * Creates a new <code>DescendantSelfAxisScorer</code>.
          *
          * @param similarity the <code>Similarity</code> instance to use.
@@ -339,7 +340,6 @@ class DescendantSelfAxisQuery extends Query {
             int parentDoc = hResolver.getParent(doc);
 
             int ancestorCount = 0;
-            int[] ancestorDocs = new int[2];
             ancestorDocs[ancestorCount++] = parentDoc;
 
             // traverse
