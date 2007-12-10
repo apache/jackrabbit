@@ -24,7 +24,6 @@ import org.apache.lucene.index.IndexReader;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.IdentityHashMap;
 import java.util.HashMap;
 
 /**
@@ -39,11 +38,6 @@ public final class CachingMultiIndexReader
      * The sub readers.
      */
     private ReadOnlyIndexReader[] subReaders;
-
-    /**
-     * Map of OffsetReaders, identified by caching reader they are based on.
-     */
-    private final Map readersByBase = new IdentityHashMap();
 
     /**
      * Map of {@link OffsetReader}s, identified by creation tick.
@@ -85,7 +79,6 @@ public final class CachingMultiIndexReader
             starts[i] = maxDoc;
             maxDoc += subReaders[i].maxDoc();
             OffsetReader offsetReader = new OffsetReader(subReaders[i], starts[i]);
-            readersByBase.put(subReaders[i].getBase().getBase(), offsetReader);
             readersByCreationTick.put(new Long(subReaders[i].getCreationTick()), offsetReader);
         }
         starts[subReaders.length] = maxDoc;
@@ -131,7 +124,8 @@ public final class CachingMultiIndexReader
                 // check if valid:
                 // 1) reader must be in the set of readers
                 // 2) doc must not be deleted
-                OffsetReader offsetReader = (OffsetReader) readersByBase.get(e.reader);
+                OffsetReader offsetReader = (OffsetReader) readersByCreationTick.get(
+                        new Long(e.creationTick));
                 if (offsetReader != null && !offsetReader.reader.isDeleted(e.doc)) {
                     return new SingleTermDocs(e.doc + offsetReader.offset);
                 }
