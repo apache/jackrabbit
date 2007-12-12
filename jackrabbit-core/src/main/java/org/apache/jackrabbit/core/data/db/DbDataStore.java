@@ -23,17 +23,15 @@ import org.apache.jackrabbit.core.data.DataStoreException;
 import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionRecoveryManager;
 import org.apache.jackrabbit.core.persistence.bundle.util.TrackingInputStream;
 import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionRecoveryManager.StreamWrapper;
+import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
@@ -45,6 +43,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.WeakHashMap;
+
+import javax.jcr.RepositoryException;
 
 /**
  * A data store implementation that stores the records in a database using JDBC.
@@ -58,6 +58,8 @@ import java.util.WeakHashMap;
  * <li>&lt;param name="{@link #setDatabaseType(String) databaseType}" value="postgresql"/>
  * <li>&lt;param name="{@link #setDriver(String) driver}" value="org.postgresql.Driver"/>
  * <li>&lt;param name="{@link #setMinRecordLength(int) minRecordLength}" value="1024"/>
+ * <li>&lt;param name="{@link #setMaxConnections(int) maxConnections}" value="2"/>
+ * <li>&lt;param name="{@link #setCopyWhenReading(int) copyWhenReading}" value="true"/>
  * </ul>
  * 
  * <p>
@@ -68,13 +70,21 @@ import java.util.WeakHashMap;
  * A three level directory structure is used to avoid placing too many
  * files in a single directory. The chosen structure is designed to scale
  * up to billions of distinct records.
+ * <p>
+ * For Microsoft SQL Server 2005, there is a problem reading large BLOBs. You will need to use
+ * the JDBC driver version 1.2 or newer, and append ;responseBuffering=adaptive to the database URL.
+ * Don't append ;selectMethod=cursor, otherwise it can still run out of memory.
+ * Example database URL: jdbc:sqlserver://localhost:4220;DatabaseName=test;responseBuffering=adaptive
+ * <p>
+ * By default, the data is copied to a temp file when reading, to avoid problems when reading multiple
+ * blobs at the same time.
  */
 public class DbDataStore implements DataStore {
     
     /**
      * The digest algorithm used to uniquely identify records.
      */
-    private static final String DIGEST = "SHA-1";
+    protected static final String DIGEST = "SHA-1";
     
     /**
      * Logger instance
@@ -84,142 +94,168 @@ public class DbDataStore implements DataStore {
     /**
      * The default value for the minimum object size.
      */
-    private static final int DEFAULT_MIN_RECORD_LENGTH = 100;
+    public static final int DEFAULT_MIN_RECORD_LENGTH = 100;
+    
+    /**
+     * The default value for the maximum connections.
+     */
+    public static final int DEFAULT_MAX_CONNECTIONS = 3;
     
     /**
      * The minimum modified date. If a file is accessed (read or write) with a modified date 
      * older than this value, the modified date is updated to the current time.
      */
-    private long minModifiedDate;
+    protected long minModifiedDate;
     
     /**
      * The database URL used.
      */
-    private String url;
+    protected String url;
     
     /**
      * The database driver.
      */
-    private String driver;
+    protected String driver;
     
     /**
      * The user name.
      */
-    private String user;
+    protected String user;
     
     /**
      * The password
      */
-    private String password;
+    protected String password;
     
     /**
      * The database type used.
      */
-    private String databaseType;
+    protected String databaseType;
     
     /**
      * The minimum size of an object that should be stored in this data store.
      */
-    private int minRecordLength = DEFAULT_MIN_RECORD_LENGTH;
+    protected int minRecordLength = DEFAULT_MIN_RECORD_LENGTH;
     
-    private ConnectionRecoveryManager conn;
+    /**
+     * The maximum number of open connections.
+     */
+    protected int maxConnections = DEFAULT_MAX_CONNECTIONS;
     
-    private static final String TEMP_PREFIX = "TEMP_";
+    /**
+     * A list of connections
+     */
+    protected Pool connectionPool;
     
-    private String tableSQL = "DATASTORE";
-    private String createTableSQL = 
-        "CREATE TABLE DATASTORE(ID VARCHAR(255) PRIMARY KEY, LENGTH BIGINT, LAST_MODIFIED BIGINT, DATA BLOB)";
-    private String insertTempSQL = 
-        "INSERT INTO DATASTORE VALUES(?, 0, ?, NULL)";
-    private String updateDataSQL = 
-        "UPDATE DATASTORE SET DATA=? WHERE ID=?";
-    private String updateLastModifiedSQL = 
-        "UPDATE DATASTORE SET LAST_MODIFIED=? WHERE ID=? AND LAST_MODIFIED<?";
-    private String updateSQL = 
-        "UPDATE DATASTORE SET ID=?, LENGTH=?, LAST_MODIFIED=? WHERE ID=? AND NOT EXISTS(SELECT ID FROM DATASTORE WHERE ID=?)";
-    private String deleteSQL = 
-        "DELETE FROM DATASTORE WHERE ID=?";
-    private String deleteOlderSQL = 
-        "DELETE FROM DATASTORE WHERE LAST_MODIFIED<?";
-    private String selectMetaSQL = 
-        "SELECT LENGTH, LAST_MODIFIED FROM DATASTORE WHERE ID=?";
-    private String selectAllSQL = 
-        "SELECT ID FROM DATASTORE";
-    private String selectDataSQL = 
-        "SELECT DATA FROM DATASTORE WHERE ID=?";
-    private String storeStream = STORE_TEMP_FILE;
+    /**
+     * The prefix used for temporary objects.
+     */
+    protected static final String TEMP_PREFIX = "TEMP_";
     
-    // write to a temporary file to get the length (slow, but always works)
-    // this is the default setting
-    private static final String STORE_TEMP_FILE = "tempFile";
+    /**
+     * The prefix for the datastore table, empty by default.
+     */
+    protected String tablePrefix = "";
     
-    // call PreparedStatement.setBinaryStream(..., -1)
-    private static final String STORE_SIZE_MINUS_ONE = "-1";
+    protected String tableSQL = "DATASTORE";
+    protected String createTableSQL = 
+        "CREATE TABLE ${tablePrefix}${table}(ID VARCHAR(255) PRIMARY KEY, LENGTH BIGINT, LAST_MODIFIED BIGINT, DATA BLOB)";
+    protected String insertTempSQL = 
+        "INSERT INTO ${tablePrefix}${table} VALUES(?, 0, ?, NULL)";
+    protected String updateDataSQL = 
+        "UPDATE ${tablePrefix}${table} SET DATA=? WHERE ID=?";
+    protected String updateLastModifiedSQL = 
+        "UPDATE ${tablePrefix}${table} SET LAST_MODIFIED=? WHERE ID=? AND LAST_MODIFIED<?";
+    protected String updateSQL = 
+        "UPDATE ${tablePrefix}${table} SET ID=?, LENGTH=?, LAST_MODIFIED=? WHERE ID=? AND NOT EXISTS(SELECT ID FROM ${tablePrefix}${table} WHERE ID=?)";
+    protected String deleteSQL = 
+        "DELETE FROM ${tablePrefix}${table} WHERE ID=?";
+    protected String deleteOlderSQL = 
+        "DELETE FROM ${tablePrefix}${table} WHERE LAST_MODIFIED<?";
+    protected String selectMetaSQL = 
+        "SELECT LENGTH, LAST_MODIFIED FROM ${tablePrefix}${table} WHERE ID=?";
+    protected String selectAllSQL = 
+        "SELECT ID FROM ${tablePrefix}${table}";
+    protected String selectDataSQL = 
+        "SELECT ID, DATA FROM ${tablePrefix}${table} WHERE ID=?";
     
-    // call PreparedStatement.setBinaryStream(..., Integer.MAX_VALUE)
-    private static final String STORE_SIZE_MAX = "max";
+    /**
+     * The stream storing mechanism used.
+     */
+    protected String storeStream = STORE_TEMP_FILE;
+
+    /**
+     * Write to a temporary file to get the length (slow, but always works).
+     * This is the default setting.
+     */
+    public static final String STORE_TEMP_FILE = "tempFile";
+    
+    /**
+     * Call PreparedStatement.setBinaryStream(..., -1)
+     */
+    public static final String STORE_SIZE_MINUS_ONE = "-1";
+    
+    /**
+     * Call PreparedStatement.setBinaryStream(..., Integer.MAX_VALUE)
+     */
+    public static final String STORE_SIZE_MAX = "max";
+    
+    /**
+     * Copy the stream to a temp file before returning it. 
+     * Enabled by default to support concurrent reads.
+     */
+    private boolean copyWhenReading = true;
     
     /**
      * All data identifiers that are currently in use are in this set until they are garbage collected.
      */
-    private WeakHashMap inUse = new WeakHashMap();    
+    protected WeakHashMap inUse = new WeakHashMap();    
 
     /**
      * {@inheritDoc}
      */
-    public synchronized DataRecord addRecord(InputStream stream) throws DataStoreException {
-        conn.setAutoReconnect(false);
-        String id = null, tempId = null;            
-        long now;            
-        for (int i = 0; i < ConnectionRecoveryManager.TRIALS; i++) {
-            try {
-                now = System.currentTimeMillis();
-                id = UUID.randomUUID().toString();
-                tempId = TEMP_PREFIX + id;
-                PreparedStatement prep = conn.executeStmt(selectMetaSQL, new Object[]{tempId});
-                ResultSet rs = prep.getResultSet();
-                if (rs.next()) {
-                    // re-try in the very, very unlikely event that the row already exists
-                    continue;
-                }
-                conn.executeStmt(insertTempSQL, new Object[]{tempId, new Long(now)});
-                break;
-            } catch (Exception e) {
-                throw convert("Can not insert new record", e);
-            }
-        }
-        if (id == null) {
-            String msg = "Can not create new record";
-            log.error(msg);
-            throw new DataStoreException(msg);
-        }
+    public DataRecord addRecord(InputStream stream) throws DataStoreException {
         ResultSet rs = null;
+        TempFileInputStream fileInput = null;
+        ConnectionRecoveryManager conn = getConnection();
         try {
+            conn.setAutoReconnect(false);
+            String id = null, tempId = null;            
+            long now;            
+            for (int i = 0; i < ConnectionRecoveryManager.TRIALS; i++) {
+                try {
+                    now = System.currentTimeMillis();
+                    id = UUID.randomUUID().toString();
+                    tempId = TEMP_PREFIX + id;
+                    PreparedStatement prep = conn.executeStmt(selectMetaSQL, new Object[]{tempId});
+                    rs = prep.getResultSet();
+                    if (rs.next()) {
+                        // re-try in the very, very unlikely event that the row already exists
+                        continue;
+                    }
+                    conn.executeStmt(insertTempSQL, new Object[]{tempId, new Long(now)});
+                    break;
+                } catch (Exception e) {
+                    throw convert("Can not insert new record", e);
+                }
+            }
+            if (id == null) {
+                String msg = "Can not create new record";
+                log.error(msg);
+                throw new DataStoreException(msg);
+            }
             MessageDigest digest = getDigest();
             DigestInputStream dIn = new DigestInputStream(stream, digest);
             TrackingInputStream in = new TrackingInputStream(dIn);
-            File temp = null;
-            InputStream fileInput = null;
             StreamWrapper wrapper;
             if (STORE_SIZE_MINUS_ONE.equals(storeStream)) {
                 wrapper = new StreamWrapper(in, -1);
             } else if (STORE_SIZE_MAX.equals(storeStream)) {
-                    wrapper = new StreamWrapper(in, Integer.MAX_VALUE);
+                wrapper = new StreamWrapper(in, Integer.MAX_VALUE);
             } else if (STORE_TEMP_FILE.equals(storeStream)) {
-                int length = 0;
-                temp = File.createTempFile("dbRecord", null);
-                OutputStream out = new FileOutputStream(temp);
-                byte[] b = new byte[4096];
-                while (true) {
-                    int n = in.read(b);
-                    if (n < 0) {
-                        break;
-                    }
-                    out.write(b, 0, n);
-                    length += n;
-                }
-                out.close();
-                fileInput = new BufferedInputStream(new FileInputStream(temp));
+                File temp = moveToTempFile(in);
+                fileInput = new TempFileInputStream(temp);
+                long length = temp.length();
                 wrapper = new StreamWrapper(fileInput, length);
             } else {
                 throw new DataStoreException("Unsupported stream store algorithm: " + storeStream);
@@ -228,6 +264,7 @@ public class DbDataStore implements DataStore {
             now = System.currentTimeMillis();
             long length = in.getPosition();
             DataIdentifier identifier = new DataIdentifier(digest.digest());
+            usesIdentifier(identifier);
             id = identifier.toString();
             // UPDATE DATASTORE SET ID=?, LENGTH=?, LAST_MODIFIED=? 
             // WHERE ID=? 
@@ -236,10 +273,6 @@ public class DbDataStore implements DataStore {
                     id, new Long(length), new Long(now), 
                     tempId, id});
             int count = prep.getUpdateCount();
-            if (temp != null) {
-                fileInput.close();
-                temp.delete();
-            }
             if (count == 0) {
                 // update count is 0, meaning such a row already exists
                 // DELETE FROM DATASTORE WHERE ID=?
@@ -266,13 +299,36 @@ public class DbDataStore implements DataStore {
             throw convert("Can not insert new record", e);
         } finally {
             conn.closeSilently(rs);
+            putBack(conn);
+            if (fileInput != null) {
+                try {
+                    fileInput.close();
+                } catch (IOException e) {
+                    throw convert("Can not close temporary file", e);
+                }
+            }
         }
+    }
+    
+    /**
+     * Creates a temp file and copies the data there.
+     * The input stream is closed afterwards.
+     * 
+     * @param in the input stream
+     * @return the file
+     * @throws IOException
+     */
+    private File moveToTempFile(InputStream in) throws IOException {
+        File temp = File.createTempFile("dbRecord", null);
+        TempFileInputStream.writeToFileAndClose(in, temp);
+        return temp;
     }
 
     /**
      * {@inheritDoc}
      */
     public synchronized int deleteAllOlderThan(long min) throws DataStoreException {
+        ConnectionRecoveryManager conn = getConnection();
         try {
             Iterator it = inUse.keySet().iterator();
             while (it.hasNext()) {
@@ -286,6 +342,8 @@ public class DbDataStore implements DataStore {
             return prep.getUpdateCount();
         } catch (Exception e) {
             throw convert("Can not delete records", e);
+        } finally {
+            putBack(conn);
         }
     }
 
@@ -293,6 +351,7 @@ public class DbDataStore implements DataStore {
      * {@inheritDoc}
      */
     public Iterator getAllIdentifiers() throws DataStoreException {
+        ConnectionRecoveryManager conn = getConnection();
         ArrayList list = new ArrayList();
         ResultSet rs = null;
         try {
@@ -311,6 +370,7 @@ public class DbDataStore implements DataStore {
             throw convert("Can not read records", e);
         } finally {
             conn.closeSilently(rs);
+            putBack(conn);
         }        
     }
 
@@ -333,12 +393,13 @@ public class DbDataStore implements DataStore {
     /**
      * {@inheritDoc}
      */
-    public synchronized DataRecord getRecord(DataIdentifier identifier) throws DataStoreException {
+    public DataRecord getRecord(DataIdentifier identifier) throws DataStoreException {
+        ConnectionRecoveryManager conn = getConnection();
         usesIdentifier(identifier);
         ResultSet rs = null;
         try {
-            // SELECT LENGTH, LAST_MODIFIED FROM DATASTORE WHERE ID = ?
             String id = identifier.toString();
+            // SELECT LENGTH, LAST_MODIFIED FROM DATASTORE WHERE ID = ?
             PreparedStatement prep = conn.executeStmt(selectMetaSQL, new Object[]{id});
             rs = prep.getResultSet();
             if (!rs.next()) {
@@ -352,6 +413,7 @@ public class DbDataStore implements DataStore {
             throw convert("Can not read identifier " + identifier, e);
         } finally {
             conn.closeSilently(rs);
+            putBack(conn);
         }
     }
 
@@ -361,21 +423,26 @@ public class DbDataStore implements DataStore {
     public synchronized void init(String homeDir) throws DataStoreException {
         try {
             initDatabaseType();
+            connectionPool = new Pool(this, maxConnections);
+            ConnectionRecoveryManager conn = getConnection();
             conn = new ConnectionRecoveryManager(false, driver, url, user, password);
             conn.setAutoReconnect(true);
             DatabaseMetaData meta = conn.getConnection().getMetaData();
+            log.info("Using JDBC driver " + meta.getDriverName() + " " + meta.getDriverVersion());
+            meta.getDriverVersion();
             ResultSet rs = meta.getTables(null, null, tableSQL, null);
             boolean exists = rs.next();
             rs.close();
             if (!exists) {
                 conn.executeStmt(createTableSQL, null);
             }
+            putBack(conn);
         } catch (Exception e) {
             throw convert("Can not init data store, driver=" + driver + " url=" + url + " user=" + user, e);
         }
     }
     
-    private void initDatabaseType() throws DataStoreException {
+    protected void initDatabaseType() throws DataStoreException {
         boolean failIfNotFound;
         if (databaseType == null) {
             if (!url.startsWith("jdbc:")) {
@@ -407,20 +474,20 @@ public class DbDataStore implements DataStore {
             throw new DataStoreException(msg);
         }
         if (driver == null) {
-            driver = prop.getProperty("driver", driver);
+            driver = getProperty(prop, "driver", driver);
         }
-        tableSQL = prop.getProperty("table", tableSQL);
-        createTableSQL = prop.getProperty("createTable", createTableSQL);
-        insertTempSQL = prop.getProperty("insertTemp", insertTempSQL);
-        updateDataSQL = prop.getProperty("updateData", updateDataSQL);
-        updateLastModifiedSQL = prop.getProperty("updateLastModified", updateLastModifiedSQL);
-        updateSQL = prop.getProperty("update", updateSQL);
-        deleteSQL = prop.getProperty("delete", deleteSQL);
-        deleteOlderSQL = prop.getProperty("deleteOlder", deleteOlderSQL);
-        selectMetaSQL = prop.getProperty("selectMeta", selectMetaSQL);
-        selectAllSQL = prop.getProperty("selectAll", selectAllSQL);
-        selectDataSQL = prop.getProperty("selectData", selectDataSQL);
-        storeStream = prop.getProperty("storeStream", storeStream);
+        tableSQL = getProperty(prop, "table", tableSQL);
+        createTableSQL = getProperty(prop, "createTable", createTableSQL);
+        insertTempSQL = getProperty(prop, "insertTemp", insertTempSQL);
+        updateDataSQL = getProperty(prop, "updateData", updateDataSQL);
+        updateLastModifiedSQL = getProperty(prop, "updateLastModified", updateLastModifiedSQL);
+        updateSQL = getProperty(prop, "update", updateSQL);
+        deleteSQL = getProperty(prop, "delete", deleteSQL);
+        deleteOlderSQL = getProperty(prop, "deleteOlder", deleteOlderSQL);
+        selectMetaSQL = getProperty(prop, "selectMeta", selectMetaSQL);
+        selectAllSQL = getProperty(prop, "selectAll", selectAllSQL);
+        selectDataSQL = getProperty(prop, "selectData", selectDataSQL);
+        storeStream = getProperty(prop, "storeStream", storeStream);
         if (STORE_SIZE_MINUS_ONE.equals(storeStream)) {
         } else if (STORE_TEMP_FILE.equals(storeStream)) {
         } else if (STORE_SIZE_MAX.equals(storeStream)) {            
@@ -432,10 +499,38 @@ public class DbDataStore implements DataStore {
             throw new DataStoreException(msg);
         }
     }
+    
+    /**
+     * Get the expanded property value. The following placeholders are supported:
+     * ${table}: the table name (the default is DATASTORE) and
+     * ${tablePrefix}: the prefix as set in the configuration (empty by default).
+     * 
+     * @param prop the properties object
+     * @param key the key
+     * @param defaultValue the default value
+     * @return the property value (placeholders are replaced)
+     */
+    protected String getProperty(Properties prop, String key, String defaultValue) {
+        String sql = prop.getProperty(key, defaultValue);
+        sql = Text.replace(sql, "${table}", tableSQL).trim();
+        sql = Text.replace(sql, "${tablePrefix}", tablePrefix).trim();
+        return sql;
+    }
 
-    private DataStoreException convert(String cause, Exception e) {
+    /**
+     * Convert an exception to a data store exception.
+     * 
+     * @param cause the message
+     * @param e the root cause
+     * @return the data store exception
+     */
+    protected DataStoreException convert(String cause, Exception e) {
         log.warn(cause, e);
-        return new DataStoreException(cause, e);
+        if (e instanceof DataStoreException) {
+            return (DataStoreException) e;
+        } else {
+            return new DataStoreException(cause, e);
+        }
     }
 
     /**
@@ -446,19 +541,29 @@ public class DbDataStore implements DataStore {
         minModifiedDate = before;
     }
 
-    synchronized long touch(DataIdentifier identifier, long lastModified) throws DataStoreException {
+    /**
+     * Update the modified date of an entry if required.
+     * 
+     * @param identifier the entry identifier
+     * @param lastModified the current last modified date
+     * @return the new modified date
+     */
+    long touch(DataIdentifier identifier, long lastModified) throws DataStoreException {
         usesIdentifier(identifier);
         if (lastModified < minModifiedDate) {
             long now = System.currentTimeMillis();
             Long n = new Long(now);
-            // UPDATE DATASTORE SET LAST_MODIFIED = ? WHERE ID = ? AND LAST_MODIFIED < ?
+            ConnectionRecoveryManager conn = getConnection();
             try {
+                // UPDATE DATASTORE SET LAST_MODIFIED = ? WHERE ID = ? AND LAST_MODIFIED < ?
                 conn.executeStmt(updateLastModifiedSQL, new Object[]{
                         n, identifier.toString(), n
                 });
                 return now;
             } catch (Exception e) {
                 throw convert("Can not update lastModified", e);
+            } finally {
+                putBack(conn);
             }
         }
         return lastModified;
@@ -468,17 +573,25 @@ public class DbDataStore implements DataStore {
      * {@inheritDoc}
      */    
     public InputStream getInputStream(DataIdentifier identifier) throws DataStoreException {
+        ConnectionRecoveryManager conn = getConnection();
         try {
-            // SELECT DATA FROM DATASTORE WHERE ID = ?
             String id = identifier.toString();
+            // SELECT ID, DATA FROM DATASTORE WHERE ID = ?
             PreparedStatement prep = conn.executeStmt(selectDataSQL, new Object[]{id});
             ResultSet rs = prep.getResultSet();
             if (!rs.next()) {
                 throw new DataStoreException("Record not found: " + identifier);
             }
-            return rs.getBinaryStream(1);
+            InputStream in = new BufferedInputStream(rs.getBinaryStream(2));
+            if (copyWhenReading) {
+                File temp = moveToTempFile(in);
+                in = new TempFileInputStream(temp);
+            }
+            return in;
         } catch (Exception e) {
             throw convert("Can not read identifier " + identifier, e);
+        } finally {
+            putBack(conn);
         }
     }
 
@@ -578,11 +691,16 @@ public class DbDataStore implements DataStore {
     /**
      * {@inheritDoc}
      */
-    public void close() {
-        conn.close();
+    public synchronized void close() {
+        ArrayList list = connectionPool.getAll();
+        for (int i = 0; i < list.size(); i++) {
+            ConnectionRecoveryManager conn = (ConnectionRecoveryManager) list.get(i);
+            conn.close();
+        }
+        list.clear();
     }
     
-    private void usesIdentifier(DataIdentifier identifier) {
+    protected void usesIdentifier(DataIdentifier identifier) {
         inUse.put(identifier, new WeakReference(identifier));
     }
     
@@ -593,12 +711,95 @@ public class DbDataStore implements DataStore {
         inUse.clear();
     }    
     
-    private synchronized MessageDigest getDigest() throws DataStoreException {
+    protected synchronized MessageDigest getDigest() throws DataStoreException {
         try {
             return MessageDigest.getInstance(DIGEST);
         } catch (NoSuchAlgorithmException e) {
             throw convert("No such algorithm: " + DIGEST, e);
         }
+    }
+    
+    protected ConnectionRecoveryManager getConnection() throws DataStoreException {
+        try {
+            return (ConnectionRecoveryManager) connectionPool.get();
+        } catch (InterruptedException e) {
+            throw new DataStoreException("Interrupted", e);
+        } catch (RepositoryException e) {
+            throw new DataStoreException("Can not open a new connection", e);
+        }
+    }
+    
+    protected void putBack(ConnectionRecoveryManager conn) throws DataStoreException {
+        try {
+            connectionPool.add(conn);
+        } catch (InterruptedException e) {
+            throw new DataStoreException("Interrupted", e);
+        }
+    }
+
+    /**
+     * Get the maximum number of concurrent connections.
+     * 
+     * @return the maximum number of connections.
+     */
+    public int getMaxConnections() {
+        return maxConnections;
+    }
+
+    /**
+     * Set the maximum number of concurrent connections.
+     * 
+     * @param maxConnections the new value
+     */
+    public void setMaxConnections(int maxConnections) {
+        this.maxConnections = maxConnections;
+    }
+
+    /**
+     * Create a new connection.
+     * 
+     * @return the new connection
+     */
+    public ConnectionRecoveryManager createNewConnection() throws RepositoryException {
+        ConnectionRecoveryManager conn = new ConnectionRecoveryManager(false, driver, url, user, password);
+        return conn;
+    }
+
+    /**
+     * Is a stream copied to a temporary file before returning?
+     * 
+     * @return the setting
+     */
+    public boolean getCopyWhenReading() {
+        return copyWhenReading;
+    }
+
+    /**
+     * The the copy setting. If enabled,
+     * a stream is always copied to a temporary file when reading a stream.
+     * 
+     * @param copyWhenReading the new setting
+     */
+    public void setCopyWhenReading(boolean copyWhenReading) {
+        this.copyWhenReading = copyWhenReading;
+    }
+
+    /**
+     * Get the table prefix. The default is empty.
+     * 
+     * @return the table prefix.
+     */
+    public String getTablePrefix() {
+        return tablePrefix;
+    }
+
+    /**
+     * Set the new table prefix.
+     * 
+     * @param tablePrefix the new value
+     */
+    public void setTablePrefix(String tablePrefix) {
+        this.tablePrefix = tablePrefix;
     }
 
 }
