@@ -21,11 +21,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-
 /**
  * Data record that is based on a normal file.
  */
-class FileDataRecord extends AbstractDataRecord {
+public class FileDataRecord extends AbstractDataRecord {
 
     /**
      * The file that contains the binary stream.
@@ -38,7 +37,7 @@ class FileDataRecord extends AbstractDataRecord {
      * @param identifier data identifier
      * @param file file that contains the binary stream
      */
-    public FileDataRecord(DataIdentifier identifier, File file) {
+    protected FileDataRecord(DataIdentifier identifier, File file) {
         super(identifier);
         assert file.isFile();
         this.file = file;

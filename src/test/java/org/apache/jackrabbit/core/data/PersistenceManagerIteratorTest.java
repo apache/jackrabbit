@@ -52,6 +52,8 @@ public class PersistenceManagerIteratorTest extends AbstractJCRTest {
             return;
         }
 
+        // TODO: make getWorkspaceNames public or create a utility class
+
         RepositoryImpl r = (RepositoryImpl) rep;
         Method m = r.getClass().getDeclaredMethod("getWorkspaceNames",
                 new Class[0]);

@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.data;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
 public class RandomInputStream extends InputStream {
@@ -23,7 +25,7 @@ public class RandomInputStream extends InputStream {
     private static final long MUL = 0x5DEECE66DL;
     private static final long ADD = 0xBL;
     private static final long MASK = (1L << 48) - 1;
-    private static final int MAX_READ_BLOCK = 15;
+    private static final int DEFAULT_MAX_READ_BLOCK_SIZE = 15;
 
     private final long initialSeed;
     private final long len;
@@ -31,14 +33,38 @@ public class RandomInputStream extends InputStream {
     private long pos;
     private long markedPos;
     private long state;
+    private int maxReadBlockSize;
 
     public String toString() {
         return "new RandomInputStream(" + initialSeed + ", " + len + ")";
     }
 
     public RandomInputStream(long seed, long len) {
+        this(seed, len, DEFAULT_MAX_READ_BLOCK_SIZE);
+    }
+
+    public static void compareStreams(InputStream a, InputStream b) throws IOException {
+        a = new BufferedInputStream(a);
+        b = new BufferedInputStream(b);
+        long pos = 0;
+        while (true) {
+            int x = a.read();
+            int y = b.read();
+            if (x == -1 || y == -1) {
+                if (x == y) {
+                    break;
+                }
+            } 
+            if (x != y) {
+                throw new IOException("Incorrect byte at position " + pos + ": x=" + x + " y=" + y);
+            }
+        }
+    }
+
+    public RandomInputStream(long seed, long len, int maxReadBlockSize) {
         this.initialSeed = seed;
         this.len = len;
+        this.maxReadBlockSize = maxReadBlockSize;
         setSeed(seed);
         reset();
     }
@@ -56,8 +82,8 @@ public class RandomInputStream extends InputStream {
         if (n > (len - pos)) {
             n = (len - pos);
         }
-        if (n > MAX_READ_BLOCK) {
-            n = MAX_READ_BLOCK;
+        if (n > maxReadBlockSize) {
+            n = maxReadBlockSize;
         } else if (n < 0) {
             n = 0;
         }

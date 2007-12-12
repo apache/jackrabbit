@@ -27,9 +27,9 @@ import java.io.InputStream;
  */
 public class DbDataRecord extends AbstractDataRecord {
     
-    private final DbDataStore store;
-    private final long length;
-    private long lastModified;
+    protected final DbDataStore store;
+    protected final long length;
+    protected long lastModified;
 
     /**
      * Creates a data record based on the given identifier and length.
