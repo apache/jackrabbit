@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
+import org.apache.jackrabbit.conversion.IllegalNameException;
 import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.apache.jackrabbit.conversion.NameResolver;
 import org.apache.jackrabbit.conversion.NameException;
@@ -847,16 +848,11 @@ class ReferenceConstraint extends ValueConstraint {
         // format: node type name
         try {
             ntName = resolver.getQName(definition);
-        } catch (org.apache.jackrabbit.conversion.IllegalNameException ine) {
+        } catch (IllegalNameException ine) {
             String msg = "invalid node type name specified as value constraint: "
                     + definition;
             log.debug(msg);
             throw new InvalidConstraintException(msg, ine);
-        } catch (NameException e) {
-            String msg = "invalid node type name specified as value constraint: "
-                    + definition;
-            log.debug(msg);
-            throw new InvalidConstraintException(msg, e);
         } catch (NamespaceException e) {
             String msg = "invalid node type name specified as value constraint: "
                     + definition;
