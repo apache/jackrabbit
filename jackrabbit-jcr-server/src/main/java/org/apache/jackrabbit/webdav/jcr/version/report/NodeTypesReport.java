@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.jcr.version.report;
 
-import org.apache.jackrabbit.util.IteratorHelper;
+import org.apache.jackrabbit.commons.iterator.NodeTypeIteratorAdapter;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavServletResponse;
@@ -41,7 +41,6 @@ import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDefinition;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -170,21 +169,18 @@ public class NodeTypesReport extends AbstractJcrReport implements NodeTypeConsta
      * @throws DavException
      */
     private static NodeTypeIterator getNodeTypes(Session session, ReportInfo info) throws RepositoryException, DavException {
-        NodeTypeIterator ntIter = null;
         NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
 
         // check the simple types first...
         if (info.containsContentElement(XML_REPORT_ALLNODETYPES, NAMESPACE)) {
-            ntIter = ntMgr.getAllNodeTypes();
+            return ntMgr.getAllNodeTypes();
         } else if (info.containsContentElement(XML_REPORT_MIXINNODETYPES, NAMESPACE)) {
-            ntIter = ntMgr.getMixinNodeTypes();
+            return ntMgr.getMixinNodeTypes();
         } else if (info.containsContentElement(XML_REPORT_PRIMARYNODETYPES, NAMESPACE)) {
-            ntIter = ntMgr.getPrimaryNodeTypes();
-        }
-        // None of the simple types. test if a report for individual nodetypes
-        // was request. If not, the request body is not valid.
-        if (ntIter == null) {
-            List ntList = new ArrayList();
+            return ntMgr.getPrimaryNodeTypes();
+        } else {
+            // None of the simple types. test if a report for individual
+            // nodetype was request. If not, the request body is not valid.
             List elemList = info.getContentElements(XML_NODETYPE, NAMESPACE);
             if (elemList.isEmpty()) {
                 // throw exception if the request body does not contain a single nodetype element
@@ -192,6 +188,7 @@ public class NodeTypesReport extends AbstractJcrReport implements NodeTypeConsta
             }
 
             // todo: find better solution...
+            List ntList = new ArrayList();
             Iterator elemIter = elemList.iterator();
             while (elemIter.hasNext()) {
                 Element el = ((Element)elemIter.next());
@@ -200,9 +197,7 @@ public class NodeTypesReport extends AbstractJcrReport implements NodeTypeConsta
                     ntList.add(ntMgr.getNodeType(nodetypeName));
                 }
             }
-            ntIter = new IteratorHelper(Collections.unmodifiableCollection(ntList));
+            return new NodeTypeIteratorAdapter(ntList);
         }
-
-        return ntIter;
     }
 }
