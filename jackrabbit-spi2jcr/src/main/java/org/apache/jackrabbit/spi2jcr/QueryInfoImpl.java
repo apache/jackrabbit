@@ -19,19 +19,18 @@ package org.apache.jackrabbit.spi2jcr;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
+import org.apache.jackrabbit.commons.iterator.RangeIteratorDecorator;
 import org.apache.jackrabbit.conversion.NameException;
 import org.apache.jackrabbit.conversion.NamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.query.QueryResult;
-import javax.jcr.query.RowIterator;
 import javax.jcr.query.Row;
 import javax.jcr.RepositoryException;
 import javax.jcr.RangeIterator;
-import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
@@ -116,35 +115,24 @@ class QueryInfoImpl implements QueryInfo {
      * {@inheritDoc}
      */
     public RangeIterator getRows() {
-        final String[] columnJcrNames;
-        final RowIterator rows;
         try {
-            columnJcrNames = result.getColumnNames();
-            rows = result.getRows();
-        } catch (RepositoryException e) {
-            return IteratorHelper.EMPTY;
-        }
-        return new IteratorHelper(new Iterator() {
-            public void remove() {
-                rows.remove();
-            }
-
-            public boolean hasNext() {
-                return rows.hasNext();
-            }
-
-            public Object next() {
-                try {
-                    Row row = rows.nextRow();
-                    return new QueryResultRowImpl(row, columnJcrNames, scoreName,
-                            pathName, idFactory, resolver, qValueFactory);
-                } catch (RepositoryException e) {
-                    log.warn("Exception when creating QueryResultRowImpl: " +
-                            e.getMessage(), e);
-                    throw new NoSuchElementException();
+            final String[] columnJcrNames = result.getColumnNames();
+            return new RangeIteratorDecorator(result.getRows()) {
+                public Object next() {
+                    try {
+                        return new QueryResultRowImpl(
+                                (Row) super.next(), columnJcrNames, scoreName,
+                                pathName, idFactory, resolver, qValueFactory);
+                    } catch (RepositoryException e) {
+                        log.warn("Exception when creating QueryResultRowImpl: " +
+                                e.getMessage(), e);
+                        throw new NoSuchElementException();
+                    }
                 }
-            }
-        });
+            };
+        } catch (RepositoryException e) {
+            return RangeIteratorAdapter.EMPTY;
+        }
     }
 
     /**
