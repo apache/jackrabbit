@@ -93,6 +93,7 @@ public class ItemStateBinding {
      * @param blobStore the blobstore
      * @param nsIndex the namespace index
      * @param nameIndex the name index
+     * @param dataStore the data store
      */
     public ItemStateBinding(ErrorHandling errorHandling,
                             BLOBStore blobStore,
@@ -122,6 +123,14 @@ public class ItemStateBinding {
      */
     public void setMinBlobSize(long minBlobSize) {
         this.minBlobSize = minBlobSize;
+    }
+
+    /**
+     * Returns the blob store that is assosiated with this binding.
+     * @return the blob store
+     */
+    public BLOBStore getBlobStore() {
+        return blobStore;
     }
 
     /**

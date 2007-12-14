@@ -580,6 +580,13 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     /**
+     * {@inheritDoc}
+     */
+    protected BundleBinding getBinding() {
+        return binding;
+    }
+
+    /**
      * Creates a suitable blobstore
      * @return a blobstore
      * @throws Exception if an unspecified error occurs
@@ -1036,8 +1043,6 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     protected synchronized void destroyBundle(NodePropBundle bundle) throws ItemStateException {
         try {
             connectionManager.executeStmt(bundleDeleteSQL, getKey(bundle.getId().getUUID()));
-            // also delete all
-            bundle.removeAllProperties();
         } catch (Exception e) {
             if (e instanceof NoSuchItemStateException) {
                 throw (NoSuchItemStateException) e;
@@ -1086,13 +1091,13 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     /**
+     * {@inheritDoc}
+     *
      * This method uses shared <code>PreparedStatements</code>, which must
      * be used strictly sequentially. Because this method synchronizes on the
      * persistence manager instance, there is no need to synchronize on the
      * shared statement. If the method would not be synchronized, the shared
      * statement must be synchronized.
-     *
-     * @see AbstractPersistenceManager#store(NodeReferences)
      */
     public synchronized void store(NodeReferences refs) throws ItemStateException {
         if (!initialized) {
