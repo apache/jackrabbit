@@ -107,6 +107,36 @@ public class ISO9075 {
     }
 
     /**
+     * Encodes <code>path</code> as specified in ISO 9075. Please note that
+     * the character '<code>[</code>' is not encoded but rather interpreted as
+     * the start of an index in a path segment.
+     *
+     * @param path the <code>String</code> to encode.
+     * @return the encoded <code>String</code>.
+     */
+    public static String encodePath(String path) {
+        String[] names = Text.explode(path, '/', true);
+        StringBuffer encoded = new StringBuffer(path.length());
+        for (int i = 0; i < names.length; i++) {
+            // detect index
+            String index = null;
+            int idx = names[i].indexOf('[');
+            if (idx != -1) {
+                index = names[i].substring(idx);
+                names[i] = names[i].substring(0, idx);
+            }
+            encoded.append(encode(names[i]));
+            if (index != null) {
+                encoded.append(index);
+            }
+            if (i < names.length - 1) {
+                encoded.append('/');
+            }
+        }
+        return encoded.toString();
+    }
+
+    /**
      * Decodes the <code>name</code>.
      * @param name the <code>QName</code> to decode.
      * @return the decoded <code>QName</code>.
