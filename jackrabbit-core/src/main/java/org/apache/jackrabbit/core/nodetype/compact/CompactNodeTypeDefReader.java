@@ -311,7 +311,7 @@ public class CompactNodeTypeDefReader {
             ntd.setMixin(true);
             nextToken();
             if (currentTokenEquals(Lexer.ORDERABLE)) {
-                ntd.setMixin(true);
+                ntd.setOrderableChildNodes(true);
                 nextToken();
             }
         }
