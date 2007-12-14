@@ -28,6 +28,7 @@ import javax.jcr.PropertyType;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
+import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -35,6 +36,8 @@ import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.name.NameConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This Class provides a simple structure to hold the nodestate and related
@@ -44,6 +47,16 @@ public class NodePropBundle {
 
     /** the cvs/svn id */
     static final String CVS_ID = "$URL$ $Rev$ $Date$";
+
+    /**
+     * default logger
+     */
+    private static Logger log = LoggerFactory.getLogger(NodePropBundle.class);
+
+    /**
+     * the bundle binding that handles this bundle
+     */
+    private final BundleBinding binding;
 
     /**
      * the node id
@@ -102,18 +115,21 @@ public class NodePropBundle {
 
     /**
      * Creates a "new" bundle with the given id
+     * @param binding the bundle binding
      * @param id the node id
      */
-    public NodePropBundle(NodeId id) {
+    public NodePropBundle(BundleBinding binding, NodeId id) {
+        this.binding = binding;
         this.id = id;
     }
 
     /**
      * Creates a bundle from the given state
+     * @param binding the bundle binding
      * @param state the node state
      */
-    public NodePropBundle(NodeState state) {
-        this((NodeId) state.getId());
+    public NodePropBundle(BundleBinding binding, NodeState state) {
+        this(binding, (NodeId) state.getId());
         update(state);
     }
 
@@ -346,7 +362,7 @@ public class NodePropBundle {
     public void addProperty(PropertyState state) {
         PropertyEntry old = (PropertyEntry) properties.put(state.getName(), new PropertyEntry(state));
         if (old != null) {
-            old.destroy();
+            old.destroy(binding.getBlobStore());
         }
     }
 
@@ -407,7 +423,7 @@ public class NodePropBundle {
     public void removeProperty(Name name) {
         PropertyEntry pe = (PropertyEntry) properties.remove(name);
         if (pe != null) {
-            pe.destroy();
+            pe.destroy(binding.getBlobStore());
         }
     }
 
@@ -678,18 +694,22 @@ public class NodePropBundle {
 
         /**
          * Destroys this property state and deletes temporary blob file values.
+         * @param blobStore the blobstore that will destroy the blobs
          */
-        private void destroy() {
-            if (type == PropertyType.BINARY) {
-                // destroy binary property values
-                for (int i=0; i<values.length; i++) {
-                    values[i].getBLOBFileValue().delete(true);
+        private void destroy(BLOBStore blobStore) {
+            // delete blobs if needed
+            if (blobIds != null) {
+                for (int i=0; i<blobIds.length; i++) {
+                    if (blobIds[i] != null) {
+                        try {
+                            blobStore.remove(blobIds[i]);
+                            log.debug("removed blob {}", blobIds[i]);
+                        } catch (Exception e) {
+                            log.error("Ingoring error while removing blob {}", blobIds[i], e);
+                        }
+                    }
                 }
             }
         }
-
-
     }
-
-
 }

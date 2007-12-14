@@ -63,6 +63,7 @@ public class BundleBinding extends ItemStateBinding {
      * @param blobStore the blobstore for retrieving blobs
      * @param nsIndex the namespace index
      * @param nameIndex the name index
+     * @param dataStore the data store
      */
     public BundleBinding(ErrorHandling errorHandling, BLOBStore blobStore,
                          StringIndex nsIndex, StringIndex nameIndex, DataStore dataStore) {
@@ -80,7 +81,7 @@ public class BundleBinding extends ItemStateBinding {
     public NodePropBundle readBundle(DataInputStream in, NodeId id)
             throws IOException {
 
-        NodePropBundle bundle = new NodePropBundle(id);
+        NodePropBundle bundle = new NodePropBundle(this, id);
 
         // read version and primary type...special handling
         int index = in.readInt();
