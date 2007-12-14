@@ -42,6 +42,7 @@ import org.apache.jackrabbit.core.persistence.bundle.util.NodePropBundle;
 import org.apache.jackrabbit.core.persistence.bundle.util.BundleCache;
 import org.apache.jackrabbit.core.persistence.bundle.util.LRUNodeIdCache;
 import org.apache.jackrabbit.core.persistence.bundle.util.HashMapIndex;
+import org.apache.jackrabbit.core.persistence.bundle.util.BundleBinding;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.name.NameConstants;
 
@@ -392,6 +393,12 @@ public abstract class AbstractBundlePersistenceManager implements
     protected abstract void store(NodeReferences refs)
             throws ItemStateException;
 
+    /**
+     * Returns the bundle binding that is used for serializing the bundles.
+     * @return the bundle binding
+     */
+    protected abstract BundleBinding getBinding();
+
     //-------------------------------------------------< PersistenceManager >---
 
     /**
@@ -536,7 +543,7 @@ public abstract class AbstractBundlePersistenceManager implements
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
             if (state.isNode()) {
-                NodePropBundle bundle = new NodePropBundle((NodeState) state);
+                NodePropBundle bundle = new NodePropBundle(getBinding(), (NodeState) state);
                 modified.put(state.getId(), bundle);
             }
         }
@@ -682,6 +689,7 @@ public abstract class AbstractBundlePersistenceManager implements
      */
     private void deleteBundle(NodePropBundle bundle) throws ItemStateException {
         destroyBundle(bundle);
+        bundle.removeAllProperties();
         bundles.remove(bundle.getId());
         missing.put(bundle.getId());
     }

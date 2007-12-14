@@ -212,6 +212,13 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
+    protected BundleBinding getBinding() {
+        return binding;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public synchronized void close() throws Exception {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
