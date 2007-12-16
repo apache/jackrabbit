@@ -97,8 +97,9 @@ public class RepositoryLock {
         try {
             directory = new File(path).getCanonicalFile();
             file = new File(directory, LOCK);
-            identifier = RepositoryLock.class.getName()
-                + ":" + directory.getPath().intern();
+            identifier =
+                (RepositoryLock.class.getName() + ":" + directory.getPath())
+                .intern();
             lock = null;
         } catch (IOException e) {
             throw new RepositoryException(
