@@ -30,7 +30,7 @@ public class TrackingInputStream extends InputStream {
     static final String CVS_ID = "$URL$ $Rev$ $Date$";
 
     /**
-     * The inderlying input stream
+     * The underlying input stream
      */
     private final InputStream in;
 
@@ -134,7 +134,7 @@ public class TrackingInputStream extends InputStream {
     }
 
     /**
-     * Reurns the number of bytes read so far.
+     * Returns the number of bytes read so far.
      * @return the number of bytes.
      */
     public long getPosition() {
