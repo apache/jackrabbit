@@ -56,7 +56,14 @@ import javax.jcr.observation.ObservationManager;
  * this achieved by updating the modified date of the entries. Newly added
  * entries are detected because the modified date is changed when they are
  * added.
- * 
+ * <p>
+ * Example code to run the data store garbage collection:
+ * <pre>
+ * GarbageCollector gc = ((SessionImpl)session).createDataStoreGarbageCollector();
+ * gc.scan();
+ * gc.stopScan();
+ * gc.deleteUnused();
+ * </pre>
  */
 public class GarbageCollector {
 
@@ -124,7 +131,10 @@ public class GarbageCollector {
     }
 
     /**
-     * Scan the repository.
+     * Scan the repository. The garbage collector will iterate over all nodes in the repository 
+     * and update the last modified date. If all persistence managers implement the 
+     * IterablePersistenceManager interface, this mechanism will be used; if not, the garbage 
+     * collector will scan the repository using the JCR API starting from the root node.
      * 
      * @throws RepositoryException
      * @throws IllegalStateException
