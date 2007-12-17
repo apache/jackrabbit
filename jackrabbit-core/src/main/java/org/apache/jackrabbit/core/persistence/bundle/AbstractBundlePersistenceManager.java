@@ -29,11 +29,11 @@ import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.NodeIdIterator;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.persistence.bundle.util.StringIndex;
@@ -52,7 +52,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
 
 /**
  * The <code>AbstractBundlePersistenceManager</code> acts as base for all
@@ -83,7 +82,7 @@ import javax.jcr.RepositoryException;
  * </ul>
  */
 public abstract class AbstractBundlePersistenceManager implements 
-        PersistenceManager, CachingPersistenceManager {
+    PersistenceManager, CachingPersistenceManager, IterablePersistenceManager {
 
     /** the cvs/svn id */
     static final String CVS_ID = "$URL$ $Rev$ $Date$";
@@ -712,21 +711,5 @@ public abstract class AbstractBundlePersistenceManager implements
             bundles.put(bundle);
         }
     }
-
-    /**
-     * Get all node ids. 
-     * A typical application will call this method multiple times, where 'after'
-     * is the last row read. The maxCount parameter defines the maximum number of 
-     * node ids returned, 0 meaning no limit. The order of the node ids is specific for the 
-     * given persistent manager. Items that are added concurrently may not be included.
-     * 
-     * @param after the lower limit, or null for no limit.
-     * @param maxCount the maximum number of node ids to return, or 0 for no limit.
-     * @return an iterator of all bundles.
-     * @throws ItemStateException if an error while loading occurs.
-     * @throws RepositoryException if a repository exception occurs
-     */
-    public abstract NodeIdIterator getAllNodeIds(NodeId after, int maxCount)
-            throws ItemStateException, RepositoryException;
 
 }

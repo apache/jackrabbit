@@ -26,8 +26,6 @@ import EDU.oswego.cs.dl.util.concurrent.LinkedQueue;
  * Implementation of a simple ConnectionRecoveryManager pool.
  * The maximum number of pooled objects can be set, and if more objects
  * are requested the pool waits until one object is put back.
- * 
- * @author Thomas Mueller
  */
 public class Pool {
     protected final int maxSize;
