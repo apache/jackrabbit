@@ -51,7 +51,7 @@ import javax.jcr.RepositoryException;
  * 
  * Configuration:<br>
  * <ul>
- * <li>&lt;param name="className" value="org.apache.jackrabbit.core.data.FileDataStore"/>
+ * <li>&lt;param name="className" value="org.apache.jackrabbit.core.data.db.DbDataStore"/>
  * <li>&lt;param name="{@link #setUrl(String) url}" value="jdbc:postgresql:test"/>
  * <li>&lt;param name="{@link #setUser(String) user}" value="sa"/>
  * <li>&lt;param name="{@link #setPassword(String) password}" value="sa"/>
@@ -157,25 +157,79 @@ public class DbDataStore implements DataStore {
      */
     protected String tablePrefix = "";
     
+    /**
+     * This is the property 'table'
+     * in the [databaseType].properties file, initialized with the default value.
+     */
     protected String tableSQL = "DATASTORE";
+    
+    /**
+     * This is the property 'createTable'
+     * in the [databaseType].properties file, initialized with the default value.
+     */
     protected String createTableSQL = 
         "CREATE TABLE ${tablePrefix}${table}(ID VARCHAR(255) PRIMARY KEY, LENGTH BIGINT, LAST_MODIFIED BIGINT, DATA BLOB)";
+
+    /**
+     * This is the property 'insertTemp'
+     * in the [databaseType].properties file, initialized with the default value.
+     */
     protected String insertTempSQL = 
         "INSERT INTO ${tablePrefix}${table} VALUES(?, 0, ?, NULL)";
+
+    /**
+     * This is the property 'updateData'
+     * in the [databaseType].properties file, initialized with the default value.
+     */
     protected String updateDataSQL = 
         "UPDATE ${tablePrefix}${table} SET DATA=? WHERE ID=?";
+    
+    /**
+     * This is the property 'updateLastModified'
+     * in the [databaseType].properties file, initialized with the default value.
+     */
     protected String updateLastModifiedSQL = 
         "UPDATE ${tablePrefix}${table} SET LAST_MODIFIED=? WHERE ID=? AND LAST_MODIFIED<?";
+
+    /**
+     * This is the property 'update'
+     * in the [databaseType].properties file, initialized with the default value.
+     */
     protected String updateSQL = 
         "UPDATE ${tablePrefix}${table} SET ID=?, LENGTH=?, LAST_MODIFIED=? WHERE ID=? AND NOT EXISTS(SELECT ID FROM ${tablePrefix}${table} WHERE ID=?)";
+
+    /**
+     * This is the property 'delete'
+     * in the [databaseType].properties file, initialized with the default value.
+     */
     protected String deleteSQL = 
         "DELETE FROM ${tablePrefix}${table} WHERE ID=?";
+    
+    /**
+     * This is the property 'deleteOlder'
+     * in the [databaseType].properties file, initialized with the default value.
+     */
     protected String deleteOlderSQL = 
         "DELETE FROM ${tablePrefix}${table} WHERE LAST_MODIFIED<?";
+    
+    /**
+     * This is the property 'selectMeta'
+     * in the [databaseType].properties file, initialized with the default value.
+     */
     protected String selectMetaSQL = 
         "SELECT LENGTH, LAST_MODIFIED FROM ${tablePrefix}${table} WHERE ID=?";
+    
+    /**
+     * This is the property 'selectAll'
+     * in the [databaseType].properties file, initialized with the default value.
+     */
     protected String selectAllSQL = 
         "SELECT ID FROM ${tablePrefix}${table}";
+
+    /**
+     * This is the property 'selectData'
+     * in the [databaseType].properties file, initialized with the default value.
+     */
     protected String selectDataSQL = 
         "SELECT ID, DATA FROM ${tablePrefix}${table} WHERE ID=?";
     
@@ -721,7 +775,9 @@ public class DbDataStore implements DataStore {
     
     protected ConnectionRecoveryManager getConnection() throws DataStoreException {
         try {
-            return (ConnectionRecoveryManager) connectionPool.get();
+            ConnectionRecoveryManager conn = (ConnectionRecoveryManager) connectionPool.get();
+            conn.setAutoReconnect(true);
+            return conn;
         } catch (InterruptedException e) {
             throw new DataStoreException("Interrupted", e);
         } catch (RepositoryException e) {

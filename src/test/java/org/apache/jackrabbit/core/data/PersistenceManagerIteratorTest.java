@@ -19,6 +19,8 @@ package org.apache.jackrabbit.core.data;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeIdIterator;
 import org.apache.jackrabbit.core.RepositoryImpl;
+import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.persistence.bundle.AbstractBundlePersistenceManager;
 import org.apache.jackrabbit.test.AbstractJCRTest;
@@ -27,6 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.Iterator;
 
 import javax.jcr.Node;
 import javax.jcr.Repository;
@@ -52,15 +56,18 @@ public class PersistenceManagerIteratorTest extends AbstractJCRTest {
             return;
         }
 
-        // TODO: make getWorkspaceNames public or create a utility class
-
         RepositoryImpl r = (RepositoryImpl) rep;
-        Method m = r.getClass().getDeclaredMethod("getWorkspaceNames",
-                new Class[0]);
-        m.setAccessible(true);
-        String[] names = (String[]) m.invoke(r, new Object[0]);
+        RepositoryConfig conf = r.getConfig();
+        Collection coll = conf.getWorkspaceConfigs();
+        String[] names = new String[coll.size()];
+        Iterator wspIt = coll.iterator();
+        for(int i = 0; wspIt.hasNext(); i++) {
+            WorkspaceConfig wsc = (WorkspaceConfig) wspIt.next();
+            names[i] = wsc.getName();
+        }
+
         for (int i = 0; i < names.length; i++) {
-            m = r.getClass().getDeclaredMethod("getWorkspaceInfo", new Class[] { String.class });
+            Method m = r.getClass().getDeclaredMethod("getWorkspaceInfo", new Class[] { String.class });
             m.setAccessible(true);
             Object info = m.invoke(r, new String[] { names[i] });
             m = info.getClass().getDeclaredMethod("getPersistenceManager", new Class[0]);
