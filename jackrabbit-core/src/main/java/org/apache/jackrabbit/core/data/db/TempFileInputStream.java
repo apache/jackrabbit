@@ -11,8 +11,6 @@ import java.io.OutputStream;
 
 /**
  * An input stream from a temp file that self-destructs when fully read or closed.
- * 
- * @author Thomas Mueller
  */
 public class TempFileInputStream extends InputStream {
     

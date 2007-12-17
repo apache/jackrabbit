@@ -182,6 +182,15 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
     public VirtualItemStateProvider getVirtualItemStateProvider() {
         return versProvider;
     }
+    
+    /**
+     * Return the persistence manager.
+     * 
+     * @return the persistence manager
+     */
+    public PersistenceManager getPersistenceManager() {
+        return pMgr;
+    }
 
     /**
      * {@inheritDoc}

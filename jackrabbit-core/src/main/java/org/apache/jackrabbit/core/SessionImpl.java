@@ -58,22 +58,28 @@ import javax.security.auth.Subject;
 
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.jackrabbit.core.RepositoryImpl.WorkspaceInfo;
 import org.apache.jackrabbit.core.config.AccessManagerConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.data.GarbageCollector;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
+import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.AuthContext;
 import org.apache.jackrabbit.core.security.SecurityConstants;
+import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.version.VersionManager;
+import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.SessionImporter;
@@ -588,6 +594,39 @@ public class SessionImpl extends AbstractSession
      */
     public void removeListener(SessionListener listener) {
         listeners.remove(listener);
+    }
+    
+    /**
+     * Create a data store garbage collector for this repository.
+     * 
+     * @throws ItemStateException 
+     * @throws RepositoryException
+     */
+    public GarbageCollector createDataStoreGarbageCollector() throws RepositoryException, ItemStateException {
+        ArrayList pmList = new ArrayList();
+        VersionManagerImpl vm = (VersionManagerImpl)rep.getVersionManager();
+        PersistenceManager pm = vm.getPersistenceManager();
+        pmList.add(pm);
+        String[] wspNames = rep.getWorkspaceNames();
+        SystemSession[] sysSessions = new SystemSession[wspNames.length];
+        for (int i = 0; i < wspNames.length; i++) {
+            String wspName = wspNames[i];
+            WorkspaceInfo wspInfo = rep.getWorkspaceInfo(wspName);
+            sysSessions[i] = rep.getSystemSession(wspName);
+            pm = wspInfo.getPersistenceManager();
+            pmList.add(pm);
+        }
+        IterablePersistenceManager[] ipmList = new IterablePersistenceManager[pmList.size()];
+        for (int i = 0; i < pmList.size(); i++) {
+            pm = (PersistenceManager) pmList.get(i);
+            if (!(pm instanceof IterablePersistenceManager)) {
+                ipmList = null;
+                break;
+            }
+            ipmList[i] = (IterablePersistenceManager) pm;
+        }
+        GarbageCollector gc = new GarbageCollector(this, ipmList, sysSessions);
+        return gc;
     }
 
     //--------------------------------------------------------< NameResolver >

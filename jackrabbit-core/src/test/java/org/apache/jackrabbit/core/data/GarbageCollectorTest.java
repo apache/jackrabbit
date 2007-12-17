@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.data;
 
 import org.apache.jackrabbit.core.RepositoryImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,11 +67,12 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         session.save();
         Thread.sleep(1000);
         
-        GarbageCollector gc = new GarbageCollector(this, 0);
+        GarbageCollector gc = ((SessionImpl)session).createDataStoreGarbageCollector();
+        gc.setScanEventListener(this);
         gc.setTestDelay(1000);
         
         LOG.debug("scanning...");
-        gc.scan(session);
+        gc.scan();
         int count = listIdentifiers(gc);
         LOG.debug("stop scanning; currently " + count + " identifiers");
         gc.stopScan();
@@ -82,10 +85,11 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         deleteMyNodes();
     }
     
-    private void runGC(Session session, boolean all) throws RepositoryException, IOException {
-        GarbageCollector gc = new GarbageCollector(this, 0);
+    private void runGC(Session session, boolean all) throws RepositoryException, IOException, ItemStateException {
+        GarbageCollector gc = ((SessionImpl)session).createDataStoreGarbageCollector();
+        gc.setScanEventListener(this);
         gc.setTestDelay(1000);
-        gc.scan(session);
+        gc.scan();
         gc.stopScan();
         if (all) {
             gc.getDataStore().clearInUse();

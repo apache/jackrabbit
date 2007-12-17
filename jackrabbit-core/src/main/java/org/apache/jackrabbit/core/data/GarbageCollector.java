@@ -16,11 +16,22 @@
  */
 package org.apache.jackrabbit.core.data;
 
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.RepositoryImpl;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
+import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.spi.Name;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Set;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -49,31 +60,47 @@ import javax.jcr.observation.ObservationManager;
  */
 public class GarbageCollector {
 
-    private final ScanEventListener callback;
+    private ScanEventListener callback;
 
-    private final int sleepBetweenNodes;
+    private int sleepBetweenNodes;
     
     private int testDelay;
 
-    private DataStore store;
+    private final DataStore store;
 
     private long startScanTimestamp;
 
-    private ArrayList listeners = new ArrayList();
+    private final ArrayList listeners = new ArrayList();
+
+    private final IterablePersistenceManager[] pmList;
+    
+    private final Session[] sessionList;
 
     // TODO It should be possible to stop and restart a garbage collection scan.
-    // TODO It may be possible to delete files early, see rememberNode()
 
     /**
      * Create a new garbage collector. 
-     * To display the progress, a callback object may be used.
+     * This method is usually not called by the application, it is called
+     * by SessionImpl.createDataStoreGarbageCollector().
      * 
-     * @param callback if set, this is called while scanning
-     * @param sleepBetweenNodes the number of milliseconds to sleep in the main scan loop (0 if the scan should run at full speed)
+     * @param list the persistence managers
      */
-    public GarbageCollector(ScanEventListener callback, int sleepBetweenNodes) {
-        this.sleepBetweenNodes = sleepBetweenNodes;
-        this.callback = callback;
+    public GarbageCollector(SessionImpl session, IterablePersistenceManager[] list, Session[] sessionList) {
+        RepositoryImpl rep = (RepositoryImpl) session.getRepository();
+        store = rep.getDataStore();
+        this.pmList = list;
+        this.sessionList = sessionList;
+    }
+
+    /**
+     * Set the delay between scanning items.
+     * The main scan loop sleeps this many milliseconds after
+     * scanning a node. The default is 0, meaning the scan should run at full speed.
+     * 
+     * @param sleepBetweenNodes the number of milliseconds to sleep 
+     */
+    public void setSleepBetweenNodes(int millis) {
+        this.sleepBetweenNodes = millis;
     }
     
     /**
@@ -84,16 +111,44 @@ public class GarbageCollector {
     public void setTestDelay(int testDelay) {
         this.testDelay = testDelay;
     }
+    
+    /**
+     * Set the event listener. If set, the event listener will be called 
+     * for each item that is scanned. This mechanism can be used
+     * to display the progress.
+     * 
+     * @param callback if set, this is called while scanning
+     */
+    public void setScanEventListener(ScanEventListener callback) {
+        this.callback = callback;
+    }
 
-    public void scan(Session session) throws RepositoryException,
-            IllegalStateException, IOException {
+    /**
+     * Scan the repository.
+     * 
+     * @throws RepositoryException
+     * @throws IllegalStateException
+     * @throws IOException
+     * @throws ItemStateException 
+     */
+    public void scan() throws RepositoryException,
+            IllegalStateException, IOException, ItemStateException {
         long now = System.currentTimeMillis();
         if (startScanTimestamp == 0) {
-            RepositoryImpl rep = (RepositoryImpl) session.getRepository();
-            store = rep.getDataStore();
             startScanTimestamp = now;
             store.updateModifiedDateOnAccess(startScanTimestamp);
         }
+        
+        if (pmList == null) {
+            for (int i = 0; i < sessionList.length; i++) {
+                scanNodes(sessionList[i]);
+            }
+        } else {
+            scanPersistenceManagers();
+        }
+    }
+    
+    private void scanNodes(Session session) throws UnsupportedRepositoryOperationException, RepositoryException, IllegalStateException, IOException {
 
         // add a listener to get 'new' nodes
         // actually, new nodes are not the problem, but moved nodes
@@ -102,6 +157,30 @@ public class GarbageCollector {
         // adding a link to a BLOB updates the modified date
         // reading usually doesn't, but when scanning, it does
         recurse(session.getRootNode(), sleepBetweenNodes);
+    }
+    
+    private void scanPersistenceManagers() throws ItemStateException, RepositoryException {
+        for (int i = 0; i < pmList.length; i++) {
+            IterablePersistenceManager pm = pmList[i];
+            Iterator it = pm.getAllNodeIds(null, 0);
+            while (it.hasNext()) {
+                NodeId id = (NodeId) it.next();
+                NodeState state = pm.load(id);
+                Set propertyNames = state.getPropertyNames();
+                for (Iterator nameIt = propertyNames.iterator(); nameIt
+                        .hasNext();) {
+                    Name name = (Name) nameIt.next();
+                    PropertyId pid = new PropertyId(id, name);
+                    PropertyState ps = pm.load(pid);
+                    if (ps.getType() == PropertyType.BINARY) {
+                        InternalValue[] values = ps.getValues();
+                        for (int j = 0; j < values.length; j++) {
+                            values[j].getBLOBFileValue().getLength();
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public void stopScan() throws RepositoryException {
@@ -176,6 +255,7 @@ public class GarbageCollector {
 
     private void rememberNode(String path) {
         // Do nothing at the moment
+        // TODO It may be possible to delete some items early
         /*
          * To delete files early in the garbage collection scan, we could do
          * this:
