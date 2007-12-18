@@ -22,7 +22,7 @@ import java.util.Map;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
-import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

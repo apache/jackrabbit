@@ -27,9 +27,9 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 
 import javax.jcr.version.VersionHistory;
@@ -359,7 +359,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             } else {
                 return vEntry.getNodeState();
             }
-        } catch (org.apache.jackrabbit.conversion.NameException e) {
+        } catch (org.apache.jackrabbit.spi.commons.conversion.NameException e) {
             throw new RepositoryException(e);
         }
     }

@@ -20,7 +20,7 @@ import org.apache.jackrabbit.test.RepositoryStubException;
 import org.apache.jackrabbit.spi2jcr.RepositoryServiceImpl;
 import org.apache.jackrabbit.spi2jcr.BatchReadConfig;
 import org.apache.jackrabbit.spi.RepositoryService;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;

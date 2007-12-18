@@ -18,11 +18,11 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.name.NameConstants;
-import org.apache.jackrabbit.name.PathBuilder;
-import org.apache.jackrabbit.conversion.IllegalNameException;
-import org.apache.jackrabbit.conversion.MalformedPathException;
-import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.PathBuilder;
+import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.ItemStateException;

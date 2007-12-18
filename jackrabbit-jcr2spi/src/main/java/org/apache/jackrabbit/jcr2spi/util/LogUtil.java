@@ -22,8 +22,8 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.conversion.NameResolver;
-import org.apache.jackrabbit.conversion.PathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;

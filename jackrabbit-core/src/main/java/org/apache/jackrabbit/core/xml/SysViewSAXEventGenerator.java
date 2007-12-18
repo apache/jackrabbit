@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.conversion.NameResolver;
-import org.apache.jackrabbit.conversion.ParsingNameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.ParsingNameResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.value.ValueHelper;
-import org.apache.jackrabbit.name.NameFactoryImpl;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;

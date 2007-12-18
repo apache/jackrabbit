@@ -20,8 +20,8 @@ import org.apache.jackrabbit.core.query.jsr283.PreparedQuery;
 import org.apache.jackrabbit.core.query.qom.QueryObjectModelTree;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.conversion.NameException;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 import javax.jcr.Value;
 import javax.jcr.RepositoryException;

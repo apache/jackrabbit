@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.spi2jcr;
 
-import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.lock.Lock;

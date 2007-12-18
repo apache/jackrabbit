@@ -18,7 +18,7 @@ package org.apache.jackrabbit.jcr2spi.nodetype;
 
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.nodetype.InvalidNodeTypeDefException;
+import org.apache.jackrabbit.spi.commons.nodetype.InvalidNodeTypeDefException;
 
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.RepositoryException;

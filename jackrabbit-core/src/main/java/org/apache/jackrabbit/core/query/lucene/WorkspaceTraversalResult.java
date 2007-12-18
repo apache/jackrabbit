@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;

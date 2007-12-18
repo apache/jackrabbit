@@ -48,10 +48,10 @@ import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.conversion.NameResolver;
-import org.apache.jackrabbit.conversion.PathResolver;
-import org.apache.jackrabbit.conversion.NamePathResolver;
-import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.xml.sax.ContentHandler;
@@ -359,7 +359,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     /**
      * @see ManagerProvider#getNamePathResolver()
      */
-    public org.apache.jackrabbit.conversion.NamePathResolver getNamePathResolver() {
+    public org.apache.jackrabbit.spi.commons.conversion.NamePathResolver getNamePathResolver() {
         return session.getNamePathResolver();
     }
 

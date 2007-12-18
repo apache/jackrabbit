@@ -19,8 +19,8 @@ package org.apache.jackrabbit.jcr2spi.name;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.jcr2spi.SessionImpl;
 import org.apache.jackrabbit.util.XMLChar;
-import org.apache.jackrabbit.namespace.AbstractNamespaceResolver;
-import org.apache.jackrabbit.namespace.NamespaceListener;
+import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceListener;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
@@ -40,7 +40,7 @@ import java.util.Map;
  * instance) and keeps track of local namespace mappings added by the session.
  * <p>
  * The namespace resolution methods required by the
- * {@link org.apache.jackrabbit.namespace.NamespaceResolver NamespaceResolver} are implemented by first
+ * {@link org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver NamespaceResolver} are implemented by first
  * looking up the local namespace mapping and then backing to the
  * underlying namespace registry.
  */

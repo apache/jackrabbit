@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.journal;
 
-import org.apache.jackrabbit.conversion.NamePathResolver;
-import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

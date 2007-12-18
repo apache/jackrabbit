@@ -32,7 +32,7 @@ import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.AndQueryNode;
 import org.apache.jackrabbit.core.query.QueryNodeFactory;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.search.Query;

@@ -22,7 +22,7 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype.xml;
 
-import org.apache.jackrabbit.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;

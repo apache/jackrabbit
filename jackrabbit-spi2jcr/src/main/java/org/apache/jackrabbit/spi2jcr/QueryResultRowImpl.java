@@ -21,9 +21,9 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.value.ValueFormat;
-import org.apache.jackrabbit.conversion.NamePathResolver;
-import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
 
 import javax.jcr.query.Row;
 import javax.jcr.RepositoryException;

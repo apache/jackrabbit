@@ -20,12 +20,12 @@ import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.value.ValueFormat;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.value.ValueHelper;
-import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 

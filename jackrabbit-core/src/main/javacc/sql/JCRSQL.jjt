@@ -41,10 +41,10 @@ PARSER_BEGIN(JCRSQLParser)
  */
 package org.apache.jackrabbit.core.query.sql;
 
-import org.apache.jackrabbit.conversion.NameException;
-import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.core.query.QueryConstants;
-import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.NamespaceException;

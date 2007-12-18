@@ -18,9 +18,9 @@ package org.apache.jackrabbit.jcr2spi.nodetype;
 
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.value.ValueFormat;
-import org.apache.jackrabbit.conversion.NamePathResolver;
-import org.apache.jackrabbit.nodetype.InvalidConstraintException;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 

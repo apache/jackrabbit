@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.util.TransientFileFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -16,16 +16,16 @@
  */
 package org.apache.jackrabbit.spi2jcr;
 
-import org.apache.jackrabbit.name.PathFactoryImpl;
-import org.apache.jackrabbit.name.PathBuilder;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.conversion.NamePathResolver;
-import org.apache.jackrabbit.conversion.NameException;
-import org.apache.jackrabbit.identifier.AbstractIdFactory;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.identifier.AbstractIdFactory;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;

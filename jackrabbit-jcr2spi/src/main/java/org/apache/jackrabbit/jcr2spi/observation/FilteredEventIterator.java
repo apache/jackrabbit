@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
-import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;

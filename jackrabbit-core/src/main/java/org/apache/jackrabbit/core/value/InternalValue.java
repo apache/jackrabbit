@@ -18,9 +18,9 @@ package org.apache.jackrabbit.core.value;
 
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.conversion.MalformedPathException;
-import org.apache.jackrabbit.conversion.NameException;
-import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.ISO8601;
@@ -34,8 +34,8 @@ import org.apache.jackrabbit.value.NameValue;
 import org.apache.jackrabbit.value.PathValue;
 import org.apache.jackrabbit.value.ReferenceValue;
 import org.apache.jackrabbit.value.StringValue;
-import org.apache.jackrabbit.name.PathFactoryImpl;
-import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;

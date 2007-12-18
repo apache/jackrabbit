@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.query;
 
 import javax.jcr.query.InvalidQueryException;
 
-import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 
 /**
  * This class acts as the central entry point for parsing query statements from

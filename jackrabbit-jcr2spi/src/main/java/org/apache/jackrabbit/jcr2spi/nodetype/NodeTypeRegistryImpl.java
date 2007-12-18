@@ -27,9 +27,9 @@ import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.nodetype.InvalidNodeTypeDefException;
-import org.apache.jackrabbit.nodetype.NodeTypeConflictException;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.nodetype.InvalidNodeTypeDefException;
+import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 

@@ -21,7 +21,7 @@ import org.apache.jackrabbit.util.Base64;
 import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
-import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

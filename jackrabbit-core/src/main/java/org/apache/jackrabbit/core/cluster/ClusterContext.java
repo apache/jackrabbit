@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.cluster;
 
 import org.apache.jackrabbit.core.config.ClusterConfig;
-import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 
 import javax.jcr.RepositoryException;
 
