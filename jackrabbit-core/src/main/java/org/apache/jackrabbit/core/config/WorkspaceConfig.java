@@ -17,13 +17,13 @@
 package org.apache.jackrabbit.core.config;
 
 /**
- * Workspace configuration. This configuration class is used to
- * create configured workspace objects.
- * <p>
- * The contained configuration information are: the home directory and name
- * of the workspace, and the file system, the persistence manager, and the
- * search index configuration. The search index is an optional part of the
- * configuration.
+ * Workspace configuration. This configuration class is used to create
+ * configured workspace objects.
+ * <p/>
+ * The contained configuration information are: the home directory and name of
+ * the workspace, the file system, the persistence manager, the search index and
+ * the item state manager locking configuration. The search index and the item
+ * state manager locking are optional parts.
  */
 public class WorkspaceConfig {
 
@@ -58,6 +58,11 @@ public class WorkspaceConfig {
     private SearchConfig sc;
 
     /**
+     * The item state manager locking configuration.
+     */
+    private ISMLockingConfig ismLockingConfig;
+
+    /**
      * Creates a workspace configuration object.
      *
      * @param home home directory
@@ -65,16 +70,23 @@ public class WorkspaceConfig {
      * @param fsc file system configuration
      * @param pmc persistence manager configuration
      * @param sc search index configuration
+     * @param ismLockingConfig the item state manager locking configuration. If
+     * <code>null</code> is passed, a default configuration is taken.
      */
     public WorkspaceConfig(String home, String name, boolean clustered,
                            FileSystemConfig fsc, PersistenceManagerConfig pmc,
-                           SearchConfig sc) {
+                           SearchConfig sc, ISMLockingConfig ismLockingConfig) {
         this.home = home;
         this.name = name;
         this.clustered = clustered;
         this.fsc = fsc;
         this.pmc = pmc;
         this.sc = sc;
+        if (ismLockingConfig != null) {
+            this.ismLockingConfig = ismLockingConfig;
+        } else {
+            this.ismLockingConfig = ISMLockingConfig.createDefaultConfig();
+        }
     }
 
     /**
@@ -106,6 +118,13 @@ public class WorkspaceConfig {
     }
 
     /**
+     * @return the configuration for the item state locking.
+     */
+    public ISMLockingConfig getISMLockingConfig() {
+    	return ismLockingConfig;
+    }
+    
+    /**
      * Returns the file system configuration.
      *
      * @return file system configuration
@@ -132,5 +151,4 @@ public class WorkspaceConfig {
     public SearchConfig getSearchConfig() {
         return sc;
     }
-
 }

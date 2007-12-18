@@ -179,14 +179,15 @@ public class SharedItemStateManager
                                   NodeId rootNodeId,
                                   NodeTypeRegistry ntReg,
                                   boolean usesReferences,
-                                  ItemStateCacheFactory cacheFactory)
+                                  ItemStateCacheFactory cacheFactory,
+                                  ISMLocking locking)
             throws ItemStateException {
         cache = new ItemStateReferenceCache(cacheFactory);
         this.persistMgr = persistMgr;
         this.ntReg = ntReg;
         this.usesReferences = usesReferences;
         this.rootNodeId = rootNodeId;
-        this.ismLocking = new DefaultISMLocking();
+        this.ismLocking = locking;
         // create root node state if it doesn't yet exist
         if (!hasNonVirtualItemState(rootNodeId)) {
             createRootNodeState(rootNodeId, ntReg);

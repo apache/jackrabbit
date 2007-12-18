@@ -89,6 +89,9 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     /** Name of the search index configuration element. */
     public static final String SEARCH_INDEX_ELEMENT = "SearchIndex";
 
+    /** Name of the ism locking configuration element. */
+    public static final String ISM_LOCKING_ELEMENT = "ISMLocking";
+
     /** Name of the application name configuration attribute. */
     public static final String APP_NAME_ATTRIBUTE = "appName";
 
@@ -296,6 +299,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      *     &lt;FileSystem ...&gt;
      *     &lt;PersistenceManager ...&gt;
      *     &lt;SearchIndex ...&gt;
+     *     &lt;ISMLocking ...&gt;
      *   &lt;/Workspace&gt;
      * </pre>
      * <p>
@@ -321,6 +325,9 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * <p>
      * The search index configuration element is optional. If it is not given,
      * then the workspace will not have search capabilities.
+     * <p>
+     * The ism locking configuration element is optional. If it is not given,
+     * then a default implementation is used.
      * <p>
      * Note that the returned workspace configuration object has not been
      * initialized.
@@ -361,7 +368,10 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         // Search implementation (optional)
         SearchConfig sc = tmpParser.parseSearchConfig(root);
 
-        return new WorkspaceConfig(home, name, clustered, fsc, pmc, sc);
+        // Item state manager locking configuration (optional)
+        ISMLockingConfig ismLockingConfig = tmpParser.parseISMLockingConfig(root);
+
+        return new WorkspaceConfig(home, name, clustered, fsc, pmc, sc, ismLockingConfig);
     }
 
     /**
@@ -421,6 +431,48 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     }
 
     /**
+     * Parses ism locking configuration. ism locking configuration  uses the
+     * following format:
+     * <pre>
+     *   &lt;ISMLocking class="..."&gt;
+     *     &lt;param name="..." value="..."&gt;
+     *     ...
+     *   &lt;/ISMLocking&gt;
+     * </pre>
+     * <p/>
+     * The <code>ISMLocking</code> is a
+     * {@link #parseBeanConfig(Element,String) bean configuration} element.
+     * <p/>
+     * The ism locking is an optional part of the  workspace configuration. If
+     * the ism locking element is not found, then this method returns
+     * <code>null</code>.
+     *
+     * @param parent parent of the <code>ISMLocking</code> element
+     * @return search configuration, or <code>null</code>
+     * @throws ConfigurationException if the configuration is broken
+     */
+    protected ISMLockingConfig parseISMLockingConfig(Element parent)
+            throws ConfigurationException {
+        NodeList children = parent.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE
+                    && ISM_LOCKING_ELEMENT.equals(child.getNodeName())) {
+                Element element = (Element) child;
+
+                // ism locking implementation class
+                String className = getAttribute(element, CLASS_ATTRIBUTE);
+
+                // ism locking parameters
+                Properties parameters = parseParameters(element);
+
+                return new ISMLockingConfig(className, parameters);
+            }
+        }
+        return null;
+    }
+
+    /**
      * Parses versioning configuration. Versioning configuration uses the
      * following format:
      * <pre>
@@ -455,7 +507,10 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         // Persistence manager implementation
         PersistenceManagerConfig pmc = parsePersistenceManagerConfig(element);
 
-        return new VersioningConfig(home, fsc, pmc);
+        // Item state manager locking configuration (optional)
+        ISMLockingConfig ismLockingConfig = parseISMLockingConfig(element);
+
+        return new VersioningConfig(home, fsc, pmc, ismLockingConfig);
     }
 
     /**
