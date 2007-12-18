@@ -37,10 +37,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.Collections;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
@@ -160,25 +157,24 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @see ItemStateFactory#getNodeReferences(NodeState)
      * @param nodeState
      */
-    public NodeReferences getNodeReferences(NodeState nodeState) {
+    public PropertyId[] getNodeReferences(NodeState nodeState) {
         NodeEntry entry = nodeState.getNodeEntry();
         // shortcut
-        if (entry.getUniqueID() == null || !entry.hasPropertyEntry(NameConstants.JCR_UUID)) {
+        if (entry.getUniqueID() == null
+                || !entry.hasPropertyEntry(NameConstants.JCR_UUID)) {
             // for sure not referenceable
-            return EmptyNodeReferences.getInstance();
+            return new PropertyId[0];
         }
 
         // nodestate has a unique ID and is potentially mix:referenceable
         // => try to retrieve references
         try {
             NodeInfo nInfo = service.getNodeInfo(sessionInfo, entry.getWorkspaceId());
-            return new NodeReferencesImpl(nInfo.getReferences());
+            return nInfo.getReferences();
         } catch (RepositoryException e) {
-            // ignore
+            log.debug("Unable to determine references to {}", nodeState);
+            return new PropertyId[0];
         }
-        // exception or no matching entry found.
-        log.debug("Unable to determine references for NodeState " + nodeState);
-        return EmptyNodeReferences.getInstance();
     }
 
     //------------------------------------------------------------< private >---
@@ -425,43 +421,4 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         return parent;
     }
 
-    //-----------------------------------------------------< NodeReferences >---
-    /**
-     * <code>NodeReferences</code> represents the references (i.e. properties of
-     * type <code>REFERENCE</code>) to a particular node (denoted by its unique ID).
-     */
-    private class NodeReferencesImpl implements NodeReferences {
-
-        private PropertyId[] references;
-
-        /**
-         * Private constructor
-         *
-         * @param references
-         */
-        private NodeReferencesImpl(PropertyId[] references) {
-            this.references = references;
-        }
-
-        //-------------------------------------------------< NodeReferences >---
-        /**
-         * @see NodeReferences#isEmpty()
-         */
-        public boolean isEmpty() {
-            return references.length <= 0;
-        }
-
-        /**
-         * @see NodeReferences#iterator()
-         */
-        public Iterator iterator() {
-            if (references.length > 0) {
-                Set referenceIds = new HashSet();
-                referenceIds.addAll(Arrays.asList(references));
-                return Collections.unmodifiableSet(referenceIds).iterator();
-            } else {
-                return Collections.EMPTY_SET.iterator();
-            }
-        }
-    }
 }

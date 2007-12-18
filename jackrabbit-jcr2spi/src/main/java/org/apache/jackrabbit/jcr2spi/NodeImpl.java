@@ -26,7 +26,6 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
-import org.apache.jackrabbit.jcr2spi.state.NodeReferences;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
@@ -536,13 +535,8 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public PropertyIterator getReferences() throws RepositoryException {
         checkStatus();
-        NodeReferences refs = getNodeState().getNodeReferences();
-        if (refs.isEmpty()) {
-            // there are no references, return empty iterator
-            return PropertyIteratorAdapter.EMPTY;
-        } else {
-            return new LazyItemIterator(itemMgr, session.getHierarchyManager(), refs.iterator());
-        }
+        List refs = Arrays.asList(getNodeState().getNodeReferences());
+        return new LazyItemIterator(itemMgr, session.getHierarchyManager(), refs.iterator());
     }
 
     /**

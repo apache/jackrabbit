@@ -24,6 +24,7 @@ import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -399,12 +400,12 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Return the <code>NodeReferences</code> present on this state or
-     * <code>null</code>.
+     * Returns the identifiers of all reference properties that point to
+     * this node.
      *
-     * @return references
+     * @return reference property identifiers
      */
-    public NodeReferences getNodeReferences() {
+    public PropertyId[] getNodeReferences() {
         return isf.getNodeReferences(this);
     }
 
