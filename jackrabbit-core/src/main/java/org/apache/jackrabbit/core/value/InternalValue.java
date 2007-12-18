@@ -377,7 +377,7 @@ public class InternalValue {
             case PropertyType.PATH:
                 return PathValue.valueOf(resolver.getJCRPath((Path) val));
             case PropertyType.NAME:
-                return NameValue.valueOf(resolver.getJCRName((Name) val));
+                return NameValue.valueOf(resolver.getJCRName((Name) val), false);
             case PropertyType.STRING:
                 return new StringValue((String) val);
             default:
