@@ -3020,13 +3020,26 @@ public class NodeImpl extends ItemImpl implements Node {
         // check lock status
         checkLock();
 
-        Property prop = internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));
-        prop.save();
-        prop = internalSetProperty(NameConstants.JCR_PREDECESSORS,
+        boolean hasPendingChanges = session.hasPendingChanges();
+
+        Property[] props = new Property[2];
+        props[0] = internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));
+        props[1] = internalSetProperty(NameConstants.JCR_PREDECESSORS,
                 new InternalValue[]{
                     InternalValue.create(new UUID(getBaseVersion().getUUID()))
                 });
-        prop.save();
+        if (hasPendingChanges) {
+            for (int i = 0; i < props.length; i++) {
+                props[i].save();
+            }
+        } else {
+            try {
+                session.save();
+            } catch (RepositoryException e) {
+                session.refresh(false);
+                throw e;
+            }
+        }
     }
 
     /**
