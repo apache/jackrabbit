@@ -29,6 +29,7 @@ import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
+
 import java.util.Iterator;
 
 /**
@@ -141,9 +142,9 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
      * @inheritDoc
      * @see ItemStateFactory#getNodeReferences(NodeState)
      */
-    public NodeReferences getNodeReferences(NodeState nodeState) {
+    public PropertyId[] getNodeReferences(NodeState nodeState) {
         if (nodeState.getStatus() == Status.NEW) {
-            return EmptyNodeReferences.getInstance();
+            return new PropertyId[0];
         }
         return workspaceStateFactory.getNodeReferences(nodeState);
     }
