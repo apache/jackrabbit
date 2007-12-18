@@ -23,8 +23,8 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.commons.iterator.EventListenerIteratorAdapter;
-import org.apache.jackrabbit.conversion.NamePathResolver;
-import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -28,9 +28,9 @@ import org.apache.jackrabbit.spi.Subscription;
 import org.apache.jackrabbit.spi.commons.EventImpl;
 import org.apache.jackrabbit.spi.commons.EventBundleImpl;
 import org.apache.jackrabbit.spi.commons.EventFilterImpl;
-import org.apache.jackrabbit.conversion.NameException;
-import org.apache.jackrabbit.conversion.NameResolver;
-import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 

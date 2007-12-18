@@ -35,7 +35,7 @@ import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

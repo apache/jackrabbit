@@ -23,7 +23,7 @@ import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.conversion.PathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 

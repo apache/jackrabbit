@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi.name;
 
-import org.apache.jackrabbit.namespace.AbstractNamespaceResolver;
-import org.apache.jackrabbit.namespace.NamespaceListener;
+import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,7 +84,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
 
     /**
      * @see javax.jcr.NamespaceRegistry#getURI(String)
-     * @see org.apache.jackrabbit.namespace.NamespaceResolver#getURI(String)
+     * @see org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver#getURI(String)
      */
     public String getURI(String prefix) throws NamespaceException {
         // try to load the uri
@@ -98,7 +98,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
 
     /**
      * @see javax.jcr.NamespaceRegistry#getPrefix(String)
-     * @see org.apache.jackrabbit.namespace.NamespaceResolver#getPrefix(String)
+     * @see org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver#getPrefix(String)
      */
     public String getPrefix(String uri) throws NamespaceException {
         // try to load the prefix

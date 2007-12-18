@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
 import org.apache.jackrabbit.spi.QItemDefinition;
-import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 

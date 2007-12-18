@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.query.sql;
 import org.apache.jackrabbit.core.query.QueryTreeBuilder;
 import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.QueryNodeFactory;
-import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;

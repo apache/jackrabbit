@@ -24,7 +24,7 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.ZombieHierarchyManager;
 import org.apache.jackrabbit.core.util.Dumpable;
-import org.apache.jackrabbit.conversion.PathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -29,7 +29,7 @@ import org.apache.jackrabbit.jcr2spi.version.VersionHistoryImpl;
 import org.apache.jackrabbit.jcr2spi.version.VersionImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;

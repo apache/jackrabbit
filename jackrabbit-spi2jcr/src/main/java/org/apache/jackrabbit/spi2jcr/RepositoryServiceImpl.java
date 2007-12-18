@@ -39,15 +39,15 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Subscription;
 import org.apache.jackrabbit.spi.commons.EventFilterImpl;
-import org.apache.jackrabbit.name.NameFactoryImpl;
-import org.apache.jackrabbit.name.PathFactoryImpl;
-import org.apache.jackrabbit.name.NameConstants;
-import org.apache.jackrabbit.name.PathBuilder;
-import org.apache.jackrabbit.conversion.NameException;
-import org.apache.jackrabbit.conversion.NamePathResolver;
-import org.apache.jackrabbit.conversion.MalformedPathException;
-import org.apache.jackrabbit.value.QValueFactoryImpl;
-import org.apache.jackrabbit.value.ValueFormat;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.PathBuilder;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.JcrConstants;
 
 import javax.jcr.RepositoryException;
@@ -290,7 +290,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         try {
             return new QNodeDefinitionImpl(getNode(nodeId, sInfo).getDefinition(),
                     sInfo.getNamePathResolver());
-        } catch (org.apache.jackrabbit.conversion.NameException e) {
+        } catch (org.apache.jackrabbit.spi.commons.conversion.NameException e) {
             throw new RepositoryException(e);
         }
     }
@@ -341,7 +341,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         Node node = getNode(nodeId, sInfo);
         try {
             return new NodeInfoImpl(node, idFactory, sInfo.getNamePathResolver());
-        } catch (org.apache.jackrabbit.conversion.NameException e) {
+        } catch (org.apache.jackrabbit.spi.commons.conversion.NameException e) {
             throw new RepositoryException(e);
         }
     }
@@ -364,7 +364,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             NodeInfo info;
             try {
                 info = new NodeInfoImpl(node, idFactory, sInfo.getNamePathResolver());
-            } catch (org.apache.jackrabbit.conversion.NameException e) {
+            } catch (org.apache.jackrabbit.spi.commons.conversion.NameException e) {
                 throw new RepositoryException(e);
             }
             return Collections.singletonList(info).iterator();
@@ -374,14 +374,14 @@ public class RepositoryServiceImpl implements RepositoryService {
                 protected void entering(Property property, int i) throws RepositoryException {
                     try {
                         itemInfos.add(new PropertyInfoImpl(property, idFactory, sInfo.getNamePathResolver(), getQValueFactory()));
-                    } catch (org.apache.jackrabbit.conversion.NameException e) {
+                    } catch (org.apache.jackrabbit.spi.commons.conversion.NameException e) {
                         throw new RepositoryException(e);
                     }
                 }
                 protected void entering(Node node, int i) throws RepositoryException {
                     try {
                         itemInfos.add(new NodeInfoImpl(node, idFactory, sInfo.getNamePathResolver()));
-                    } catch (org.apache.jackrabbit.conversion.NameException e) {
+                    } catch (org.apache.jackrabbit.spi.commons.conversion.NameException e) {
                         throw new RepositoryException(e);
                     }
                 }
@@ -410,7 +410,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                 childInfos.add(new ChildInfoImpl(children.nextNode(),
                         sInfo.getNamePathResolver()));
             }
-        } catch (org.apache.jackrabbit.conversion.NameException e) {
+        } catch (org.apache.jackrabbit.spi.commons.conversion.NameException e) {
             throw new RepositoryException(e);
         }
         return childInfos.iterator();
@@ -426,7 +426,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         try {
             return new PropertyInfoImpl(getProperty(propertyId, sInfo), idFactory,
                     sInfo.getNamePathResolver(), getQValueFactory());
-        } catch (org.apache.jackrabbit.conversion.NameException e) {
+        } catch (org.apache.jackrabbit.spi.commons.conversion.NameException e) {
             throw new RepositoryException(e);
         }
     }
@@ -1018,7 +1018,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                 nodeTypes.add(new QNodeTypeDefinitionImpl(nt,
                         sInfo.getNamePathResolver(), getQValueFactory()));
             }
-        } catch (org.apache.jackrabbit.conversion.NameException e) {
+        } catch (org.apache.jackrabbit.spi.commons.conversion.NameException e) {
             throw new RepositoryException(e);
         }
         return nodeTypes.iterator();

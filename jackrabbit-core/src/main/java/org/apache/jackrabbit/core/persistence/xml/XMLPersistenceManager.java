@@ -42,7 +42,7 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.util.Text;
-import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

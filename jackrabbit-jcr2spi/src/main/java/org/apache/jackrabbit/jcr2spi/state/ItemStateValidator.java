@@ -172,7 +172,7 @@ public class ItemStateValidator {
      *
      * @param itemState
      * @return JCR path
-     * @see LogUtil#safeGetJCRPath(ItemState,org.apache.jackrabbit.conversion.PathResolver)
+     * @see LogUtil#safeGetJCRPath(ItemState,org.apache.jackrabbit.spi.commons.conversion.PathResolver)
      */
     private String safeGetJCRPath(ItemState itemState) {
         return LogUtil.safeGetJCRPath(itemState, mgrProvider.getPathResolver());

@@ -31,7 +31,7 @@ import org.apache.jackrabbit.core.virtual.AbstractVISProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;

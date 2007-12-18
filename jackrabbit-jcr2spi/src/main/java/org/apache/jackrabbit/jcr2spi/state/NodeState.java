@@ -26,7 +26,7 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.NodeInfo;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 

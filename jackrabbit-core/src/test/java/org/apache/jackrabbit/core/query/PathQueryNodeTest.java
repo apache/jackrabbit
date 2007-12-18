@@ -21,11 +21,11 @@ import java.util.Arrays;
 import junit.framework.TestCase;
 
 import org.apache.jackrabbit.core.query.xpath.XPathQueryBuilder;
-import org.apache.jackrabbit.namespace.NamespaceResolver;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.conversion.NameResolver;
-import org.apache.jackrabbit.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 
 public class PathQueryNodeTest extends TestCase {
 

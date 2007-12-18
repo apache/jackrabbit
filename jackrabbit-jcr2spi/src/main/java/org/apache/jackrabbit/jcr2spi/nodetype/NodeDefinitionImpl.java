@@ -18,8 +18,8 @@ package org.apache.jackrabbit.jcr2spi.nodetype;
 
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.conversion.NamePathResolver;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 

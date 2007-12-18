@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.namespace.AbstractNamespaceResolver;
-import org.apache.jackrabbit.namespace.NamespaceListener;
-import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceListener;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.XMLChar;
 

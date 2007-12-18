@@ -24,7 +24,7 @@ import org.apache.jackrabbit.jcr2spi.SessionImpl;
 import org.apache.jackrabbit.jcr2spi.ItemLifeCycleListener;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;

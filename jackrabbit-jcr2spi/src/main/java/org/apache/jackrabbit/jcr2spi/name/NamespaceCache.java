@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.name;
 
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.namespace.NamespaceListener;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceListener;
 import org.apache.jackrabbit.util.XMLChar;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.slf4j.Logger;

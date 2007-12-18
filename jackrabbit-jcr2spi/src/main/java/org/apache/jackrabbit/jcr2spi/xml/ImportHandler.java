@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.conversion.NameResolver;
-import org.apache.jackrabbit.conversion.ParsingNameResolver;
-import org.apache.jackrabbit.conversion.NamePathResolver;
-import org.apache.jackrabbit.conversion.DefaultNamePathResolver;
-import org.apache.jackrabbit.conversion.ParsingPathResolver;
-import org.apache.jackrabbit.namespace.AbstractNamespaceResolver;
-import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.ParsingNameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.ParsingPathResolver;
+import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.PathFactory;

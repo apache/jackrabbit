@@ -32,11 +32,11 @@ import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
 import org.apache.jackrabbit.core.query.PropertyFunctionQueryNode;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.util.ISO8601;
-import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.NamespaceException;

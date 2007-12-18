@@ -20,7 +20,7 @@ import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QueryInfo;
-import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 

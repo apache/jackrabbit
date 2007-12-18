@@ -18,9 +18,9 @@ package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

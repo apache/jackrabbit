@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.Name;
 
 /**

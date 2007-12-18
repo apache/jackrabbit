@@ -18,10 +18,10 @@ package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.jackrabbit.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.value.ValueHelper;
-import org.apache.jackrabbit.value.ValueFormat;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
-import org.apache.jackrabbit.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
@@ -30,7 +30,7 @@ import org.apache.jackrabbit.jcr2spi.state.NodeReferences;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
 import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
@@ -47,7 +47,7 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1572,7 +1572,7 @@ public class NodeImpl extends ItemImpl implements Node {
             }
         } catch (PathNotFoundException e) {
             // item does not exist -> ignore and return null
-        } catch (org.apache.jackrabbit.conversion.NameException e) {
+        } catch (org.apache.jackrabbit.spi.commons.conversion.NameException e) {
             String msg = "Invalid relative path: " + relPath;
             log.debug(msg);
             throw new RepositoryException(msg, e);
@@ -1615,7 +1615,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     // ignore -> return null;
                 }
             }
-        } catch (org.apache.jackrabbit.conversion.NameException e) {
+        } catch (org.apache.jackrabbit.spi.commons.conversion.NameException e) {
             String msg = "failed to resolve property path " + relPath + " relative to " + safeGetJCRPath();
             log.debug(msg);
             throw new RepositoryException(msg, e);

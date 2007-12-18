@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 
 import javax.jcr.NamespaceException;
 import java.util.HashMap;

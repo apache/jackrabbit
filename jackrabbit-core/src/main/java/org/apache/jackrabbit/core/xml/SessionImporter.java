@@ -23,8 +23,8 @@ import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.value.ReferenceValue;
 import org.apache.jackrabbit.uuid.UUID;
-import org.apache.jackrabbit.name.NameFactoryImpl;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

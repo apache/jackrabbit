@@ -21,7 +21,7 @@ import org.apache.jackrabbit.jcr2spi.operation.AddNode;
 import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

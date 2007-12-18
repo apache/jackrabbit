@@ -29,8 +29,8 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.name.PathFactoryImpl;
-import org.apache.jackrabbit.name.PathBuilder;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

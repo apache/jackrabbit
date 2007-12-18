@@ -21,16 +21,16 @@ import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.conversion.NameResolver;
-import org.apache.jackrabbit.conversion.IllegalNameException;
-import org.apache.jackrabbit.conversion.NameParser;
-import org.apache.jackrabbit.conversion.DefaultNamePathResolver;
-import org.apache.jackrabbit.conversion.ParsingPathResolver;
-import org.apache.jackrabbit.conversion.NamePathResolver;
-import org.apache.jackrabbit.conversion.PathResolver;
-import org.apache.jackrabbit.namespace.NamespaceResolver;
-import org.apache.jackrabbit.name.NameFactoryImpl;
-import org.apache.jackrabbit.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
+import org.apache.jackrabbit.spi.commons.conversion.NameParser;
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.ParsingPathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 
 import javax.jcr.NamespaceException;
 

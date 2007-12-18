@@ -16,17 +16,17 @@
  */
 package org.apache.jackrabbit.core.journal;
 
-import org.apache.jackrabbit.conversion.MalformedPathException;
-import org.apache.jackrabbit.conversion.NameException;
-import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
 import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefWriter;
 import org.apache.jackrabbit.core.nodetype.compact.ParseException;
-import org.apache.jackrabbit.name.PathFactoryImpl;
-import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.uuid.Constants;

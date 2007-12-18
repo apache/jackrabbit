@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.query;
 
 import javax.jcr.query.InvalidQueryException;
 
-import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 
 /**
  * Specifies an interface for a query tree builder.

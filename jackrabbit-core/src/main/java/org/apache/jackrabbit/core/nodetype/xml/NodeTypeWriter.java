@@ -22,9 +22,9 @@ import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.util.DOMBuilder;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.namespace.NamespaceResolver;
-import org.apache.jackrabbit.conversion.NamePathResolver;
-import org.apache.jackrabbit.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.NamespaceRegistry;

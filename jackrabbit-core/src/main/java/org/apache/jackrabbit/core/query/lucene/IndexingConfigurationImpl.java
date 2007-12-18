@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.conversion.IllegalNameException;
-import org.apache.jackrabbit.conversion.MalformedPathException;
-import org.apache.jackrabbit.conversion.NameResolver;
-import org.apache.jackrabbit.conversion.ParsingNameResolver;
-import org.apache.jackrabbit.conversion.PathResolver;
-import org.apache.jackrabbit.conversion.ParsingPathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.ParsingNameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.ParsingPathResolver;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -33,11 +33,11 @@ import org.apache.jackrabbit.core.nodetype.xml.AdditionalNamespaceResolver;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.NameFactoryImpl;
-import org.apache.jackrabbit.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.ISO9075;
-import org.apache.jackrabbit.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.commons.collections.iterators.AbstractIteratorDecorator;
 import org.slf4j.Logger;

@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
 /**
  * Property identifier. An instance of this class identifies a single

@@ -21,9 +21,9 @@ import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.name.LocalNamespaceMappings;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.QueryInfo;
-import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -217,7 +217,7 @@ public class QueryImpl implements Query {
             queryNode.setProperty(resolver.getJCRName(NameConstants.JCR_STATEMENT), statement);
             node = queryNode;
             return node;
-        } catch (org.apache.jackrabbit.conversion.NameException e) {
+        } catch (org.apache.jackrabbit.spi.commons.conversion.NameException e) {
             throw new RepositoryException(e.getMessage(), e);
         }
     }

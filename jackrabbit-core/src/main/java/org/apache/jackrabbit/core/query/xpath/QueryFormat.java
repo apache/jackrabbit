@@ -37,8 +37,8 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.ISO9075;
-import org.apache.jackrabbit.conversion.NameResolver;
-import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.NamespaceException;

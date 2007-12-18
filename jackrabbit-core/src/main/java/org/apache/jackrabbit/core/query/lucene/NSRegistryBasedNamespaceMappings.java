@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.conversion.IllegalNameException;
-import org.apache.jackrabbit.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
-import org.apache.jackrabbit.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.NamespaceException;

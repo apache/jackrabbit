@@ -44,7 +44,7 @@ import org.apache.jackrabbit.core.persistence.bundle.util.LRUNodeIdCache;
 import org.apache.jackrabbit.core.persistence.bundle.util.HashMapIndex;
 import org.apache.jackrabbit.core.persistence.bundle.util.BundleBinding;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 import java.util.HashMap;
 import java.util.HashSet;

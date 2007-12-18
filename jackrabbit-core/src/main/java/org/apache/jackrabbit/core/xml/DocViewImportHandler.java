@@ -17,11 +17,11 @@
 package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.conversion.NameException;
-import org.apache.jackrabbit.conversion.NameParser;
-import org.apache.jackrabbit.conversion.IllegalNameException;
-import org.apache.jackrabbit.name.NameConstants;
-import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NameParser;
+import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.ISO9075;
 import org.slf4j.Logger;

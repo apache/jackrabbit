@@ -24,7 +24,7 @@ import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 import javax.jcr.RepositoryException;
 

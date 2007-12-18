@@ -18,7 +18,7 @@ package org.apache.jackrabbit.jcr2spi.nodetype;
 
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeConflictException;
 
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.ConstraintViolationException;

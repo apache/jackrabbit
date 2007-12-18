@@ -20,7 +20,7 @@ import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.name.LocalNamespaceMappings;
-import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;

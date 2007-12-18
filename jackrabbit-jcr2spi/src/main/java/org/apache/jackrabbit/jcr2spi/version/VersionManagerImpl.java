@@ -41,7 +41,7 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 import java.util.Iterator;
 

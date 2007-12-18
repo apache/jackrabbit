@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.conversion.NameException;
-import org.apache.jackrabbit.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.nodetype.jsr283.NodeTypeDefinition;
 import org.apache.jackrabbit.core.value.InternalValue;

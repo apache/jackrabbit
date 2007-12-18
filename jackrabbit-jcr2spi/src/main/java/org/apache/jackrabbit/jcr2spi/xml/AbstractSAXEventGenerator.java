@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.conversion.NameResolver;
-import org.apache.jackrabbit.conversion.ParsingNameResolver;
-import org.apache.jackrabbit.name.NameConstants;
-import org.apache.jackrabbit.name.NameFactoryImpl;
-import org.apache.jackrabbit.namespace.NamespaceResolver;
-import org.apache.jackrabbit.namespace.SessionNamespaceResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.ParsingNameResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.SessionNamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
