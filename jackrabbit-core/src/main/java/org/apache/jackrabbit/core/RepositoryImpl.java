@@ -58,6 +58,7 @@ import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ManagedMLRUItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
+import org.apache.jackrabbit.core.state.ISMLocking;
 import org.apache.jackrabbit.core.util.RepositoryLock;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
@@ -387,8 +388,11 @@ public class RepositoryImpl extends AbstractRepository
                 ntReg,
                 dataStore);
 
+        ISMLocking ismLocking = vConfig.getISMLockingConfig().createISMLocking();
+
         return new VersionManagerImpl(pm, fs, ntReg, delegatingDispatcher,
-                VERSION_STORAGE_NODE_ID, SYSTEM_ROOT_NODE_ID, cacheFactory);
+                VERSION_STORAGE_NODE_ID, SYSTEM_ROOT_NODE_ID, cacheFactory,
+                ismLocking);
     }
 
     /**
@@ -1177,10 +1181,11 @@ public class RepositoryImpl extends AbstractRepository
                                                             NodeId rootNodeId,
                                                             NodeTypeRegistry ntReg,
                                                             boolean usesReferences,
-                                                            ItemStateCacheFactory cacheFactory)
+                                                            ItemStateCacheFactory cacheFactory,
+                                                            ISMLocking locking)
             throws ItemStateException {
 
-        return new SharedItemStateManager(persistMgr, rootNodeId, ntReg, true, cacheFactory);
+        return new SharedItemStateManager(persistMgr, rootNodeId, ntReg, true, cacheFactory, locking);
     }
 
     //-----------------------------------------------------------< Repository >
@@ -1727,9 +1732,12 @@ public class RepositoryImpl extends AbstractRepository
                     ntReg,
                     dataStore);
 
+            ISMLocking ismLocking = config.getISMLockingConfig().createISMLocking();
+
             // create item state manager
             try {
-                itemStateMgr = createItemStateManager(persistMgr, rootNodeId, ntReg, true, cacheFactory);
+                itemStateMgr = createItemStateManager(persistMgr, rootNodeId,
+                        ntReg, true, cacheFactory, ismLocking);
                 try {
                     itemStateMgr.addVirtualItemStateProvider(
                             vMgr.getVirtualItemStateProvider());

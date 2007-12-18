@@ -15,8 +15,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<!DOCTYPE Repository PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 1.2//EN"
-                            "http://jackrabbit.apache.org/dtd/repository-1.2.dtd">
+<!DOCTYPE Repository PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 1.4//EN"
+                            "http://jackrabbit.apache.org/dtd/repository-1.4.dtd">
 <!-- Example Repository Configuration File -->
 <Repository>
     <!--
@@ -89,6 +89,11 @@
                 <param name="path" value="${wsp.home}/index"/>
             </FileSystem>
         </SearchIndex>
+        <!--
+            The ISM locking implementation.
+            class: FQN of class implementing the ISMLocking interface
+        -->
+        <ISMLocking class="org.apache.jackrabbit.core.state.DefaultISMLocking"/>
     </Workspace>
 
     <!--
@@ -111,5 +116,10 @@
         -->
         <PersistenceManager class="org.apache.jackrabbit.core.persistence.obj.ObjectPersistenceManager"/>
 
+        <!--
+            The ISM locking implementation.
+            class: FQN of class implementing the ISMLocking interface
+        -->
+        <ISMLocking class="org.apache.jackrabbit.core.state.DefaultISMLocking"/>
     </Versioning>
 </Repository>
