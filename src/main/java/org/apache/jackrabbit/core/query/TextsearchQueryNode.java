@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.conversion.MalformedPathException;
-import org.apache.jackrabbit.name.PathBuilder;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
 

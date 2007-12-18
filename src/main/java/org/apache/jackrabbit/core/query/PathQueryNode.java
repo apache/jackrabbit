@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.query;
 
 import java.util.List;
 
-import org.apache.jackrabbit.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.Name;
 
 /**

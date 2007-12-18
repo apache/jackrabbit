@@ -23,7 +23,7 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
