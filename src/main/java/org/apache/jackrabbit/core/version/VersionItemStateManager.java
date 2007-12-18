@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.ISMLocking;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
@@ -50,9 +51,10 @@ public class VersionItemStateManager extends SharedItemStateManager {
     public VersionItemStateManager(PersistenceManager persistMgr,
                                    NodeId rootNodeId,
                                    NodeTypeRegistry ntReg,
-                                   ItemStateCacheFactory cacheFactory)
+                                   ItemStateCacheFactory cacheFactory,
+                                   ISMLocking locking)
             throws ItemStateException {
-        super(persistMgr, rootNodeId, ntReg, false, cacheFactory);
+        super(persistMgr, rootNodeId, ntReg, false, cacheFactory, locking);
         this.pMgr = persistMgr;
     }
 

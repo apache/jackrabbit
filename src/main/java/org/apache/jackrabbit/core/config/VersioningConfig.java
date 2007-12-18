@@ -46,17 +46,32 @@ public class VersioningConfig {
     private final PersistenceManagerConfig pmc;
 
     /**
+     * ISM locking configuration
+     */
+    private final ISMLockingConfig ismLockingConfig;
+    
+    /**
      * Creates a versioning configuration object.
      *
-     * @param home home directory
-     * @param fsc file system configuration
-     * @param pmc persistence manager configuration
+     * @param home             home directory
+     * @param fsc              file system configuration
+     * @param pmc              persistence manager configuration
+     * @param ismLockingConfig the item state manager locking configuration, if
+     *                         <code>null</code> is passed a default
+     *                         configuration is used.
      */
-    public VersioningConfig(
-            String home, FileSystemConfig fsc, PersistenceManagerConfig pmc) {
+    public VersioningConfig(String home,
+                            FileSystemConfig fsc,
+                            PersistenceManagerConfig pmc,
+                            ISMLockingConfig ismLockingConfig) {
         this.home = home;
         this.fsc = fsc;
         this.pmc = pmc;
+        if (ismLockingConfig != null) {
+            this.ismLockingConfig = ismLockingConfig;
+        } else {
+            this.ismLockingConfig = ISMLockingConfig.createDefaultConfig();
+        }
     }
 
     /**
@@ -86,4 +101,10 @@ public class VersioningConfig {
         return pmc;
     }
 
+    /**
+     * @return name of the ISM locking configuration
+     */
+    public ISMLockingConfig getISMLockingConfig() {
+    	return ismLockingConfig;
+    }
 }
