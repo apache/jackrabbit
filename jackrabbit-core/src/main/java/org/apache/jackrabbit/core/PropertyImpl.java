@@ -23,25 +23,19 @@ import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.uuid.UUID;
-import org.apache.jackrabbit.value.BooleanValue;
-import org.apache.jackrabbit.value.DateValue;
-import org.apache.jackrabbit.value.DoubleValue;
-import org.apache.jackrabbit.value.LongValue;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemVisitor;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.lock.LockException;
@@ -59,7 +53,7 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     private static Logger log = LoggerFactory.getLogger(PropertyImpl.class);
 
-    private PropertyDefinition definition;
+    private final PropertyDefinition definition;
 
     /**
      * Package private constructor.
@@ -77,6 +71,21 @@ public class PropertyImpl extends ItemImpl implements Property {
         super(itemMgr, session, id, state, listeners);
         this.definition = definition;
         // value will be read on demand
+    }
+
+    /**
+     * Checks that this property is valid (session not closed, property not
+     * removed, etc.) and returns the underlying property state if all is OK.
+     *
+     * @return property state
+     * @throws RepositoryException if the property is not valid
+     */
+    private PropertyState getPropertyState() throws RepositoryException {
+        // JCR-1272: Need to get the state reference now so it
+        // doesn't get invalidated after the sanity check
+        ItemState state = getItemState();
+        sanityCheck();
+        return (PropertyState) state;
     }
 
     protected synchronized ItemState getOrCreateTransientItemState()
@@ -401,551 +410,165 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * Returns the internal values of this property
+     * Returns the internal values of a multi-valued property.
      *
-     * @return
-     * @throws RepositoryException
+     * @return array of values
+     * @throws ValueFormatException if this property is not multi-valued
+     * @throws RepositoryException 
      */
     public InternalValue[] internalGetValues() throws RepositoryException {
-
-        // check state of this instance
-        sanityCheck();
-
-        // check multi-value flag
-        if (!definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is not multi-valued");
+        if (definition.isMultiple()) {
+            return getPropertyState().getValues();
+        } else {
+            throw new ValueFormatException(
+                    this + " is a single-valued property,"
+                    + " so it's value can not be retrieved as an array");
         }
 
-        PropertyState state = (PropertyState) getItemState();
-        return state.getValues();
     }
 
     /**
-     * Returns the internal values of this property
+     * Returns the internal value of a single-valued property.
      *
-     * @return
+     * @return value
+     * @throws ValueFormatException if this property is not single-valued
      * @throws RepositoryException
      */
     public InternalValue internalGetValue() throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check multi-value flag
         if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath()
-                    + " is multi-valued and can therefore only be retrieved as an array of values");
+            throw new ValueFormatException(
+                    this + " is a multi-valued property,"
+                    + " so it's values can only be retrieved as an array");
+        } else {
+            InternalValue[] values = getPropertyState().getValues();
+            if (values.length > 0) {
+                return values[0];
+            } else {
+                // should never be the case, but being a little paranoid can't hurt...
+                throw new RepositoryException(this + ": single-valued property with no value");
+            }
         }
-
-        PropertyState state = (PropertyState) getItemState();
-        return state.getValues()[0];
     }
 
     //-------------------------------------------------------------< Property >
-    /**
-     * {@inheritDoc}
-     */
-    public Value[] getValues() throws ValueFormatException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
 
-        // check multi-value flag
-        if (!definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath()
-                    + " is not multi-valued");
-        }
-
-        PropertyState state = (PropertyState) getItemState();
-        InternalValue[] internalValues = state.getValues();
-        Value[] values = new Value[internalValues.length];
-        for (int i = 0; i < internalValues.length; i++) {
-            values[i] = internalValues[i].toJCRValue(session.getNamePathResolver());
+    public Value[] getValues() throws RepositoryException {
+        InternalValue[] internals = internalGetValues();
+        Value[] values = new Value[internals.length];
+        for (int i = 0; i < internals.length; i++) {
+            values[i] = internals[i].toJCRValue(session);
         }
         return values;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public Value getValue() throws ValueFormatException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check multi-value flag
-        if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath()
-                    + " is multi-valued and can therefore only be retrieved as an array of values");
-        }
-
-        PropertyState state = (PropertyState) getItemState();
+    public Value getValue() throws RepositoryException {
         try {
-            InternalValue val = state.getValues()[0];
-            return val.toJCRValue(session.getNamePathResolver());
-        } catch (RepositoryException e) {
-            throw e;
-        } catch (Exception e) {
-            String msg = "Internal error while retrieving value of "
-                    + safeGetJCRPath();
+            return internalGetValue().toJCRValue(session);
+        } catch (RuntimeException e) {
+            String msg = "Internal error while retrieving value of " + this;
             log.error(msg, e);
             throw new RepositoryException(msg, e);
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public String getString() throws ValueFormatException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check multi-value flag
-        if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath()
-                    + " is multi-valued and can therefore only be retrieved as an array of values");
-        }
-
+    public String getString() throws RepositoryException {
         return getValue().getString();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public InputStream getStream() throws ValueFormatException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check multi-value flag
-        if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath()
-                    + " is multi-valued and can therefore only be retrieved as an array of values");
-        }
-
+    public InputStream getStream() throws RepositoryException {
         return getValue().getStream();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public long getLong() throws ValueFormatException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check multi-value flag
-        if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath()
-                    + " is multi-valued and can therefore only be retrieved as an array of values");
-        }
-
-        PropertyState state = (PropertyState) getItemState();
-        InternalValue val = state.getValues()[0];
-        int type = val.getType();
-        if (type == PropertyType.LONG) {
-            return val.getLong();
-        }
-        // not a LONG value, delegate conversion to Value object
-        return val.toJCRValue(session.getNamePathResolver()).getLong();
+    public long getLong() throws RepositoryException {
+        return getValue().getLong();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public double getDouble() throws ValueFormatException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check multi-value flag
-        if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath()
-                    + " is multi-valued and can therefore only be retrieved as an array of values");
-        }
-
-        // avoid unnecessary object creation if possible
-        PropertyState state = (PropertyState) getItemState();
-        InternalValue val = state.getValues()[0];
-        int type = val.getType();
-        if (type == PropertyType.DOUBLE) {
-            return val.getDouble();
-        }
-        // not a DOUBLE value, delegate conversion to Value object
-        return val.toJCRValue(session.getNamePathResolver()).getDouble();
+    public double getDouble() throws RepositoryException {
+        return getValue().getDouble();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public Calendar getDate() throws ValueFormatException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check multi-value flag
-        if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath()
-                    + " is multi-valued and can therefore only be retrieved as an array of values");
-        }
-
-        // avoid unnecessary object creation if possible
-        PropertyState state = (PropertyState) getItemState();
-        InternalValue val = state.getValues()[0];
-        int type = val.getType();
-        if (type == PropertyType.DATE) {
-            return val.getDate();
-        }
-        // not a DATE value, delegate conversion to Value object
-        return val.toJCRValue(session.getNamePathResolver()).getDate();
+    public Calendar getDate() throws RepositoryException {
+        return getValue().getDate();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public boolean getBoolean() throws ValueFormatException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check multi-value flag
-        if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath()
-                    + " is multi-valued and can therefore only be retrieved as an array of values");
-        }
-
-        // avoid unnecessary object creation if possible
-        PropertyState state = (PropertyState) getItemState();
-        InternalValue val = state.getValues()[0];
-        int type = val.getType();
-        if (type == PropertyType.BOOLEAN) {
-            return val.getBoolean();
-        }
-        // not a BOOLEAN value, delegate conversion to Value object
-        return val.toJCRValue(session.getNamePathResolver()).getBoolean();
+    public boolean getBoolean() throws RepositoryException {
+        return getValue().getBoolean();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public Node getNode() throws ValueFormatException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check multi-value flag
-        if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath()
-                    + " is multi-valued and can therefore only be retrieved as an array of values");
-        }
-
-        PropertyState state = (PropertyState) getItemState();
-        InternalValue val = state.getValues()[0];
-        if (val.getType() == PropertyType.REFERENCE) {
-            // reference, i.e. target UUID
-            UUID targetUUID = val.getUUID();
-            return (Node) itemMgr.getItem(new NodeId(targetUUID));
+        Value value = getValue();
+        if (value.getType() == PropertyType.REFERENCE) {
+            return session.getNodeByUUID(value.getString());
         } else {
+            // TODO: The specification suggests using value conversion
             throw new ValueFormatException("property must be of type REFERENCE");
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void setValue(Calendar date)
-            throws ValueFormatException, VersionException,
-            LockException, ConstraintViolationException,
-            RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check pre-conditions for setting property value
-        checkSetValue(false);
-
-        // check type according to definition of this property
-        int reqType = definition.getRequiredType();
-        if (reqType == PropertyType.UNDEFINED) {
-            reqType = PropertyType.DATE;
-        }
-
-        if (date == null) {
-            internalSetValue(null, reqType);
-            return;
-        }
-
-        InternalValue value;
-        if (reqType != PropertyType.DATE) {
-            // type conversion required
-            Value targetVal = ValueHelper.convert(
-                    new DateValue(date), reqType,
-                    ValueFactoryImpl.getInstance());
-            value = InternalValue.create(targetVal, session.getNamePathResolver(), rep.getDataStore());
+    public void setValue(Calendar value) throws RepositoryException {
+        if (value != null) {
+            setValue(session.getValueFactory().createValue(value));
         } else {
-            // no type conversion required
-            value = InternalValue.create(date);
+            remove();
         }
-
-        internalSetValue(new InternalValue[]{value}, reqType);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void setValue(double number)
-            throws ValueFormatException, VersionException,
-            LockException, ConstraintViolationException,
-            RepositoryException {
-        // check state of this instance
-        sanityCheck();
+    public void setValue(double value) throws RepositoryException {
+        setValue(session.getValueFactory().createValue(value));
+    }
 
-        // check pre-conditions for setting property value
-        checkSetValue(false);
-
-        // check type according to definition of this property
-        int reqType = definition.getRequiredType();
-        if (reqType == PropertyType.UNDEFINED) {
-            reqType = PropertyType.DOUBLE;
-        }
-
-        InternalValue value;
-        if (reqType != PropertyType.DOUBLE) {
-            // type conversion required
-            Value targetVal = ValueHelper.convert(
-                    new DoubleValue(number), reqType,
-                    ValueFactoryImpl.getInstance());
-            value = InternalValue.create(targetVal, session.getNamePathResolver(), rep.getDataStore());
+    public void setValue(InputStream value) throws RepositoryException {
+        if (value != null) {
+            setValue(session.getValueFactory().createValue(value));
         } else {
-            // no type conversion required
-            value = InternalValue.create(number);
+            remove();
         }
-
-        internalSetValue(new InternalValue[]{value}, reqType);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void setValue(InputStream stream)
-            throws ValueFormatException, VersionException,
-            LockException, ConstraintViolationException,
-            RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check pre-conditions for setting property value
-        checkSetValue(false);
-
-        // check type according to definition of this property
-        int reqType = definition.getRequiredType();
-        if (reqType == PropertyType.UNDEFINED) {
-            reqType = PropertyType.BINARY;
-        }
-
-        if (stream == null) {
-            internalSetValue(null, reqType);
-            return;
-        }
-
-        InternalValue value = InternalValue.createTemporary(stream, rep.getDataStore());
-        if (reqType != PropertyType.BINARY) {
-            // type conversion required
-            Value jcrValue = value.toJCRValue(session.getNamePathResolver());
-            Value targetVal = ValueHelper.convert(
-                    jcrValue, reqType, ValueFactoryImpl.getInstance());
-            value = InternalValue.create(targetVal, session.getNamePathResolver(), rep.getDataStore());
-        }
-
-        internalSetValue(new InternalValue[]{value}, reqType);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setValue(String string)
-            throws ValueFormatException, VersionException,
-            LockException, ConstraintViolationException,
-            RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check pre-conditions for setting property value
-        checkSetValue(false);
-
-        // check type according to definition of this property
-        int reqType = definition.getRequiredType();
-        if (reqType == PropertyType.UNDEFINED) {
-            reqType = PropertyType.STRING;
-        }
-
-        if (string == null) {
-            internalSetValue(null, reqType);
-            return;
-        }
-
-        InternalValue internalValue;
-        if (reqType != PropertyType.STRING) {
-            // type conversion required
-            Value targetValue = ValueHelper.convert(
-                    string, reqType,
-                    ValueFactoryImpl.getInstance());
-            internalValue = InternalValue.create(targetValue, session.getNamePathResolver(), rep.getDataStore());
+    public void setValue(String value) throws RepositoryException {
+        if (value != null) {
+            setValue(session.getValueFactory().createValue(value));
         } else {
-            // no type conversion required
-            internalValue = InternalValue.create(string);
+            remove();
         }
-        internalSetValue(new InternalValue[]{internalValue}, reqType);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void setValue(String[] strings)
-            throws ValueFormatException, VersionException,
-            LockException, ConstraintViolationException,
-            RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check pre-conditions for setting property value
-        checkSetValue(true);
-
-        // check type according to definition of this property
-        int reqType = definition.getRequiredType();
-        if (reqType == PropertyType.UNDEFINED) {
-            reqType = PropertyType.STRING;
-        }
-
-        InternalValue[] internalValues = null;
-        // convert to internal values of correct type
+    public void setValue(String[] strings) throws RepositoryException {
         if (strings != null) {
-            internalValues = new InternalValue[strings.length];
+            ValueFactory factory = session.getValueFactory();
+            Value[] values = new Value[strings.length];
             for (int i = 0; i < strings.length; i++) {
-                String string = strings[i];
-                InternalValue internalValue = null;
-                if (string != null) {
-                    if (reqType != PropertyType.STRING) {
-                        // type conversion required
-                        Value targetValue = ValueHelper.convert(
-                                string, reqType,
-                                ValueFactoryImpl.getInstance());
-                        internalValue = InternalValue.create(targetValue, session.getNamePathResolver(), rep.getDataStore());
-                    } else {
-                        // no type conversion required
-                        internalValue = InternalValue.create(string);
-                    }
+                if (strings[i] != null) {
+                    values[i] = factory.createValue(strings[i]);
                 }
-                internalValues[i] = internalValue;
             }
-        }
-
-        internalSetValue(internalValues, reqType);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setValue(boolean b)
-            throws ValueFormatException, VersionException,
-            LockException, ConstraintViolationException,
-            RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check pre-conditions for setting property value
-        checkSetValue(false);
-
-        // check type according to definition of this property
-        int reqType = definition.getRequiredType();
-        if (reqType == PropertyType.UNDEFINED) {
-            reqType = PropertyType.BOOLEAN;
-        }
-
-        InternalValue value;
-        if (reqType != PropertyType.BOOLEAN) {
-            // type conversion required
-            Value targetVal = ValueHelper.convert(
-                    new BooleanValue(b), reqType,
-                    ValueFactoryImpl.getInstance());
-            value = InternalValue.create(targetVal, session.getNamePathResolver(), rep.getDataStore());
+            setValue(values);
         } else {
-            // no type conversion required
-            value = InternalValue.create(b);
+            remove();
         }
-
-        internalSetValue(new InternalValue[]{value}, reqType);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    public void setValue(boolean value) throws RepositoryException {
+        setValue(session.getValueFactory().createValue(value));
+    }
+
     public void setValue(Node target)
-            throws ValueFormatException, VersionException,
-            LockException, ConstraintViolationException,
-            RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check pre-conditions for setting property value
-        checkSetValue(false);
-
-        // check type according to definition of this property
-        int reqType = definition.getRequiredType();
-        if (reqType == PropertyType.UNDEFINED) {
-            reqType = PropertyType.REFERENCE;
-        }
-
+            throws ValueFormatException, RepositoryException {
         if (target == null) {
-            internalSetValue(null, reqType);
-            return;
-        }
-
-        if (reqType == PropertyType.REFERENCE) {
-            if (target instanceof NodeImpl) {
-                NodeImpl targetNode = (NodeImpl) target;
-                if (targetNode.isNodeType(NameConstants.MIX_REFERENCEABLE)) {
-                    InternalValue value = InternalValue.create(new UUID(targetNode.getUUID()));
-                    internalSetValue(new InternalValue[]{value}, reqType);
-                } else {
-                    throw new ValueFormatException("target node must be of node type mix:referenceable");
-                }
-            } else {
-                String msg = "incompatible Node object: " + target;
-                log.debug(msg);
-                throw new RepositoryException(msg);
-            }
+            remove();
+        } else if (((NodeImpl) target).isNodeType(NameConstants.MIX_REFERENCEABLE)) {
+            setValue(session.getValueFactory().createValue(
+                    target.getUUID(), PropertyType.REFERENCE));
         } else {
-            throw new ValueFormatException("property must be of type REFERENCE");
+            throw new ValueFormatException(
+                    "target node must be of node type mix:referenceable");
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void setValue(long number)
-            throws ValueFormatException, VersionException,
-            LockException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check pre-conditions for setting property value
-        checkSetValue(false);
-
-        // check type according to definition of this property
-        int reqType = definition.getRequiredType();
-        if (reqType == PropertyType.UNDEFINED) {
-            reqType = PropertyType.LONG;
-        }
-
-        InternalValue value;
-        if (reqType != PropertyType.LONG) {
-            // type conversion required
-            Value targetVal = ValueHelper.convert(
-                    new LongValue(number), reqType,
-                    ValueFactoryImpl.getInstance());
-            value = InternalValue.create(targetVal, session.getNamePathResolver(), rep.getDataStore());
-        } else {
-            // no type conversion required
-            value = InternalValue.create(number);
-        }
-
-        internalSetValue(new InternalValue[]{value}, reqType);
+    public void setValue(long value) throws RepositoryException {
+        setValue(session.getValueFactory().createValue(value));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public synchronized void setValue(Value value)
             throws ValueFormatException, VersionException,
             LockException, ConstraintViolationException,
@@ -1050,40 +673,12 @@ public class PropertyImpl extends ItemImpl implements Property {
         internalSetValue(internalValues, reqType);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public long getLength() throws ValueFormatException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check multi-value flag
-        if (definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is multi-valued");
-        }
-
-        InternalValue[] values = ((PropertyState) state).getValues();
-        if (values.length == 0) {
-            // should never be the case, but being a little paranoid can't hurt...
-            log.warn(safeGetJCRPath() + ": single-valued property with no value");
-            return -1;
-        }
-        return getLength(values[0]);
+    public long getLength() throws RepositoryException {
+        return getLength(internalGetValue());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public long[] getLengths() throws ValueFormatException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        // check multi-value flag
-        if (!definition.isMultiple()) {
-            throw new ValueFormatException(safeGetJCRPath() + " is not multi-valued");
-        }
-
-        InternalValue[] values = ((PropertyState) state).getValues();
+    public long[] getLengths() throws RepositoryException {
+        InternalValue[] values = internalGetValues();
         long[] lengths = new long[values.length];
         for (int i = 0; i < values.length; i++) {
             lengths[i] = getLength(values[i]);
@@ -1101,14 +696,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         return definition;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public int getType() throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        return ((PropertyState) state).getType();
+        return getPropertyState().getType();
     }
 
     //-----------------------------------------------------------------< Item >
@@ -1141,11 +730,19 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      * {@inheritDoc}
      */
-    public Node getParent()
-            throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        return (Node) itemMgr.getItem(state.getParentId());
+    public Node getParent() throws RepositoryException {
+        return (Node) itemMgr.getItem(getPropertyState().getParentId());
     }
+
+    //--------------------------------------------------------------< Object >
+
+    /**
+     * Returns the (safe) path of this property.
+     *
+     * @return property path
+     */
+    public String toString() {
+        return safeGetJCRPath();
+    }
+
 }
