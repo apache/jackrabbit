@@ -16,17 +16,44 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.io.File;
-import java.io.PrintStream;
-import java.security.AccessControlException;
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.jackrabbit.commons.AbstractSession;
+import org.apache.jackrabbit.core.config.AccessManagerConfig;
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.lock.LockManager;
+import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.core.security.AMContext;
+import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.security.AuthContext;
+import org.apache.jackrabbit.core.security.SecurityConstants;
+import org.apache.jackrabbit.core.state.LocalItemStateManager;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.SessionItemStateManager;
+import org.apache.jackrabbit.core.state.SharedItemStateManager;
+import org.apache.jackrabbit.core.util.Dumpable;
+import org.apache.jackrabbit.core.version.VersionManager;
+import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
+import org.apache.jackrabbit.core.xml.ImportHandler;
+import org.apache.jackrabbit.core.xml.SessionImporter;
+import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -39,6 +66,7 @@ import javax.jcr.NamespaceException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -46,60 +74,25 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
-import javax.jcr.Property;
-import javax.jcr.lock.LockException;
 import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.version.VersionException;
 import javax.security.auth.Subject;
-
-import org.apache.commons.collections.IteratorUtils;
-import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.core.RepositoryImpl.WorkspaceInfo;
-import org.apache.jackrabbit.core.config.AccessManagerConfig;
-import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.data.GarbageCollector;
-import org.apache.jackrabbit.core.lock.LockManager;
-import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
-import org.apache.jackrabbit.core.persistence.PersistenceManager;
-import org.apache.jackrabbit.core.security.AMContext;
-import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.security.AuthContext;
-import org.apache.jackrabbit.core.security.SecurityConstants;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.LocalItemStateManager;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.SessionItemStateManager;
-import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.util.Dumpable;
-import org.apache.jackrabbit.core.version.VersionManager;
-import org.apache.jackrabbit.core.version.VersionManagerImpl;
-import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
-import org.apache.jackrabbit.core.xml.ImportHandler;
-import org.apache.jackrabbit.core.xml.SessionImporter;
-import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
-import org.apache.jackrabbit.commons.AbstractSession;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.uuid.UUID;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
+import java.io.File;
+import java.io.PrintStream;
+import java.security.AccessControlException;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A <code>SessionImpl</code> ...
@@ -595,39 +588,6 @@ public class SessionImpl extends AbstractSession
     public void removeListener(SessionListener listener) {
         listeners.remove(listener);
     }
-    
-    /**
-     * Create a data store garbage collector for this repository.
-     * 
-     * @throws ItemStateException 
-     * @throws RepositoryException
-     */
-    public GarbageCollector createDataStoreGarbageCollector() throws RepositoryException, ItemStateException {
-        ArrayList pmList = new ArrayList();
-        VersionManagerImpl vm = (VersionManagerImpl)rep.getVersionManager();
-        PersistenceManager pm = vm.getPersistenceManager();
-        pmList.add(pm);
-        String[] wspNames = rep.getWorkspaceNames();
-        SystemSession[] sysSessions = new SystemSession[wspNames.length];
-        for (int i = 0; i < wspNames.length; i++) {
-            String wspName = wspNames[i];
-            WorkspaceInfo wspInfo = rep.getWorkspaceInfo(wspName);
-            sysSessions[i] = rep.getSystemSession(wspName);
-            pm = wspInfo.getPersistenceManager();
-            pmList.add(pm);
-        }
-        IterablePersistenceManager[] ipmList = new IterablePersistenceManager[pmList.size()];
-        for (int i = 0; i < pmList.size(); i++) {
-            pm = (PersistenceManager) pmList.get(i);
-            if (!(pm instanceof IterablePersistenceManager)) {
-                ipmList = null;
-                break;
-            }
-            ipmList[i] = (IterablePersistenceManager) pm;
-        }
-        GarbageCollector gc = new GarbageCollector(this, ipmList, sysSessions);
-        return gc;
-    }
 
     //--------------------------------------------------------< NameResolver >
 
@@ -708,7 +668,7 @@ public class SessionImpl extends AbstractSession
         if (set.contains(ADD_NODE_ACTION)) {
             try {
                 parentPath = targetPath.getAncestor(1);
-                parentId = hierMgr.resolvePath(parentPath);
+                parentId = hierMgr.resolveNodePath(parentPath);
                 if (parentId == null) {
                     // parent does not exist (i.e. / was specified), throw exception
                     throw new AccessControlException(ADD_NODE_ACTION);
@@ -759,7 +719,7 @@ public class SessionImpl extends AbstractSession
                             parentPath = targetPath.getAncestor(1);
                         }
                         if (parentId == null) {
-                            parentId = hierMgr.resolvePath(parentPath);
+                            parentId = hierMgr.resolveNodePath(parentPath);
                             if (parentId == null) {
                                 // parent does not exist, throw exception
                                 throw new AccessControlException(SET_PROPERTY_ACTION);
@@ -946,12 +906,8 @@ public class SessionImpl extends AbstractSession
             }
             srcName = srcPath.getNameElement();
             srcParentPath = srcPath.getAncestor(1);
-            ItemImpl item = getItemManager().getItem(srcPath);
-            if (!item.isNode()) {
-                throw new PathNotFoundException(srcAbsPath);
-            }
-            targetNode = (NodeImpl) item;
-            srcParentNode = (NodeImpl) getItemManager().getItem(srcParentPath);
+            targetNode = getItemManager().getNode(srcPath);
+            srcParentNode = getItemManager().getNode(srcParentPath);
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(srcAbsPath);
         } catch (NameException e) {
@@ -976,7 +932,7 @@ public class SessionImpl extends AbstractSession
             }
             destName = destPath.getNameElement();
             destParentPath = destPath.getAncestor(1);
-            destParentNode = (NodeImpl) getItemManager().getItem(destParentPath);
+            destParentNode = getItemManager().getNode(destParentPath);
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(destAbsPath);
         } catch (NameException e) {
@@ -1006,24 +962,19 @@ public class SessionImpl extends AbstractSession
 
         // check for name collisions
 
-        ItemImpl existing = null;
+        NodeImpl existing = null;
         try {
-            existing = getItemManager().getItem(destPath);
-            if (!existing.isNode()) {
-                // there's already a property with that name
+            existing = getItemManager().getNode(destPath);
+            // there's already a node with that name:
+            // check same-name sibling setting of existing node
+            if (!existing.getDefinition().allowsSameNameSiblings()) {
                 throw new ItemExistsException(existing.safeGetJCRPath());
-            } else {
-                // there's already a node with that name:
-                // check same-name sibling setting of existing node
-                if (!((NodeImpl) existing).getDefinition().allowsSameNameSiblings()) {
-                    throw new ItemExistsException(existing.safeGetJCRPath());
-                }
             }
         } catch (AccessDeniedException ade) {
             // FIXME by throwing ItemExistsException we're disclosing too much information
             throw new ItemExistsException(destAbsPath);
         } catch (PathNotFoundException pnfe) {
-            // no name collision since same-name siblings are allowed
+            // no name collision, fall through
         }
 
         // check constraints
@@ -1101,13 +1052,13 @@ public class SessionImpl extends AbstractSession
         // check sanity of this session
         sanityCheck();
 
-        Item item;
+        NodeImpl parent;
         try {
             Path p = getQPath(parentAbsPath).getNormalizedPath();
             if (!p.isAbsolute()) {
                 throw new RepositoryException("not an absolute path: " + parentAbsPath);
             }
-            item = getItemManager().getItem(p);
+            parent = getItemManager().getNode(p);
         } catch (NameException e) {
             String msg = parentAbsPath + ": invalid path";
             log.debug(msg);
@@ -1115,10 +1066,6 @@ public class SessionImpl extends AbstractSession
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(parentAbsPath);
         }
-        if (!item.isNode()) {
-            throw new PathNotFoundException(parentAbsPath);
-        }
-        NodeImpl parent = (NodeImpl) item;
 
         // verify that parent node is checked-out
         if (!parent.internalIsCheckedOut()) {
@@ -1440,11 +1387,22 @@ public class SessionImpl extends AbstractSession
      */
     public Node getNode(String absPath)
             throws PathNotFoundException, RepositoryException {
-        Item item  = getItem(absPath);
-        if (!item.isNode()) {
+        // check sanity of this session
+        sanityCheck();
+
+        try {
+            Path p = getQPath(absPath).getNormalizedPath();
+            if (!p.isAbsolute()) {
+                throw new RepositoryException("not an absolute path: " + absPath);
+            }
+            return getItemManager().getNode(p);
+        } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(absPath);
+        } catch (NameException e) {
+            String msg = "invalid path:" + absPath;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
         }
-        return (Node) item;
     }
 
     /**
@@ -1459,11 +1417,22 @@ public class SessionImpl extends AbstractSession
      */
     public Property getProperty(String absPath)
             throws PathNotFoundException, RepositoryException {
-        Item item  = getItem(absPath);
-        if (item.isNode()) {
+        // check sanity of this session
+        sanityCheck();
+
+        try {
+            Path p = getQPath(absPath).getNormalizedPath();
+            if (!p.isAbsolute()) {
+                throw new RepositoryException("not an absolute path: " + absPath);
+            }
+            return getItemManager().getProperty(p);
+        } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(absPath);
+        } catch (NameException e) {
+            String msg = "invalid path:" + absPath;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
         }
-        return (Property) item;
     }
 
     /**
@@ -1481,12 +1450,19 @@ public class SessionImpl extends AbstractSession
      * @since JCR 2.0
      */
     public boolean nodeExists(String absPath) throws RepositoryException {
-        // TODO: optimize...
+        // check sanity of this session
+        sanityCheck();
+
         try {
-            getNode(absPath);
-            return true;
-        } catch (PathNotFoundException pnfe) {
-            return false;
+            Path p = getQPath(absPath).getNormalizedPath();
+            if (!p.isAbsolute()) {
+                throw new RepositoryException("not an absolute path: " + absPath);
+            }
+            return getItemManager().nodeExists(p);
+        } catch (NameException e) {
+            String msg = "invalid path:" + absPath;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
         }
     }
 
@@ -1505,12 +1481,19 @@ public class SessionImpl extends AbstractSession
      * @since JCR 2.0
      */
     boolean propertyExists(String absPath) throws RepositoryException {
-        // TODO: optimize...
+        // check sanity of this session
+        sanityCheck();
+
         try {
-            getProperty(absPath);
-            return true;
-        } catch (PathNotFoundException pnfe) {
-            return false;
+            Path p = getQPath(absPath).getNormalizedPath();
+            if (!p.isAbsolute()) {
+                throw new RepositoryException("not an absolute path: " + absPath);
+            }
+            return getItemManager().propertyExists(p);
+        } catch (NameException e) {
+            String msg = "invalid path:" + absPath;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
         }
     }
 

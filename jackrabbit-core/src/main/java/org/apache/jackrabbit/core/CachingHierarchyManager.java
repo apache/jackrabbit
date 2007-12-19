@@ -23,25 +23,24 @@ import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateListener;
 import org.apache.jackrabbit.core.util.Dumpable;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.name.PathMap;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.PathMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.HashMap;
-import java.io.PrintStream;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
+import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Implementation of a <code>HierarchyManager</code> that caches paths of
@@ -115,8 +114,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * <p/>
      * Cache the intermediate item inside our cache.
      */
-    protected ItemId resolvePath(Path path, ItemState state, int next)
-            throws ItemStateException {
+    protected void beforeResolvePath(Path path, ItemState state, int next) {
 
         if (state.isNode() && !isCached(state.getId())) {
             try {
@@ -126,12 +124,11 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                     builder.addLast(elements[i]);
                 }
                 Path parentPath = builder.getPath();
-                cache((NodeState) state, parentPath);
+                cache(((NodeState) state).getNodeId(), parentPath);
             } catch (MalformedPathException mpe) {
                 log.warn("Failed to build path of " + state.getId(), mpe);
             }
         }
-        return super.resolvePath(path, state, next);
     }
 
     /**
@@ -166,7 +163,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
         if (state.isNode()) {
             try {
-                cache((NodeState) state, builder.getPath());
+                cache(((NodeState) state).getNodeId(), builder.getPath());
             } catch (MalformedPathException mpe) {
                 log.warn("Failed to build path of " + state.getId());
             }
@@ -180,7 +177,6 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * Check the path indicated inside our cache first.
      */
     public ItemId resolvePath(Path path) throws RepositoryException {
-
         // Run base class shortcut and sanity checks first
         if (path.denotesRoot()) {
             return rootNodeId;
@@ -190,16 +186,64 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             throw new RepositoryException(msg);
         }
 
+        ItemId id;
         PathMap.Element element = map(path);
         if (element == null) {
-            return super.resolvePath(path);
+            id = super.resolvePath(path);
+        } else {
+            LRUEntry entry = (LRUEntry) element.get();
+            if (element.hasPath(path)) {
+                entry.touch();
+                return entry.getId();
+            }
+            // first try to resolve node path, then property path
+            id = super.resolvePath(path, entry.getId(), element.getDepth() + 1, true);
+            if (id == null) {
+                id = super.resolvePath(path, entry.getId(), element.getDepth() + 1, false);
+            }
         }
-        LRUEntry entry = (LRUEntry) element.get();
-        if (element.hasPath(path)) {
-            entry.touch();
-            return entry.getId();
+
+        if (id != null && id.denotesNode() && !isCached(id)) {
+            // cache result
+            cache((NodeId) id, path);
         }
-        return super.resolvePath(path, entry.getId(), element.getDepth() + 1);
+
+        return id;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Check the path indicated inside our cache first.
+     */
+    public NodeId resolveNodePath(Path path) throws RepositoryException {
+        ItemId id = resolvePath(path);
+        return id != null && id.denotesNode() ? (NodeId) id : null;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Check the path indicated inside our cache first.
+     */
+    public PropertyId resolvePropertyPath(Path path) throws RepositoryException {
+        // Run base class shortcut and sanity checks first
+        if (path.denotesRoot()) {
+            return null;
+        } else if (!path.isCanonical()) {
+            String msg = "path is not canonical";
+            log.debug(msg);
+            throw new RepositoryException(msg);
+        }
+
+        // check cache for parent path
+        PathMap.Element element = map(path.getAncestor(1));
+        if (element == null) {
+            return super.resolvePropertyPath(path);
+        } else {
+            LRUEntry entry = (LRUEntry) element.get();
+            return (PropertyId) super.resolvePath(path, entry.getId(), element.getDepth() + 1, false);
+        }
     }
 
     /**
@@ -501,15 +545,12 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     }
 
     /**
-     * Cache an item in the hierarchy given its id and path. Adds a listener
-     * for this item state to get notified about changes.
+     * Cache an item in the hierarchy given its id and path.
      *
-     * @param state node state
-     * @param path  path to item
+     * @param id   node id
+     * @param path path to item
      */
-    private void cache(NodeState state, Path path) {
-        NodeId id = state.getNodeId();
-
+    private void cache(NodeId id, Path path) {
         synchronized (cacheMonitor) {
             if (idCache.get(id) != null) {
                 return;

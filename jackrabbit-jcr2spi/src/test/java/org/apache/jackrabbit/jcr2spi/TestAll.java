@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
 
 /**
  * <code>TestAll</code>...
@@ -49,7 +49,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(MoveTreeTest.class);
         suite.addTestSuite(MoveNewTreeTest.class);
         suite.addTestSuite(MoveMultipleTest.class);
-        suite.addTestSuite(WorkspaceMoveTest.class);
+        //suite.addTestSuite(WorkspaceMoveTest.class);  // see JCR-1276
         suite.addTestSuite(RevertMoveTest.class);
 
         // refresh

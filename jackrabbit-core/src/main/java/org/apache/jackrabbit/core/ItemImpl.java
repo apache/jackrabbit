@@ -21,9 +21,9 @@ import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -34,11 +34,11 @@ import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.state.StaleItemStateException;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.uuid.UUID;
-import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1395,8 +1395,12 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             if (relDegree < 0) {
                 throw new ItemNotFoundException();
             }
+            // shortcut
+            if (relDegree == 0) {
+                return this;
+            }
             Path ancestorPath = path.getAncestor(relDegree);
-            return itemMgr.getItem(ancestorPath);
+            return itemMgr.getNode(ancestorPath);
         } catch (PathNotFoundException pnfe) {
             throw new ItemNotFoundException();
         }

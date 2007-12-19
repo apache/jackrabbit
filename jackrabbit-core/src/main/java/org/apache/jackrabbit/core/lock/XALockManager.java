@@ -188,7 +188,7 @@ public class XALockManager implements LockManager, InternalXAResource {
             throws LockException, RepositoryException {
 
         SessionImpl sessionImpl = (SessionImpl) session;
-        checkLock((NodeImpl) sessionImpl.getItemManager().getItem(path));
+        checkLock(sessionImpl.getItemManager().getNode(path));
     }
 
     /**
