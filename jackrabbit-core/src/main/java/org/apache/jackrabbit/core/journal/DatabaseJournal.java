@@ -200,7 +200,7 @@ public class DatabaseJournal extends AbstractJournal {
 
         try {
             connection = getConnection();
-            connection.setAutoCommit(true);
+            setAutoCommit(connection, true);
             checkSchema();
             buildSQLStatements();
             prepareStatements();
@@ -451,7 +451,10 @@ public class DatabaseJournal extends AbstractJournal {
     private static void setAutoCommit(Connection connection, boolean autoCommit) {
         if (connection != null) {
             try {
-                connection.setAutoCommit(autoCommit);
+                // JCR-1013: Setter may fail on a managed connection
+                if (connection.getAutoCommit() != autoCommit) {
+                    connection.setAutoCommit(autoCommit);
+                }
             } catch (SQLException e) {
                 String msg = "Unable to set autocommit flag to " + autoCommit;
                 log.warn(msg, e);

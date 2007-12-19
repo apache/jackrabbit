@@ -330,7 +330,10 @@ public class ConnectionRecoveryManager {
             log.warn("Could not connect; driver: " + driver + " url: " + url + " user: " + user + " error: " + e.toString(), e);
             throw e;
         }
-        connection.setAutoCommit(true);
+        // JCR-1013: Setter may fail unnecessarily on a managed connection
+        if (!connection.getAutoCommit()) {
+            connection.setAutoCommit(true);
+        }
         try {
             DatabaseMetaData meta = connection.getMetaData();
             log.info("Database: " + meta.getDatabaseProductName() + " / " + meta.getDatabaseProductVersion());
