@@ -19,8 +19,8 @@ package org.apache.jackrabbit.core.state;
 import org.apache.commons.collections.MapIterator;
 import org.apache.commons.collections.OrderedMapIterator;
 import org.apache.commons.collections.map.LinkedMap;
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
@@ -928,6 +928,11 @@ public class NodeState extends ItemState {
                 if (obj instanceof ArrayList) {
                     // map entry is a list of siblings
                     siblings = (ArrayList) obj;
+                    if (siblings.size() > 0) {
+                        // reuse immutable Name instance from 1st same name sibling
+                        // in order to help gc conserving memory
+                        nodeName = ((ChildNodeEntry)siblings.get(0)).getName();
+                    }
                 } else {
                     // map entry is a single child node entry,
                     // convert to siblings list

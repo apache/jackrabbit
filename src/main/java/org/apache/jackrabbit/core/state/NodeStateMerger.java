@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.spi.Name;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.HashSet;
+import java.util.Iterator;
 
 /**
  * Internal utility class used for merging concurrent changes that occured
@@ -106,11 +106,6 @@ class NodeStateMerger {
                 if (context.isAdded(cne.getId())) {
                     // a new child node entry has been added to this state;
                     // check for name collisions with other state
-                    if (overlayedState.hasPropertyName(cne.getName())
-                            && !context.isDeleted(new PropertyId(state.getNodeId(), cne.getName()))) {
-                        // conflicting names
-                        return false;
-                    }
                     if (overlayedState.hasChildNodeEntry(cne.getName())) {
                         // conflicting names
                         if (cne.getIndex() < 2) {

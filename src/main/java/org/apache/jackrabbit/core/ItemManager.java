@@ -24,17 +24,17 @@ import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
-import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -210,7 +210,11 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
 
     //--------------------------------------------------< item access methods >
     /**
-     * Checks if the item with the given path exists.
+     * Checks whether an item exists at the specified path.
+     *
+     * @deprecated As of JSR 283, a <code>Path</code> doesn't anymore uniquely
+     * identify an <code>Item</code>, therefore {@link #nodeExists(Path)} and
+     * {@link #propertyExists(Path)} should be used instead.
      *
      * @param path path to the item to be checked
      * @return true if the specified item exists
@@ -221,25 +225,43 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
             session.sanityCheck();
 
             ItemId id = hierMgr.resolvePath(path);
-            if (id == null) {
-                return false;
-            }
-
-            // check if state exists for the given item
-            if (!itemStateProvider.hasItemState(id)) {
-                return false;
-            }
-
-            // check privileges
-            if (!session.getAccessManager().isGranted(id, AccessManager.READ)) {
-                // clear cache
-                evictItem(id);
-                // item exists but the session has not been granted read access
-                return false;
-            }
-            return true;
-        } catch (ItemNotFoundException infe) {
+            return (id != null) && itemExists(id);
+        } catch (RepositoryException re) {
             return false;
+        }
+    }
+
+    /**
+     * Checks whether a node exists at the specified path.
+     *
+     * @param path path to the node to be checked
+     * @return true if a node exists at the specified path
+     */
+    public boolean nodeExists(Path path) {
+        try {
+            // check sanity of session
+            session.sanityCheck();
+
+            NodeId id = hierMgr.resolveNodePath(path);
+            return (id != null) && itemExists(id);
+        } catch (RepositoryException re) {
+            return false;
+        }
+    }
+
+    /**
+     * Checks whether a property exists at the specified path.
+     *
+     * @param path path to the property to be checked
+     * @return true if a property exists at the specified path
+     */
+    public boolean propertyExists(Path path) {
+        try {
+            // check sanity of session
+            session.sanityCheck();
+
+            PropertyId id = hierMgr.resolvePropertyPath(path);
+            return (id != null) && itemExists(id);
         } catch (RepositoryException re) {
             return false;
         }
@@ -285,6 +307,13 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
     }
 
     /**
+     * Returns the node at the specified absolute path in the workspace.
+     * If no such node exists, then it returns the property at the specified path.
+     * If no such property exists a <code>PathNotFoundException</code> is thrown.
+     * 
+     * @deprecated As of JSR 283, a <code>Path</code> doesn't anymore uniquely
+     * identify an <code>Item</code>, therefore {@link #getNode(Path)} and
+     * {@link #getProperty(Path)} should be used instead.
      * @param path
      * @return
      * @throws PathNotFoundException
@@ -299,6 +328,46 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         }
         try {
             return getItem(id);
+        } catch (ItemNotFoundException infe) {
+            throw new PathNotFoundException(safeGetJCRPath(path));
+        }
+    }
+
+    /**
+     * @param path
+     * @return
+     * @throws PathNotFoundException
+     * @throws AccessDeniedException
+     * @throws RepositoryException
+     */
+    public NodeImpl getNode(Path path)
+            throws PathNotFoundException, AccessDeniedException, RepositoryException {
+        NodeId id = hierMgr.resolveNodePath(path);
+        if (id == null) {
+            throw new PathNotFoundException(safeGetJCRPath(path));
+        }
+        try {
+            return (NodeImpl) getItem(id);
+        } catch (ItemNotFoundException infe) {
+            throw new PathNotFoundException(safeGetJCRPath(path));
+        }
+    }
+
+    /**
+     * @param path
+     * @return
+     * @throws PathNotFoundException
+     * @throws AccessDeniedException
+     * @throws RepositoryException
+     */
+    public PropertyImpl getProperty(Path path)
+            throws PathNotFoundException, AccessDeniedException, RepositoryException {
+        PropertyId id = hierMgr.resolvePropertyPath(path);
+        if (id == null) {
+            throw new PathNotFoundException(safeGetJCRPath(path));
+        }
+        try {
+            return (PropertyImpl) getItem(id);
         } catch (ItemNotFoundException infe) {
             throw new PathNotFoundException(safeGetJCRPath(path));
         }

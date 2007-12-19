@@ -16,7 +16,11 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
+import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
+import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.core.nodetype.ItemDef;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
@@ -26,7 +30,6 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
-import org.apache.jackrabbit.core.nodetype.ItemDef;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
@@ -34,26 +37,23 @@ import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.version.LabelVersionSelector;
+import org.apache.jackrabbit.core.version.DateVersionSelector;
 import org.apache.jackrabbit.core.version.InternalFreeze;
 import org.apache.jackrabbit.core.version.InternalFrozenNode;
 import org.apache.jackrabbit.core.version.InternalFrozenVersionHistory;
-import org.apache.jackrabbit.core.version.VersionSelector;
-import org.apache.jackrabbit.core.version.DateVersionSelector;
+import org.apache.jackrabbit.core.version.LabelVersionSelector;
 import org.apache.jackrabbit.core.version.VersionImpl;
-import org.apache.jackrabbit.core.lock.LockManager;
-import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
-import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
+import org.apache.jackrabbit.core.version.VersionSelector;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.PathBuilder;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.ValueHelper;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -177,20 +177,9 @@ public class NodeImpl extends ItemImpl implements Node {
             /**
              * build and resolve absolute path
              */
-            Path p =
-                PathFactoryImpl.getInstance().create(getPrimaryPath(), session.getQPath(relPath), false)
-                .getCanonicalPath();
-            ItemId id = session.getHierarchyManager().resolvePath(p);
-            if (id == null) {
-                // path not found
-                return null;
-            }
-            if (!id.denotesNode()) {
-                return (PropertyId) id;
-            } else {
-                // not a property
-                return null;
-            }
+            Path p = PathFactoryImpl.getInstance().create(
+                    getPrimaryPath(), session.getQPath(relPath), true);
+            return session.getHierarchyManager().resolvePropertyPath(p);
         } catch (NameException e) {
             String msg = "failed to resolve path " + relPath + " relative to " + safeGetJCRPath();
             log.debug(msg);
@@ -241,17 +230,7 @@ public class NodeImpl extends ItemImpl implements Node {
              * build and resolve absolute path
              */
             p = PathFactoryImpl.getInstance().create(getPrimaryPath(), p, true);
-            ItemId id = session.getHierarchyManager().resolvePath(p);
-            if (id == null) {
-                // path not found
-                return null;
-            }
-            if (id.denotesNode()) {
-                return (NodeId) id;
-            } else {
-                // not a node
-                return null;
-            }
+            return session.getHierarchyManager().resolveNodePath(p);
         } catch (NameException e) {
             String msg = "failed to resolve path " + relPath + " relative to " + safeGetJCRPath();
             log.debug(msg);
@@ -475,12 +454,6 @@ public class NodeImpl extends ItemImpl implements Node {
     protected synchronized PropertyImpl createChildProperty(Name name, int type,
                                                             PropertyDefinitionImpl def)
             throws RepositoryException {
-        // check for name collisions with existing child nodes
-        if (((NodeState) state).hasChildNodeEntry(name)) {
-            String msg = "there's already a child node with name " + name;
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
 
         // create a new property state
         PropertyState propState;
@@ -785,10 +758,6 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // check for name collisions
         NodeState thisState = (NodeState) state;
-        if (thisState.hasPropertyName(nodeName)) {
-            // there's already a property with that name
-            throw new ItemExistsException(itemMgr.safeGetJCRPath(nodePath));
-        }
         NodeState.ChildNodeEntry cne = thisState.getChildNodeEntry(nodeName, 1);
         if (cne != null) {
             // there's already a child node entry with that name;
@@ -3020,26 +2989,13 @@ public class NodeImpl extends ItemImpl implements Node {
         // check lock status
         checkLock();
 
-        boolean hasPendingChanges = session.hasPendingChanges();
-
-        Property[] props = new Property[2];
-        props[0] = internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));
-        props[1] = internalSetProperty(NameConstants.JCR_PREDECESSORS,
+        Property prop = internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));
+        prop.save();
+        prop = internalSetProperty(NameConstants.JCR_PREDECESSORS,
                 new InternalValue[]{
                     InternalValue.create(new UUID(getBaseVersion().getUUID()))
                 });
-        if (hasPendingChanges) {
-            for (int i = 0; i < props.length; i++) {
-                props[i].save();
-            }
-        } else {
-            try {
-                session.save();
-            } catch (RepositoryException e) {
-                session.refresh(false);
-                throw e;
-            }
-        }
+        prop.save();
     }
 
     /**
