@@ -754,7 +754,7 @@ public class SharedItemStateManager
                 for (Iterator iter = shared.modifiedStates(); iter.hasNext();) {
                     ItemState state = (ItemState) iter.next();
                     try {
-                        state.copy(loadItemState(state.getId()));
+                        state.copy(loadItemState(state.getId()), false);
                     } catch (ItemStateException e) {
                         state.discard();
                     }
@@ -762,7 +762,7 @@ public class SharedItemStateManager
                 for (Iterator iter = shared.deletedStates(); iter.hasNext();) {
                     ItemState state = (ItemState) iter.next();
                     try {
-                        state.copy(loadItemState(state.getId()));
+                        state.copy(loadItemState(state.getId()), false);
                     } catch (ItemStateException e) {
                         state.discard();
                     }
@@ -925,8 +925,7 @@ public class SharedItemStateManager
             if (state != null) {
                 try {
                     ItemState currentState = loadItemState(state.getId());
-                    state.copy(currentState);
-                    state.setModCount(currentState.getModCount());
+                    state.copy(currentState, true);
                     shared.modified(state);
                 } catch (NoSuchItemStateException e) {
                     // This is likely to happen because a subsequent delete

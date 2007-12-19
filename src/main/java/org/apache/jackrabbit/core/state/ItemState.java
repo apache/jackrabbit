@@ -150,17 +150,18 @@ public abstract class ItemState implements Serializable {
     /**
      * Copy state information from another state into this state
      * @param state source state information
+     * @param syncModCount if the modCount should be synchronized.
      */
-    protected abstract void copy(ItemState state);
+    protected abstract void copy(ItemState state, boolean syncModCount);
 
     /**
      * Pull state information from overlayed state.
      */
     void pull() {
-        if (overlayedState != null) {
-            copy(overlayedState);
+        ItemState state = overlayedState;
+        if (state != null) {
             // sync modification count
-            modCount = overlayedState.getModCount();
+            copy(state, true);
         }
     }
 
@@ -168,8 +169,9 @@ public abstract class ItemState implements Serializable {
      * Push state information into overlayed state.
      */
     void push() {
-        if (overlayedState != null) {
-            overlayedState.copy(this);
+        ItemState state = overlayedState;
+        if (state != null) {
+            state.copy(this, false);
         }
     }
 

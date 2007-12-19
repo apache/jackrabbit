@@ -103,7 +103,7 @@ public class PropertyState extends ItemState {
     /**
      * {@inheritDoc}
      */
-    protected synchronized void copy(ItemState state) {
+    protected synchronized void copy(ItemState state, boolean syncModCount) {
         synchronized (state) {
             PropertyState propState = (PropertyState) state;
             id = propState.id;
@@ -111,6 +111,9 @@ public class PropertyState extends ItemState {
             defId = propState.defId;
             values = propState.values;
             multiValued = propState.multiValued;
+            if (syncModCount) {
+                setModCount(state.getModCount());
+            }
         }
     }
 
