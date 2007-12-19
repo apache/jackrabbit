@@ -18,9 +18,6 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.ItemId;
 
-import java.util.Set;
-import java.util.Collection;
-
 /**
  * An <code>ItemStateCache</code> maintains a cache of <code>ItemState</code>
  * instances.
@@ -50,6 +47,13 @@ public interface ItemStateCache {
     ItemState retrieve(ItemId id);
 
     /**
+     * Returns all the cached item states.
+     *
+     * @return newly allocated item state array
+     */
+    ItemState[] retrieveAll();
+
+    /**
      * Stores the specified <code>ItemState</code> object in the map
      * using its <code>ItemId</code> as the key.
      *
@@ -77,29 +81,6 @@ public interface ItemStateCache {
      * @return <code>true</code> if this cache contains no entries.
      */
     boolean isEmpty();
-
-    /**
-     * Returns the number of entries in this cache.
-     *
-     * @return number of entries in this cache.
-     */
-    int size();
-
-    /**
-     * Returns an unmodifiable set view of the keys (i.e. <code>ItemId</code>
-     * objects) of the cached entries.
-     *
-     * @return a set view of the keys of the cached entries.
-     */
-    Set keySet();
-
-    /**
-     * Returns an unmodifiable collection view of the values (i.e.
-     * <code>ItemState</code> objects) contained in this cache.
-     *
-     * @return a collection view of the values contained in this cache.
-     */
-    Collection values();
 
     /**
      * Informs the cache that the item was modified and the cache might need to
