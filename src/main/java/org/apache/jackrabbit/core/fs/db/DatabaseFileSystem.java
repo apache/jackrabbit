@@ -954,7 +954,10 @@ public class DatabaseFileSystem implements FileSystem {
      */
     protected void initConnection() throws Exception {
         con = getConnection();
-        con.setAutoCommit(true);
+        // JCR-1013: Setter may fail unnecessarily on a managed connection
+        if (!con.getAutoCommit()) {
+            con.setAutoCommit(true);
+        }
     }
 
     /**
