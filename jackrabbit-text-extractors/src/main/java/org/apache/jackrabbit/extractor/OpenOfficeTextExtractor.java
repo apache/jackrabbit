@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.extractor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -36,6 +38,12 @@ import java.util.zip.ZipEntry;
  * Text extractor for OpenOffice documents.
  */
 public class OpenOfficeTextExtractor extends AbstractTextExtractor {
+
+    /**
+     * Logger instance.
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(OpenOfficeTextExtractor.class);
 
     /**
      * Creates a new <code>OpenOfficeTextExtractor</code> instance.
@@ -82,8 +90,10 @@ public class OpenOfficeTextExtractor extends AbstractTextExtractor {
 
             return new StringReader(contentHandler.getContent());
         } catch (ParserConfigurationException e) {
+            logger.warn("Failed to extract OpenOffice text content", e);
             return new StringReader("");
         } catch (SAXException e) {
+            logger.warn("Failed to extract OpenOffice text content", e);
             return new StringReader("");
         } finally {
             stream.close();

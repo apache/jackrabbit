@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.extractor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -34,6 +36,12 @@ import java.io.StringReader;
  * Text extractor for HyperText Markup Language (HTML).
  */
 public class HTMLTextExtractor extends AbstractTextExtractor {
+
+    /**
+     * Logger instance.
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(HTMLTextExtractor.class);
 
     /**
      * Creates a new <code>HTMLTextExtractor</code> instance.
@@ -61,8 +69,10 @@ public class HTMLTextExtractor extends AbstractTextExtractor {
 
             return new StringReader(parser.getContents());
         } catch (TransformerConfigurationException e) {
+            logger.warn("Failed to extract HTML text content", e);
             return new StringReader("");
         } catch (TransformerException e) {
+            logger.warn("Failed to extract HTML text content", e);
             return new StringReader("");
         } finally {
             stream.close();

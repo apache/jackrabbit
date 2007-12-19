@@ -19,6 +19,8 @@ package org.apache.jackrabbit.extractor;
 import org.pdfbox.pdfparser.PDFParser;
 import org.pdfbox.pdmodel.PDDocument;
 import org.pdfbox.util.PDFTextStripper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Reader;
 import java.io.InputStream;
@@ -32,6 +34,12 @@ import java.io.StringReader;
  * Text extractor for Portable Document Format (PDF).
  */
 public class PdfTextExtractor extends AbstractTextExtractor {
+
+    /**
+     * Logger instance.
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(PdfTextExtractor.class);
 
     /**
      * Force loading of dependent class.
@@ -80,6 +88,7 @@ public class PdfTextExtractor extends AbstractTextExtractor {
         } catch (Exception e) {
             // it may happen that PDFParser throws a runtime
             // exception when parsing certain pdf documents
+            logger.warn("Failed to extract PDF text content", e);
             return new StringReader("");
         } finally {
             stream.close();

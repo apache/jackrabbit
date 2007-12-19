@@ -21,18 +21,27 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Reader;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.CharArrayWriter;
 import java.io.CharArrayReader;
+import java.io.StringReader;
 import java.util.Iterator;
 
 /**
  * Text extractor for Microsoft Excel sheets.
  */
 public class MsExcelTextExtractor extends AbstractTextExtractor {
+
+    /**
+     * Logger instance.
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(MsExcelTextExtractor.class);
 
     /**
      * Force loading of dependent class.
@@ -90,6 +99,9 @@ public class MsExcelTextExtractor extends AbstractTextExtractor {
             }
 
             return new CharArrayReader(writer.toCharArray());
+        } catch (RuntimeException e) {
+            logger.warn("Failed to extract Excel text content", e);
+            return new StringReader("");
         } finally {
             stream.close();
         }
