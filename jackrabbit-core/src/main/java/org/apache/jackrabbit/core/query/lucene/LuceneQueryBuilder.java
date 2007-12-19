@@ -16,14 +16,14 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.SearchManager;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.HierarchyManagerImpl;
-import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SearchManager;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.query.AndQueryNode;
+import org.apache.jackrabbit.core.query.DefaultQueryNodeVisitor;
 import org.apache.jackrabbit.core.query.DerefQueryNode;
 import org.apache.jackrabbit.core.query.ExactQueryNode;
 import org.apache.jackrabbit.core.query.LocationStepQueryNode;
@@ -32,6 +32,7 @@ import org.apache.jackrabbit.core.query.NotQueryNode;
 import org.apache.jackrabbit.core.query.OrQueryNode;
 import org.apache.jackrabbit.core.query.OrderQueryNode;
 import org.apache.jackrabbit.core.query.PathQueryNode;
+import org.apache.jackrabbit.core.query.PropertyFunctionQueryNode;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
 import org.apache.jackrabbit.core.query.QueryConstants;
 import org.apache.jackrabbit.core.query.QueryNode;
@@ -39,29 +40,27 @@ import org.apache.jackrabbit.core.query.QueryNodeVisitor;
 import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
-import org.apache.jackrabbit.core.query.PropertyFunctionQueryNode;
-import org.apache.jackrabbit.core.query.DefaultQueryNodeVisitor;
-import org.apache.jackrabbit.core.query.lucene.fulltext.QueryParser;
 import org.apache.jackrabbit.core.query.lucene.fulltext.ParseException;
+import org.apache.jackrabbit.core.query.lucene.fulltext.QueryParser;
 import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.name.PathBuilder;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.util.ISO8601;
-import org.apache.jackrabbit.util.XMLChar;
 import org.apache.jackrabbit.util.ISO9075;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.util.XMLChar;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.BooleanClause.Occur;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
@@ -883,9 +882,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 case QueryConstants.OPERATION_SIMILAR:
                     String uuid = "x";
                     try {
-                        ItemId id = hmgr.resolvePath(session.getQPath(node.getStringValue()));
-                        if (id != null && id.denotesNode()) {
-                            uuid = ((NodeId) id).getUUID().toString();
+                        NodeId id = hmgr.resolveNodePath(session.getQPath(node.getStringValue()));
+                        if (id != null) {
+                            uuid = id.getUUID().toString();
                         }
                     } catch (Exception e) {
                         exceptions.add(e);

@@ -19,25 +19,22 @@ package org.apache.jackrabbit.core.xml;
 import org.apache.jackrabbit.core.BatchedItemOperations;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.uuid.UUID;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,10 +49,10 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
-import java.util.ArrayList;
 
 /**
  * <code>WorkspaceImporter</code> ...
@@ -457,10 +454,6 @@ public class WorkspaceImporter implements Importer {
                         return;
                     }
 
-                    if (parent.hasPropertyName(nodeName)) {
-                        resolvePropertyNameConflict(parent, nodeName);
-                    }
-
                     // check if new node can be added (check access rights &
                     // node type constraints only, assume locking & versioning status
                     // has already been checked on ancestor)
@@ -521,40 +514,6 @@ public class WorkspaceImporter implements Importer {
                 aborted = true;
                 itemOps.cancel();
             }
-        }
-    }
-
-    /**
-     * Resolves a conflict where a property with the same name as a node
-     * being imported already exists; if this property has been imported
-     * as well (e.g. through document view import where an element can have
-     * the same name as one of the attributes of its parent element) we have
-     * to rename the conflicting property.
-     *
-     * @see http://issues.apache.org/jira/browse/JCR-61
-     * @param parent parent node
-     * @param name name of the node being imported
-     * @throws RepositoryException
-     */
-    private void resolvePropertyNameConflict(NodeState parent, Name name)
-            throws RepositoryException {
-        PropertyId propId = new PropertyId(parent.getNodeId(), name);
-        PropertyState conflicting = itemOps.getPropertyState(propId);
-        if (conflicting.getStatus() == ItemState.STATUS_NEW) {
-            // assume this property has been imported as well;
-            // rename conflicting property
-            // @todo use better reversible escaping scheme to create unique name
-            Name newName = NameFactoryImpl.getInstance().create(name.getNamespaceURI(), name.getLocalName() + "_");
-            while (parent.hasPropertyName(newName)) {
-                newName = NameFactoryImpl.getInstance().create(newName.getNamespaceURI(), newName.getLocalName() + "_");
-            }
-            InternalValue[] values = conflicting.getValues();
-            PropertyState newProp = itemOps.createPropertyState(
-                    parent, newName, conflicting.getType(), values.length);
-            newProp.setValues(values);
-            parent.removePropertyName(name);
-            itemOps.store(parent);
-            itemOps.destroy(conflicting);
         }
     }
 

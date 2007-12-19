@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
@@ -30,16 +30,51 @@ public interface HierarchyManager {
     /**
      * Resolves a path into an item id.
      * <p/>
+     * If there is both a node and a property at the specified path, this method
+     * will return the id of the node.
+     * <p/>
      * Note that, for performance reasons, this method returns <code>null</code>
      * rather than throwing a <code>PathNotFoundException</code> if there's no
      * item to be found at <code>path</code>.
-     *  
+     *
+     * @deprecated As of JSR 283, a <code>Path</code> doesn't anymore uniquely
+     * identify an <code>Item</code>, therefore {@link #resolveNodePath(Path)} and
+     * {@link #resolvePropertyPath(Path)} should be used instead.
+     *
      * @param path path to resolve
      * @return item id refered to by <code>path</code> or <code>null</code>
      *         if there's no item at <code>path</code>.
      * @throws RepositoryException if an error occurs
      */
     ItemId resolvePath(Path path) throws RepositoryException;
+
+    /**
+     * Resolves a path into a node id.
+     * <p/>
+     * Note that, for performance reasons, this method returns <code>null</code>
+     * rather than throwing a <code>PathNotFoundException</code> if there's no
+     * node to be found at <code>path</code>.
+     *
+     * @param path path to resolve
+     * @return node id refered to by <code>path</code> or <code>null</code>
+     *         if there's no node at <code>path</code>.
+     * @throws RepositoryException if an error occurs
+     */
+    NodeId resolveNodePath(Path path) throws RepositoryException;
+
+    /**
+     * Resolves a path into a property id.
+     * <p/>
+     * Note that, for performance reasons, this method returns <code>null</code>
+     * rather than throwing a <code>PathNotFoundException</code> if there's no
+     * property to be found at <code>path</code>.
+     *
+     * @param path path to resolve
+     * @return property id refered to by <code>path</code> or <code>null</code>
+     *         if there's no property at <code>path</code>.
+     * @throws RepositoryException if an error occurs
+     */
+    PropertyId resolvePropertyPath(Path path) throws RepositoryException;
 
     /**
      * Returns the path to the given item.

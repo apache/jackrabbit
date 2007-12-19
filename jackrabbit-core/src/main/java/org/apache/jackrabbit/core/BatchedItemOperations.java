@@ -35,11 +35,11 @@ import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -590,13 +590,6 @@ public class BatchedItemOperations extends ItemValidator {
                             parentState);
 
             // check for name collisions
-            if (parentState.hasPropertyName(nodeName)) {
-                // there's already a property with that name
-                throw new ItemExistsException("cannot add child node '"
-                        + nodeName.getLocalName() + "' to "
-                        + safeGetJCRPath(parentState.getNodeId())
-                        + ": colliding with same-named existing property");
-            }
             if (parentState.hasChildNodeEntry(nodeName)) {
                 // there's already a node with that name...
 
@@ -1008,12 +1001,6 @@ public class BatchedItemOperations extends ItemValidator {
             throws ItemExistsException, ConstraintViolationException,
             RepositoryException, IllegalStateException {
 
-        // check for name collisions with existing properties
-        if (parent.hasPropertyName(nodeName)) {
-            String msg = "there's already a property with name " + nodeName;
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
         // check for name collisions with existing nodes
         if (!def.allowsSameNameSiblings() && parent.hasChildNodeEntry(nodeName)) {
             NodeId errorId = parent.getChildNodeEntry(nodeName, 1).getId();
@@ -1146,12 +1133,6 @@ public class BatchedItemOperations extends ItemValidator {
                                              int type,
                                              PropDef def)
             throws ItemExistsException, RepositoryException {
-        // check for name collisions with existing child nodes
-        if (parent.hasChildNodeEntry(propName)) {
-            String msg = "there's already a child node with name " + propName;
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
 
         // check for name collisions with existing properties
         if (parent.hasPropertyName(propName)) {
@@ -1380,8 +1361,8 @@ public class BatchedItemOperations extends ItemValidator {
                                      Path nodePath)
             throws PathNotFoundException, RepositoryException {
         try {
-            ItemId id = srcHierMgr.resolvePath(nodePath);
-            if (id == null || !id.denotesNode()) {
+            NodeId id = srcHierMgr.resolveNodePath(nodePath);
+            if (id == null) {
                 throw new PathNotFoundException(safeGetJCRPath(nodePath));
             }
             return (NodeState) getItemState(srcStateMgr, id);

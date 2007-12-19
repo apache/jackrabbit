@@ -16,15 +16,14 @@
  */
 package org.apache.jackrabbit.core.xml;
 
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.value.ReferenceValue;
-import org.apache.jackrabbit.uuid.UUID;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.value.ReferenceValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +36,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeDefinition;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
@@ -89,34 +87,6 @@ public class SessionImporter implements Importer {
                                   NodeId id)
             throws RepositoryException {
         NodeImpl node;
-
-        if (parent.hasProperty(nodeName)) {
-            /**
-             * a property with the same name already exists; if this property
-             * has been imported as well (e.g. through document view import
-             * where an element can have the same name as one of the attributes
-             * of its parent element) we have to rename the onflicting property;
-             *
-             * see http://issues.apache.org/jira/browse/JCR-61
-             */
-            Property conflicting = parent.getProperty(nodeName);
-            if (conflicting.isNew()) {
-                // assume this property has been imported as well;
-                // rename conflicting property
-                // @todo use better reversible escaping scheme to create unique name
-                Name newName = NameFactoryImpl.getInstance().create(nodeName.getNamespaceURI(), nodeName.getLocalName() + "_");
-                if (parent.hasProperty(newName)) {
-                    newName = NameFactoryImpl.getInstance().create(newName.getNamespaceURI(), newName.getLocalName() + "_");
-                }
-
-                if (conflicting.getDefinition().isMultiple()) {
-                    parent.setProperty(newName, conflicting.getValues());
-                } else {
-                    parent.setProperty(newName, conflicting.getValue());
-                }
-                conflicting.remove();
-            }
-        }
 
         // add node
         UUID uuid = (id == null) ? null : id.getUUID();
