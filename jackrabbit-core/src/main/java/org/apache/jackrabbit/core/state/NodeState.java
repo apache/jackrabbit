@@ -136,7 +136,7 @@ public class NodeState extends ItemState {
     /**
      * {@inheritDoc}
      */
-    protected synchronized void copy(ItemState state) {
+    protected synchronized void copy(ItemState state, boolean syncModCount) {
         synchronized (state) {
             NodeState nodeState = (NodeState) state;
             id = nodeState.id;
@@ -150,6 +150,9 @@ public class NodeState extends ItemState {
             childNodeEntries = nodeState.childNodeEntries;
             sharedChildNodeEntries = true;
             nodeState.sharedChildNodeEntries = true;
+            if (syncModCount) {
+                setModCount(state.getModCount());
+            }
         }
     }
 
