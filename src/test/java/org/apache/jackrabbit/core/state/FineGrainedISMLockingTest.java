@@ -16,29 +16,13 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
 /**
- * Test suite that includes all testcases for the State module.
+ * <code>FineGrainedISMLockingTest</code> executes the test cases implemented in
+ * {@link AbstractISMLockingTest}.
  */
-public class TestAll extends TestCase {
+public class FineGrainedISMLockingTest extends AbstractISMLockingTest {
 
-    /**
-     * Returns a <code>Test</code> suite that executes all tests inside this
-     * package.
-     *
-     * @return a <code>Test</code> suite that executes all tests inside this
-     *         package.
-     */
-    public static Test suite() {
-        TestSuite suite = new TestSuite("State tests");
-
-        suite.addTestSuite(ChangeLogTest.class);
-        suite.addTestSuite(DefaultISMLockingTest.class);
-        suite.addTestSuite(FineGrainedISMLockingTest.class);
-
-        return suite;
+    public ISMLocking createISMLocking() {
+        return new FineGrainedISMLocking();
     }
 }
