@@ -23,10 +23,19 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Text extractor for plain text.
  */
 public class PlainTextExtractor extends AbstractTextExtractor {
+
+    /**
+     * Logger instance.
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(PlainTextExtractor.class);
 
     /**
      * Creates a new <code>PlainTextExtractor</code> instance.
@@ -59,6 +68,7 @@ public class PlainTextExtractor extends AbstractTextExtractor {
                 return new InputStreamReader(stream);
             }
         } catch (UnsupportedEncodingException e) {
+            logger.warn("Failed to extract plain text content", e);
             stream.close();
             return new StringReader("");
         }

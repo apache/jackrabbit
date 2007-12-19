@@ -21,6 +21,8 @@ import org.apache.poi.poifs.eventfilesystem.POIFSReaderListener;
 import org.apache.poi.poifs.eventfilesystem.POIFSReaderEvent;
 import org.apache.poi.poifs.filesystem.DocumentInputStream;
 import org.apache.poi.util.LittleEndian;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Reader;
 import java.io.InputStream;
@@ -29,11 +31,18 @@ import java.io.OutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
 import java.io.ByteArrayInputStream;
+import java.io.StringReader;
 
 /**
  * Text extractor for Microsoft PowerPoint presentations.
  */
 public class MsPowerPointTextExtractor extends AbstractTextExtractor {
+
+    /**
+     * Logger instance.
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(MsPowerPointTextExtractor.class);
 
     /**
      * Force loading of dependent class.
@@ -66,6 +75,9 @@ public class MsPowerPointTextExtractor extends AbstractTextExtractor {
             reader.read(stream);
             return new InputStreamReader(
                     new ByteArrayInputStream(baos.toByteArray()));
+        } catch (RuntimeException e) {
+            logger.warn("Failed to extract PowerPoint text content", e);
+            return new StringReader("");
         } finally {
             stream.close();
         }

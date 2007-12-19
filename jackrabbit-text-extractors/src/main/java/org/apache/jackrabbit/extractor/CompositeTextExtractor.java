@@ -24,6 +24,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Composite text extractor. This class presents a unified interface
  * for a set of {@link TextExtractor} instances. The composite extractor
@@ -31,6 +34,12 @@ import java.util.Set;
  * and delegates text extraction calls to the appropriate components.
  */
 public class CompositeTextExtractor implements TextExtractor {
+
+    /**
+     * Logger instance.
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(CompositeTextExtractor.class);
 
     /**
      * Configured {@link TextExtractor} instances, keyed by content types.
@@ -77,9 +86,15 @@ public class CompositeTextExtractor implements TextExtractor {
             throws IOException {
         TextExtractor extractor = (TextExtractor) extractors.get(type);
         if (extractor != null) {
-            return extractor.extractText(stream, type, encoding);
+            try {
+                return extractor.extractText(stream, type, encoding);
+            } catch (RuntimeException e) {
+                logger.warn("Failed to extract text content", e);
+                return new StringReader("");
+            }
         } else {
             stream.close();
+            logger.info("No extractor available for content type {}", type);
             return new StringReader("");
         }
     }

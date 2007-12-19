@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.extractor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.textmining.text.extraction.WordExtractor;
 
 import java.io.Reader;
@@ -27,6 +29,12 @@ import java.io.StringReader;
  * Text extractor for Microsoft Word documents.
  */
 public class MsWordTextExtractor extends AbstractTextExtractor {
+
+    /**
+     * Logger instance.
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(MsWordTextExtractor.class);
 
     /**
      * Force loading of dependent class.
@@ -60,6 +68,7 @@ public class MsWordTextExtractor extends AbstractTextExtractor {
 
             return new StringReader(text);
         } catch (Exception e) {
+            logger.warn("Failed to extract Word text content", e);
             return new StringReader("");
         } finally {
             stream.close();

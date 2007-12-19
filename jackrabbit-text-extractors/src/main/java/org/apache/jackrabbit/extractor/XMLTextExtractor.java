@@ -28,6 +28,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -43,6 +45,12 @@ import org.xml.sax.XMLReader;
  * specific content type.
  */
 public class XMLTextExtractor extends AbstractTextExtractor {
+
+    /**
+     * Logger instance.
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(XMLTextExtractor.class);
 
     /**
      * Creates a new <code>XMLTextExtractor</code> instance.
@@ -93,8 +101,10 @@ public class XMLTextExtractor extends AbstractTextExtractor {
 
             return new CharArrayReader(writer.toCharArray());
         } catch (ParserConfigurationException e) {
+            logger.warn("Failed to extract XML text content", e);
             return new StringReader("");
         } catch (SAXException e) {
+            logger.warn("Failed to extract XML text content", e);
             return new StringReader("");
         } finally {
             stream.close();
