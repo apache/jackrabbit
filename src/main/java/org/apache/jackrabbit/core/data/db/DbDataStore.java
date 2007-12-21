@@ -479,8 +479,6 @@ public class DbDataStore implements DataStore {
             initDatabaseType();
             connectionPool = new Pool(this, maxConnections);
             ConnectionRecoveryManager conn = getConnection();
-            conn = new ConnectionRecoveryManager(false, driver, url, user, password);
-            conn.setAutoReconnect(true);
             DatabaseMetaData meta = conn.getConnection().getMetaData();
             log.info("Using JDBC driver " + meta.getDriverName() + " " + meta.getDriverVersion());
             meta.getDriverVersion();
