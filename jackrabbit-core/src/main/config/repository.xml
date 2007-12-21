@@ -122,6 +122,12 @@
             - synonymProviderClass: the name of a class that implements
               org.apache.jackrabbit.core.query.lucene.SynonymProvider. The
               default value is null (-> not set).
+            - synonymProviderConfigPath: the path to the synonym provider configuration file.
+              This path interpreted relative to the path parameter. If there is a FileSystem
+              element inside the SearchIndex element, then this path is interpreted relative
+              to the root path of the FileSystem. Whether this parameter is mandatory depends
+              on the synonym provider implementation.
+              The default value is null (-> not set).
 
             Note: all parameters (except path) in this SearchIndex config are default
             values and can be omitted.
