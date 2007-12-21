@@ -20,6 +20,10 @@ import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeIdIterator;
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
 import org.apache.jackrabbit.core.query.AbstractQueryHandler;
 import org.apache.jackrabbit.core.query.DefaultQueryNodeFactory;
 import org.apache.jackrabbit.core.query.ExecutableQuery;
@@ -326,6 +330,17 @@ public class SearchIndex extends AbstractQueryHandler {
     private SynonymProvider synProvider;
 
     /**
+     * The configuration path for the synonym provider.
+     */
+    private String synonymProviderConfigPath;
+
+    /**
+     * The FileSystem for the synonym if the query handler context does not
+     * provide one.
+     */
+    private FileSystem synonymProviderConfigFs;
+
+    /**
      * Indicates the index format version which is relevant to a <b>query</b>. This
      * value may be different from what {@link MultiIndex#getIndexFormatVersion()}
      * returns because queries may be executed on two physical indexes with
@@ -598,6 +613,13 @@ public class SearchIndex extends AbstractQueryHandler {
      * to this handler.
      */
     public void close() {
+        if (synonymProviderConfigFs != null) {
+            try {
+                synonymProviderConfigFs.close();
+            } catch (FileSystemException e) {
+                log.warn("Exception while closing FileSystem", e);
+            }
+        }
         // shutdown extractor
         if (extractor instanceof PooledTextExtractor) {
             ((PooledTextExtractor) extractor).shutdown();
@@ -897,12 +919,59 @@ public class SearchIndex extends AbstractQueryHandler {
         if (synonymProviderClass != null) {
             try {
                 sp = (SynonymProvider) synonymProviderClass.newInstance();
+                sp.initialize(createSynonymProviderConfigResource());
             } catch (Exception e) {
                 log.warn("Exception initializing synonym provider: " +
                         synonymProviderClass, e);
             }
         }
         return sp;
+    }
+
+    /**
+     * Creates a file system resource to the synonym provider configuration.
+     *
+     * @return a file system resource or <code>null</code> if no path was
+     *         configured.
+     * @throws FileSystemException if an exception occurs accessing the file
+     *                             system.
+     */
+    protected FileSystemResource createSynonymProviderConfigResource()
+            throws FileSystemException {
+        if (synonymProviderConfigPath != null) {
+            FileSystemResource fsr;
+            // simple sanity check
+            if (synonymProviderConfigPath.endsWith(FileSystem.SEPARATOR)) {
+                throw new FileSystemException(
+                        "Invalid synonymProviderConfigPath: " +
+                        synonymProviderConfigPath);
+            }
+            FileSystem fs = getContext().getFileSystem();
+            if (fs == null) {
+                fs = new LocalFileSystem();
+                int lastSeparator = synonymProviderConfigPath.lastIndexOf(
+                        FileSystem.SEPARATOR_CHAR);
+                if (lastSeparator != -1) {
+                    File root = new File(path,
+                            synonymProviderConfigPath.substring(0, lastSeparator));
+                    ((LocalFileSystem) fs).setRoot(root);
+                    fs.init();
+                    fsr = new FileSystemResource(fs,
+                            synonymProviderConfigPath.substring(lastSeparator + 1));
+                } else {
+                    ((LocalFileSystem) fs).setPath(path);
+                    fs.init();
+                    fsr = new FileSystemResource(fs, synonymProviderConfigPath);
+                }
+                synonymProviderConfigFs = fs;
+            } else {
+                fsr = new FileSystemResource(fs, synonymProviderConfigPath);
+            }
+            return fsr;
+        } else {
+            // path not configured
+            return null;
+        }
     }
 
     /**
@@ -1683,6 +1752,23 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public boolean getEnableConsistencyCheck() {
         return consistencyCheckEnabled;
+    }
+
+    /**
+     * Sets the configuration path for the synonym provider.
+     *
+     * @param path the configuration path for the synonym provider.
+     */
+    public void setSynonymProviderConfigPath(String path) {
+        synonymProviderConfigPath = path;
+    }
+
+    /**
+     * @return the configuration path for the synonym provider. If none is set
+     *         this method returns <code>null</code>.
+     */
+    public String getSynonymProviderConfigPath() {
+        return synonymProviderConfigPath;
     }
 
     //----------------------------< internal >----------------------------------

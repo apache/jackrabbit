@@ -50,6 +50,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(QueryResultTest.class);
         suite.addTestSuite(FnNameQueryTest.class);
         suite.addTestSuite(PathQueryNodeTest.class);
+        suite.addTestSuite(SynonymProviderTest.class);
 
         // exclude long running tests per default
         //suite.addTestSuite(MassiveRangeTest.class);

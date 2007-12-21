@@ -16,11 +16,28 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import org.apache.jackrabbit.core.fs.FileSystemResource;
+
+import java.io.IOException;
+
 /**
  * <code>SynonymProvider</code> defines an interface for a component that
  * returns synonyms for a given term.
  */
 public interface SynonymProvider {
+
+    /**
+     * Initializes the synonym provider and passes the file system resource to
+     * the synonym provider configuration defined by the configuration value of
+     * the <code>synonymProviderConfigPath</code> parameter. The resource may be
+     * <code>null</code> if the configuration parameter is not set.
+     *
+     * @param fsr the file system resource to the synonym provider
+     *            configuration.
+     * @throws IOException if an error occurs while initializing the synonym
+     *                     provider.
+     */
+    public void initialize(FileSystemResource fsr) throws IOException;
 
     /**
      * Returns an array of terms that are considered synonyms for the given
