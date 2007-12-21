@@ -923,6 +923,7 @@ public class SearchIndex extends AbstractQueryHandler {
             } catch (Exception e) {
                 log.warn("Exception initializing synonym provider: " +
                         synonymProviderClass, e);
+                sp = null;
             }
         }
         return sp;
@@ -937,7 +938,7 @@ public class SearchIndex extends AbstractQueryHandler {
      *                             system.
      */
     protected FileSystemResource createSynonymProviderConfigResource()
-            throws FileSystemException {
+            throws FileSystemException, IOException {
         if (synonymProviderConfigPath != null) {
             FileSystemResource fsr;
             // simple sanity check
@@ -954,7 +955,7 @@ public class SearchIndex extends AbstractQueryHandler {
                 if (lastSeparator != -1) {
                     File root = new File(path,
                             synonymProviderConfigPath.substring(0, lastSeparator));
-                    ((LocalFileSystem) fs).setRoot(root);
+                    ((LocalFileSystem) fs).setRoot(root.getCanonicalFile());
                     fs.init();
                     fsr = new FileSystemResource(fs,
                             synonymProviderConfigPath.substring(lastSeparator + 1));
