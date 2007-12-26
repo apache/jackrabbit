@@ -22,11 +22,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.servlet.ServletException;
 
 import org.apache.jackrabbit.api.JackrabbitRepository;
+import org.apache.jackrabbit.commons.repository.RepositoryFactory;
+import org.apache.jackrabbit.commons.repository.SingletonRepositoryFactory;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.servlet.AbstractRepositoryServlet;
@@ -118,12 +119,13 @@ public class JackrabbitRepositoryServlet extends AbstractRepositoryServlet {
     }
 
     /**
-     * Returns the repository instance.
+     * Returns a repository factory that always returns the configured
+     * repository instance.
      *
-     * @return repository instance
+     * @return repository factory
      */
-    protected Repository getRepository() {
-        return repository;
+    protected RepositoryFactory getRepositoryFactory() {
+        return new SingletonRepositoryFactory(repository);
     }
 
     /**

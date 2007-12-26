@@ -20,7 +20,6 @@ import javax.jcr.Repository;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
-import org.apache.jackrabbit.commons.repository.ProxyRepository;
 import org.apache.jackrabbit.commons.repository.RepositoryFactory;
 
 /**
@@ -62,12 +61,13 @@ public class ContextRepositoryServlet extends AbstractRepositoryServlet {
     private static final long serialVersionUID = 6222606878557491477L;
 
     /**
-     * Creates and returns a repository proxy for accessing a repository
+     * Creates and returns a repository factory for accessing a repository
      * in the configured servlet context attribute.
      *
-     * @return repository proxy
+     * @return repository factory
      */
-    protected Repository getRepository() throws ServletException {
+    protected RepositoryFactory getRepositoryFactory()
+            throws ServletException {
         String path = getInitParameter("path");
         String name = getInitParameter("name", Repository.class.getName());
 
@@ -82,13 +82,11 @@ public class ContextRepositoryServlet extends AbstractRepositoryServlet {
                     + name + " of servlet " + getServletName());
         }
 
-        RepositoryFactory factory;
-        if (context != null) {
-            factory = new CrossContextRepositoryFactory(context, path, name);
+        if (path != null) {
+            return new CrossContextRepositoryFactory(context, path, name);
         } else {
-            factory = new ContextRepositoryFactory(context, name);
+            return new ContextRepositoryFactory(context, name);
         }
-        return new ProxyRepository(factory);
     }
 
 }

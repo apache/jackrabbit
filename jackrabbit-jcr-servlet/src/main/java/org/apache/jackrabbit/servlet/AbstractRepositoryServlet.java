@@ -25,12 +25,20 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.jackrabbit.commons.repository.ProxyRepository;
+import org.apache.jackrabbit.commons.repository.RepositoryFactory;
+
 /**
  * Abstract base class for servlets that make a repository available in
  * the servlet context. This class handles the initialization and cleanup
  * tasks of setting up and clearing the configured repository attribute,
  * while a subclass only needs to implement the abstract
- * {@link #getRepository()} method to actually make the repository available.
+ * {@link #getRepositoryFactory()} method that returns a factory for
+ * retrieving the actual content repository.
+ * <p>
+ * The {@link Repository} instance bound to the servlet context is actually
+ * a {@link ProxyRepository} that uses the given {@link RepositoryFactory}
+ * for late binding of the underlying content repository.
  * <p>
  * The default name of the repository attribute is
  * "<code>javax.jcr.Repository</code>", but it can be changed by specifying
@@ -58,12 +66,16 @@ import javax.servlet.http.HttpServletResponse;
 public abstract class AbstractRepositoryServlet extends HttpServlet {
 
     /**
-     * Retrieves a repository and binds it in servlet context attribute.
+     * Binds a {@link ProxyRepository} with the factory returned by
+     * {@link #getRepositoryFactory()} in the configured servlet
+     * context attribute.
      *
-     * @throws ServletException if the repository can not be retrieved
+     * @throws ServletException if the factory could not be retrieved
      */
     public void init() throws ServletException {
-        getServletContext().setAttribute(getAttributeName(), getRepository());
+        getServletContext().setAttribute(
+                getAttributeName(),
+                new ProxyRepository(getRepositoryFactory()));
     }
 
     /**
@@ -74,19 +86,14 @@ public abstract class AbstractRepositoryServlet extends HttpServlet {
     }
 
     /**
-     * Returns the repository instance to be bound in the servlet context.
-     * This method is invoked once during servlet initialization and is the
-     * only method that a subclass needs to implement.
-     * <p>
-     * Note that the returned repository can be (and often is) a proxy
-     * instance that accesses the actual repository only on demand. This
-     * allows late binding of the repository even though this method gets
-     * called already during servlet initialization.
+     * Returns the repository factory that will be used by the
+     * {@link ProxyRepository} bound to the servlet context.
      *
-     * @return repository instance
-     * @throws ServletException if the repository is not available
+     * @return repository factory
+     * @throws ServletException if the factory could not be created
      */
-    protected abstract Repository getRepository() throws ServletException;
+    protected abstract RepositoryFactory getRepositoryFactory()
+        throws ServletException;
 
     /**
      * Returns the name of the repository attribute. The default
@@ -150,13 +157,12 @@ public abstract class AbstractRepositoryServlet extends HttpServlet {
      * @param request HTTP request
      * @param response HTTP response
      * @throws IOException on IO errors
+     * @throws ServletException on servlet errors
      */
     protected void doGet(
             HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        String name = getAttributeName();
-        Repository repository = (Repository)
-            getServletContext().getAttribute(name);
+            throws IOException, ServletException {
+        Repository repository = new ServletRepository(this);
 
         String info = request.getPathInfo();
         if (info == null || info.equals("/")) {
@@ -166,8 +172,10 @@ public abstract class AbstractRepositoryServlet extends HttpServlet {
                 descriptors.setProperty(
                         keys[i], repository.getDescriptor(keys[i]));
             }
+            // TODO: Using UTF-8 instead of ISO-8859-1 would be better, but
+            // would require re-implementing the Properties.store() method
             response.setContentType("text/plain; charset=ISO-8859-1");
-            descriptors.store(response.getOutputStream(), name);
+            descriptors.store(response.getOutputStream(), getAttributeName());
         } else {
             String key = info.substring(1); // skip the leading "/"
             String descriptor = repository.getDescriptor(key);
