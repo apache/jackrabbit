@@ -19,11 +19,11 @@ package org.apache.jackrabbit.servlet.remote;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import javax.jcr.Repository;
 import javax.servlet.ServletException;
 
+import org.apache.jackrabbit.commons.repository.RepositoryFactory;
 import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
-import org.apache.jackrabbit.rmi.repository.URLRemoteRepository;
+import org.apache.jackrabbit.rmi.repository.URLRemoteRepositoryFactory;
 import org.apache.jackrabbit.servlet.AbstractRepositoryServlet;
 
 /**
@@ -63,18 +63,20 @@ public class URLRemoteRepositoryServlet extends RemoteRepositoryServlet {
     private static final long serialVersionUID = 6144781813459102448L;
 
     /**
-     * Creates and returns a proxy for the remote repository at the given URL.
+     * Creates and returns a factory for retrieving the remote repository
+     * at the given URL.
      *
-     * @return repository proxy
+     * @return repository factory
+     * @throws ServletException if the factory could not be created
      */
-    protected Repository getRepository() throws ServletException {
+    protected RepositoryFactory getRepositoryFactory() throws ServletException {
         String url = getInitParameter("url");
         if (url == null) {
             throw new ServletException("Missing init parameter: url");
         }
 
         try {
-            return new URLRemoteRepository(
+            return new URLRemoteRepositoryFactory(
                         getLocalAdapterFactory(), new URL(url));
         } catch (MalformedURLException e) {
             throw new ServletException("Invalid repository URL: " + url, e);

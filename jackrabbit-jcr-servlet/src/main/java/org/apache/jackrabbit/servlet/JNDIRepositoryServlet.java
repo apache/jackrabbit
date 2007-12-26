@@ -24,7 +24,8 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletException;
 
-import org.apache.jackrabbit.commons.repository.JNDIRepository;
+import org.apache.jackrabbit.commons.repository.JNDIRepositoryFactory;
+import org.apache.jackrabbit.commons.repository.RepositoryFactory;
 
 /**
  * Servlet that makes a repository from JNDI available as an attribute
@@ -62,12 +63,12 @@ public class JNDIRepositoryServlet extends AbstractRepositoryServlet {
     private static final long serialVersionUID = 8952525573562952560L;
 
     /**
-     * Creates and returns a JNDI repository proxy based on the configured
+     * Creates and returns a JNDI repository factory based on the configured
      * init parameters.
      *
-     * @return JNDI repository proxy
+     * @return JNDI repository factory
      */
-    protected Repository getRepository() throws ServletException {
+    protected RepositoryFactory getRepositoryFactory() throws ServletException {
         try {
             String location = Repository.class.getName().replace('.', '/');
             Hashtable environment = new Hashtable();
@@ -80,7 +81,7 @@ public class JNDIRepositoryServlet extends AbstractRepositoryServlet {
                     environment.put(name, getInitParameter(name));
                 }
             }
-            return new JNDIRepository(
+            return new JNDIRepositoryFactory(
                     new InitialContext(environment), location);
         } catch (NamingException e) {
             throw new ServletException(

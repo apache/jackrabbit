@@ -24,10 +24,11 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletException;
 
+import org.apache.jackrabbit.commons.repository.RepositoryFactory;
 import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
-import org.apache.jackrabbit.rmi.repository.JNDIRemoteRepository;
+import org.apache.jackrabbit.rmi.repository.JNDIRemoteRepositoryFactory;
 import org.apache.jackrabbit.servlet.AbstractRepositoryServlet;
 
 /**
@@ -74,12 +75,13 @@ public class JNDIRemoteRepositoryServlet extends RemoteRepositoryServlet {
     private static final long serialVersionUID = 9029928193416404478L;
 
     /**
-     * Creates and returns a proxy for the remote repository in the configured
-     * JNDI location.
+     * Creates and returns a factory for retrieving the remote repository
+     * in the configured JNDI location.
      *
-     * @return repository proxy
+     * @return repository factory
+     * @throws ServletException if the factory could not be created
      */
-    protected Repository getRepository() throws ServletException {
+    protected RepositoryFactory getRepositoryFactory() throws ServletException {
         String location =
             "//localhost/" + RemoteRepository.class.getName().replace('.', '/');
         try {
@@ -94,7 +96,7 @@ public class JNDIRemoteRepositoryServlet extends RemoteRepositoryServlet {
                     environment.put(name, getInitParameter(name));
                 }
             }
-            return new JNDIRemoteRepository(
+            return new JNDIRemoteRepositoryFactory(
                     getLocalAdapterFactory(),
                     new InitialContext(environment), location);
         } catch (NamingException e) {
