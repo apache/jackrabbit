@@ -611,7 +611,7 @@ public class PathFactoryImpl implements PathFactory {
             if (this == obj) {
                 return true;
             }
-            if (obj instanceof PathImpl) {
+            if (obj instanceof Path) {
                 Path other = (Path) obj;
                 return Arrays.equals(elements, other.getElements());
             }
