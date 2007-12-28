@@ -63,9 +63,12 @@ jackrabbit-core
   [JCR-1073] Add getTotalSize() to QueryResults
   [JCR-1079] Extend the IndexingConfiguration to allow configuration ...
   [JCR-1112] CacheManager interval between recalculation of cache sizes ...
+  [JCR-1154] Database Data Store
   [JCR-1184] Introduce spellchecker functionality based on content in ...
+  [JCR-1276] A Property and a Node Can Have the Same Name
 
   Improvements
+  [JCR-314]  Fine grained locking in SharedItemStateManager
   [JCR-564]  Remove geronimo JTA as a runtime dependency
   [JCR-688]  Improve name resolution
   [JCR-691]  Let NameException extend RepositoryException
@@ -80,6 +83,7 @@ jackrabbit-core
   [JCR-928]  NodeTypeManagerImpl.hasNodeType should allow unknown prefixes
   [JCR-940]  add db connection autoConnect for BundleDbPersistenceManager.
   [JCR-943]  SQL Server support in clustering module
+  [JCR-948]  Support for JNDI configuration of BundleDbPersistenceManager
   [JCR-949]  PostgreSQL support in clustering module
   [JCR-967]  Only search the index for the "jcr:system" tree if needed
   [JCR-968]  Add support for tablespaces to Oracle related classes
@@ -102,27 +106,57 @@ jackrabbit-core
   [JCR-1111] Accesss to version history results in reading all versions ...
   [JCR-1114] Remove QueryResultImpl and rename LazyQueryResultImpl to ...
   [JCR-1116] Database persistence managers: log database and driver ...
+  [JCR-1138] Data store garbage collection
   [JCR-1156] DatabaseJournal refactoring for subclassing capability
   [JCR-1162] Improve logging in NodeTypeRegistry.persistCustomNodeTypeDefs
   [JCR-1169] Distribution of commons classes
   [JCR-1175] Test cases for all FileSystem implementations
   [JCR-1178] Rethrow exception with cause in BundleDbPersistenceManager
+  [JCR-1181] Use common base classes in jackrabbit-core and jcr2spi
+  [JCR-1182] Put everything in jackrabbit-spi-commons under ...
+  [JCR-1209] NodeImpl.checkout() calls save() two times
+  [JCR-1213] UUIDDocId cache does not work properly because of ...
   [JCR-1214] DocId.UUIDDocId should not have a string attr uuid
   [JCR-1221] IndexMerger blocks client threads when obsolete index ...
   [JCR-1222] Index nodes in parallel
+  [JCR-1225] ReadOnlyIndexReaders are re-created on every access
+  [JCR-1229] Remove build.xml from jackrabbit-core
+  [JCR-1234] CachingMultiReader has inconsistent name
+  [JCR-1238] Change default value for maxMergeDocs
+  [JCR-1241] NodeIndexer creates unnecessary string representation of Name ...
+  [JCR-1251] DescendantSelfAxisQuery creates too many object instances
+  [JCR-1252] BundleFsPersistenceManager: remove deprecated settings
+  [JCR-1266] Use creation tick instead of weak references in DocNumberCache
+  [JCR-1273] Unnecessary parsing of Name value
+  [JCR-1278] Add configuration path to SynonymProvider
 
   Bug fixes
   [JCR-674]  String properties with invalid XML characters export as ...
+  [JCR-832]  BundleDBPersistenceManager does not free blobStore resources
+  [JCR-1013] Connection.setAutoCommit(...) fails if connection is managed ...
+  [JCR-1148] NullPointerException in ItemState
   [JCR-1167] Paths not correct after reordering children
   [JCR-1170] Repository lock keeps file open
   [JCR-1176] MemoryFileSystem is different from other FileSystems
   [JCR-1179] Event filtering by path not working as specified
   [JCR-1185] building trunk fails with javacc plugin version 2.2
   [JCR-1217] Aggregate include ignored if no primaryType set
+  [JCR-1235] o.a.j.core.integration.PrepareTestRepository fails on 2nd and ...
+  [JCR-1240] Index segments are only committed on close
+  [JCR-1246] In DatabasePersistenceManager.store(), if the exception is ...
+  [JCR-1250] When adding a large (100MB) binary to the DbDataStore, it ...
+  [JCR-1254] DatabaseJournal commits twice inside a transaction, causing an ...
+  [JCR-1265] Lower-Case Search-Function works with Upper-Case Searchstring
+  [JCR-1270] CompactNodeTypeDefReader does not recognise MIXIN ORDERABLE ...
+  [JCR-1271] NullPointerException when iterating over properties
+  [JCR-1272] Property.getValue() throws RepositoryException with internal error
+  [JCR-1274] ItemStateCache in SharedItemStateManager not properly ...
+  [JCR-1277] ConnectionRecoveryManager is created twice in DBDataStore init ...
 
 jackrabbit-jca
 
-  No changes
+  Improvements
+  [JCR-987]  Deploy JCA JAR file to maven repository
 
 jackrabbit-jcr-commons
 
@@ -134,6 +168,8 @@ jackrabbit-jcr-commons
   [JCR-1152] SPI implementations currently need to provide ...
   [JCR-1169] Distribution of commons classes
   [JCR-1206] UUID generation: SecureRandom should be used by default
+  [JCR-1258] Add path encoding to ISO9075
+  [JCR-1273] Unnecessary parsing of Name value
 
   Bug fixes
   [JCR-674]  String properties with invalid XML characters export as ...
@@ -157,6 +193,10 @@ jackrabbit-jcr-server
   [JCR-852]  Change Log-Level in DefaultIOListener
   [JCR-1172] Better MimeType Handling
   [JCR-1210] WebDAV: pack AbstractWebdavServlet with the ...
+  [JCR-1230] Jcr-Server: useful output upon GET to root- and ...
+  [JCR-1262] Deprecated AbstractWebdavServlet should be empty and extend ...
+  [JCR-1263] Move SimpleWebdavServlet to jcr-server and make it abstract
+  [JCR-1268] Move JCRWebdavServerServlet to jcr-server and make it abstrat
 
 jackrabbit-jcr-servlet
 
@@ -173,6 +213,7 @@ jackrabbit-jcr-tests
   [JCR-822]  TCK: Transfer of lock token should be tested using ...
   [JCR-947]  XMLReader logs fatal error to system out
   [JCR-1143] NullPointerException in ClassDescriptor
+  [JCR-1224] Release references to JCR items in tearDown
 
   Bug fixes
   [JCR-1134] bad assumptions in VersionHistoryTest.testInitallyGetAll...
@@ -182,6 +223,7 @@ jackrabbit-jcr2spi
 
   New features
   [JCR-999]  SPI: provide batch read functionality
+  [JCR-1009] JCR2SPI: add JNDI support
 
   Improvements
   [JCR-996]  Name and Path interfaces in SPI
@@ -204,9 +246,15 @@ jackrabbit-jcr2spi
   [JCR-1152] SPI implementations currently need to provide ...
   [JCR-1153] remove support for event bundle IDs
   [JCR-1159] SPI: improve description of locking methods on RepositoryService
+  [JCR-1166] JCR2SPI does not provide actual size on RangeIterator.getSize()
   [JCR-1169] Distribution of commons classes
+  [JCR-1181] Use common base classes in jackrabbit-core and jcr2spi
+  [JCR-1182] Put everything in jackrabbit-spi-commons under ...
   [JCR-1200] allow SPI implementation to compute default values for ...
   [JCR-1204] Redesign SPI observation
+  [JCR-1231] Jcr2Spi: Unneeded call to getPropertyInfo upon creating a new ...
+  [JCR-1244] No need for NodeReferences in jcr2spi
+  [JCR-1267] Unreachable catch block for NameException in ValueConstraint.java
 
   Bug fixes
   [JCR-674]  String properties with invalid XML characters export as ...
@@ -221,6 +269,7 @@ jackrabbit-jcr2spi
   [JCR-1149] JCR2SPI: several broken equals() comparisons
   [JCR-1160] JCR2SPI: test regression for WorkspaceMoveReferenceableTest...
   [JCR-1183] JCR2SPI: potential race condition in event listener registration
+  [JCR-1245] JCR2SPI: Use namespace decl. present in imported xml to ...
 
 jackrabbit-spi
 
@@ -239,6 +288,7 @@ jackrabbit-spi
   [JCR-1153] remove support for event bundle IDs
   [JCR-1155] Wrong link in javadoc of QNodeTypeDefinition
   [JCR-1159] SPI: improve description of locking methods on RepositoryService
+  [JCR-1190] QValueFactory improvements
   [JCR-1200] allow SPI implementation to compute default values for ...
   [JCR-1204] Redesign SPI observation
 
@@ -256,15 +306,19 @@ jackrabbit-spi-commons
   [JCR-1152] SPI implementations currently need to provide ...
   [JCR-1153] remove support for event bundle IDs
   [JCR-1169] Distribution of commons classes
+  [JCR-1182] Put everything in jackrabbit-spi-commons under ...
+  [JCR-1190] QValueFactory improvements
   [JCR-1200] allow SPI implementation to compute default values for ...
 
   Bug fixes
   [JCR-1179] Event filtering by path not working as specified
+  [JCR-1280] Path.equals does not work for other Path implementations
 
 jackrabbit-spi2jcr
 
   New features
   [JCR-999]  SPI: provide batch read functionality
+  [JCR-1009] JCR2SPI: add JNDI support
 
   Improvements
   [JCR-996]  Name and Path interfaces in SPI
@@ -277,6 +331,7 @@ jackrabbit-spi2jcr
   [JCR-1157] Expose namespace registry via workspace instead via session ...
   [JCR-1159] SPI: improve description of locking methods on RepositoryService
   [JCR-1169] Distribution of commons classes
+  [JCR-1182] Put everything in jackrabbit-spi-commons under ...
   [JCR-1204] Redesign SPI observation
 
   Bug fixes
@@ -285,7 +340,8 @@ jackrabbit-spi2jcr
 
 jackrabbit-text-extractors
 
-  No changes
+  Improvements
+  [JCR-1247] Add Warnlog on Extraction Failure
 
 jackrabbit-webapp
 
@@ -298,12 +354,17 @@ jackrabbit-webapp
 
   Improvements
   [JCR-1016] [PATCH] Allow RepositoryAccessServlet to get the Repository ...
+  [JCR-1193] war missing jcr jar
   [JCR-1210] WebDAV: pack AbstractWebdavServlet with the ...
+  [JCR-1268] Move JCRWebdavServerServlet to jcr-server and make it abstract
 
 jackrabbit-webdav
 
   Improvements
   [JCR-1210] WebDAV: pack AbstractWebdavServlet with the ...
+
+  Bug fixes
+  [JCR-1264] IfHeader: Incorrect test for parsing keyword "not" in parseIfList
 
 jcr-mapping
 
@@ -325,6 +386,7 @@ jcr-mapping
   [JCR-864]  Bug in UtilDateTypeConverterImpl
   [JCR-1044] NTCollectionConverterImpl throws a null pointer exception ...
   [JCR-1054] Duplicate attribute in BeanDescriptor and CollectionDescriptor
+  [JCR-1198] Issue while loading list of classes at that path itself
 
 Release Contents
 ----------------
