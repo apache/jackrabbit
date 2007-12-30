@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE jackrabbit-ocm PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/jackrabbit-ocm.dtd">
+<jackrabbit-ocm>
+
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.HierarchyNode"  jcrType="nt:hierarchyNode" >
+		<field-descriptor fieldName="path" path="true" />
+		<field-descriptor fieldName="creationDate" jcrName="jcr:created"/>	
+	</class-descriptor>	
+	
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Folder"  jcrType="nt:folder"
+	                  extend="org.apache.jackrabbit.ocm.testmodel.HierarchyNode" >
+
+		<collection-descriptor fieldName="children" proxy="false" autoUpdate="false" 
+		                       elementClassName="org.apache.jackrabbit.ocm.testmodel.HierarchyNode" 
+		                       collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl" />
+
+	</class-descriptor>	
+	
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.File"  jcrType="nt:file" 
+	                  extend="org.apache.jackrabbit.ocm.testmodel.HierarchyNode" >
+	                  
+		<bean-descriptor  fieldName="resource"  jcrName="jcr:content" />
+	</class-descriptor>
+		
+    <class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Resource"  jcrType="nt:resource">
+		<field-descriptor fieldName="mimeType" jcrName="jcr:mimeType"/>			
+		<field-descriptor fieldName="data" jcrName="jcr:data"/>	
+		<field-descriptor fieldName="lastModified" jcrName="jcr:lastModified"/>	
+	</class-descriptor>	
+
+    <class-descriptor className="org.apache.jackrabbit.ocm.testmodel.PropertyTest" jcrType="ocm:propertytest" >
+		<field-descriptor fieldName="path" path="true" />
+		<field-descriptor fieldName="requiredProp" jcrName="ocm:requiredProp" />
+		<field-descriptor fieldName="requiredWithConstraintsProp" jcrName="ocm:requiredWithConstraintsProp" jcrValueConstraints="abc,def,ghi" />
+		<field-descriptor fieldName="autoCreatedProp" jcrName="ocm:autoCreatedProp" jcrDefaultValue="aaa" />
+		<field-descriptor fieldName="autoCreatedWithConstraintsProp" jcrName="ocm:autoCreatedWithConstraintsProp" jcrDefaultValue="ccc" jcrValueConstraints="bbb,ccc,ddd"/>
+		<field-descriptor fieldName="mandatoryProp" jcrName="ocm:mandatoryProp" jcrMandatory="true" />				
+		<field-descriptor fieldName="mandatoryWithConstaintsProp" jcrName="ocm:mandatoryWithConstaintsProp" jcrMandatory="true" jcrValueConstraints="xx,yy"/>						
+		<field-descriptor fieldName="protectedWithDefaultValueProp" jcrName="ocm:protectedWithDefaultValueProp" jcrProtected="true"/>
+	</class-descriptor>			
+</jackrabbit-ocm>
+ 
