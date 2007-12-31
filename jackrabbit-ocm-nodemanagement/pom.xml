@@ -32,13 +32,11 @@
 		<version>1.4-SNAPSHOT</version>
 	</parent>
 	<artifactId>jackrabbit-ocm-nodemanagement</artifactId>
-	<packaging>jar</packaging>
 	<name>Jackrabbit OCM Node management</name>
 	<description>
 		This subproject contains the JCR Nodetype Management tools. This
 		tools convert a OCM class descriptor into JCR node types.
 	</description>
-	<inceptionYear>2007</inceptionYear>
 
 	<!-- ====================================================================== -->
 	<!-- D E P E N D E N C I E S                                                -->
@@ -51,7 +49,6 @@
 		<dependency>
 			<groupId>org.apache.jackrabbit</groupId>
 			<artifactId>jackrabbit-ocm</artifactId>
-			<version>1.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.jackrabbit</groupId>
@@ -66,7 +63,6 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -74,12 +70,11 @@
 			<artifactId>slf4j-log4j12</artifactId>
 			<scope>test</scope>
 		</dependency>
-
 	</dependencies>
+
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<excludes>
@@ -89,4 +84,17 @@
 			</plugin>
 		</plugins>
 	</build>
+
+  <scm>
+    <connection>
+      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-ocm-nodemanagement
+    </connection>
+    <developerConnection>
+      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-ocm-nodemanagement
+    </developerConnection>
+    <url>
+      http://svn.apache.org/viewvc/asf/jackrabbit/trunk/jackrabbit-ocm-nodemanagement
+    </url>
+  </scm>
+
 </project>
