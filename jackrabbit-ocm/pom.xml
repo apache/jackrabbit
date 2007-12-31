@@ -61,42 +61,19 @@
           <argLine>-Xmx256m</argLine>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>retrotranslator-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>translate-project</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
-
-  <!-- ====================================================================== -->
-  <!-- P R O F I L E S                                                        -->
-  <!-- ====================================================================== -->
-  <profiles>
-    <profile>
-      <id>jdk1.4</id>
-      <properties>
-        <maven.test.skip>true</maven.test.skip>
-      </properties>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <configuration>
-              <excludes>
-                <exclude>
-                  org/apache/jackrabbit/ocm/mapper/impl/annotation/**
-                </exclude>
-              </excludes>
-              <target>1.4</target>
-              <source>1.4</source>
-            </configuration>
-          </plugin>
-          <plugin>
-            <artifactId>maven-jar-plugin</artifactId>
-            <configuration>
-              <classifier>jdk1.4</classifier>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 
   <!-- ====================================================================== -->
   <!-- D E P E N D E N C I E S                                                -->
