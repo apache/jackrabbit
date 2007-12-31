@@ -70,6 +70,10 @@
     <module>jackrabbit-spi-commons</module>
     <module>jackrabbit-jcr2spi</module>
     <module>jackrabbit-spi2jcr</module>
+    <!-- TODO: OCM requires Java 5
+    <module>jackrabbit-ocm</module>
+    <module>jackrabbit-ocm-nodemanagement</module>
+    -->
   </modules>
 
   <build>
@@ -672,6 +676,21 @@
         <version>3.1</version>
       </dependency>
       <dependency>
+        <groupId>commons-digester</groupId>
+        <artifactId>commons-digester</artifactId>
+        <version>1.7</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-lang</groupId>
+        <artifactId>commons-lang</artifactId>
+        <version>2.1</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-beanutils</groupId>
+        <artifactId>commons-beanutils</artifactId>
+        <version>1.7.0</version>
+      </dependency>
+      <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
         <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
         <version>1.0.1</version>
@@ -713,6 +732,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
+        <artifactId>jackrabbit-jcr-servlet</artifactId>
+        <version>1.4-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-jcr-server</artifactId>
         <version>1.4-SNAPSHOT</version>
       </dependency>
@@ -734,6 +758,16 @@
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-spi2jcr</artifactId>
+        <version>1.4-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.jackrabbit</groupId>
+        <artifactId>jackrabbit-ocm</artifactId>
+        <version>1.4-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.jackrabbit</groupId>
+        <artifactId>jackrabbit-ocm-nodemanagement</artifactId>
         <version>1.4-SNAPSHOT</version>
       </dependency>
       <dependency>

@@ -32,7 +32,6 @@
     <version>1.4-SNAPSHOT</version>
   </parent>
   <artifactId>jackrabbit-ocm</artifactId>
-  <packaging>jar</packaging>
   <name>Jackrabbit Object Content Mapping</name>
   <description>
     This Jackrabbit subproject is an object/JCR persistence and
@@ -43,7 +42,6 @@
     Java-based Criteria, as well as in JCR query language. It offers
     also features like version support and object locking.
   </description>
-  <inceptionYear>2007</inceptionYear>
 
   <!-- ====================================================================== -->
   <!-- B U I L D                                                              -->
@@ -72,6 +70,9 @@
   <profiles>
     <profile>
       <id>jdk1.4</id>
+      <properties>
+        <maven.test.skip>true</maven.test.skip>
+      </properties>
       <build>
         <plugins>
           <plugin>
@@ -108,7 +109,6 @@
     <dependency>
       <groupId>commons-digester</groupId>
       <artifactId>commons-digester</artifactId>
-      <version>1.7</version>
     </dependency>
     <dependency>
       <groupId>commons-collections</groupId>
@@ -117,7 +117,6 @@
     <dependency>
       <groupId>commons-lang</groupId>
       <artifactId>commons-lang</artifactId>
-      <version>2.1</version>
     </dependency>
 
     <dependency>
@@ -128,12 +127,10 @@
     <dependency>
       <groupId>cglib</groupId>
       <artifactId>cglib</artifactId>
-      <version>2.1_3</version>
     </dependency>
     <dependency>
       <groupId>commons-beanutils</groupId>
       <artifactId>commons-beanutils</artifactId>
-      <version>1.7.0</version>
     </dependency>
 
     <!-- Test -->
@@ -161,13 +158,13 @@
 
   <scm>
     <connection>
-      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/contrib/jackrabbit-jcr-mapping/jcr-mapping
+      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-ocm
     </connection>
     <developerConnection>
-      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/contrib/jackrabbit-jcr-mapping/jcr-mapping
+      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-ocm
     </developerConnection>
     <url>
-      http://svn.apache.org/viewvc/jackrabbit/trunk/contrib/jackrabbit-jcr-mapping/jcr-mapping
+      http://svn.apache.org/viewvc/asf/jackrabbit/trunk/jackrabbit-ocm
     </url>
   </scm>
 
