@@ -36,7 +36,7 @@
         <source><![CDATA[
 <class-descriptor
     className="org.apache.jackrabbit.ocm.testmodel.Page"
-    jcrType="graffito:page">
+    jcrType="my:page">
   <collection-descriptor
       fieldName="paragraphs" jcrName="paragraphs"
       elementClassName="org.apache.jackrabbit.ocm.testmodel.Paragraph" />
@@ -45,9 +45,9 @@
 
 <class-descriptor
     className="org.apache.jackrabbit.ocm.testmodel.Paragraph"
-    jcrType="graffito:paragraph">
+    jcrType="my:paragraph">
   <field-descriptor fieldName="path" path="true" />
-  <field-descriptor fieldName="text" jcrName="graffito:text"/>
+  <field-descriptor fieldName="text" jcrName="my:text"/>
 </class-descriptor>
 ]]></source>
         <p>
@@ -65,9 +65,9 @@
 /mysite/page1
   /mysite/page1/paragraphs
     /mysite/page1/paragraphs/collection-element1
-      graffito:text = "This is the content of para1"
+      my:text = "This is the content of para1"
     /mysite/page1/paragraphs/collection-element2
-      graffito:text = "This is the content of para2"
+      my:text = "This is the content of para2"
   ... other subnodes for page1 ...
 ]]></source>
         <p>

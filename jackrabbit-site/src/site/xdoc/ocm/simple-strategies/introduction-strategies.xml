@@ -109,13 +109,13 @@ public class Paragraph
         <source><![CDATA[
 /mysite/page1
   /mysite/page1/pageInfo
-    graffito:title = "This is my page title"
-    graffito:description = "This is my page description"
+    my:title = "This is my page title"
+    my:description = "This is my page description"
   /mysite/page1/paragraphs
     /mysite/page1/paragraphs/paragraph1
-      graffito:text = "This is the content of para1"
+      my:text = "This is the content of para1"
     /mysite/page1/paragraphs/paragraph2
-      graffito:text = "This is the content of para2"
+      my:text = "This is the content of para2"
  ]]></source>
         <p>
           It is possible to have another kind of jcr structure by using
@@ -153,7 +153,7 @@ public class Paragraph
           type by specifying the desired type in the attribute jcrType.
           The following class-descriptor map the class
           "org.apache.jackrabbit.ocm.testmodel.Paragraph" into the
-          node type "graffito:paragraph".
+          node type "my:paragraph".
         </p>
         <p>
           Here are the class-descriptors required to map the classes

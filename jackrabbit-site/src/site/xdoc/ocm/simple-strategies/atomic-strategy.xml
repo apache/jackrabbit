@@ -33,7 +33,7 @@
           Based on our model defined
           <a href="introduction-strategies.html">here</a>,
           the following field-descriptor maps the bean field "title"
-          (String type) into the JCR property "graffito:title".
+          (String type) into the JCR property "my:title".
         </p>
         <p align="center"><img src="../images/atomic-fields-def.jpg"/></p>
       </subsection>

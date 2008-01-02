@@ -98,7 +98,7 @@
         </p>
         <p align="center"><img src="images/xml-file-descriptor.jpg"/></p>
         <p>
-          The root element is "graffito-jcr" and it contains one or more
+          The root element is "jackrabbit-ocm" and it contains one or more
           "class-descriptor". As you can see in the sections
           "Mapping Strategies" and "Advanced Mapping Strategies", each
           class-descriptor contains the mapping information used for each
