@@ -394,7 +394,9 @@ public class LocalItemStateManager
             // just ensure that the newly created state is still cached. it can
             // happen during a restore operation that a state with the same id
             // is deleted and created (JCR-1197)
-            cache.cache(local);
+            if (!cache.isCached(created.getId())) {
+                cache.cache(local);
+            }
         }
         if (local != null) {
             dispatcher.notifyStateCreated(created);
