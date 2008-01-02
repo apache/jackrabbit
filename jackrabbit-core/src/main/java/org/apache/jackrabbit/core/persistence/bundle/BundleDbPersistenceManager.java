@@ -432,7 +432,8 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                 String sql = reader.readLine();
                 while (sql != null) {
                     sql = createSchemaSQL(sql);
-                    if (sql.length() > 0 && (sql.indexOf("BINVAL") < 0 || useDbBlobStore())) {
+                    if (!sql.startsWith("#") && sql.length() > 0
+                            && (sql.indexOf("BINVAL") < 0 || useDbBlobStore())) {
                         // only create blob related tables of db blob store configured
                         // execute sql stmt
                         stmt.executeUpdate(sql);
