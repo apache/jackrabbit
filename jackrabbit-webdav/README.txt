@@ -22,7 +22,7 @@ See "TODO.txt" for the current status and open issues.
 See the Apache Jackrabbit web site (http://jackrabbit.apache.org/)
 for documentation and other information. You are welcome to join the
 Jackrabbit mailing lists (http://jackrabbit.apache.org/mail-lists.html)
-to discuss this compoment and to use the Jackrabbit issue tracker
+to discuss this component and to use the Jackrabbit issue tracker
 (http://issues.apache.org/jira/browse/JCR) to report issues or request
 new features.
 
@@ -54,20 +54,20 @@ limitations under the License.
 Getting Started
 ===============
 
-This compoment uses a Maven 2 (http://maven.apache.org/) build
+This component uses a Maven 2 (http://maven.apache.org/) build
 environment. If you have Maven 2 installed, you can compile and
-package the jacrabbit-commons jar using the following command:
+package the jackrabbit-commons jar using the following command:
 
     mvn package
 
 See the Maven 2 documentation for other build features.
 
-This compoment has a dependency to the Jackrabbit JCR Commons library.
+This component has a dependency to the Jackrabbit JCR Commons library.
 If you are using the latest Jackrabbit source code, you need to first
 build and install the JCR Commons library in your local Maven 2 repository
 before building this component.
 
-The latest source code for this compoment is available in the
+The latest source code for this component is available in the
 Subversion (http://subversion.tigris.org/) source repository of
 the Apache Software Foundation. If you have Subversion installed,
 you can checkout the latest source using the following command:
