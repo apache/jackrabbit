@@ -70,7 +70,7 @@
             persistence manager of the workspace:
             class: FQN of class implementing the PersistenceManager interface
         -->
-        <PersistenceManager class="org.apache.jackrabbit.core.persistence.db.DerbyPersistenceManager">
+        <PersistenceManager class="org.apache.jackrabbit.core.persistence.bundle.DerbyPersistenceManager">
           <param name="url" value="jdbc:derby:${wsp.home}/db;create=true"/>
           <param name="schemaObjectPrefix" value="${wsp.name}_"/>
         </PersistenceManager>
@@ -101,7 +101,7 @@
             a 'normal' persistence manager, but this could change in future
             implementations.
         -->
-        <PersistenceManager class="org.apache.jackrabbit.core.persistence.db.DerbyPersistenceManager">
+        <PersistenceManager class="org.apache.jackrabbit.core.persistence.bundle.DerbyPersistenceManager">
           <param name="url" value="jdbc:derby:${rep.home}/version/db;create=true"/>
           <param name="schemaObjectPrefix" value="version_"/>
         </PersistenceManager>

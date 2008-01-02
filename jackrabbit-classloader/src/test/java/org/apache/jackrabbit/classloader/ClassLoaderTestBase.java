@@ -97,7 +97,8 @@ public class ClassLoaderTestBase extends TestCase {
     }
 
     public void repositoryStart() throws Exception {
-        InputStream config = getClass().getResourceAsStream("/repository.xml");
+        InputStream config =
+            RepositoryImpl.class.getResourceAsStream("repository.xml");
         String home = new File("cltest").getAbsolutePath();
         RepositoryConfig rc = RepositoryConfig.create(config, home);
         RepositoryImpl repository = RepositoryImpl.create(rc);
