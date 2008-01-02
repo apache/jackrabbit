@@ -106,7 +106,7 @@ public class Paragraph
         <source><![CDATA[
 <class-descriptor
     className="org.apache.jackrabbit.ocm.testmodel.Page"
-    jcrType="graffito:page">
+    jcrType="my:page">
   <field-descriptor fieldName="path" path="true" />
   <bean-descriptor fieldName="pageInfo" jcrName="pageInfo" />
   <collection-descriptor
@@ -116,17 +116,17 @@ public class Paragraph
 
 <class-descriptor
     className="org.apache.jackrabbit.ocm.testmodel.PageInfo"
-    jcrType="graffito:PageInfo">
+    jcrType="my:PageInfo">
   <field-descriptor fieldName="path" path="true" />
-  <field-descriptor fieldName="title" jcrName="graffito:title"/>
-  <field-descriptor fieldName="description" jcrName="graffito:description"/>
+  <field-descriptor fieldName="title" jcrName="my:title"/>
+  <field-descriptor fieldName="description" jcrName="my:description"/>
 </class-descriptor>
 
 <class-descriptor
     className="org.apache.jackrabbit.ocm.testmodel.Paragraph"
-    jcrType="graffito:paragraph">
+    jcrType="my:paragraph">
   <field-descriptor fieldName="path" path="true" />
-  <field-descriptor fieldName="text" jcrName="graffito:text"/>
+  <field-descriptor fieldName="text" jcrName="my:text"/>
 </class-descriptor>
 ]]></source>
 
@@ -142,13 +142,13 @@ public class Paragraph
         <source><![CDATA[
 /mysite/page1
   /mysite/page1/pageInfo
-    graffito:title = "This is my page title"
-    graffito:description = "This is my page description"
+    my:title = "This is my page title"
+    my:description = "This is my page description"
   /mysite/page1/paragraphs
     /mysite/page1/paragraphs/paragraph1
-      graffito:text = "This is the content of para1"
+      my:text = "This is the content of para1"
     /mysite/page1/paragraphs/paragraph2
-      graffito:text = ""This is the content of para2"
+      my:text = ""This is the content of para2"
 ]]></source>
       </p>
         <p>
@@ -164,7 +164,7 @@ public class Paragraph
     className="org.apache.jackrabbit.ocm.testmodel.Paragraph"
     jcrType="nt:unstructured">
   <field-descriptor fieldName="path" path="true" />
-  <field-descriptor fieldName="text" jcrName="graffito:text"/>
+  <field-descriptor fieldName="text" jcrName="my:text"/>
 </class-descriptor>
 ]]></source>
         <p>
@@ -179,14 +179,14 @@ public class Paragraph
           It is also possible to map a bean class to a specific JCR node type.
           The following class-descriptor map the class
           "org.apache.jackrabbit.ocm.testmodel.Paragraph" to the node
-          type "graffito:paragraph".
+          type "my:paragraph".
         </p>
         <source><![CDATA[
 <class-descriptor
     className="org.apache.jackrabbit.ocm.testmodel.Paragraph"
-    jcrType="graffito:paragraph">
+    jcrType="my:paragraph">
   <field-descriptor fieldName="path" path="true" />
-  <field-descriptor fieldName="text" jcrName="graffito:text"/>
+  <field-descriptor fieldName="text" jcrName="my:text"/>
 </class-descriptor>
 ]]></source>
         <p>
@@ -196,7 +196,7 @@ public class Paragraph
           the Jackrabbit API.
         </p>
         <source><![CDATA[
-<nodeType name="graffito:paragraph" isMixin="false"
+<nodeType name="my:paragraph" isMixin="false"
           hasOrderableChildNodes="false" primaryItemName="">
   <supertypes>
     <supertype>mix:versionable</supertype>
@@ -207,7 +207,7 @@ public class Paragraph
       mandatory="false" onParentVersion="COPY" protected="false"
       multiple="false" />
   <propertyDefinition
-     name="graffito:text" requiredType="String" autoCreated="false"
+     name="my:text" requiredType="String" autoCreated="false"
      mandatory="true" onParentVersion="COPY" protected="false"
      multiple="false" />
 </nodeType>

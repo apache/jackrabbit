@@ -32,8 +32,7 @@
         <li>Lock objects.</li>
       </ul>
       <p>
-        You can see the
-        <a href="../apidocs/org/apache/portals/graffito/jcr/persistence/PersistenceManager.html">JavaDoc</a>
+        You can see the <a href="../api/1.4/">JavaDoc</a>
         to get a complete API overview.
       </p>
       <p>We plan to add other features in a future release.</p>

@@ -51,8 +51,8 @@
         <source><![CDATA[
 /mysite/page1
   /mysite/page1/pageInfo
-       graffito:title = "This is my page title"
-       graffito:description = "This is my page description"
+       my:title = "This is my page title"
+       my:description = "This is my page description"
   ... other subnodes for page1 ...
 ]]></source>
         <p>
@@ -117,9 +117,9 @@
 <source><![CDATA[
 <class-descriptor
     className="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.CmsObjectImpl"
-    jcrType="graffito:cmsobjectimpl" >
+    jcrType="my:cmsobjectimpl" >
   <field-descriptor fieldName="path" path="true" />
-  <field-descriptor fieldName="name" jcrName="graffito:name" id="true" />
+  <field-descriptor fieldName="name" jcrName="my:name" id="true" />
   <bean-descriptor
       fieldName="parentFolder"
       converter="org.apache.jackrabbit.ocm.persistence.beanconverter.impl.ParentBeanConverterImpl" />
@@ -137,7 +137,7 @@
             <source><![CDATA[
 <class-descriptor
     className="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.CmsObjectImpl"
-    jcrType="graffito:cmsobjectimpl" >
+    jcrType="my:cmsobjectimpl" >
   <bean-descriptor
       fieldName="parentFolder"
       converter="org.apache.jackrabbit.ocm.persistence.beanconverter.impl.ParentBeanConverterImpl" />
