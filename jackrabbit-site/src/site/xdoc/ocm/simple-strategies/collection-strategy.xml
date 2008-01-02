@@ -35,16 +35,16 @@
         </p>
         <source><![CDATA[
 <class-descriptor
-    className="org.apache.portals.graffito.jcr.testmodel.Page"
+    className="org.apache.jackrabbit.ocm.testmodel.Page"
     jcrType="graffito:page">
   <collection-descriptor
       fieldName="paragraphs" jcrName="paragraphs"
-      elementClassName="org.apache.portals.graffito.jcr.testmodel.Paragraph" />
+      elementClassName="org.apache.jackrabbit.ocm.testmodel.Paragraph" />
   <!-- other field, bean and collection mapping here !-->
 </class-descriptor>
 
 <class-descriptor
-    className="org.apache.portals.graffito.jcr.testmodel.Paragraph"
+    className="org.apache.jackrabbit.ocm.testmodel.Paragraph"
     jcrType="graffito:paragraph">
   <field-descriptor fieldName="path" path="true" />
   <field-descriptor fieldName="text" jcrName="graffito:text"/>

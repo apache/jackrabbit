@@ -115,25 +115,25 @@
             Specify the converter class in the field descriptor :
             <source><![CDATA[
 <class-descriptor
-    className="org.apache.portals.graffito.jcr.testmodel.Atomic"
+    className="org.apache.jackrabbit.ocm.testmodel.Atomic"
     jcrType="nt:unstructured">
   <field-descriptor
       fieldName="int2boolean" jcrName="int2boolean"
-      converter="org.apache.portals.graffito.jcr.persistence.atomic.Int2BooleanTypeConverterImpl" />
+      converter="org.apache.jackrabbit.ocm.persistence.atomic.Int2BooleanTypeConverterImpl" />
 </class-descriptor>
 ]]></source>
           </li>
           <li>
             Implement the converter class (based on the interface
-            org.apache.portals.graffito.jcr.persistence.atomic.AtomicTypeConverter):
+            org.apache.jackrabbit.ocm.persistence.atomic.AtomicTypeConverter):
             <source><![CDATA[
-package org.apache.portals.graffito.jcr.persistence.atomic;
+package org.apache.jackrabbit.ocm.persistence.atomic;
 
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 
-import org.apache.portals.graffito.jcr.exception.IncorrectAtomicTypeException;
-import org.apache.portals.graffito.jcr.persistence.atomictypeconverter.AtomicTypeConverter;
+import org.apache.jackrabbit.ocm.exception.IncorrectAtomicTypeException;
+import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.AtomicTypeConverter;
 
 /**
  * This is a simple converter which convert a boolean field value into a jcr long property.
@@ -144,7 +144,7 @@ public class Int2BooleanTypeConverterImpl implements AtomicTypeConverter
 {
   /**
    *
-   * @see org.apache.portals.graffito.jcr.persistence.atomictypeconverter.AtomicTypeConverter#getValue(java.lang.Object)
+   * @see org.apache.jackrabbit.ocm.persistence.atomictypeconverter.AtomicTypeConverter#getValue(java.lang.Object)
    */
   public Value getValue(ValueFactory valueFactory, Object propValue)
   {
@@ -165,7 +165,7 @@ public class Int2BooleanTypeConverterImpl implements AtomicTypeConverter
 
     /**
      *
-     * @see org.apache.portals.graffito.jcr.persistence.atomictypeconverter.AtomicTypeConverter#getObject(javax.jcr.Value)
+     * @see org.apache.jackrabbit.ocm.persistence.atomictypeconverter.AtomicTypeConverter#getObject(javax.jcr.Value)
      */
   public Object getObject(Value value)
     {
@@ -189,7 +189,7 @@ public class Int2BooleanTypeConverterImpl implements AtomicTypeConverter
 
   /**
    *
-   * @see org.apache.portals.graffito.jcr.persistence.atomictypeconverter.AtomicTypeConverter#getStringValue(java.lang.Object)
+   * @see org.apache.jackrabbit.ocm.persistence.atomictypeconverter.AtomicTypeConverter#getStringValue(java.lang.Object)
    */
   public String getStringValue(Object object)
   {

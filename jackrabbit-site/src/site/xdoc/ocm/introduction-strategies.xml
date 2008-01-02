@@ -105,17 +105,17 @@ public class Paragraph
         </p>
         <source><![CDATA[
 <class-descriptor
-    className="org.apache.portals.graffito.jcr.testmodel.Page"
+    className="org.apache.jackrabbit.ocm.testmodel.Page"
     jcrType="graffito:page">
   <field-descriptor fieldName="path" path="true" />
   <bean-descriptor fieldName="pageInfo" jcrName="pageInfo" />
   <collection-descriptor
       fieldName="paragraphs" jcrName="paragraphs"
-      elementClassName="org.apache.portals.graffito.jcr.testmodel.Paragraph" />
+      elementClassName="org.apache.jackrabbit.ocm.testmodel.Paragraph" />
 </class-descriptor>
 
 <class-descriptor
-    className="org.apache.portals.graffito.jcr.testmodel.PageInfo"
+    className="org.apache.jackrabbit.ocm.testmodel.PageInfo"
     jcrType="graffito:PageInfo">
   <field-descriptor fieldName="path" path="true" />
   <field-descriptor fieldName="title" jcrName="graffito:title"/>
@@ -123,7 +123,7 @@ public class Paragraph
 </class-descriptor>
 
 <class-descriptor
-    className="org.apache.portals.graffito.jcr.testmodel.Paragraph"
+    className="org.apache.jackrabbit.ocm.testmodel.Paragraph"
     jcrType="graffito:paragraph">
   <field-descriptor fieldName="path" path="true" />
   <field-descriptor fieldName="text" jcrName="graffito:text"/>
@@ -161,7 +161,7 @@ public class Paragraph
         </p>
         <source><![CDATA[
 <class-descriptor
-    className="org.apache.portals.graffito.jcr.testmodel.Paragraph"
+    className="org.apache.jackrabbit.ocm.testmodel.Paragraph"
     jcrType="nt:unstructured">
   <field-descriptor fieldName="path" path="true" />
   <field-descriptor fieldName="text" jcrName="graffito:text"/>
@@ -169,7 +169,7 @@ public class Paragraph
 ]]></source>
         <p>
           This class descriptor maps the class
-          "org.apache.portals.graffito.jcr.testmodel.Paragraph"
+          "org.apache.jackrabbit.ocm.testmodel.Paragraph"
           to the JCR type "nt:unstructured". Each field-descriptors maps
           one bean attribute to a JCR property. You can find more information
           on the field-descriptors in the page
@@ -178,12 +178,12 @@ public class Paragraph
         <p>
           It is also possible to map a bean class to a specific JCR node type.
           The following class-descriptor map the class
-          "org.apache.portals.graffito.jcr.testmodel.Paragraph" to the node
+          "org.apache.jackrabbit.ocm.testmodel.Paragraph" to the node
           type "graffito:paragraph".
         </p>
         <source><![CDATA[
 <class-descriptor
-    className="org.apache.portals.graffito.jcr.testmodel.Paragraph"
+    className="org.apache.jackrabbit.ocm.testmodel.Paragraph"
     jcrType="graffito:paragraph">
   <field-descriptor fieldName="path" path="true" />
   <field-descriptor fieldName="text" jcrName="graffito:text"/>

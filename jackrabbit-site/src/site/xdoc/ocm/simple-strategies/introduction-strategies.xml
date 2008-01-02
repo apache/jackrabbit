@@ -136,7 +136,7 @@ public class Paragraph
         <p align="center"><img src="../images/simple-classdescriptor-def.jpg"/></p>
         <p>
           This class descriptor maps the class
-          "org.apache.portals.graffito.jcr.testmodel.Paragraph" into the
+          "org.apache.jackrabbit.ocm.testmodel.Paragraph" into the
           JCR type "nt:unstructured". Each field-descriptor maps one bean
           field into a JCR property. For example, the first field descriptor
           maps the java bean field "text" into the jcr property called
@@ -152,7 +152,7 @@ public class Paragraph
           It is also possible to map a bean class to a particular JCR node
           type by specifying the desired type in the attribute jcrType.
           The following class-descriptor map the class
-          "org.apache.portals.graffito.jcr.testmodel.Paragraph" into the
+          "org.apache.jackrabbit.ocm.testmodel.Paragraph" into the
           node type "graffito:paragraph".
         </p>
         <p>
