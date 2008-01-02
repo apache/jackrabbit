@@ -74,10 +74,7 @@
          <item name="Visualization"           href="/doc/nodetype/visualization.html" />
       </item>
       <item name="Object Content Mapping"     href="/ocm/index.html" collapse="true">
-        <item name="Persistence Manager"      href="/ocm/engine-introduction.html">
-          <item name="Setup"                  href="/ocm/engine-setup.html"/>
-        </item>
-        <item name="Persistence Manager API"  href="/ocm/api/api-intro.html">
+        <item name="Object Manager"           href="/ocm/engine-introduction.html">
           <item name="Basic operations"       href="/ocm/api/basic-operations.html"/>
           <item name="Search"                 href="/ocm/api/search.html"/>
           <item name="Managing Versions"      href="/ocm/api/versionning.html"/>
@@ -87,6 +84,7 @@
           <item name="Atomic Fields"          href="/ocm/simple-strategies/atomic-strategy.html"/>
           <item name="Bean Fields"            href="/ocm/simple-strategies/bean-strategy.html"/>
           <item name="Collection Fields"      href="/ocm/simple-strategies/collection-strategy.html"/>
+          <item name="Advanced Strategies"    href="/ocm/advanced-strategies.html"/>
         </item>
       </item>
     </menu>

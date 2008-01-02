@@ -168,7 +168,7 @@ public class Paragraph
         </p>
         <p align="center"><img src="../images/node-type-def.jpg" ></img></p>
         <p>
-          Of course, node types "Graffito:Page" and "Graffito:PageInfo" are
+          Of course, node types "my:Page" and "my:PageInfo" are
           also required.
         </p>
         <p>
