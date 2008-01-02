@@ -1,5 +1,5 @@
 =========================
-Welcome to Jackrabbit API
+Welcome to Jackrabbit OCM
 =========================
 
 This Jackrabbit subproject is an object/JCR persistence and query service.
