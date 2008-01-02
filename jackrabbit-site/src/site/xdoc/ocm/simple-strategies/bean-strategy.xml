@@ -85,7 +85,7 @@
           </tr>
           <tr>
             <td>
-              org.apache.portals.graffito.jcr.persistence.beanconverter.impl.ParentBeanConverterImpl
+              org.apache.jackrabbit.ocm.persistence.beanconverter.impl.ParentBeanConverterImpl
             </td>
             <td>
               Map a bean field to the parent node. it is used to access to the
@@ -95,7 +95,7 @@
           </tr>
           <tr>
             <td>
-              org.apache.portals.graffito.jcr.persistence.beanconverter.impl.InlineBeanConverterImpl
+              org.apache.jackrabbit.ocm.persistence.beanconverter.impl.InlineBeanConverterImpl
             </td>
             <td>
               Bean converter used to map some node properties into one nested
@@ -116,13 +116,13 @@
         </p>
 <source><![CDATA[
 <class-descriptor
-    className="org.apache.portals.graffito.jcr.testmodel.inheritance.impl.CmsObjectImpl"
+    className="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.CmsObjectImpl"
     jcrType="graffito:cmsobjectimpl" >
   <field-descriptor fieldName="path" path="true" />
   <field-descriptor fieldName="name" jcrName="graffito:name" id="true" />
   <bean-descriptor
       fieldName="parentFolder"
-      converter="org.apache.portals.graffito.jcr.persistence.beanconverter.impl.ParentBeanConverterImpl" />
+      converter="org.apache.jackrabbit.ocm.persistence.beanconverter.impl.ParentBeanConverterImpl" />
 </class-descriptor>
 ]]></source>
       </subsection>
@@ -136,17 +136,17 @@
             Specify the converter class in the bean descriptor:
             <source><![CDATA[
 <class-descriptor
-    className="org.apache.portals.graffito.jcr.testmodel.inheritance.impl.CmsObjectImpl"
+    className="org.apache.jackrabbit.ocm.testmodel.inheritance.impl.CmsObjectImpl"
     jcrType="graffito:cmsobjectimpl" >
   <bean-descriptor
       fieldName="parentFolder"
-      converter="org.apache.portals.graffito.jcr.persistence.beanconverter.impl.ParentBeanConverterImpl" />
+      converter="org.apache.jackrabbit.ocm.persistence.beanconverter.impl.ParentBeanConverterImpl" />
 </class-descriptor>
 ]]></source>
         </li>
         <li>
           Implement the converter class (based on the interface
-          org.apache.portals.graffito.jcr.persistence.beanconverter.BeanConverter).
+          org.apache.jackrabbit.ocm.persistence.beanconverter.BeanConverter).
           Your bean converter class can also extends the class
           AbstractBeanConverterImpl to have a default implementation for
           some methods.
@@ -156,15 +156,15 @@ import javax.jcr.Session;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.portals.graffito.jcr.exception.JcrMappingException;
-import org.apache.portals.graffito.jcr.exception.PersistenceException;
-import org.apache.portals.graffito.jcr.exception.RepositoryException;
-import org.apache.portals.graffito.jcr.mapper.Mapper;
-import org.apache.portals.graffito.jcr.mapper.model.BeanDescriptor;
-import org.apache.portals.graffito.jcr.mapper.model.ClassDescriptor;
-import org.apache.portals.graffito.jcr.persistence.atomictypeconverter.AtomicTypeConverterProvider;
-import org.apache.portals.graffito.jcr.persistence.beanconverter.BeanConverter;
-import org.apache.portals.graffito.jcr.persistence.objectconverter.ObjectConverter;
+import org.apache.jackrabbit.ocm.exception.JcrMappingException;
+import org.apache.jackrabbit.ocm.exception.PersistenceException;
+import org.apache.jackrabbit.ocm.exception.RepositoryException;
+import org.apache.jackrabbit.ocm.mapper.Mapper;
+import org.apache.jackrabbit.ocm.mapper.model.BeanDescriptor;
+import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
+import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.AtomicTypeConverterProvider;
+import org.apache.jackrabbit.ocm.persistence.beanconverter.BeanConverter;
+import org.apache.jackrabbit.ocm.persistence.objectconverter.ObjectConverter;
 /**
  *
  * Bean converter used to access to the parent object.

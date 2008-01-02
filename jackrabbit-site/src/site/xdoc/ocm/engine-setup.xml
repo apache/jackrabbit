@@ -31,18 +31,18 @@
 import javax.jcr.Session;
 import javax.jcr.Repository;
 
-import org.apache.portals.graffito.jcr.mapper.Mapper;
-import org.apache.portals.graffito.jcr.mapper.impl.DigesterMapperImpl;
+import org.apache.jackrabbit.ocm.mapper.Mapper;
+import org.apache.jackrabbit.ocm.mapper.impl.DigesterMapperImpl;
 
-import org.apache.portals.graffito.jcr.persistence.atomictypeconverter.AtomicTypeConverterProvider;
-import org.apache.portals.graffito.jcr.persistence.atomictypeconverter.impl.DefaultAtomicTypeConverterProvider;
+import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.AtomicTypeConverterProvider;
+import org.apache.jackrabbit.ocm.persistence.atomictypeconverter.impl.DefaultAtomicTypeConverterProvider;
 
-import org.apache.portals.graffito.jcr.persistence.objectconverter.ObjectConverter;
-import org.apache.portals.graffito.jcr.persistence.objectconverter.impl.ObjectConverterImpl;
+import org.apache.jackrabbit.ocm.persistence.objectconverter.ObjectConverter;
+import org.apache.jackrabbit.ocm.persistence.objectconverter.impl.ObjectConverterImpl;
 
-import org.apache.portals.graffito.jcr.query.QueryManager;
-import org.apache.portals.graffito.jcr.query.impl.QueryManagerImpl;
-import org.apache.portals.graffito.jcr.repository.RepositoryUtil;
+import org.apache.jackrabbit.ocm.query.QueryManager;
+import org.apache.jackrabbit.ocm.query.impl.QueryManagerImpl;
+import org.apache.jackrabbit.ocm.repository.RepositoryUtil;
 
 // 1. Instantiate a JCR session
 
