@@ -1,4 +1,4 @@
-\<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="ISO-8859-1"?>
 <!--
    Licensed to the Apache Software Foundation (ASF) under one or more
    contributor license agreements.  See the NOTICE file distributed with
@@ -74,25 +74,20 @@
          <item name="Visualization"           href="/doc/nodetype/visualization.html" />
       </item>
       <item name="Object Content Mapping"     href="/ocm/index.html" collapse="true">
-        <item name="Persistence Manager"      href="/ocm/engine-introduction.html"/>
-          <item name="Mapping Descriptor DTD" href="/ocm/jackrabbit-ocm.dtd.txt"/>
+        <item name="Persistence Manager"      href="/ocm/engine-introduction.html">
           <item name="Setup"                  href="/ocm/engine-setup.html"/>
-          <item name="Spring Integration"     href="/ocm/engine-spring.html"/>
         </item>
-        <item name="Persistence Manager API"  href="/ocm/api/api-intro.html"/>
+        <item name="Persistence Manager API"  href="/ocm/api/api-intro.html">
           <item name="Basic operations"       href="/ocm/api/basic-operations.html"/>
           <item name="Search"                 href="/ocm/api/search.html"/>
           <item name="Managing Versions"      href="/ocm/api/versionning.html"/>
           <item name="Locking"                href="/ocm/api/locking.html"/>
-        </menu>
-        <menu name="Basic Mapping Stategies" href="/ocm/simple-strategies/introduction-strategies.html"/>
-          <item name="Mapping Atomic Fields"  href="/ocm/simple-strategies/atomic-strategy.html"/>
-          <item name="Mapping Bean Fields"    href="/ocm/simple-strategies/bean-strategy.html"/>
-          <item name="Mapping Collection Fields" href="/ocm/simple-strategies/collection-strategy.html"/>
-        </menu>
-        <menu name="Advanced Mapping Stategies">
-          <item name="Inheritance and Interface" href="/ocm/advanced-strategies/inheritance-interface-strategies.html"/>
-          <item name="Performance"            href="/ocm/advanced-strategies/inheritance-interface-strategies.html"/>
+        </item>
+        <item name="Mapping Stategies"        href="/ocm/simple-strategies/introduction-strategies.html">
+          <item name="Atomic Fields"          href="/ocm/simple-strategies/atomic-strategy.html"/>
+          <item name="Bean Fields"            href="/ocm/simple-strategies/bean-strategy.html"/>
+          <item name="Collection Fields"      href="/ocm/simple-strategies/collection-strategy.html"/>
+        </item>
       </item>
     </menu>
     <menu name="Thanks">
@@ -101,7 +96,6 @@
       <item name="Apache Sponsors"
             href="http://www.apache.org/foundation/thanks.html"/>
       <item name="Attribution"              href="/thanks.html"/>
-      </item>
     </menu>
     ${reports}
   </body>
