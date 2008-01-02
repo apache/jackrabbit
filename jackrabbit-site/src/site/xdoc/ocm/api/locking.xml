@@ -23,17 +23,18 @@
     <title>The Persistence Manager API</title>
   </properties>
   <body>
-
     <section name="Managing Locks">
       <subsection name="Overview">
         <p>
-          Following the Jcr specification, it is possible to lock nodes and their children (see section 8.4).
-          You can see on this page the OCM API used to lock on the object level.
-          In order to lock an object, its matching node has to implement the jcr mixin type "mix:lockable".
+          Following the Jcr specification, it is possible to lock nodes and
+          their children (see section 8.4). You can see on this page the
+          OCM API used to lock on the object level. In order to lock an object,
+          its matching node has to implement the jcr mixin type "mix:lockable".
           It is possible to specify this node type in the class descriptor :
         </p>
-        <p align="center"> <img src="../images/lockable-def.jpg" ></img></p>
+        <p align="center"> <img src="../images/lockable-def.jpg"/></p>
       </subsection>
+
       <subsection name="A basic example">
         <source>
 // --------------------------------------------------------------------------------
@@ -95,9 +96,8 @@ if (! persistenceManager.isLocked("/test"))
 // Unlock the object
 // --------------------------------------------------------------------------------
 persistenceManager.unlock("/test", lockToken);
-        </source>
+</source>
       </subsection>
-
     </section>
   </body>
 </document>
