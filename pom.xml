@@ -183,6 +183,14 @@
               <value>test</value>
             </property>
             <property>
+              <name>derby.storage.fileSyncTransactionLog</name>
+              <value>true</value>
+            </property>
+            <property>
+              <name>derby.stream.error.file</name>
+              <value>target/derby.log</value>
+            </property>
+            <property>
               <name>known.issues</name>
               <value>
                 org.apache.jackrabbit.core.xml.DocumentViewTest#testMultiValue
