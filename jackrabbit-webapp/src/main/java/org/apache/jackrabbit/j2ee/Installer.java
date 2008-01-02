@@ -94,7 +94,8 @@ public class Installer {
      * the place for the repository config template
      * todo: to be configured
      */
-    private final String configTemplate = "/WEB-INF/templates/repository.xml";
+    private final String configTemplate =
+        "/org/apache/jackrabbit/core/repository.xml";
 
     /**
      * the place for the bootstrap properties template
@@ -180,6 +181,9 @@ public class Installer {
     private void installRepositoryConfig(File dest) throws IOException {
         log.info("Creating new repository config: {}", dest.getPath());
         InputStream in = context.getResourceAsStream(configTemplate);
+        if (in == null) {
+            in = getClass().getResourceAsStream(configTemplate);
+        }
         OutputStream out = new FileOutputStream(dest);
         byte[] buffer = new byte[8192];
         int read;
