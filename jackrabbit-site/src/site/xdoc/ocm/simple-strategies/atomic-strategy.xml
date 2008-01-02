@@ -21,19 +21,29 @@
     <title>Mapping Atomic Fields</title>
   </properties>
   <body>
-
     <section name="Mapping Atomic Fields">
       <subsection name="Introduction">
-        <p>The field-descriptor maps a bean attribute based on a java primitive type into a JCR property.
-        By default, the persistence manager uses the correct mapping in function of the attribute type (see below the section "Supported Types").</p>
-        <p>Based on our model defined <a href="introduction-strategies.html">here</a>,
-        the following field-descriptor maps the bean field "title" (String type) into the JCR property "graffito:title".</p>
-                <p align="center"><img src="../images/atomic-fields-def.jpg" ></img></p>
-
+        <p>
+          The field-descriptor maps a bean attribute based on a Java primitive
+          type into a JCR property. By default, the persistence manager uses
+          the correct mapping in function of the attribute type (see below
+          the section "Supported Types").
+        </p>
+        <p>
+          Based on our model defined
+          <a href="introduction-strategies.html">here</a>,
+          the following field-descriptor maps the bean field "title"
+          (String type) into the JCR property "graffito:title".
+        </p>
+        <p align="center"><img src="../images/atomic-fields-def.jpg"/></p>
       </subsection>
+
       <subsection name ="Supported Types">
-                <p>It is not necessary to specify the type in the field-descriptor.
-                The Persistence Manager uses the java introspection to get information on each atomic field.</p>
+        <p>
+          It is not necessary to specify the type in the field-descriptor.
+          The Persistence Manager uses the java introspection to get
+          information on each atomic field.
+        </p>
         <table>
           <tr>
             <th>Java Type</th>
@@ -63,17 +73,14 @@
             <td>byte[]</td>
             <td>BINARY</td>
           </tr>
-
           <tr>
             <td>java.io.InputStream</td>
             <td>BINARY</td>
           </tr>
-
           <tr>
             <td>java.util.Calendar</td>
             <td>LONG (corresponding to Calendar.getTimeInMillis()</td>
           </tr>
-
           <tr>
             <td>java.sql.Timestamp</td>
             <td>LONG (corresponding to Timestamp.getTime()</td>
@@ -82,32 +89,44 @@
             <td>java.util.Date</td>
             <td>LONG (corresponding to java.util.Date.getTime()</td>
           </tr>
-
         </table>
         <p>
-          Due to some issues with Jackrabbit (mainly with xpath queries),  Calendar, Timestamp and date are converted into JCR LONG.
+          Due to some issues with Jackrabbit (mainly with xpath queries),
+          Calendar, Timestamp and date are converted into JCR LONG.
           We plan to add other converters for those types in the next release.
         </p>
       </subsection>
-      <subsection name ="Using Another Atomic Type Converter">
-         <p>
-           The OCM framework gives you the freedom to choose another kind of mapping for atomic fields.
-           For example, you can convert java.util.Date bean field into a JCR Date type instead of a JCR Long type.
-           This can be done by writting your own atomic type converter class.
-         </p>
-         <p>
-           Let's start with a simple example.
-           If you want to use a mapping strategy which convert a boolean bean field into a JCR Long type, you have to make the following steps :
-         <ol>
-          <li>Specify the converter class in the field descriptor :
-             <source><![CDATA[
-<class-descriptor className="org.apache.portals.graffito.jcr.testmodel.Atomic" jcrType="nt:unstructured" >
-  <field-descriptor fieldName="int2boolean" jcrName="int2boolean" converter="org.apache.portals.graffito.jcr.persistence.atomic.Int2BooleanTypeConverterImpl" />
+
+      <subsection name="Using Another Atomic Type Converter">
+        <p>
+         The OCM framework gives you the freedom to choose another kind of
+         mapping for atomic fields. For example, you can convert
+         java.util.Date bean field into a JCR Date type instead of a
+         JCR Long type. This can be done by writing your own atomic type
+         converter class.
+        </p>
+        <p>
+          Let's start with a simple example. If you want to use a mapping
+          strategy which convert a boolean bean field into a JCR Long type,
+          you have to make the following steps:
+        </p>
+        <ol>
+          <li>
+            Specify the converter class in the field descriptor :
+            <source><![CDATA[
+<class-descriptor
+    className="org.apache.portals.graffito.jcr.testmodel.Atomic"
+    jcrType="nt:unstructured">
+  <field-descriptor
+      fieldName="int2boolean" jcrName="int2boolean"
+      converter="org.apache.portals.graffito.jcr.persistence.atomic.Int2BooleanTypeConverterImpl" />
 </class-descriptor>
-            ]]></source>
+]]></source>
           </li>
-          <li>Implement the converter class (based on the interface org.apache.portals.graffito.jcr.persistence.atomic.AtomicTypeConverter) :
-<source><![CDATA[
+          <li>
+            Implement the converter class (based on the interface
+            org.apache.portals.graffito.jcr.persistence.atomic.AtomicTypeConverter):
+            <source><![CDATA[
 package org.apache.portals.graffito.jcr.persistence.atomic;
 
 import javax.jcr.Value;
@@ -120,7 +139,6 @@ import org.apache.portals.graffito.jcr.persistence.atomictypeconverter.AtomicTyp
  * This is a simple converter which convert a boolean field value into a jcr long property.
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
- *
  */
 public class Int2BooleanTypeConverterImpl implements AtomicTypeConverter
 {
@@ -181,12 +199,8 @@ public class Int2BooleanTypeConverterImpl implements AtomicTypeConverter
 
 }
 ]]></source>
-
           </li>
-         </ol>
-              </p>
-
-
+        </ol>
       </subsection>
     </section>
   </body>

@@ -23,26 +23,44 @@
   <body>
     <section name="Introduction to the Mapping Strategies">
       <p>
-        We are calling "Mapping strategy" the algorithm used by the Persistence Manager to map a java class into JCR nodes and/or properties.
+        We are calling "Mapping strategy" the algorithm used by the
+        Persistence Manager to map a Java class into JCR nodes and/or
+        properties.
       </p>
-      <subsection name="The Object Model">
-      <p>
-        In order to explain the basic mapping strategies, we will use the following simple object model :
-        <ul>
-          <li>A page contains a path (of course), a pageInfo  and a collection of paragraphs.</li>
-          <li>The PageInfo class contains the title and the page description. We are using the pageInfo here to see all mapping features (see the bean-descriptors). In real application, this class is not necessary :-)</li>
-          <li>Each paragraph contains a path and a text field.</li>
-        </ul>
-      </p>
-      <p align="center"><img src="../images/sample-model-doc.png" ></img></p>
-      <p>
-        This object model could be too simple for real applications and it is just used here to simplify the description of the different mapping strategies.
-      </p>
-      </subsection>
-      <subsection name="The Java Classes">
-      <p>Based on that object model, we can define the following java classes :</p>
 
-      <source>
+      <subsection name="The Object Model">
+        <p>
+          In order to explain the basic mapping strategies, we will use
+          the following simple object model :
+        </p>
+        <ul>
+          <li>
+            A page contains a path (of course), a pageInfo  and a collection
+            of paragraphs.
+          </li>
+          <li>
+            The PageInfo class contains the title and the page description.
+            We are using the pageInfo here to see all mapping features (see
+            the bean-descriptors). In real application, this class is not
+            necessary :-)
+          </li>
+          <li>
+            Each paragraph contains a path and a text field.
+          </li>
+        </ul>
+        <p align="center"><img src="../images/sample-model-doc.png"/></p>
+        <p>
+          This object model could be too simple for real applications and it
+          is just used here to simplify the description of the different
+          mapping strategies.
+        </p>
+      </subsection>
+   
+      <subsection name="The Java Classes">
+        <p>
+          Based on that object model, we can define the following Java classes:
+        </p>
+        <source>
 public class Page
 {
   String path;
@@ -80,14 +98,15 @@ public class Paragraph
   /* Add here the getter and setter methods */
 
 }
-      </source>
+</source>
       </subsection>
+
       <subsection name="The JCR Structure">
-            <p>
-              Here is the resulting JCR structure if the page is stored on the path "/mysite/mypage1" and contains 2 paragraphs :
-      </p>
-      <p>
-      <source><![CDATA[
+        <p>
+          Here is the resulting JCR structure if the page is stored on
+          the path "/mysite/mypage1" and contains 2 paragraphs:
+        </p>
+        <source><![CDATA[
 /mysite/page1
   /mysite/page1/pageInfo
     graffito:title = "This is my page title"
@@ -96,57 +115,79 @@ public class Paragraph
     /mysite/page1/paragraphs/paragraph1
       graffito:text = "This is the content of para1"
     /mysite/page1/paragraphs/paragraph2
-      graffito:text = ""This is the content of para2"
-      ]]></source>
-      </p>
-
-      <p>It is possible to have another kind of jcr structure by using other mapping strategies.
-      See the sections <a href="atomic-strategy.html">Mapping Atomic Fields</a>, <a href="bean-strategy.html">Mapping Bean Fields</a>, <a href="collection-strategy.html">Mapping Collection Fields</a> to get more information on that.</p>
-
+      graffito:text = "This is the content of para2"
+ ]]></source>
+        <p>
+          It is possible to have another kind of jcr structure by using
+          other mapping strategies. See the sections
+          <a href="atomic-strategy.html">Mapping Atomic Fields</a>,
+          <a href="bean-strategy.html">Mapping Bean Fields</a>,
+          <a href="collection-strategy.html">Mapping Collection Fields</a>
+          to get more information on that.
+        </p>
       </subsection>
+
       <subsection name="The Class Descriptors">
         <p>
-           When you decide to map a bean class, you have to create a new class descriptor entry in the Persistence Manager descriptor file.
-           Let's start with the simplest class-descriptor :
+           When you decide to map a bean class, you have to create a new
+           class descriptor entry in the Persistence Manager descriptor file.
+           Let's start with the simplest class-descriptor:
         </p>
-        <p align="center"> <img src="../images/simple-classdescriptor-def.jpg" ></img></p>
+        <p align="center"><img src="../images/simple-classdescriptor-def.jpg"/></p>
         <p>
-            This class descriptor maps the class "org.apache.portals.graffito.jcr.testmodel.Paragraph" into the JCR type "nt:unstructured".
-            Each field-descriptor maps one bean field into a JCR property. For example, the first field descriptor maps the java bean field "text" into the jcr property called "myjcrtext".
-            The second field-descriptor is a specific case because it maps the jcr node path into a bean field called "path" (see below the section "The Path Field").
-
-
-            You can find more information on the field-descriptors in the page <a href="atomic-strategy.html">Mapping Atomic fields</a>.
+          This class descriptor maps the class
+          "org.apache.portals.graffito.jcr.testmodel.Paragraph" into the
+          JCR type "nt:unstructured". Each field-descriptor maps one bean
+          field into a JCR property. For example, the first field descriptor
+          maps the java bean field "text" into the jcr property called
+          "myjcrtext". The second field-descriptor is a specific case
+          because it maps the jcr node path into a bean field called "path"
+          (see below the section "The Path Field").
         </p>
         <p>
-          It is also possible to map a bean class to a particular JCR node type by specifying the desired type in the attribute jcrType.
-          The following class-descriptor map the class "org.apache.portals.graffito.jcr.testmodel.Paragraph" into the node type "graffito:paragraph".
-
+          You can find more information on the field-descriptors in the page
+          <a href="atomic-strategy.html">Mapping Atomic fields</a>.
         </p>
-
-           <p>Here are the class-descriptors required to map the classes Page, PageInfo and Paragraph :</p>
-           <p align="center"><img src="../images/other-descriptors.jpg" ></img></p>
         <p>
-          In order to use correctly our example class with <a href="http://incubator.apache.org/jackrabbit/">Jackrabbit</a>, you should add the following node type definition in its custom_nodetypes.xml file or import the node type definition with the Jackrabbit API.
+          It is also possible to map a bean class to a particular JCR node
+          type by specifying the desired type in the attribute jcrType.
+          The following class-descriptor map the class
+          "org.apache.portals.graffito.jcr.testmodel.Paragraph" into the
+          node type "graffito:paragraph".
         </p>
-
+        <p>
+          Here are the class-descriptors required to map the classes
+          Page, PageInfo and Paragraph:
+        </p>
+        <p align="center"><img src="../images/other-descriptors.jpg"/></p>
+        <p>
+          In order to use correctly our example class with
+          <a href="http://jackrabbit.apache.org/">Apache Jackrabbit</a>,
+          you should import the following node type definitions with the
+          Jackrabbit API.
+        </p>
         <p align="center"><img src="../images/node-type-def.jpg" ></img></p>
         <p>
-          Of course, node types "Graffito:Page" and "Graffito:PageInfo" are also required.
-          We are currently building a node type management tools which can import the node types from the class-descriptors.
+          Of course, node types "Graffito:Page" and "Graffito:PageInfo" are
+          also required.
+        </p>
+        <p>
+          We are currently building a node type management tools which can
+          import the node types from the class-descriptors.
         </p>
       </subsection>
-      <subsection name ="The Path Field">
+
+      <subsection name="The Path Field">
         <p>
-        Each mapped class contains a mandatory field called the "path field". It contains the JCR path  associated to the object.
-        For example, the following descriptor specify the bean field "myPath" as the path field.
+          Each mapped class contains a mandatory field called the "path field".
+          It contains the JCR path  associated to the object. For example,
+          the following descriptor specify the bean field "myPath" as the
+          path field.
         </p>
         <source><![CDATA[
 <field-descriptor fieldName="myPath" path="true" />
-          ]]></source>
-
+]]></source>
       </subsection>
-
     </section>
   </body>
 </document>

@@ -21,13 +21,9 @@
     <title>The Persistence Manager API</title>
   </properties>
   <body>
-
     <section name="Searching objects">
-
       <subsection name="Searching a single object">
-        <p>
-
-          <source>
+        <source>
 QueryManager queryManager = persistenceManager.getQueryManager();
 
 // Build the search filter
@@ -37,55 +33,41 @@ filter.addEqualTo("text", "Para 1");   // Text is an attribute in the class Para
 // Build the query
 Query query = queryManager.createQuery(filter);
 Paragraph paragraph = (Paragraph) persistenceManager.getObject(query);
-          </source>
-        </p>
-
+</source>
       </subsection>
 
       <subsection name="Searching a collection">
-        <p>
-
-          <source>
+        <source>
 QueryManager queryManager = persistenceManager.getQueryManager();
 Filter filter = queryManager.createFilter(Paragraph.class);
 filter.setScope("/test/node1//");
 Query query = queryManager.createQuery(filter);
 persistenceManager = this.getPersistenceManager();
 Collection result = persistenceManager.getObjects(query);
-          </source>
-        </p>
-
+</source>
       </subsection>
-      <subsection name="Searching with an iterator">
-        <p>
 
-          <source>
+      <subsection name="Searching with an iterator">
+        <source>
 QueryManager queryManager = persistenceManager.getQueryManager();
 Filter filter = queryManager.createFilter(Paragraph.class);
 filter.setScope("/test/node1//");
 Query query = queryManager.createQuery(filter);
 persistenceManager = this.getPersistenceManager();
 Iterator ierator = persistenceManager.getObjectIterator(query);
-          </source>
-        </p>
-
+</source>
       </subsection>
-      <subsection name="Remove objects based on a query">
-        <p>
 
-          <source>
+      <subsection name="Remove objects based on a query">
+        <source>
 QueryManager queryManager = persistenceManager.getQueryManager();
 Filter filter = queryManager.createFilter(Paragraph.class);
 filter.setScope("/test/node1//");
 Query query = queryManager.createQuery(filter);
 persistenceManager = this.getPersistenceManager();
 persistenceManager.remove(query);
-          </source>
-        </p>
-
+</source>
       </subsection>
-
-
     </section>
   </body>
 </document>

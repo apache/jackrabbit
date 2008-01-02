@@ -21,22 +21,22 @@
     <title>The Persistence Manager API</title>
   </properties>
   <body>
-
     <section name="API Overview">
-
-        <p>With the current Persistence Manager API, it is possible to  :
-         <ul>
-           <li>Manage the object life cycle (insert, update, delete, retrieve).</li>
-          <li>Search single object or collections with criteria.</li>
-          <li>Manage versions (check int, check out, create a new version, show history).</li>
-          <li>Lock objects.</li>
-        </ul>
-        </p>
-        <p>
-        You can see the  <a href="../apidocs/org/apache/portals/graffito/jcr/persistence/PersistenceManager.html">JavaDoc</a> to get a complete API overview.
-              </p>
-        <p>We plan to add other features in a future release.</p>
-
+      <p>
+        With the current Persistence Manager API, it is possible to:
+      </p>
+      <ul>
+        <li>Manage the object life cycle (insert, update, delete, retrieve).</li>
+        <li>Search single object or collections with criteria.</li>
+        <li>Manage versions (check int, check out, create a new version, show history).</li>
+        <li>Lock objects.</li>
+      </ul>
+      <p>
+        You can see the
+        <a href="../apidocs/org/apache/portals/graffito/jcr/persistence/PersistenceManager.html">JavaDoc</a>
+        to get a complete API overview.
+      </p>
+      <p>We plan to add other features in a future release.</p>
     </section>
   </body>
 </document>

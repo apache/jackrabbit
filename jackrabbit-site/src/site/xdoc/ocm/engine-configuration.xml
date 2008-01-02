@@ -18,11 +18,10 @@
 <document>
   <properties>
     <author email="christophe.lombart@gmail.com">Christophe Lombart</author>
-    <title>Graffito JCR Persistence Manager</title>
+    <title>Jackrabbit JCR Persistence Manager</title>
   </properties>
   <body>
     <section name="The Persistence Manager Configuration">
-
       <p>TODO</p>
     </section>
   </body>

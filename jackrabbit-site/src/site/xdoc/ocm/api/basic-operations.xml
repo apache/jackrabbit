@@ -23,15 +23,18 @@
   <body>
     <section name="The Basic Operations">
       <p>
-        When you have <a href="../engine-setup.html">create a new Persistence Manager</a> in your application, you can use this component to insert, update, delete and retrieve objects. The class 'Folder' used in the following sections should be associated to a class-descriptor defined in the  mapping descriptor.
+        When you have <a href="../engine-setup.html">created a new
+        Persistence Manager</a> in your application, you can use this
+        component to insert, update, delete and retrieve objects.
+        The class 'Folder' used in the following sections should be
+        associated to a class-descriptor defined in the  mapping descriptor.
       </p>
       <p>
-        This page describes only the main Persistence Manager methods. You can see the javadoc to get more information on the API.
+        This page describes only the main Persistence Manager methods.
+        You can see the javadoc to get more information on the API.
       </p>
 
-
       <subsection name="Insert">
-        <p>
 <source>
 Folder folder =  new Folder();
 folder.setPath("/myfolder");
@@ -40,12 +43,9 @@ folder.set...(); // call the setter methods
 persistenceManager.insert(myFolder);
 
 </source>
-
-        </p>
-
       </subsection>
+
       <subsection name="Retrieve and update an object">
-        <p>
 <source>
 Folder folder = (Folder) persistenceManager.getObject(Folder.class, "/myfolder");
 folder.set...(); // call the setter methods
@@ -53,27 +53,21 @@ folder.set...(); // call the setter methods
 persistenceManager.update(myFolder);
 
 </source>
-
-        </p>
-
       </subsection>
 
       <subsection name="Delete">
-        <p>
 <source>
 persistenceManager.remove("/test");
 </source>
-        </p>
-
       </subsection>
 
       <subsection name ="Save last changes">
-      <p>After some inserts, deletes and/or updates, you can call the method <code>persistenceManager.save()</code> to apply your changes into the JCR repository.</p>
+        <p>
+          After some inserts, deletes and/or updates, you can call
+          the method <code>persistenceManager.save()</code> to apply your
+          changes into the JCR repository.
+        </p>
       </subsection>
-
-
-
-
     </section>
   </body>
 </document>
