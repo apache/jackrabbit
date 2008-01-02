@@ -30,22 +30,57 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 
-Getting Started
-===============
+Building and publishing the site
+================================
 
-This compoment uses a Maven 2 (http://maven.apache.org/) build
-environment. If you have Maven 2 installed, you can build the Jackrabbit
-web site with:
+The Apache Jackrabbit web site at http://jackrabbit.apache.org/ is
+generated with Maven 2, committed to the source repository, and finally
+updated to the live web server.
 
-    mvn site
+To edit and publish the contents of the site you first need to check out the
+Jackrabbit trunk as well as the Jackrabbit site directory:
 
-See the Maven 2 documentation for other build features.
+    svn checkout https://svn.apache.org/repos/asf/jackrabbit/trunk jackrabbit
+    svn checkout https://svn.apache.org/repos/asf/jackrabbit/site
 
-The latest source code for this compoment is available in the
-Subversion (http://subversion.tigris.org/) source repository of
-the Apache Software Foundation. If you have Subversion installed,
-you can checkout the latest source using the following command:
+To make changes, first edit the source content under
+"jackrabbit/jackrabbit-site/src/site" and then generate the HTML versions
+using Maven.
 
-    svn checkout http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-site
+Here is the process for generating the site content after the above
+checkouts have been done and changes made:
 
-See the Subversion documentation for other source control features.
+    $ svn update jackrabbit site             # Get the latest changes
+    $ cd jackrabbit/jackrabbit-site
+    $ mvn site
+
+You can review the site by pointing your browser to target/site/index.html
+inside the jackrabbit/jackrabbit-site directory.
+
+If the site looks good, you can publish the changes like this:
+
+    $ cp -f -r target/site/* ../../site
+    $ cd ../../site
+    $ find . -name '*.html" | xargs perl -i -pe 's/\r\n/\n/'
+                                             # Fix line endings
+    $ svn status | egrep '^\?'               # Check for new files
+    $ svn add ...                            # If new files are included
+    $ svn diff | less                        # Check sanity
+    $ svn commit -m 'site: Updated site'
+
+Note the CRLF fix, it is needed because of some of the Maven 2 xdoc
+processing introduces Windows line breaks in the generated html.
+
+Once the updated site has been committed, the checked out version on
+people.apache.org needs to be updated:
+
+    $ umask 002; svn update /www/jackrabbit.apache.org
+
+The contents of /www/jackrabbit.apache.org are automatically
+synchronized to the actual public web server every few hours.
+
+Note that the above process is only sufficient for changes to existing
+files and new files.  When source files are deleted or moved under
+jackrabbit, their corresponding docs files have to be separately
+deleted or moved within the jackrabbit-site tree (otherwise, the old
+generated file will just sit there and stagnate).
