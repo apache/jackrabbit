@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- 
+<!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
   this work for additional information regarding copyright ownership.
@@ -16,39 +16,39 @@
   limitations under the License.
 -->
 <document>
-	<properties>
-		<author email="christophe.lombart@gmail.com">
-			Christophe Lombart
-		</author>
-		<title>The Persistence Manager API</title>
-	</properties>
-	<body>
+  <properties>
+    <author email="christophe.lombart@gmail.com">
+      Christophe Lombart
+    </author>
+    <title>The Persistence Manager API</title>
+  </properties>
+  <body>
 
-		<section name="Managing versions">
-			<subsection name="Overview">
-				<p>
-					Right now, the OCM tools provides basic versionning features :
-					<ul>
-					   <li>Check in, check out.</li>
-					   <li>Retrieve version history (first version, last version, the complete history, ...).</li>
-					   <li>Apply labels.</li>
-					</ul>
-				</p>
-				<p>
-					Later, we would like to add more advanced versionning support like version compare, replace, revert, ...
-				</p>
-				<p>
-					Each versionned object has to be mapped to a mix:versionable JCR node. 
-					It is possible to specify this node type in the class descriptor : 
-				</p>	
-				<p align="center"> <img src="../images/versionable-def.jpg" ></img></p>
-			</subsection>
-			<subsection name="Check in - Check out">
-				<source>
-// Create a new page - first version 
-Page page = new Page(); 
-page.setPath("/page"); 
-page.setTitle("Page Title"); 
+    <section name="Managing versions">
+      <subsection name="Overview">
+        <p>
+          Right now, the OCM tools provides basic versionning features :
+          <ul>
+             <li>Check in, check out.</li>
+             <li>Retrieve version history (first version, last version, the complete history, ...).</li>
+             <li>Apply labels.</li>
+          </ul>
+        </p>
+        <p>
+          Later, we would like to add more advanced versionning support like version compare, replace, revert, ...
+        </p>
+        <p>
+          Each versionned object has to be mapped to a mix:versionable JCR node.
+          It is possible to specify this node type in the class descriptor :
+        </p>
+        <p align="center"> <img src="../images/versionable-def.jpg" ></img></p>
+      </subsection>
+      <subsection name="Check in - Check out">
+        <source>
+// Create a new page - first version
+Page page = new Page();
+page.setPath("/page");
+page.setTitle("Page Title");
 page.addParagraph(new Paragraph("para1"));
 page.addParagraph(new Paragraph("para2"));
 persistenceManager.insert(page);
@@ -67,20 +67,20 @@ persistenceManager.checkout("/page");
 persistenceManager.update(page);
 persistenceManager.save();
 persistenceManager.checkin("/page");
-				</source>
-			</subsection>
-			<subsection name="Retrieve the version history">
+        </source>
+      </subsection>
+      <subsection name="Retrieve the version history">
 <source>
 VersionIterator versionIterator = persistenceManager.getAllVersions("/page");
 while (versionIterator.hasNext())
 {
     Version version = (Version) versionIterator.next();
-    System.out.println("version found : "+ version.getName() + " - " + 
+    System.out.println("version found : "+ version.getName() + " - " +
                           version.getPath() + " - " +  version.getCreated().getTime());
 }
-</source>			
-			</subsection>
-			<subsection name="Retrieve version description">
+</source>
+      </subsection>
+      <subsection name="Retrieve version description">
 <source>
 // Retrieve the first version description
 Version baseVersion = persistenceManager.getBaseVersion("/page");
@@ -89,24 +89,24 @@ System.out.println("Base version : " + baseVersion.getName());
 // Retrieve the latest version description
 Version rootVersion = persistenceManager.getRootVersion("/page");
 System.out.println("Root version : " + rootVersion.getName());
-</source>			
-			</subsection>
-			<subsection name="Retrieve the object state matching to a specific version">
+</source>
+      </subsection>
+      <subsection name="Retrieve the object state matching to a specific version">
 <source>
-//Get the object matching to the first version 
+//Get the object matching to the first version
 Page  page = (Page) persistenceManager.getObject( "/page", "1.0");
-</source>			
-			</subsection>
-			<subsection name="Using version labels">
+</source>
+      </subsection>
+      <subsection name="Using version labels">
 <source>
 Page page = new Page();
 page.setPath("/page");
-page.setTitle("Page Title");            	 
+page.setTitle("Page Title");
 page.addParagraph(new Paragraph("para1"));
 page.addParagraph(new Paragraph("para2"));
 persistenceManager.insert(page);
 persistenceManager.save();
-                 
+
 // Checkin with some labels
 page.addParagraph(new Paragraph("para3"));
 persistenceManager.checkout("/page");
@@ -114,12 +114,12 @@ persistenceManager.update(page);
 persistenceManager.save();
 persistenceManager.checkin("/page", new String[] {"A", "B"});
 
-// Checkin with some labels            	 
+// Checkin with some labels
 page.addParagraph(new Paragraph("para4"));
 persistenceManager.checkout("/page");
 persistenceManager.update(page);
 persistenceManager.save();
-persistenceManager.checkin("/page", new String[] {"C", "D"});         	 
+persistenceManager.checkin("/page", new String[] {"C", "D"});
 
 // Retrieve all labels
 String[] allLabels = persistenceManager.getAllVersionLabels("/page");
@@ -131,9 +131,9 @@ assertTrue("Incorrect number of labels", versionLabels.length == 2);
 assertTrue("Incorrect label", versionLabels[0].equals("C") || versionLabels[0].equals("D"));
 assertTrue("Incorrect label", versionLabels[1].equals("C") || versionLabels[0].equals("D"));
 
-</source>			
-			</subsection>
-			
-		</section>
-	</body>
+</source>
+      </subsection>
+
+    </section>
+  </body>
 </document>

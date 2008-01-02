@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- 
+<!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
   this work for additional information regarding copyright ownership.
@@ -16,76 +16,76 @@
   limitations under the License.
 -->
 <document>
-	<properties>
-		<author email="christophe.lombart@gmail.com">Christophe Lombart</author>
-		<title>The Persistence Manager API</title>
-	</properties>
-	<body>
-		
-		<section name="Searching objects">
-			
-			<subsection name="Searching a single object">
-				<p>
-					
-					<source>					
+  <properties>
+    <author email="christophe.lombart@gmail.com">Christophe Lombart</author>
+    <title>The Persistence Manager API</title>
+  </properties>
+  <body>
+
+    <section name="Searching objects">
+
+      <subsection name="Searching a single object">
+        <p>
+
+          <source>
 QueryManager queryManager = persistenceManager.getQueryManager();
 
-// Build the search filter 
+// Build the search filter
 Filter filter = queryManager.createFilter(Paragraph.class);
-filter.addEqualTo("text", "Para 1");   // Text is an attribute in the class Paragraph 	          	     
-						
-// Build the query 
+filter.addEqualTo("text", "Para 1");   // Text is an attribute in the class Paragraph
+
+// Build the query
 Query query = queryManager.createQuery(filter);
-Paragraph paragraph = (Paragraph) persistenceManager.getObject(query);						
-					</source>
-				</p>
-				
-			</subsection>	
-			
-			<subsection name="Searching a collection">
-				<p>
-					
-					<source>					
+Paragraph paragraph = (Paragraph) persistenceManager.getObject(query);
+          </source>
+        </p>
+
+      </subsection>
+
+      <subsection name="Searching a collection">
+        <p>
+
+          <source>
 QueryManager queryManager = persistenceManager.getQueryManager();
-Filter filter = queryManager.createFilter(Paragraph.class);    
+Filter filter = queryManager.createFilter(Paragraph.class);
 filter.setScope("/test/node1//");
-Query query = queryManager.createQuery(filter);    	      
+Query query = queryManager.createQuery(filter);
 persistenceManager = this.getPersistenceManager();
-Collection result = persistenceManager.getObjects(query);						
-					</source>
-				</p>
-				
-			</subsection>				
-			<subsection name="Searching with an iterator">
-				<p>
-					
-					<source>					
+Collection result = persistenceManager.getObjects(query);
+          </source>
+        </p>
+
+      </subsection>
+      <subsection name="Searching with an iterator">
+        <p>
+
+          <source>
 QueryManager queryManager = persistenceManager.getQueryManager();
-Filter filter = queryManager.createFilter(Paragraph.class);    
+Filter filter = queryManager.createFilter(Paragraph.class);
 filter.setScope("/test/node1//");
-Query query = queryManager.createQuery(filter);    	      
+Query query = queryManager.createQuery(filter);
 persistenceManager = this.getPersistenceManager();
-Iterator ierator = persistenceManager.getObjectIterator(query);	
-					</source>
-				</p>
-				
-			</subsection>	
-			<subsection name="Remove objects based on a query">
-				<p>
-					
-					<source>					
+Iterator ierator = persistenceManager.getObjectIterator(query);
+          </source>
+        </p>
+
+      </subsection>
+      <subsection name="Remove objects based on a query">
+        <p>
+
+          <source>
 QueryManager queryManager = persistenceManager.getQueryManager();
-Filter filter = queryManager.createFilter(Paragraph.class);    
+Filter filter = queryManager.createFilter(Paragraph.class);
 filter.setScope("/test/node1//");
-Query query = queryManager.createQuery(filter);    	      
+Query query = queryManager.createQuery(filter);
 persistenceManager = this.getPersistenceManager();
-persistenceManager.remove(query);	
-					</source>
-				</p>
-				
-			</subsection>	
-			
-			
-		</section>
-	</body>
+persistenceManager.remove(query);
+          </source>
+        </p>
+
+      </subsection>
+
+
+    </section>
+  </body>
 </document>

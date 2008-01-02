@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- 
+<!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
   this work for additional information regarding copyright ownership.
@@ -16,27 +16,27 @@
   limitations under the License.
 -->
 <document>
-	<properties>
-		<author email="christophe.lombart@gmail.com">Christophe Lombart</author>
-		<title>The Persistence Manager API</title>
-	</properties>
-	<body>
-				
-		<section name="API Overview">
-			
-				<p>With the current Persistence Manager API, it is possible to  : 
-				 <ul>
-					 <li>Manage the object life cycle (insert, update, delete, retrieve).</li>
-					<li>Search single object or collections with criteria.</li>
-					<li>Manage versions (check int, check out, create a new version, show history).</li>	
-					<li>Lock objects.</li>
-				</ul>
-				</p>
-				<p>
-				You can see the  <a href="../apidocs/org/apache/portals/graffito/jcr/persistence/PersistenceManager.html">JavaDoc</a> to get a complete API overview. 
-			        </p>
-				<p>We plan to add other features in a future release.</p>
-			
-		</section>
-	</body>
+  <properties>
+    <author email="christophe.lombart@gmail.com">Christophe Lombart</author>
+    <title>The Persistence Manager API</title>
+  </properties>
+  <body>
+
+    <section name="API Overview">
+
+        <p>With the current Persistence Manager API, it is possible to  :
+         <ul>
+           <li>Manage the object life cycle (insert, update, delete, retrieve).</li>
+          <li>Search single object or collections with criteria.</li>
+          <li>Manage versions (check int, check out, create a new version, show history).</li>
+          <li>Lock objects.</li>
+        </ul>
+        </p>
+        <p>
+        You can see the  <a href="../apidocs/org/apache/portals/graffito/jcr/persistence/PersistenceManager.html">JavaDoc</a> to get a complete API overview.
+              </p>
+        <p>We plan to add other features in a future release.</p>
+
+    </section>
+  </body>
 </document>
