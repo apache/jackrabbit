@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- 
+<!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
   this work for additional information regarding copyright ownership.
@@ -16,13 +16,13 @@
   limitations under the License.
 -->
 <document>
-	<properties>
-		<author email="christophe.lombart@gmail.com">Christophe Lombart</author>
-		<title>Introduction to the Mapping Strategies</title>
-	</properties>
-	<body>
-		<section name="Introduction to the Advanced Mapping Strategies">
-			<p>We are currently working on the advanced mapping strategies.</p>
-		</section>	
-	</body>
+  <properties>
+    <author email="christophe.lombart@gmail.com">Christophe Lombart</author>
+    <title>Introduction to the Mapping Strategies</title>
+  </properties>
+  <body>
+    <section name="Introduction to the Advanced Mapping Strategies">
+      <p>We are currently working on the advanced mapping strategies.</p>
+    </section>
+  </body>
 </document>

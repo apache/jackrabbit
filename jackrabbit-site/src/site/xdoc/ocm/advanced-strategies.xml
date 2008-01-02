@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- 
+<!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
   this work for additional information regarding copyright ownership.
@@ -16,67 +16,67 @@
   limitations under the License.
 -->
 <document>
-	<properties>
-		<author email="christophe.lombart@gmail.com">Christophe Lombart</author>
-		<title>Advanced Mapping Strategies</title>
-	</properties>
-	<body>
-				
-		<section name="Advanced Mapping Strategies">
-			<subsection name="Inheritance">
-			</subsection>	
+  <properties>
+    <author email="christophe.lombart@gmail.com">Christophe Lombart</author>
+    <title>Advanced Mapping Strategies</title>
+  </properties>
+  <body>
 
-			<subsection name="Interface">
-			</subsection>
-			<subsection name="Components">
+    <section name="Advanced Mapping Strategies">
+      <subsection name="Inheritance">
+      </subsection>
+
+      <subsection name="Interface">
+      </subsection>
+      <subsection name="Components">
 
 
-			<p>A component is an entity that cannot live by its own, but has a logical
-			meaning. Take for example an Address. It may live alone, but doesn't make much sense in some
-			systems. Once associated with an User it starts making sense. Now, as in RDBMS you can choose the
-			persist this as a record in a separate table with a 1-1 relation, or you may choose to persist
-			Address field along with the User.
-			
-			Now, returning to JCR, the component is fitting perfectly the mixin notion. A mixin cannot live by
-			its own in the repository. It is associated with some node. It's properties are added to the set of
+      <p>A component is an entity that cannot live by its own, but has a logical
+      meaning. Take for example an Address. It may live alone, but doesn't make much sense in some
+      systems. Once associated with an User it starts making sense. Now, as in RDBMS you can choose the
+      persist this as a record in a separate table with a 1-1 relation, or you may choose to persist
+      Address field along with the User.
+
+      Now, returning to JCR, the component is fitting perfectly the mixin notion. A mixin cannot live by
+      its own in the repository. It is associated with some node. It's properties are added to the set of
 original node.
-			</p>
-			</subsection>
-			<subsection name ="Group some bean attributes into a subnode">
-			</subsection>	
-			<subsection name ="Map to another node structure">
-				<p>Sometime, it should be interesting to map to a different jcr node structure.
-				Here is an example, for a class "File", we can have :</p>
-			<source><![CDATA[ 				
+      </p>
+      </subsection>
+      <subsection name ="Group some bean attributes into a subnode">
+      </subsection>
+      <subsection name ="Map to another node structure">
+        <p>Sometime, it should be interesting to map to a different jcr node structure.
+        Here is an example, for a class "File", we can have :</p>
+      <source><![CDATA[
 public class File
-				
+
 {
-				
-				
-	private String mimeType;
-	private String encoding;
-	private InputStream data;
-	private Calendar lastModified;
-	// Add getters/setters
+
+
+  private String mimeType;
+  private String encoding;
+  private InputStream data;
+  private Calendar lastModified;
+  // Add getters/setters
 }
-				]]></source>		  
-				
-				<p>and in terms of JCR structure, we can have :</p>
-				<source><![CDATA[ 
-				
+        ]]></source>
+
+        <p>and in terms of JCR structure, we can have :</p>
+        <source><![CDATA[
+
 nt:file
-	jcr:content
-		jcr:mimeType
-		jcr:encoding
-		jcr:data
-		jcr:lastModified
-				]]></source>	
-				So, the jcr:content node is an extra node to specify in the mapping file.
-				
-			</subsection>
-			<subsection name ="">
-			</subsection>
-			
-		</section>
-	</body>
+  jcr:content
+    jcr:mimeType
+    jcr:encoding
+    jcr:data
+    jcr:lastModified
+        ]]></source>
+        So, the jcr:content node is an extra node to specify in the mapping file.
+
+      </subsection>
+      <subsection name ="">
+      </subsection>
+
+    </section>
+  </body>
 </document>

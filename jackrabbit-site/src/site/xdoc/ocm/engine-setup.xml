@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- 
+<!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
   this work for additional information regarding copyright ownership.
@@ -16,69 +16,69 @@
   limitations under the License.
 -->
 <document>
-	<properties>
-		<author email="christophe.lombart@gmail.com">Christophe Lombart</author>
-		<title>Graffito JCR Persistence Manager</title>
-	</properties>
-	<body>
-		<section name="The Persistence Manager Setup">
-			
-			<subsection name = "Basic setup">
-				<p>When you start your application, you need the following code to initialize correctly the Persistence Manager.</p>
-				<source>
+  <properties>
+    <author email="christophe.lombart@gmail.com">Christophe Lombart</author>
+    <title>Graffito JCR Persistence Manager</title>
+  </properties>
+  <body>
+    <section name="The Persistence Manager Setup">
+
+      <subsection name = "Basic setup">
+        <p>When you start your application, you need the following code to initialize correctly the Persistence Manager.</p>
+        <source>
 import javax.jcr.Session;
 import javax.jcr.Repository;
-					
+
 import org.apache.portals.graffito.jcr.mapper.Mapper;
-import org.apache.portals.graffito.jcr.mapper.impl.DigesterMapperImpl;				
-					
+import org.apache.portals.graffito.jcr.mapper.impl.DigesterMapperImpl;
+
 import org.apache.portals.graffito.jcr.persistence.atomictypeconverter.AtomicTypeConverterProvider;
 import org.apache.portals.graffito.jcr.persistence.atomictypeconverter.impl.DefaultAtomicTypeConverterProvider;
-					
+
 import org.apache.portals.graffito.jcr.persistence.objectconverter.ObjectConverter;
 import org.apache.portals.graffito.jcr.persistence.objectconverter.impl.ObjectConverterImpl;
 
 import org.apache.portals.graffito.jcr.query.QueryManager;
 import org.apache.portals.graffito.jcr.query.impl.QueryManagerImpl;
 import org.apache.portals.graffito.jcr.repository.RepositoryUtil;
-				
+
 // 1. Instantiate a JCR session
-			
+
 Repository repository = RepositoryUtil.getRepository("repositoryTest");
 Session session = RepositoryUtil.login(repository, "superuser", "superuser");
-					
+
 // 2. Specify the different mapping files
-					
-String[] files = { "./src/test-config/jcrmapping.xml", 
-			"./src/test-config/jcrmapping-atomic.xml",
-			"./src/test-config/jcrmapping-beandescriptor.xml"};
+
+String[] files = { "./src/test-config/jcrmapping.xml",
+      "./src/test-config/jcrmapping-atomic.xml",
+      "./src/test-config/jcrmapping-beandescriptor.xml"};
 
 // 3. Initialise the PersistenceManager dependencies
-				
+
 Mapper mapper = new DigesterMapperImpl(files).buildMapper();
 AtomicTypeConverterProvider converterProvider = new DefaultAtomicTypeConverterProvider();
 Map atomicTypeConverters = converterProvider.getAtomicTypeConverters();
 QueryManager queryManager = new QueryManagerImpl(mapper, atomicTypeConverters);
 ObjectConverter objectConverter = new ObjectConverterImpl(mapper, converterProvider);
-				
+
 // 4. Intantiate the PersistenceManager
-				
-PersistenceManager persistenceManager = new PersistenceManagerImpl(mapper, objectConverter, queryManager, session);	
-					
-					
-</source>	
-				<p>See the page <a href="api/api-intro.html">here</a> to get a complete overview on the Persistence Manager API.</p>
-			</subsection>
-			
-			<subsection name="Platform/Framework integration">
-				<p>You can also get more information on the Spring support <a href="engine-spring.html">here</a>.</p>
-				<p>Of course, support for other containers are welcome.</p>
-			</subsection>
-			
-		</section>
-		
-		
-		
-		
-	</body>
+
+PersistenceManager persistenceManager = new PersistenceManagerImpl(mapper, objectConverter, queryManager, session);
+
+
+</source>
+        <p>See the page <a href="api/api-intro.html">here</a> to get a complete overview on the Persistence Manager API.</p>
+      </subsection>
+
+      <subsection name="Platform/Framework integration">
+        <p>You can also get more information on the Spring support <a href="engine-spring.html">here</a>.</p>
+        <p>Of course, support for other containers are welcome.</p>
+      </subsection>
+
+    </section>
+
+
+
+
+  </body>
 </document>
