@@ -62,10 +62,10 @@ The components contained in the released source archive are listed below
 
         Core of the Apache Jackrabbit content repository implementation.
 
-    * Jackrabbit Index Filters (jackrabbit-index-filters-1.4.jar)
+    * Jackrabbit Text Extractors (jackrabbit-text-extractors-1.4.jar)
 
-        Text indexing filters for Jackrabbit. Includes example filters
-        for Adobe PDF and MS Excel, PowerPoint, and Word.
+        Text extractor classes that allow Jackrabbit to extract text content
+        from binary properties for full text indexing.
 
     * Jackrabbit JCR-RMI (jackrabbit-jcr-rmi-1.4.jar)
 
@@ -80,6 +80,11 @@ The components contained in the released source archive are listed below
 
         WebDAV servlet implementations based on JCR.
 
+    * Jackrabbit JCR Servlets (jackrabbit-jcr-servlet-1.4.jar)
+
+        Set of servlets and other classes designed to make it easier to use
+        Jackrabbit and other JCR content repositories in web applications.
+
     * Jackrabbit Repository Classloader (jackrabbit-classloader-1.4.jar)
 
         Java classloader for loading classes from JCR content repositories.
@@ -92,6 +97,37 @@ The components contained in the released source archive are listed below
 
         J2EE Connector Architecture (JCA) resource adapter for Jackrabbit.
 
+    * Jackrabbit SPI (jackrabbit-spi-1.4.jar)
+
+        The SPI defines a layer within a JSR-170 implementation that separates
+        the transient space from the persistent layer.
+
+    * Jackrabbit SPI Commons (jackrabbit-spi-commons-1.4.jar)
+
+        This component contains generic utility classes that might be used
+        to build an SPI implementation.
+
+    * Jackrabbit SPI2JCR (jackrabbit-spi2jcr-1.4.jar)
+
+        This component contains a SPI implementation wrapping around an
+        implementation of JSR-170.
+
+    * Jackrabbit JCR2SPI (jackrabbit-jcr2spi-1.4.jar)
+
+        This component contains an implementation of the JSR-170 API and
+        covers the functionality that is not delegated to the SPI
+        implementation.
+
+    * Jackrabbit OCM (jackrabbit-ocm-1.4.jar)
+
+        Object-Content mapping tool for persisting and accessing Java objects
+        in a JCR content repository.
+
+    * Jackrabbit OCM Node Management (jackrabbit-ocm-nodemanagement-1.4.jar)
+
+        This component simplifies registration of node types and namespaces
+        referenced in OCM mapping descriptors.        
+
 All files contain a README.txt file with more information. Note that
 external runtime dependencies are only included for the war and rar
 archives. Other dependencies can be downloaded either manually or
@@ -100,6 +136,30 @@ automatically using the Maven build system.
 Each release file is accompanied by SHA1 and MD5 checksums and a PGP
 signature. The public key used for the signatures can be found
 in the KEYS file located in the parent directory.
+
+Upgrading to Jackrabbit 1.4
+---------------------------
+
+Apache Jackrabbit 1.4 is fully compatible with the previous 1.x releases.
+A previous Apache Jackrabbit 1.x installation can be upgraded by replacing
+the relevant jar files with the new versions and adding some new dependencies.
+No changes to repository contents are needed.
+
+Jackrabbit 1.4 introduces the SPI layer described above, and in addition to
+it's earlier dependencies the jackrabbit-core component now also needs the
+jackrabbit-spi and jackrabbit-spi-commons components in the classpath.
+
+A number of classes in jackrabbit-jcr-commons have been deprecated, and you
+should check for the suggested replacements if you use those classes in your
+applications.
+
+The Lucene dependency was upgraded to 2.2.0, and so you need to upgrade
+also the lucene-core jar file in your classpath when upgrading
+jackrabbit-core. No index file changes are needed.
+
+Repository configuration has been extended with a number of options for
+storage, locking and indexing strategies. However, no changes to existing
+configuration files are needed unless you want to enable these new features.
 
 Upgrading to Jackrabbit 1.3
 ---------------------------
