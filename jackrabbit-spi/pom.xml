@@ -29,7 +29,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit</artifactId>
-    <version>1.4-SNAPSHOT</version>
+    <version>1.4-rc1</version>
   </parent>
   <artifactId>jackrabbit-spi</artifactId>
   <name>Jackrabbit SPI</name>

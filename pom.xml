@@ -36,7 +36,7 @@
   <groupId>org.apache.jackrabbit</groupId>
   <artifactId>jackrabbit</artifactId>
   <name>Apache Jackrabbit</name>
-  <version>1.4-SNAPSHOT</version>
+  <version>1.4-rc1</version>
   <packaging>pom</packaging>
   <!--
     Keep the description on a single line. Otherwise Maven might generate
@@ -698,77 +698,77 @@
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-api</artifactId>
-        <version>1.4-SNAPSHOT</version>
+        <version>1.4-rc1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-jcr-commons</artifactId>
-        <version>1.4-SNAPSHOT</version>
+        <version>1.4-rc1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-text-extractors</artifactId>
-        <version>1.4-SNAPSHOT</version>
+        <version>1.4-rc1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-jcr-rmi</artifactId>
-        <version>1.4-SNAPSHOT</version>
+        <version>1.4-rc1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-core</artifactId>
-        <version>1.4-SNAPSHOT</version>
+        <version>1.4-rc1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-jcr-tests</artifactId>
-        <version>1.4-SNAPSHOT</version>
+        <version>1.4-rc1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-webdav</artifactId>
-        <version>1.4-SNAPSHOT</version>
+        <version>1.4-rc1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-jcr-servlet</artifactId>
-        <version>1.4-SNAPSHOT</version>
+        <version>1.4-rc1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-jcr-server</artifactId>
-        <version>1.4-SNAPSHOT</version>
+        <version>1.4-rc1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-spi</artifactId>
-        <version>1.4-SNAPSHOT</version>
+        <version>1.4-rc1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-spi-commons</artifactId>
-        <version>1.4-SNAPSHOT</version>
+        <version>1.4-rc1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-jcr2spi</artifactId>
-        <version>1.4-SNAPSHOT</version>
+        <version>1.4-rc1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-spi2jcr</artifactId>
-        <version>1.4-SNAPSHOT</version>
+        <version>1.4-rc1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-ocm</artifactId>
-        <version>1.4-SNAPSHOT</version>
+        <version>1.4-rc1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.jackrabbit</groupId>
         <artifactId>jackrabbit-ocm-nodemanagement</artifactId>
-        <version>1.4-SNAPSHOT</version>
+        <version>1.4-rc1</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
