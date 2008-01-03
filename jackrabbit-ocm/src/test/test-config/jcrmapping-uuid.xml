@@ -17,7 +17,6 @@
    limitations under the License.
   -->
 
-<!DOCTYPE jackrabbit-ocm PUBLIC "-//The Apache Software Foundation//DTD Repository//EN" "./src/dtd/jackrabbit-ocm.dtd">
 <jackrabbit-ocm>
     <class-descriptor
 		className="org.apache.jackrabbit.ocm.testmodel.uuid.A" jcrType="nt:unstructured" jcrMixinTypes="mix:referenceable" >
