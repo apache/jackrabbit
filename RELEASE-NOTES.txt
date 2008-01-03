@@ -35,11 +35,17 @@ pre-compiled binary component archives.
         The main source archive contains a "jackrabbit-1.4-src" directory
         with the full released source code and build environment. Use the
         following commands (or the equivalent in your system) to build all
-        the released components with Maven 2:
+        the released components with Maven 2 and Java 1.4:
 
           $ jar xf jackrabbit-1.4-src.jar
           $ cd jackrabbit-1.4-src
           $ mvn install
+
+        The OCM components require Java 5 or higher, and you need to
+        build them separately:
+        
+          $ (cd jackrabbit-ocm; mvn install)
+          $ (cd jackrabbit-ocm-nodemanagement; mvn install)
 
 The components contained in the released source archive are listed below
 (with the pre-compiled binary archives in parenthesis):

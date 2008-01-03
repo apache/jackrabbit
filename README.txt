@@ -71,6 +71,11 @@ components is:
 
    mvn install
 
+Note that the OCM components require Java 5, and need to be built separately:
+
+   cd jackrabbit-ocm; mvn install
+   cd jackrabbit-ocm-nodemanagement; mvn install
+
 For more instructions, please see the documentation at:
 
    http://jackrabbit.apache.org/doc/building.html
