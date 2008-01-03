@@ -1,21 +1,19 @@
-<%
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-%><%@ page import="javax.jcr.Repository,
+<%--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+--%><%@ page import="javax.jcr.Repository,
                  javax.jcr.Session,
                  org.apache.jackrabbit.j2ee.RepositoryAccessServlet,
                  javax.jcr.SimpleCredentials,
@@ -74,7 +72,9 @@
                 filetypes.add(types[i]);
             }
         }
-%><html>
+
+if (seedWord != null && numDocs > 0 && filetypes.size() > 0) { %>
+<html>
 <head>
 <title>Welcome to Apache Jackrabbit - Populate workspace: <%= wspName %></title>
 <link rel="shortcut icon" href="<%= request.getContextPath() %>/images/favicon.ico" type="image/vnd.microsoft.icon">
@@ -84,19 +84,19 @@
 <script><!--
 function draw() {
 	// draw the bar
-	document.write('<table cellspacing="0" cellpadding="0" style="border-color:' + this.borderColor + '; border-width:' + this.borderWidth + '; border-style:' + this.borderStyle + '">');
-	document.write('<tr><td>');
-	document.write('<table border="0" cellspacing="0" cellpadding="0" style="">');
-	document.write('<tr><td style="background-color:' + this.barColor +'"><img src="<%= request.getContextPath() %>/images/0.gif" id="' + this.id + 'barFG" width="0" height="' + this.height + '"/></td>');
-	document.write('<td><img src="<%= request.getContextPath() %>/images/0.gif" id="' + this.id + 'barBG" width="' + this.width + '" height="' + this.height + '"/></td></tr>');
-	document.write('</table>');
-	document.write('</tr></td>');
-	document.write('</table>');
-	document.write('<table>');
-	document.write('<tr><td><img src="<%= request.getContextPath() %>/images/0.gif" width="' + this.width + '" height="0"/></td></tr>');
-	document.write('<tr><td align="center"><div id="' + this.id + 'barValue">0%</div></td></tr>');
-	document.write('<tr><td align="center"><div id="' + this.id + 'barInfo">&nbsp;</div></td></tr>');
-	document.write('</table>');
+        document.write('<table cellspacing="0" cellpadding="0" style="border-color:' + this.borderColor + '; border-width:' + this.borderWidth + '; border-style:' + this.borderStyle + '">');
+        document.write('<tr><td>');
+        document.write('<table border="0" cellspacing="0" cellpadding="0" style="">');
+        document.write('<tr><td style="background-color:' + this.barColor +'"><img src="<%= request.getContextPath() %>/images/0.gif" id="' + this.id + 'barFG" width="0" height="' + this.height + '"/></td>');
+        document.write('<td><img src="<%= request.getContextPath() %>/images/0.gif" id="' + this.id + 'barBG" width="' + this.width + '" height="' + this.height + '"/></td></tr>');
+        document.write('</table>');
+        document.write('</tr></td>');
+        document.write('</table>');
+        document.write('<table>');
+        document.write('<tr><td><img src="<%= request.getContextPath() %>/images/0.gif" width="' + this.width + '" height="0"/></td></tr>');
+        document.write('<tr><td align="center"><span id="' + this.id + 'barValue">0%</span></td></tr>');
+        document.write('<tr><td align="center"><span id="' + this.id + 'barInfo">&nbsp;</span></td></tr>');
+        document.write('</table>');
 
 	this.barFG = document.getElementById(this.id + 'barFG');
 	this.barBG = document.getElementById(this.id + 'barBG');
@@ -135,17 +135,13 @@ ProgressBar.prototype.borderWidth = "2px";
 </script>
 </head>
   <body>
-  <div id="bodyColumn">
-  <a href="http://jackrabbit.apache.org"><img src="<%= request.getContextPath() %>/images/jackrabbitlogo.gif" alt="" /></a><br>
+  <div style="background: white; border: 1px solid black; padding: 50px; width: 510px; margin: 50px auto;">
   <h2>Populate workspace: "<%= wspName %>"</h2><br>
-    <%
-        if (seedWord != null && numDocs > 0 && filetypes.size() > 0) {
-    %>
-    <h6>Overall progress</h6>
-    <script>var pb = new ProgressBar(<%= numDocs %>, 300, 30);pb.draw();</script>
+    <p>Overall progress</p>
+    <script>var pb = new ProgressBar(<%= numDocs %>, 500, 30);pb.draw();</script>
     
-    <br><h6>Downloading document</h6>
-    <script>var dp = new ProgressBar(1000, 300, 30);dp.draw();</script>
+    <p>Downloading document</p>
+    <script>var dp = new ProgressBar(1000, 500, 30);dp.draw();</script>
     <%
             Node root = jcrSession.getRootNode();
             int n = 0;
@@ -255,14 +251,17 @@ ProgressBar.prototype.borderWidth = "2px";
                     offset += 10;
                 }
             }
-        } else {
-    %>
-    <p>This page allows you to populate the workspace with documents downloaded
-from the Internet.</p>
-    <%
-        }
-    %>
-    <form>
+%>  </div>
+  </body>
+</html>
+<% } else {
+request.setAttribute("title", "Populate workspace " + wspName);
+%><jsp:include page="header.jsp"/>
+<p>
+  This page allows you to populate the workspace with documents downloaded
+  from the Internet.
+</p>
+    <form method="POST">
       <table>
       <tr><td>Seed word:</td><td><input name="seed" type="text" size="30" value="<%= seedWord == null ? "download" : seedWord %>"/></td></tr>
       <tr><td>Number of documents:</td><td><input name="num" type="text" size="30" value="<%= numDocs == 0 ? 100 : numDocs %>"/></td></tr>
@@ -271,11 +270,8 @@ from the Internet.</p>
       </table>
     </form>
   </div>
-  <div id="footer">
-  <em>Powered by <a href="<%= rep.getDescriptor(Repository.REP_VENDOR_URL_DESC) %>"><%= rep.getDescriptor(Repository.REP_NAME_DESC)%></a> version <%= rep.getDescriptor(Repository.REP_VERSION_DESC) %>.</em>
-  </div>
-  </body>
-</html><%
+<jsp:include page="footer.jsp"/>
+<%    }
     } finally {
         if (jcrSession != null) {
             jcrSession.logout();

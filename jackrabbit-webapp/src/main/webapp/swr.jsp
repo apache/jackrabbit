@@ -1,21 +1,19 @@
-<%
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-%><%@ page import="javax.jcr.Repository,
+<%--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+--%><%@ page import="javax.jcr.Repository,
                  javax.jcr.Session,
                  org.apache.jackrabbit.j2ee.RepositoryAccessServlet,
                  javax.jcr.SimpleCredentials,
@@ -44,21 +42,9 @@
         if (q == null || numResults == null) {
             return;
         }
-        %>
-<html>
-<head>
-<title>Welcome to Apache Jackrabbit - Search within results</title>
-<link rel="shortcut icon" href="<%= request.getContextPath() %>/images/favicon.ico" type="image/vnd.microsoft.icon">
-<style type="text/css" media="all">
-      @import url("<%= request.getContextPath() %>/css/default.css");
-</style>
-</head>
-  <body>
-  <div id="bodyColumn">
-  <a href="http://jackrabbit.apache.org"><img src="<%= request.getContextPath() %>/images/jackrabbitlogo.gif" alt="" /></a><br>
-  <h2>Search within results</h2>
-</head>
-  <body onload=document.f.as_q.focus()>
+
+        request.setAttribute("title", "Search within results");
+        %><jsp:include page="header.jsp"/>
     <form name=f action="search.jsp">
       <table border=0 cellpadding=0 cellspacing=0 width=100%>
         <tr><table border=0 width=100%><tr><td><br>There were about <b><%= numResults %></b> results for <b><%= q %></b>.<br>
@@ -73,16 +59,8 @@
         </td></tr>
       </table>
     </form>
-    <br>
-  
-  </div>
-  <div id="footer">
-  <em>Powered by <a href="<%= rep.getDescriptor(Repository.REP_VENDOR_URL_DESC) %>"><%= rep.getDescriptor(Repository.REP_NAME_DESC)%></a> version <%= rep.getDescriptor(Repository.REP_VERSION_DESC) %>.</em>
-  </div>
-
-  </body>
-
-</html><%
+<jsp:include page="footer.jsp"/>
+<%
     } finally {
         if (jcrSession != null) {
             jcrSession.logout();
