@@ -642,9 +642,9 @@ public class RepositoryStartupServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         if (repository == null) {
-            redirect(req, resp, "/bootstrap/missing.html");
+            redirect(req, resp, "/bootstrap/missing.jsp");
         } else {
-            redirect(req, resp, "/bootstrap/running.html");
+            redirect(req, resp, "/bootstrap/running.jsp");
         }
     }
 
@@ -654,7 +654,7 @@ public class RepositoryStartupServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         if (repository != null) {
-            redirect(req, resp, "/bootstrap/reconfigure.html");
+            redirect(req, resp, "/bootstrap/reconfigure.jsp");
         } else {
             int rc = new Installer(bootstrapConfigFile,
                     getServletContext()).installRepository(req);
@@ -663,25 +663,25 @@ public class RepositoryStartupServlet extends HttpServlet {
                     // restart rep
                     restart();
                     if (repository == null) {
-                        redirect(req, resp, "/bootstrap/error.html");
+                        redirect(req, resp, "/bootstrap/error.jsp");
                     } else {
-                        redirect(req, resp, "/bootstrap/success.html");
+                        redirect(req, resp, "/bootstrap/success.jsp");
                     }
                     break;
                 case Installer.C_INVALID_INPUT:
-                    redirect(req, resp, "/bootstrap/missing.html");
+                    redirect(req, resp, "/bootstrap/missing.jsp");
                     break;
                 case Installer.C_CONFIG_EXISTS:
                 case Installer.C_BOOTSTRAP_EXISTS:
                 case Installer.C_HOME_EXISTS:
-                    redirect(req, resp, "/bootstrap/exists.html");
+                    redirect(req, resp, "/bootstrap/exists.jsp");
                     break;
                 case Installer. C_HOME_MISSING:
                 case Installer.C_CONFIG_MISSING:
-                    redirect(req, resp, "/bootstrap/notexists.html");
+                    redirect(req, resp, "/bootstrap/notexists.jsp");
                     break;
                 case Installer.C_INSTALL_ERROR:
-                    redirect(req, resp, "/bootstrap/error.html");
+                    redirect(req, resp, "/bootstrap/error.jsp");
                     break;
             }
         }
