@@ -47,7 +47,6 @@ import org.apache.jackrabbit.ocm.exception.LockedException;
 import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.exception.VersionException;
 import org.apache.jackrabbit.ocm.lock.Lock;
-import org.apache.jackrabbit.ocm.manager.ManagerConstant;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.DefaultAtomicTypeConverterProvider;
 import org.apache.jackrabbit.ocm.manager.cache.ObjectCache;
@@ -535,7 +534,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
             throw new ObjectContentManagerException("Impossible to get the object - the query returns more than one object");
         }
 
-        return result.iterator().next();
+        return result.isEmpty() ? null : result.iterator().next();
     }
 
     /**
