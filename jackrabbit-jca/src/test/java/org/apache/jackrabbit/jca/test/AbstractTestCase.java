@@ -16,7 +16,14 @@
  */
 package org.apache.jackrabbit.jca.test;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 import junit.framework.TestCase;
+
+import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.jca.JCAManagedConnectionFactory;
 
 import javax.jcr.Credentials;
@@ -31,13 +38,13 @@ public abstract class AbstractTestCase
     /**
      * Repository home directory.
      */
-    public static final String JCR_HOME_DIR = "applications/test";
+    public static final String JCR_HOME_DIR = "target/repository";
 
     /**
      * Repository configuration file.
      */
     public static final String JCR_CONFIG_FILE =
-        "applications/test/repository.xml";
+        "target/repository/repository.xml";
 
     /**
      * Default credentials.
@@ -64,7 +71,33 @@ public abstract class AbstractTestCase
     /**
      * Setup the test.
      */
-    protected void setUp() {
+    protected void setUp() throws Exception {
+        File home = new File(JCR_HOME_DIR);
+        if (!home.exists()) {
+            home.mkdirs();
+        }
+
+        File conf = new File(JCR_CONFIG_FILE);
+        if (!conf.exists()) {
+            InputStream input =
+                RepositoryImpl.class.getResourceAsStream("repository.xml");
+            try {
+                OutputStream output = new FileOutputStream(conf);
+                try {
+                    byte[] buffer = new byte[1024];
+                    int n = input.read(buffer);
+                    while (n != -1) {
+                        output.write(buffer, 0, n);
+                        n = input.read(buffer);
+                    }
+                } finally {
+                    output.close();
+                }
+            } finally {
+                input.close();
+            }
+        }
+
         // Construct the managed connection factory
         this.mcf = new JCAManagedConnectionFactory();
         this.mcf.setHomeDir(JCR_HOME_DIR);
