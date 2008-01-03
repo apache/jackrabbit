@@ -53,6 +53,15 @@ String href =
   Internet.
 </p>
 
+<h3>File system access</h3>
+<p>
+  Many operating systems, including Windows and Mac OS X, allow you to
+  "mount" a WebDAV server as a shared network disk. You can use the above
+  URL to make the default workspace available as such a network disk, after
+  which you can use normal file system tools to copy files and folders to
+  and from the content repository.
+</p>
+
 <h3>Supported WebDAV functionality</h3>
 <ul>
 <li><a href="http://www.ietf.org/rfc/rfc2518.txt">RFC 2518</a> (WebDAV 1,2)</li>
