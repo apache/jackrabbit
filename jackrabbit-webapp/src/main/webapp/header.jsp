@@ -49,6 +49,11 @@
               <li><a href="<%= request.getContextPath() %>/">Welcome</a></li>
               <li><a href="<%= request.getContextPath() %>/webdav-simple.jsp">Standard WebDAV</a></li>
               <li><a href="<%= request.getContextPath() %>/webdav-jcr.jsp">JCR WebDAV</a></li>
+            </ul>
+          </li>
+          <li>Default workspace
+            <ul>
+              <li><a href="<%= request.getContextPath() %>/repository/default/">Browse</a></li>
               <li><a href="<%= request.getContextPath() %>/search.jsp">Search</a></li>
               <li><a href="<%= request.getContextPath() %>/populate.jsp">Populate</a></li>
             </ul>
