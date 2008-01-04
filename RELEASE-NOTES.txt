@@ -426,7 +426,7 @@ jackrabbit-jcr-rmi
   [JCR-953]  Support for transactions when using JCR over RMI.
   [JCR-959]  Remove @author tags in jackrabbit-jcr-rmi
 
-  Known issues
+  Bug fixes
   [JCR-1226] ServerQuery does not use RemoteAdapterFactory for creating ...
 
 jackrabbit-jcr-server
