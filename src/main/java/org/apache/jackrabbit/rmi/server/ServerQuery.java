@@ -55,7 +55,7 @@ public class ServerQuery extends ServerObject implements RemoteQuery {
     /** {@inheritDoc} */
     public RemoteQueryResult execute()
             throws RepositoryException, RemoteException {
-        return new ServerQueryResult(query.execute(), getFactory());
+        return getFactory().getRemoteQueryResult(query.execute());
     }
 
     /** {@inheritDoc} */
