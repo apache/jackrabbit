@@ -404,6 +404,9 @@ jackrabbit-jca
 
 jackrabbit-jcr-commons
 
+  New features
+  [JCR-1259] Utility code for filtering and packaging trees
+
   Improvements
   [JCR-742]  Abstract JCR base classes
   [JCR-896]  Unnecessary parsing of Name value
