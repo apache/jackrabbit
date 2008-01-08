@@ -418,6 +418,7 @@ jackrabbit-jcr-commons
   Bug fixes
   [JCR-674]  String properties with invalid XML characters export as ...
   [JCR-1167] Paths not correct after reordering children
+  [JCR-1292] Deprecated classes point to wrong replacements ...
 
 jackrabbit-jcr-rmi
 

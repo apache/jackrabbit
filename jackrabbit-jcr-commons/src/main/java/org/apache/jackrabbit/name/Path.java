@@ -80,9 +80,12 @@ import java.io.Serializable;
  *                  character *)
  * </pre>
  *
- * @deprecated Use {@link org.apache.jackrabbit.spi.Path} and
- * {@link org.apache.jackrabbit.spi.PathFactory} instead. A default implementation
- * is provided by {@link org.apache.jackrabbit.name.PathFactoryImpl}.
+ * @deprecated Use the Path and PathFactory interfaces from 
+ *             the org.apache.jackrabbit.spi package of
+ *             the jackrabbit-spi component. A default implementation
+ *             is available as
+ *             the org.apache.jackrabbit.spi.commons.name.PathFactoryImpl
+ *             class in the jackrabbit-spi-commons component.
  */
 public final class Path implements Serializable {
 

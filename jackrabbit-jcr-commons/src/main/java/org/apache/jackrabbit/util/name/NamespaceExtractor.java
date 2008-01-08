@@ -41,7 +41,9 @@ import java.util.HashMap;
  * and can be used by tools (such as o.a.j.tools.nodetype.CompactNodeTypeDefWriter)
  * to resolve namespaces.
  *
- * @deprecated User org.apache.jackrabbit.namespace.NamespaceExtractor instead
+ * @deprecated Use the NamespaceExtractor class from 
+ *             the org.apache.jackrabbit.spi.commons.namespace package of
+ *             the jackrabbit-spi-commons component.
  */
 public class NamespaceExtractor {
     private static Logger log = LoggerFactory.getLogger(NamespaceExtractor.class);
