@@ -26,7 +26,9 @@ package org.apache.jackrabbit.name;
  * See the section 4.6 of the JCR 1.0 specification for details of the
  * JCR name syntax.
  *
- * @deprecated 
+ * @deprecated Use the IllegalNameException class from 
+ *             the org.apache.jackrabbit.spi.commons.conversion package of
+ *             the jackrabbit-spi-commons component.
  */
 public class IllegalNameException extends NameException {
 

@@ -29,7 +29,9 @@ import java.util.Map;
  * Generic path map that associates information with the individual path elements
  * of a path.
  *
- * @deprecated Use {@link org.apache.jackrabbit.name.PathMap} instead.
+ * @deprecated Use the PathMap class from 
+ *             the org.apache.jackrabbit.spi.commons.name package of
+ *             the jackrabbit-spi-commons component.
  */
 public class PathMap {
 

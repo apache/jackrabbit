@@ -21,7 +21,9 @@ import javax.jcr.NamespaceException;
 /**
  * Resolver for JCR paths.
  *
- * @deprecated Use {@link org.apache.jackrabbit.conversion.PathResolver} instead.
+ * @deprecated Use the PathResolver interface from 
+ *             the org.apache.jackrabbit.spi.commons.conversion package of
+ *             the jackrabbit-spi-commons component.
  */
 public interface PathResolver {
 
