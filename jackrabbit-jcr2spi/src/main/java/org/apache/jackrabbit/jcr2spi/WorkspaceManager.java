@@ -746,6 +746,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
          * Executes the operations on the repository service.
          */
         private void execute(ChangeLog changeLog) throws RepositoryException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException {
+            RepositoryException ex = null;
             try {
                 ItemState target = changeLog.getTarget();
                 batch = service.createBatch(sessionInfo, target.getId());
@@ -755,12 +756,28 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                     log.debug("executing " + op.getName());
                     op.accept(this);
                 }
+            } catch (RepositoryException e) {
+                ex = e;
             } finally {
                 if (batch != null) {
-                    service.submit(batch);
+                    try {
+                        // submit must be called even in case there is an
+                        // exception to give the service a chance to clean
+                        // up the batch
+                        service.submit(batch);
+                    } catch (RepositoryException e) {
+                        if (ex == null) {
+                            ex = e;
+                        } else {
+                            log.warn("Exception submitting batch", e);
+                        }
+                    }
                     // reset batch field
                     batch = null;
                 }
+            }
+            if (ex != null) {
+                throw ex;
             }
         }
 
