@@ -75,8 +75,10 @@ public class JNDIDatabaseJournal extends DatabaseJournal {
             DataSource dataSource = (DataSource) ic.lookup(dataSourceLocation);
             return dataSource.getConnection();
         } catch (NamingException e) {
-            throw new SQLException(
-                    "DataSource not found: " + dataSourceLocation, e);
+            SQLException exception = new SQLException(
+                    "DataSource not found: " + dataSourceLocation);
+            exception.initCause(e);
+            throw exception;
         }
     }
 
