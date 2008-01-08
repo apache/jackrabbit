@@ -24,7 +24,9 @@ import javax.jcr.Session;
  * helper class that exposes the <code>NamespaceResolver</code>
  * interface on a <code>Session</code>
  *
- * @deprecated Use {@link org.apache.jackrabbit.namespace.SessionNamespaceResolver} instead. 
+ * @deprecated Use the SessionNamespaceResolver class from 
+ *             the org.apache.jackrabbit.spi.commons.namespace package of
+ *             the jackrabbit-spi-commons component.
  */
 public class SessionNamespaceResolver extends AbstractNamespaceResolver {
 

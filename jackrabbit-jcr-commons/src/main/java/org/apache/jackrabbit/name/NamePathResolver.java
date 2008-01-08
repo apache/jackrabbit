@@ -21,7 +21,9 @@ package org.apache.jackrabbit.name;
  * name and path resolver interfaces when a single dependency for both
  * name and path resolution is needed.
  *
- * @deprecated Use {@link org.apache.jackrabbit.conversion.NamePathResolver} instead.
+ * @deprecated Use the NamePathResolver interface from 
+ *             the org.apache.jackrabbit.spi.commons.conversion package of
+ *             the jackrabbit-spi-commons component.
  */
 public interface NamePathResolver extends NameResolver, PathResolver {
 }

@@ -33,7 +33,9 @@ import java.util.Iterator;
  * constructor will not enable listener support and all listener related
  * methods will throw an {@link UnsupportedOperationException} in that case.
  *
- * @deprecated Use {@link org.apache.jackrabbit.namespace.AbstractNamespaceResolver} instead.
+ * @deprecated Use the AbstractNamespaceResolver class from 
+ *             the org.apache.jackrabbit.spi.commons.namespace package of
+ *             the jackrabbit-spi-commons component.
  */
 public abstract class AbstractNamespaceResolver implements NamespaceResolver {
 
