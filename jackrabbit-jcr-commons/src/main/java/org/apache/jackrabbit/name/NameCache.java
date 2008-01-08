@@ -23,7 +23,7 @@ package org.apache.jackrabbit.name;
  * Please note, that the redundant naming of the methods is intentionally in
  * order to allow a class to implement several caches.
  *
- * @deprecated Use {@link org.apache.jackrabbit.conversion.NameCache} instead.
+ * @deprecated
  */
 public interface NameCache {
 
