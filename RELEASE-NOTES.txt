@@ -535,6 +535,9 @@ jackrabbit-jcr2spi
   [JCR-1245] JCR2SPI: Use namespace decl. present in imported xml to ...
   [JCR-1296] Exception may get lost in WorkspaceManager....
 
+  Known issues
+  [JCR-1293] ReorderReferencableSNSTest failure
+
 jackrabbit-spi
 
   New features

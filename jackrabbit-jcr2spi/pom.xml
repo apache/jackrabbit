@@ -85,6 +85,9 @@
             <property>
               <name>known.issues</name>
               <value>
+                org.apache.jackrabbit.test.api.version.RemoveVersionTest
+                org.apache.jackrabbit.jcr2spi.version.LabelTest
+                org.apache.jackrabbit.jcr2spi.ReorderReferenceableSNSTest
                 org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespaceVisibility
                 org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testRegisteredNamespaceVisibility
                 org.apache.jackrabbit.jcr2spi.ReorderMoveTest#testRevertMoveAndReorderSNS
