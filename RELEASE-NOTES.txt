@@ -327,6 +327,7 @@ jackrabbit-core
   [JCR-1278] Add configuration path to SynonymProvider
   [JCR-1283] Use bundle persistence in default configuration
   [JCR-1291] Missing class JNDIDatabaseJournal
+  [JCR-1297] Set svn:eol-style on ddl files
 
   Bug fixes
   [JCR-674]  String properties with invalid XML characters export as ...
