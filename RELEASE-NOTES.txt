@@ -325,7 +325,8 @@ jackrabbit-core
   [JCR-1273] Unnecessary parsing of Name value
   [JCR-1278] Add configuration path to SynonymProvider
   [JCR-1283] Use bundle persistence in default configuration
-  
+  [JCR-1291] Missing class JNDIDatabaseJournal
+
   Bug fixes
   [JCR-674]  String properties with invalid XML characters export as ...
   [JCR-832]  BundleDBPersistenceManager does not free blobStore resources
