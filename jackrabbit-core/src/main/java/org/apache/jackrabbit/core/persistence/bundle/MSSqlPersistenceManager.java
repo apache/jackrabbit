@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.persistence.bundle;
 
-import org.apache.jackrabbit.core.persistence.PMContext;
+import org.apache.jackrabbit.util.Text;
 
 /**
  * Extends the {@link BundleDbPersistenceManager} by MS-SQL specific code.
@@ -33,6 +33,7 @@ import org.apache.jackrabbit.core.persistence.PMContext;
  * <li>&lt;param name="{@link #setSchema(String) schema}" value="mssql"/>
  * <li>&lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/>
  * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/>
+ * <li>&lt;param name="{@link #setTableSpace(String) tableSpace}" value=""/>
  * </ul>
  */
 public class MSSqlPersistenceManager extends BundleDbPersistenceManager {
@@ -40,18 +41,39 @@ public class MSSqlPersistenceManager extends BundleDbPersistenceManager {
     /** the cvs/svn id */
     static final String CVS_ID = "$URL$ $Rev$ $Date$";
 
+    /** the MS SQL table space to use */
+    protected String tableSpace = "";
+
+    public MSSqlPersistenceManager() {
+        setDriver("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+        setSchema("mssql");
+    }
+
+    protected String createSchemaSQL(String sql) {
+        return Text.replace(
+                super.createSchemaSQL(sql), "${tableSpace}", tableSpace);
+    }
+
     /**
-     * {@inheritDoc}
+     * Returns the configured MS SQL table space.
+     * 
+     * @return the configured MS SQL table space.
      */
-    public void init(PMContext context) throws Exception {
-        // init default values
-        if (getDriver() == null) {
-            setDriver("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+    public String getTableSpace() {
+        return tableSpace;
+    }
+
+    /**
+     * Sets the MS SQL table space.
+     * 
+     * @param tableSpace the MS SQL table space.
+     */
+    public void setTableSpace(String tableSpace) {
+        if (tableSpace != null && tableSpace.length() > 0) {
+            this.tableSpace = "on " + tableSpace.trim();
+        } else {
+            this.tableSpace = "";
         }
-        if (getSchema() == null) {
-            setSchema("mssql");
-        }
-        super.init(context);
     }
 
 }
