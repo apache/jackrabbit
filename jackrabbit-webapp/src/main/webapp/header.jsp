@@ -44,11 +44,12 @@
       </div>
       <div id="navigation">
         <ul>
-          <li>WebDAV Server
+          <li>Jackrabbit JCR Server
             <ul>
               <li><a href="<%= request.getContextPath() %>/">Welcome</a></li>
               <li><a href="<%= request.getContextPath() %>/webdav-simple.jsp">Standard WebDAV</a></li>
               <li><a href="<%= request.getContextPath() %>/webdav-jcr.jsp">JCR WebDAV</a></li>
+              <li><a href="<%= request.getContextPath() %>/troubleshooting.jsp">Troubleshooting</a></li>
             </ul>
           </li>
           <li>Default workspace
