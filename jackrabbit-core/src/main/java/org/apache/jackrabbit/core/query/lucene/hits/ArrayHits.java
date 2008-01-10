@@ -87,9 +87,9 @@ public class ArrayHits implements Hits {
             int nextDocValue = hits[i];
             if (nextDocValue >= target) {
                 index = i;
-                break;
+                return next();
             }
         }
-        return next();
+        return -1;
     }
 }

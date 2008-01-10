@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.query;
 
+import org.apache.jackrabbit.core.query.lucene.hits.ArrayHitsTest;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -51,7 +53,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(FnNameQueryTest.class);
         suite.addTestSuite(PathQueryNodeTest.class);
         suite.addTestSuite(SynonymProviderTest.class);
-
+        suite.addTestSuite(ArrayHitsTest.class);
+        
         // exclude long running tests per default
         //suite.addTestSuite(MassiveRangeTest.class);
         //suite.addTestSuite(ConcurrentQueryTest.class);
