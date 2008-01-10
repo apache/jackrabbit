@@ -38,7 +38,8 @@ public interface Hits {
     
     /** 
      * Skips to the first match beyond the current whose document number is
-     * greater than or equal to the given target.
+     * greater than or equal to the given target. Returns -1 if there is no
+     * matching document number greater than target.
      */
     int skipTo(int target) throws IOException;
     
