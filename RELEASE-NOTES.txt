@@ -167,6 +167,12 @@ Repository configuration has been extended with a number of options for
 storage, locking and indexing strategies. However, no changes to existing
 configuration files are needed unless you want to enable these new features.
 
+A minor behavioural change to queries containing XPath "not(@property)"
+constraints was made to make Jackrabbit better conform with the JCR
+specification. In Jackrabbit 1.3 and before such constraint would match
+empty multi-valued properties, but in Jackrabbit 1.4 the contraint is true
+only if the property does not exist.
+
 Upgrading to Jackrabbit 1.3
 ---------------------------
 
@@ -328,6 +334,7 @@ jackrabbit-core
   [JCR-1283] Use bundle persistence in default configuration
   [JCR-1291] Missing class JNDIDatabaseJournal
   [JCR-1297] Set svn:eol-style on ddl files
+  [JCR-1299] Default configuration not suitable for demo web application
 
   Bug fixes
   [JCR-674]  String properties with invalid XML characters export as ...
@@ -352,6 +359,7 @@ jackrabbit-core
   [JCR-1272] Property.getValue() throws RepositoryException with internal error
   [JCR-1274] ItemStateCache in SharedItemStateManager not properly ...
   [JCR-1277] ConnectionRecoveryManager is created twice in DBDataStore init ...
+  [JCR-1298] Wrong schemaObjectPrefix parameter in default repository.xml
 
   Known issues
   [JCR-43]   Restore on nodes creates same-name-sibling of ...
