@@ -641,6 +641,9 @@ jackrabbit-webapp
   [JCR-1283] Use bundle persistence in default configuration
   [JCR-1287] jackrabbit-webapp facelift
 
+  Known issues
+  [JCR-1301] Trouble undeploying jackrabbit-webapp from Tomcat
+
 jackrabbit-webdav
 
   Improvements
