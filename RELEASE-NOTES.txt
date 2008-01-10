@@ -629,6 +629,7 @@ jackrabbit-webapp
   [JCR-961]  Add workspace population tool
   [JCR-1184] Introduce spellchecker functionality based on content in ...
   [JCR-1188] WebDAV: Allow for Extensions of MimeResolver in the ...
+  [JCR-1289] Error reporting page for jackrabbit-webapp
 
   Improvements
   [JCR-924]  Use the Jackrabbit RMI extensions by default in jackrabbit-webapp

@@ -70,10 +70,9 @@ a.external  { font-style: italic; }
 h1, h2, h3  { color: #869900; }
 
 pre         { background: #E0E0E0;
-              margin-left: 2em;
-              margin-right: 2em;
               padding: 1em;
-              border: 1px dotted black; }
+              border: 1px dotted black;
+              overflow: auto; }
 
 td          { font-size: small; }
 
