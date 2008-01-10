@@ -335,5 +335,9 @@
         <exception-type>org.apache.jackrabbit.j2ee.JcrApiNotFoundException</exception-type>
         <location>/error/classpath.jsp</location>
     </error-page>
+    <error-page>
+        <exception-type>javax.jcr.RepositoryException</exception-type>
+        <location>/error/repository.jsp</location>
+    </error-page>
 
 </web-app>
