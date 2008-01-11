@@ -44,6 +44,11 @@ String href =
   <li><a href="<%= href %>"><%= href %></a></li>
 </ul>
 <p>
+  The server asks for authentication, but by default any username and password
+  is accepted. You can modify this security policy in the repository
+  configuration file.
+</p>
+<p>
   To access other workspace than the default one, replace the last part of
   the URL (<code>/default/</code>) with the name of another workspace.
 </p>
