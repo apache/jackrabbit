@@ -28,27 +28,29 @@ try {
     %><jsp:forward page="bootstrap/missing.jsp"/><%
 }
 
-request.setAttribute("title", "Apache Jackrabbit WebDAV Server");
+request.setAttribute("title", "Apache Jackrabbit JCR Server");
 %><jsp:include page="header.jsp"/>
 <p>
-  Welcome to the Apache Jackrabbit WebDAV Server. This web application
-  contains a JCR content repository and makes it available to both remote
-  and local clients.
+  Welcome to the Apache Jackrabbit JCR Server. This web application
+  contains a JCR content repository and makes it available to clients
+  through WebDAV and other means.
 </p>
 <p>
-  This application proves the following two WebDAV "views" to the content
-  in the JCR content repository.
+  The following two WebDAV views are provided for accessing the
+  content in the JCR content repository.
 </p>
 <ul>
-<li><a href="webdav-simple.jsp">Standard WebDAV</a></li>
-<li><a href="webdav-jcr.jsp">JCR WebDAV</a></li>
+  <li><a href="webdav-simple.jsp">Standard WebDAV</a></li>
+  <li><a href="webdav-jcr.jsp">JCR WebDAV</a></li>
 </ul>
 <p>
-  Other web applications running in the same servlet container can access
-  the content repository through JNDI, and remote clients can use either
-  WebDAV or the standard JCR API through the <code>jackrabbit-jcr-rmi</code>
-  component for accessing content in the repository.
+  Clients can also access the repository using the JCR API. Both local
+  and remote access is supported.
 </p>
+<ul>
+  <li><a href="remote.jsp">Remote repository access</a></li>
+  <li><a href="local.jsp">Local repository access</a></li>
+</ul>
 
 <h3>About Apache Jackrabbit</h3>
 <p>

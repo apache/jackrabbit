@@ -17,10 +17,12 @@
 package org.apache.jackrabbit.j2ee;
 
 import org.apache.jackrabbit.api.JackrabbitRepository;
+import org.apache.jackrabbit.commons.repository.RepositoryFactory;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitServerAdapterFactory;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
+import org.apache.jackrabbit.servlet.AbstractRepositoryServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
@@ -48,7 +50,6 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -142,7 +143,7 @@ import javax.servlet.http.HttpServletResponse;
  * a new (or existing) repository home and will copy the templates of the
  * repository.xml and bootstrap.properties to the respective location.
  */
-public class RepositoryStartupServlet extends HttpServlet {
+public class RepositoryStartupServlet extends AbstractRepositoryServlet {
 
     /**
      * the default logger
@@ -289,6 +290,25 @@ public class RepositoryStartupServlet extends HttpServlet {
      */
     public Repository getRepository() {
         return repository;
+    }
+
+    /**
+     * Returns a repository factory that returns the repository if available
+     * or throws an exception if not.
+     *
+     * @return repository factory
+     */
+    public RepositoryFactory getRepositoryFactory() {
+        return new RepositoryFactory() {
+            public Repository getRepository() throws RepositoryException {
+                Repository r = repository;
+                if (r != null) {
+                    return repository;
+                } else {
+                    throw new RepositoryException("Repository not available");
+                }
+            }
+        };
     }
 
     /**

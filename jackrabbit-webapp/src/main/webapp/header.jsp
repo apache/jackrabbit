@@ -49,6 +49,8 @@
               <li><a href="<%= request.getContextPath() %>/">Welcome</a></li>
               <li><a href="<%= request.getContextPath() %>/webdav-simple.jsp">Standard WebDAV</a></li>
               <li><a href="<%= request.getContextPath() %>/webdav-jcr.jsp">JCR WebDAV</a></li>
+              <li><a href="<%= request.getContextPath() %>/remote.jsp">Remote access</a></li>
+              <li><a href="<%= request.getContextPath() %>/local.jsp">Local access</a></li>
               <li><a href="<%= request.getContextPath() %>/troubleshooting.jsp">Troubleshooting</a></li>
             </ul>
           </li>
