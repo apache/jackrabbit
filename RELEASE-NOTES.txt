@@ -494,6 +494,7 @@ jackrabbit-jcr-tests
   [JCR-1130] bad test assumptions in TextNodeTest with respect to ...
   [JCR-1161] Export test cases fail with Java 5 on Mac OS X
   [JCR-1164] Bad test assumptions in observation tests
+  [JCR-1307] TCK: Attribute values may be normalized in document view exports
 
 jackrabbit-jcr2spi
 
