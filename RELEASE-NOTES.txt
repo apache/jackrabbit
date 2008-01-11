@@ -267,6 +267,7 @@ jackrabbit-core
   [JCR-1184] Introduce spellchecker functionality based on content in ...
   [JCR-1276] A Property and a Node Can Have the Same Name
   [JCR-1295] Tablespace (Filegroup) support for MS SQL Server
+  [JCR-1304] Support system properties in ${...} vars in XML config files
 
   Improvements
   [JCR-314]  Fine grained locking in SharedItemStateManager
