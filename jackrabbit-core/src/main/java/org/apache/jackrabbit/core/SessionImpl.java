@@ -1385,6 +1385,27 @@ public class SessionImpl extends AbstractSession
         return wsp.getLockManager();
     }
 
+    /**
+     * Returns all locks owned by this session.
+     *
+     * @return an array of <code>Lock</code>s
+     */
+    public Lock[] getLocks() {
+        // check sanity of this session
+        //sanityCheck();
+        if (!alive) {
+            log.error("failed to retrieve locks: session has been closed");
+            return new Lock[0];
+        }
+
+        try {
+            return getLockManager().getLocks(this);
+        } catch (RepositoryException e) {
+            log.error("Lock manager not available.", e);
+            return new Lock[0];
+        }
+    }
+
     //--------------------------------------------------< new JSR 283 methods >
     /**
      * Returns the node specified by the given identifier. Applies to both
@@ -1533,28 +1554,6 @@ public class SessionImpl extends AbstractSession
             String msg = "invalid path:" + absPath;
             log.debug(msg);
             throw new RepositoryException(msg, e);
-        }
-    }
-
-    /**
-     * Returns all locks owned by this session.
-     *
-     * @return an array of <code>Lock</code>s
-     * @since JCR 2.0
-     */
-    public Lock[] getLocks() {
-        // check sanity of this session
-        //sanityCheck();
-        if (!alive) {
-            log.error("failed to retrieve locks: session has been closed");
-            return new Lock[0];
-        }
-
-        try {
-            return getLockManager().getLocks(this);
-        } catch (RepositoryException e) {
-            log.error("Lock manager not available.", e);
-            return new Lock[0];
         }
     }
 
