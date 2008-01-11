@@ -132,7 +132,7 @@ public class RepositoryConfig {
      */
     public static RepositoryConfig create(InputSource xml, String home)
             throws ConfigurationException {
-        Properties variables = new Properties();
+        Properties variables = new Properties(System.getProperties());
         variables.setProperty(
                 RepositoryConfigurationParser.REPOSITORY_HOME_VARIABLE, home);
         RepositoryConfigurationParser parser =
@@ -408,7 +408,7 @@ public class RepositoryConfig {
             if (!homeDir.exists()) {
                 homeDir.mkdir();
             }
-            Properties variables = new Properties();
+            Properties variables = new Properties(parser.getVariables());
             variables.setProperty(
                     RepositoryConfigurationParser.WORKSPACE_HOME_VARIABLE,
                     homeDir.getPath());
