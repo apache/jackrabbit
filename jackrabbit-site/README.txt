@@ -61,7 +61,7 @@ If the site looks good, you can publish the changes like this:
 
     $ cp -f -r target/site/* ../../site
     $ cd ../../site
-    $ find . -name '*.html" | xargs perl -i -pe 's/\r\n/\n/'
+    $ find . -name '*.html' | xargs perl -i -pe 's/\r\n/\n/'
                                              # Fix line endings
     $ svn status | egrep '^\?'               # Check for new files
     $ svn add ...                            # If new files are included
