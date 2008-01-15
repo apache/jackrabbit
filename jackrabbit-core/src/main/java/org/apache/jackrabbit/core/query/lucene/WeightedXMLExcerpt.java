@@ -21,7 +21,11 @@ import org.apache.lucene.index.TermPositionVector;
 import java.io.IOException;
 
 /**
- * <code>DefaultXMLExcerpt</code> creates an XML excerpt of a matching node.
+ * <code>WeightedXMLExcerpt</code> creates an XML excerpt of a matching node. In
+ * contrast to {@link DefaultXMLExcerpt} this implementation weights fragments
+ * based on the proximity of highlighted terms. Highlighted terms that are
+ * adjacent have a higher weight. In addition, the more highlighted terms, the
+ * higher the weight.
  * <br/>
  * E.g. if you search for 'jackrabbit' and 'query' you may get the following
  * result for a node:
@@ -31,8 +35,10 @@ import java.io.IOException;
  *     &lt;fragment>Before parsing the XPath &lt;highlight>query&lt;/highlight> in &lt;highlight>Jackrabbit&lt;/highlight>, the statement is surrounded&lt;/fragment>
  * &lt;/excerpt>
  * </pre>
+ *
+ * @see WeightedHighlighter
  */
-public class DefaultXMLExcerpt extends AbstractExcerpt {
+public class WeightedXMLExcerpt extends AbstractExcerpt {
 
     /**
      * {@inheritDoc}
@@ -42,7 +48,7 @@ public class DefaultXMLExcerpt extends AbstractExcerpt {
                                    int maxFragments,
                                    int maxFragmentSize)
             throws IOException {
-        return DefaultHighlighter.highlight(tpv, getQueryTerms(), text,
+        return WeightedHighlighter.highlight(tpv, getQueryTerms(), text,
                 maxFragments, maxFragmentSize / 2);
     }
 }
