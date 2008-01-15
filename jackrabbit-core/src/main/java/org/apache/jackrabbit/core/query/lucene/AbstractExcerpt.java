@@ -140,11 +140,8 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
                 return createExcerpt((TermPositionVector) tfv, text.toString(),
                         maxFragments, maxFragmentSize);
             } else {
-                log.debug("No TermPositionVector on Fulltext field, using {}",
-                        SimpleExcerptProvider.class.getName());
-                SimpleExcerptProvider exProvider = new SimpleExcerptProvider();
-                exProvider.init(query, index);
-                return exProvider.getExcerpt(id, maxFragments, maxFragmentSize);
+                log.debug("No TermPositionVector on Fulltext field.");
+                return null;
             }
         } finally {
             reader.close();

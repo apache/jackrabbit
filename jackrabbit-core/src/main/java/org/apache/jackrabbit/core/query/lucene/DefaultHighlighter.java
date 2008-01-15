@@ -42,7 +42,7 @@ import org.apache.jackrabbit.util.Text;
  * @see org.apache.lucene.index.TermPositionVector
  * @see org.apache.lucene.index.TermFreqVector
  */
-class DefaultHighlighter {
+public class DefaultHighlighter {
 
     /**
      * A default value of <tt>3</tt>
@@ -50,9 +50,9 @@ class DefaultHighlighter {
     public static final int DEFAULT_MAXFRAGMENTS = 3;
 
     /**
-     * A default value of <tt>80</tt>
+     * A default value of <tt>75</tt>
      */
-    public static final int DEFAULT_SURROUND = 80;
+    public static final int DEFAULT_SURROUND = 75;
 
     public static final String START_EXCERPT = "<excerpt>";
 
@@ -62,28 +62,11 @@ class DefaultHighlighter {
 
     public static final String END_FRAGMENT_SEPARATOR = "</fragment>";
 
-    private DefaultHighlighter() {
-    }
+    public static final String START_HIGHLIGHT = "<highlight>";
 
-    /**
-     * @param tvec       the term position vector for this hit
-     * @param queryTerms the query terms.
-     * @param text       the original text that was used to create the tokens.
-     * @param prepend    the string used to prepend a highlighted token, for
-     *                   example <tt>&quot;&lt;b&gt;&quot;</tt>
-     * @param append     the string used to append a highlighted token, for
-     *                   example <tt>&quot;&lt;/b&gt;&quot;</tt>
-     * @return a String with text fragments where tokens from the query are
-     *         highlighted
-     */
-    public static String highlight(TermPositionVector tvec,
-                                   Set queryTerms,
-                                   String text,
-                                   String prepend,
-                                   String append)
-            throws IOException {
-        return highlight(tvec, queryTerms, text, prepend, append,
-                DEFAULT_MAXFRAGMENTS, DEFAULT_SURROUND);
+    public static final String END_HIGHLIGHT = "</highlight>";
+
+    protected DefaultHighlighter() {
     }
 
     /**
@@ -118,6 +101,46 @@ class DefaultHighlighter {
                                    int maxFragments,
                                    int surround)
             throws IOException {
+        return new DefaultHighlighter().doHighlight(tvec, queryTerms, text,
+                excerptStart, excerptEnd, fragmentStart, fragmentEnd, hlStart,
+                hlEnd, maxFragments, surround);
+    }
+
+    /**
+     * @param tvec         the term position vector for this hit
+     * @param queryTerms   the query terms.
+     * @param text         the original text that was used to create the tokens.
+     * @param maxFragments the maximum number of fragments
+     * @param surround     the maximum number of chars surrounding a highlighted
+     *                     token
+     * @return a String with text fragments where tokens from the query are
+     *         highlighted
+     */
+    public static String highlight(TermPositionVector tvec,
+                                   Set queryTerms,
+                                   String text,
+                                   int maxFragments,
+                                   int surround)
+            throws IOException {
+        return highlight(tvec, queryTerms, text, START_EXCERPT, END_EXCERPT,
+                START_FRAGMENT_SEPARATOR, END_FRAGMENT_SEPARATOR,
+                START_HIGHLIGHT, END_HIGHLIGHT, maxFragments, surround);
+    }
+
+    /**
+     * @see #highlight(TermPositionVector, Set, String, String, String, String, String, String, String, int, int)
+     */
+    protected String doHighlight(TermPositionVector tvec,
+                                 Set queryTerms,
+                                 String text,
+                                 String excerptStart,
+                                 String excerptEnd,
+                                 String fragmentStart,
+                                 String fragmentEnd,
+                                 String hlStart,
+                                 String hlEnd,
+                                 int maxFragments,
+                                 int surround) throws IOException {
         String[] terms = new String[queryTerms.size()];
         Iterator it = queryTerms.iterator();
         for (int i = 0; it.hasNext(); i++) {
@@ -138,68 +161,42 @@ class DefaultHighlighter {
             java.util.Arrays.sort(offsets, new TermVectorOffsetInfoSorter());
         }
 
-        return mergeFragments(offsets, new StringReader(text), excerptStart,
+        return mergeFragments(offsets, text, excerptStart,
                 excerptEnd, fragmentStart, fragmentEnd, hlStart, hlEnd,
                 maxFragments, surround);
     }
 
-    /**
-     * @param tvec         the term position vector for this hit
-     * @param queryTerms   the query terms.
-     * @param text         the original text that was used to create the tokens.
-     * @param prepend      the string used to prepend a highlighted token, for
-     *                     example <tt>&quot;&lt;b&gt;&quot;</tt>
-     * @param append       the string used to append a highlighted token, for
-     *                     example <tt>&quot;&lt;/b&gt;&quot;</tt>
-     * @param maxFragments the maximum number of fragments
-     * @param surround     the maximum number of chars surrounding a highlighted
-     *                     token
-     * @return a String with text fragments where tokens from the query are
-     *         highlighted
-     */
-    public static String highlight(TermPositionVector tvec,
-                                   Set queryTerms,
-                                   String text,
-                                   String prepend,
-                                   String append,
-                                   int maxFragments,
-                                   int surround)
+    protected String mergeFragments(TermVectorOffsetInfo[] offsets,
+                                    String text,
+                                    String excerptStart,
+                                    String excerptEnd,
+                                    String fragmentStart,
+                                    String fragmentEnd,
+                                    String hlStart,
+                                    String hlEnd,
+                                    int maxFragments,
+                                    int surround)
             throws IOException {
-        return highlight(tvec, queryTerms, text, START_EXCERPT, END_EXCERPT,
-                START_FRAGMENT_SEPARATOR, END_FRAGMENT_SEPARATOR, prepend,
-                append, maxFragments, surround);
-    }
-
-    private static String mergeFragments(TermVectorOffsetInfo[] offsets,
-                                         StringReader reader,
-                                         String excerptStart,
-                                         String excerptEnd,
-                                         String fragmentStart,
-                                         String fragmentEnd,
-                                         String hlStart,
-                                         String hlEnd,
-                                         int maxFragments,
-                                         int surround)
-            throws IOException {
+        StringReader reader = new StringReader(text);
         if (offsets == null || offsets.length == 0) {
             // nothing to highlight
-            StringBuffer text = new StringBuffer(excerptStart);
-            text.append(fragmentStart);
-            int min = text.length();
+            StringBuffer excerpt = new StringBuffer(excerptStart);
+            excerpt.append(fragmentStart);
+            int min = excerpt.length();
             char[] buf = new char[surround * 2];
             int len = reader.read(buf);
-            text.append(buf, 0, len);
+            excerpt.append(buf, 0, len);
             if (len == buf.length) {
-                for (int i = text.length() - 1; i > min; i--) {
-                    if (Character.isWhitespace(text.charAt(i))) {
-                        text.delete(i, text.length());
-                        text.append(" ...");
+                for (int i = excerpt.length() - 1; i > min; i--) {
+                    if (Character.isWhitespace(excerpt.charAt(i))) {
+                        excerpt.delete(i, excerpt.length());
+                        excerpt.append(" ...");
                         break;
                     }
                 }
             }
-            text.append(fragmentEnd).append(excerptEnd);
-            return text.toString();
+            excerpt.append(fragmentEnd).append(excerptEnd);
+            return excerpt.toString();
         }
         int lastOffset = offsets.length; // Math.min(10, offsets.length); // 10 terms is plenty?
         ArrayList fragmentInfoList = new ArrayList();

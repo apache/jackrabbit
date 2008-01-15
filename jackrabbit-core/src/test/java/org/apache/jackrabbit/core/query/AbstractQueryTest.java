@@ -21,6 +21,7 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import javax.jcr.query.Query;
+import javax.jcr.query.QueryManager;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
@@ -35,6 +36,18 @@ import java.util.Iterator;
  * Abstract base class for query test cases.
  */
 public class AbstractQueryTest extends AbstractJCRTest {
+
+    protected QueryManager qm;
+
+    protected void setUp() throws Exception {
+        super.setUp();
+        qm = superuser.getWorkspace().getQueryManager();
+    }
+
+    protected void tearDown() throws Exception {
+        qm = null;
+        super.tearDown();
+    }
 
     /**
      * Checks if the <code>result</code> contains a number of <code>hits</code>.
@@ -115,7 +128,7 @@ public class AbstractQueryTest extends AbstractJCRTest {
      */
     protected void executeXPathQuery(String xpath, Node[] nodes)
             throws RepositoryException {
-        QueryResult res = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH).execute();
+        QueryResult res = qm.createQuery(xpath, Query.XPATH).execute();
         checkResult(res, nodes);
     }
 
@@ -127,7 +140,7 @@ public class AbstractQueryTest extends AbstractJCRTest {
      */
     protected void executeSQLQuery(String sql, Node[] nodes)
             throws RepositoryException {
-        QueryResult res = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL).execute();
+        QueryResult res = qm.createQuery(sql, Query.SQL).execute();
         checkResult(res, nodes);
     }
 
@@ -156,6 +169,23 @@ public class AbstractQueryTest extends AbstractJCRTest {
         for (Iterator it = resultPaths.iterator(); it.hasNext();) {
             String path = (String) it.next();
             assertTrue(path + " is not expected to be part of the result set", expectedPaths.contains(path));
+        }
+    }
+
+    /**
+     * Executes the query specified by <code>statement</code> and returns the
+     * query result.
+     *
+     * @param statement either a SQL or XPath statement.
+     * @return the query result.
+     * @throws RepositoryException if an error occurs.
+     */
+    protected QueryResult executeQuery(String statement)
+            throws RepositoryException {
+        if (statement.trim().toLowerCase().startsWith("select")) {
+            return qm.createQuery(statement, Query.SQL).execute();
+        } else {
+            return qm.createQuery(statement, Query.XPATH).execute();
         }
     }
 }
