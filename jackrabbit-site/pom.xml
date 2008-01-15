@@ -35,4 +35,16 @@
   <name>Jackrabbit web site</name>
   <description>Jackrabbit web site</description>
 
+  <build>
+    <plugins>
+      <plugin>
+       <artifactId>maven-site-plugin</artifactId>
+       <configuration>
+         <templateDirectory>${basedir}/src/site/templates</templateDirectory>
+         <template>site.vm</template>
+       </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>
