@@ -17,21 +17,28 @@
   -->
 <document>
    <properties>
-      <title>Downloads</title>
+      <title>Apache Jackrabbit Downloads</title>
    </properties>
 
    <body>
-<section name="Downloading Apache Jackrabbit Releases">
+<section name="Apache Jackrabbit Downloads">
 
-<p>Use the links below to download the Apache Jackrabbit releases from one of
-our mirrors.  You <strong>should</strong> <a href="#Verify">verify the
-integrity</a> of the downloaded files using signatures downloaded from
-our main distribution directory.</p>
-
-<p>Only current recommended releases are available on the main
-distribution site and its mirrors.  Older releases are available from
-the <a href="http://archive.apache.org/dist/jackrabbit/">archive download
-site.</a></p>
+<p>
+  Use the links below to download Apache Jackrabbit releases from one of
+  our mirrors.  You should <a href="#Verify">verify the integrity</a> of
+  the files using the signatures and checksums available from this page.
+</p>
+<ul>
+  <li><a href="#Apache%20Jackrabbit%201.4">Apache Jackrabbit 1.4</a></li>
+  <li><a href="#Apache%20Jackrabbit%201.3.3">Apache Jackrabbit 1.3.3</a></li>
+  <li><a href="#Release%20Archive">Release Archive</a></li>
+</ul>
+<p>
+  Apache Jackrabbit releases are available under the
+  <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.
+  See the <code>NOTICE.txt</code> file contained in each release artifact
+  for applicable copyright attribution notices.
+</p>
 
 <subsection name="Local Mirror">
 
@@ -60,147 +67,396 @@ Other mirrors: <select name="Preferred">
 <p>You may also consult the <a href="http://www.apache.org/mirrors/">complete
 list of mirrors</a>.</p>
 </subsection>
-</section>
 
-<section name="Apache Jackrabbit 1.3.3">
-
-<p>For details, see the <a href="[preferred]/jackrabbit/RELEASE-NOTES-1.3.3.txt">release notes</a>.</p>
-
-<subsection name="Source Code">
-
-<ul>
-<li><a href="[preferred]/jackrabbit/source/jackrabbit-1.3.3-src.jar">jackrabbit-1.3.3-src.jar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/source/jackrabbit-1.3.3-src.jar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/source/jackrabbit-1.3.3-src.jar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/source/jackrabbit-1.3.3-src.jar.sha">SHA1</a>]
-</li>
-</ul>
-
+<subsection name="Apache Jackrabbit 1.4">
 <p>
-The main source archive contains a "jackrabbit-1.3.3-src" directory
-with the full released source code and build environment. Use the
-following commands (or the equivalent in your system) to build all
-the released components with Maven 2:
+  Apache Jackrabbit 1.4 is an incremental feature release. While
+  remaining compatible with previous releases, Jackrabbit 1.4 introduces
+  a number of new features, improvements and fixes to known issues. The
+  most notable new features in this releases are the new object mapping
+  and service provider components for JCR. The Jackrabbit content
+  repository implementation has been enhanced with a new storage model
+  for binary content, a much improved query and indexing system, and
+  many fixes and improvements especially for concurrent access. Many
+  smaller improvements and bug fixes are also included all over the
+  codebase.
 </p>
-<source>
-$ jar xf jackrabbit-1.3.3-src.jar
-$ cd jackrabbit-1.3.3-src
-$ mvn install
-</source>
-
-</subsection>
-
-<subsection name="Compiled Java Bytecode">
-
-<p>Jackrabbit API</p>
-<ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-api-1.3.3.jar">jackrabbit-api-1.3.3.jar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-api-1.3.3.jar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-api-1.3.3.jar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-api-1.3.3.jar.sha">SHA1</a>]
-</li>
-</ul>
-
-<p>Jackrabbit JCR Commons</p>
-<ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-commons-1.3.3.jar">jackrabbit-jcr-commons-1.3.3.jar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-commons-1.3.3.jar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-commons-1.3.3.jar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-commons-1.3.3.jar.sha">SHA1</a>]
-</li>
-</ul>
-
-<p>Jackrabbit JCR Tests</p>
-<ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-tests-1.3.3.jar">jackrabbit-jcr-tests-1.3.3.jar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-tests-1.3.3.jar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-tests-1.3.3.jar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-tests-1.3.3.jar.sha">SHA1</a>]
-</li>
-</ul>
-
-<p>Jackrabbit Core</p>
-<ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-core-1.3.3.jar">jackrabbit-core-1.3.3.jar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-core-1.3.3.jar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-core-1.3.3.jar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-core-1.3.3.jar.sha">SHA1</a>]
-</li>
-</ul>
-
-<p>Jackrabbit Text Extractors</p>
-<ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-text-extractors-1.3.3.jar">jackrabbit-text-extractors-1.3.3.jar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-text-extractors-1.3.3.jar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-text-extractors-1.3.3.jar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-text-extractors-1.3.3.jar.sha">SHA1</a>]
-</li>
-</ul>
-
-<p>Jackrabbit JCR-RMI</p>
-<ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-rmi-1.3.3.jar">jackrabbit-jcr-rmi-1.3.3.jar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-rmi-1.3.3.jar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-rmi-1.3.3.jar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-rmi-1.3.3.jar.sha">SHA1</a>]
-</li>
-</ul>
-
-<p>Jackrabbit WebDAV Library</p>
-<ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-webdav-1.3.3.jar">jackrabbit-webdav-1.3.3.jar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webdav-1.3.3.jar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webdav-1.3.3.jar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webdav-1.3.3.jar.sha">SHA1</a>]
-</li>
-</ul>
-
-<p>Jackrabbit JCR Server</p>
-<ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-server-1.3.3.jar">jackrabbit-jcr-server-1.3.3.jar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-server-1.3.3.jar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-server-1.3.3.jar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-server-1.3.3.jar.sha">SHA1</a>]
-</li>
-</ul>
-
-<p>Jackrabbit Repository Classloader</p>
-<ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-classloader-1.3.3.jar">jackrabbit-classloader-1.3.3.jar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-classloader-1.3.3.jar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-classloader-1.3.3.jar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-classloader-1.3.3.jar.sha">SHA1</a>]
-</li>
-</ul>
-
-<p>Jackrabbit Web Application</p>
-<ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-webapp-1.3.3.war">jackrabbit-webapp-1.3.3.war</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webapp-1.3.3.war.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webapp-1.3.3.war.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webapp-1.3.3.war.sha">SHA1</a>]
-</li>
-</ul>
-
-<p>Jackrabbit JCA Resource Adapter</p>
-<ul>
-<li><a href="[preferred]/jackrabbit/binaries/jackrabbit-jca-1.3.3.rar">jackrabbit-jca-1.3.3.rar</a> 
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jca-1.3.3.rar.asc">PGP</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jca-1.3.3.rar.md5">MD5</a>]
-[<a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jca-1.3.3.rar.sha">SHA1</a>]
-</li>
-</ul>
-
+<p>
+  See the
+  <a href="[preferred]/jackrabbit/RELEASE-NOTES-1.4.txt">release notes</a>
+  for more details, including instructions on how to build the source code
+  and descriptions of the pre-built binary components.
+</p>
+<table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>Download</th>
+      <th>Verify</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Apache Jackrabbit 1.4 Source Code</td>
+      <td><a href="[preferred]/jackrabbit/source/jackrabbit-1.4-src.jar">jackrabbit-1.4-src.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/source/jackrabbit-1.4-src.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/source/jackrabbit-1.4-src.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/source/jackrabbit-1.4-src.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit API</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-api-1.4.jar">jackrabbit-api-1.4.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-api-1.4.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-api-1.4.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-api-1.4.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit JCR Commons</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-commons-1.4.jar">jackrabbit-jcr-commons-1.4.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-commons-1.4.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-commons-1.4.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-commons-1.4.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit JCR Tests</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-tests-1.4.jar">jackrabbit-jcr-tests-1.4.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-tests-1.4.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-tests-1.4.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-tests-1.4.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit Core</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-core-1.4.jar">jackrabbit-core-1.4.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-core-1.4.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-core-1.4.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-core-1.4.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit Text Extractors</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-text-extractors-1.4.jar">jackrabbit-text-extractors-1.4.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-text-extractors-1.4.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-text-extractors-1.4.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-text-extractors-1.4.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit JCR-RMI</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-rmi-1.4.jar">jackrabbit-jcr-rmi-1.4.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-rmi-1.4.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-rmi-1.4.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-rmi-1.4.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit WebDAV Library</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-webdav-1.4.jar">jackrabbit-webdav-1.4.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webdav-1.4.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webdav-1.4.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webdav-1.4.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit JCR Server</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-server-1.4.jar">jackrabbit-jcr-server-1.4.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-server-1.4.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-server-1.4.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-server-1.4.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit JCR Servlets</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-servlet-1.4.jar">jackrabbit-jcr-servlet-1.4.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-servlet-1.4.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-servlet-1.4.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-servlet-1.4.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit Repository Classloader</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-classloader-1.4.jar">jackrabbit-classloader-1.4.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-classloader-1.4.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-classloader-1.4.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-classloader-1.4.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit Web Application</td>
+      <td>
+        <a href="[preferred]/jackrabbit/binaries/jackrabbit-webapp-1.4.war">jackrabbit-webapp-1.4.war</a>
+        <br />
+        <a href="[preferred]/jackrabbit/binaries/jackrabbit-webapp-1.4.jar">jackrabbit-webapp-1.4.jar</a>
+      </td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webapp-1.4.war.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webapp-1.4.war.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webapp-1.4.war.sha">SHA1</a>
+        <br />
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webapp-1.4.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webapp-1.4.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webapp-1.4.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td rowspan="2">Jackrabbit JCA Resource Adapter</td>
+      <td>
+        <a href="[preferred]/jackrabbit/binaries/jackrabbit-jca-1.4.rar">jackrabbit-jca-1.4.rar</a>
+        <br />
+        <a href="[preferred]/jackrabbit/binaries/jackrabbit-jca-1.4.jar">jackrabbit-jca-1.4.jar</a>
+      </td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jca-1.4.rar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jca-1.4.rar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jca-1.4.rar.sha">SHA1</a>
+        <br />
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jca-1.4.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jca-1.4.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jca-1.4.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit SPI</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-spi-1.4.jar">jackrabbit-spi-1.4.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-spi-1.4.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-spi-1.4.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-spi-1.4.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit SPI Commons</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-spi-commons-1.4.jar">jackrabbit-spi-commons-1.4.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-spi-commons-1.4.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-spi-commons-1.4.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-spi-commons-1.4.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit SPI2JCR</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-spi2jcr-1.4.jar">jackrabbit-spi2jcr-1.4.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-spi2jcr-1.4.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-spi2jcr-1.4.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-spi2jcr-1.4.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit JCR2SPI</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr2spi-1.4.jar">jackrabbit-jcr2spi-1.4.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr2spi-1.4.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr2spi-1.4.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr2spi-1.4.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit OCM</td>
+      <td>
+        <a href="[preferred]/jackrabbit/binaries/jackrabbit-ocm-1.4.jar">jackrabbit-ocm-1.4.jar</a>
+        <br />
+        <a href="[preferred]/jackrabbit/binaries/jackrabbit-ocm-1.4-jdk14.jar">jackrabbit-ocm-1.4-jdk14.jar</a>
+      </td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-ocm-1.4.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-ocm-1.4.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-ocm-1.4.jar.sha">SHA1</a>
+        <br />
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-ocm-1.4-jdk14.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-ocm-1.4-jdk14.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-ocm-1.4-jdk14.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit OCM Node Management</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-ocm-nodemanagement-1.4.jar">jackrabbit-ocm-nodemanagement-1.4.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-ocm-nodemanagement-1.4.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-ocm-nodemanagement-1.4.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-ocm-nodemanagement-1.4.jar.sha">SHA1</a>
+      </td>
+    </tr>
+  </tbody>
+</table>
 <p>
 Note that external runtime dependencies are only included for the
 war and rar archives. Other dependencies can be downloaded either
-manually or automatically using the Maven build system.
+manually or automatically using the Maven build system. All the binary
+artifacts are available also from the central Maven repository.
 </p>
-
 </subsection>
-</section>
 
-<section name="Verify">
+<subsection name="Apache Jackrabbit 1.3.3">
+<p>
+  Apache Jackrabbit 1.3.3 is patch release with bug fixes for features like
+  concurrent versioning, journaling, and JCR API tests.
+</p>
+<p>
+  See the
+  <a href="[preferred]/jackrabbit/RELEASE-NOTES-1.3.3.txt">release notes</a>
+  for more details, including instructions on how to build the source code
+  and descriptions of the pre-built binary components.
+</p>
+<table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>Download</th>
+      <th>Verify</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Apache Jackrabbit 1.3.3 Source Code</td>
+      <td><a href="[preferred]/jackrabbit/source/jackrabbit-1.3.3-src.jar">jackrabbit-1.3.3-src.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/source/jackrabbit-1.3.3-src.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/source/jackrabbit-1.3.3-src.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/source/jackrabbit-1.3.3-src.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit API</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-api-1.3.3.jar">jackrabbit-api-1.3.3.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-api-1.3.3.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-api-1.3.3.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-api-1.3.3.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit JCR Commons</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-commons-1.3.3.jar">jackrabbit-jcr-commons-1.3.3.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-commons-1.3.3.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-commons-1.3.3.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-commons-1.3.3.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit JCR Tests</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-tests-1.3.3.jar">jackrabbit-jcr-tests-1.3.3.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-tests-1.3.3.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-tests-1.3.3.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-tests-1.3.3.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit Core</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-core-1.3.3.jar">jackrabbit-core-1.3.3.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-core-1.3.3.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-core-1.3.3.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-core-1.3.3.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit Text Extractors</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-text-extractors-1.3.3.jar">jackrabbit-text-extractors-1.3.3.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-text-extractors-1.3.3.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-text-extractors-1.3.3.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-text-extractors-1.3.3.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit JCR-RMI</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-rmi-1.3.3.jar">jackrabbit-jcr-rmi-1.3.3.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-rmi-1.3.3.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-rmi-1.3.3.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-rmi-1.3.3.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit WebDAV Library</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-webdav-1.3.3.jar">jackrabbit-webdav-1.3.3.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webdav-1.3.3.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webdav-1.3.3.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webdav-1.3.3.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit JCR Server</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-server-1.3.3.jar">jackrabbit-jcr-server-1.3.3.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-server-1.3.3.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-server-1.3.3.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-server-1.3.3.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit JCR Servlets</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-jcr-servlet-1.3.3.jar">jackrabbit-jcr-servlet-1.3.3.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-servlet-1.3.3.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-servlet-1.3.3.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jcr-servlet-1.3.3.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit Repository Classloader</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-classloader-1.3.3.jar">jackrabbit-classloader-1.3.3.jar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-classloader-1.3.3.jar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-classloader-1.3.3.jar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-classloader-1.3.3.jar.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Jackrabbit Web Application</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-webapp-1.3.3.war">jackrabbit-webapp-1.3.3.war</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webapp-1.3.3.war.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webapp-1.3.3.war.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-webapp-1.3.3.war.sha">SHA1</a>
+      </td>
+    </tr>
+    <tr>
+      <td rowspan="2">Jackrabbit JCA Resource Adapter</td>
+      <td><a href="[preferred]/jackrabbit/binaries/jackrabbit-jca-1.3.3.rar">jackrabbit-jca-1.3.3.rar</a></td>
+      <td>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jca-1.3.3.rar.asc">PGP</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jca-1.3.3.rar.md5">MD5</a>
+        <a href="http://www.apache.org/dist/jackrabbit/binaries/jackrabbit-jca-1.3.3.rar.sha">SHA1</a>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p>
+Note that external runtime dependencies are only included for the
+war and rar archives. Other dependencies can be downloaded either
+manually or automatically using the Maven build system. All the binary
+artifacts are available also from the central Maven repository.
+</p>
+</subsection>
+
+<subsection name="Release Archive">
+<p>
+  Only current recommended releases are available on the main distribution
+  site and its mirrors. Older releases are available from the
+  <a href="http://archive.apache.org/dist/jackrabbit/">archive download site.</a>
+</p>
+</subsection>
+
+<subsection name="Verify">
 
 <p>It is essential that you verify the integrity of the downloaded
 files using the PGP or MD5 signatures.  Please read
@@ -239,6 +495,7 @@ Textutils</a>.  Windows users can get binary md5 programs from
 <a href="http://www.pc-tools.net/win32/freeware/console/">here</a>, or
 <a href="http://www.slavasoft.com/fsum/">here</a>.</p>
 
+</subsection>
 </section>
 </body>
 </document>

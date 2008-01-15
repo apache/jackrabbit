@@ -47,6 +47,20 @@
       </p>
       <subsection name="Apache Jackrabbit News">
         <dl>
+          <dt><strong>January 15, 2008: Apache Jackrabbit 1.4 released</strong></dt>
+          <dd>
+            Apache Jackrabbit 1.4 is an incremental feature release. While
+            remaining compatible with previous releases, Jackrabbit 1.4
+            introduces a number of new features, improvements and fixes
+            to known issues. The most notable new features in this releases
+            are the new object mapping and service provider components for JCR.
+            The Jackrabbit content repository implementation has been enhanced
+            with a new storage model for binary content, a much improved query
+            and indexing system, and many fixes and improvements especially for
+            concurrent access. Many smaller improvements and bug fixes are also
+            included all over the codebase.<br />
+            See the <a href="downloads.cgi">downloads page</a> for more details.
+          </dd>
           <dt><strong>October 8, 2007: Apache Jackrabbit 1.3.3 released</strong></dt>
           <dd>
             From the release notes: "<em>Apache Jackrabbit 1.3.3 is patch
@@ -59,15 +73,6 @@
             From the release notes: "<em>Apache Jackrabbit 1.3.1 is patch
             release with bug fixes and improvements for clustering, query, and
             other features.</em>"
-          </dd>
-          <dt><strong>April 25, 2007: Apache Jackrabbit 1.3 released</strong></dt>
-          <dd>
-            From the release notes: "<em>Apache Jackrabbit 1.3 an incremental
-            feature release. The most notable changes in this release are
-            support for query result highlighting, performance improvements
-            thanks to a new bundle persistence manager, and a new classloader
-            component for loading Java classes from a content repository.
-            Many smaller improvements and bug fixes are also included.</em>"
           </dd>
         </dl>
         <p>
