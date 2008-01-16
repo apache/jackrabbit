@@ -3680,11 +3680,14 @@ public class NodeImpl extends ItemImpl implements Node {
 
         NodeImpl srcNode = doMergeTest(srcSession, failedIds, bestEffort);
         if (srcNode == null) {
-            // leave, iterate over children
+            // leave, iterate over children, but ignore non-versionable child
+            // nodes (see JCR-1046)
             NodeIterator iter = getNodes();
             while (iter.hasNext()) {
                 NodeImpl n = (NodeImpl) iter.nextNode();
-                n.internalMerge(srcSession, failedIds, bestEffort, removeExisting, replaceExisting);
+                if (n.isNodeType(NameConstants.MIX_VERSIONABLE)) {
+                    n.internalMerge(srcSession, failedIds, bestEffort, removeExisting, replaceExisting);
+                }
             }
             return;
         }
