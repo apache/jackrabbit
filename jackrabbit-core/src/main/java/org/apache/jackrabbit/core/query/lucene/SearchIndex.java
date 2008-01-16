@@ -239,9 +239,12 @@ public class SearchIndex extends AbstractQueryHandler {
     private boolean useCompoundFile = true;
 
     /**
-     * Flag indicating whether document order is enable as the default ordering.
+     * Flag indicating whether document order is enabled as the default
+     * ordering.
+     * <p/>
+     * Default value is: <code>false</code>.
      */
-    private boolean documentOrder = true;
+    private boolean documentOrder = false;
 
     /**
      * If set <code>true</code> the index is checked for consistency on startup.
