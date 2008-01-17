@@ -64,52 +64,62 @@ public class MergeNonVersionableSubNodeTest extends AbstractMergeTest {
      */
     public void testMergeNodeNonVersionableSubNodeUpdate() throws RepositoryException {
         // modify non versionable subnode so we can check if it's updated after merge
-        String nvSubNodePath = nodeName1 + "/" + nodeName2 + "/" + nodeName3;
-        Node nvSubNode = testRootNodeW2.getNode(nvSubNodePath);
-        nvSubNode.setProperty(propertyName1, CHANGED_STRING);
-        superuserW2.save();
+        String changedString = CHANGED_STRING + System.currentTimeMillis();
+        String nvSubNodePath = nodeName2 + "/" + nodeName3;
 
-        // versionable ancestor to merge in second workspace
-        Node nodeToMerge = testRootNodeW2.getNode(nodeName1);
+        // versionable ancestor to merge in first workspace (N)
+        Node n = testRootNodeW2.getNode(nodeName1);
 
-        // make sure the ancestor will get status 'update' on merge: V is predeccessor of V'
-        nodeToMerge.checkout();
-        nodeToMerge.checkin();
+        // versionable ancestor to merge in second workspace (N')
+        Node np = testRootNodeW2.getNode(nodeName1);
 
-        nodeToMerge.checkout();
-        nodeToMerge.merge(workspace.getName(), true);
+        // checkout N and make change
+        n.checkout();
+        Node nvSubNode = n.getNode(nvSubNodePath);
+        nvSubNode.setProperty(propertyName1, changedString);
+        n.save();
+        n.checkin();
 
-        // corresponding node to nvSubNode in default workspace
-        Node correspondingSubNode = testRootNode.getNode(nvSubNodePath);
+        // merge change into N'
+        np.merge(workspaceW2.getName(), true);
 
-        // test if modification on non-v node is done according to corresponding node.
-        assertTrue(nvSubNode.getProperty(propertyName1).getString().equals(correspondingSubNode.getName()));
+        // corresponding node to nvSubNode in 2nd workspace
+        Node nvSubNodeP = np.getNode(nvSubNodePath);
+
+        // test if modification on N was merged into N' subnode
+        assertTrue(nvSubNodeP.getProperty(propertyName1).getString().equals(changedString));
     }
 
     /**
      * Node.merge(): nonversionable subNode N: is left unchanged if the nearest
      * versionable ancestor has state leave.<br>
      */
-    public void disable_testMergeNodeNonVersionableSubNodeLeave() throws RepositoryException {
+    public void testMergeNodeNonVersionableSubNodeLeave() throws RepositoryException {
         // modify non versionable subnode so we can check if it's updated after merge
-        String nvSubNodePath = nodeName1 + "/" + nodeName2 + "/" + nodeName3;
-        Node nvSubNode = testRootNodeW2.getNode(nvSubNodePath);
-        nvSubNode.setProperty(propertyName1, CHANGED_STRING);
-        superuserW2.save();
+        String changedString = CHANGED_STRING + System.currentTimeMillis();
+        String nvSubNodePath = nodeName2 + "/" + nodeName3;
 
-        // versionable ancestor to merge in second workspace
-        Node nodeToMerge = testRootNodeW2.getNode(nodeName1);
+        // versionable ancestor to merge in first workspace (N)
+        Node n = testRootNodeW2.getNode(nodeName1);
 
-        // make sure the ancestor will get status 'leave' on merge: V is successor of V'
-        Node correspondingNodeToMerge = testRootNode.getNode(nodeName1);
-        correspondingNodeToMerge.checkout();
-        correspondingNodeToMerge.checkin();
+        // versionable ancestor to merge in second workspace (N')
+        Node np = testRootNodeW2.getNode(nodeName1);
 
-        nodeToMerge.checkout();
-        nodeToMerge.merge(workspace.getName(), true);
+        // checkout N' and make change
+        np.checkout();
+        Node nvSubNodeP = np.getNode(nvSubNodePath);
+        nvSubNodeP.setProperty(propertyName1, changedString);
+        np.save();
+        np.checkin();
 
-        // test if modification on non-v node is unchanged.
-        assertTrue(nvSubNode.getProperty(propertyName1).getString().equals(CHANGED_STRING));
+        // merge into N'
+        np.merge(workspaceW2.getName(), true);
+
+        // corresponding node to nvSubNode in 2nd workspace
+        Node nvSubNode = np.getNode(nvSubNodePath);
+
+        // test if modification on N' was not modified
+        assertTrue(nvSubNode.getProperty(propertyName1).getString().equals(changedString));
     }
 
     /**
