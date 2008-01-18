@@ -44,38 +44,11 @@
     <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-spi-commons</url>
   </scm>
 
-  <build>
-    <resources>
-      <resource>
-        <directory>${basedir}/src/main/java</directory>
-        <includes>
-          <include>**/*.properties</include>
-        </includes>
-      </resource>
-    </resources>
-    <plugins>
-      <!-- Use Java 1.4 everywhere -->
-      <plugin>
-        <inherited>true</inherited>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <target>1.4</target>
-          <source>1.4</source>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <includes>
-            <include>**/TestAll.java</include>
-          </includes>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-
   <dependencies>
+    <dependency>
+      <groupId>javax.jcr</groupId>
+      <artifactId>jcr</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-spi</artifactId>
@@ -85,13 +58,9 @@
       <artifactId>jackrabbit-jcr-commons</artifactId>
     </dependency>
     <dependency>
-      <groupId>javax.jcr</groupId>
-      <artifactId>jcr</artifactId>
-    </dependency>
-    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 

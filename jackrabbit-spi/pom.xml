@@ -44,27 +44,10 @@
     <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-spi</url>
   </scm>
 
-  <build>
-    <resources>
-      <resource>
-        <directory>${basedir}/src/main/java</directory>
-        <includes>
-          <include>**/*.properties</include>
-        </includes>
-      </resource>
-    </resources>
-  </build>
-
   <dependencies>
     <dependency>
       <groupId>javax.jcr</groupId>
       <artifactId>jcr</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 
