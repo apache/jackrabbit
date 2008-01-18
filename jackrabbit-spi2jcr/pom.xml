@@ -44,18 +44,11 @@
     <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-spi2jcr</url>
   </scm>
 
-  <build>
-    <resources>
-      <resource>
-        <directory>${basedir}/src/main/java</directory>
-        <includes>
-          <include>**/*.properties</include>
-        </includes>
-      </resource>
-    </resources>
-  </build>
-
   <dependencies>
+    <dependency>
+      <groupId>javax.jcr</groupId>
+      <artifactId>jcr</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-spi</artifactId>
@@ -67,10 +60,6 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>javax.jcr</groupId>
-      <artifactId>jcr</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
