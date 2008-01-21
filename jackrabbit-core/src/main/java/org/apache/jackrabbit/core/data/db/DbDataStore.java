@@ -67,6 +67,14 @@ import javax.jcr.RepositoryException;
  * The remaining settings are generated using the database URL sub-protocol from the
  * database type resource file.
  * <p>
+ * JNDI can be used to get the connection. In this case, use the javax.naming.InitialContext as the driver,
+ * and the JNDI name as the URL. If the user and password are configured in the JNDI resource,
+ * they should not be configured here. Example JNDI settings:
+ * <pre>
+ * &lt;param name="driver" value="javax.naming.InitialContext" />
+ * &lt;param name="url" value="java:comp/env/jdbc/Test" />
+ * </pre>
+ * <p>
  * A three level directory structure is used to avoid placing too many
  * files in a single directory. The chosen structure is designed to scale
  * up to billions of distinct records.
