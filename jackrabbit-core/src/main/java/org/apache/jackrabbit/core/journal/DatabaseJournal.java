@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.journal;
 
+import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionFactory;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
@@ -27,11 +28,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import javax.jcr.RepositoryException;
 
 /**
  * Database-based journal implementation. Stores records inside a database table named
@@ -55,6 +57,14 @@ import java.sql.Statement;
  * <li><code>password</code>: password to specify when connecting</li>
  * <li><code>reconnectDelayMs</code>: number of milliseconds to wait before
  * trying to reconnect to the database.
+ * <p>
+ * JNDI can be used to get the connection. In this case, use the javax.naming.InitialContext as the driver,
+ * and the JNDI name as the URL. If the user and password are configured in the JNDI resource,
+ * they should not be configured here. Example JNDI settings:
+ * <pre>
+ * &lt;param name="driver" value="javax.naming.InitialContext" />
+ * &lt;param name="url" value="java:comp/env/jdbc/Test" />
+ * </pre> * 
  * </ul>
  */
 public class DatabaseJournal extends AbstractJournal {
@@ -243,7 +253,7 @@ public class DatabaseJournal extends AbstractJournal {
         try {
             Class.forName(driver);
         } catch (ClassNotFoundException e) {
-            String msg = "Unable to load JDBC driver class.";
+            String msg = "Unable to load driver class.";
             throw new JournalException(msg, e);
         }
     }
@@ -257,10 +267,16 @@ public class DatabaseJournal extends AbstractJournal {
      *
      * @see #init()
      * @return new connection
-     * @throws SQLException if an error occurs
+     * @throws JournalException if the driver could not be loaded
+     * @throws SQLException if the connection could not be established
      */
-    protected Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(url, user, password);
+    protected Connection getConnection() throws SQLException, JournalException {
+        try {
+            return ConnectionFactory.getConnection(driver, url, user, password);
+        } catch (RepositoryException e) {
+            String msg = "Unable to load driver class.";
+            throw new JournalException(msg, e);        
+        }
     }
 
     /**
@@ -569,7 +585,7 @@ public class DatabaseJournal extends AbstractJournal {
      * exists, waits until at least <code>reconnectTimeMs</code> have passed
      * since the error occurred and recreates the connection.
      */
-    private void checkConnection() throws SQLException {
+    private void checkConnection() throws SQLException, JournalException {
         if (connection == null) {
             long delayMs = reconnectTimeMs - System.currentTimeMillis();
             if (delayMs > 0) {

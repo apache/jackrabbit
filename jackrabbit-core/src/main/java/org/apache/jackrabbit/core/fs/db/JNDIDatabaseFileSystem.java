@@ -23,6 +23,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
+ * @deprecated
+ * This class should not be used because it is not database vendor specific. 
+ * Each DatabaseFileSystem now supports getting the connection via JNDI
+ * by setting the driver to javax.naming.InitialContext 
+ * and the URL to the JNDI name.
+ * <p>
  * Database file system that uses JNDI to acquire the database connection.
  * The JNDI location of the {@link DataSource} to be used in given as
  * the <code>dataSourceLocation</code> configuration property. See the

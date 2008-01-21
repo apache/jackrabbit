@@ -16,11 +16,14 @@
  */
 package org.apache.jackrabbit.core.persistence.db;
 
+import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionFactory;
 import org.apache.jackrabbit.core.persistence.util.Serializer;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+
+import javax.jcr.RepositoryException;
 
 /**
  * <code>SimpleDbPersistenceManager</code> is a generic JDBC-based
@@ -107,6 +110,13 @@ import java.sql.SQLException;
  *       &lt;param name="externalBLOBs" value="false"/&gt;
  *   &lt;/PersistenceManager&gt;
  * </pre>
+ * JNDI can be used to get the connection. In this case, use the javax.naming.InitialContext as the driver,
+ * and the JNDI name as the URL. If the user and password are configured in the JNDI resource,
+ * they should not be configured here. Example JNDI settings:
+ * <pre>
+ * &lt;param name="driver" value="javax.naming.InitialContext" />
+ * &lt;param name="url" value="java:comp/env/jdbc/Test" />
+ * </pre>
  * See also {@link DerbyPersistenceManager}, {@link OraclePersistenceManager}.
  */
 public class SimpleDbPersistenceManager extends DatabasePersistenceManager {
@@ -153,15 +163,14 @@ public class SimpleDbPersistenceManager extends DatabasePersistenceManager {
 
     /**
      * Returns a JDBC connection acquired using the JDBC {@link DriverManager}.
+     * @throws SQLException 
      *
-     * @throws ClassNotFoundException if the JDBC driver class is not found
-     * @throws SQLException if a database access error occurs
+     * @throws RepositoryException if the driver could not be loaded
+     * @throws SQLException if the connection could not be established
      * @see DatabasePersistenceManager#getConnection()
      */
-    protected Connection getConnection() throws ClassNotFoundException, SQLException {
-        Class.forName(driver);
-        Connection connection = DriverManager.getConnection(url, user, password);
-        return connection;
+    protected Connection getConnection() throws RepositoryException, SQLException {
+        return ConnectionFactory.getConnection(driver, url, user, password);
     }
 
 }

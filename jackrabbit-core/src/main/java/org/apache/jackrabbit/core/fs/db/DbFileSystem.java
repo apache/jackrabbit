@@ -16,9 +16,12 @@
  */
 package org.apache.jackrabbit.core.fs.db;
 
+import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionFactory;
+
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
+
+import javax.jcr.RepositoryException;
 
 /**
  * <code>DbFileSystem</code> is a generic JDBC-based <code>FileSystem</code>
@@ -84,6 +87,13 @@ import java.sql.SQLException;
  *       &lt;param name="password" value="postgres"/&gt;
  *       &lt;param name="schemaObjectPrefix" value="rep_"/&gt;
  *   &lt;/FileSystem&gt;
+ * </pre>
+ * JNDI can be used to get the connection. In this case, use the javax.naming.InitialContext as the driver,
+ * and the JNDI name as the URL. If the user and password are configured in the JNDI resource,
+ * they should not be configured here. Example JNDI settings:
+ * <pre>
+ * &lt;param name="driver" value="javax.naming.InitialContext" />
+ * &lt;param name="url" value="java:comp/env/jdbc/Test" />
  * </pre>
  * See also {@link DerbyFileSystem}, {@link DB2FileSystem}, {@link OracleFileSystem}.
  */
@@ -182,9 +192,8 @@ public class DbFileSystem extends DatabaseFileSystem {
      *
      * @throws SQLException if an error occurs
      */
-    protected Connection getConnection() throws ClassNotFoundException, SQLException {
-        Class.forName(driver);
-        return DriverManager.getConnection(url, user, password);
+    protected Connection getConnection() throws RepositoryException, SQLException {
+        return ConnectionFactory.getConnection(driver, url, user, password);
     }
 
 }
