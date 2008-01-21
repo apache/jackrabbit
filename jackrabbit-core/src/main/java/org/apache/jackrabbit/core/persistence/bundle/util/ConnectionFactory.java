@@ -57,7 +57,7 @@ public class ConnectionFactory {
                     // JNDI context
                     Context context = (Context) d.newInstance();
                     DataSource ds = (DataSource) context.lookup(url);
-                    if (isNullOrEmpty(user) && isNullOrEmpty(password)) {
+                    if (user == null && password == null) {
                         return ds.getConnection();
                     } else {
                         return ds.getConnection(user, password);
@@ -84,15 +84,6 @@ public class ConnectionFactory {
             }
         }
         return DriverManager.getConnection(url, user, password);
-    }
-    
-    /**
-     * Check if a String is null or empty (the length is null).
-     *
-     * @return true if it is null or empty
-     */
-    private static boolean isNullOrEmpty(String s) {
-        return s == null || s.length() == 0;
     }
 
 }
