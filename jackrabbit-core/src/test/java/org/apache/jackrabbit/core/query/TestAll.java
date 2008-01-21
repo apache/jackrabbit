@@ -55,6 +55,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SynonymProviderTest.class);
         suite.addTestSuite(ArrayHitsTest.class);
         suite.addTestSuite(ExcerptTest.class);
+        suite.addTestSuite(IndexingAggregateTest.class);
 
         // exclude long running tests per default
         //suite.addTestSuite(MassiveRangeTest.class);
