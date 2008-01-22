@@ -4,7 +4,7 @@
    this work for additional information regarding copyright ownership.
    The ASF licenses this file to You under the Apache License, Version 2.0
    (the "License"); you may not use this file except in compliance with
-   the License.  You may obtain a copy of the License at
+   the License.  You may obtain a copy of the License at 
 
        http://www.apache.org/licenses/LICENSE-2.0
 
@@ -50,7 +50,7 @@
         clustering node that synchronizes changes made in a cluster
        
 -->
-<!ELEMENT Repository (FileSystem,Security,Workspaces,Workspace,Versioning,SearchIndex?,Cluster?)>
+<!ELEMENT Repository (FileSystem,Security,Workspaces,Workspace,Versioning,SearchIndex?,Cluster?,DataStore?)>
 
 <!--
     a virtual file system
@@ -172,3 +172,11 @@
 -->
 <!ELEMENT ISMLocking (param*)>
 <!ATTLIST ISMLocking class CDATA #REQUIRED>
+
+<!--
+    the DataStore element configures the data store
+    to be used for the workspace; the class attribute specifies the
+    FQN of the class implementing the DataStore interface
+-->
+<!ELEMENT DataStore (param*)>
+<!ATTLIST DataStore class CDATA #REQUIRED>
