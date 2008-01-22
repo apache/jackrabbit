@@ -16,6 +16,11 @@
  */
 package org.apache.jackrabbit.util;
 
+import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.SessionNamespaceResolver;
+
 import javax.jcr.Node;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
@@ -70,11 +75,12 @@ import javax.jcr.observation.ObservationManager;
  *     long nextValue = ((Long) ret).longValue();
  * }
  * </pre>
+ *
+ * @deprecated Use the Locked class from 
+ *             the org.apache.jackrabbit.spi.commons.lock package of
+ *             the jackrabbit-spi-commons component.
  */
 public abstract class Locked {
-
-    /** The mixin namespace */
-    private static final String MIX = "http://www.jcp.org/jcr/mix/1.0";
 
     /**
      * Object returned when timeout is reached without being able to call
@@ -131,16 +137,17 @@ public abstract class Locked {
         }
 
         Session session = lockable.getSession();
+        SessionNamespaceResolver resolver = new SessionNamespaceResolver(session);
 
+        Lock lock;
         EventListener listener = null;
         try {
             // check whether the lockable can be locked at all
-            String mix = session.getNamespacePrefix(MIX);
-            if (!lockable.isNodeType(mix + ":lockable")) {
+            if (!lockable.isNodeType(NameFormat.format(QName.MIX_LOCKABLE, resolver))) {
                 throw new IllegalArgumentException("Node is not lockable");
             }
 
-            Lock lock = tryLock(lockable, isDeep);
+            lock = tryLock(lockable, isDeep);
             if (lock != null) {
                 return runAndUnlock(lock);
             }
@@ -198,6 +205,8 @@ public abstract class Locked {
                     }
                 }
             }
+        } catch (NoPrefixDeclaredException e) {
+            throw new RepositoryException(e);
         } finally {
             if (listener != null) {
                 session.getWorkspace().getObservationManager().removeEventListener(listener);
