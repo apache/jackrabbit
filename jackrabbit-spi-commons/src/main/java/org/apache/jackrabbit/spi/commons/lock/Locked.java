@@ -76,8 +76,6 @@ import javax.jcr.lock.LockException;
  *     long nextValue = ((Long) ret).longValue();
  * }
  * </pre>
- *
- * @deprecated use the Locked class in the jackrabbit-jcr-commons component
  */
 public abstract class Locked {
 
