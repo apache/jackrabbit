@@ -38,6 +38,7 @@
    a corrupted MANIFEST.MF (see http://jira.codehaus.org/browse/MJAR-4)
   -->
   <description>JCR-RMI is a transparent Remote Method Invocation (RMI) layer for the Content Repository for Java Technology API (JCR). The layer makes it possible to remotely access JCR content repositories. JCR-RMI is developed as a part of the Apache Jackrabbit project, but the implementation is compatible with all JCR content repositories.</description>
+  <packaging>bundle</packaging>
 
   <build>
     <plugins>
@@ -60,6 +61,23 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Export-Package>
+              org.apache.jackrabbit.rmi.*;version=${pom.version}
+            </Export-Package>
+            
+            <!-- optional resolution XA -->
+            <Import-Package>
+              javax.transaction.xa;resolution:=optional,*
+            </Import-Package>
+          </instructions>
+        </configuration>
       </plugin>
     </plugins>
   </build>
@@ -94,10 +112,6 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>xerces</groupId>
-      <artifactId>xercesImpl</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>

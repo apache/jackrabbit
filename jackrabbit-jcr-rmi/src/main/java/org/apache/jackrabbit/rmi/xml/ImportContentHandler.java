@@ -18,8 +18,12 @@ package org.apache.jackrabbit.rmi.xml;
 
 import java.io.ByteArrayOutputStream;
 
-import org.apache.xml.serialize.OutputFormat;
-import org.apache.xml.serialize.XMLSerializer;
+import javax.jcr.RepositoryException;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
+import javax.xml.transform.stream.StreamResult;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.Locator;
@@ -39,14 +43,24 @@ public abstract class ImportContentHandler implements ContentHandler {
     private ByteArrayOutputStream buffer;
 
     /** The internal XML serializer. */
-    private ContentHandler handler;
+    private TransformerHandler handler;
 
     /**
      * Creates a SAX content handler for importing XML data.
+     * 
+     * @throws RepositoryException if the this instance cannot be setup. This
+     *      exception contains the reason why it cannot be setup as its cause.
      */
-    public ImportContentHandler() {
+    public ImportContentHandler() throws RepositoryException {
         this.buffer = new ByteArrayOutputStream();
-        this.handler = new XMLSerializer(buffer, new OutputFormat());
+        
+        try {
+            SAXTransformerFactory stf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
+            this.handler = stf.newTransformerHandler();
+            this.handler.setResult(new StreamResult(buffer));
+        } catch (TransformerConfigurationException tce) {
+            throw new RepositoryException("Cannot create XML handler", tce);
+        }
     }
 
     /**

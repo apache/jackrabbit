@@ -18,6 +18,7 @@ package org.apache.jackrabbit.rmi.xml;
 
 import java.io.ByteArrayInputStream;
 
+import javax.jcr.RepositoryException;
 import javax.jcr.Workspace;
 
 
@@ -43,12 +44,16 @@ public class WorkspaceImportContentHandler extends ImportContentHandler {
     /**
      * Creates a SAX content handler for importing XML data to the given
      * workspace and path using the given UUID behavior.
-     *
+     * 
      * @param workspace repository workspace
      * @param path import content path
      * @param uuidBehaviour UUID behavior
+     * @throws RepositoryException if the this instance cannot be setup. This
+     *             exception contains the reason why it cannot be setup as its
+     *             cause.
      */
-    public WorkspaceImportContentHandler(Workspace workspace, String path, int uuidBehaviour) {
+    public WorkspaceImportContentHandler(Workspace workspace, String path,
+            int uuidBehaviour) throws RepositoryException {
         this.workspace = workspace;
         this.path = path;
         this.uuidBehaviour = uuidBehaviour;
