@@ -24,15 +24,12 @@ import org.apache.jackrabbit.spi.Name;
  */
 public class NameFactoryImpl implements NameFactory {
 
-    private static NameFactory FACTORY;
+    private static final NameFactory INSTANCE = new NameFactoryImpl();
 
     private NameFactoryImpl() {};
 
     public static NameFactory getInstance() {
-        if (FACTORY == null) {
-            FACTORY = new NameFactoryImpl();
-        }
-        return FACTORY;
+        return INSTANCE;
     }
 
     //--------------------------------------------------------< NameFactory >---
