@@ -18,6 +18,7 @@ package org.apache.jackrabbit.rmi.xml;
 
 import java.io.ByteArrayInputStream;
 
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 
@@ -41,15 +42,18 @@ public class SessionImportContentHandler extends ImportContentHandler {
     private int mode;
 
     /**
-     * Creates a SAX content handler for importing XML data to the given
-     * session and path.
-     *
+     * Creates a SAX content handler for importing XML data to the given session
+     * and path.
+     * 
      * @param session repository session
      * @param path import content path
      * @param uuidBehaviour UUID behavior mode
+     * @throws RepositoryException if the this instance cannot be setup. This
+     *             exception contains the reason why it cannot be setup as its
+     *             cause.
      */
-    public SessionImportContentHandler(
-            Session session, String path, int uuidBehaviour) {
+    public SessionImportContentHandler(Session session, String path,
+            int uuidBehaviour) throws RepositoryException {
         this.session = session;
         this.path = path;
         this.mode = uuidBehaviour;
