@@ -142,7 +142,7 @@ public class AppendRecord extends AbstractRecord {
      *
      * @param revision revision
      */
-    protected void setRevision(long revision) {
+    public void setRevision(long revision) {
         this.revision = revision;
     }
 
