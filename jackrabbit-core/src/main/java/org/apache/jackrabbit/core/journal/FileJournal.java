@@ -114,6 +114,10 @@ public class FileJournal extends AbstractJournal {
             maximumSize = DEFAULT_MAXSIZE;
         }
         rootDirectory = new File(directory);
+        
+        // JCR-1341: Cluster Journal directory should be created automatically
+        rootDirectory.mkdirs();
+        
         if (!rootDirectory.exists() || !rootDirectory.isDirectory()) {
             String msg = "Directory specified does either not exist " +
                     "or is not a directory: " + directory;
