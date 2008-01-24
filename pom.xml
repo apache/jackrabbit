@@ -155,7 +155,6 @@
               <Bundle-DocURL>
                 http://jackrabbit.apache.org
               </Bundle-DocURL>
-              <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
             </instructions>
           </configuration>
         </plugin>
