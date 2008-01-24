@@ -34,6 +34,7 @@
   <artifactId>jackrabbit-api</artifactId>
   <name>Jackrabbit API</name>
   <description>Jacrabbit-specific extensions to the JCR API</description>
+  <packaging>bundle</packaging>
 
   <scm>
     <connection>
@@ -44,6 +45,23 @@
     </developerConnection>
     <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-api</url>
   </scm>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Export-Package>
+              org.apache.jackrabbit.api.*;version=${pom.version}
+            </Export-Package>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
   <dependencies>
     <dependency>
