@@ -37,7 +37,7 @@ import java.io.OutputStream;
  * (2 bytes each). The next 8 bytes contain the revision this log starts with.
  * After this, zero or more <code>ReadRecord</code>s follow.
  */
-class FileRecordLog {
+public class FileRecordLog {
 
     /**
      * Logger.
