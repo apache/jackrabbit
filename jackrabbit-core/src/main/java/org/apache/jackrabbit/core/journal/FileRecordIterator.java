@@ -27,7 +27,7 @@ import java.util.NoSuchElementException;
  * Record cursor that returns unseen revisions in ascending order on every
  * iteration.
  */
-class FileRecordIterator implements RecordIterator {
+public class FileRecordIterator implements RecordIterator {
 
     /**
      * Log files to scan for revisions.
