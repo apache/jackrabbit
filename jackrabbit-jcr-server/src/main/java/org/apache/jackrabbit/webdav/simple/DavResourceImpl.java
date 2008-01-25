@@ -454,7 +454,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
                 if (failures.containsKey(o)) {
                     Object error = failures.get(o);
                     statusCode = (error instanceof RepositoryException)
-                        ? new JcrDavException((RepositoryException)o).getErrorCode()
+                        ? new JcrDavException((RepositoryException) error).getErrorCode()
                         : DavServletResponse.SC_INTERNAL_SERVER_ERROR;
                 } else {
                     statusCode = (failures.isEmpty()) ? DavServletResponse.SC_OK : DavServletResponse.SC_FAILED_DEPENDENCY;
