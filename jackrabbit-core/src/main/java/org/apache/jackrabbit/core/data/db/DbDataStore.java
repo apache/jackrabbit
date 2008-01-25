@@ -49,19 +49,19 @@ import javax.jcr.RepositoryException;
 /**
  * A data store implementation that stores the records in a database using JDBC.
  * 
- * Configuration:<br>
- * <ul>
- * <li>&lt;param name="className" value="org.apache.jackrabbit.core.data.db.DbDataStore"/>
- * <li>&lt;param name="{@link #setUrl(String) url}" value="jdbc:postgresql:test"/>
- * <li>&lt;param name="{@link #setUser(String) user}" value="sa"/>
- * <li>&lt;param name="{@link #setPassword(String) password}" value="sa"/>
- * <li>&lt;param name="{@link #setDatabaseType(String) databaseType}" value="postgresql"/>
- * <li>&lt;param name="{@link #setDriver(String) driver}" value="org.postgresql.Driver"/>
- * <li>&lt;param name="{@link #setMinRecordLength(int) minRecordLength}" value="1024"/>
- * <li>&lt;param name="{@link #setMaxConnections(int) maxConnections}" value="2"/>
- * <li>&lt;param name="{@link #setCopyWhenReading(int) copyWhenReading}" value="true"/>
- * </ul>
- * 
+ * Configuration:
+ * <pre>
+ * &lt;DataStore class="org.apache.jackrabbit.core.data.db.DbDataStore">
+ *     &lt;param name="{@link #setUrl(String) url}" value="jdbc:postgresql:test"/>
+ *     &lt;param name="{@link #setUser(String) user}" value="sa"/>
+ *     &lt;param name="{@link #setPassword(String) password}" value="sa"/>
+ *     &lt;param name="{@link #setDatabaseType(String) databaseType}" value="postgresql"/>
+ *     &lt;param name="{@link #setDriver(String) driver}" value="org.postgresql.Driver"/>
+ *     &lt;param name="{@link #setMinRecordLength(int) minRecordLength}" value="1024"/>
+ *     &lt;param name="{@link #setMaxConnections(int) maxConnections}" value="2"/>
+ *     &lt;param name="{@link #setCopyWhenReading(int) copyWhenReading}" value="true"/>
+ * &lt/DataStore>
+ * </pre>
  * <p>
  * Only URL, user name and password usually need to be set. 
  * The remaining settings are generated using the database URL sub-protocol from the

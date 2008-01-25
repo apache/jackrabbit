@@ -33,13 +33,13 @@ import java.util.WeakHashMap;
  * Simple file-based data store. Data records are stored as normal files
  * named using a message digest of the contained binary stream.
  * 
- * Configuration:<br>
- * <ul>
- * <li>&lt;param name="className" value="org.apache.jackrabbit.core.data.FileDataStore"/>
- * <li>&lt;param name="{@link #setPath(String) path}" value="/data/datastore"/>
- * <li>&lt;param name="{@link #setMinRecordLength(int) minRecordLength}" value="1024"/>
- * </ul>
- * 
+ * Configuration:
+ * <pre>
+ * &lt;DataStore class="org.apache.jackrabbit.core.data.FileDataStore">
+ *     &lt;param name="{@link #setPath(String) path}" value="/data/datastore"/>
+ *     &lt;param name="{@link #setMinRecordLength(int) minRecordLength}" value="1024"/>
+ * &lt/DataStore>
+ * </pre>
  * <p>
  * If the directory is not set, the directory &lt;repository home&gt;/repository/datastore is used.
  * <p>
