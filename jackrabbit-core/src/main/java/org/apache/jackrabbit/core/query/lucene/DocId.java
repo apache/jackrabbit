@@ -107,8 +107,19 @@ abstract class DocId {
      *
      * @param uuid the node uuid.
      * @return a <code>DocId</code> based on a node UUID.
+     * @throws IllegalArgumentException if the <code>uuid</code> is malformed.
      */
     static DocId create(String uuid) {
+        return create(UUID.fromString(uuid));
+    }
+
+    /**
+     * Creates a <code>DocId</code> based on a node UUID.
+     *
+     * @param uuid the node uuid.
+     * @return a <code>DocId</code> based on a node UUID.
+     */
+    static DocId create(UUID uuid) {
         return new UUIDDocId(uuid);
     }
 
@@ -188,13 +199,10 @@ abstract class DocId {
          * Creates a <code>DocId</code> based on a Node uuid.
          *
          * @param uuid the Node uuid.
-         * @throws IllegalArgumentException if the <code>uuid</code> is
-         *                                  malformed.
          */
-        UUIDDocId(String uuid) {
-            UUID tmp = UUID.fromString(uuid);
-            this.lsb = tmp.getLeastSignificantBits();
-            this.msb = tmp.getMostSignificantBits();
+        UUIDDocId(UUID uuid) {
+            this.lsb = uuid.getLeastSignificantBits();
+            this.msb = uuid.getMostSignificantBits();
         }
 
         /**

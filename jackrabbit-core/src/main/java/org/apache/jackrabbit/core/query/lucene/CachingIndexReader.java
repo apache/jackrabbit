@@ -22,11 +22,16 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
+import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.BitSet;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.text.NumberFormat;
 
 /**
  * Implements an <code>IndexReader</code> that maintains caches to resolve
@@ -69,11 +74,14 @@ class CachingIndexReader extends FilterIndexReader {
      * @param delegatee the base <code>IndexReader</code>.
      * @param cache     a document number cache, or <code>null</code> if not
      *                  available to this reader.
+     * @throws IOException if an error occurs while reading from the index.
      */
-    CachingIndexReader(IndexReader delegatee, DocNumberCache cache) {
+    CachingIndexReader(IndexReader delegatee, DocNumberCache cache)
+            throws IOException {
         super(delegatee);
         this.cache = cache;
         parents = new DocId[delegatee.maxDoc()];
+        initializeParents(delegatee);
     }
 
     /**
@@ -211,6 +219,74 @@ class CachingIndexReader extends FilterIndexReader {
     private static long getNextCreationTick() {
         synchronized (CachingIndexReader.class) {
             return currentTick++;
+        }
+    }
+
+    /**
+     * Initializes the {@link #parents} <code>DocId</code> array.
+     *
+     * @param reader the underlying index reader.
+     * @throws IOException if an error occurs while reading from the index.
+     */
+    private void initializeParents(IndexReader reader) throws IOException {
+        long time = System.currentTimeMillis();
+        Map docs = new HashMap();
+        for (int i = 0; i < reader.maxDoc(); i++) {
+            if (!reader.isDeleted(i)) {
+                Document doc = reader.document(i, FieldSelectors.UUID_AND_PARENT);
+                UUID uuid = UUID.fromString(doc.get(FieldNames.UUID));
+                UUID parent = null;
+                try {
+                    parent = UUID.fromString(doc.get(FieldNames.PARENT));
+                } catch (IllegalArgumentException e) {
+                    // root node does not have a parent
+                }
+                NodeInfo info = new NodeInfo(i, uuid, parent);
+                docs.put(uuid, info);
+            }
+        }
+        double foreignParents = 0;
+        for (Iterator it = docs.values().iterator(); it.hasNext(); ) {
+            NodeInfo info = (NodeInfo) it.next();
+            NodeInfo parent = (NodeInfo) docs.get(info.parent);
+            if (parent != null) {
+                parents[info.docId] = DocId.create(parent.docId);
+            } else if (info.parent != null) {
+                foreignParents++;
+                parents[info.docId] = DocId.create(info.parent);
+            } else {
+                // no parent -> root node
+                parents[info.docId] = DocId.NULL;
+            }
+        }
+        if (log.isDebugEnabled()) {
+            NumberFormat nf = NumberFormat.getPercentInstance();
+            nf.setMaximumFractionDigits(1);
+            time = System.currentTimeMillis() - time;
+            if (parents.length > 0) {
+                foreignParents /= parents.length;
+            }
+            log.debug("initialized {} DocIds in {} ms, {} foreign parents",
+                    new Object[]{
+                        new Integer(parents.length),
+                        new Long(time),
+                        nf.format(foreignParents)
+                    });
+        }
+    }
+
+    private static class NodeInfo {
+
+        final int docId;
+
+        final UUID uuid;
+
+        final UUID parent;
+
+        public NodeInfo(int docId, UUID uuid, UUID parent) {
+            this.docId = docId;
+            this.uuid = uuid;
+            this.parent = parent;
         }
     }
 
