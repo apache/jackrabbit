@@ -31,7 +31,7 @@ public interface MultiIndexReader {
      * @return the <code>IndexReader</code>s that are contained in this
      *         <code>MultiIndexReader</code>.
      */
-    public IndexReader[] getIndexReaders();
+    IndexReader[] getIndexReaders();
 
     /**
      * Creates a document id for the given <code>uuid</code>.
@@ -41,7 +41,7 @@ public interface MultiIndexReader {
      *         with the given <code>uuid</code>.
      * @throws IOException if an error occurs while reading from the index.
      */
-    public ForeignSegmentDocId createDocId(UUID uuid) throws IOException;
+    ForeignSegmentDocId createDocId(UUID uuid) throws IOException;
 
     /**
      * Returns the document number for the passed <code>docId</code>. If the id
@@ -52,5 +52,6 @@ public interface MultiIndexReader {
      *         does not exist).
      * @throws IOException if an error occurs while reading from the index.
      */
-    public int getDocumentNumber(ForeignSegmentDocId docId) throws IOException;
+    int getDocumentNumber(ForeignSegmentDocId docId) throws IOException;
+
 }

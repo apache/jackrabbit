@@ -29,8 +29,8 @@ import javax.jcr.Value;
  *
  * @since JCR 2.0
  */
-public interface QueryObjectModelFactory
-        extends QueryObjectModelConstants {
+public interface QueryObjectModelFactory extends QueryObjectModelConstants {
+
     ///
     /// QUERY
     ///
@@ -50,11 +50,10 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public QueryObjectModel createQuery
-            (Selector selector,
-             Constraint constraint,
-             Ordering[] orderings,
-             Column[] columns) throws InvalidQueryException, RepositoryException;
+    QueryObjectModel createQuery(
+            Selector selector, Constraint constraint,
+            Ordering[] orderings, Column[] columns)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Creates a query with one or more selectors.
@@ -73,11 +72,10 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public QueryObjectModel createQuery
-            (Source source,
-             Constraint constraint,
-             Ordering[] orderings,
-             Column[] columns) throws InvalidQueryException, RepositoryException;
+    QueryObjectModel createQuery(
+            Source source, Constraint constraint,
+            Ordering[] orderings, Column[] columns)
+        throws InvalidQueryException, RepositoryException;
 
     ///
     /// SELECTOR
@@ -93,8 +91,8 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public Selector selector(String nodeTypeName)
-            throws InvalidQueryException, RepositoryException;
+    Selector selector(String nodeTypeName)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Selects a subset of the nodes in the repository based on node type.
@@ -105,8 +103,8 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public Selector selector(String nodeTypeName, String selectorName)
-            throws InvalidQueryException, RepositoryException;
+    Selector selector(String nodeTypeName, String selectorName)
+        throws InvalidQueryException, RepositoryException;
 
     ///
     /// JOIN
@@ -119,20 +117,19 @@ public interface QueryObjectModelFactory
      * @param right         the right node-tuple source; non-null
      * @param joinType      either
      *                      <ul>
-     *                      <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_INNER},</li>
-     *                      <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_LEFT_OUTER},</li>
-     *                      <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_RIGHT_OUTER}</li>
+     *                      <li>{@link QueryObjectModelConstants#JOIN_TYPE_INNER},</li>
+     *                      <li>{@link QueryObjectModelConstants#JOIN_TYPE_LEFT_OUTER},</li>
+     *                      <li>{@link QueryObjectModelConstants#JOIN_TYPE_RIGHT_OUTER}</li>
      *                      </ul>
      * @param joinCondition the join condition; non-null
      * @return the join; non-null
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public Join join
-            (Source left,
-             Source right,
-             int joinType,
-             JoinCondition joinCondition) throws InvalidQueryException, RepositoryException;
+    Join join(
+            Source left, Source right,
+            int joinType, JoinCondition joinCondition)
+        throws InvalidQueryException, RepositoryException;
 
     ///
     /// JOINCONDITION
@@ -150,11 +147,10 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public EquiJoinCondition equiJoinCondition
-            (String selector1Name,
-             String property1Name,
-             String selector2Name,
-             String property2Name) throws InvalidQueryException, RepositoryException;
+    EquiJoinCondition equiJoinCondition(
+            String selector1Name, String property1Name,
+            String selector2Name, String property2Name)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Tests whether a first selector's node is the same as a second selector's
@@ -166,9 +162,9 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public SameNodeJoinCondition sameNodeJoinCondition
-            (String selector1Name,
-             String selector2Name) throws InvalidQueryException, RepositoryException;
+    SameNodeJoinCondition sameNodeJoinCondition(
+            String selector1Name, String selector2Name)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Tests whether a first selector's node is the same as a node identified
@@ -181,10 +177,9 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public SameNodeJoinCondition sameNodeJoinCondition
-            (String selector1Name,
-             String selector2Name,
-             String selector2Path) throws InvalidQueryException, RepositoryException;
+    SameNodeJoinCondition sameNodeJoinCondition(
+            String selector1Name, String selector2Name, String selector2Path)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Tests whether a first selector's node is a child of a second selector's
@@ -196,9 +191,9 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public ChildNodeJoinCondition childNodeJoinCondition
-            (String childSelectorName,
-             String parentSelectorName) throws InvalidQueryException, RepositoryException;
+    ChildNodeJoinCondition childNodeJoinCondition(
+            String childSelectorName, String parentSelectorName)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Tests whether a first selector's node is a descendant of a second
@@ -210,9 +205,9 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public DescendantNodeJoinCondition descendantNodeJoinCondition
-            (String descendantSelectorName,
-             String ancestorSelectorName) throws InvalidQueryException, RepositoryException;
+    DescendantNodeJoinCondition descendantNodeJoinCondition(
+            String descendantSelectorName, String ancestorSelectorName)
+        throws InvalidQueryException, RepositoryException;
 
     ///
     /// CONSTRAINT
@@ -227,8 +222,8 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public And and(Constraint constraint1, Constraint constraint2)
-            throws InvalidQueryException, RepositoryException;
+    And and(Constraint constraint1, Constraint constraint2)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Performs a logical disjunction of two other constraints.
@@ -239,8 +234,8 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public Or or(Constraint constraint1, Constraint constraint2)
-            throws InvalidQueryException, RepositoryException;
+    Or or(Constraint constraint1, Constraint constraint2)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Performs a logical negation of another constraint.
@@ -250,8 +245,8 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public Not not(Constraint constraint)
-            throws InvalidQueryException, RepositoryException;
+    Not not(Constraint constraint)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Filters node-tuples based on the outcome of a binary operation.
@@ -272,10 +267,9 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public Comparison comparison
-            (DynamicOperand operand1,
-             int operator,
-             StaticOperand operand2) throws InvalidQueryException, RepositoryException;
+    Comparison comparison(
+            DynamicOperand operand1, int operator, StaticOperand operand2)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Tests the existence of a property in the default selector.
@@ -286,8 +280,8 @@ public interface QueryObjectModelFactory
      *                               or is otherwise invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public PropertyExistence propertyExistence(String propertyName)
-            throws InvalidQueryException, RepositoryException;
+    PropertyExistence propertyExistence(String propertyName)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Tests the existence of a property in the specified selector.
@@ -298,9 +292,9 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public PropertyExistence propertyExistence
-            (String selectorName,
-             String propertyName) throws InvalidQueryException, RepositoryException;
+    PropertyExistence propertyExistence(
+            String selectorName, String propertyName)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Performs a full-text search against the default selector.
@@ -314,9 +308,9 @@ public interface QueryObjectModelFactory
      *                               or is otherwise invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public FullTextSearch fullTextSearch
-            (String propertyName,
-             String fullTextSearchExpression) throws InvalidQueryException, RepositoryException;
+    FullTextSearch fullTextSearch(
+            String propertyName, String fullTextSearchExpression)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Performs a full-text search against the specified selector.
@@ -330,10 +324,10 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public FullTextSearch fullTextSearch
-            (String selectorName,
-             String propertyName,
-             String fullTextSearchExpression) throws InvalidQueryException, RepositoryException;
+    FullTextSearch fullTextSearch(
+            String selectorName, String propertyName,
+            String fullTextSearchExpression)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Tests whether a node in the default selector is reachable by a specified
@@ -345,8 +339,8 @@ public interface QueryObjectModelFactory
      *                               or is otherwise invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public SameNode sameNode(String path)
-            throws InvalidQueryException, RepositoryException;
+    SameNode sameNode(String path)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Tests whether a node in the specified selector is reachable by a specified
@@ -358,8 +352,8 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public SameNode sameNode(String selectorName, String path)
-            throws InvalidQueryException, RepositoryException;
+    SameNode sameNode(String selectorName, String path)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Tests whether a node in the default selector is a child of a node
@@ -371,8 +365,8 @@ public interface QueryObjectModelFactory
      *                               or is otherwise invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public ChildNode childNode(String path)
-            throws InvalidQueryException, RepositoryException;
+    ChildNode childNode(String path)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Tests whether a node in the specified selector is a child of a node
@@ -384,8 +378,8 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public ChildNode childNode(String selectorName, String path)
-            throws InvalidQueryException, RepositoryException;
+    ChildNode childNode(String selectorName, String path)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Tests whether a node in the default selector is a descendant of a node
@@ -397,8 +391,8 @@ public interface QueryObjectModelFactory
      *                               or is otherwise invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public DescendantNode descendantNode(String path)
-            throws InvalidQueryException, RepositoryException;
+    DescendantNode descendantNode(String path)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Tests whether a node in the specified selector is a descendant of a node
@@ -410,8 +404,8 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public DescendantNode descendantNode(String selectorName, String path)
-            throws InvalidQueryException, RepositoryException;
+    DescendantNode descendantNode(String selectorName, String path)
+        throws InvalidQueryException, RepositoryException;
 
     ///
     /// OPERAND
@@ -427,8 +421,8 @@ public interface QueryObjectModelFactory
      *                               or is otherwise invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public PropertyValue propertyValue(String propertyName)
-            throws InvalidQueryException, RepositoryException;
+    PropertyValue propertyValue(String propertyName)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Evaluates to the value (or values, if multi-valued) of a property in the
@@ -440,8 +434,8 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public PropertyValue propertyValue(String selectorName, String propertyName)
-            throws InvalidQueryException, RepositoryException;
+    PropertyValue propertyValue(String selectorName, String propertyName)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Evaluates to the length (or lengths, if multi-valued) of a property.
@@ -452,8 +446,8 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public Length length(PropertyValue propertyValue)
-            throws InvalidQueryException, RepositoryException;
+    Length length(PropertyValue propertyValue)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Evaluates to a <code>NAME</code> value equal to the prefix-qualified name
@@ -464,8 +458,7 @@ public interface QueryObjectModelFactory
      *                               or is otherwise invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public NodeName nodeName()
-            throws InvalidQueryException, RepositoryException;
+    NodeName nodeName() throws InvalidQueryException, RepositoryException;
 
     /**
      * Evaluates to a <code>NAME</code> value equal to the prefix-qualified name
@@ -476,8 +469,8 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public NodeName nodeName(String selectorName)
-            throws InvalidQueryException, RepositoryException;
+    NodeName nodeName(String selectorName)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Evaluates to a <code>NAME</code> value equal to the local (unprefixed)
@@ -488,8 +481,8 @@ public interface QueryObjectModelFactory
      *                               or is otherwise invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public NodeLocalName nodeLocalName()
-            throws InvalidQueryException, RepositoryException;
+    NodeLocalName nodeLocalName()
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Evaluates to a <code>NAME</code> value equal to the local (unprefixed)
@@ -500,8 +493,8 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public NodeLocalName nodeLocalName(String selectorName)
-            throws InvalidQueryException, RepositoryException;
+    NodeLocalName nodeLocalName(String selectorName)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Evaluates to a <code>DOUBLE</code> value equal to the full-text search
@@ -512,8 +505,8 @@ public interface QueryObjectModelFactory
      *                               or is otherwise invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public FullTextSearchScore fullTextSearchScore()
-            throws InvalidQueryException, RepositoryException;
+    FullTextSearchScore fullTextSearchScore()
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Evaluates to a <code>DOUBLE</code> value equal to the full-text search
@@ -524,8 +517,8 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public FullTextSearchScore fullTextSearchScore(String selectorName)
-            throws InvalidQueryException, RepositoryException;
+    FullTextSearchScore fullTextSearchScore(String selectorName)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Evaluates to the lower-case string value (or values, if multi-valued)
@@ -537,8 +530,8 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public LowerCase lowerCase(DynamicOperand operand)
-            throws InvalidQueryException, RepositoryException;
+    LowerCase lowerCase(DynamicOperand operand)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Evaluates to the upper-case string value (or values, if multi-valued)
@@ -550,8 +543,8 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public UpperCase upperCase(DynamicOperand operand)
-            throws InvalidQueryException, RepositoryException;
+    UpperCase upperCase(DynamicOperand operand)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Evaluates to the value of a bind variable.
@@ -561,8 +554,8 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public BindVariableValue bindVariable(String bindVariableName)
-            throws InvalidQueryException, RepositoryException;
+    BindVariableValue bindVariable(String bindVariableName)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Evaluates to a literal value.
@@ -572,8 +565,8 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public Literal literal(Value value)
-            throws InvalidQueryException, RepositoryException;
+    Literal literal(Value value)
+        throws InvalidQueryException, RepositoryException;
 
     ///
     /// ORDERING
@@ -587,8 +580,8 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public Ordering ascending(DynamicOperand operand)
-            throws InvalidQueryException, RepositoryException;
+    Ordering ascending(DynamicOperand operand)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Orders by the value of the specified operand, in descending order.
@@ -598,8 +591,8 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public Ordering descending(DynamicOperand operand)
-            throws InvalidQueryException, RepositoryException;
+    Ordering descending(DynamicOperand operand)
+        throws InvalidQueryException, RepositoryException;
 
     ///
     /// COLUMN
@@ -619,8 +612,8 @@ public interface QueryObjectModelFactory
      *                               or is otherwise invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public Column column(String propertyName)
-            throws InvalidQueryException, RepositoryException;
+    Column column(String propertyName)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Identifies a property in the default selector to include in the tabular
@@ -636,8 +629,8 @@ public interface QueryObjectModelFactory
      *                               or is otherwise invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public Column column(String propertyName, String columnName)
-            throws InvalidQueryException, RepositoryException;
+    Column column(String propertyName, String columnName)
+        throws InvalidQueryException, RepositoryException;
 
     /**
      * Identifies a property in the specified selector to include in the tabular
@@ -653,8 +646,6 @@ public interface QueryObjectModelFactory
      * @throws InvalidQueryException if the query is invalid
      * @throws RepositoryException   if the operation otherwise fails
      */
-    public Column column
-            (String selectorName,
-             String propertyName,
-             String columnName) throws InvalidQueryException, RepositoryException;
+    Column column(String selectorName, String propertyName, String columnName)
+        throws InvalidQueryException, RepositoryException;
 }

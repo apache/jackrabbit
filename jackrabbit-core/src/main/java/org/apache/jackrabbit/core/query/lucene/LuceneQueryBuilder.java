@@ -1114,7 +1114,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
      * @param field
      * @return Query that matches all nodes that have a property named 'field'
      */
-    private final Query createMatchAllQuery(String field) {
+    private Query createMatchAllQuery(String field) {
         if (indexFormatVersion.getVersion() >= IndexFormatVersion.V2.getVersion()) {
             // new index format style
             return new TermQuery(new Term(FieldNames.PROPERTIES_SET, field));

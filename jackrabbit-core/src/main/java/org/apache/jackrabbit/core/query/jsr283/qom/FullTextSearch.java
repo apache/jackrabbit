@@ -87,14 +87,14 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
  *
  * @since JCR 2.0
  */
-public interface FullTextSearch
-        extends Constraint {
+public interface FullTextSearch extends Constraint {
+
     /**
      * Gets the name of the selector against which to apply this constraint.
      *
      * @return the selector name; non-null
      */
-    public String getSelectorName();
+    String getSelectorName();
 
     /**
      * Gets the name of the property.
@@ -104,12 +104,13 @@ public interface FullTextSearch
      *         search scope is the node (or node subtree, in
      *         some implementations).
      */
-    public String getPropertyName();
+    String getPropertyName();
 
     /**
      * Gets the full-text search expression.
      *
      * @return the full-text search expression; non-null
      */
-    public String getFullTextSearchExpression();
+    String getFullTextSearchExpression();
+
 }

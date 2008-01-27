@@ -29,5 +29,6 @@ public interface ClusterOperation {
      * @param successful <code>true</code> if the operation ended successfully;
      *                   <code>false</code> otherwise
      */
-    public void ended(boolean successful);
+    void ended(boolean successful);
+
 }

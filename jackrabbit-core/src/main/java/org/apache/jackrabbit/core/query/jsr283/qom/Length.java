@@ -28,12 +28,13 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
  *
  * @since JCR 2.0
  */
-public interface Length
-        extends DynamicOperand {
+public interface Length extends DynamicOperand {
+
     /**
      * Gets the property value for which to compute the length.
      *
      * @return the property value; non-null
      */
-    public PropertyValue getPropertyValue();
+    PropertyValue getPropertyValue();
+
 }

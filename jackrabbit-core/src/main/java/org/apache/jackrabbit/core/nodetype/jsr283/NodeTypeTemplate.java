@@ -44,42 +44,42 @@ public interface NodeTypeTemplate extends NodeTypeDefinition {
      *
      * @param name a <code>String</code>.
      */
-    public void setName(String name);
+    void setName(String name);
 
     /**
      * Sets the names of the supertypes of the node type.
      *
      * @param names a <code>String</code> array.
      */
-    public void setDeclaredSuperTypeNames(String[] names);
+    void setDeclaredSuperTypeNames(String[] names);
 
     /**
      * Sets the abstract flag of the node type.
      *
      * @param abstractStatus a <code>boolean</code>.
      */
-    public void setAbstract(boolean abstractStatus);
+    void setAbstract(boolean abstractStatus);
 
     /**
      * Sets the mixin flag of the node type.
      *
      * @param mixin a <code>boolean</code>.
      */
-    public void setMixin(boolean mixin);
+    void setMixin(boolean mixin);
 
     /**
      * Sets the orderable child nodes flag of the node type.
      *
      * @param orderable a <code>boolean</code>.
      */
-    public void setOrderableChildNodes(boolean orderable);
+    void setOrderableChildNodes(boolean orderable);
 
     /**
      * Sets the name of the primary item.
      *
      * @param name a <code>String</code>.
      */
-    public void setPrimaryItemName(String name);
+    void setPrimaryItemName(String name);
 
     /**
      * Returns a mutable <code>List</code> of <code>PropertyDefinitionTemplate</code>
@@ -89,7 +89,7 @@ public interface NodeTypeTemplate extends NodeTypeDefinition {
      *
      * @return a mutable <code>List</code> of <code>PropertyDefinitionTemplate</code> objects.
      */
-    public List getPropertyDefinitionTemplates();
+    List getPropertyDefinitionTemplates();
 
     /**
      * Returns a mutable <code>List</code> of <code>NodeDefinitionTemplate</code>
@@ -99,5 +99,6 @@ public interface NodeTypeTemplate extends NodeTypeDefinition {
      *
      * @return a mutable <code>List</code> of <code>NodeDefinitionTemplate</code> objects.
      */
-    public List getNodeDefinitionTemplates();
+    List getNodeDefinitionTemplates();
+
 }

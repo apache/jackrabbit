@@ -54,12 +54,13 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
  * @since JCR 2.0
  */
 public interface Column {
+
     /**
      * Gets the name of the selector.
      *
      * @return the selector name; non-null
      */
-    public String getSelectorName();
+    String getSelectorName();
 
     /**
      * Gets the name of the property.
@@ -68,7 +69,7 @@ public interface Column {
      *         each single-value non-residual property of the
      *         selector's node type
      */
-    public String getPropertyName();
+    String getPropertyName();
 
     /**
      * Gets the column name.
@@ -78,5 +79,6 @@ public interface Column {
      *         <code>getPropertyName</code> is null and non-null
      *         otherwise
      */
-    public String getColumnName();
+    String getColumnName();
+
 }

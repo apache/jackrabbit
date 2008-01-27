@@ -33,19 +33,20 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
  *
  * @since JCR 2.0
  */
-public interface PropertyValue
-        extends DynamicOperand {
+public interface PropertyValue extends DynamicOperand {
+
     /**
      * Gets the name of the selector against which to evaluate this operand.
      *
      * @return the selector name; non-null
      */
-    public String getSelectorName();
+    String getSelectorName();
 
     /**
      * Gets the name of the property.
      *
      * @return the property name; non-null
      */
-    public String getPropertyName();
+    String getPropertyName();
+
 }

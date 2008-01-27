@@ -25,7 +25,7 @@ public interface CacheAccessListener {
     /**
      * The access listener is only called each x accesses.
      */
-    static final int ACCESS_INTERVAL = 127;
+    int ACCESS_INTERVAL = 127;
 
     /**
      * The cache calls this method after a number of accessed.

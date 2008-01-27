@@ -32,7 +32,8 @@ public interface ExcerptProvider {
     /**
      * Name of the rep:excerpt function.
      */
-    public final Name REP_EXCERPT = NameFactoryImpl.getInstance().create(Name.NS_REP_URI, "excerpt(.)");
+    Name REP_EXCERPT = NameFactoryImpl.getInstance().create(
+            Name.NS_REP_URI, "excerpt(.)");
 
     /**
      * Initializes this excerpt provider.
@@ -42,7 +43,7 @@ public interface ExcerptProvider {
      * @throws IOException if an error occurs while initializing this excerpt
      *                     provider.
      */
-    public void init(Query query, SearchIndex index) throws IOException;
+    void init(Query query, SearchIndex index) throws IOException;
 
     /**
      * Returns the XML excerpt for the node with <code>id</code>.
@@ -54,6 +55,7 @@ public interface ExcerptProvider {
      *         <code>id</code>.
      * @throws IOException if an error occurs while creating the excerpt.
      */
-    public String getExcerpt(NodeId id, int maxFragments, int maxFragmentSize)
-            throws IOException;
+    String getExcerpt(NodeId id, int maxFragments, int maxFragmentSize)
+        throws IOException;
+
 }

@@ -24,12 +24,13 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
  *
  * @since JCR 2.0
  */
-public interface Not
-        extends Constraint {
+public interface Not extends Constraint {
+
     /**
      * Gets the constraint negated by this <code>Not</code> constraint.
      *
      * @return the constraint; non-null
      */
-    public Constraint getConstraint();
+    Constraint getConstraint();
+
 }

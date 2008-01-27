@@ -31,14 +31,14 @@ public interface ClusterContext {
      *
      * @return cluster configuration
      */
-    public ClusterConfig getClusterConfig();
+    ClusterConfig getClusterConfig();
 
     /**
      * Return a namespace resolver to map prefixes to URIs and vice-versa
      *
      * @return namespace resolver
      */
-    public NamespaceResolver getNamespaceResovler();
+    NamespaceResolver getNamespaceResovler();
 
     /**
      * Notifies the cluster context that some workspace update events are available
@@ -47,7 +47,7 @@ public interface ClusterContext {
      * @param workspace workspace name
      * @throws RepositoryException if the context is unable to provide the listener
      */
-    public void updateEventsReady(String workspace) throws RepositoryException;
+    void updateEventsReady(String workspace) throws RepositoryException;
 
     /**
      * Notifies the cluster context that some workspace lock events are available
@@ -56,5 +56,6 @@ public interface ClusterContext {
      * @param workspace workspace name
      * @throws RepositoryException if the context is unable to provide the listener
      */
-    public void lockEventsReady(String workspace) throws RepositoryException;
+    void lockEventsReady(String workspace) throws RepositoryException;
+
 }

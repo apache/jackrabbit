@@ -37,19 +37,20 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
  *
  * @since JCR 2.0
  */
-public interface ChildNodeJoinCondition
-        extends JoinCondition {
+public interface ChildNodeJoinCondition extends JoinCondition {
+
     /**
      * Gets the name of the child selector.
      *
      * @return the selector name; non-null
      */
-    public String getChildSelectorName();
+    String getChildSelectorName();
 
     /**
      * Gets the name of the parent selector.
      *
      * @return the selector name; non-null
      */
-    public String getParentSelectorName();
+    String getParentSelectorName();
+
 }

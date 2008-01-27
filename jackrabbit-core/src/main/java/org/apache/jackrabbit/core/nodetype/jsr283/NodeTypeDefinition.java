@@ -46,7 +46,7 @@ public interface NodeTypeDefinition {
      *
      * @return a <code>String</code>
      */
-    public String getName();
+    String getName();
 
     /**
      * Returns the names of the supertypes actually declared in this node type.
@@ -59,7 +59,7 @@ public interface NodeTypeDefinition {
      *
      * @return an array of <code>String</code>s
      */
-    public String[] getDeclaredSupertypeNames();
+    String[] getDeclaredSupertypeNames();
 
     /**
      * Returns <code>true</code> if this is an abstract node type; returns
@@ -76,7 +76,7 @@ public interface NodeTypeDefinition {
      *
      * @return a <code>boolean</code>
      */
-    public boolean isAbstract();
+    boolean isAbstract();
 
     /**
      * Returns <code>true</code> if this is a mixin type; returns
@@ -89,7 +89,7 @@ public interface NodeTypeDefinition {
      *
      * @return a <code>boolean</code>
      */
-    public boolean isMixin();
+    boolean isMixin();
 
     /**
      * Returns <code>true</code> if nodes of this type must support orderable
@@ -108,7 +108,7 @@ public interface NodeTypeDefinition {
      *
      * @return a <code>boolean</code>
      */
-    public boolean hasOrderableChildNodes();
+    boolean hasOrderableChildNodes();
 
     /**
      * Returns the name of the primary item (one of the child items of the nodes
@@ -123,7 +123,7 @@ public interface NodeTypeDefinition {
      *
      * @return a <code>String</code>
      */
-    public String getPrimaryItemName();
+    String getPrimaryItemName();
 
     /**
      * Returns an array containing the property definitions actually declared in
@@ -136,7 +136,7 @@ public interface NodeTypeDefinition {
      *
      * @return an array of <code>PropertyDefinition</code>s
      */
-    public PropertyDefinition[] getDeclaredPropertyDefinitions();
+    PropertyDefinition[] getDeclaredPropertyDefinitions();
 
     /**
      * Returns an array containing the child node definitions actually declared
@@ -149,5 +149,6 @@ public interface NodeTypeDefinition {
      *
      * @return an array of <code>NodeDefinition</code>s
      */
-    public NodeDefinition[] getDeclaredChildNodeDefinitions();
+    NodeDefinition[] getDeclaredChildNodeDefinitions();
+
 }

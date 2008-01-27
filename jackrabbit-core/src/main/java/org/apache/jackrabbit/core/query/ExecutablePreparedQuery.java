@@ -37,6 +37,7 @@ public interface ExecutablePreparedQuery extends ExecutableQuery {
      *                                       valid variable in this query.
      * @throws javax.jcr.RepositoryException if an error occurs.
      */
-    public void bindValue(Name varName, Value value)
-            throws IllegalArgumentException, RepositoryException;
+    void bindValue(Name varName, Value value)
+        throws IllegalArgumentException, RepositoryException;
+
 }

@@ -38,49 +38,49 @@ public interface NodeDefinitionTemplate extends NodeDefinition {
      *
      * @param name a <code>String</code>.
      */
-    public void setName(String name);
+    void setName(String name);
 
     /**
      * Sets the auto-create status of the node.
      *
      * @param autoCreated a <code>boolean</code>.
      */
-    public void setAutoCreated(boolean autoCreated);
+    void setAutoCreated(boolean autoCreated);
 
     /**
      * Sets the mandatory status of the node.
      *
      * @param mandatory a <code>boolean</code>.
      */
-    public void setMandatory(boolean mandatory);
+    void setMandatory(boolean mandatory);
 
     /**
      * Sets the on-parent-version status of the node.
      *
      * @param opv an <code>int</code> constant member of <code>OnParentVersionAction</code>.
      */
-    public void setOnParentVersion(int opv);
+    void setOnParentVersion(int opv);
 
     /**
      * Sets the protected status of the node.
      *
      * @param protectedStatus a <code>boolean</code>.
      */
-    public void setProtected(boolean protectedStatus);
+    void setProtected(boolean protectedStatus);
 
     /**
      * Sets the required primary types of this node.
      *
      * @param requiredPrimaryTypes a <code>String</code> array.
      */
-    public void setRequiredPrimaryTypes(String[] requiredPrimaryTypes);
+    void setRequiredPrimaryTypes(String[] requiredPrimaryTypes);
 
     /**
      * Sets the default primary type of this node.
      *
      * @param defaultPrimaryType a <code>String</code>.
      */
-    public void setDefaultPrimaryType(String defaultPrimaryType);
+    void setDefaultPrimaryType(String defaultPrimaryType);
 
 
     /**
@@ -88,5 +88,6 @@ public interface NodeDefinitionTemplate extends NodeDefinition {
      *
      * @param allowSameNameSiblings a <code>boolean</code>.
      */
-    public void setSameNameSiblings(boolean allowSameNameSiblings);
+    void setSameNameSiblings(boolean allowSameNameSiblings);
+
 }

@@ -88,12 +88,13 @@ public interface VirtualItemStateProvider extends ItemStateManager {
      * Add an <code>ItemStateListener</code>
      * @param listener the new listener to be informed on modifications
      */
-    public void addListener(ItemStateListener listener);
+    void addListener(ItemStateListener listener);
 
     /**
      * Remove an <code>ItemStateListener</code>
      *
      * @param listener an existing listener
      */
-    public void removeListener(ItemStateListener listener);
+    void removeListener(ItemStateListener listener);
+
 }

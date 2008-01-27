@@ -34,7 +34,7 @@ public interface LockEventListener {
      * @param userId user id
      * @throws RepositoryException if the lock cannot be processed
      */
-    public void externalLock(NodeId nodeId, boolean isDeep, String userId) throws RepositoryException;
+    void externalLock(NodeId nodeId, boolean isDeep, String userId) throws RepositoryException;
 
     /**
      * Handle an external unlock operation.
@@ -42,5 +42,6 @@ public interface LockEventListener {
      * @param nodeId node id
      * @throws RepositoryException if the unlock cannot be processed
      */
-    public void externalUnlock(NodeId nodeId) throws RepositoryException;
+    void externalUnlock(NodeId nodeId) throws RepositoryException;
+
 }

@@ -55,33 +55,34 @@ import org.apache.jackrabbit.core.query.jsr283.PreparedQuery;
  *
  * @since JCR 2.0
  */
-public interface QueryObjectModel
-        extends PreparedQuery {
+public interface QueryObjectModel extends PreparedQuery {
+
     /**
      * Gets the node-tuple source for this query.
      *
      * @return the node-tuple source; non-null
      */
-    public Source getSource();
+    Source getSource();
 
     /**
      * Gets the constraint for this query.
      *
      * @return the constraint, or null if none
      */
-    public Constraint getConstraint();
+    Constraint getConstraint();
 
     /**
      * Gets the orderings for this query.
      *
      * @return an array of zero or more orderings; non-null
      */
-    public Ordering[] getOrderings();
+    Ordering[] getOrderings();
 
     /**
      * Gets the columns for this query.
      *
      * @return an array of zero or more columns; non-null
      */
-    public Column[] getColumns();
+    Column[] getColumns();
+
 }

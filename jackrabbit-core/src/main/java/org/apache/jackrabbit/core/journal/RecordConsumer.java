@@ -27,26 +27,27 @@ public interface RecordConsumer {
      *
      * @return unique identifier
      */
-    public String getId();
+    String getId();
 
     /**
      * Return the revision this consumer has last seen.
      *
      * @return revision
      */
-    public long getRevision();
+    long getRevision();
 
     /**
      * Consume a record.
      *
      * @param  record record to consume
      */
-    public void consume(Record record);
+    void consume(Record record);
 
     /**
      * Set the revision this consumer has last seen.
      *
      * @param revision revision
      */
-    public void setRevision(long revision);
+    void setRevision(long revision);
+
 }

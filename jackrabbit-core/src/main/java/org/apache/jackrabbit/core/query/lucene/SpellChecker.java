@@ -34,7 +34,7 @@ public interface SpellChecker {
      * @throws IOException if an error occurs while initializing the spell
      *                     checker.
      */
-    public void init(QueryHandler handler) throws IOException;
+    void init(QueryHandler handler) throws IOException;
 
     /**
      * Runs the spell checker over the first spellcheck relation query node in
@@ -49,10 +49,11 @@ public interface SpellChecker {
      *         determines that the fulltext query statement is spelled
      *         correctly.
      */
-    public String check(QueryRootNode aqt) throws IOException;
+    String check(QueryRootNode aqt) throws IOException;
 
     /**
      * Closes this spell checker and allows it to free resources.
      */
-    public void close();
+    void close();
+
 }

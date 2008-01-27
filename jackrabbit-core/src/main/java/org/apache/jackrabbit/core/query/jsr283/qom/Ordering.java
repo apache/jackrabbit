@@ -59,21 +59,23 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
  * @since JCR 2.0
  */
 public interface Ordering {
+
     /**
      * The operand by which to order.
      *
      * @return the operand; non-null
      */
-    public DynamicOperand getOperand();
+    DynamicOperand getOperand();
 
     /**
      * Gets the order.
      *
      * @return either
      *         <ul>
-     *         <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#ORDER_ASCENDING} or</li>
-     *         <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#ORDER_DESCENDING}</li>
+     *         <li>{@link QueryObjectModelConstants#ORDER_ASCENDING} or</li>
+     *         <li>{@link QueryObjectModelConstants#ORDER_DESCENDING}</li>
      *         </ul>
      */
-    public int getOrder();
+    int getOrder();
+
 }

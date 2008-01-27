@@ -31,5 +31,6 @@ public interface Transformable extends TransformConstants {
      * </ul>
      * @param transformation a transform constant.
      */
-    public void setTransformation(int transformation);
+    void setTransformation(int transformation);
+
 }

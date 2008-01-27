@@ -37,7 +37,7 @@ public interface SynonymProvider {
      * @throws IOException if an error occurs while initializing the synonym
      *                     provider.
      */
-    public void initialize(FileSystemResource fsr) throws IOException;
+    void initialize(FileSystemResource fsr) throws IOException;
 
     /**
      * Returns an array of terms that are considered synonyms for the given
@@ -47,5 +47,6 @@ public interface SynonymProvider {
      * @return an array of synonyms for the given <code>term</code> or an empty
      *         array if no synonyms are known.
      */
-    public String[] getSynonyms(String term);
+    String[] getSynonyms(String term);
+
 }

@@ -31,7 +31,7 @@ public interface Update {
      * @param name attribute name
      * @param value attribute value
      */
-    public void setAttribute(String name, Object value);
+    void setAttribute(String name, Object value);
 
     /**
      * Return an attribute of this update operation.
@@ -39,18 +39,19 @@ public interface Update {
      * @param name attribute name
      * @return attribute value or <code>null</code>
      */
-    public Object getAttribute(String name);
+    Object getAttribute(String name);
 
     /**
      * Return the local changes of this update operation.
      *
      * @return local changes
      */
-    public ChangeLog getChanges();
+    ChangeLog getChanges();
 
     /**
      * Return the collection of events this update operation will
      * generate.
      */
-    public EventStateCollection getEvents();
+    EventStateCollection getEvents();
+
 }

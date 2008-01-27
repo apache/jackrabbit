@@ -28,12 +28,13 @@ public interface NamespaceEventChannel {
      * @param newPrefix new prefix. if <code>null</code> this is an unmap operation
      * @param uri uri to map prefix to
      */
-    public void remapped(String oldPrefix, String newPrefix, String uri);
+    void remapped(String oldPrefix, String newPrefix, String uri);
 
     /**
      * Set listener that will receive information about incoming, external namespace events.
      *
      * @param listener namespace event listener
      */
-    public void setListener(NamespaceEventListener listener);
+    void setListener(NamespaceEventListener listener);
+
 }

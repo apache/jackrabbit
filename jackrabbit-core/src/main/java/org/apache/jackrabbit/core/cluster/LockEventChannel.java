@@ -34,7 +34,7 @@ public interface LockEventChannel {
      * @return cluster operation or <code>null</code> if the cluster node
      *         is not started or some error occurs
      */
-    public ClusterOperation create(NodeId nodeId, boolean deep, String owner);
+    ClusterOperation create(NodeId nodeId, boolean deep, String owner);
 
     /**
      * Create a new cluster operation  that should be used to inform other
@@ -44,12 +44,13 @@ public interface LockEventChannel {
      * @return cluster operation or <code>null</code> if the cluster node
      *         is not started or some error occurs
      */
-    public ClusterOperation create(NodeId nodeId);
+    ClusterOperation create(NodeId nodeId);
 
     /**
      * Set listener that will receive information about incoming, external lock events.
      *
      * @param listener lock event listener
      */
-    public void setListener(LockEventListener listener);
+    void setListener(LockEventListener listener);
+
 }

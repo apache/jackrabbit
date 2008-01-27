@@ -22,63 +22,65 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
  * @since JCR 2.0
  */
 public interface QueryObjectModelConstants {
+
     /**
      * An inner join.
      */
-    public static final int JOIN_TYPE_INNER = 101;
+    int JOIN_TYPE_INNER = 101;
 
     /**
      * A left-outer join.
      */
-    public static final int JOIN_TYPE_LEFT_OUTER = 102;
+    int JOIN_TYPE_LEFT_OUTER = 102;
 
     /**
      * A right-outer join.
      */
-    public static final int JOIN_TYPE_RIGHT_OUTER = 103;
+    int JOIN_TYPE_RIGHT_OUTER = 103;
 
     /**
      * The "<code>=</code>" comparison operator.
      */
-    public static final int OPERATOR_EQUAL_TO = 201;
+    int OPERATOR_EQUAL_TO = 201;
 
     /**
      * The "<code>!=</code>" comparison operator.
      */
-    public static final int OPERATOR_NOT_EQUAL_TO = 202;
+    int OPERATOR_NOT_EQUAL_TO = 202;
 
     /**
      * The "<code>&lt;</code>" comparison operator.
      */
-    public static final int OPERATOR_LESS_THAN = 203;
+    int OPERATOR_LESS_THAN = 203;
 
     /**
      * The "<code>&lt;=</code>" comparison operator.
      */
-    public static final int OPERATOR_LESS_THAN_OR_EQUAL_TO = 204;
+    int OPERATOR_LESS_THAN_OR_EQUAL_TO = 204;
 
     /**
      * The "<code>&gt;</code>" comparison operator.
      */
-    public static final int OPERATOR_GREATER_THAN = 205;
+    int OPERATOR_GREATER_THAN = 205;
 
     /**
      * The "<code>&gt;=</code>" comparison operator.
      */
-    public static final int OPERATOR_GREATER_THAN_OR_EQUAL_TO = 206;
+    int OPERATOR_GREATER_THAN_OR_EQUAL_TO = 206;
 
     /**
      * The "<code>like</code>" comparison operator.
      */
-    public static final int OPERATOR_LIKE = 207;
+    int OPERATOR_LIKE = 207;
 
     /**
      * Ascending order.
      */
-    public static final int ORDER_ASCENDING = 301;
+    int ORDER_ASCENDING = 301;
 
     /**
      * Descending order.
      */
-    public static final int ORDER_DESCENDING = 302;
+    int ORDER_DESCENDING = 302;
+
 }

@@ -55,26 +55,27 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
  *
  * @since JCR 2.0
  */
-public interface SameNodeJoinCondition
-        extends JoinCondition {
+public interface SameNodeJoinCondition extends JoinCondition {
+
     /**
      * Gets the name of the first selector.
      *
      * @return the selector name; non-null
      */
-    public String getSelector1Name();
+    String getSelector1Name();
 
     /**
      * Gets the name of the second selector.
      *
      * @return the selector name; non-null
      */
-    public String getSelector2Name();
+    String getSelector2Name();
 
     /**
      * Gets the path relative to the second selector.
      *
      * @return the relative path, or null for none
      */
-    public String getSelector2Path();
+    String getSelector2Path();
+
 }

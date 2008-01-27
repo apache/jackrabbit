@@ -24,19 +24,20 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
  *
  * @since JCR 2.0
  */
-public interface And
-        extends Constraint {
+public interface And extends Constraint {
+
     /**
      * Gets the first constraint.
      *
      * @return the constraint; non-null
      */
-    public Constraint getConstraint1();
+    Constraint getConstraint1();
 
     /**
      * Gets the second constraint.
      *
      * @return the constraint; non-null
      */
-    public Constraint getConstraint2();
+    Constraint getConstraint2();
+
 }

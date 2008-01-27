@@ -26,33 +26,34 @@ public interface UpdateEventChannel {
      *
      * @param update update operation
      */
-    public void updateCreated(Update update);
+    void updateCreated(Update update);
 
     /**
      * Called when an a update operation has been prepared.
      *
      * @param update update operation
      */
-    public void updatePrepared(Update update);
+    void updatePrepared(Update update);
 
     /**
      * Called when an a update operation has been committed.
      *
      * @param update update operation
      */
-    public void updateCommitted(Update update);
+    void updateCommitted(Update update);
 
     /**
      * Called when an a update operation has been cancelled.
      *
      * @param update update operation
      */
-    public void updateCancelled(Update update);
+    void updateCancelled(Update update);
 
     /**
      * Set listener that will receive information about incoming, external update events.
      *
      * @param listener update event listener
      */
-    public void setListener(UpdateEventListener listener);
+    void setListener(UpdateEventListener listener);
+
 }

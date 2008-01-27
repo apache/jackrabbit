@@ -35,8 +35,8 @@ public interface NodeTypeEventListener {
      * @throws RepositoryException if an error occurs
      * @throws InvalidNodeTypeDefException if the node type definition is invalid
      */
-    public void externalRegistered(Collection ntDefs)
-            throws RepositoryException, InvalidNodeTypeDefException;
+    void externalRegistered(Collection ntDefs)
+        throws RepositoryException, InvalidNodeTypeDefException;
 
     /**
      * Called when a node type has been externally re-registered.
@@ -46,7 +46,7 @@ public interface NodeTypeEventListener {
      * @throws NoSuchNodeTypeException if the node type had not yet been registered
      * @throws InvalidNodeTypeDefException if the node type definition is invalid
      */
-    public void externalReregistered(NodeTypeDef ntDef)
+    void externalReregistered(NodeTypeDef ntDef)
         throws NoSuchNodeTypeException, InvalidNodeTypeDefException, RepositoryException;
 
     /**
@@ -56,6 +56,7 @@ public interface NodeTypeEventListener {
      * @throws RepositoryException if an error occurs
      * @throws NoSuchNodeTypeException if a node type is already unregistered
      */
-    public void externalUnregistered(Collection ntNames)
+    void externalUnregistered(Collection ntNames)
         throws RepositoryException, NoSuchNodeTypeException;
+
 }

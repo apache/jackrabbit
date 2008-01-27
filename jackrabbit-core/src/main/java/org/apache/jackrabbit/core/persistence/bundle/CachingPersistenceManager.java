@@ -30,6 +30,6 @@ public interface CachingPersistenceManager {
      *
      * @param changes the set of changes of the external modification.
      */
-    public void onExternalUpdate(ChangeLog changes);
+    void onExternalUpdate(ChangeLog changes);
 
 }
