@@ -26,7 +26,7 @@ public interface LockEventChannel {
     /**
      * Create a new cluster operation that should be used to inform other
      * instances in the cluster. Called when a node is about to be
-     * locked. 
+     * locked.
      *
      * @param nodeId node id
      * @param deep flag indicating whether lock is deep

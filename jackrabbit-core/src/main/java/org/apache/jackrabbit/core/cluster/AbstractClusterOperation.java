@@ -78,7 +78,7 @@ abstract class AbstractClusterOperation implements ClusterOperation {
      * @throws JournalException if an error occurs
      */
     protected abstract void write() throws JournalException;
-    
+
     /**
      * {@inheritDoc}
      */

@@ -41,7 +41,7 @@ class LockOperation extends AbstractClusterOperation {
     private String owner;
 
     /**
-     * Flag indicating whether this is a lock. 
+     * Flag indicating whether this is a lock.
      */
     private boolean isLock;
 

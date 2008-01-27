@@ -64,7 +64,7 @@ import javax.jcr.RepositoryException;
  * <pre>
  * &lt;param name="driver" value="javax.naming.InitialContext" />
  * &lt;param name="url" value="java:comp/env/jdbc/Test" />
- * </pre> * 
+ * </pre> *
  * </ul>
  */
 public class DatabaseJournal extends AbstractJournal {
@@ -149,7 +149,7 @@ public class DatabaseJournal extends AbstractJournal {
      * Statement appending a new record.
      */
     private PreparedStatement insertRevisionStmt;
-    
+
     /**
      * Auto commit level.
      */
@@ -275,7 +275,7 @@ public class DatabaseJournal extends AbstractJournal {
             return ConnectionFactory.getConnection(driver, url, user, password);
         } catch (RepositoryException e) {
             String msg = "Unable to load driver class.";
-            throw new JournalException(msg, e);        
+            throw new JournalException(msg, e);
         }
     }
 
@@ -494,7 +494,7 @@ public class DatabaseJournal extends AbstractJournal {
             }
         }
     }
-    
+
     /**
      * Rollback a connection. Does nothing if the connection passed is
      * <code>null</code> and logs any exception as warning.
