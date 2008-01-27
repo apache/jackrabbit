@@ -417,7 +417,7 @@ public class AnnotationMapperImplTest extends TestCase {
 	/**
 	 * Test interface setting
 	 */
-	public void testInterfaceWithoutDiscriminator() 
+	public void testInterfaceWithoutDiscriminator()
 	{
 		try {
 			Mapper mapper = getMapper();
@@ -455,7 +455,7 @@ public class AnnotationMapperImplTest extends TestCase {
 			assertEquals("Invalid number of implemented interface", classDescriptor.getImplements().size(), 1);				
 			assertFalse("Invalid extend strategy", classDescriptor.usesNodeTypePerHierarchyStrategy());
 			assertTrue("Invalid extend strategy", classDescriptor.usesNodeTypePerConcreteClassStrategy());
-      
+
 			
 		} catch (JcrMappingException e) {
 			e.printStackTrace();
@@ -464,7 +464,7 @@ public class AnnotationMapperImplTest extends TestCase {
 	}
 
 	/**
-	 * 
+	 *
 	 * Test Node Type per concrete class setting
 	 */
 	public void testProxy() {
@@ -484,7 +484,7 @@ public class AnnotationMapperImplTest extends TestCase {
 		}
 	}
 	
-	private Mapper getMapper() 
+	private Mapper getMapper()
 	{
 		List<Class> classes = new ArrayList<Class>();
 		classes.add( org.apache.jackrabbit.ocm.testmodel.A.class);

@@ -78,11 +78,11 @@ class ClassLoaderResource {
      * the repository.
      */
     private final long loadTime;
-    
+
     /**
      * Flag indicating that this resource has already been checked for expiry
      * and whether it is actually expired.
-     * 
+     *
      * @see #isExpired()
      */
     private boolean expired;
@@ -208,7 +208,7 @@ class ClassLoaderResource {
         // the property
         return getSafePath();
     }
-    
+
     /**
      * Returns the path of the property containing the resource by appending
      * the {@link #getName() name} to the path of the class path entry to which
@@ -361,10 +361,10 @@ class ClassLoaderResource {
                     currentPropTime = System.currentTimeMillis();
                 }
             }
-    
+
             // creation time of version currently loaded
             long loadTime = getLoadTime();
-    
+
             // expire if a new version would be loaded
             expired = currentPropTime > loadTime;
             if (expired && log.isDebugEnabled()) {
@@ -373,7 +373,7 @@ class ClassLoaderResource {
                     new Date(loadTime), new Date(currentPropTime));
             }
         }
-        
+
         return expired;
     }
 

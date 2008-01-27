@@ -71,7 +71,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
         this.name = name;
         this.factory = factory;
     }
-    
+
     /**
      * Resolves this <code>HierarchyEntryImpl</code> and returns the target
      * <code>ItemState</code> of this reference. This method may return a
@@ -129,7 +129,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     abstract Path buildPath(boolean workspacePath) throws RepositoryException;
 
     /**
-     * 
+     *
      * @return
      */
     ItemState internalGetItemState() {

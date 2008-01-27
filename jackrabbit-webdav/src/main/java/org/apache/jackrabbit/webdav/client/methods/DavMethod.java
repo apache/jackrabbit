@@ -83,7 +83,7 @@ public interface DavMethod extends HttpMethod {
     public DavException getResponseException() throws IOException;
 
     /**
-     * 
+     *
      * @throws DavException
      * @throws IOException
      */

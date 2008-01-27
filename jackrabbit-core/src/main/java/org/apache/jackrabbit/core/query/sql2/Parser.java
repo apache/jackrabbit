@@ -71,10 +71,10 @@ public class Parser {
 
     // The bind variables
     private HashMap bindVariables;
-    
+
     // The list of selectors of this query
     private ArrayList selectors;
-    
+
     // SQL injection protection: if disabled, literals are not allowed
     private boolean allowTextLiterals = true, allowNumberLiterals = true;
 
@@ -83,7 +83,7 @@ public class Parser {
 
     /**
      * Create a new parser. A parser can be re-used, but it is not thread safe.
-     * 
+     *
      * @param factory the query object model factory
      * @param valueFactory the value factory
      */
@@ -94,7 +94,7 @@ public class Parser {
 
     /**
      * Parse a JCR-SQL2 query and return the prepared query.
-     * 
+     *
      * @param query the query string
      * @return the prepared query
      * @throws RepositoryException if parsing failed
@@ -121,7 +121,7 @@ public class Parser {
             orderings = parseOrder();
         }
         return factory.createQuery(source, constraint, orderings, columnArray);
-    }    
+    }
 
     // Page 127
     private Selector parseSelector() throws RepositoryException {
@@ -133,7 +133,7 @@ public class Parser {
             return factory.selector(nodeTypeName);
         }
     }
-    
+
     // Page 128
     private String readName() throws RepositoryException {
         if (readIf("[")) {
@@ -161,7 +161,7 @@ public class Parser {
             return readAny();
         }
     }
-    
+
     // Page 129
     private Source parseSource() throws RepositoryException {
         Selector selector = parseSelector();
@@ -189,7 +189,7 @@ public class Parser {
         }
         return source;
     }
-    
+
     // Page 130
     private JoinCondition parseJoinCondition() throws RepositoryException {
         boolean identifier = currentTokenType == IDENTIFIER;
@@ -228,7 +228,7 @@ public class Parser {
             return factory.equiJoinCondition(selector1, property1, selector2, readName());
         }
     }
-    
+
     // Page 136
     private Constraint parseConstraint() throws RepositoryException {
         Constraint a = parseAnd();
@@ -245,7 +245,7 @@ public class Parser {
         }
         return a;
     }
-    
+
     // Page 138
     private Constraint parseCondition() throws RepositoryException {
         Constraint a;
@@ -272,7 +272,7 @@ public class Parser {
         }
         return a;
     }
-    
+
     // Page 141
     private Constraint parseCondition(DynamicOperand left) throws RepositoryException {
         Constraint c;
@@ -336,7 +336,7 @@ public class Parser {
         }
         return c;
     }
-    
+
     private PropertyExistence getPropertyExistence(PropertyValue p) throws InvalidQueryException, RepositoryException {
         if (p.getSelectorName() == null) {
             return factory.propertyExistence(p.getPropertyName());
@@ -344,7 +344,7 @@ public class Parser {
             return factory.propertyExistence(p.getSelectorName(), p.getPropertyName());
         }
     }
-    
+
     // Page 144
     private Constraint parseConditionFuntionIf(String functionName) throws RepositoryException {
         Constraint c;
@@ -391,15 +391,15 @@ public class Parser {
         read(")");
         return c;
     }
-    
+
     // Page 148
     private String readPath() throws RepositoryException {
         return readName();
     }
-    
+
     // Page 149
     private DynamicOperand parseDynamicOperand() throws RepositoryException {
-        boolean identifier = currentTokenType == IDENTIFIER;        
+        boolean identifier = currentTokenType == IDENTIFIER;
         String name = readName();
         if (identifier && readIf("(")) {
             return parseExpressionFunction(name);
@@ -407,7 +407,7 @@ public class Parser {
             return parsePropertyValue(name);
         }
     }
-    
+
     private DynamicOperand parseExpressionFunction(String functionName) throws RepositoryException {
         DynamicOperand op;
         if ("LENGTH".equals(functionName)) {
@@ -440,7 +440,7 @@ public class Parser {
         read(")");
         return op;
     }
-    
+
     // Page 150
     private PropertyValue parsePropertyValue(String name) throws RepositoryException {
         if (readIf(".")) {
@@ -449,7 +449,7 @@ public class Parser {
             return factory.propertyValue(name);
         }
     }
-    
+
     // Page 155
     private StaticOperand parseStaticOperand() throws RepositoryException {
         if (currentTokenType == PLUS) {
@@ -467,7 +467,7 @@ public class Parser {
                 // TODO decimal
                 throw getSyntaxError("number");
             }
-        } 
+        }
         if (currentTokenType == VALUE) {
             Literal literal = factory.literal(currentValue);
             read();
@@ -510,10 +510,10 @@ public class Parser {
         orderList.toArray(orderings);
         return orderings;
     }
-    
+
     // Page 159
     private ArrayList parseColumns() throws RepositoryException {
-        ArrayList list = new ArrayList();        
+        ArrayList list = new ArrayList();
         if (readIf("*")) {
             list.add(new ColumnOrWildcard());
         } else {
@@ -540,7 +540,7 @@ public class Parser {
         }
         return list;
     }
-    
+
     private Column[] resolveColumns(ArrayList list) throws RepositoryException {
         ArrayList columns = new ArrayList();
         for (int i = 0; i < list.size(); i++) {
@@ -572,7 +572,7 @@ public class Parser {
         columns.toArray(array);
         return array;
     }
-    
+
     private boolean readIf(String token) throws RepositoryException {
         if (isToken(token)) {
             read();
@@ -618,7 +618,7 @@ public class Parser {
         String s = currentValue.getString();
         read();
         return s;
-    }    
+    }
 
     private void addExpected(String token) {
         if (expected != null) {
@@ -725,7 +725,7 @@ public class Parser {
             throw getSyntaxError();
         }
     }
-    
+
     private void read() throws RepositoryException {
         currentTokenQuoted = false;
         if (expected != null) {
@@ -881,7 +881,7 @@ public class Parser {
             throw getSyntaxError();
         }
     }
-    
+
     private void checkLiterals(boolean text) throws InvalidQueryException {
         if (text && !allowTextLiterals || (!text && !allowNumberLiterals)) {
             throw getSyntaxError("bind variable (literals of this type not allowed)");
@@ -923,7 +923,7 @@ public class Parser {
         currentValue = valueFactory.createValue(bd.doubleValue());
         currentTokenType = VALUE;
     }
-    
+
     private InvalidQueryException getSyntaxError() {
         if (expected == null || expected.size() == 0) {
             return getSyntaxError(null);
@@ -938,7 +938,7 @@ public class Parser {
             return getSyntaxError(buff.toString());
         }
     }
-    
+
     private InvalidQueryException getSyntaxError(String expected) {
         int index = Math.min(parseIndex, statement.length() - 1);
         String query = statement.substring(0, index) + ">*<" + statement.substring(index).trim();
@@ -946,12 +946,12 @@ public class Parser {
             query += "; expected: " + expected;
         }
         return new InvalidQueryException("Query:\n" + query);
-    }    
-    
+    }
+
     private static class ColumnOrWildcard {
         String selectorName;
         String propertyName;
         String columnName;
     }
-    
+
 }

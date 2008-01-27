@@ -24,7 +24,7 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
 import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 
 @Node(jcrType="ocm:ntmain")
-public class NTMain 
+public class NTMain
 {
 
 	@Field(path=true) private String path;
@@ -46,5 +46,5 @@ public class NTMain
 		this.proxyCollection = proxyCollection;
 	}
 
-     
+
 }

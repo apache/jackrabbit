@@ -97,7 +97,7 @@ public class Restore extends AbstractOperation {
      * if the state returned by {@link #getNodeState()} is the target.
      *
      * @return
-     * @see javax.jcr.Node#restore(Version, String, boolean) 
+     * @see javax.jcr.Node#restore(Version, String, boolean)
      */
     public Path getRelativePath() {
         return relQPath;

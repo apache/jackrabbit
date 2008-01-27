@@ -40,7 +40,7 @@ import java.lang.ref.Reference;
 
 /**
  * <code>ChildNodeEntriesImpl</code> implements a memory sensitive implementation
- * of the <code>ChildNodeEntries</code> interface. 
+ * of the <code>ChildNodeEntries</code> interface.
  */
 final class ChildNodeEntriesImpl implements ChildNodeEntries {
 
@@ -591,7 +591,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
 
         /**
          * Return true if more than one NodeEnty with the given name exists.
-         * 
+         *
          * @param qName
          * @return
          */

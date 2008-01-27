@@ -363,7 +363,7 @@ public interface Path extends Serializable {
          * in the format "<code>{namespaceURI}localPart</code>" or
          * "<code>{namespaceURI}localPart[index]</code>" in case of an index
          * greater than {@link Path#INDEX_DEFAULT}.
-         * 
+         *
          * @return
          */
         public String getString();

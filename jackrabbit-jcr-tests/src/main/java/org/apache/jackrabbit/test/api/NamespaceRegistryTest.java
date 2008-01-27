@@ -139,7 +139,7 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
         assertEquals("Namespace URI was not registered.", namespaceUri, nsp.getURI(namespacePrefix));
 
         Item created;
-        
+
         try {
             created = testRootNode.addNode(namespacePrefix + ":root");
             testRootNode.save();

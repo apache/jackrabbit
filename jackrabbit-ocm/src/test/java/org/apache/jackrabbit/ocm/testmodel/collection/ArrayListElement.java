@@ -21,10 +21,10 @@ import java.util.Iterator;
 
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
 
-/** 
+/**
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
- * 
+ *
  */
 public class ArrayListElement extends ArrayList implements ManageableCollection
 {
@@ -47,12 +47,12 @@ public class ArrayListElement extends ArrayList implements ManageableCollection
     {
        return  this.iterator();
     }
-    
+
 	public int getSize()
 	{
 		
 		return this.size();
 	}
-    
+
 
 }

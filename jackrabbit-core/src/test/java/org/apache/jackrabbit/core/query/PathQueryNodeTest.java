@@ -37,7 +37,7 @@ public class PathQueryNodeTest extends TestCase {
         public String getPrefix(String uri) {
             throw new UnsupportedOperationException();
         }
-        
+
         public String getURI(String prefix) {
             if (Name.NS_JCR_PREFIX.equals(prefix))
                 return Name.NS_JCR_URI;

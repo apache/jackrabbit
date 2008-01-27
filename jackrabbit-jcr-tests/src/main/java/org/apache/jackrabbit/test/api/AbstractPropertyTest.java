@@ -46,7 +46,7 @@ abstract class AbstractPropertyTest extends AbstractJCRTest {
      * values defined in {@link javax.jcr.PropertyType}.
      */
     protected abstract int getPropertyType();
-    
+
     /**
      * Concrete subclasses return the multivalued-ness of property they test.
      * (<code>null</code>: does not matter)
@@ -84,8 +84,8 @@ abstract class AbstractPropertyTest extends AbstractJCRTest {
         }
         super.cleanUp();
     }
-    
-    
+
+
     /**
      * Releases the session aquired in {@link #setUp()}.
      */

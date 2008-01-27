@@ -26,5 +26,5 @@ public class ArrayHitsTest extends TestCase {
         int doc = hits.skipTo(2);
         assertEquals(-1, doc);
     }
-    
+
 }

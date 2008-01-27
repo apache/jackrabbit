@@ -69,7 +69,7 @@ public class AnnotationRemoveTest extends DigesterTestBase
     {
         super.setUp();
 		this.importData(date);
-        
+
     }
 	
 

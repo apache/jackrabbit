@@ -28,7 +28,7 @@ import java.util.Map;
  * cache. The entries within the long term cache are discarded only when the
  * size of the cache exceeds the given maximum cache size.
  *
- * @deprecated Use the GenerationalCache class from 
+ * @deprecated Use the GenerationalCache class from
  *             the org.apache.jackrabbit.spi.commons.conversion package of
  *             the jackrabbit-spi-commons component.
  */

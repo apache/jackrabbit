@@ -51,7 +51,7 @@ public class NodeTypeImpl implements NodeType, NodeTypeDefinition {
     private final NodeTypeManagerImpl ntMgr;
     // resolver used to translate qualified names to JCR names
     private final NamePathResolver resolver;
-    private final DataStore store;    
+    private final DataStore store;
 
     /**
      * Package private constructor

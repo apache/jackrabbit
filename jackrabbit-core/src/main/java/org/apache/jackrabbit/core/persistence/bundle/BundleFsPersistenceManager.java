@@ -274,7 +274,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             throw new ItemStateException(msg, e);
         }
     }
-    
+
     /**
      * Creates the file path for the given node id that is
      * suitable for storing node states in a filesystem.
@@ -291,8 +291,8 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
         buf.append('.');
         buf.append(NODEFILENAME);
         return buf;
-    }    
-    
+    }
+
     /**
      * Creates the file path for the given references id that is
      * suitable for storing reference states in a filesystem.
@@ -310,7 +310,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
         buf.append('.');
         buf.append(NODEREFSFILENAME);
         return buf;
-    }    
+    }
 
     /**
      * {@inheritDoc}
@@ -532,10 +532,10 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             throw new ItemStateException(msg, e);
         }
     }
-    
+
     /**
      * {@inheritDoc}
-     */    
+     */
     protected UUID getUUIDFromFileName(String fileName) {
         StringBuffer buff = new StringBuffer(35);
         if (!fileName.endsWith("." + NODEFILENAME)) {
@@ -556,8 +556,8 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
         }
         String u = buff.toString();
         return new UUID(u);
-    }    
-    
+    }
+
     private void getListRecursive(ArrayList list, String path, UUID bigger,
             int maxCount) throws FileSystemException {
         if (maxCount > 0 && list.size() >= maxCount) {
@@ -587,7 +587,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
                     bigger, maxCount);
         }
     }
-    
+
     private static class FileNodeIdIterator implements NodeIdIterator {
 
         private final ArrayList list;
@@ -615,7 +615,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
         public void remove() {
             throw new UnsupportedOperationException();
         }
-        
+
     }
 
 }

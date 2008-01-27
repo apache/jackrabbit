@@ -95,7 +95,7 @@ public class DefaultItemResource extends AbstractItemResource {
      * Always returns 'now'
      *
      * @return
-     * @see DavResource#getModificationTime() 
+     * @see DavResource#getModificationTime()
      */
     public long getModificationTime() {
         return new Date().getTime();

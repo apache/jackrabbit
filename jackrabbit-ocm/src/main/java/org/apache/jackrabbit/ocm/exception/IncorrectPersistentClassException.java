@@ -24,8 +24,8 @@ package org.apache.jackrabbit.ocm.exception;
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
 public class IncorrectPersistentClassException extends JcrMappingException {
-   
-    
+
+
     public IncorrectPersistentClassException(String message, Throwable nested) {
         super(message, nested);
     }

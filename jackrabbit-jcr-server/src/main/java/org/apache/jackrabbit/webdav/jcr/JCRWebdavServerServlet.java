@@ -246,7 +246,7 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
     public static String getPathPrefix(ServletContext ctx) {
         return (String) ctx.getAttribute(CTX_ATTR_RESOURCE_PATH_PREFIX);
     }
-    
+
     /**
      * Returns the repository to be used by this servlet.
      */

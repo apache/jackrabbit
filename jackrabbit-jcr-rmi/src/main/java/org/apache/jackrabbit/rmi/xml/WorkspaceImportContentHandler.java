@@ -44,7 +44,7 @@ public class WorkspaceImportContentHandler extends ImportContentHandler {
     /**
      * Creates a SAX content handler for importing XML data to the given
      * workspace and path using the given UUID behavior.
-     * 
+     *
      * @param workspace repository workspace
      * @param path import content path
      * @param uuidBehaviour UUID behavior

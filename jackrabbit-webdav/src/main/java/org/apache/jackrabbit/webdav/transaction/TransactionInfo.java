@@ -74,7 +74,7 @@ public class TransactionInfo implements TransactionConstants, XmlSerializable {
         } else {
             log.warn("transactionInfo must contain a single 'transactionstatus' element.");
             throw new DavException(DavServletResponse.SC_BAD_REQUEST);
-        }     
+        }
     }
 
     /**

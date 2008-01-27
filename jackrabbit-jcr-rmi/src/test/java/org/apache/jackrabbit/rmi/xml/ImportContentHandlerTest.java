@@ -38,26 +38,26 @@ public class ImportContentHandlerTest extends TestCase {
         ch.startElement(null, "sample", "sample", null);
         ch.endElement(null, "sample", "sample");
         ch.endDocument();
-        
+
         byte[] xml = ch.getXML();
         assertNotNull("Serialized XML is null", xml);
         assertTrue("Serialized XML is empty", xml.length > 0);
-        
+
         // for the moment we don't actually care for the concrete contents
-    }        
-    
+    }
+
     private static class DummyImportContentHandler extends ImportContentHandler {
 
         private byte[] xml;
-        
+
         DummyImportContentHandler() throws RepositoryException {
             super();
         }
-        
+
         protected void importXML(byte[] xml) throws Exception {
             this.xml = xml;
         }
-        
+
         byte[] getXML() {
             return xml;
         }

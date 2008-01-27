@@ -47,7 +47,7 @@ public class ProxyRepository extends AbstractRepository {
     /**
      * Creates a proxy for the repository (or repositories) accessible
      * through the given factory.
-     * 
+     *
      * @param factory repository factory
      */
     public ProxyRepository(RepositoryFactory factory) {

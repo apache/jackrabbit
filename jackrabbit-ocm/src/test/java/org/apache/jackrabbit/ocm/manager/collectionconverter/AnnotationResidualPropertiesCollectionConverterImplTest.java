@@ -35,7 +35,7 @@ import org.apache.jackrabbit.ocm.testmodel.Residual;
  * Test ResidualPropertiesCollectionConverterImpl
  *
  * @author <a href="mailto:fmeschbe[at]apache[dot]com">Felix Meschberger</a>
- * 
+ *
  */
 public class AnnotationResidualPropertiesCollectionConverterImplTest extends AnnotationTestBase
 {
@@ -68,24 +68,24 @@ public class AnnotationResidualPropertiesCollectionConverterImplTest extends Ann
 
             Residual residual = new Residual.ResidualProperties();
             residual.setPath("/test");
-                        
+
             ocm.insert(residual);
             ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             residual = (Residual) ocm.getObject( "/test");
             assertNotNull("Object is null", residual);
             assertNull("Hashmap is not null", residual.getElements());
-            
+
             // --------------------------------------------------------------------------------
             // Update an object graph in the repository
             // --------------------------------------------------------------------------------
 
             residual = new Residual.ResidualProperties();
             residual.setPath("/test");
-            
+
             ManagedHashMap map = new ManagedHashMap();
             map.put("value1", "Value1");
             map.put("value2", "Value2");
@@ -93,22 +93,22 @@ public class AnnotationResidualPropertiesCollectionConverterImplTest extends Ann
             map.put("value4", "Value4");
             map.put("value5", Arrays.asList(new String[]{ "Value5-1", "Value5-2" }));
             residual.setElements(map);
-            
+
             ocm.update(residual);
             ocm.save();
-            
+
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             residual = (Residual) ocm.getObject( "/test");
             assertNotNull("Object is null", residual);
-            assertTrue("Incorrect number of values", residual.getElements().size() == 5);            
+            assertTrue("Incorrect number of values", residual.getElements().size() == 5);
             assertTrue("Incorrect collection element", residual.getElements().get("value2").equals("Value2"));
             assertNotNull("Missing collection element", residual.getElements().get("value5"));
             assertTrue("Incorrect collection element type", (residual.getElements().get("value5") instanceof List));
             assertEquals("Incorrect collection element list size", ((List) residual.getElements().get("value5")).size(), 2);
             assertEquals("Incorrect collection element list value", ((List) residual.getElements().get("value5")).get(0), "Value5-1");
-            
+
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
@@ -120,13 +120,13 @@ public class AnnotationResidualPropertiesCollectionConverterImplTest extends Ann
             map.put("value15", "Value15");
             map.put("value16", Arrays.asList(new String[]{ "Value16-1", "Value16-2" }));
             residual.setElements(map);
-            
+
             ocm.update(residual);
             ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
 
             residual = (Residual) ocm.getObject( "/test");
             assertNotNull("Object is null", residual);
@@ -144,8 +144,8 @@ public class AnnotationResidualPropertiesCollectionConverterImplTest extends Ann
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
 
-   
+
 }

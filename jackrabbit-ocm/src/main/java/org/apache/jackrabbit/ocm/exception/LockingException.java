@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.ocm.exception;
 
 /**
- * Base exception for all exceptions related to JCR Locking feature. 
- * 
+ * Base exception for all exceptions related to JCR Locking feature.
+ *
  * @author markoc
  */
 abstract public class LockingException extends ObjectContentManagerException {

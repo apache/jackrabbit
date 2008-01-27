@@ -56,7 +56,7 @@ public class MSSqlPersistenceManager extends BundleDbPersistenceManager {
 
     /**
      * Returns the configured MS SQL table space.
-     * 
+     *
      * @return the configured MS SQL table space.
      */
     public String getTableSpace() {
@@ -65,7 +65,7 @@ public class MSSqlPersistenceManager extends BundleDbPersistenceManager {
 
     /**
      * Sets the MS SQL table space.
-     * 
+     *
      * @param tableSpace the MS SQL table space.
      */
     public void setTableSpace(String tableSpace) {

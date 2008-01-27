@@ -27,7 +27,7 @@ import javax.jcr.lock.LockException;
  * Defines the functionality needed for locking and unlocking nodes.
  */
 public interface LockManager {
-    
+
     /**
      * Lock a node. Checks whether the node is not locked and then
      * returns a lock object for this node.

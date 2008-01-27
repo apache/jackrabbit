@@ -22,15 +22,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation allow to defined the implement descriptor on the class 
+ * This annotation allow to defined the implement descriptor on the class
  * level
- * 
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
- * 
+ *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface Implement 
+public @interface Implement
 {
-    Class interfaceName();    
+    Class interfaceName();
 }

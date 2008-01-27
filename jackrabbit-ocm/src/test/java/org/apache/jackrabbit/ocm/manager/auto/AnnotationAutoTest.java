@@ -77,28 +77,28 @@ public class AnnotationAutoTest extends DigesterTestBase {
 		//---------------------------------------------------------------------------------------------------------
 	    Folder  folder = new FolderImpl();
 	    folder.setPath("/folder2");
-	    folder.setName("folder2");        
+	    folder.setName("folder2");
 		
 	    Document document = new DocumentImpl();
 	    document.setPath("/folder2/document4");
 	    document.setName("document4");
-	    document.setContentType("plain/text"); 
+	    document.setContentType("plain/text");
 	    DocumentStream documentStream = new DocumentStream();
 	    documentStream.setEncoding("utf-8");
 	    documentStream.setContent("Test Content 4".getBytes());
-	    document.setDocumentStream(documentStream);       
+	    document.setDocumentStream(documentStream);
 
 	    Folder subFolder = new FolderImpl();
 	    subFolder.setName("subfolder");
 	    subFolder.setPath("/folder2/subfolder");
-	    	    	    
+	    	    	
 	    folder.addChild(document);
 	    folder.addChild(subFolder);
 	    ocm.insert(folder);               		
 		ocm.save();
 		
 		//---------------------------------------------------------------------------------------------------------	
-		// Retrieve folder2 
+		// Retrieve folder2
 		//---------------------------------------------------------------------------------------------------------	
 		Folder folder2 = (Folder) ocm.getObject( "/folder2");
 		assertNotNull("folder 2 is null", folder2);
@@ -112,14 +112,14 @@ public class AnnotationAutoTest extends DigesterTestBase {
 		ocm.save();
 		
 		//---------------------------------------------------------------------------------------------------------	
-		// Retrieve folder2 
+		// Retrieve folder2
 		//---------------------------------------------------------------------------------------------------------	
 		 folder2 = (Folder) ocm.getObject( "/folder2");
 		assertNotNull("folder 2 is null", folder2);
 		assertEquals("Invalid number of cms object  found in folder2 children", folder2.getChildren().size() ,0); // autoInsert = false
 
 		//---------------------------------------------------------------------------------------------------------	
-		// Retrieve children attribute 
+		// Retrieve children attribute
 		//---------------------------------------------------------------------------------------------------------			
 		ocm.retrieveMappedAttribute(folder2, "children");
 		assertNotNull("folder 2 is null", folder2);
@@ -128,14 +128,14 @@ public class AnnotationAutoTest extends DigesterTestBase {
 		assertTrue("Invalid item in the collection", this.contains(folder2.getChildren(), "/folder2/subfolder", FolderImpl.class));		
 		
 		//---------------------------------------------------------------------------------------------------------	
-		// Update 
+		// Update
 		//---------------------------------------------------------------------------------------------------------	
 		folder2.setChildren(null);
 		ocm.update(folder2); // autoupdate = false for the children attribute. So no update on the children collection
 		ocm.save();
 
 		//---------------------------------------------------------------------------------------------------------	
-		// Retrieve children attribute 
+		// Retrieve children attribute
 		//---------------------------------------------------------------------------------------------------------			
 		ocm.retrieveMappedAttribute(folder2, "children");
 		assertNotNull("folder 2 is null", folder2);

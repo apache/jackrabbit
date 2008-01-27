@@ -62,7 +62,7 @@ public class GetSupportedQueryLanguagesTest extends AbstractQueryTest {
      * Tests if all implementations return {@link Query#XPATH} with
      * {@link QueryManager#getSupportedQueryLanguages()}. Tests if repositores
      * that have the SQL descriptor set in the repository return {@link Query#SQL}.
-     */ 
+     */
     public void testGetSupportedQueryLanguages() throws RepositoryException {
         List langs = Arrays.asList(session.getWorkspace().getQueryManager().getSupportedQueryLanguages());
         // all repositories must support XPath

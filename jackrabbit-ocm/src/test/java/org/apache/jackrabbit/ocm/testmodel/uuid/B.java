@@ -33,26 +33,26 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 @Node
 public class B
 {
-	@Field(path=true) private String path; 
+	@Field(path=true) private String path;
     @Field(converter=ReferenceTypeConverterImpl.class) private String reference2A; // This String attribute is mapped to a reference/uuid jcr property
     @Collection(collectionConverter=ReferenceCollectionConverterImpl.class ) private java.util.Collection multiReferences; // a collection of references (uuid)
-    
-    public String getPath() 
+
+    public String getPath()
     {
 		return path;
 	}
 	
-    public void setPath(String path) 
+    public void setPath(String path)
 	{
 		this.path = path;
 	}
 
-	public String getReference2A() 
+	public String getReference2A()
 	{
 		return reference2A;
 	}
 
-	public void setReference2A(String reference2A) 
+	public void setReference2A(String reference2A)
 	{
 		this.reference2A = reference2A;
 	}
@@ -66,5 +66,5 @@ public class B
 	}
 
 
-    
+
 }

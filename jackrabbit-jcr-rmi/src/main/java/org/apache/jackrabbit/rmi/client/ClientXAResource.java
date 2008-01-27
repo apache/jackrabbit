@@ -39,7 +39,7 @@ public class ClientXAResource implements XAResource {
     /**
      * Returns <code>true</code> if the given object is a local
      * adapter that refers to the same remote XA resource.
-     * 
+     *
      * @see http://blogs.sun.com/fkieviet/entry/j2ee_jca_resource_adapters_the
      */
     public boolean isSameRM(XAResource xares) throws XAException {

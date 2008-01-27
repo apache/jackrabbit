@@ -78,9 +78,9 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
 
     /** Name of the journal configuration element. */
     public static final String JOURNAL_ELEMENT = "Journal";
-    
+
     /** Name of the data store configuration element. */
-    public static final String DATA_STORE_ELEMENT = "DataStore";    
+    public static final String DATA_STORE_ELEMENT = "DataStore";
 
     /** Name of the persistence manager configuration element. */
     public static final String PERSISTENCE_MANAGER_ELEMENT =
@@ -222,7 +222,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
 
         // Optional journal configuration
         ClusterConfig cc = parseClusterConfig(root);
-        
+
         // Optional data store configuration
         DataStoreConfig dsc = parseDataStoreConfig(root);
 
@@ -574,7 +574,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         return new JournalConfig(
                 parseBeanConfig(cluster, JOURNAL_ELEMENT));
     }
-    
+
     /**
      * Parses data store configuration. Data store configuration uses the following format:
      * <pre>
@@ -604,7 +604,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
             }
         }
         return null;
-    }    
+    }
 
     /**
      * Parses the PersistenceManager config.

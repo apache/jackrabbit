@@ -58,11 +58,11 @@ public class DigesterUuidTest extends DigesterTestBase
                 new TestSuite(DigesterUuidTest.class));
     }
 
-    
+
     /**
-     * 
+     *
      *  Map the jcr uuid into a String attribute
-     *  
+     *
      */
     public void testUuid()
     {
@@ -78,17 +78,17 @@ public class DigesterUuidTest extends DigesterTestBase
             a.setPath("/test");
             a.setStringData("testdata");
             ocm.insert(a);
-            ocm.save();           
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (A) ocm.getObject( "/test");
             assertNotNull("a is null", a);
             String uuidA = a.getUuid();
             assertNotNull("uuid is null", uuidA);
             System.out.println("UUID : " + uuidA);
-            
+
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
@@ -98,22 +98,22 @@ public class DigesterUuidTest extends DigesterTestBase
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (A) ocm.getObject("/test");
             assertNotNull("a is null", a);
             assertTrue("The uuid has been modified", uuidA.equals(a.getUuid()));
-            
+
             // --------------------------------------------------------------------------------
             // Get the object with the uuid
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (A) ocm.getObjectByUuid(uuidA);
             assertNotNull("a is null", a);
             assertTrue("Invalid object found with the uuid ", "testdata2".equals(a.getStringData()));
-            
+
             // --------------------------------------------------------------------------------
             // Get the object with an invalid uuid
-            // --------------------------------------------------------------------------------           
-            try 
+            // --------------------------------------------------------------------------------
+            try
             {
                 a = (A) ocm.getObjectByUuid("1234");
                 fail("Exception not throw");
@@ -124,20 +124,20 @@ public class DigesterUuidTest extends DigesterTestBase
             	System.out.println(e);
 
             }
-            
-            
+
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
     /**
-     * 
-     * Map a Reference into a String attribute. 
-     * Object B has an attribute containing the object A uuid. 
+     *
+     * Map a Reference into a String attribute.
+     * Object B has an attribute containing the object A uuid.
      *
      */
     public void testFieldReference()
@@ -153,17 +153,17 @@ public class DigesterUuidTest extends DigesterTestBase
             a.setPath("/test");
             a.setStringData("testdata");
             ocm.insert(a);
-            ocm.save();           
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (A) ocm.getObject( "/test");
             assertNotNull("a is null", a);
             String uuidA = a.getUuid();
             assertNotNull("uuid is null", uuidA);
             System.out.println("UUID : " + uuidA);
-                        
+
             // --------------------------------------------------------------------------------
             // Create and store an object B in the repository which has a reference to A
             // --------------------------------------------------------------------------------
@@ -172,16 +172,16 @@ public class DigesterUuidTest extends DigesterTestBase
             b.setPath("/testB");
             ocm.insert(b);
             ocm.save();
-            
+
             // --------------------------------------------------------------------------------
-            // Retrieve the object B with an invalid reference 
-            // --------------------------------------------------------------------------------            
+            // Retrieve the object B with an invalid reference
+            // --------------------------------------------------------------------------------
             b = (B) ocm.getObject("/testB");
             assertNotNull("b is null", b);
             assertTrue("Invalid uuid property", b.getReference2A().equals(uuidA));
-            
+
             // --------------------------------------------------------------------------------
-            // Update the object B with an invalid reference 
+            // Update the object B with an invalid reference
             // --------------------------------------------------------------------------------
             b.setReference2A("1245");
             try
@@ -195,22 +195,22 @@ public class DigesterUuidTest extends DigesterTestBase
             	System.out.println("Invalid uuid : " + e);
             	
             }
-            
-            
+
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
 
     /**
-     * 
-     * Map a Reference into a bean attribute. 
-     * Object B has an attribute containing the object A. 
-     * The jcr node matching to the object B contains a reference (the jcr node matching to the object B).   
+     *
+     * Map a Reference into a bean attribute.
+     * Object B has an attribute containing the object A.
+     * The jcr node matching to the object B contains a reference (the jcr node matching to the object B).
      *
      */
     public void testBeanReference()
@@ -226,17 +226,17 @@ public class DigesterUuidTest extends DigesterTestBase
             a.setPath("/test");
             a.setStringData("testdata");
             ocm.insert(a);
-            ocm.save();           
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object a
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (A) ocm.getObject( "/test");
             assertNotNull("a is null", a);
             String uuidA = a.getUuid();
             assertNotNull("uuid is null", uuidA);
             System.out.println("UUID : " + uuidA);
-            
+
             // --------------------------------------------------------------------------------
             // Create and store an object B in the repository which has a reference to A
             // --------------------------------------------------------------------------------
@@ -245,7 +245,7 @@ public class DigesterUuidTest extends DigesterTestBase
             b.setPath("/testB2");
             ocm.insert(b);
             ocm.save();
-            
+
             // --------------------------------------------------------------------------------
             // Retrieve object B
             // --------------------------------------------------------------------------------
@@ -261,27 +261,27 @@ public class DigesterUuidTest extends DigesterTestBase
             b.setA(null);
             ocm.update(b);
             ocm.save();
-            
+
             // --------------------------------------------------------------------------------
             // Retrieve object B
             // --------------------------------------------------------------------------------
             b = (B2) ocm.getObject("/testB2");
             a = b.getA();
             assertNull("a is not null", a);
-            
-            
+
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
 
     /**
-     * Map a list of uuid  into a collection of String 
-     * The list is defined in a jcr property (Referece type / multi values) 
+     * Map a list of uuid  into a collection of String
+     * The list is defined in a jcr property (Referece type / multi values)
      *
      */
     public void testCollectionOfUuid()
@@ -297,16 +297,16 @@ public class DigesterUuidTest extends DigesterTestBase
             a1.setPath("/a1");
             a1.setStringData("testdata1");
             ocm.insert(a1);
-            
+
             A a2 = new A();
             a2.setPath("/a2");
             a2.setStringData("testdata2");
-            ocm.insert(a2);            
-            ocm.save();           
+            ocm.insert(a2);
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the objects
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a1 = (A) ocm.getObject( "/a1");
             assertNotNull("a1 is null", a1);
             a2 = (A) ocm.getObject( "/a2");
@@ -314,7 +314,7 @@ public class DigesterUuidTest extends DigesterTestBase
             ArrayList references = new ArrayList();
             references.add(a1.getUuid());
             references.add(a2.getUuid());
-            
+
             // --------------------------------------------------------------------------------
             // Create and store an object B in the repository which has a collection of A
             // --------------------------------------------------------------------------------
@@ -323,7 +323,7 @@ public class DigesterUuidTest extends DigesterTestBase
             b.setMultiReferences(references);
             ocm.insert(b);
             ocm.save();
-            
+
             // --------------------------------------------------------------------------------
             // Retrieve object B
             // --------------------------------------------------------------------------------
@@ -348,33 +348,33 @@ public class DigesterUuidTest extends DigesterTestBase
             	System.out.println("Invalid uuid value in the collection : " + e);
             	
             }
-            
+
             // --------------------------------------------------------------------------------
             // Update object B with an null value
             // --------------------------------------------------------------------------------
             b.setMultiReferences(null);
             ocm.update(b);
             ocm.save();
-            
+
             // --------------------------------------------------------------------------------
             // Retrieve object B
             // --------------------------------------------------------------------------------
-            b = (B) ocm.getObject("/testB");            
+            b = (B) ocm.getObject("/testB");
             assertNull("a is not null", b.getMultiReferences());
-            
-            
+
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
 
     /**
      * Map a list of uuid  into a collection
-     * The list is defined in a jcr property (multi values) 
+     * The list is defined in a jcr property (multi values)
      *
      */
     public void testCollectionOfBeanWithUuid()
@@ -390,16 +390,16 @@ public class DigesterUuidTest extends DigesterTestBase
             a1.setPath("/a1");
             a1.setStringData("testdata1");
             ocm.insert(a1);
-            
+
             A a2 = new A();
             a2.setPath("/a2");
             a2.setStringData("testdata2");
-            ocm.insert(a2);            
-            ocm.save();           
+            ocm.insert(a2);
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the objects
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a1 = (A) ocm.getObject( "/a1");
             assertNotNull("a1 is null", a1);
             a2 = (A) ocm.getObject( "/a2");
@@ -407,7 +407,7 @@ public class DigesterUuidTest extends DigesterTestBase
             ArrayList references = new ArrayList();
             references.add(a1);
             references.add(a2);
-            
+
             // --------------------------------------------------------------------------------
             // Create and store an object B in the repository which has a collection of A
             // --------------------------------------------------------------------------------
@@ -416,7 +416,7 @@ public class DigesterUuidTest extends DigesterTestBase
             b.setMultiReferences(references);
             ocm.insert(b);
             ocm.save();
-            
+
             // --------------------------------------------------------------------------------
             // Retrieve object B
             // --------------------------------------------------------------------------------
@@ -433,24 +433,24 @@ public class DigesterUuidTest extends DigesterTestBase
             b.setMultiReferences(null);
             ocm.update(b);
             ocm.save();
-            
+
             // --------------------------------------------------------------------------------
             // Retrieve object B
             // --------------------------------------------------------------------------------
-            b = (B2) ocm.getObject("/testB2");            
+            b = (B2) ocm.getObject("/testB2");
             assertNull("a is not null", b.getMultiReferences());
-            
-            
+
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
-    
-    
+
+
     /**
      * Test on uuid field defined in an ancestor class
      *
@@ -469,17 +469,17 @@ public class DigesterUuidTest extends DigesterTestBase
             a.setPath("/descendant");
             a.setStringData("testdata");
             ocm.insert(a);
-            ocm.save();           
+            ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (Descendant) ocm.getObject( "/descendant");
             assertNotNull("a is null", a);
             String uuidA = a.getUuid();
             assertNotNull("uuid is null", uuidA);
             System.out.println("UUID : " + uuidA);
-            
+
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
@@ -489,26 +489,26 @@ public class DigesterUuidTest extends DigesterTestBase
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (Descendant) ocm.getObject("/descendant");
             assertNotNull("a is null", a);
             assertTrue("The uuid has been modified", uuidA.equals(a.getUuid()));
-            
+
             // --------------------------------------------------------------------------------
             // Get the object with the uuid
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (Descendant) ocm.getObjectByUuid(uuidA);
             assertNotNull("a is null", a);
             assertTrue("Invalid object found with the uuid ", "testdata2".equals(a.getStringData()));
-            
-            
+
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
 
 }

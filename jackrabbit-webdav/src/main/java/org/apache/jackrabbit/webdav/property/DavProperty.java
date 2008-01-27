@@ -48,7 +48,7 @@ public interface DavProperty extends XmlSerializable, DavConstants {
 
     /**
      * Returns the name of this property
-     * 
+     *
      * @return the name of this property
      */
     public DavPropertyName getName();

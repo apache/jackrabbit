@@ -213,7 +213,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
         // do some preliminary checks
         for (Iterator iter = nodeTypeNames.iterator(); iter.hasNext();) {
             Name ntName = (Name) iter.next();
-            
+
             // Best effort check for node types other than those to be
             // unregistered that depend on the given node types
             Set dependents = registeredNTDefs.getDependentNodeTypes(ntName);
@@ -747,7 +747,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
                     ps.println(" (declared in " + pd[i].getDeclaringNodeType() + ") ");
                     ps.println("\t\tName\t\t" + (pd[i].definesResidual() ? "*" : pd[i].getName().toString()));
                     String type = pd[i].getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(pd[i].getRequiredType());
-                    ps.println("\t\tRequiredType\t" + type);                  
+                    ps.println("\t\tRequiredType\t" + type);
                     String[] vca = pd[i].getValueConstraints();
                     StringBuffer constraints = new StringBuffer();
                     if (vca == null) {

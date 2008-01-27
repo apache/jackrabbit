@@ -25,30 +25,30 @@ import org.apache.jackrabbit.ocm.manager.beanconverter.impl.DefaultBeanConverter
 
 /**
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
- * 
- * 
+ *
+ *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD })
 public @interface Bean {
 
 	String jcrName() default "";
-    boolean proxy() default false;	 
-    Class converter() default DefaultBeanConverterImpl.class;    
+    boolean proxy() default false;	
+    Class converter() default DefaultBeanConverterImpl.class;
     boolean autoInsert() default true;
     boolean autoRetrieve() default true;
     boolean autoUpdate() default true;
-    
-    // The folling annotation props are used to create jcr node type. 
-    // There are not necessary for the mapping bean strategies. 
-    String jcrType() default "";    
+
+    // The folling annotation props are used to create jcr node type.
+    // There are not necessary for the mapping bean strategies.
+    String jcrType() default "";
     boolean jcrAutoCreated() default false;
-    boolean jcrMandatory() default false;        
-    String jcrOnParentVersion() default "COPY";    
-    boolean jcrProtected() default false; 
-    boolean jcrSameNameSiblings() default false; 
-            
-	       
+    boolean jcrMandatory() default false;
+    String jcrOnParentVersion() default "COPY";
+    boolean jcrProtected() default false;
+    boolean jcrSameNameSiblings() default false;
+
+	
 
 
 }

@@ -64,7 +64,7 @@ public abstract class AbstractItemStateFactory implements ItemStateFactory {
     }
 
     /**
-     * 
+     *
      * @param createdState
      */
     void notifyCreated(ItemState createdState) {

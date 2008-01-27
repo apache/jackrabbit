@@ -21,10 +21,10 @@ import java.util.Iterator;
 
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
 
-/** 
+/**
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
- * 
+ *
  */
 public class HashMapElement extends HashMap implements ManageableCollection
 {
@@ -47,12 +47,12 @@ public class HashMapElement extends HashMap implements ManageableCollection
     {
        return  this.values().iterator();
     }
-    
+
 	public int getSize()
 	{
 		
 		return this.size();
 	}
-    
+
 
 }

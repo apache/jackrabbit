@@ -22,13 +22,13 @@ import java.util.Map;
 /**
  * This interface defines a provider for accessing
  * {@link org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter}
- * 
+ *
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 public interface AtomicTypeConverterProvider {
     /**
      * Retrieves the <code>AtomicTypeConverter</code> associated with a class.
-     * 
+     *
      * @param clazz a class
      * @return the corresponding <code>AtomicTypeConverter</code> or <tt>null</tt>
      * if the class has no <code>AtomicTypeConverter</code> associated
@@ -37,7 +37,7 @@ public interface AtomicTypeConverterProvider {
 
     /**
      * Returns a map of all registered <code>AtomicTypeConverter<code>s.
-     * 
+     *
      * @return <code>Map<Class, AtomicTypeConverter></code>
      */
     Map getAtomicTypeConverters();

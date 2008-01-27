@@ -30,8 +30,8 @@ public class Element
 {
     @Field(jcrName="ocm:id") private String id;
     @Field(jcrName="ocm:text") private String text;
-    
-    
+
+
     /**
      * @return Returns the id.
      */
@@ -59,7 +59,7 @@ public class Element
     public void setText(String text)
     {
         this.text = text;
-    } 
-    
-    
+    }
+
+
 }

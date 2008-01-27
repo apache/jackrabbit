@@ -269,7 +269,7 @@ class ChildAxisQuery extends Query {
             do {
                 nextDoc = hits.next();
             } while (nextDoc > -1 && !indexIsValid(nextDoc));
-            
+
             return nextDoc > -1;
         }
 
@@ -295,7 +295,7 @@ class ChildAxisQuery extends Query {
             nextDoc = hits.skipTo(target);
             while (nextDoc > -1 && !indexIsValid(nextDoc))
                 next();
-            return nextDoc > -1;            
+            return nextDoc > -1;
         }
 
         /**
@@ -310,7 +310,7 @@ class ChildAxisQuery extends Query {
 
         private void calculateChildren() throws IOException {
             if (hits == null) {
-                
+
                 // collect all context nodes
                 List uuids = new ArrayList();
                 final Hits contextHits = new AdaptingHits();
@@ -327,7 +327,7 @@ class ChildAxisQuery extends Query {
                     uuids.add(uuid);
                     i = contextHits.next();
                 }
-                
+
                 // collect all children of the context nodes
                 Hits childrenHits = new AdaptingHits();
 
@@ -342,7 +342,7 @@ class ChildAxisQuery extends Query {
                 } finally {
                     docs.close();
                 }
-                
+
                 if (nameTestScorer != null) {
                     hits = new HitsIntersection(childrenHits, new ScorerHits(nameTestScorer));
                 } else {

@@ -70,7 +70,7 @@ public class AnnotationAtomicQueryTest extends AnnotationTestBase
 			this.importData(date);
 			ObjectContentManager ocm = this.getObjectContentManager();
 			
-			// Test Boolean value 
+			// Test Boolean value
 			QueryManager queryManager = this.getQueryManager();
 			Filter filter = queryManager.createFilter(Atomic.class);
 			filter.addEqualTo("booleanObject", new Boolean(true));

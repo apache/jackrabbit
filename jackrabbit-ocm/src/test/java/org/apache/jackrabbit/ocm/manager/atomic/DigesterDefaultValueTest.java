@@ -49,13 +49,13 @@ public class DigesterDefaultValueTest extends DigesterTestBase
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(new TestSuite(DigesterDefaultValueTest.class));
     }
-    
+
 	public void testDefaultValues()
 	{
 	    try
 	    {
 	        ObjectContentManager ocm = getObjectContentManager();
-	        
+	
 	        // --------------------------------------------------------------------------------
 	        // Create and store an object graph in the repository
 	        // --------------------------------------------------------------------------------
@@ -63,31 +63,31 @@ public class DigesterDefaultValueTest extends DigesterTestBase
 	        a.setPath("/testDefault");
 	        a.setP1("p1Value");
 	        // do not set p2, p3, p4, p5
-	        
+	
 	        ocm.insert(a);
 	        ocm.save();
-	        
-	        
+	
+	
 	        // --------------------------------------------------------------------------------
 	        // Get the object
 	        // --------------------------------------------------------------------------------
 	        a = null;
 	        a = (Default) ocm.getObject( "/testDefault" );
 	        assertNotNull("a is null", a);
-	        
+	
 	        assertEquals("p1Value", a.getP1());
 	        assertNull(a.getP2());
 	        assertEquals("p3DescriptorDefaultValue", a.getP3());
 	        assertEquals("p4DefaultValue", a.getP4());
 	        assertEquals("p5DefaultValue", a.getP5());
-	        
+	
 	    }
 	    catch (Exception e)
 	    {
 	        e.printStackTrace();
 	        fail("Exception occurs during the unit test : " + e);
 	    }
-	    
+	
 	}
 	
 	
@@ -108,13 +108,13 @@ public class DigesterDefaultValueTest extends DigesterTestBase
         	nodeA.setProperty("ocm:p1", "p1Value");
         	ocm.getSession().save();
         	
-             
+
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------
             Default a = (Default) ocm.getObject( "/testDefault" );
             assertNotNull("a is null", a);
-            
+
             assertEquals("p1Value", a.getP1());
             assertNull(a.getP2());
             assertEquals("p3DescriptorDefaultValue", a.getP3());
@@ -127,7 +127,7 @@ public class DigesterDefaultValueTest extends DigesterTestBase
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
-    
+
 }

@@ -39,7 +39,7 @@ import org.apache.jackrabbit.ocm.mapper.model.MappingDescriptor;
  * Abstract class for {@link org.apache.jackrabbit.ocm.mapper.Mapper}
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
- * 
+ *
  * TODO : Add more reference tests. For exemple, the mapper has to check if the class used for the elements
  *        of a collectiondescriptor exists. For performance reasone, we can defined some optional validations.
  */
@@ -48,30 +48,30 @@ public abstract class AbstractMapperImpl implements Mapper {
 
     protected DescriptorReader descriptorReader;
     protected MappingDescriptor mappingDescriptor;
-    protected Collection rootClassDescriptors = new ArrayList(); // contains the class descriptor which have not ancestors 
+    protected Collection rootClassDescriptors = new ArrayList(); // contains the class descriptor which have not ancestors
 
-    public void buildMapper() 
+    public void buildMapper()
     {
     	mappingDescriptor = descriptorReader.loadClassDescriptors();
     	mappingDescriptor.setMapper(this);
     	
-        if (null != this.mappingDescriptor) 
+        if (null != this.mappingDescriptor)
         {
             List errors = new ArrayList();
-            errors =  solveReferences(errors);            
+            errors =  solveReferences(errors);
             errors = validateDescriptors(errors, rootClassDescriptors);
 
-            if (!errors.isEmpty()) 
+            if (!errors.isEmpty())
             {
                 throw new InitMapperException("Mapping descriptors contain errors."
                         + getErrorMessage(errors));
             }
         }
-        else 
+        else
         {
             throw new InitMapperException("No mappings were provided");
         }
-                
+
     }
 
 
@@ -80,18 +80,18 @@ public abstract class AbstractMapperImpl implements Mapper {
             Map.Entry entry = (Map.Entry) it.next();
             ClassDescriptor cd = (ClassDescriptor) entry.getValue();
 
-            if (null != cd.getExtend() && !"".equals(cd.getExtend())) 
+            if (null != cd.getExtend() && !"".equals(cd.getExtend()))
             {
                 ClassDescriptor superClassDescriptor = this.mappingDescriptor.getClassDescriptorByName(cd.getExtend());
 
-                if (null == superClassDescriptor) 
+                if (null == superClassDescriptor)
                 {
                     errors.add("Cannot find mapping for class "
                             + cd.getExtend()
                             + " referenced as extends from "
                             + cd.getClassName());
                 }
-                else 
+                else
                 {
             	       log.debug("Class " +cd.getClassName() +  " extends " + cd.getExtend());
                     cd.setSuperClassDescriptor(superClassDescriptor);
@@ -101,40 +101,40 @@ public abstract class AbstractMapperImpl implements Mapper {
             {
                    rootClassDescriptors.add(cd);
             }
-            
+
             Collection interfaces = cd.getImplements();
-            if (interfaces.size() > 0) 
+            if (interfaces.size() > 0)
             {	
             	      for (Iterator iterator = interfaces.iterator(); iterator.hasNext();)
             	      {
             	    	          String interfaceName= (String) iterator.next();
                           ClassDescriptor interfaceClassDescriptor = this.mappingDescriptor.getClassDescriptorByName(interfaceName);
 
-                          if (null == interfaceClassDescriptor) 
+                          if (null == interfaceClassDescriptor)
                           {
                               errors.add("Cannot find mapping for interface "
                                       + interfaceName
                                       + " referenced as implements from "
                                       + cd.getClassName());
                           }
-                          else 
+                          else
                           {
                       	       log.debug("Class " +cd.getClassName() +  " implements " + interfaceName);
                               //cd.setSuperClassDescriptor(interfaceClassDescriptor);
-                      	      interfaceClassDescriptor.addDescendantClassDescriptor(cd); 
+                      	      interfaceClassDescriptor.addDescendantClassDescriptor(cd);
                           }
-            	    	      
+            	    	
             	      }
             }
-            
+
         }
 
         return errors;
     }
-    
+
     /**
      * Validate all class descriptors.
-     * This method validates the toplevel ancestors and after the descendants. 
+     * This method validates the toplevel ancestors and after the descendants.
      * Otherwise, we can have invalid settings in the class descriptors
      * @param errors all errors found during the validation process
      * @param classDescriptors the ancestor classdescriptors
@@ -155,8 +155,8 @@ public abstract class AbstractMapperImpl implements Mapper {
             }
         }
         return errors;
-    }    
-    
+    }
+
     protected String getErrorMessage(List errors) {
         final String lineSep = System.getProperty("line.separator");
         StringBuffer buf = new StringBuffer();
@@ -165,8 +165,8 @@ public abstract class AbstractMapperImpl implements Mapper {
         }
 
         return buf.toString();
-    }    
-    
+    }
+
     /**
     *
     * @see org.apache.jackrabbit.ocm.mapper.Mapper#getClassDescriptorByClass(java.lang.Class)
@@ -176,9 +176,9 @@ public abstract class AbstractMapperImpl implements Mapper {
 	   if (descriptor==null) {
 			throw new IncorrectPersistentClassException("Class of type: " + clazz.getName() + " has no descriptor.");
 	   }
-       return descriptor ; 
+       return descriptor ;
    }
-   
+
    /**
    * @see org.apache.jackrabbit.ocm.mapper.Mapper#getClassDescriptorByNodeType(String)
    */
@@ -187,6 +187,6 @@ public abstract class AbstractMapperImpl implements Mapper {
 	   if (descriptor==null) {
 			throw new IncorrectPersistentClassException("Node type: " + jcrNodeType + " has no descriptor.");
 	   }
-      return descriptor ;      
-  }   
+      return descriptor ;
+  }
 }

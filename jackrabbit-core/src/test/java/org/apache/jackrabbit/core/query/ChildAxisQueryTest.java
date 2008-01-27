@@ -232,15 +232,15 @@ public class ChildAxisQueryTest extends AbstractQueryTest {
         executeXPathQuery(base + "*/*, 'lazy')]",
                 new Node[]{});
     }
-    
+
     public void testSimpleQuery() throws Exception {
         Node foo = testRootNode.addNode("foo");
         testRootNode.addNode("bar");
-       
+
         testRootNode.save();
 
         String sql = "SELECT * FROM nt:unstructured WHERE jcr:path LIKE '"+testRoot+"/foo'";
         executeSQLQuery(sql, new Node[] {foo});
     }
-    
+
 }

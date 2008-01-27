@@ -22,7 +22,7 @@ import javax.jcr.NamespaceException;
  * Resolver for prefixed JCR names and namespace-qualified
  * {@link QName QNames}.
  *
- * @deprecated Use the NameResolver interface from 
+ * @deprecated Use the NameResolver interface from
  *             the org.apache.jackrabbit.spi.commons.conversion package of
  *             the jackrabbit-spi-commons component.
  */

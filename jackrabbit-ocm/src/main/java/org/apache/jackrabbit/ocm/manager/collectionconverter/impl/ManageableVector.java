@@ -21,17 +21,17 @@ import java.util.Vector;
 
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
 
-/** 
+/**
  *
- * {@link ManageableCollection} Vector implementation 
+ * {@link ManageableCollection} Vector implementation
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
- * 
+ *
  */
 public class ManageableVector extends Vector implements ManageableCollection
 {
 
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection#addObject(java.lang.Object)
 	 */
     public void addObject(Object object)
@@ -40,16 +40,16 @@ public class ManageableVector extends Vector implements ManageableCollection
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection#getIterator()
      */
     public Iterator getIterator()
     {
         return this.iterator();
     }
-    
+
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection#getSize()
      */
 	public int getSize()
@@ -57,6 +57,6 @@ public class ManageableVector extends Vector implements ManageableCollection
 		
 		return this.size();
 	}
-    
+
 
 }

@@ -693,7 +693,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * those, that have been transiently removed.<br>
      * NOTE, that the result of this method, does NOT represent the list of
      * mixin-types that currently affect this node.
-     * 
+     *
      * @return
      */
     private List getMixinTypes() {
@@ -1366,7 +1366,7 @@ public class NodeImpl extends ItemImpl implements Node {
         throws ConstraintViolationException, RepositoryException {
         QPropertyDefinition def = getApplicablePropertyDefinition(qName, type, true);
         int targetType = def.getRequiredType();
-        // make sure, the final type is not set to undefined        
+        // make sure, the final type is not set to undefined
         if (targetType == PropertyType.UNDEFINED) {
             if (type == PropertyType.UNDEFINED) {
                 // try to retrieve type from the values array

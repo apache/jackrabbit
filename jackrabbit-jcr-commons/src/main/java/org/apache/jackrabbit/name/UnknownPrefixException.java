@@ -21,7 +21,7 @@ package org.apache.jackrabbit.name;
  * This exception is thrown when attempting to parse a JCR name string
  * whose prefix is not bound to any namespace.
  *
- * @deprecated 
+ * @deprecated
  */
 public class UnknownPrefixException extends NameException {
 

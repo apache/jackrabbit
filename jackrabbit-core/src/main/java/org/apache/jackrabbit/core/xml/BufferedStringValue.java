@@ -313,7 +313,7 @@ class BufferedStringValue implements TextValue {
             throw new RepositoryException("Error accessing property value", e);
         }
     }
-    
+
     private static class Base64ReaderInputStream extends InputStream {
 
         private static final int BUFFER_SIZE = 1024;

@@ -24,65 +24,65 @@ import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
 
 /**
  * Convert any kind of {@link ManageableCollection} into severals JCR nodes.
- * 
+ *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart Christophe </a>
- * 
+ *
  */
 public interface CollectionConverter
 {
 
 	/**
 	 * Insert/convert collection elements into some JCR nodes
-	 * @param session The JCR session 
+	 * @param session The JCR session
 	 * @param parentNode the node which will contains the collection element
 	 * @param collectionDescriptor The collection descriptor
 	 * @param collection the collection to insert
-	 * 
+	 *
 	 * @throws ObjectContentManagerException when it is not possible to insert the collection
-	 * 
+	 *
 	 */
-	public void insertCollection(Session session, Node parentNode, 
+	public void insertCollection(Session session, Node parentNode,
 			                     CollectionDescriptor collectionDescriptor, ManageableCollection collection) throws ObjectContentManagerException;
 
 	/**
 	 * Update collection elements already present in the JCR repository
-	 * @param session The JCR session 
+	 * @param session The JCR session
 	 * @param parentNode the node which will contains the collection element
 	 * @param collectionDescriptor The collection descriptor
 	 * @param collection the collection to update
-	 * 
+	 *
 	 * @throws ObjectContentManagerException when it is not possible to update the collection
 	 */
-	public void updateCollection(Session session, Node parentNode, 
+	public void updateCollection(Session session, Node parentNode,
 			                     CollectionDescriptor collectionDescriptor, ManageableCollection collection) throws ObjectContentManagerException;
 
 	/**
-	 * Get a {@link ManageableCollection} from the JCR repository 
-	 * @param session The JCR session 
+	 * Get a {@link ManageableCollection} from the JCR repository
+	 * @param session The JCR session
 	 * @param parentNode the node which contains the collection element
 	 * @param collectionDescriptor The collection descriptor
-	 * @param collectionFieldClass The collection class to used (ArrayList, Vector, ..) 
+	 * @param collectionFieldClass The collection class to used (ArrayList, Vector, ..)
 	 * @return The collection populates with all elements found in the JCR repository
-	 * 
-	 * @throws ObjectContentManagerException when it is not possible to retrieve the collection 
+	 *
+	 * @throws ObjectContentManagerException when it is not possible to retrieve the collection
 	 */
-	public ManageableCollection getCollection(Session session, Node parentNode, 
+	public ManageableCollection getCollection(Session session, Node parentNode,
 			                                  CollectionDescriptor collectionDescriptor, Class collectionFieldClass) throws ObjectContentManagerException;
 
 	
 	/**
 	 * Check if the collection is null. This method is mainly used in the Proxy manager to return a null value or a proxy object
-	 * Without proxy proxy, this method is never called. 
-	 * 
-	 * @param session The JCR session 
+	 * Without proxy proxy, this method is never called.
+	 *
+	 * @param session The JCR session
 	 * @param parentNode the node which contains the collection element
 	 * @param collectionDescriptor The collection descriptor
-	 * @param collectionFieldClass The collection class to used (ArrayList, Vector, ..) 
+	 * @param collectionFieldClass The collection class to used (ArrayList, Vector, ..)
 	 * @return true if the collection contains elements.
-	 * 
-	 * 
-	 * @throws ObjectContentManagerException when it is not possible to retrieve the collection 
+	 *
+	 *
+	 * @throws ObjectContentManagerException when it is not possible to retrieve the collection
 	 */	
-	public boolean isNull(Session session, Node parentNode, 
+	public boolean isNull(Session session, Node parentNode,
                                       CollectionDescriptor collectionDescriptor, Class collectionFieldClass) throws ObjectContentManagerException;
 }

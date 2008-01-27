@@ -24,9 +24,9 @@ import org.apache.jackrabbit.ocm.mapper.impl.AbstractMapperImpl;
 /**
  * An implementation of the OCM mapper that builds class descriptors based on
  * the use of annotations on the underlying classes
- * 
+ *
  * @author Philip Dodds
- * 
+ *
  */
 public class AnnotationMapperImpl extends AbstractMapperImpl implements Mapper {
 

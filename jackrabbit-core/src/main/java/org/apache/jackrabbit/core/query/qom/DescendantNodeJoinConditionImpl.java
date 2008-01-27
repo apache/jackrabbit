@@ -24,7 +24,7 @@ import org.apache.jackrabbit.core.query.jsr283.qom.DescendantNodeJoinCondition;
 /**
  * <code>DescendantNodeJoinConditionImpl</code>...
  */
-public class DescendantNodeJoinConditionImpl 
+public class DescendantNodeJoinConditionImpl
         extends JoinConditionImpl
         implements DescendantNodeJoinCondition {
 

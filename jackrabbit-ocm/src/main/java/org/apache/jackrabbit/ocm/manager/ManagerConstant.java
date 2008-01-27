@@ -19,20 +19,20 @@ package org.apache.jackrabbit.ocm.manager;
 
 
 /**
- *  
+ *
  * General Object Content Manager Constants use in several classes
- * 
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
- * 
+ *
  */
 public interface ManagerConstant
 {
-	public static final String NT_UNSTRUCTURED = "nt:unstructured";    
+	public static final String NT_UNSTRUCTURED = "nt:unstructured";
 	public static final String DISCRIMINATOR_NODE_TYPE = "ocm:discriminator";
-	public static final String DISCRIMINATOR_PROPERTY_NAME = "ocm:classname"; 
+	public static final String DISCRIMINATOR_PROPERTY_NAME = "ocm:classname";
 	
 	
 	public static final String FROZEN_NODE_TYPE = "nt:frozenNode";
 	public static final String FROZEN_PRIMARY_TYPE_PROPERTY = "jcr:frozenPrimaryType";
-        
+
 }

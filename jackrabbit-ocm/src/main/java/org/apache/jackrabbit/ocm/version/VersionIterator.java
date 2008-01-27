@@ -24,7 +24,7 @@ import javax.jcr.version.Version;
 
 /**
  * VersionIterator is a wrapper class for JCR VersionIterator
- * 
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  *
  */
@@ -39,7 +39,7 @@ public class VersionIterator implements Iterator
 	}
 
 	/**
-	 * 
+	 *
 	 * @see java.util.Iterator#hasNext()
 	 */
 	public boolean hasNext()
@@ -48,10 +48,10 @@ public class VersionIterator implements Iterator
 	}
 
 	/**
-	 * 
+	 *
 	 * @see java.util.Iterator#next()
 	 */
-	public Object next() 
+	public Object next()
 	{
 
 		try
@@ -67,7 +67,7 @@ public class VersionIterator implements Iterator
 	}
 
 	/**
-	 * 
+	 *
 	 * @return the versionIterator size
 	 */
 	public long getSize()
@@ -76,7 +76,7 @@ public class VersionIterator implements Iterator
 	}
 	
 	/**
-	 * 
+	 *
 	 * @see java.util.Iterator#remove()
 	 */
 	public void remove()

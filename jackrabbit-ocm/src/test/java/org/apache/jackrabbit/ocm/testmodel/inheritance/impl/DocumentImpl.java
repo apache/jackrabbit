@@ -29,22 +29,22 @@ import org.apache.jackrabbit.ocm.testmodel.interfaces.Document;
  * CMS VersionnedDocument implementation.
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
- * 
+ *
  */
 @Node(jcrType="ocm:documentimpl", extend=ContentImpl.class, discriminator=false)
 @Implement(interfaceName=Document.class)
 public class DocumentImpl extends ContentImpl implements Document
 {
     protected final static Log log =  LogFactory.getLog(DocumentImpl.class);
-    
+
     @Field(jcrName="ocm:size") protected long size;
-    @Field(jcrName="ocm:contenttype") protected String contentType;   
-        
+    @Field(jcrName="ocm:contenttype") protected String contentType;
+
     @Bean(jcrName="ocm:documentstream", proxy=true) protected DocumentStream documentStream;
 
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Document#getContentType()
      */
     public String getContentType()
@@ -53,7 +53,7 @@ public class DocumentImpl extends ContentImpl implements Document
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Document#setContentType(java.lang.String)
      */
     public void setContentType(String contentType)
@@ -62,7 +62,7 @@ public class DocumentImpl extends ContentImpl implements Document
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Document#getSize()
      */
     public long getSize()
@@ -71,7 +71,7 @@ public class DocumentImpl extends ContentImpl implements Document
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Document#setSize(long)
      */
     public void setSize(long size)
@@ -80,7 +80,7 @@ public class DocumentImpl extends ContentImpl implements Document
     }
 
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Document#getDocumentStream()
 	 */
 	public DocumentStream getDocumentStream() {
@@ -88,13 +88,13 @@ public class DocumentImpl extends ContentImpl implements Document
 	}
 
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Document#setDocumentStream(org.apache.jackrabbit.ocm.testmodel.inheritance.impl.DocumentStream)
 	 */
 	public void setDocumentStream(DocumentStream documentStream) {
 		this.documentStream = documentStream;
 	}
 
-    
+
 }
 

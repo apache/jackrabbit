@@ -151,7 +151,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         this(locator, factory, session, config, null);
         this.isCollection = isCollection;
     }
-    
+
     /**
      * Create a new {@link DavResource}.
      *

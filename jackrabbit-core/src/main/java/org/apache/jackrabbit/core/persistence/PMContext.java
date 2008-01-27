@@ -76,7 +76,7 @@ public class PMContext {
                      FileSystem fs,
                      NodeId rootNodeId,
                      NamespaceRegistry nsReg,
-                     NodeTypeRegistry ntReg, 
+                     NodeTypeRegistry ntReg,
                      DataStore dataStore) {
         this.physicalHomeDir = homeDir;
         this.fs = fs;
@@ -128,7 +128,7 @@ public class PMContext {
     public NodeTypeRegistry getNodeTypeRegistry() {
         return ntReg;
     }
-    
+
     /**
      * Returns the data store
      *

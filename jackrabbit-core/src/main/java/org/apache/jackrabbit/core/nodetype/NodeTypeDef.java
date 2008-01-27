@@ -43,7 +43,7 @@ public class NodeTypeDef implements Cloneable {
 
     private boolean mixin;
     private boolean orderableChildNodes;
-    
+
     private boolean abstractStatus;
     private Name primaryItemName;
 

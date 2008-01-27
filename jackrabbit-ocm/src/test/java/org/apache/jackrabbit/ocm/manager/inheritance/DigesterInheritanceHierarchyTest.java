@@ -233,7 +233,7 @@ public class DigesterInheritanceHierarchyTest extends DigesterTestBase {
 		assertTrue("Invalid item in the collection", this.contains(result, "/anotherdescendant2", AnotherDescendant.class));
 		assertTrue("Invalid item in the collection", this.contains(result, "/anotherdescendant3", AnotherDescendant.class));		
 
- 
+
 	}
-	    
+	
 }

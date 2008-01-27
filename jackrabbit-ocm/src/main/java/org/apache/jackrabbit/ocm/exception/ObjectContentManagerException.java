@@ -32,7 +32,7 @@ public class ObjectContentManagerException extends NestableRuntimeException {
      */
     protected ObjectContentManagerException() {
     }
-    
+
     /**
      * Constructor with message.
      *

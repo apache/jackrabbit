@@ -103,7 +103,7 @@ public class NodeIndexer {
      * Indicates index format for this node indexer.
      */
     protected IndexFormatVersion indexFormatVersion = IndexFormatVersion.V1;
-   
+
     /**
      * Creates a new node indexer.
      *
@@ -149,7 +149,7 @@ public class NodeIndexer {
     public void setIndexFormatVersion(IndexFormatVersion indexFormatVersion) {
         this.indexFormatVersion = indexFormatVersion;
     }
-    
+
     /**
      * Sets the indexing configuration for this node indexer.
      *
@@ -208,14 +208,14 @@ public class NodeIndexer {
             PropertyId id = new PropertyId(node.getNodeId(), propName);
             try {
                 PropertyState propState = (PropertyState) stateProvider.getItemState(id);
-                
+
                 // add each property to the _PROPERTIES_SET for searching
                 // beginning with V2
                 if (indexFormatVersion.getVersion()
                         >= IndexFormatVersion.V2.getVersion()) {
                     addPropertyName(doc, propState.getName());
                 }
-                
+
                 InternalValue[] values = propState.getValues();
                 for (int i = 0; i < values.length; i++) {
                     addValue(doc, values[i], propState.getName());
@@ -354,7 +354,7 @@ public class NodeIndexer {
         }
         doc.add(new Field(FieldNames.PROPERTIES_SET, fieldName, Field.Store.NO, Field.Index.NO_NORMS));
     }
-    
+
     /**
      * Adds the binary value to the document as the named field.
      * <p/>
@@ -440,10 +440,10 @@ public class NodeIndexer {
     /**
      * Creates a field of name <code>fieldName</code> with the value of <code>
      * internalValue</code>. The created field is indexed without norms.
-     * 
+     *
      * @param fieldName     The name of the field to add
      * @param internalValue The value for the field to add to the document.
-     * @param store         <code>true</code> if the value should be stored, 
+     * @param store         <code>true</code> if the value should be stored,
      *                      <code>false</code> otherwise
      */
     protected Field createFieldWithoutNorms(String fieldName,
@@ -459,7 +459,7 @@ public class NodeIndexer {
      * Adds the calendar value to the document as the named field. The calendar
      * value is converted to an indexable string value using the
      * {@link DateField} class.
-     * 
+     *
      * @param doc
      *            The document to which to add the field
      * @param fieldName

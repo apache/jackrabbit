@@ -25,7 +25,7 @@ import javax.jcr.RepositoryException;
  * The listener interface for receiving garbage collection scan events.
  */
 public interface ScanEventListener extends EventListener {
-    
+
     /**
      * This method is called before a node is scanned.
      */

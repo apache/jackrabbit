@@ -91,7 +91,7 @@ public class ValueFormat {
     }
 
     /**
-     * 
+     *
      * @param jcrValue
      * @param propertyType
      * @param resolver

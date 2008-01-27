@@ -43,7 +43,7 @@ public class EmptyRepository extends AbstractRepository {
     /**
      * Returns an empty array since this repository contains no descriptors.
      *
-     * @return empty array 
+     * @return empty array
      */
     public String[] getDescriptorKeys() {
         return new String[0];

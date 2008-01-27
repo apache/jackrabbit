@@ -50,7 +50,7 @@ import org.apache.jackrabbit.ocm.testmodel.crossreference.B;
 
 /**
  * Basic test for ObjectContentManager
- * Test when objects are cross referenced 
+ * Test when objects are cross referenced
  * eg. object 'a' contains a reference to an object 'b' and object 'b' contains a reference to 'a'.
  *
  * @author <a href="mailto:christophe.lombart@gmail.com>Christophe Lombart</a>
@@ -75,7 +75,7 @@ public class AnnotationAvoidRecursiveLoopTest extends AnnotationTestBase
                 new TestSuite(AnnotationAvoidRecursiveLoopTest.class));
     }
 
-    
+
     public void testCrossReferences()
     {
         try
@@ -88,59 +88,59 @@ public class AnnotationAvoidRecursiveLoopTest extends AnnotationTestBase
             a.setPath("/test");
             a.setA1("a1");
             a.setA2("a2");
-            
+
             ocm.insert(a);
             ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (A) ocm.getObject( "/test");
             assertNotNull("a is null", a);
-            
+
             B b = new B();
             b.setB1("b1");
             b.setB2("b2");
-            // Add crossreference between b and a 
+            // Add crossreference between b and a
             a.setB(b);
-            b.setA(a); 
+            b.setA(a);
 
             B b1 = new B();
             b1.setB1("b1.1");
-            b1.setB2("b1.2");            
+            b1.setB2("b1.2");
             b1.setA(a);
             a.addB(b1);
 
             B b2 = new B();
             b2.setB1("b2.1");
-            b2.setB2("b2.2");            
+            b2.setB2("b2.2");
             b2.setA(a);
             a.addB(b2);
 
             ocm.update(a);
             ocm.save();
-            
+
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (A) ocm.getObject( "/test");
             assertNotNull("a is null", a);
             assertTrue("Duplicate instance a", a == a.getB().getA());
-            
+
             Collection collection = a.getCollection();
             assertTrue("Invalid number of items in the collection", collection.size() == 2);
             B[] bs = (B[]) collection.toArray(new B[2]);
             assertTrue("Duplicate instance a", a == bs[0].getA());
             assertTrue("Duplicate instance a", a == bs[1].getA());
-            
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
 
 	
@@ -158,6 +158,6 @@ public class AnnotationAvoidRecursiveLoopTest extends AnnotationTestBase
 		
 	}	
 
-    
+
 
 }

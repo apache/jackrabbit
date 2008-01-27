@@ -55,7 +55,7 @@ import org.xml.sax.ContentHandler;
 /**
  * Base class for testcases. Provides priviledged access to the jcr test
  * repository.
- * 
+ *
  * @author <a href="mailto:okiessler@apache.org">Oliver Kiessler</a>
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  * @version $Id: Exp $
@@ -70,14 +70,14 @@ public abstract class AbstractTestBase extends TestCase
 	protected ObjectContentManager ocm;
 
 	protected Mapper mapper;
-    
+
     protected boolean isInit = false;
 
 	/**
 	 * <p>
 	 * Defines the test case name for junit.
 	 * </p>
-	 * 
+	 *
 	 * @param testName
 	 *            The test case name.
 	 */
@@ -88,14 +88,14 @@ public abstract class AbstractTestBase extends TestCase
 
 	/**
 	 * Setting up the testcase.
-	 * 
+	 *
 	 * @see junit.framework.TestCase#setUp()
 	 */
 	protected void setUp() throws Exception
 	{
 		try {
 			super.setUp();
-	        
+	
 	        if (!isInit) {
 	            initObjectContentManager();
 	            RepositoryUtil.setupSession(getSession());
@@ -121,7 +121,7 @@ public abstract class AbstractTestBase extends TestCase
 
 	/**
 	 * Getter for property ocm.
-	 * 
+	 *
 	 * @return jcrSession
 	 */
 	public ObjectContentManager getObjectContentManager()
@@ -145,7 +145,7 @@ public abstract class AbstractTestBase extends TestCase
 
 	protected abstract void initObjectContentManager() throws UnsupportedRepositoryOperationException, javax.jcr.RepositoryException;
 	
-    protected void registerNodeTypes(Session session) 
+    protected void registerNodeTypes(Session session)
     throws InvalidNodeTypeDefException, javax.jcr.RepositoryException, IOException {
         InputStream xml = new FileInputStream(
                 "./src/test/test-config/nodetypes/custom_nodetypes.xml");
@@ -170,7 +170,7 @@ public abstract class AbstractTestBase extends TestCase
 
         }
     }
-   
+
 
 	public void exportDocument(String filePath, String nodePath, boolean skipBinary, boolean noRecurse)
 	{
@@ -233,16 +233,16 @@ public abstract class AbstractTestBase extends TestCase
                     {
                     	   return false;
                     }
- 
+
                 }
             }
             return false;
     }
 
 	
-	protected  void cleanUpRepisotory() 
+	protected  void cleanUpRepisotory()
 	{
-		try 
+		try
 		{
 				Session session = this.getSession();		
 				NodeIterator nodeIterator = session.getRootNode().getNodes();

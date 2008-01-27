@@ -161,9 +161,9 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
             if (obj instanceof Reference) {
                 Reference ref = (Reference)obj;
                 String classname = ref.getClassName();
-                                
+
                 if (RepositoryImpl.class.getName().equals(classname)) {
-                
+
                     RefAddr rfac = ref.get(RCF);
                     if (rfac == null || !(rfac instanceof StringRefAddr)) {
                         throw new Exception("Address type " + RCF + " missing or of wrong class: " + rfac);
@@ -177,7 +177,7 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
                     String repositoryConfigClassName = (String)((StringRefAddr)rclas).getContent();
 
                     Object rof = Class.forName(configFactoryClassName).newInstance();
-                    
+
                     if (! (rof instanceof ObjectFactory)) {
                         throw new Exception(rof + " must implement ObjectFactory");
                     }

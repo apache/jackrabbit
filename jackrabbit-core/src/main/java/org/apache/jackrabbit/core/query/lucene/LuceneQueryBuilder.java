@@ -137,7 +137,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
      * Wether the index format is new or old.
      */
     private IndexFormatVersion indexFormatVersion;
-    
+
     /**
      * Exceptions thrown during tree translation
      */
@@ -166,7 +166,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                                NamespaceMappings nsMappings,
                                Analyzer analyzer,
                                PropertyTypeRegistry propReg,
-                               SynonymProvider synonymProvider, 
+                               SynonymProvider synonymProvider,
                                IndexFormatVersion indexFormatVersion) {
         this.root = root;
         this.session = session;
@@ -195,7 +195,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
      *                        information.
      * @param synonymProvider the synonym provider or <code>null</code> if node
      *                        is configured.
-     * @param  indexFormatVersion  the index format version to be used                   
+     * @param  indexFormatVersion  the index format version to be used
      * @return the lucene query tree.
      * @throws RepositoryException if an error occurs during the translation.
      */
@@ -1106,7 +1106,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         }
         return (String[]) values.toArray(new String[values.size()]);
     }
-    
+
     /**
      * Depending on the index format this method returns
      * a query that matches all nodes that have a property named 'field'

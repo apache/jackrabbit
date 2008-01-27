@@ -29,16 +29,16 @@ public class File  extends HierarchyNode
 {
 
     @Bean(jcrName="jcr:content") private Resource resource;
-    
-	public Resource getResource() 
+
+	public Resource getResource()
 	{
 		return resource;
 	}
 
-	public void setResource(Resource resource) 
+	public void setResource(Resource resource)
 	{
 		this.resource = resource;
 	}
 
-    
+
 }

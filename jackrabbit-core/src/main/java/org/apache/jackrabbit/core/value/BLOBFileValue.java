@@ -23,8 +23,8 @@ import java.io.OutputStream;
 import javax.jcr.RepositoryException;
 
 /**
- * Represents binary data which is backed by a resource or byte[]. 
- * Unlike <code>BinaryValue</code> it has no state, i.e. 
+ * Represents binary data which is backed by a resource or byte[].
+ * Unlike <code>BinaryValue</code> it has no state, i.e.
  * the <code>getStream()</code> method always returns a fresh
  * <code>InputStream</code> instance.
  * <p/>
@@ -36,7 +36,7 @@ public abstract class BLOBFileValue {
 
     /**
      * Returns an InputStream representation of this value.
-     * 
+     *
      * @return An InputStream representation of this value.
      */
     public abstract InputStream getStream() throws RepositoryException;
@@ -46,7 +46,7 @@ public abstract class BLOBFileValue {
      *
      * @return The length, in bytes, of this <code>BLOBFileValue</code>,
      *         or -1L if the length can't be determined.
-     * @throws IOException 
+     * @throws IOException
      */
     public abstract long getLength();
 
@@ -72,12 +72,12 @@ public abstract class BLOBFileValue {
      * {@inheritDoc}
      */
     public abstract boolean equals(Object obj);
-    
+
     /**
      * {@inheritDoc}
      */
     public abstract String toString();
-    
+
     /*
      * Spools the contents of this <code>BLOBFileValue</code> to the given
      * output stream.

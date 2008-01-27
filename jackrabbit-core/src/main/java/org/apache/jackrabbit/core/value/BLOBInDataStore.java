@@ -31,20 +31,20 @@ import javax.jcr.RepositoryException;
  * Represents binary data which is stored in the data store.
  */
 public class BLOBInDataStore extends BLOBFileValue {
-    
+
     private final DataStore store;
     private final DataIdentifier identifier;
-    
+
     /**
      * the prefix of the string representation of this value
-     */    
+     */
     private static final String PREFIX = "dataStore:";
-    
+
     /**
      * The default logger
      */
     private static Logger log = LoggerFactory.getLogger(BLOBInDataStore.class);
-    
+
 
     private BLOBInDataStore(DataStore store, DataIdentifier identifier) {
         assert store != null;
@@ -68,7 +68,7 @@ public class BLOBInDataStore extends BLOBFileValue {
         BLOBInDataStore other = (BLOBInDataStore) obj;
         return store == other.store && identifier.equals(other.identifier);
     }
-    
+
     /**
      * Returns zero to satisfy the Object equals/hashCode contract.
      * This class is mutable and not meant to be used as a hash key.
@@ -101,20 +101,20 @@ public class BLOBInDataStore extends BLOBFileValue {
         buff.append(PREFIX);
         buff.append(identifier.toString());
         return buff.toString();
-    }   
-    
+    }
+
     static BLOBInDataStore getInstance(DataStore store, String s) {
         String id = s.substring(PREFIX.length());
         DataIdentifier identifier = new DataIdentifier(id);
         return new BLOBInDataStore(store, identifier);
     }
-    
+
     static BLOBInDataStore getInstance(DataStore store, InputStream in) throws DataStoreException {
         DataRecord rec = store.addRecord(in);
         DataIdentifier identifier = rec.getIdentifier();
         return new BLOBInDataStore(store, identifier);
-    }    
-    
+    }
+
     /**
      * Checks if String can be converted to an instance of this class.
      * @param s
@@ -122,8 +122,8 @@ public class BLOBInDataStore extends BLOBFileValue {
      */
     static boolean isInstance(String s) {
         return s.startsWith(PREFIX);
-    }    
-    
+    }
+
     private DataRecord getDataRecord() throws DataStoreException {
         // may not keep the record, otherwise garbage collection doesn't work
         return store.getRecord(identifier);

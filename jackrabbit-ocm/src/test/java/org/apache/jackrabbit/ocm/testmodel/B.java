@@ -30,8 +30,8 @@ public class B
      @Field private String b1;
      @Field private String b2;
      private A a;
-     
-     
+
+
     /**
      * @return Returns the b1.
      */
@@ -66,6 +66,6 @@ public class B
 	public void setA(A a) {
 		this.a = a;
 	}
-    
-    
+
+
 }

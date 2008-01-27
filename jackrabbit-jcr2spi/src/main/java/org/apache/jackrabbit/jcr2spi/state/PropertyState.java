@@ -247,7 +247,7 @@ public class PropertyState extends ItemState {
             return values[0];
         }
     }
-    
+
     /**
      * Sets the value(s) of this property.
      *

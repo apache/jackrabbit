@@ -25,9 +25,9 @@ import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.DefaultCollect
 
 /**
  * Allows the annotation of getting methods to show that they reflect a child node in JCR
- * 
+ *
  * @author Philip Dodds
- * 
+ *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD })
@@ -43,26 +43,26 @@ public @interface Collection {
 	
     boolean autoInsert() default true;
 
-    // Use Object.class as default value 
+    // Use Object.class as default value
     // because it is not possible to have a default null value in annotation field
-    Class elementClassName() default Object.class;      
-    
+    Class elementClassName() default Object.class;
+
 	Class collectionConverter() default DefaultCollectionConverterImpl.class;
 
-	// Use Object.class as default value 
+	// Use Object.class as default value
     // because it is not possible to have a default null value in annotation field	
-	Class collectionClassName() default Object.class; 
+	Class collectionClassName() default Object.class;
 
     String jcrType() default "";
-    
-    boolean jcrAutoCreated() default false; 
-    
-    boolean jcrMandatory() default false; 
-    
+
+    boolean jcrAutoCreated() default false;
+
+    boolean jcrMandatory() default false;
+
     String jcrOnParentVersion() default "COPY";
-    
+
     boolean jcrProtected() default false;
-        
-    boolean jcrSameNameSiblings() default false;    
-    
+
+    boolean jcrSameNameSiblings() default false;
+
 }

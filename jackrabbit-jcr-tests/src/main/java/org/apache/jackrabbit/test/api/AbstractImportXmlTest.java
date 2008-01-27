@@ -146,10 +146,10 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
             targetNode = createAncestors(target);
             refTarget = testRoot + "/refTarget";
             refTargetNode = createAncestors(refTarget);
-  
+
             nsp = workspace.getNamespaceRegistry();
             ntManager = workspace.getNodeTypeManager();
-  
+
             // construct a namespace not existing in the repository
             unusedPrefix = getUnusedPrefix();
             unusedURI = getUnusedURI();

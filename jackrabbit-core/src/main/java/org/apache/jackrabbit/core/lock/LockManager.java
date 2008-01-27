@@ -87,7 +87,7 @@ public interface LockManager {
      * given node; otherwise returns <code>false</code>.
      * <p/>
      * Note that <code>isLockHolder(session, node)==true</code> implies
-     * <code>holdsLock(node)==true</code>.   
+     * <code>holdsLock(node)==true</code>.
      * @param session session
      * @param node node
      * @return if the specified session holds a lock on the given node;

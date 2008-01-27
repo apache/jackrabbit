@@ -55,7 +55,7 @@ public class BatchReadConfig {
 
     /**
      * Define the batch-read depth for the given node type name.
-     * 
+     *
      * @param ntName
      * @param depth
      */

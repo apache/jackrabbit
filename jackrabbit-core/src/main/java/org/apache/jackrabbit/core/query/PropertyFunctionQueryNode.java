@@ -112,7 +112,7 @@ public class PropertyFunctionQueryNode extends QueryNode {
     public String getFunctionName() {
         return functionName;
     }
-    
+
     /**
      * {@inheritDoc}
      */

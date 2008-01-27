@@ -26,7 +26,7 @@ import javax.jcr.query.RowIterator;
 
 /**
  * Adapter class for turning {@link RangeIterator}s or {@link Iterator}s
- * into {@link RowIterator}s. 
+ * into {@link RowIterator}s.
  */
 public class RowIteratorAdapter extends RangeIteratorDecorator
         implements RowIterator {

@@ -41,16 +41,16 @@ public class IndexFormatVersion {
      * V2 is the index format for Jackrabbit releases >= 1.4
      */
     public static final IndexFormatVersion V2 = new IndexFormatVersion(2);
-    
+
     /**
      * The used version of the index format
      */
     private final int version;
-    
+
     /**
      * Creates a index format version.
      *
-     * @param version       The version of the index. 
+     * @param version       The version of the index.
      */
     private IndexFormatVersion(int version) {
         this.version = version;
@@ -70,7 +70,7 @@ public class IndexFormatVersion {
     public String toString() {
         return String.valueOf(getVersion());
     }
-    
+
     /**
      * @return the index format version of the index used by the given
      * index reader.

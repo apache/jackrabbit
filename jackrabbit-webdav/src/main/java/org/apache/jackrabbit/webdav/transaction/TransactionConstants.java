@@ -117,7 +117,7 @@ public interface TransactionConstants {
 
     /**
      * "global" lock scope constant.
-     * 
+     *
      * @see #XML_GLOBAL
      * @see Scope#create(String, Namespace)
      */

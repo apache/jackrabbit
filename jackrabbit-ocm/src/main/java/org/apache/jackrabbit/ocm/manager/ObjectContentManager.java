@@ -34,17 +34,17 @@ import org.apache.jackrabbit.ocm.version.VersionIterator;
 /**
  * The object content manager encapsulates a JCR session. This is the main
  * component used to manage objects into the JCR repository.
- * 
+ *
  * @author Sandro Boehme
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart
  *         Christophe </a>
- * 
+ *
  */
 public interface ObjectContentManager {
 
     /**
      * Check if an object exists
-     * 
+     *
      * @param path
      *            the object path
      * @return true if the item exists
@@ -56,7 +56,7 @@ public interface ObjectContentManager {
 
     /**
      * Can this object content manager insert, update, delete, ... that type?
-     * 
+     *
      * @param clazz
      *            class for question
      * @return <code>true</code> if the class is persistence
@@ -65,7 +65,7 @@ public interface ObjectContentManager {
 
     /**
      * Insert an object into the JCR repository
-     * 
+     *
      * @param object
      *            the object to add
      * @throws ObjectContentManagerException
@@ -75,7 +75,7 @@ public interface ObjectContentManager {
 
     /**
      * Update an object
-     * 
+     *
      * @param object
      *            the object to update
      * @throws ObjectContentManagerException
@@ -85,11 +85,11 @@ public interface ObjectContentManager {
 
     /**
      * Get an object from the JCR repository
-     * 
+     *
      * @param path
      *            the object path
      * @return the object found or null
-     * 
+     *
      * @throws ObjectContentManagerException
      *             when it is not possible to retrieve the object
      */
@@ -97,11 +97,11 @@ public interface ObjectContentManager {
 
     /**
      * Get an object from the JCR repository
-     * 
+     *
      * @param the
      *            object uuid
      * @return the object found or null
-     * 
+     *
      * @throws ObjectContentManagerException
      *             when it is not possible to retrieve the object
      */
@@ -110,13 +110,13 @@ public interface ObjectContentManager {
 
     /**
      * Get an object from the JCR repository
-     * 
+     *
      * @param path
      *            the object path
      * @param versionNumber
      *            The desired object version number
      * @return the object found or null
-     * 
+     *
      * @throws ObjectContentManagerException
      *             when it is not possible to retrieve the object
      */
@@ -125,13 +125,13 @@ public interface ObjectContentManager {
 
     /**
      * Get an object from the JCR repository
-     * 
+     *
      * @param objectClass
      *            the object class
      * @param path
      *            the object path
      * @return the object found or null
-     * 
+     *
      * @throws ObjectContentManagerException
      *             when it is not possible to retrieve the object
      */
@@ -140,7 +140,7 @@ public interface ObjectContentManager {
 
     /**
      * Get an object from the JCR repository
-     * 
+     *
      * @param objectClass
      *            the object class
      * @param path
@@ -148,7 +148,7 @@ public interface ObjectContentManager {
      * @param versionNumber
      *            The desired object version number
      * @return the object found or null
-     * 
+     *
      * @throws ObjectContentManagerException
      *             when it is not possible to retrieve the object
      */
@@ -159,7 +159,7 @@ public interface ObjectContentManager {
      * Retrieve the specified attribute for the given persistent object. this
      * attribute is either a bean or a collection. This method is usefull if the
      * corresponding descriptor has an autoRetrieve="false"
-     * 
+     *
      * @param object
      *            The persistent object
      * @param attributeName
@@ -169,7 +169,7 @@ public interface ObjectContentManager {
 
     /**
      * Retrieve all mapped attributes for the given persistent object.
-     * 
+     *
      * @param object
      *            The persistent object
      */
@@ -177,79 +177,79 @@ public interface ObjectContentManager {
 
     /**
      * Remove an object from a JCR repository
-     * 
+     *
      * @param path
      *            the object path
      * @throws ObjectContentManagerException
      *             when it is not possible to remove the object
-     * 
+     *
      */
     public void remove(String path) throws ObjectContentManagerException;
 
     /**
      * Remove an object from a JCR repository
-     * 
+     *
      * @param object
      *            the object to remove
      * @throws ObjectContentManagerException
      *             when it is not possible to remove the object
-     * 
+     *
      */
     public void remove(Object object) throws ObjectContentManagerException;
 
     /**
      * Remove all objects matching to a query
-     * 
+     *
      * @param query
      *            The query used to find the objects to remove
      * @throws ObjectContentManagerException
      *             when it is not possible to remove all objects
-     * 
+     *
      */
     public void remove(Query query) throws ObjectContentManagerException;
 
     /**
      * Retrieve an object matching to a query
-     * 
+     *
      * @param query
      *            The Query object used to seach the object
      * @return The object found or null
      * @throws ObjectContentManagerException
      *             when it is not possible to retrieve the object
-     * 
+     *
      */
     public Object getObject(Query query) throws ObjectContentManagerException;
 
     /**
      * Retrieve some objects matching to a query
-     * 
+     *
      * @param query
      *            The query used to seach the objects
      * @return a collection of objects found
      * @throws ObjectContentManagerException
      *             when it is not possible to retrieve the objects
-     * 
+     *
      */
     public Collection getObjects(Query query)
             throws ObjectContentManagerException;
 
     /**
      * Returns a list of objects of that particular class which are associated to a specific path.
-     * This method is helpfull when same name sibling is used to create nodes. 
+     * This method is helpfull when same name sibling is used to create nodes.
      * This would not return the objects anywhere below the denoted path.
-     * 
-     * @param objectClass 
-     * @param path Node path. 
+     *
+     * @param objectClass
+     * @param path Node path.
      * @return a collection of object found
      */
 
     public Collection getObjects(Class objectClass, String path)
             throws ObjectContentManagerException;
-    
+
     /**
      * Return a list of object matching to a JCR query
-     * 
-     * @param query the JCR query 
+     *
+     * @param query the JCR query
      * @param language the JCR Language ("XPATH" or "SQL").
      * @return
      */
@@ -257,7 +257,7 @@ public interface ObjectContentManager {
 
     /**
      * Retrieve some objects matching to a query.
-     * 
+     *
      * @param query
      *            The query used to seach the objects
      * @return an iterator of objects found
@@ -278,23 +278,23 @@ public interface ObjectContentManager {
      * The <code>language</code> must be a string from among those returned by
      * <code>javax.jcr.QueryManager.getSupportedQueryLanguages()</code>; if
      * it is not, then an <code>InvalidQueryException</code> is thrown.
-     * 
+     *
      * @param query
      *            The query to execute to find the objects.
      * @param language
      *            The language in which the query is written
-     * 
+     *
      * @return An iterator of objects instances. Each entry in the iterator
      *         represents the mapping of a node returned by the query. If the
      *         query returns a node, which may not be mapped, the respective
      *         node is ignored.
-     * 
+     *
      * @throws org.apache.jackrabbit.ocm.exception.InvalidQueryException
      *             If the query is not a valid JCR Query according to the
      *             specified language
      * @throws ObjectContentManagerException
      *             If an error occurrs querying for the objects.
-     * 
+     *
      * @see javax.jcr.query.QueryManager#createQuery(String, String)
      * @see javax.jcr.query.QueryManager#getSupportedQueryLanguages()
      */
@@ -303,7 +303,7 @@ public interface ObjectContentManager {
     /**
      * Checkout - Create a new version This is only possible if the object is
      * based on mix:versionable node type
-     * 
+     *
      * @param path
      *            The object path
      * @throws VersionException
@@ -313,7 +313,7 @@ public interface ObjectContentManager {
 
     /**
      * Checkin an object
-     * 
+     *
      * @param path
      *            the object path
      * @throws VersionException
@@ -324,7 +324,7 @@ public interface ObjectContentManager {
     /**
      * Checkin an object and apply some labels to this new version Within a
      * particular object path, a given label may appear a maximum of once
-     * 
+     *
      * @param path
      *            The object path
      * @param versionLabels
@@ -337,7 +337,7 @@ public interface ObjectContentManager {
 
     /**
      * Get all version labels assigned to a particular object version
-     * 
+     *
      * @param path
      *            the object path
      * @param versionName
@@ -351,7 +351,7 @@ public interface ObjectContentManager {
 
     /**
      * Get all version labels assigned to all versions
-     * 
+     *
      * @param path
      *            the object path
      * @return a array of string (version labels)
@@ -362,7 +362,7 @@ public interface ObjectContentManager {
 
     /**
      * Add a new label to a particular version
-     * 
+     *
      * @param path
      *            the object path
      * @param versionName
@@ -378,7 +378,7 @@ public interface ObjectContentManager {
 
     /**
      * Get all object versions
-     * 
+     *
      * @param path
      *            the object path
      * @return a version iterator
@@ -389,7 +389,7 @@ public interface ObjectContentManager {
 
     /**
      * Get the first object version
-     * 
+     *
      * @param path
      *            the object path
      * @return the first version found
@@ -400,7 +400,7 @@ public interface ObjectContentManager {
 
     /**
      * Get the lastest object version
-     * 
+     *
      * @param path
      *            the object path
      * @return the last version found
@@ -411,7 +411,7 @@ public interface ObjectContentManager {
 
     /**
      * Get a particular version
-     * 
+     *
      * @param path
      *            the object path
      * @param versionName
@@ -425,7 +425,7 @@ public interface ObjectContentManager {
 
     /**
      * Save all modifications made by the object content manager
-     * 
+     *
      * @throws ObjectContentManagerException
      *             when it is not possible to save all pending operation into
      *             the JCR repo
@@ -434,7 +434,7 @@ public interface ObjectContentManager {
 
     /**
      * Close the session
-     * 
+     *
      * @throws ObjectContentManagerException
      *             when it is not possible to logout
      */
@@ -442,7 +442,7 @@ public interface ObjectContentManager {
 
     /**
      * Lock object saved on {@param path }.
-     * 
+     *
      * @param path
      *            path to saved object.
      * @param isDeep
@@ -451,7 +451,7 @@ public interface ObjectContentManager {
      *            is lock session scoped? See JCR spec: Session-scoped and
      *            Open-scoped Locks
      * @return lock - Wrapper object for a JCR lock
-     * 
+     *
      * @throws LockedException
      *             if path is locked (cannot lock same path again)
      */
@@ -460,14 +460,14 @@ public interface ObjectContentManager {
 
     /**
      * Unlock object stored on {@param path }.
-     * 
+     *
      * @param path
      *            path to stored object
-     * 
-     * 
+     *
+     *
      * @param lockToken
      *            see JCR spec: 8.4.6 Lock Token; can be <code>null</code>
-     * 
+     *
      * @throws IllegalUnlockException
      *             throws if the current operation does not own the current lock
      */
@@ -476,33 +476,33 @@ public interface ObjectContentManager {
 
     /**
      * Is that path locked?
-     * 
+     *
      * @param absPath
      * @return <code>true</code> if path locked
      */
     public boolean isLocked(String absPath);
 
     /**
-     * 
+     *
      * @return The query manager reference
      */
     public QueryManager getQueryManager();
 
     /**
      * Refresh the underlying jcr session (see the jcr spec)
-     * 
+     *
      * @param keepChanges
      */
     public void refresh(boolean keepChanges);
 
     /**
      * Move an object
-     * 
+     *
      * @param srcPath
      *            path of the object to move
      * @param destPath
      *            destination path
-     * 
+     *
      * @throws ObjectContentManagerException
      */
     public void move(String srcPath, String destPath)
@@ -510,12 +510,12 @@ public interface ObjectContentManager {
 
     /**
      * Copy an object
-     * 
+     *
      * @param srcPath
      *            path of the object to copy
      * @param destPath
      *            destination path
-     * 
+     *
      * @throws ObjectContentManagerException
      */
     public void copy(String srcPath, String destPath)
@@ -524,7 +524,7 @@ public interface ObjectContentManager {
     /**
      * This method returns the JCR session. The JCR session could be used to
      * make some JCR specific calls.
-     * 
+     *
      * @return the associated JCR session
      */
     public Session getSession();

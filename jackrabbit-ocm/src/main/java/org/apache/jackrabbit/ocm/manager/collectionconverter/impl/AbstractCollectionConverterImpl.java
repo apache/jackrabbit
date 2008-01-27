@@ -35,9 +35,9 @@ import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
 
-/** 
+/**
  * Abstract class used for all CollectionConverter
- * 
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
@@ -48,7 +48,7 @@ public abstract class AbstractCollectionConverterImpl implements CollectionConve
 
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param atomicTypeConverters The atomic type converter to used
 	 * @param objectConverter The object converter to used
 	 * @param mapper The mapper to used

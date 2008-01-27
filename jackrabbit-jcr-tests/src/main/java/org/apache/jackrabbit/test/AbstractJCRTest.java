@@ -388,7 +388,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
         }
         testRootNode = null;
     }
-    
+
     protected void tearDown() throws Exception {
         cleanUp();
         super.tearDown();
@@ -531,7 +531,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected boolean isSupported(String descriptorKey) throws RepositoryException {
         return "true".equals(helper.getRepository().getDescriptor(descriptorKey));
     }
-    
+
     /**
      * Checks that the repository supports multiple workspace, otherwise aborts with
      * {@link NotExecutableException}.
@@ -606,9 +606,9 @@ public abstract class AbstractJCRTest extends JUnitTest {
      * type is not supported
      */
     protected void ensureCanSetProperty(Node node, String propertyName, Value[] values) throws NotExecutableException, RepositoryException {
-      
+
         int propertyType = values.length == 0 ? PropertyType.UNDEFINED : values[0].getType();
-        
+
         if (! canSetProperty(node, propertyName, propertyType, true)) {
             throw new NotExecutableException("configured property name " + propertyName + " can not be set on node " + node.getPath());
         }

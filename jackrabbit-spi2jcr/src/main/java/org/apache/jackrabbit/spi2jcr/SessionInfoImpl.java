@@ -83,13 +83,13 @@ class SessionInfoImpl implements SessionInfo {
      * @param credentials a copy of the credentials that were used to obtain the
      * @param nameFactory
      * @param pathFactory
-     * @throws RepositoryException 
+     * @throws RepositoryException
      */
     SessionInfoImpl(Session session, Credentials credentials,
                     NameFactory nameFactory, PathFactory pathFactory) throws RepositoryException {
         this.session = session;
         this.credentials = credentials;
-        
+
         final NamespaceRegistry nsReg = session.getWorkspace().getNamespaceRegistry();
         final NamespaceResolver nsResolver = new AbstractNamespaceResolver() {
             public String getPrefix(String uri) throws NamespaceException {

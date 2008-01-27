@@ -61,7 +61,7 @@ public class OpenOfficeTextExtractor extends AbstractTextExtractor {
 
     /**
      * {@inheritDoc}
-     */ 
+     */
     public Reader extractText(InputStream stream,
                               String type,
                               String encoding) throws IOException {

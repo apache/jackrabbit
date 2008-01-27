@@ -43,7 +43,7 @@ import org.apache.jackrabbit.ocm.testmodel.interfaces.Folder;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
-public class AnnotationConcreteClassTest extends AnnotationTestBase 
+public class AnnotationConcreteClassTest extends AnnotationTestBase
 {
 	private final static Log log = LogFactory.getLog(AnnotationConcreteClassTest.class);
 
@@ -70,23 +70,23 @@ public class AnnotationConcreteClassTest extends AnnotationTestBase
 			ObjectContentManager ocm = this.getObjectContentManager();
 
 			//---------------------------------------------------------------------------------------------------------
-			// Insert 
+			// Insert
 			//---------------------------------------------------------------------------------------------------------			
             DocumentImpl documentImpl = new DocumentImpl();
             documentImpl.setPath("/document1");
             documentImpl.setName("document name");
-            documentImpl.setContentType("plain/text"); 
+            documentImpl.setContentType("plain/text");
             DocumentStream documentStream = new DocumentStream();
             documentStream.setEncoding("utf-8");
             documentStream.setContent("Test Content".getBytes());
             documentImpl.setDocumentStream(documentStream);
             Document document = documentImpl;
-            
+
             ocm.insert(document);
 			ocm.save();
 
 			//---------------------------------------------------------------------------------------------------------
-			// Retrieve 
+			// Retrieve
 			//---------------------------------------------------------------------------------------------------------						
 			document = (Document) ocm.getObject( "/document1");
 			assertTrue("Invalid implementation for Document", document instanceof DocumentImpl);
@@ -134,58 +134,58 @@ public class AnnotationConcreteClassTest extends AnnotationTestBase
     DocumentImpl document = new DocumentImpl();
     document.setPath("/document1");
     document.setName("document name 1");
-    document.setContentType("plain/text"); 
+    document.setContentType("plain/text");
     DocumentStream documentStream = new DocumentStream();
     documentStream.setEncoding("utf-8");
     documentStream.setContent("Test Content".getBytes());
-    document.setDocumentStream(documentStream);        
-    ocm.insert(document);
-    
-    document = new DocumentImpl();
-    document.setPath("/document2");        
-    document.setName("document name 2");
-    document.setContentType("plain/text"); 
-    documentStream = new DocumentStream();
-    documentStream.setEncoding("utf-8");
-    documentStream.setContent("Test Content".getBytes());
-    document.setDocumentStream(documentStream);       
+    document.setDocumentStream(documentStream);
     ocm.insert(document);
 
     document = new DocumentImpl();
-    document.setPath("/document3");        
+    document.setPath("/document2");
+    document.setName("document name 2");
+    document.setContentType("plain/text");
+    documentStream = new DocumentStream();
+    documentStream.setEncoding("utf-8");
+    documentStream.setContent("Test Content".getBytes());
+    document.setDocumentStream(documentStream);
+    ocm.insert(document);
+
+    document = new DocumentImpl();
+    document.setPath("/document3");
     document.setName("document 3");
-    document.setContentType("plain/text"); 
+    document.setContentType("plain/text");
     documentStream = new DocumentStream();
     documentStream.setEncoding("utf-8");
     documentStream.setContent("Test Content 3".getBytes());
-    document.setDocumentStream(documentStream);       
+    document.setDocumentStream(documentStream);
     ocm.insert(document);
-    
+
     FolderImpl folder = new FolderImpl();
     folder.setPath("/folder1");
     folder.setName("folder1");
     ocm.insert(folder);
 
 
-    document = new DocumentImpl();        
+    document = new DocumentImpl();
     document.setName("document4");
-    document.setContentType("plain/text"); 
+    document.setContentType("plain/text");
     documentStream = new DocumentStream();
     documentStream.setEncoding("utf-8");
     documentStream.setContent("Test Content 4".getBytes());
-    document.setDocumentStream(documentStream);       
+    document.setDocumentStream(documentStream);
 
     FolderImpl subFolder = new FolderImpl();
     subFolder.setName("subfolder");
-    
+
     folder = new FolderImpl();
     folder.setPath("/folder2");
-    folder.setName("folder2");        
+    folder.setName("folder2");
     folder.addChild(document);
     folder.addChild(subFolder);
     ocm.insert(folder);               		
 
-    
+
 	Atomic a = new Atomic();
 	a.setPath("/atomic");
 	a.setBooleanPrimitive(true);
@@ -207,7 +207,7 @@ public class AnnotationConcreteClassTest extends AnnotationTestBase
 	
 
 	//---------------------------------------------------------------------------------------------------------	
-	// Retrieve Documents 
+	// Retrieve Documents
 	//---------------------------------------------------------------------------------------------------------			
 	queryManager = ocm.getQueryManager();
 	filter = queryManager.createFilter(Document.class);
@@ -222,7 +222,7 @@ public class AnnotationConcreteClassTest extends AnnotationTestBase
 
 	
 	//---------------------------------------------------------------------------------------------------------	
-	// Retrieve folder2 
+	// Retrieve folder2
 	//---------------------------------------------------------------------------------------------------------	
 	Folder folder2 = (Folder) ocm.getObject( "/folder2");
 	assertNotNull("folder 2 is null", folder2);
@@ -247,7 +247,7 @@ public class AnnotationConcreteClassTest extends AnnotationTestBase
 	assertTrue("Invalid item in the collection", this.contains(parenFolder.getChildren(), "/folder2/subfolder", FolderImpl.class));
 	
 	//---------------------------------------------------------------------------------------------------------	
-	// Retrieve Contents (ancestor of Documents) 
+	// Retrieve Contents (ancestor of Documents)
 	//---------------------------------------------------------------------------------------------------------			
 	queryManager = ocm.getQueryManager();
 	filter = queryManager.createFilter(Content.class);
@@ -295,7 +295,7 @@ public class AnnotationConcreteClassTest extends AnnotationTestBase
 	assertTrue("Invalid item in the collection", this.contains(result, "/folder2/subfolder",FolderImpl.class));
 	
 }
- 
+
 
 public void testBeanCollection() {
 	ObjectContentManager ocm = this.getObjectContentManager();
@@ -305,26 +305,26 @@ public void testBeanCollection() {
 	//---------------------------------------------------------------------------------------------------------
 	 Folder folder = new FolderImpl();		
      folder.setPath("/mainfolder");
-     folder.setName("Main folder");        
-    
+     folder.setName("Main folder");
+
      for (int i=1; i<=100;i++)
      {
-         Document document = new DocumentImpl();	        
+         Document document = new DocumentImpl();	
          document.setName("document" + i);
-         document.setContentType("plain/text"); 
+         document.setContentType("plain/text");
          DocumentStream documentStream = new DocumentStream();
          documentStream.setEncoding("utf-8");
          documentStream.setContent("Test Content".getBytes());
          document.setDocumentStream(documentStream);
          folder.addChild(document);
-         
+
          Folder subFolder = new FolderImpl();
          subFolder.setName("folder" + i);
          subFolder.addChild(document);
          folder.addChild(subFolder);
-         	    	 
+         	    	
      }
-     log.debug("Save the folder and its 200 children");   
+     log.debug("Save the folder and its 200 children");
      ocm.insert(folder);
      ocm.save();
      log.debug("End - Save the folder and its 200 children");
@@ -338,7 +338,7 @@ public void testBeanCollection() {
 	assertEquals("Invalid number of children", children.size(), 200);
      for (int i=1; i<=100;i++)
      {
-    	   
+    	
         assertTrue("Invalid item in the collection : " +"/mainfolder/document" + i , this.contains(children, "/mainfolder/document" + i,DocumentImpl.class));
 	    assertTrue("Invalid item in the collection : " + "/mainfolder/folder" + i, this.contains(children, "/mainfolder/folder" + i, FolderImpl.class));
      }

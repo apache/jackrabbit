@@ -129,7 +129,7 @@ public final class PropertyDefinitionImpl extends ItemDefinitionImpl implements 
 
     /**
      * Returns {@link #PROPERTYDEFINITION_ELEMENT}.
-     * 
+     *
      * @return always returns {@link #PROPERTYDEFINITION_ELEMENT}
      */
     String getElementName() {

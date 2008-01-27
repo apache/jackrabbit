@@ -78,7 +78,7 @@ public class RepositoryDescriptorsReport extends AbstractJcrReport implements It
     }
 
     /**
-     * @see Report#init(DavResource, ReportInfo) 
+     * @see Report#init(DavResource, ReportInfo)
      */
     public void init(DavResource resource, ReportInfo info) throws DavException {
         // delegate validation to abstract super classe

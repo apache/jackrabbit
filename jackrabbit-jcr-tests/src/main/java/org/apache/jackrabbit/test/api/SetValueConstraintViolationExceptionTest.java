@@ -819,7 +819,7 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
             // create a referenceable node not satisfying the constraint
             nodeNotSatisfied = testRootNode.addNode(nodeName4, nodeTypeNotSatisfied);
             nodeNotSatisfied.addMixin(mixReferenceable);
-            
+
             // some implementations may require a save after addMixin()
             testRootNode.save();
 

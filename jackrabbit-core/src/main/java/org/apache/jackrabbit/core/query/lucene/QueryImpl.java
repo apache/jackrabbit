@@ -92,7 +92,7 @@ public class QueryImpl extends AbstractQueryImpl {
                 session.getNamePathResolver(), factory);
         allNodesQueryNode = createMatchAllNodesQuery(factory);
     }
-    
+
     /**
      * Executes this query and returns a <code>{@link QueryResult}</code>.
      *
@@ -190,11 +190,11 @@ public class QueryImpl extends AbstractQueryImpl {
 
         return (Name[]) selectProps.toArray(new Name[selectProps.size()]);
     }
-    
+
     /**
      * Returns <code>true</code> if this query node needs items under
      * /jcr:system to be queried.
-     * 
+     *
      * @return <code>true</code> if this query node needs content under
      *         /jcr:system to be queried; <code>false</code> otherwise.
      */

@@ -28,19 +28,19 @@ public interface CustomNodeTypeCreator {
 
     /** This method is supposed to create custom node types on repository
      * setup.
-     * 
-     * @throws org.apache.jackrabbit.ocm.exception.CustomNodeTypeCreationException 
-     * @return true/false True if custom node type creation succeeded 
+     *
+     * @throws org.apache.jackrabbit.ocm.exception.CustomNodeTypeCreationException
+     * @return true/false True if custom node type creation succeeded
      */
     boolean createInitialJcrCustomNodeTypes() throws CustomNodeTypeCreationException;
 
     /** Method to add a jcr custom node type to an existing jcr repository.
-     * 
-     * @throws org.apache.jackrabbit.ocm.exception.CustomNodeTypeCreationException 
+     *
+     * @throws org.apache.jackrabbit.ocm.exception.CustomNodeTypeCreationException
      * @return true/false True if custom node type creation succeeded
      */
     boolean addJcrCustomNodeType() throws CustomNodeTypeCreationException;
-    
+
     /** Jcr session to be injected into implementation.
      * @param jcrSession JcrSession
      */

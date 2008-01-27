@@ -94,19 +94,19 @@ public interface IndexingConfiguration {
      * @return the boost for the node scope fulltext index field.
      */
     float getNodeBoost(NodeState state);
-    
+
     /**
-     * Returns the analyzer configured for the property with this fieldName 
+     * Returns the analyzer configured for the property with this fieldName
      * (the string representation ,JCR-style name, of the given <code>Name</code>
-     * prefixed with <code>FieldNames.FULLTEXT_PREFIX</code>), 
+     * prefixed with <code>FieldNames.FULLTEXT_PREFIX</code>),
      * and <code>null</code> if none is configured, or the configured analyzer
      * cannot be found. If <code>null</code> is returned, the default Analyzer
      * is used.
-     * 
+     *
      * @param fieldName the string representation ,JCR-style name, of the given <code>Name</code>,
      * prefixed with <code>FieldNames.FULLTEXT_PREFIX</code>)
-     * @return the <code>analyzer</code> to use for indexing this property 
+     * @return the <code>analyzer</code> to use for indexing this property
      */
     Analyzer getPropertyAnalyzer(String fieldName);
-    
+
 }

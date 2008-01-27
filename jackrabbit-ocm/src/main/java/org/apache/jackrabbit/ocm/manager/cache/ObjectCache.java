@@ -20,15 +20,15 @@ package org.apache.jackrabbit.ocm.manager.cache;
 
 /**
  *
- *  
- * Interface use for an object cache.  
- * 
+ *
+ * Interface use for an object cache.
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
- * 
+ *
  */
 public interface ObjectCache
 {
-    
+
 	void cache(String path, Object object);
 	
 	void clear();

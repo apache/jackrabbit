@@ -22,7 +22,7 @@ import org.apache.jackrabbit.BaseException;
  * Base class for exceptions about malformed or otherwise
  * invalid JCR names and paths.
  *
- * @deprecated Use the NameException class from 
+ * @deprecated Use the NameException class from
  *             the org.apache.jackrabbit.spi.commons.conversion package of
  *             the jackrabbit-spi-commons component.
  */

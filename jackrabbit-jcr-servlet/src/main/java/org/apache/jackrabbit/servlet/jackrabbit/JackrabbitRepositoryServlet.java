@@ -57,7 +57,7 @@ import org.apache.jackrabbit.servlet.AbstractRepositoryServlet;
  *     "<code>repository.xml</code>" within the configured repository home
  *     directory. A standard configuration file is automatically copied to
  *     the configured location during servlet initialization if the file
- *     does not already exist. 
+ *     does not already exist.
  *   </dd>
  * </dl>
  * <p>
@@ -106,7 +106,7 @@ public class JackrabbitRepositoryServlet extends AbstractRepositoryServlet {
         } catch (RepositoryException e) {
             throw new ServletException("Failed to start Jackrabbit", e);
         }
-        
+
         super.init();
     }
 
@@ -130,7 +130,7 @@ public class JackrabbitRepositoryServlet extends AbstractRepositoryServlet {
 
     /**
      * Copies the default repository configuration file to the given location.
-     *  
+     *
      * @param config path of the configuration file
      * @throws ServletException if the configuration file could not be copied
      */

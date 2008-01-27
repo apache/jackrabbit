@@ -24,7 +24,7 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
  * Simple object used to test default value assignement
  */
 @Node(jcrType="ocm:DefTestPrimary", discriminator=false)
-public class Default 
+public class Default
 {
 	@Field(path=true) private String path;
 
@@ -39,7 +39,7 @@ public class Default
 
 	@Field(jcrName="ocm:p5") private String p5;
 
-    
+
     public String getPath() {
         return path;
     }
@@ -50,7 +50,7 @@ public class Default
 
     /**
      * @return the p1
-     */    
+     */
     public String getP1() {
         return p1;
     }
@@ -64,7 +64,7 @@ public class Default
 
     /**
      * @return the p2
-     */    
+     */
     public String getP2() {
         return p2;
     }
@@ -78,7 +78,7 @@ public class Default
 
     /**
      * @return the p3
-     */    
+     */
     public String getP3() {
         return p3;
     }
@@ -92,7 +92,7 @@ public class Default
 
     /**
      * @return the p4
-     */    
+     */
     public String getP4() {
         return p4;
     }
@@ -106,7 +106,7 @@ public class Default
 
     /**
      * @return the p5
-     */    
+     */
     public String getP5() {
         return p5;
     }

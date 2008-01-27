@@ -88,7 +88,7 @@ public class SharedFieldSortComparator extends SortComparator {
      * @param reader the index reader.
      * @param propertyName the name of the property to sort.
      * @return a <code>ScoreDocComparator</code> for the
-     * @throws IOException 
+     * @throws IOException
      * @throws IOException
      */
     public ScoreDocComparator newComparator(final IndexReader reader, final String propertyName) throws IOException {
@@ -109,7 +109,7 @@ public class SharedFieldSortComparator extends SortComparator {
                     FieldNames.createNamedValue(propertyName, ""),
                     SharedFieldSortComparator.this, createComparatorValues);
         }
-        starts[readers.size()] = maxDoc; 
+        starts[readers.size()] = maxDoc;
 
         return new ScoreDocComparator() {
 
@@ -130,7 +130,7 @@ public class SharedFieldSortComparator extends SortComparator {
             /**
              * Returns an empty if no lookup table is available otherwise the
              * index term for the score doc <code>i</code>.
-             * 
+             *
              * @param i
              *            the score doc.
              * @return the sort value if available.
@@ -174,7 +174,7 @@ public class SharedFieldSortComparator extends SortComparator {
                     }
                 }
                 return hi;
-            }             
+            }
 
         };
     }

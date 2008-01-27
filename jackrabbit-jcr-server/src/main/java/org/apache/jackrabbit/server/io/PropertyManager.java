@@ -49,7 +49,7 @@ public interface PropertyManager {
     public void addPropertyHandler(PropertyHandler propertyHandler);
 
     /**
-     * 
+     *
      * @return
      */
     public PropertyHandler[] getPropertyHandlers();

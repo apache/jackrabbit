@@ -28,14 +28,14 @@ import javax.jcr.RepositoryException;
  * and data store garbage collection.
  */
 public interface IterablePersistenceManager extends PersistenceManager {
-    
+
     /**
-     * Get all node ids. 
+     * Get all node ids.
      * A typical application will call this method multiple times, where 'after'
-     * is the last row read. The maxCount parameter defines the maximum number of 
-     * node ids returned, 0 meaning no limit. The order of the node ids is specific for the 
+     * is the last row read. The maxCount parameter defines the maximum number of
+     * node ids returned, 0 meaning no limit. The order of the node ids is specific for the
      * given persistent manager. Items that are added concurrently may not be included.
-     * 
+     *
      * @param after the lower limit, or null for no limit.
      * @param maxCount the maximum number of node ids to return, or 0 for no limit.
      * @return an iterator of all bundles.

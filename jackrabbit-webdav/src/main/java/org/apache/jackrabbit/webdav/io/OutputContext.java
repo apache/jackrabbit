@@ -55,7 +55,7 @@ public interface OutputContext {
      * @param contentType
      */
     public void setContentType(String contentType);
-    
+
     /**
      * Sets the modification time of the resource
      *

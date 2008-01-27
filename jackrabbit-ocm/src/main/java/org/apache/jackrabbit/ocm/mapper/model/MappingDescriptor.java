@@ -42,12 +42,12 @@ public class MappingDescriptor {
     private Mapper mapper;
 
     private String packageName;
-    
+
     public void setPackage(String pckgName) {
         this.packageName = pckgName;
     }
-    
-    
+
+
     /**
      * Add a new ClassDescriptor
      *
@@ -71,8 +71,8 @@ public class MappingDescriptor {
         }
 
         classDescriptorsByClassName.put(classDescriptor.getClassName(), classDescriptor);
-        
-        if (null != classDescriptor.getJcrType() && !  "".equals(classDescriptor.getJcrType()) && 
+
+        if (null != classDescriptor.getJcrType() && !  "".equals(classDescriptor.getJcrType()) &&
         		 ! ManagerConstant.NT_UNSTRUCTURED.equals(classDescriptor.getJcrType()))
         {
         	if ((classDescriptorsByNodeType.get(classDescriptor.getClassName()) != null) &&
@@ -93,7 +93,7 @@ public class MappingDescriptor {
     public ClassDescriptor getClassDescriptorByName(String className) {
         return (ClassDescriptor) classDescriptorsByClassName.get(className);
     }
-    
+
     public ClassDescriptor getClassDescriptorByNodeType(String nodeType)
     {
         return (ClassDescriptor) classDescriptorsByNodeType.get(nodeType);	
@@ -103,7 +103,7 @@ public class MappingDescriptor {
     {
     	return classDescriptorsByClassName.values();
     }
-    
+
     /**
      * Get all class descriptors by class name
      * @return all class descriptors found

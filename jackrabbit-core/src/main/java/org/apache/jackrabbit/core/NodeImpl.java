@@ -4446,7 +4446,7 @@ public class NodeImpl extends ItemImpl implements Node {
             log.debug(msg);
             throw new ConstraintViolationException(msg, re);
         }
-        
+
         if (!defId.equals(((NodeState) state).getDefinitionId())) {
             onRedefine(defId);
         }

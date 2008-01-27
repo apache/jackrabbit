@@ -314,7 +314,7 @@ public interface VersionControlledResource extends VersionableResource {
 
     /**
      * Perform an uncheckout on the version controlled resource.
-     * 
+     *
      * @throws DavException
      */
     public void uncheckout() throws DavException;

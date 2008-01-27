@@ -24,7 +24,7 @@ import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 
 /**
  * Package level tests.
- * 
+ *
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 public class AllTests {
@@ -36,7 +36,7 @@ public class AllTests {
     public static Test buildSuite() {
         TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.manager.beanconverter");
         //$JUnit-BEGIN$
-        suite.addTestSuite(DigesterBeanDescriptorTest.class);        
+        suite.addTestSuite(DigesterBeanDescriptorTest.class);
         suite.addTestSuite(AnnotationBeanDescriptorTest.class);
         //$JUnit-END$
 

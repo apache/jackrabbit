@@ -23,13 +23,13 @@ package org.apache.jackrabbit.ocm.nodemanagement.exception;
  */
 public class OperationNotSupportedException extends BaseNodeManagementException
 {
-    
+
     /** Creates a new instance of NodeTypeRemovalException. */
     public OperationNotSupportedException()
     {
     }
-    
-    /** Creates a new instance of NodeTypeRemovalException. 
+
+    /** Creates a new instance of NodeTypeRemovalException.
      * @param wrappedException Root exception
      */
     public OperationNotSupportedException(Exception wrappedException)

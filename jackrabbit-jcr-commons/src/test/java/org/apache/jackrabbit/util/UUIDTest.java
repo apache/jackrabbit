@@ -23,11 +23,11 @@ import junit.framework.TestCase;
 
 /**
  * Test the Version 4 (random), Leach-Salz UUID generation.
- * 
+ *
  * @author Thomas Mueller
  */
 public class UUIDTest extends TestCase {
-    
+
     public void testUUID() {
         UUID uuid1 = UUID.randomUUID();
         checkUUIDFormat(uuid1);
@@ -43,14 +43,14 @@ public class UUIDTest extends TestCase {
         assertEquals(max.toString(), "ffffffff-ffff-4fff-bfff-ffffffffffff");
         UUID min = new UUID(minHigh, minLow);
         assertEquals(min.toString(), "00000000-0000-4000-8000-000000000000");
-        
+
         // test with a wrong provider
         // must fall back to the default
         VersionFourGenerator.setPRNGProvider("wrong", "wrong");
         UUID uuid2 = UUID.randomUUID();
         checkUUIDFormat(uuid2);
     }
-    
+
     private void checkUUIDFormat(UUID uuid) {
         long high = uuid.getMostSignificantBits();
         long low = uuid.getLeastSignificantBits();

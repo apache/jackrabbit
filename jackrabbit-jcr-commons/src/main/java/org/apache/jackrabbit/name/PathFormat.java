@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
  * <code>PathFormat</code> formats a {@link Path} using a
  * {@link NamespaceResolver}.
  *
- * @deprecated Use the PathResolver interface from 
+ * @deprecated Use the PathResolver interface from
  *             the org.apache.jackrabbit.spi.commons.conversion package of
  *             the jackrabbit-spi-commons component.
  */

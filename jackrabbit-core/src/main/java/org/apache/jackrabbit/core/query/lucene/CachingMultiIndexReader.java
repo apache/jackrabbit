@@ -171,7 +171,7 @@ public final class CachingMultiIndexReader
 
     /**
      * {@inheritDoc}
-     */ 
+     */
     public IndexReader[] getIndexReaders() {
         IndexReader readers[] = new IndexReader[subReaders.length];
         System.arraycopy(subReaders, 0, readers, 0, subReaders.length);
@@ -211,7 +211,7 @@ public final class CachingMultiIndexReader
         }
         return -1;
     }
-    
+
     /**
      * Returns the reader index for document <code>n</code>.
      * Implementation copied from lucene MultiReader class.

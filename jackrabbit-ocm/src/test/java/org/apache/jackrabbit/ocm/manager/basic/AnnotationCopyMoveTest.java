@@ -68,7 +68,7 @@ public class AnnotationCopyMoveTest extends DigesterTestBase
     {
         super.setUp();
 
-        
+
     }
 
 	public void testCopy()
@@ -85,36 +85,36 @@ public class AnnotationCopyMoveTest extends DigesterTestBase
         b.setB1("b1");
         b.setB2("b2");
         a.setB(b);
-        
+
         C c1 = new C();
         c1.setId("first");
         c1.setName("First Element");
         C c2 = new C();
         c2.setId("second");
         c2.setName("Second Element");
-        
+
         C c3 = new C();
         c3.setId("third");
         c3.setName("Third Element");
-        
-        
+
+
         Collection collection = new ArrayList();
         collection.add(c1);
         collection.add(c2);
         collection.add(c3);
-        
+
         a.setCollection(collection);
-        
+
         ocm.insert(a);
         ocm.save();
 		
         // --------------------------------------------------------------------------------
-        // Copy the object 
+        // Copy the object
         // --------------------------------------------------------------------------------
-        ocm.copy("/test", "/test2");      
-        
+        ocm.copy("/test", "/test2");
+
         // --------------------------------------------------------------------------------
-        // Get the object 
+        // Get the object
         // --------------------------------------------------------------------------------
         a = (A) ocm.getObject("/test2");
         assertNotNull("a is null", a);
@@ -122,36 +122,36 @@ public class AnnotationCopyMoveTest extends DigesterTestBase
         assertTrue("Invalid field b.b1", a.getB().getB1().equals("b1"));
         assertTrue("Invalid number of items in field collection", a.getCollection().size() == 3);
 
-        
+
         // --------------------------------------------------------------------------------
-        // Check exceptions 
+        // Check exceptions
         // --------------------------------------------------------------------------------
-       
-        try 
+
+        try
         {
 			ocm.copy("/incorrectpath", "/test2");			
 			fail("the copy method accepts an incorrect source path");
-		} catch (ObjectContentManagerException e) 
+		} catch (ObjectContentManagerException e)
 		{
 			// Nothing to do  - Expected behaviour
-		}       
+		}
 
-        try 
+        try
         {
 			ocm.copy("/test", "incorrectpath");			
 			fail("the copy method accepts an incorrect destination path");
-		} catch (ObjectContentManagerException e) 
+		} catch (ObjectContentManagerException e)
 		{
 			// Nothing to do  - Expected behaviour
 		}
 		
         // --------------------------------------------------------------------------------
-        // Remove objects 
+        // Remove objects
         // --------------------------------------------------------------------------------
         ocm.remove("/test");
         ocm.remove("/test2");
         ocm.save();
-        
+
 	}
 
 	public void testSimpleMove()
@@ -169,53 +169,53 @@ public class AnnotationCopyMoveTest extends DigesterTestBase
         	ocm.save();
 			
 			// --------------------------------------------------------------------------------
-			// Copy the object 
+			// Copy the object
 			// --------------------------------------------------------------------------------
         	ocm.move("/source", "/result");
 
 			// --------------------------------------------------------------------------------
-			// Get the object 
+			// Get the object
 			// --------------------------------------------------------------------------------
 			atomic = (Atomic) ocm.getObject("/result");
 			assertNotNull("atomic is null", atomic);
-			assertTrue("Invalid field a1", atomic.getString().equals("test atomic"));			        
+			assertTrue("Invalid field a1", atomic.getString().equals("test atomic"));			
 
 			assertFalse("Object with path /source still exists", ocm.objectExists("/source"));
 
 			// --------------------------------------------------------------------------------
-			// Check exceptions 
-			// --------------------------------------------------------------------------------      
-			try 
+			// Check exceptions
+			// --------------------------------------------------------------------------------
+			try
 			{
 				ocm.move("/incorrectpath", "/test2");			
 				fail("the copy method accepts an incorrect source path");
-			} catch (ObjectContentManagerException e) 
+			} catch (ObjectContentManagerException e)
 			{
 				// Nothing to do  - Expected behaviour
-			}       
+			}
 
-			try 
+			try
 			{
 				ocm.move("/test", "incorrectpath");			
 				fail("the copy method accepts an incorrect destination path");
-			} catch (ObjectContentManagerException e) 
+			} catch (ObjectContentManagerException e)
 			{
 				// Nothing to do  - Expected behaviour
 			}
 			
 			// --------------------------------------------------------------------------------
-			// Remove objects 
+			// Remove objects
 			// --------------------------------------------------------------------------------
 			ocm.remove("/result");
 			ocm.save();
-		} 
-        catch (Exception e) 
+		}
+        catch (Exception e)
 		{
         	e.printStackTrace();
         	fail();
 		}
 		
-        
+
 	}
 	
 	public void testObjectGraphMove()
@@ -257,27 +257,27 @@ public class AnnotationCopyMoveTest extends DigesterTestBase
         	ocm.save();
 			
 			// --------------------------------------------------------------------------------
-			// Copy the object 
+			// Copy the object
 			// --------------------------------------------------------------------------------			
-        	ocm.move("/source", "/result");            
+        	ocm.move("/source", "/result");
         	// --------------------------------------------------------------------------------
-			// Get the object 
+			// Get the object
 			// --------------------------------------------------------------------------------
 			a = (A) ocm.getObject("/result");
 			assertNotNull("a is null", a);
 			assertTrue("Invalid field a1", a.getA1().equals("a1"));
 			assertTrue("Invalid field b.b1", a.getB().getB1().equals("b1"));
 			assertTrue("Invalid number of items in field collection", a.getCollection().size() == 3);
-			        
+			
 			assertFalse("Object with path /source still exists", ocm.objectExists("/source"));
 			
 			// --------------------------------------------------------------------------------
-			// Remove objects 
+			// Remove objects
 			// --------------------------------------------------------------------------------
 			ocm.remove("/result");
 			ocm.save();
-		} 
-        catch (Exception e) 
+		}
+        catch (Exception e)
 		{
         	e.printStackTrace();
         	fail();

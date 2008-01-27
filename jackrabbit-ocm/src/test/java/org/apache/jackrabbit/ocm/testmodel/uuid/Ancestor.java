@@ -28,16 +28,16 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 @Node(isAbstract=true, jcrMixinTypes="mix:referenceable")
 public class Ancestor
 {
-	@Field(path=true) private String path; 
+	@Field(path=true) private String path;
 	@Field(uuid=true) private String uuid;
-    
-    
-    public String getPath() 
+
+
+    public String getPath()
     {
 		return path;
 	}
 	
-    public void setPath(String path) 
+    public void setPath(String path)
 	{
 		this.path = path;
 	}
@@ -49,5 +49,5 @@ public class Ancestor
 	public void setUuid(String uuid) {
 		this.uuid = uuid;
 	}
-    
+
 }

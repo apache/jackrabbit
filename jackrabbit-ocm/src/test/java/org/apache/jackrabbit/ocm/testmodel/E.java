@@ -26,7 +26,7 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 @Node
-public class E 
+public class E
 {
     @Field(path=true) private String path;
     @Field private String d1;

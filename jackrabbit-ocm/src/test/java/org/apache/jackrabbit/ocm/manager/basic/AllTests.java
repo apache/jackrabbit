@@ -24,7 +24,7 @@ import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 
 /**
  * Package level tests.
- * 
+ *
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 public class AllTests {
@@ -41,12 +41,12 @@ public class AllTests {
         suite.addTestSuite(DigesterRemoveTest.class);
         suite.addTestSuite(DigesterSameNameSiblingTest.class);
         suite.addTestSuite(DigesterSimpleTest.class);
-        
+
         suite.addTestSuite(AnnotationAvoidRecursiveLoopTest.class);
         suite.addTestSuite(AnnotationCopyMoveTest.class);
         suite.addTestSuite(AnnotationRemoveTest.class);
         suite.addTestSuite(AnnotationSameNameSiblingTest.class);
-        suite.addTestSuite(AnnotationSimpleTest.class);        
+        suite.addTestSuite(AnnotationSimpleTest.class);
 
         //$JUnit-END$
 

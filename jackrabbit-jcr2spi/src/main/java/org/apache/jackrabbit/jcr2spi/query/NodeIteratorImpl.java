@@ -77,7 +77,7 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
         this.itemMgr = itemMgr;
         this.hierarchyMgr = hierarchyMgr;
         this.rows = queryInfo.getRows();
-        
+
         fetchNext();
     }
 
@@ -209,7 +209,7 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
         // reset
         next = null;
         nextScore = 0;
-        
+
         while (next == null && rows.hasNext()) {
             try {
                 QueryResultRow row = (QueryResultRow) rows.next();

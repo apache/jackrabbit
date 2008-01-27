@@ -65,7 +65,7 @@ public class SimpleJBossAccessManager implements AccessManager {
         } finally {
             rolefs.close();
         }
-        
+
         Iterator iterator = context.getSubject().getPrincipals().iterator();
         while (iterator.hasNext()) {
             Principal principal = (Principal) iterator.next();

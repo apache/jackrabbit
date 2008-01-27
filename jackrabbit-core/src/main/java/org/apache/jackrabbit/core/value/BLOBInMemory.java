@@ -28,48 +28,48 @@ import java.util.Arrays;
  * Represents binary data which is backed by a byte[] (in memory).
  */
 public class BLOBInMemory extends BLOBFileValue {
-    
+
     /**
      * Logger instance for this class
      */
     private static Logger log = LoggerFactory.getLogger(BLOBInMemory.class);
-    
+
     /**
      * the prefix of the string representation of this value
-     */    
+     */
     private static final String PREFIX = "0x";
-    
+
     /**
      * the data
      */
     private byte[] data;
-    
+
     /**
      * empty array
-     */    
+     */
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
-    
+
     /**
      * empty instance
      */
     private static final BLOBInMemory EMPTY = new BLOBInMemory(EMPTY_BYTE_ARRAY);
-    
+
     /**
      * Creates a new instance from a
      * <code>byte[]</code> array.
      *
      * @param data the byte array
-     */    
+     */
     private BLOBInMemory(byte[] data) {
         this.data = data;
     }
-    
+
     /**
      * Creates a new instance from a
      * <code>byte[]</code> array.
      *
      * @param data the byte array
-     */    
+     */
     static BLOBInMemory getInstance(byte[] data) {
         if (data.length == 0) {
             return EMPTY;
@@ -77,7 +77,7 @@ public class BLOBInMemory extends BLOBFileValue {
             return new BLOBInMemory(data);
         }
     }
-    
+
     /**
      * Checks if String can be converted to an instance of this class.
      * @param s
@@ -85,8 +85,8 @@ public class BLOBInMemory extends BLOBFileValue {
      */
     static boolean isInstance(String s) {
         return s.startsWith(PREFIX);
-    }    
-    
+    }
+
     /**
      * Convert a String to an instance of this class.
      * @param s
@@ -98,7 +98,7 @@ public class BLOBInMemory extends BLOBFileValue {
         int len = s.length();
         if (len % 2 != 0) {
             String msg = "unable to deserialize byte array " + s + " , length=" + s.length();
-            log.debug(msg);            
+            log.debug(msg);
             throw new IllegalArgumentException(msg);
         }
         len /= 2;
@@ -109,7 +109,7 @@ public class BLOBInMemory extends BLOBFileValue {
             }
         } catch (NumberFormatException e) {
             String msg = "unable to deserialize byte array " + s;
-            log.debug(msg);            
+            log.debug(msg);
             throw new IllegalArgumentException(msg);
         }
         return BLOBInMemory.getInstance(data);
@@ -158,8 +158,8 @@ public class BLOBInMemory extends BLOBFileValue {
             buff.append(hex[c & 0xf]);
         }
         return buff.toString();
-    }    
-    
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -173,7 +173,7 @@ public class BLOBInMemory extends BLOBFileValue {
         }
         return false;
     }
-    
+
     /**
      * Returns zero to satisfy the Object equals/hashCode contract.
      * This class is mutable and not meant to be used as a hash key.
@@ -183,6 +183,6 @@ public class BLOBInMemory extends BLOBFileValue {
      */
     public int hashCode() {
         return 0;
-    }    
+    }
 
 }

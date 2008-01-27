@@ -53,14 +53,14 @@ public class AnnotationNTCollectionConverterImplTest extends AnnotationTestBase
         return new RepositoryLifecycleTestSetup(
                 new TestSuite(AnnotationNTCollectionConverterImplTest.class));
     }
-          
+
 
     public void testCollection()
     {
         try
         {
         	ObjectContentManager ocm = getObjectContentManager();
-            
+
         	// --------------------------------------------------------------------------------
             // Create and store an object graph in the repository with a null collection
             // --------------------------------------------------------------------------------
@@ -68,75 +68,75 @@ public class AnnotationNTCollectionConverterImplTest extends AnnotationTestBase
             Page page = new Page();
             page.setPath("/test");
             page.setTitle("Page Title");
-            
+
             ocm.insert(page);
             ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             page = (Page) ocm.getObject( "/test");
             assertNull("page.getParagraphs is not null", page.getParagraphs());
-            assertTrue("Incorrect page title", page.getTitle().equals("Page Title"));                        
-            
+            assertTrue("Incorrect page title", page.getTitle().equals("Page Title"));
+
             // --------------------------------------------------------------------------------
             // Create and store an object graph in the repository
             // --------------------------------------------------------------------------------
             ArrayList paragraphs = new ArrayList();
-            
+
             paragraphs.add(new Paragraph("Para 1"));
             paragraphs.add(new Paragraph("Para 2"));
             paragraphs.add(new Paragraph("Para 3"));
             page.setParagraphs(paragraphs);
-            
-            ocm.update(page);
-            ocm.save();
-            
-            // --------------------------------------------------------------------------------
-            // Get the object
-            // --------------------------------------------------------------------------------           
-            page = (Page) ocm.getObject( "/test");
-            assertNotNull("page.getParagraphs is null", page.getParagraphs());
-            assertTrue("Incorrect page title", page.getTitle().equals("Page Title"));
-            assertTrue("Incorrect page.getParagraphs size", page.getParagraphs().size() == 3);
-            assertTrue("Incorrect para element", ((Paragraph) page.getParagraphs().iterator().next()).getText().equals("Para 1"));
-            
-            // --------------------------------------------------------------------------------
-            // Update the object
-            // --------------------------------------------------------------------------------
-            paragraphs = new ArrayList();
-            
-            paragraphs.add(new Paragraph("Para 1"));
-            paragraphs.add(new Paragraph("Para 2"));
-            paragraphs.add(new Paragraph("Para 4"));
-            paragraphs.add(new Paragraph("Para 5"));
-            page.setParagraphs(paragraphs);
-            
+
             ocm.update(page);
             ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
+            page = (Page) ocm.getObject( "/test");
+            assertNotNull("page.getParagraphs is null", page.getParagraphs());
+            assertTrue("Incorrect page title", page.getTitle().equals("Page Title"));
+            assertTrue("Incorrect page.getParagraphs size", page.getParagraphs().size() == 3);
+            assertTrue("Incorrect para element", ((Paragraph) page.getParagraphs().iterator().next()).getText().equals("Para 1"));
+
+            // --------------------------------------------------------------------------------
+            // Update the object
+            // --------------------------------------------------------------------------------
+            paragraphs = new ArrayList();
+
+            paragraphs.add(new Paragraph("Para 1"));
+            paragraphs.add(new Paragraph("Para 2"));
+            paragraphs.add(new Paragraph("Para 4"));
+            paragraphs.add(new Paragraph("Para 5"));
+            page.setParagraphs(paragraphs);
+
+            ocm.update(page);
+            ocm.save();
+
+            // --------------------------------------------------------------------------------
+            // Get the object
+            // --------------------------------------------------------------------------------
 
             page = (Page) ocm.getObject( "/test");
             assertNotNull("page.getParagraphs is null", page.getParagraphs());
             assertTrue("Incorrect page title", page.getTitle().equals("Page Title"));
             assertTrue("Incorrect page.getParagraphs size", page.getParagraphs().size() == 4);
             assertTrue("Incorrect para element", ((Paragraph) page.getParagraphs().iterator().next()).getText().equals("Para 1"));
-            
+
             // --------------------------------------------------------------------------------
             // Export to check the content
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             this.exportDocument("target/NTCollectionExport.xml", "/test", true, false);
-            
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
-   
+
 }

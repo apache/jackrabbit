@@ -503,7 +503,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
 	    supportedReports.addReportType(ReportType.LOCATE_BY_HISTORY);
             if (this.isVersionControlled()) {
             supportedReports.addReportType(ReportType.VERSION_TREE);
-	    }            
+	    }
         }
     }
 
@@ -593,7 +593,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
 
     /**
      * Build a new locator for the given href.
-     * 
+     *
      * @param href
      * @return
      */

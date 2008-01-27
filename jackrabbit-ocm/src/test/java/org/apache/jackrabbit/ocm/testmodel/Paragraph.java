@@ -21,10 +21,10 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Bean;
 import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
 import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 
-/** 
+/**
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
- * 
+ *
  */
 @Node(jcrType="ocm:paragraph", discriminator=false)
 public class Paragraph
@@ -32,16 +32,16 @@ public class Paragraph
     @Field(path=true) private String path;
 	@Field(jcrName="ocm:text") private String text;
 	
-    // The converter ParentBeanConverterImpl can be used to have a simple reference 
+    // The converter ParentBeanConverterImpl can be used to have a simple reference
 	// to the page containing this pararaph (parent node) - cannot be updated
-	@Bean(proxy=true, converter=ParentBeanConverterImpl.class) private Page page; 
+	@Bean(proxy=true, converter=ParentBeanConverterImpl.class) private Page page;
 	
-    public String getPath() 
+    public String getPath()
     {
 		return path;
 	}
 
-	public void setPath(String path) 
+	public void setPath(String path)
 	{
 		this.path = path;
 	}
@@ -72,7 +72,7 @@ public class Paragraph
         this.text = text;
     }
 
-	public Page getPage() 
+	public Page getPage()
 	{
 		return page;
 	}
@@ -82,6 +82,6 @@ public class Paragraph
 	}
 
 	
-    
-    
+
+
 }

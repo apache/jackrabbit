@@ -54,10 +54,10 @@ public class AnnotationJcrNodeTypeTest extends AnnotationTestBase {
 				AnnotationJcrNodeTypeTest.class));
 	}
 
-	public void testRetrieveSingleton() 
+	public void testRetrieveSingleton()
 	{
 
-		try 
+		try
 		{
 			ObjectContentManager ocm = this.getObjectContentManager();
 
@@ -65,18 +65,18 @@ public class AnnotationJcrNodeTypeTest extends AnnotationTestBase {
 			// Insert a  folder (class mapped to jcr:folder) with one file (class mapped to jcr:file)
 			//---------------------------------------------------------------------------------------------------------			
             Resource resource = new Resource();
-            resource.setData(new ByteArrayInputStream("this is the content".getBytes()));            
+            resource.setData(new ByteArrayInputStream("this is the content".getBytes()));
             resource.setLastModified(Calendar.getInstance());
             resource.setMimeType("plain/text");
-            File file = new File();    
+            File file = new File();
             file.setResource(resource);
-            
-            
+
+
             Folder folder = new Folder();
             folder.setPath("/folder1");
             folder.addChild(file);
-            
-            ocm.insert(folder);            
+
+            ocm.insert(folder);
 			ocm.save();
 			
 			

@@ -85,7 +85,7 @@ public class DerefQueryNode extends LocationStepQueryNode {
         }
         return false;
     }
-    
+
     /**
      * {@inheritDoc}
      */

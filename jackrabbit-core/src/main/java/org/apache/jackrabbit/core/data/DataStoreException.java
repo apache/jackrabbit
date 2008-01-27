@@ -43,7 +43,7 @@ public class DataStoreException extends RepositoryException {
     public DataStoreException(String message, Throwable cause) {
         super(message, cause);
     }
-    
+
     /**
      * Constructs a new instance of this class with the specified root cause.
      *
@@ -52,5 +52,5 @@ public class DataStoreException extends RepositoryException {
     public DataStoreException(Throwable rootCause) {
         super(rootCause);
     }
- 
+
 }

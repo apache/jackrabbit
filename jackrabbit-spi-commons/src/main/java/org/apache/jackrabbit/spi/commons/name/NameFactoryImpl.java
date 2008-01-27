@@ -87,7 +87,7 @@ public class NameFactoryImpl implements NameFactory {
         private final String localName;
 
         private NameImpl(String namespaceURI, String localName) {
-            // internalize namespaceURI to improve performance of comparisons.            
+            // internalize namespaceURI to improve performance of comparisons.
             this.namespaceURI = namespaceURI.intern();
             // localName is not internalized in order not to risk huge perm
             // space for large repositories

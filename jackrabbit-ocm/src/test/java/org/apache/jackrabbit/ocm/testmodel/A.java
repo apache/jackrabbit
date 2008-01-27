@@ -32,16 +32,16 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 @Node(jcrMixinTypes="mix:lockable" )
 public class A
 {
-	@Field(path=true) private String path; 
+	@Field(path=true) private String path;
     @Field private String a1;
     @Field private String a2;
     @Bean private B b;
-    
+
     private B emptyB;
 
     @Collection(elementClassName=C.class, jcrType="ocm:C") private java.util.Collection collection;	
-    @Collection(elementClassName=C.class) private java.util.Collection emptyCollection; 
-    
+    @Collection(elementClassName=C.class) private java.util.Collection emptyCollection;
+
     public String getPath() {
 		return path;
 	}
@@ -90,8 +90,8 @@ public class A
     {
         this.b = b;
     }
-    
-        
+
+
     /**
      * @return Returns the collection.
      */
@@ -99,7 +99,7 @@ public class A
     {
         return collection;
     }
-    
+
     /**
      * @param collection The collection to set.
      */
@@ -107,15 +107,15 @@ public class A
     {
         this.collection = collection;
     }
-    
+
     public void addC(C c)
     {
        if (collection == null )
        {
            collection = new ArrayList();
        }
-       
-       collection.add(c);   
+
+       collection.add(c);
     }
     public java.util.Collection getEmptyCollection()
     {
@@ -133,6 +133,6 @@ public class A
     {
         this.emptyB = emptyB;
     }
-    
-    
+
+
 }

@@ -66,11 +66,11 @@ public class VersionResourceImpl extends DeltaVResourceImpl implements VersionRe
     /**
      * Create a new {@link org.apache.jackrabbit.webdav.DavResource}.
      * @param locator
-     * @param factory 
-     * @param session 
-     * @param config 
-     * @param item 
-     * @throws DavException 
+     * @param factory
+     * @param session
+     * @param config
+     * @param item
+     * @throws DavException
      *
      */
     public VersionResourceImpl(DavResourceLocator locator, DavResourceFactory factory, DavSession session, ResourceConfig config, Item item) throws DavException {

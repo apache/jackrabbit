@@ -237,7 +237,7 @@ class XAEnvironment {
             }
         }
 
-        // add 'uncommitted' lock infos 
+        // add 'uncommitted' lock infos
         result.addAll(lockedNodesMap.values());
 
         return (AbstractLockInfo[]) result.toArray(new AbstractLockInfo[result.size()]);

@@ -32,21 +32,21 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 @Node
 public class B2
 {
-	@Field(path=true) private String path; 
-    
+	@Field(path=true) private String path;
+
     // This attribute is mapped to a reference jcr property
-	@Bean(converter=ReferenceBeanConverterImpl.class) private A a; 
-    
+	@Bean(converter=ReferenceBeanConverterImpl.class) private A a;
+
     //  a collection of bean mapped into a list of jcr properties (reference type)
     @Collection (collectionConverter=BeanReferenceCollectionConverterImpl.class)
-    private java.util.Collection multiReferences; 
-    
-    public String getPath() 
+    private java.util.Collection multiReferences;
+
+    public String getPath()
     {
 		return path;
 	}
 	
-    public void setPath(String path) 
+    public void setPath(String path)
 	{
 		this.path = path;
 	}
@@ -65,5 +65,5 @@ public class B2
 	public void setMultiReferences(java.util.Collection multiReferences) {
 		this.multiReferences = multiReferences;
 	}
-    
+
 }

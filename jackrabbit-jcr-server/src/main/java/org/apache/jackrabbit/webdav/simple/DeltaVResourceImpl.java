@@ -150,7 +150,7 @@ public class DeltaVResourceImpl extends DavResourceImpl implements DeltaVResourc
         List resources = new ArrayList();
         if (prop != null && prop instanceof HrefProperty) {
             HrefProperty hp = (HrefProperty)prop;
-            // process list of hrefs 
+            // process list of hrefs
             List hrefs = hp.getHrefs();
             for (Iterator iter = hrefs.iterator(); iter.hasNext();) {
                 String href = (String)iter.next();

@@ -31,7 +31,7 @@ import org.apache.jackrabbit.ocm.nodemanagement.impl.RepositorySessionFactory;
 public class TestBase  extends TestCase
 {
     protected static Session session;
-    
+
     /**
      * Setting up the testcase.
      *
@@ -46,12 +46,12 @@ public class TestBase  extends TestCase
             configuration.setRepositoryName("repositoryTest");
             configuration.setRepositoryPath("./target/repository");
             session = RepositorySessionFactory.getSession(RepositorySessionFactory.JACKRABBIT, "superuser", "superuser", configuration);
-            
+
             /*RepositoryConfiguration configuration = new RepositoryConfiguration();
             configuration.setConfigurationFile("./src/config/jeceria/jeceira.xml");
             configuration.setRepositoryName("test");
             session = RepositorySessionFactory.getSession(RepositorySessionFactory.JECEIRA, null, null, configuration);*/
-        }       
+        }
     }
 
     /**
@@ -60,9 +60,9 @@ public class TestBase  extends TestCase
     public void tearDown() throws Exception
     {
     }
-    
+
     /** Returns true if a property was found in an array of property defintions.
-     * 
+     *
      * @param defintions PropertyDefinition[]
      * @param propertyName Name of property to find
      * @return true/false
@@ -71,7 +71,7 @@ public class TestBase  extends TestCase
             String propertyName)
     {
         boolean found = false;
-        
+
         if (definitions != null && definitions.length > 0)
         {
             for (int i = 0; i < definitions.length; i++)
@@ -82,7 +82,7 @@ public class TestBase  extends TestCase
                 }
             }
         }
-        
+
         return found;
     }
 }

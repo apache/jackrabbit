@@ -74,7 +74,7 @@ public class ManageableCollectionUtil {
             if (collectionClass.equals(HashSet.class)) {
                 return new ManageableSet();
             }
-            
+
             if (collectionClass.equals(Collection.class) || collectionClass.equals(List.class)) {
                 return new ManageableArrayList();
             }
@@ -82,7 +82,7 @@ public class ManageableCollectionUtil {
             if (collectionClass.equals(Set.class)) {
                 return new ManageableSet();
             }
-            
+
             Object collection = collectionClass.newInstance();
             if (!(collection instanceof ManageableCollection)) {
                 throw new JcrMappingException("Unsupported collection type :"
@@ -134,7 +134,7 @@ public class ManageableCollectionUtil {
             if (object.getClass().equals(HashSet.class)) {
                 return new ManageableSet((Set) object);
             }
-            
+
             if (object.getClass().equals(Collection.class)
                 || object.getClass().equals(List.class)) {
                 ManageableArrayList manageableArrayList = new ManageableArrayList();
@@ -149,7 +149,7 @@ public class ManageableCollectionUtil {
         catch (Exception e) {
             throw new JcrMappingException("Impossible to create the manageable collection", e);
         }
-        
+
         throw new JcrMappingException("Unsupported collection type :" + object.getClass().getName());
     }
 }

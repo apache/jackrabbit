@@ -79,7 +79,7 @@ class TreeComparator extends AbstractJCRTest {
     public void setSession(Session session) {
         this.session = session;
     }
-    
+
     /**
      * Makes sure that the source and target folder exist, and are empty
      */
@@ -242,7 +242,7 @@ class TreeComparator extends AbstractJCRTest {
             // the UUID during serialization.
             if (!referenceable.isNodeType(mixReferenceable)) {
                 referenceable.addMixin(mixReferenceable);
-                // some implementations may require a save after addMixin()                
+                // some implementations may require a save after addMixin()
                 session.save();
             }
 
@@ -593,7 +593,7 @@ class TreeComparator extends AbstractJCRTest {
 
     /**
      * Checks if a given property should be skipped during xml import.
-     *  
+     *
      * @param propertyName
      * @return
      */

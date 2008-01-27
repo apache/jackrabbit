@@ -21,15 +21,15 @@ package org.apache.jackrabbit.ocm.nodemanagement.impl;
  * @author <a href="mailto:okiessler@apache.org">Oliver Kiessler</a>
  */
 public abstract class BaseNamespaceHelper {
-    
+
     /** Default namespace if none is specified.
      */
 //    public static final String DEFAULT_NAMESPACE = "";
-    
+
     /** Default namespace URI if none is specified.
      */
-    public static final String DEFAULT_NAMESPACE_URI = "";    
-    
+    public static final String DEFAULT_NAMESPACE_URI = "";
+
     /** Creates a new instance of BaseNamespaceHelper. */
     public BaseNamespaceHelper() {
     }

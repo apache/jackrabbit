@@ -160,7 +160,7 @@ public class QueryImpl implements Query {
     }
 
     /**
-     * @see Query#execute() 
+     * @see Query#execute()
      */
     public QueryResult execute() throws RepositoryException {
         QueryInfo qI = wspManager.executeQuery(statement, language,

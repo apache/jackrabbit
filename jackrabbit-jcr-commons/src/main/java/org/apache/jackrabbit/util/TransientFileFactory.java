@@ -98,7 +98,7 @@ public class TransientFileFactory {
         } catch (IllegalStateException e) {
             // can't register shutdownhook because
             // jvm shutdown sequence has already begun,
-            // silently ignore... 
+            // silently ignore...
         }
     }
 

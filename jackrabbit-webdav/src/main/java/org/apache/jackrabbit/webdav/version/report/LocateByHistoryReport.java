@@ -57,7 +57,7 @@ public class LocateByHistoryReport implements Report, DeltaVConstants {
 
     /**
      * Returns {@link ReportType#LOCATE_BY_HISTORY}.
-     * 
+     *
      * @see Report#getType()
      */
     public ReportType getType() {

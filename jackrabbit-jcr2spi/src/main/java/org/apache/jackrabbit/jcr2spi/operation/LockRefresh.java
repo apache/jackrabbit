@@ -54,7 +54,7 @@ public class LockRefresh extends AbstractOperation {
     public void persisted() {
         // nothing to do.
     }
-    
+
     //----------------------------------------< Access Operation Parameters >---
     public NodeId getNodeId() {
         return nodeState.getNodeId();

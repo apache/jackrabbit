@@ -66,7 +66,7 @@ public class AnnotationInterfaceHierarchyTest extends AnnotationTestBase {
 			ObjectContentManager ocm = this.getObjectContentManager();
 
 			//---------------------------------------------------------------------------------------------------------
-			// Insert 
+			// Insert
 			//---------------------------------------------------------------------------------------------------------			
 			AnotherDescendant  anotherDescendant = new AnotherDescendant();
 			anotherDescendant.setAnotherDescendantField("anotherDescendantValue");
@@ -77,11 +77,11 @@ public class AnnotationInterfaceHierarchyTest extends AnnotationTestBase {
 			ocm.save();
 
 			//---------------------------------------------------------------------------------------------------------
-			// Retrieve 
+			// Retrieve
 			//---------------------------------------------------------------------------------------------------------						
 			Interface result =  (Interface) ocm.getObject("/test");
 			assertNotNull("Object is null", result);
-			anotherDescendant = (AnotherDescendant) result; 
+			anotherDescendant = (AnotherDescendant) result;
 			
 			assertEquals("Descendant path is invalid", anotherDescendant.getPath(), "/test");
 			assertEquals("Descendant ancestorField is invalid", anotherDescendant.getAncestorField(), "ancestorValue");

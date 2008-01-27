@@ -35,10 +35,10 @@ public class CollectionLazyLoader implements LazyLoader {
 	private CollectionConverter collectionConverter;
 	private Session session;
 	private Node collectionParentNode;
-	private CollectionDescriptor collectionDescriptor; 
+	private CollectionDescriptor collectionDescriptor;
 	private Class collectionFieldClass;
 	
-	public CollectionLazyLoader(CollectionConverter collectionConverter, Session session, Node parentNode, 
+	public CollectionLazyLoader(CollectionConverter collectionConverter, Session session, Node parentNode,
 			                                               CollectionDescriptor collectionDescriptor, Class collectionFieldClass ) {
 		this.collectionConverter = collectionConverter;
 		this.session = session;

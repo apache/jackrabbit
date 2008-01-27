@@ -58,7 +58,7 @@ class MatchAllWeight extends AbstractWeight {
     /**
      * @param query
      * @param searcher
-     * @param field name of the field to match 
+     * @param field name of the field to match
      */
     MatchAllWeight(Query query, Searcher searcher, String field) {
         super(searcher);

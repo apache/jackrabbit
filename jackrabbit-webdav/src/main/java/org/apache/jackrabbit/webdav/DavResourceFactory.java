@@ -39,7 +39,7 @@ public interface DavResourceFactory {
      *
      * @param locator
      * @param session
-     * @return a new <code>DavResource</code> object. 
+     * @return a new <code>DavResource</code> object.
      * @throws DavException
      */
     public DavResource createResource(DavResourceLocator locator, DavSession session) throws DavException;

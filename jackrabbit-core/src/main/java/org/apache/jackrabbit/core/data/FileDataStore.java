@@ -32,7 +32,7 @@ import java.util.WeakHashMap;
 /**
  * Simple file-based data store. Data records are stored as normal files
  * named using a message digest of the contained binary stream.
- * 
+ *
  * Configuration:
  * <pre>
  * &lt;DataStore class="org.apache.jackrabbit.core.data.FileDataStore">
@@ -56,7 +56,7 @@ public class FileDataStore implements DataStore {
      * The digest algorithm used to uniquely identify records.
      */
     private static final String DIGEST = "SHA-1";
-    
+
     /**
      * The default value for the minimum object size.
      */
@@ -69,7 +69,7 @@ public class FileDataStore implements DataStore {
     private static final String TMP = "tmp";
 
     /**
-     * The minimum modified date. If a file is accessed (read or write) with a modified date 
+     * The minimum modified date. If a file is accessed (read or write) with a modified date
      * older than this value, the modified date is updated to the current time.
      */
     private long minModifiedDate;
@@ -79,18 +79,18 @@ public class FileDataStore implements DataStore {
      * of content within this directory is controlled by this class.
      */
     private File directory;
-    
+
     /**
      * The name of the directory that contains all the data record files. The structure
      * of content within this directory is controlled by this class.
      */
     private String path;
-    
+
     /**
      * The minimum size of an object that should be stored in this data store.
      */
     private int minRecordLength = DEFAULT_MIN_RECORD_LENGTH;
-    
+
     /**
      * All data identifiers that are currently in use are in this set until they are garbage collected.
      */
@@ -102,12 +102,12 @@ public class FileDataStore implements DataStore {
      */
     public FileDataStore() {
     }
-    
+
     /**
      * Initialized the data store.
      * If the path is not set, &lt;repository home&gt;/repository/datastore is used.
      * This directory is automatically created if it does not yet exist.
-     * 
+     *
      * @param config the repository configuration
      */
     public void init(String homeDir) {
@@ -137,13 +137,13 @@ public class FileDataStore implements DataStore {
         usesIdentifier(identifier);
         return new FileDataRecord(identifier, file);
     }
-    
+
     private void usesIdentifier(DataIdentifier identifier) {
         inUse.put(identifier, new WeakReference(identifier));
     }
 
     /**
-     * Creates a new data record. 
+     * Creates a new data record.
      * The stream is first consumed and the contents are saved in a temporary file
      * and the SHA-1 message digest of the stream is calculated. If a
      * record with the same SHA-1 digest (and length) is found then it is
@@ -237,10 +237,10 @@ public class FileDataStore implements DataStore {
 
     /**
      * Returns a unique temporary file to be used for creating a new
-     * data record. 
+     * data record.
      *
      * @return temporary file
-     * @throws IOException 
+     * @throws IOException
      */
     private File newTemporaryFile() throws IOException {
         if (!directory.isDirectory()) {
@@ -255,10 +255,10 @@ public class FileDataStore implements DataStore {
     public void updateModifiedDateOnAccess(long before) {
         minModifiedDate = before;
     }
-    
+
     /**
      * {@inheritDoc}
-     */    
+     */
     public int deleteAllOlderThan(long min) {
         return deleteOlderRecursive(directory, min);
     }
@@ -281,7 +281,7 @@ public class FileDataStore implements DataStore {
         }
         return count;
     }
-    
+
     private void listRecursive(List list, File file) {
         File[] l = file.listFiles();
         for (int i = 0; l != null && i < l.length; i++) {
@@ -293,7 +293,7 @@ public class FileDataStore implements DataStore {
             }
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -311,7 +311,7 @@ public class FileDataStore implements DataStore {
         }
         return identifiers.iterator();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -321,7 +321,7 @@ public class FileDataStore implements DataStore {
 
     /**
      * Get the name of the directory where this data store keeps the files.
-     * 
+     *
      * @return the full path name
      */
     public String getPath() {
@@ -330,7 +330,7 @@ public class FileDataStore implements DataStore {
 
     /**
      * Set the name of the directory where this data store keeps the files.
-     * 
+     *
      * @param path the full path name
      */
     public void setPath(String directoryName) {
@@ -346,7 +346,7 @@ public class FileDataStore implements DataStore {
 
     /**
      * Set the minimum object length.
-     * 
+     *
      * @param minRecordLength the length
      */
     public void setMinRecordLength(int minRecordLength) {

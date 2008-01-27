@@ -24,17 +24,17 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
 import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 
 @Node
-public class Main 
+public class Main
 {
 
 	@Field(path=true) private String path;
 	@Bean(proxy=true) private Detail proxyDetail;
-	@Bean(proxy=true) private Detail nullDetail; 
+	@Bean(proxy=true) private Detail nullDetail;
     @Bean private Detail detail;
     @Collection(proxy=true, elementClassName=Detail.class) private java.util.Collection proxyCollection;
     @Collection(proxy=true, elementClassName=Detail.class) private java.util.Collection nullProxyCollection;
 
-     
+
 	public String getPath() {
 		return path;
 	}
@@ -84,5 +84,5 @@ public class Main
 	}
 	
 	
-     
+
 }

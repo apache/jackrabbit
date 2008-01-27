@@ -19,7 +19,7 @@ package org.apache.jackrabbit.ocm.query;
 
 /**
  * JCR Query interface
- * 
+ *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  *
  */
@@ -27,25 +27,25 @@ public interface Query
 {
 		
 	/**
-	 * Set the filter to use with this query 
+	 * Set the filter to use with this query
 	 * @param filter The filter to use
 	 */
 	public void setFilter(Filter filter);
 	
 	/**
-	 * 
+	 *
 	 * @return The filter used for this query
 	 */
 	public Filter getFilter();
 	
 	/**
-	 * Order the object found (ascending) 
+	 * Order the object found (ascending)
 	 * @param fieldNameAttribute the name of the field used to sort the search result
 	 */
 	public void addOrderByAscending(String fieldNameAttribute);
 	
 	/**
-	 * Order the object found (descending) 
+	 * Order the object found (descending)
 	 * @param fieldNameAttribute the name of the field used to sort the search result
 	 */
 	

@@ -290,7 +290,7 @@ public class ItemStateValidator {
     }
 
     /**
-     * 
+     *
      * @param parentState
      * @param propertyName
      * @param definition

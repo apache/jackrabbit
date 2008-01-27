@@ -199,7 +199,7 @@ public class RelationQueryNode extends NAryQueryNode implements QueryConstants {
         builder.addLast(element);
         try {
             relPath = builder.getPath();
-        } 
+        }
         catch (MalformedPathException e) {
             // path is always valid
         }

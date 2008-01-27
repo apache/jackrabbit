@@ -614,7 +614,7 @@ public class DomUtil {
      */
     public static String getPrefixedName(String localName, Namespace namespace) {
         if (namespace == null
-            || Namespace.EMPTY_NAMESPACE.equals(namespace) 
+            || Namespace.EMPTY_NAMESPACE.equals(namespace)
             || Namespace.EMPTY_NAMESPACE.getPrefix().equals(namespace.getPrefix())) {
             return localName;
         }

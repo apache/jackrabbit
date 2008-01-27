@@ -78,7 +78,7 @@ public class LocateCorrespondingNodeReport extends AbstractJcrReport {
      * Returns {@link #LOCATE_CORRESPONDING_NODE_REPORT}
      *
      * @return always returns {@link #LOCATE_CORRESPONDING_NODE_REPORT}
-     * @see org.apache.jackrabbit.webdav.version.report.Report#getType() 
+     * @see org.apache.jackrabbit.webdav.version.report.Report#getType()
      */
     public ReportType getType() {
         return LOCATE_CORRESPONDING_NODE_REPORT;

@@ -56,7 +56,7 @@ public class SetMixin extends AbstractOperation {
     /**
      *
      * @param visitor
-     * @see Operation#accept(OperationVisitor) 
+     * @see Operation#accept(OperationVisitor)
      */
     public void accept(OperationVisitor visitor) throws AccessDeniedException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         visitor.visit(this);
@@ -79,7 +79,7 @@ public class SetMixin extends AbstractOperation {
     public NodeId getNodeId() {
         return nodeId;
     }
-    
+
     public Name[] getMixinNames() {
         return mixinNames;
     }

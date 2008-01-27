@@ -131,13 +131,13 @@ public class PathQueryNode extends NAryQueryNode {
         }
         return false;
     }
-    
-    
+
+
     /**
      * {@inheritDoc}
      */
     public boolean needsSystemTree() {
-        
+
         LocationStepQueryNode[] pathSteps = getPathSteps();
         if (pathSteps == null || pathSteps.length == 0) {
             return true;
@@ -161,7 +161,7 @@ public class PathQueryNode extends NAryQueryNode {
             // the system tree ("*")
             return true;
         }
-        
+
         // Calculate the first workspace relative location step
         LocationStepQueryNode firstWorkspaceRelativeStep = pathSteps[0];
         if (firstPathStepName.equals(NameConstants.ROOT)) {
@@ -170,19 +170,19 @@ public class PathQueryNode extends NAryQueryNode {
                 firstWorkspaceRelativeStep = pathSteps[1];
             }
         }
-        
+
         // First path step starts with "//"
         if (firstWorkspaceRelativeStep.getIncludeDescendants())
             return true;
 
-        // If the first workspace relative location step is jcr:system we need 
+        // If the first workspace relative location step is jcr:system we need
         // to include the system tree
         Name firstWorkspaceRelativeName = firstWorkspaceRelativeStep.getNameTest();
         if (firstWorkspaceRelativeName == null
                 || firstWorkspaceRelativeName.equals(NameConstants.JCR_SYSTEM)) {
             return true;
         }
-        
+
         return super.needsSystemTree();
     }
 }

@@ -29,16 +29,16 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
  * Document Content
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
- * 
+ *
  */
 
 @Node(jcrType="ocm:documentstream", discriminator=false)
-public class DocumentStream 
+public class DocumentStream
 {
     protected final static Log log = LogFactory.getLog(DocumentStream.class);
-      
-    @Field( jcrName="ocm:binarycontent") protected byte[] content;    
-    @Field( jcrName="ocm:encoding") protected String encoding;    
+
+    @Field( jcrName="ocm:binarycontent") protected byte[] content;
+    @Field( jcrName="ocm:encoding") protected String encoding;
     @Field(path=true) protected String path;
 
 
@@ -47,7 +47,7 @@ public class DocumentStream
      */
     public InputStream getContentStream()
     {
-        return new ByteArrayInputStream(content);        
+        return new ByteArrayInputStream(content);
     }
 
     /**
@@ -55,7 +55,7 @@ public class DocumentStream
      */
     public byte[] getContent()
     {
-        
+
         return content;
     }
 
@@ -65,11 +65,11 @@ public class DocumentStream
      */
     public void setContent(byte[] stream)
     {
-        
+
         content = stream;
 
     }
-        
+
     /**
      * @return Returns the encoding.
      */
@@ -77,7 +77,7 @@ public class DocumentStream
     {
         return encoding;
     }
-    
+
     /**
      * @param encoding The encoding to set.
      */
@@ -93,8 +93,8 @@ public class DocumentStream
 	public void setPath(String path) {
 		this.path = path;
 	}
-    
-    
+
+
 }
 
 

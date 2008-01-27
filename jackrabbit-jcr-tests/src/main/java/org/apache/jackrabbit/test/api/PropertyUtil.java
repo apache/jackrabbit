@@ -83,8 +83,8 @@ public class PropertyUtil {
         "\\u0D57|\\u0E31|\\u0E34-\\u0E3A|\\u0E47-\\u0E4E|\\u0EB1|\\u0EB4-\\u0EB9|\\u0EBB-\\u0EBC|\\u0EC8-\\u0ECD|" +
         "\\u0F18-\\u0F19|\\u0F35|\\u0F37|\\u0F39|\\u0F3E|\\u0F3F|\\u0F71-\\u0F84|\\u0F86-\\u0F8B|\\u0F90-\\u0F95|\\u0F97|" +
         "\\u0F99-\\u0FAD|\\u0FB1-\\u0FB7|\\u0FB9|\\u20D0-\\u20DC|\\u20E1|\\u302A-\\u302F|\\u3099|\\u309A";
-    
-    public static final String DIGIT = 
+
+    public static final String DIGIT =
         "\\u0030-\\u0039|\\u0660-\\u0669|\\u06F0-\\u06F9|\\u0966-\\u096F|\\u09E6-\\u09EF|\\u0A66-\\u0A6F|\\u0AE6-\\u0AEF|" +
         "\\u0B66-\\u0B6F|\\u0BE7-\\u0BEF|\\u0C66-\\u0C6F|\\u0CE6-\\u0CEF|\\u0D66-\\u0D6F|\\u0E50-\\u0E59|\\u0ED0-\\u0ED9|" +
         "\\u0F20-\\u0F29";
@@ -108,7 +108,7 @@ public class PropertyUtil {
 
     public static final String SIMPLENAME_CHAR =
         "[^/:\\[\\]\\*'\"\\s]";
-    
+
     public static final String PATTERNSTRING_NAME =
         "((" + NC_NAME + "):)?" + // prefix
         SIMPLENAME_CHAR + "([" + SIMPLENAME_CHAR + "| ]*" + SIMPLENAME_CHAR +")?";

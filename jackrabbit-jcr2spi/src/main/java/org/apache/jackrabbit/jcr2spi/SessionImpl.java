@@ -182,7 +182,7 @@ public class SessionImpl implements Session, ManagerProvider {
 
     /**
      * Always returns an empty String array.
-     * 
+     *
      * @see javax.jcr.Session#getAttributeNames()
      */
     public String[] getAttributeNames() {
@@ -639,7 +639,7 @@ public class SessionImpl implements Session, ManagerProvider {
     protected SessionItemStateManager createSessionItemStateManager(UpdatableItemStateManager workspaceStateManager, ItemStateFactory isf) throws RepositoryException {
         return new SessionItemStateManager(workspaceStateManager, getValidator(), getQValueFactory(), isf, this);
     }
-    
+
     protected ItemManager createItemManager(HierarchyManager hierarchyManager) {
         return new ItemManagerImpl(hierarchyManager, this);
     }
@@ -776,7 +776,7 @@ public class SessionImpl implements Session, ManagerProvider {
     SessionImpl switchWorkspace(String workspaceName) throws AccessDeniedException,
         NoSuchWorkspaceException, RepositoryException {
         checkAccessibleWorkspace(workspaceName);
-        
+
         SessionInfo info = config.getRepositoryService().obtain(sessionInfo, workspaceName);
         if (info instanceof XASessionInfo) {
             return new XASessionImpl((XASessionInfo) info, repository, config);

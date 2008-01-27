@@ -22,21 +22,21 @@ package org.apache.jackrabbit.spi;
  * as to the score and to the qualified values represent in this result row.
  */
 public interface QueryResultRow {
-  
+
     /**
      * Returns {@link NodeId} of node this result row represents.
-     * 
+     *
      * @return node id of the <code>Node</code> this result row represents.
      */
     public NodeId getNodeId();
-    
+
     /**
      * Returns score of this result row.
-     * 
+     *
      * @return score of this result row.
      */
     public double getScore();
-    
+
     /**
      * Returns an array of <code>QValue</code>s.
      *

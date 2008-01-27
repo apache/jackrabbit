@@ -39,5 +39,5 @@ public class ImplementDescriptor {
 	public String toString() {
 		
 		return "Implement Descriptor : " +  this.interfaceName;
-	}    
+	}
 }

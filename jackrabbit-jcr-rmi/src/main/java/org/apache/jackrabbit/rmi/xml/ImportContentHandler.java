@@ -47,13 +47,13 @@ public abstract class ImportContentHandler implements ContentHandler {
 
     /**
      * Creates a SAX content handler for importing XML data.
-     * 
+     *
      * @throws RepositoryException if the this instance cannot be setup. This
      *      exception contains the reason why it cannot be setup as its cause.
      */
     public ImportContentHandler() throws RepositoryException {
         this.buffer = new ByteArrayOutputStream();
-        
+
         try {
             SAXTransformerFactory stf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
             this.handler = stf.newTransformerHandler();

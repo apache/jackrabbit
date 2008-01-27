@@ -24,104 +24,104 @@ import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 
 /**
  * Convert any kind of beans into JCR nodes & properties
- * 
+ *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart Christophe </a>
  * @version $Id: Exp $
  */
 public interface ObjectConverter
 {
 	/**
-	 * Insert the object 
-	 * 
-	 * @param session the JCR session  
+	 * Insert the object
+	 *
+	 * @param session the JCR session
 	 * @param object the object to insert
 	 * @throws ObjectContentManagerException when it is not possible to insert the object
-	 * 
+	 *
 	 */
     public void insert(Session session, Object object) throws ObjectContentManagerException;
-    
+
 	/**
-	 * Update the object 
-	 * 
-	 * @param session the JCR session 
+	 * Update the object
+	 *
+	 * @param session the JCR session
 	 * @param object the object to update
 	 * @throws ObjectContentManagerException when it is not possible to update the object
-	 */    
+	 */
     public void update(Session session, Object object) throws ObjectContentManagerException;
-    
+
     /**
      * Retrieve an object from the JCR repo
-     * 
-     * @param session The JCR session 
+     *
+     * @param session The JCR session
      * @param clazz The class assigned to the object to retrieve
      * @param path the JCR path
      * @return The object found or null
-     * 
+     *
      * @throws ObjectContentManagerException when it is not possible to retrieve the object
      */
     public Object getObject(Session session, String path) throws ObjectContentManagerException;
-    
+
     /**
      * Retrieve an object from the JCR repo
-     * 
-     * @param session The JCR session 
+     *
+     * @param session The JCR session
      * @param clazz The class assigned to the object to retrieve
      * @param path the JCR path
      * @return The object found or null
-     * 
+     *
      * @throws ObjectContentManagerException when it is not possible to retrieve the object
      */
     public Object getObject(Session session, Class clazz, String path) throws ObjectContentManagerException;
-    
-    
+
+
     /**
      * Retrieve the specified attribute  for the given persistent object.
      * this attribute is either a bean or a collection. This method is usefull if the corresponding descriptor has an autoRetrieve="false"
-     * 
+     *
      * @param session The JCR session
      * @param object The persistent object
      * @param attributeName The name of the attribute to retrieve
      */
     public void retrieveMappedAttribute(Session session, Object object, String attributeName);
 
-    
+
     /**
      * Retrieve all mapped  attributes for the given persistent object.
-     * 
-     * @param session The JCR session     
+     *
+     * @param session The JCR session
      * @param object The persistent object
      */
     public void retrieveAllMappedAttributes(Session session, Object object);
-    
+
 	/**
-	 * Insert the object 
-	 * 
-	 * @param session the JCR session 
-	 * @param parentNode The parent node used to store the new JCR element (object) 
+	 * Insert the object
+	 *
+	 * @param session the JCR session
+	 * @param parentNode The parent node used to store the new JCR element (object)
 	 * @param nodeName The node name used to store the object
 	 * @param object the object to insert
 	 * @throws ObjectContentManagerException when it is not possible to insert the object
 	 */
     public void insert(Session session, Node parentNode, String nodeName, Object object) throws ObjectContentManagerException;
-    
+
 	/**
-	 * Update the object 
-	 * 
-	 * @param session the JCR session 
-	 * @param parentNode The parent node used to store the new JCR element (object) 
+	 * Update the object
+	 *
+	 * @param session the JCR session
+	 * @param parentNode The parent node used to store the new JCR element (object)
 	 * @param nodeName The node name used to store the object
 	 * @param object the object to update
 	 * @throws ObjectContentManagerException when it is not possible to update the object
-	 */    
+	 */
     public void update(Session session, Node parentNode, String nodeName, Object object) throws ObjectContentManagerException;
-    
-   
+
+
     /**
-     * Get the object JCR path 
-     * 
-     * @param session the JCR session 
-     * @param object the object for which the path has to be retrieve 
-     * @return the object JCR path 
+     * Get the object JCR path
+     *
+     * @param session the JCR session
+     * @param object the object for which the path has to be retrieve
+     * @return the object JCR path
      * @throws ObjectContentManagerException when it is not possible to retrieve the object path
      */
     public String getPath(Session session , Object object)  throws ObjectContentManagerException;

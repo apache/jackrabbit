@@ -26,7 +26,7 @@ import java.io.InputStream;
  * Data record that is stored in a database
  */
 public class DbDataRecord extends AbstractDataRecord {
-    
+
     protected final DbDataStore store;
     protected final long length;
     protected long lastModified;

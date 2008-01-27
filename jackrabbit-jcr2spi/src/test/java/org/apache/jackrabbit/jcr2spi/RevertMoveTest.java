@@ -37,7 +37,7 @@ public class RevertMoveTest extends AbstractMoveTest {
      * Implementation specific test, that expects that the scope of a refresh(false)
      * must include all nodes affected by the operations that affected the
      * subtree to be refreshed.
-     * 
+     *
      * @throws RepositoryException
      */
     public void testRevertMovedNode() throws RepositoryException {

@@ -25,7 +25,7 @@ import org.apache.jackrabbit.core.query.jsr283.qom.DescendantNode;
 /**
  * <code>DescendantNodeImpl</code>...
  */
-public class DescendantNodeImpl 
+public class DescendantNodeImpl
         extends ConstraintImpl
         implements DescendantNode {
 

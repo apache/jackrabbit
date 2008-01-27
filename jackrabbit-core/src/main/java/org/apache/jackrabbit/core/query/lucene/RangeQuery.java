@@ -192,7 +192,7 @@ public class RangeQuery extends Query implements Transformable {
 
     /**
      * {@inheritDoc}
-     */ 
+     */
     public void extractTerms(Set terms) {
         if (stdRangeQuery != null) {
             stdRangeQuery.extractTerms(terms);

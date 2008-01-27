@@ -65,17 +65,17 @@ public class DigesterDefaultCollectionConverterImplTest extends DigesterTestBase
             // Create and store an object with a null collection field
             // --------------------------------------------------------------------------------
             A a = new A();
-            a.setPath("/test");               
-            
+            a.setPath("/test");
+
             ocm.insert(a);
             ocm.save();
-            
+
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (A) ocm.getObject( "/test");
             assertNull("a.collection is not null", a.getCollection());
-            
+
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
@@ -85,58 +85,58 @@ public class DigesterDefaultCollectionConverterImplTest extends DigesterTestBase
             C c2 = new C();
             c2.setId("second");
             c2.setName("Second Element");
-            
+
             C c3 = new C();
             c3.setId("third");
             c3.setName("Third Element");
-            
-            
+
+
             Collection collection = new ArrayList();
             collection.add(c1);
             collection.add(c2);
             collection.add(c3);
-            
+
             a.setCollection(collection);
-            
+
             ocm.update(a);
             ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (A) ocm.getObject("/test");
             assertNotNull("a is null", a);
             assertNotNull("a.collection is null", a.getCollection());
             assertTrue("Incorrect collection size", a.getCollection().size() == 3);
             assertTrue("Incorrect a.collection", ((C) a.getCollection().iterator().next()).getId().equals("first"));
-            
+
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
             a.setCollection(null);
             ocm.update(a);
             ocm.save();
-            
+
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (A) ocm.getObject( "/test");
             assertNull("a.collection is not null", a.getCollection());
-            
+
             // --------------------------------------------------------------------------------
             // Export to check the content
-            // --------------------------------------------------------------------------------           
-            this.exportDocument("target/DefaultCollectionConverterExport.xml", "/test", true, false);         
-            
+            // --------------------------------------------------------------------------------
+            this.exportDocument("target/DefaultCollectionConverterExport.xml", "/test", true, false);
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
-    
+
     public void testDropElement()
     {
         try
@@ -154,70 +154,70 @@ public class DigesterDefaultCollectionConverterImplTest extends DigesterTestBase
             C c2 = new C();
             c2.setId("second");
             c2.setName("Second Element");
-            
+
             C c3 = new C();
             c3.setId("third");
             c3.setName("Third Element");
-            
-            
+
+
             Collection collection = new ArrayList();
             collection.add(c1);
             collection.add(c2);
             collection.add(c3);
-            
+
             a.setCollection(collection);
-            
+
             ocm.insert(a);
             ocm.save();
-            
+
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (A) ocm.getObject( "/test");
             assertNotNull("a.collection is null", a.getCollection());
             assertEquals("Incorrect a.collection size", 3, a.getCollection().size());
             assertTrue("Incorrect a.collection", ((C) a.getCollection().iterator().next()).getId().equals("first"));
-            
+
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
             c1 = new C();
             c1.setId("new first");
             c1.setName("First Element");
-            
+
             c2 = new C();
             c2.setId("new second");
             c2.setName("Second Element");
-            
+
             collection = new ArrayList();
             collection.add(c1);
             collection.add(c2);
             a.setCollection(collection);
-            
+
             ocm.update(a);
             ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (A) ocm.getObject( "/test");
             assertNotNull("a is null", a);
             assertNotNull("a.collection is null", a.getCollection());
             assertTrue("Incorrect collection size", a.getCollection().size() == 2);
             assertTrue("Incorrect a.collection", ((C) a.getCollection().iterator().next()).getId().equals("new first"));
-            
+
             // --------------------------------------------------------------------------------
             // Export to check the content
-            // --------------------------------------------------------------------------------           
-            this.exportDocument("target/DefaultCollectionConverterExport.xml", "/test", true, false);         
-            
+            // --------------------------------------------------------------------------------
+            this.exportDocument("target/DefaultCollectionConverterExport.xml", "/test", true, false);
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
 
     public void testAddElement()
@@ -238,63 +238,63 @@ public class DigesterDefaultCollectionConverterImplTest extends DigesterTestBase
             C c2 = new C();
             c2.setId("second");
             c2.setName("Second Element");
-            
+
             C c3 = new C();
             c3.setId("third");
             c3.setName("Third Element");
-            
-            
+
+
             Collection collection = new ArrayList();
             collection.add(c1);
             collection.add(c2);
             collection.add(c3);
-            
+
             a.setCollection(collection);
-            
+
             ocm.insert(a);
             ocm.save();
-            
+
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (A) ocm.getObject( "/test");
             assertNotNull("a.collection is null", a.getCollection());
             assertEquals("Incorrect a.collection size", 3, a.getCollection().size());
             assertEquals("Incorrect a.collection", "first", ((C) a.getCollection().iterator().next()).getId());
-            
+
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
             C c4 = new C();
             c4.setId("Fourth");
             c4.setName("Fourth Element");
-                
+
             collection = new ArrayList();
             collection.add(c1);
             collection.add(c2);
             collection.add(c3);
             collection.add(c4);
             a.setCollection(collection);
-            
+
             ocm.update(a);
             ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (A) ocm.getObject( "/test");
             assertNotNull("a is null", a);
             assertNotNull("a.collection is null", a.getCollection());
             assertEquals("Incorrect collection size", 4, a.getCollection().size());
             assertEquals("Incorrect a.collection", "first", ((C) a.getCollection().iterator().next()).getId());
-            
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
-    }    
-   
+
+    }
+
 }

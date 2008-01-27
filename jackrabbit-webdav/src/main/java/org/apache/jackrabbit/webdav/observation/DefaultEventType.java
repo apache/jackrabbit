@@ -31,7 +31,7 @@ import java.util.ArrayList;
 /**
  * <code>DefaultEventType</code> defines a simple EventType implementation that
  * only consists of a qualified event name consisting of namespace plus local
- * name. 
+ * name.
  */
 public class DefaultEventType implements EventType {
 

@@ -53,7 +53,7 @@ public class AnnotationNullAtomicTest extends DigesterTestBase
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(new TestSuite(AnnotationNullAtomicTest.class));
     }
-    
+
 
     public void testNullValueAtomicFields()
     {
@@ -61,26 +61,26 @@ public class AnnotationNullAtomicTest extends DigesterTestBase
         {
 
         	ObjectContentManager ocm = getObjectContentManager();
-     
+
             // --------------------------------------------------------------------------------
             // Create and store an object graph in the repository
             // --------------------------------------------------------------------------------
             Atomic a = new Atomic();
             a.setPath("/test");
-            a.setIntegerObject(new Integer(100));            
+            a.setIntegerObject(new Integer(100));
             a.setDate(new Date());
             byte[] content = "Test Byte".getBytes();
             a.setByteArray(content);
             a.setCalendar(Calendar.getInstance());
             a.setDoubleObject(new Double(2.12));
             a.setDoublePrimitive(1.23);
-            
+
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream("Test Stream".getBytes());
             a.setInputStream(byteArrayInputStream);
-            
+
             ocm.insert(a);
             ocm.save();
-             
+
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------
@@ -88,32 +88,32 @@ public class AnnotationNullAtomicTest extends DigesterTestBase
             a = (Atomic) ocm.getObject( "/test");
             assertNotNull("a is null", a);
             assertNull("Boolean object is not null", a.getBooleanObject());
-            
+
             assertFalse("Incorrect boolean primitive", a.isBooleanPrimitive());
             assertNotNull("Integer Object is null", a.getIntegerObject());
             assertTrue("Incorrect Integer object", a.getIntegerObject().intValue() == 100);
             assertTrue("Incorrect int primitive", a.getIntPrimitive() == 0);
-            assertNull("String object is not null", a.getString());            
+            assertNull("String object is not null", a.getString());
             assertNotNull("Byte array object is null", a.getByteArray());
             assertTrue("Incorrect byte object", new String(a.getByteArray()).equals("Test Byte"));
-            
+
             assertNotNull("date object is null", a.getDate());
             assertNotNull("calendar object is null", a.getCalendar());
-            
+
             assertNotNull("Double object is null", a.getDoubleObject());
             assertTrue("Incorrect double object", a.getDoubleObject().doubleValue() == 2.12);
             assertTrue("Incorrect double primitive", a.getDoublePrimitive() == 1.23);
-            
+
             assertNotNull("Incorrect input stream primitive", a.getInputStream());
-            
-            
+
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
-    
+
 }

@@ -33,7 +33,7 @@ import java.io.IOException;
  * fragments based on the proximity of highlighted terms. Highlighted terms that
  * are adjacent have a higher weight. In addition, the more highlighted terms,
  * the higher the weight.
- * 
+ *
  * @see WeightedHighlighter
  */
 public class WeightedHTMLExcerpt extends AbstractExcerpt {

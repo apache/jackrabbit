@@ -20,7 +20,7 @@ import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
 
 /**
- * The <code>LockManager</code> interface. 
+ * The <code>LockManager</code> interface.
  */
 public interface LockManager {
 

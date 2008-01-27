@@ -32,7 +32,7 @@ import org.apache.jackrabbit.ocm.testmodel.Residual;
  * Test ResidualNodesCollectionConverterImpl
  *
  * @author <a href="mailto:fmeschbe[at]apache[dot]com">Felix Meschberger</a>
- * 
+ *
  */
 public class DigesterResidualNodesCollectionConverterImplTest extends DigesterTestBase
 {
@@ -52,7 +52,7 @@ public class DigesterResidualNodesCollectionConverterImplTest extends DigesterTe
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(new TestSuite(DigesterResidualNodesCollectionConverterImplTest.class));
     }
-   
+
     public void testResidualNodes()
     {
         try
@@ -70,36 +70,36 @@ public class DigesterResidualNodesCollectionConverterImplTest extends DigesterTe
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             residual = (Residual) ocm.getObject( "/test");
             assertNotNull("Object is null", residual);
             assertNull("Map is not null", residual.getElements());
-            
+
             // --------------------------------------------------------------------------------
             // Update an object graph in the repository
             // --------------------------------------------------------------------------------
             residual = new Residual.ResidualNodes();
             residual.setPath("/test");
-            
+
             ManagedHashMap map = new ManagedHashMap();
             map.put("value1", new Paragraph("Value1"));
             map.put("value2", new Paragraph("Value2"));
             map.put("value3", new Paragraph("Value3"));
             map.put("value4", new Paragraph("Value4"));
             residual.setElements(map);
-            
+
             ocm.update(residual);
             ocm.save();
-            
+
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             residual = (Residual) ocm.getObject( "/test");
             assertNotNull("Object is null", residual);
-            assertTrue("Incorrect number of values", residual.getElements().size() == 4);            
+            assertTrue("Incorrect number of values", residual.getElements().size() == 4);
             assertTrue("Incorrect collection element type", (residual.getElements().get("value2") instanceof Paragraph));
             assertEquals("Incorrect collection element text", ((Paragraph) residual.getElements().get("value2")).getText(), "Value2");
-            
+
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
@@ -110,13 +110,13 @@ public class DigesterResidualNodesCollectionConverterImplTest extends DigesterTe
             map.put("value14", new Paragraph("Value14"));
             map.put("value15", new Paragraph("Value15"));
             residual.setElements(map);
-            
+
             ocm.update(residual);
             ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
 
             residual = (Residual) ocm.getObject( "/test");
             assertNotNull("Object is null", residual);
@@ -130,8 +130,8 @@ public class DigesterResidualNodesCollectionConverterImplTest extends DigesterTe
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
 
-   
+
 }

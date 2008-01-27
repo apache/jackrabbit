@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.transaction.jackrabbit.UserTransactionImpl;
 
 /** Testcase for RepositoryUtil.
- * 
+ *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
@@ -67,7 +67,7 @@ public class RepositoryUtilTest extends TestCase
 
     public static Test suite()
     {
-        TestSuite suite = new TestSuite(RepositoryUtilTest.class); 
+        TestSuite suite = new TestSuite(RepositoryUtilTest.class);
         // All methods starting with "test" will be executed in the test suite.
         return new TestSetup(suite) {
             protected void setUp() throws Exception {
@@ -79,7 +79,7 @@ public class RepositoryUtilTest extends TestCase
                 RepositoryUtil.unRegisterRepository("repositoryTest");
                 super.tearDown();
             }
-            
+
         };
     }
 
@@ -96,11 +96,11 @@ public class RepositoryUtilTest extends TestCase
             Session session = RepositoryUtil.login(repository, "superuser", "superuser");
             Node root = session.getRootNode();
             assertNotNull("Root node is null", root);
-            
+
             Session session2 = RepositoryUtil.login(repository, "superuser", "superuser");
             root = session2.getRootNode();
             assertNotNull("Root node is null", root);
-            
+
             session.logout();
             session2.logout();
         }
@@ -111,7 +111,7 @@ public class RepositoryUtilTest extends TestCase
         }
 
     }
-    
+
     /**
      * Simple unit test to check if custome node types are well defined
      *
@@ -120,15 +120,15 @@ public class RepositoryUtilTest extends TestCase
     {
         try
         {
-            Repository repository = RepositoryUtil.getRepository("repositoryTest");           
+            Repository repository = RepositoryUtil.getRepository("repositoryTest");
             Session session = RepositoryUtil.login(repository, "superuser", "superuser");
             NodeTypeManager nodeTypeManager = session.getWorkspace().getNodeTypeManager();
-            
+
             // TODO custom node types not implemented yet
-            
+
             //NodeType nodeType = nodeTypeManager.getNodeType("ocm:folder");
             //assertNotNull("Root node is null", nodeType);
-            
+
             session.logout();
         }
         catch (Exception e)
@@ -138,8 +138,8 @@ public class RepositoryUtilTest extends TestCase
         }
     }
 
-    
-    
+
+
     public void testEncodePath()
     {
          String encodedPath = RepositoryUtil.encodePath("/files/test/1.0");
@@ -149,7 +149,7 @@ public class RepositoryUtilTest extends TestCase
          assertTrue("Incorrect encoded path", encodedPath.equals("/files/test/_x0031_2aa/b/_x0033_4/rrr/_x0031_.0"));
 
     }
-    
+
     public void testUserTransaction()
     {
     	try
@@ -197,5 +197,5 @@ public class RepositoryUtilTest extends TestCase
             fail("Unable to run user transaction : " + e);
 		}
     }
-    
+
 }

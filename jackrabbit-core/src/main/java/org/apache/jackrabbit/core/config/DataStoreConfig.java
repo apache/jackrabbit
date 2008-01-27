@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.config;
 
 /**
- * Data store configuration. 
+ * Data store configuration.
  */
 public class DataStoreConfig extends BeanConfig {
 
@@ -29,5 +29,5 @@ public class DataStoreConfig extends BeanConfig {
     public DataStoreConfig(BeanConfig config) {
         super(config);
     }
-    
+
 }

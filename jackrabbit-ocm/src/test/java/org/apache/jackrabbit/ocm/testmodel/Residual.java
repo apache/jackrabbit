@@ -26,19 +26,19 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 /**
  *
  * @author <a href="mailto:fmeschbe[at]apache[dot]com">Felix Meschberger</a>
- * 
- * Note : 
+ *
+ * Note :
  * If the annotation are defined on the field declaration, it is mandatory to register the ancestor classes.
- * Otherwise, the annotation mapper will not map the fields defined in the ancester classes. 
- * 
+ * Otherwise, the annotation mapper will not map the fields defined in the ancester classes.
+ *
  */
 @Node
 public class Residual
 {
 	@Field(path=true) private String path;
-    
+
     private ManagedHashMap elements;
-    
+
 	/**
      * @return Returns the elements.
      */
@@ -54,29 +54,29 @@ public class Residual
         this.elements = elements;
     }
 
-    
-    @Node(extend=Residual.class) public static class ResidualProperties extends Residual 
+
+    @Node(extend=Residual.class) public static class ResidualProperties extends Residual
     {
-        @Collection( jcrName="value*",elementClassName=String.class,collectionConverter=ResidualPropertiesCollectionConverterImpl.class, 
-                collectionClassName=ManagedHashMap.class)
-        private ManagedHashMap elements;        
-        
-        
-    }
-    
-    @Node(extend=Residual.class) public static class ResidualNodes extends Residual 
-    {
-    	
-        @Collection( jcrName="value*",elementClassName=Object.class,collectionConverter=ResidualNodesCollectionConverterImpl.class, 
+        @Collection( jcrName="value*",elementClassName=String.class,collectionConverter=ResidualPropertiesCollectionConverterImpl.class,
                 collectionClassName=ManagedHashMap.class)
         private ManagedHashMap elements;
-            
+
+
+    }
+
+    @Node(extend=Residual.class) public static class ResidualNodes extends Residual
+    {
+    	
+        @Collection( jcrName="value*",elementClassName=Object.class,collectionConverter=ResidualNodesCollectionConverterImpl.class,
+                collectionClassName=ManagedHashMap.class)
+        private ManagedHashMap elements;
+
     	
     }
-    
+
     protected Residual() {}
-    
-    
+
+
     public String getPath() {
 		return path;
 	}

@@ -26,7 +26,7 @@ import javax.jcr.nodetype.NodeTypeIterator;
 
 /**
  * Adapter class for turning {@link RangeIterator}s or {@link Iterator}s
- * into {@link NodeTypeIterator}s. 
+ * into {@link NodeTypeIterator}s.
  */
 public class NodeTypeIteratorAdapter extends RangeIteratorDecorator
         implements NodeTypeIterator {

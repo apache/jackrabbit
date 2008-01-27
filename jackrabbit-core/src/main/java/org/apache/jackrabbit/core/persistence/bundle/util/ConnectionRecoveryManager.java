@@ -235,7 +235,7 @@ public class ConnectionRecoveryManager {
      */
     public PreparedStatement executeStmt(String sql, Object[] params) throws SQLException, RepositoryException {
         return executeStmt(sql, params, false, 0);
-    }    
+    }
 
     /**
      * Executes the given SQL statement with the specified parameters.
@@ -371,7 +371,7 @@ public class ConnectionRecoveryManager {
      * Re-establishes the database connection.
      *
      * @throws SQLException if reconnecting failed
-     * @throws RepositoryException 
+     * @throws RepositoryException
      */
     private void reestablishConnection() throws SQLException, RepositoryException {
 

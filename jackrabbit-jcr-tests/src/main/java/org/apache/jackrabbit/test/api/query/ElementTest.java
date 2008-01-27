@@ -33,7 +33,7 @@ import javax.jcr.Node;
  * <code>nodetype</code> or <code>nt:base</code>
  * @tck.config nodename3 node name for a child node of type
  * <code>nodetype</code> or <code>nt:base</code>
- * 
+ *
  * @test
  * @sources ElementTest.java
  * @executeClass org.apache.jackrabbit.test.api.query.ElementTest

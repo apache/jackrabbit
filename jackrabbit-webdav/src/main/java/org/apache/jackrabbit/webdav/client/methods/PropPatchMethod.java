@@ -162,7 +162,7 @@ public class PropPatchMethod extends DavMethodBase implements DavConstants {
     }
 
     /**
-     * 
+     *
      * @param multiStatus
      * @param httpState
      * @param httpConnection
@@ -216,7 +216,7 @@ public class PropPatchMethod extends DavMethodBase implements DavConstants {
      *
      * @return
      * @throws IOException
-     * @see DavMethod#getResponseException() 
+     * @see DavMethod#getResponseException()
      */
     public DavException getResponseException() throws IOException {
         checkUsed();

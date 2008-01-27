@@ -37,24 +37,24 @@ import javax.jcr.Session;
  * Test cases for data store garbage collection.
  */
 public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventListener {
-    
+
     /** logger instance */
-    private static final Logger LOG = LoggerFactory.getLogger(GarbageCollectorTest.class);    
-    
+    private static final Logger LOG = LoggerFactory.getLogger(GarbageCollectorTest.class);
+
     public void testGC() throws Exception {
         Node root = testRootNode;
         Session session = root.getSession();
-        
+
         RepositoryImpl rep = (RepositoryImpl) session.getRepository();
         if (rep.getDataStore() == null) {
             LOG.info("testGC skipped. Data store is not used.");
             return;
         }
-        
+
         deleteMyNodes();
         runGC(session, true);
         runGC(session, true);
-        
+
         root.addNode("node1");
         Node node2 = root.addNode("node2");
         Node n = node2.addNode("nodeWithBlob");
@@ -62,15 +62,15 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         n = node2.addNode("nodeWithTemporaryBlob");
         n.setProperty("test", new RandomInputStream(11, 10000));
         session.save();
-        
+
         n.remove();
         session.save();
         Thread.sleep(1000);
-        
+
         GarbageCollector gc = ((SessionImpl)session).createDataStoreGarbageCollector();
         gc.setScanEventListener(this);
         gc.setTestDelay(1000);
-        
+
         LOG.debug("scanning...");
         gc.scan();
         int count = listIdentifiers(gc);
@@ -81,10 +81,10 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         assertTrue(gc.deleteUnused() > 0);
         int count2 = listIdentifiers(gc);
         assertEquals(count - 1, count2);
-        
+
         deleteMyNodes();
     }
-    
+
     private void runGC(Session session, boolean all) throws RepositoryException, IOException, ItemStateException {
         GarbageCollector gc = ((SessionImpl)session).createDataStoreGarbageCollector();
         gc.setScanEventListener(this);
@@ -96,7 +96,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         }
         gc.deleteUnused();
     }
-    
+
     private int listIdentifiers(GarbageCollector gc) throws DataStoreException {
         LOG.debug("identifiers:");
         Iterator it = gc.getDataStore().getAllIdentifiers();
@@ -108,18 +108,18 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         }
         return count;
     }
-    
+
     public void testTransientObjects() throws Exception {
-        
+
         Node root = testRootNode;
         Session session = root.getSession();
-        
+
         RepositoryImpl rep = (RepositoryImpl) session.getRepository();
         if (rep.getDataStore() == null) {
             LOG.info("testTransientObjects skipped. Data store is not used.");
             return;
         }
-        
+
         deleteMyNodes();
         runGC(session, true);
         runGC(session, true);
@@ -135,7 +135,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         runGC(session, false);
 
         s2.save();
-        
+
         InputStream in = n.getProperty("test").getStream();
         InputStream in2 = new RandomInputStream(10, 10000);
         while (true) {
@@ -146,7 +146,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
                 break;
             }
         }
-        
+
         deleteMyNodes();
     }
 
@@ -156,7 +156,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
             LOG.debug("scanned: " + path);
         }
     }
-    
+
     private void list(Node n) throws RepositoryException {
         if (!n.getName().startsWith("jcr:")) {
             for (NodeIterator it = n.getNodes(); it.hasNext();) {
@@ -177,9 +177,9 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
 
     public void done() {
     }
-    
+
     private void deleteMyNodes() throws RepositoryException {
-        Node root = testRootNode;        
+        Node root = testRootNode;
         while (root.hasNode("testroot")) {
             root.getNode("testroot").remove();
         }

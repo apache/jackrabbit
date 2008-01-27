@@ -53,7 +53,7 @@ public class SubscriptionDiscovery extends AbstractDavProperty {
     /**
      * Create a new <code>SubscriptionDiscovery</code> that contains a single
      * subscription entry.
-     * 
+     *
      * @param subscription
      */
     public SubscriptionDiscovery(Subscription subscription) {

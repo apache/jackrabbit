@@ -56,7 +56,7 @@ import org.apache.jackrabbit.servlet.AbstractRepositoryServlet;
 public class RMIRemoteRepositoryServlet extends RemoteRepositoryServlet {
 
     /**
-     * Serial version UID. 
+     * Serial version UID.
      */
     private static final long serialVersionUID = 2410543206806054854L;
 

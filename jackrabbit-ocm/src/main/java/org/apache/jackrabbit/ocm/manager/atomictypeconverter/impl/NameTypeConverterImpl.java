@@ -26,29 +26,29 @@ import org.apache.jackrabbit.ocm.exception.IncorrectAtomicTypeException;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter;
 
 /**
- * 
- *  Name Type Converter 
- * 
+ *
+ *  Name Type Converter
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
- * 
+ *
  */
 public class NameTypeConverterImpl implements AtomicTypeConverter
 {
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter#getValue(java.lang.Object)
 	 */
 	public Value getValue(ValueFactory valueFactory, Object propValue)
 	{
-		try 
+		try
 		{
-			if (propValue == null) 
+			if (propValue == null)
 			{
 				return null;
 			}
 			return valueFactory.createValue((String) propValue, PropertyType.NAME);
-		} 
-		catch (RepositoryException e) 
+		}
+		catch (RepositoryException e)
 		{
 			throw new IncorrectAtomicTypeException("Impossible to convert the value : " + propValue.toString(), e);
 		}
@@ -56,7 +56,7 @@ public class NameTypeConverterImpl implements AtomicTypeConverter
 	}
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter#getObject(javax.jcr.Value)
      */
 	public Object getObject(Value value)
@@ -73,7 +73,7 @@ public class NameTypeConverterImpl implements AtomicTypeConverter
 	}
 	
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter#getStringValue(java.lang.Object)
 	 */
 	public String getXPathQueryValue(ValueFactory valueFactory, Object object)

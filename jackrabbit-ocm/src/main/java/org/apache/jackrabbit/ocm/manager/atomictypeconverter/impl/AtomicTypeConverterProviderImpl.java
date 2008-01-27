@@ -27,39 +27,39 @@ import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter
 
 /**
  * Implementation of {@link AtomicTypeConverterProvider}.
- * 
+ *
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 public class AtomicTypeConverterProviderImpl implements AtomicTypeConverterProvider {
     protected Map m_converters;
     protected Map m_converterInstances = new HashMap();
-    
+
     /**
      * No-arg constructor.
      */
     public AtomicTypeConverterProviderImpl() {
     }
-    
+
     /**
      * Full constructor.
-     * 
+     *
      * @param converters a map of classes and their associated <code>AtomicTypeConverter</code>
      * classes.
      */
     public AtomicTypeConverterProviderImpl(Map converters) {
         m_converters= converters;
     }
-    
+
     /**
      * Sets the associations of classes and their <code>AtomicTypeConverter</code>
      * classes.
-     * 
+     *
      * @param converters <code>Map<Class, Class></code>
      */
     public void setAtomicTypeConvertors(Map converters) {
         m_converters= converters;
     }
-    
+
     /**
      * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverterProvider#getAtomicTypeConverter(java.lang.Class)
      */
@@ -72,7 +72,7 @@ public class AtomicTypeConverterProviderImpl implements AtomicTypeConverterProvi
         if(null == converterClass) {
             throw new IncorrectAtomicTypeException("No registered converter for a field based on the class :'" + clazz + "'");
         }
-        
+
         try {
             converter= (AtomicTypeConverter) converterClass.newInstance();
             m_converterInstances.put(clazz, converter);
@@ -80,12 +80,12 @@ public class AtomicTypeConverterProviderImpl implements AtomicTypeConverterProvi
         catch(Exception ex) {
             throw new IncorrectAtomicTypeException(
                     "Cannot create converter instance from class '" + clazz + "'", ex);
-            
+
         }
-        
+
         return converter;
     }
-    
+
     /**
      * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverterProvider#getAtomicTypeConverters()
      */
@@ -95,7 +95,7 @@ public class AtomicTypeConverterProviderImpl implements AtomicTypeConverterProvi
             Class clazz= (Class) it.next();
             result.put(clazz, getAtomicTypeConverter(clazz));
         }
-        
+
         return result;
     }
 }

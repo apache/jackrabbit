@@ -45,16 +45,16 @@ public class ReferencesTest extends AbstractJCRTest {
 
         // make sure the node is now referenceable
         assertTrue("test node should be mix:referenceable", n1.isNodeType(mixReferenceable));
-        
+
         // create references: n2.p1 -> n1
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
-        
+
         Value[] values = new Value[]{superuser.getValueFactory().createValue(n1)};
-        
+
         // abort test if the repository does not allow setting
         // reference properties on this node
         ensureCanSetProperty(n2, propertyName1, values);
-        
+
         Property p1 = n2.setProperty(propertyName1, values);
         testRootNode.save();
         PropertyIterator iter = n1.getReferences();
@@ -116,7 +116,7 @@ public class ReferencesTest extends AbstractJCRTest {
         if (needsMixin(n1, mixReferenceable)) {
             n1.addMixin(mixReferenceable);
         }
-        
+
         // with some impls. the mixin type has only affect upon save
         testRootNode.save();
 

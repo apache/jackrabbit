@@ -76,7 +76,7 @@ import javax.jcr.observation.ObservationManager;
  * }
  * </pre>
  *
- * @deprecated Use the Locked class from 
+ * @deprecated Use the Locked class from
  *             the org.apache.jackrabbit.spi.commons.lock package of
  *             the jackrabbit-spi-commons component.
  */

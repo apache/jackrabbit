@@ -32,7 +32,7 @@ public class QueryObjectModelImpl
         implements QueryObjectModel {
 
     //-------------------------< QueryObjectModel >-----------------------------
-    
+
     /**
      * Gets the node-tuple source for this query.
      *

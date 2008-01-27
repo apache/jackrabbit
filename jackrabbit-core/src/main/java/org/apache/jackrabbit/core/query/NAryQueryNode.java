@@ -147,7 +147,7 @@ public abstract class NAryQueryNode extends QueryNode {
         }
         return false;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -162,5 +162,5 @@ public abstract class NAryQueryNode extends QueryNode {
         }
         return false;
     }
-    
+
 }

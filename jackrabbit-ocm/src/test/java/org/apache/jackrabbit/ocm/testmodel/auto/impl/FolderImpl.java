@@ -30,19 +30,19 @@ import org.apache.jackrabbit.ocm.testmodel.auto.Folder;
  * Forlder implementation
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
- * 
+ *
  */
 @Node(jcrType="ocm:folderimpl", extend=CmsObjectImpl.class ,discriminator=false)
 @Implement(interfaceName=Folder.class)
-public class FolderImpl extends CmsObjectImpl implements Folder 
+public class FolderImpl extends CmsObjectImpl implements Folder
 {
-    @Collection(proxy=true, autoUpdate=false, autoInsert=false, autoRetrieve=false, 
-    		    elementClassName=CmsObjectImpl.class,  
+    @Collection(proxy=true, autoUpdate=false, autoInsert=false, autoRetrieve=false,
+    		    elementClassName=CmsObjectImpl.class,
     			collectionConverter=NTCollectionConverterImpl.class)
     protected List children = new ArrayList();
 
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Folder#getChildren()
 	 */
 	public List getChildren() {
@@ -50,15 +50,15 @@ public class FolderImpl extends CmsObjectImpl implements Folder
 	}
 
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Folder#setChildren(java.util.List)
 	 */
 	public void setChildren(List children) {
 		this.children = children;
 	}
-    
+
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Folder#addChild(org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject)
      */
     public void addChild(CmsObject child)

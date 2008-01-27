@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 /**
  * <code>NameFormat</code> provides methods for formatting and parsing names.
  *
- * @deprecated Use the NameResolver interface from 
+ * @deprecated Use the NameResolver interface from
  *             the org.apache.jackrabbit.spi.commons.conversion package of
  *             the jackrabbit-spi-commons component.
  */

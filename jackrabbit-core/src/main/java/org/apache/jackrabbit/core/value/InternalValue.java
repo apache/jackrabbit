@@ -75,7 +75,7 @@ public class InternalValue {
     private static final InternalValue BOOLEAN_TRUE = new InternalValue(true);
 
     private static final InternalValue BOOLEAN_FALSE = new InternalValue(false);
-    
+
     /**
      * If set to 'true', the data store is used when configured in repository.xml
      */
@@ -93,7 +93,7 @@ public class InternalValue {
     /**
      * Create a new internal value from the given JCR value.
      * Large binary values are stored in a temporary file.
-     * 
+     *
      * @param value the JCR value
      * @param resolver
      * @return the created internal value
@@ -106,7 +106,7 @@ public class InternalValue {
     /**
      * Create a new internal value from the given JCR value.
      * If the data store is enabled, large binary values are stored in the data store.
-     * 
+     *
      * @param value the JCR value
      * @param resolver
      * @param store the data store
@@ -210,7 +210,7 @@ public class InternalValue {
      * @return the created value
      */
     public static InternalValue create(byte[] value) {
-        if (USE_DATA_STORE) {        
+        if (USE_DATA_STORE) {
             return new InternalValue(BLOBInMemory.getInstance(value));
         }
         return new InternalValue(new BLOBValue(value));
@@ -218,13 +218,13 @@ public class InternalValue {
 
     /**
      * Create an internal value that is backed by a temporary file.
-     * 
+     *
      * @param value the stream
      * @param store the data store
      * @return the internal value
      */
     public static InternalValue createTemporary(InputStream value) throws RepositoryException {
-        if (USE_DATA_STORE) {        
+        if (USE_DATA_STORE) {
             return new InternalValue(getBLOBFileValue(null, value));
         }
         try {
@@ -233,12 +233,12 @@ public class InternalValue {
             throw new RepositoryException("Error creating temporary file", e);
         }
     }
-    
+
     /**
-     * Create an internal value that is backed by a temporary file 
+     * Create an internal value that is backed by a temporary file
      * (if data store usage is disabled or the store is null)
      * or in the data store if it is not null and enabled.
-     * 
+     *
      * @param value the stream
      * @param store the data store or null to use a temporary file
      * @return the internal value
@@ -279,7 +279,7 @@ public class InternalValue {
     public static InternalValue create(FileSystemResource value) throws IOException {
         if (USE_DATA_STORE) {
             return new InternalValue(BLOBInResource.getInstance(value));
-        }        
+        }
         return new InternalValue(new BLOBValue(value));
     }
 
@@ -292,14 +292,14 @@ public class InternalValue {
         assert !USE_DATA_STORE;
         return new InternalValue(new BLOBValue(value));
     }
-    
+
     /**
      * Create a binary object with the given identifier.
-     * 
+     *
      * @param store the data store
      * @param id the identifier
      * @return the value
-     */    
+     */
     public static InternalValue create(DataStore store, String id) {
         assert USE_DATA_STORE && store != null;
         return new InternalValue(getBLOBFileValue(store, id));
@@ -324,7 +324,7 @@ public class InternalValue {
         }
         return ret;
     }
-    
+
     /**
      * @param values
      * @return the created value
@@ -335,7 +335,7 @@ public class InternalValue {
             ret[i] = new InternalValue(values[i]);
         }
         return ret;
-    }    
+    }
 
     /**
      * @param value
@@ -392,51 +392,51 @@ public class InternalValue {
     public Object internalValue() {
         return val;
     }
-    
+
     public BLOBFileValue getBLOBFileValue() {
         assert val != null && type == PropertyType.BINARY;
         return (BLOBFileValue) val;
     }
-    
+
     public UUID getUUID() {
         assert val != null && type == PropertyType.REFERENCE;
         return (UUID) val;
     }
-    
+
     public boolean getBoolean() {
         assert val != null && type == PropertyType.BOOLEAN;
         return ((Boolean) val).booleanValue();
-    }    
+    }
 
     public Name getQName() {
         assert val != null && type == PropertyType.NAME;
         return (Name) val;
     }
-    
+
     public Path getPath() {
         assert val != null && type == PropertyType.PATH;
         return (Path) val;
     }
-    
+
     public long getLong() {
         assert val != null && type == PropertyType.LONG;
         return ((Long) val).longValue();
     }
-    
+
     public double getDouble() {
         assert val != null && type == PropertyType.DOUBLE;
         return ((Double) val).doubleValue();
     }
-    
+
     public Calendar getDate() {
         assert val != null && type == PropertyType.DATE;
         return (Calendar) val;
     }
-    
+
     public String getString() {
         assert val != null && type == PropertyType.STRING;
         return (String) val;
-    }    
+    }
 
     /**
      * @return the type
@@ -593,7 +593,7 @@ public class InternalValue {
         val = value;
         type = PropertyType.REFERENCE;
     }
-    
+
     private static BLOBFileValue getBLOBFileValue(DataStore store, InputStream in) throws RepositoryException {
         int maxMemorySize;
         if (store != null) {

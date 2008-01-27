@@ -119,7 +119,7 @@ public class NodeTypeDefDiff {
             type = TRIVIAL;
 
             // check supertypes
-            int tmpType = supertypesDiff(); 
+            int tmpType = supertypesDiff();
             if (tmpType > type) {
                 type = tmpType;
             }
@@ -334,11 +334,11 @@ public class NodeTypeDefDiff {
 
         return maxType;
     }
-    
+
     public String toString() {
         String result = getClass().getName() + "[\n\tnodeTypeName="
                 + oldDef.getName();
-        
+
         result += ",\n\tmixinFlagDiff=" + modificationTypeToString(mixinFlagDiff());
         result += ",\n\tsupertypesDiff=" + modificationTypeToString(supertypesDiff());
 

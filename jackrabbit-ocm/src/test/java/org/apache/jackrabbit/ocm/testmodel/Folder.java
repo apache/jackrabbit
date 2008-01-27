@@ -31,15 +31,15 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 public class Folder extends HierarchyNode
 {
     @Collection(autoUpdate=false, elementClassName=HierarchyNode.class , collectionConverter=NTCollectionConverterImpl.class)
-    private java.util.Collection children; 
-   
+    private java.util.Collection children;
 
-	public java.util.Collection getChildren() 
+
+	public java.util.Collection getChildren()
 	{
 		return children;
 	}
 
-	public void setChildren(java.util.Collection children) 
+	public void setChildren(java.util.Collection children)
 	{
 		this.children = children;
 	}
@@ -52,5 +52,5 @@ public class Folder extends HierarchyNode
 		}
 		children.add(node);
 	}
-    
+
 }

@@ -155,7 +155,7 @@ public class AnonymousConnection implements ManagedConnection, XAResource {
     public boolean isSameRM(XAResource xares) throws XAException {
         return xares instanceof AnonymousConnection;
     }
-    
+
     //--------------------------------------------------------- not implemented
 
     public void start(Xid xid, int flags) throws XAException {

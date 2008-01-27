@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.data;
 import java.io.Serializable;
 
 /**
- * Opaque data identifier used to identify records in a data store. 
+ * Opaque data identifier used to identify records in a data store.
  * All identifiers must be serializable and implement the standard
  * object equality and hash code methods.
  */
@@ -59,7 +59,7 @@ public final class DataIdentifier implements Serializable {
         char[] buffer = new char[identifier.length * 2];
         for (int i = 0; i < identifier.length; i++) {
             buffer[2 * i] = HEX[(identifier[i] >> 4) & 0x0f];
-            buffer[2 * i + 1] = HEX[identifier[i] & 0x0f]; 
+            buffer[2 * i + 1] = HEX[identifier[i] & 0x0f];
         }
         this.identifier = new String(buffer);
     }
@@ -85,7 +85,7 @@ public final class DataIdentifier implements Serializable {
      */
     public boolean equals(Object object) {
         return (object instanceof DataIdentifier)
-            && identifier.equals(object.toString()); 
+            && identifier.equals(object.toString());
     }
 
     /**

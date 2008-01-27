@@ -62,16 +62,16 @@ public class NodeTypeManagerImpl implements NodeTypeManager
      * Logging.
      */
     private static Log log = LogFactory.getLog(NodeTypeManagerImpl.class);
-    
+
     /** Namespace helper class for Jackrabbit.
      */
     private NamespaceHelper namespaceHelper = new NamespaceHelper();
-    
+
     /** Creates a new instance of NodeTypeManagerImpl. */
     public NodeTypeManagerImpl()
     {
     }
-    
+
     /**
      * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createNamespace
      */
@@ -92,26 +92,26 @@ public class NodeTypeManagerImpl implements NodeTypeManager
             }
         }
     }
-    
+
     /**
      * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createNodeTypes
-     */    
+     */
     public void createNodeTypes(Session session, MappingDescriptor mappingDescriptor)
     throws NodeTypeCreationException
     {
     	if (mappingDescriptor != null && mappingDescriptor.getClassDescriptorsByClassName().size() > 0)
         {
-            
+
         }
         else
         {
             throw new NodeTypeCreationException("The MappingDescriptor can't be null or empty.");
         }
     }
-    
+
     /**
      * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createNodeTypes
-     */     
+     */
     public void createNodeTypes(Session session, ClassDescriptor[] classDescriptors)
     throws NodeTypeCreationException
     {
@@ -132,16 +132,16 @@ public class NodeTypeManagerImpl implements NodeTypeManager
 
     /**
      * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createNodeTypesFromMappingFiles
-     */       
+     */
     public void createNodeTypesFromMappingFiles(Session session,
             InputStream[] mappingXmlFiles)
             throws NodeTypeCreationException
     {
     }
-    
+
     /**
      * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createSingleNodeType
-     */ 
+     */
     public void createSingleNodeType(Session session, ClassDescriptor classDescriptor)
     throws NodeTypeCreationException
     {
@@ -149,14 +149,14 @@ public class NodeTypeManagerImpl implements NodeTypeManager
         {
             getNamespaceHelper().setRegistry(session.getWorkspace().getNamespaceRegistry());
             ArrayList list = new ArrayList();
-            
+
             if (classDescriptor.getJcrType() != null &&
                     (classDescriptor.getJcrType().startsWith("nt:")
                     || classDescriptor.getJcrType().startsWith("mix:")))
             {
                 throw new NodeTypeCreationException("Namespace nt and mix are reserved namespaces. Please specify your own.");
             }
-            
+
             if (checkSuperTypes(session.getWorkspace().getNodeTypeManager(),
                     classDescriptor.getJcrSuperTypes()))
             {
@@ -189,7 +189,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
                         }
                     }
                 }
-                
+
                 if (classDescriptor.getCollectionDescriptors() != null) {
                     Iterator collectionIterator = classDescriptor.getCollectionDescriptors().iterator();
                     while (collectionIterator.hasNext()) {
@@ -224,7 +224,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
     }
 
     /** Checks if all JCR super types for a given node type exist.
-     * 
+     *
      * @param ntMgr NodeTypeManager
      * @param superTypes Comma separated String with JCR node types
      * @return true/false
@@ -255,9 +255,9 @@ public class NodeTypeManagerImpl implements NodeTypeManager
 
         return exists;
     }
-    
+
     /** Creates a NodeTypeDef object.
-     * 
+     *
      * @param jcrNodeType Name of JCR node type
      * @param jcrSuperTypes JCR node super types
      * @return type
@@ -267,7 +267,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
     {
         NodeTypeDef type = new NodeTypeDef();
         type.setMixin(false);
-        
+
         if (jcrNodeType != null && (! jcrNodeType.equals("")))
         {
             type.setName(getNamespaceHelper().getName(jcrNodeType));
@@ -276,14 +276,14 @@ public class NodeTypeManagerImpl implements NodeTypeManager
         {
             type.setName(getNamespaceHelper().getName(className));
         }
-        
+
         type.setSupertypes(getJcrSuperTypes(jcrSuperTypes));
         type.setPrimaryItemName(getNamespaceHelper().getName(jcrNodeType));
         return type;
     }
-    
+
     /** Creates a PropDefImpl object.
-     * 
+     *
      * @param fieldName The name of the field
      * @param field property definition descriptor
      * @param declaringNodeType Node Type QName where the property belongs to
@@ -293,7 +293,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
             PropertyDefDescriptor field, Name declaringNodeType)
     {
         PropDefImpl property = new PropDefImpl();
-        
+
         if (field.getJcrName() != null)
         {
             property.setName(getNamespaceHelper().getName(field.getJcrName()));
@@ -303,7 +303,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
         {
             property.setName(getNamespaceHelper().getName(fieldName));
         }
-        
+
         if (field.getJcrType() != null)
         {
             property.setRequiredType(PropertyType.valueFromName(field.getJcrType()));
@@ -319,19 +319,19 @@ public class NodeTypeManagerImpl implements NodeTypeManager
         property.setAutoCreated(field.isJcrAutoCreated());
         property.setMandatory(field.isJcrMandatory());
         property.setMultiple(field.isJcrMultiple());
-        
+
         if (field.getJcrOnParentVersion() != null &&
                 field.getJcrOnParentVersion().length() > 0)
         {
             property.setOnParentVersion(OnParentVersionAction.valueFromName(field.getJcrOnParentVersion()));
         }
-        
+
         property.setProtected(field.isJcrProtected());
         return property;
     }
 
     /** Creates a NodeDefImpl object.
-     * 
+     *
      * @param fieldName Name of the field
      * @param field child node definition descriptor
      * @param declaringNodeType Node Type QName where the chid node belongs to
@@ -339,7 +339,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
      */
     private NodeDefImpl getNodeDefinition(String fieldName,
         ChildNodeDefDescriptor field, Name declaringNodeType) {
-        
+
         NodeDefImpl node = new NodeDefImpl();
 
         if (field.getJcrName() != null) {
@@ -357,7 +357,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
         node.setMandatory(field.isJcrMandatory());
         node.setAllowsSameNameSiblings(field.isJcrSameNameSiblings());
         node.setDefaultPrimaryType( getNamespaceHelper().getName( field.getDefaultPrimaryType() ) );
-        
+
         if (field.getJcrOnParentVersion() != null
             && field.getJcrOnParentVersion().length() > 0) {
             node.setOnParentVersion(OnParentVersionAction.valueFromName(field.getJcrOnParentVersion()));
@@ -368,9 +368,9 @@ public class NodeTypeManagerImpl implements NodeTypeManager
     }
 
     /**
-     * 
-     * @param propDef 
-     * @return 
+     *
+     * @param propDef
+     * @return
      */
     protected String showPropertyDefinition(PropertyDefinition propDef)
     {
@@ -385,8 +385,8 @@ public class NodeTypeManagerImpl implements NodeTypeManager
 
     /** Creates a QName array from a comma separated list of JCR super types in
      * a given String.
-     * 
-     * @param superTypes JCR super types 
+     *
+     * @param superTypes JCR super types
      * @return qNameSuperTypes
      */
     public Name[] getJcrSuperTypes(String superTypes)
@@ -410,25 +410,25 @@ public class NodeTypeManagerImpl implements NodeTypeManager
 
     /**
      * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createSingleNodeTypeFromMappingFile
-     */     
+     */
     public void createSingleNodeTypeFromMappingFile(Session session,
             InputStream mappingXmlFile, String jcrNodeType)
             throws NodeTypeCreationException
     {
     }
-    
+
     /**
      * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createNodeTypeFromClass
-     */     
+     */
     public void createNodeTypeFromClass(Session session, Class clazz,
             String jcrNodeType, boolean reflectSuperClasses)
             throws NodeTypeCreationException
     {
     }
-    
+
     /**
      * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createNodeTypesFromConfiguration
-     */  
+     */
     public void createNodeTypesFromConfiguration(Session session,
             InputStream jcrRepositoryConfigurationFile)
             throws OperationNotSupportedException, NodeTypeCreationException
@@ -442,7 +442,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
             {
                 list.add(types[i]);
             }
-            
+
             createNodeTypesFromList(session, list);
             log.info("Registered " + list.size() + " nodetypes from xml configuration file.");
         }
@@ -452,23 +452,23 @@ public class NodeTypeManagerImpl implements NodeTypeManager
             throw new NodeTypeCreationException(e);
         }
     }
-    
+
     /**
-     * 
-     * @param session 
-     * @param nodeTypes 
-     * @throws org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException 
-     * @throws javax.jcr.RepositoryException 
+     *
+     * @param session
+     * @param nodeTypes
+     * @throws org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException
+     * @throws javax.jcr.RepositoryException
      */
     private void createNodeTypesFromList(Session session, List nodeTypes)
     throws InvalidNodeTypeDefException, RepositoryException
     {
         getNodeTypeRegistry(session).registerNodeTypes(nodeTypes);
     }
-    
+
     /**
      * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#removeNodeTypes
-     */     
+     */
     public void removeNodeTypesFromConfiguration(Session session, InputStream jcrRepositoryConfigurationFile)
     throws NodeTypeRemovalException
     {
@@ -481,7 +481,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager
             {
                 list.add(types[i]);
             }
-            
+
             removeNodeTypesFromList(session, list);
             log.info("Registered " + list.size() + " nodetypes from xml configuration file.");
         }
@@ -491,11 +491,11 @@ public class NodeTypeManagerImpl implements NodeTypeManager
             throw new NodeTypeRemovalException(e);
         }
     }
-    
+
     private void removeNodeTypesFromList(Session session, List nodeTypes)
     throws NodeTypeRemovalException
     {
-        for (Iterator nodeTypeIterator = nodeTypes.iterator(); nodeTypeIterator.hasNext();) 
+        for (Iterator nodeTypeIterator = nodeTypes.iterator(); nodeTypeIterator.hasNext();)
         {
 			NodeTypeDef nodeTypeDef = (NodeTypeDef) nodeTypeIterator.next();
 			this.removeSingleNodeType(session, nodeTypeDef.getName());
@@ -506,12 +506,12 @@ public class NodeTypeManagerImpl implements NodeTypeManager
 
     /**
      * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createSingleNodeTypeFromMappingFile
-     */     
+     */
     public void removeNodeTypesFromMappingFile(Session session, InputStream[] mappingXmlFile)
             throws NodeTypeRemovalException
     {
     }
-    
+
     public void removeSingleNodeType(Session session, Name name)
     throws NodeTypeRemovalException
     {
@@ -522,12 +522,12 @@ public class NodeTypeManagerImpl implements NodeTypeManager
         catch (Exception e)
         {
             throw new NodeTypeRemovalException(e);
-        }      
+        }
     }
-    
+
     /**
      * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#removeSingleNodeType
-     */     
+     */
     public void removeSingleNodeType(Session session, String jcrNodeType)
     throws NodeTypeRemovalException
     {
@@ -538,11 +538,11 @@ public class NodeTypeManagerImpl implements NodeTypeManager
         catch (Exception e)
         {
             throw new NodeTypeRemovalException(e);
-        }      
+        }
     }
 
     /** Returns the jackrabbit NodeTypeRegistry from an open session.
-     * 
+     *
      * @param session Repository session
      * @return nodeTypeRegistry
      */
@@ -558,22 +558,22 @@ public class NodeTypeManagerImpl implements NodeTypeManager
 
     /**
      * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#getPrimaryNodeTypeNames
-     */    
+     */
     public List getPrimaryNodeTypeNames(Session session, String namespace)
     {
         return null;
     }
-    
+
     /**
      * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#getAllPrimaryNodeTypeNames
-     */    
+     */
     public List getAllPrimaryNodeTypeNames(Session session)
     {
         return null;
     }
 
     /** Getter for property namespaceHelper.
-     * 
+     *
      * @return namespaceHelper
      */
     public NamespaceHelper getNamespaceHelper()
@@ -582,14 +582,14 @@ public class NodeTypeManagerImpl implements NodeTypeManager
     }
 
     /** Setter for property namespaceHelper.
-     * 
+     *
      * @param object namespaceHelper
      */
     public void setNamespaceHelper(NamespaceHelper object)
     {
         this.namespaceHelper = object;
     }
-    
+
 
     private boolean isPropertyType(String type)
     {
@@ -601,6 +601,6 @@ public class NodeTypeManagerImpl implements NodeTypeManager
     	        type.equals(PropertyType.TYPENAME_NAME) ||
     	        type.equals(PropertyType.TYPENAME_PATH) ||
     	        type.equals(PropertyType.TYPENAME_REFERENCE) ||
-    	        type.equals(PropertyType.TYPENAME_STRING));    	       
+    	        type.equals(PropertyType.TYPENAME_STRING));    	
     }
 }

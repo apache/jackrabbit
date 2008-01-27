@@ -28,21 +28,21 @@ import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
  * @version $Id: Exp $
  */
 public class CustomNodeTypeCreatorImpl implements CustomNodeTypeCreator {
-    
+
     /** Logger.
      */
-    private final static Log log = LogFactory.getLog(CustomNodeTypeCreatorImpl.class); 
-    
+    private final static Log log = LogFactory.getLog(CustomNodeTypeCreatorImpl.class);
+
     /** Session to the jcr repository.
      */
     private ObjectContentManagerImpl jcrSession;
-    
+
     /** Creates a new instance of CustomNodeTypeCreatorImpl. */
     public CustomNodeTypeCreatorImpl()
     {
     }
-    
-    /** Creates a new instance of CustomNodeTypeCreatorImpl with a jcr session. 
+
+    /** Creates a new instance of CustomNodeTypeCreatorImpl with a jcr session.
      * @param jcrSession JcrSession
      */
     public CustomNodeTypeCreatorImpl(ObjectContentManagerImpl jcrSession)
@@ -52,33 +52,33 @@ public class CustomNodeTypeCreatorImpl implements CustomNodeTypeCreator {
 
     /** This method is supposed to create custom node types on repository
      * setup.
-     * 
-     * @throws org.apache.jackrabbit.ocm.exception.CustomNodeTypeCreationException 
+     *
+     * @throws org.apache.jackrabbit.ocm.exception.CustomNodeTypeCreationException
      * @return true/false
      */
     public boolean createInitialJcrCustomNodeTypes() throws CustomNodeTypeCreationException
     {
-       
+
         // TODO
-        
+
         return true;
     }
 
     /** Method to add a jcr custom node type to an existing jcr repository.
-     * 
-     * @throws org.apache.jackrabbit.ocm.exception.CustomNodeTypeCreationException 
+     *
+     * @throws org.apache.jackrabbit.ocm.exception.CustomNodeTypeCreationException
      * @return true/false
      */
     public boolean addJcrCustomNodeType() throws CustomNodeTypeCreationException
     {
-        
+
         // TODO
-        
+
         return false;
     }
-    
+
     /** Setter for property jcrSession.
-     * 
+     *
      * @param jcrSession JcrSession
      */
     public void setJcrSession(ObjectContentManagerImpl jcrSession)
@@ -87,7 +87,7 @@ public class CustomNodeTypeCreatorImpl implements CustomNodeTypeCreator {
     }
 
     /** Getter for property jcrSession.
-     * 
+     *
      * @return jcrSession
      */
     public ObjectContentManager getJcrSession()

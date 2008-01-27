@@ -24,9 +24,9 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
 import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 
 /**
- * 
+ *
  * Simple object used to test multivalue properties
- * 
+ *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart
  *         Christophe </a>
  * @version $Id: Exp $
@@ -38,7 +38,7 @@ public class MultiValue
 	
 	@Field private String name;
 	
-	@Collection(elementClassName=String.class,  collectionConverter=MultiValueCollectionConverterImpl.class) 
+	@Collection(elementClassName=String.class,  collectionConverter=MultiValueCollectionConverterImpl.class)
 	private java.util.Collection multiValues;
 
 	@Collection(elementClassName=String.class,  collectionConverter=MultiValueCollectionConverterImpl.class)

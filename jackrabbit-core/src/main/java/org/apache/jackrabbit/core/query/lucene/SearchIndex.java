@@ -422,7 +422,7 @@ public class SearchIndex extends AbstractQueryHandler {
 
         indexingConfig = createIndexingConfiguration(nsMappings);
         analyzer.setIndexingConfig(indexingConfig);
-        
+
         index = new MultiIndex(indexDir, this, excludedIDs, nsMappings);
         if (index.numDocs() == 0) {
             index.createInitialIndex(
@@ -891,7 +891,7 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
-     * @param namespaceMappings The namespace mappings 
+     * @param namespaceMappings The namespace mappings
      * @return the fulltext indexing configuration or <code>null</code> if there
      *         is no configuration.
      */

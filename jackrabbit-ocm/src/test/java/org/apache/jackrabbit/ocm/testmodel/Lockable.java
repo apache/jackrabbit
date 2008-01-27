@@ -23,17 +23,17 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 /**
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
- * 
+ *
  */
-@Node(jcrType="ocm:TestLockable") 
+@Node(jcrType="ocm:TestLockable")
 public class Lockable
 {
-	@Field(path=true) private String path; 
+	@Field(path=true) private String path;
     @Field(jcrName="ocm:a1") private String a1;
     @Field(jcrName="ocm:a2") private String a2;
     @Field(jcrName="jcr:lockOwner") private String lockOwner;
-    
-    
+
+
     public String getPath() {
 		return path;
 	}
@@ -68,16 +68,16 @@ public class Lockable
     {
         this.a2 = a2;
     }
-    
-	public String getLockOwner() 
+
+	public String getLockOwner()
 	{
 		return lockOwner;
 	}
 	
-	public void setLockOwner(String lockOwner) 
+	public void setLockOwner(String lockOwner)
 	{
 		this.lockOwner = lockOwner;
 	}
-    
-    
+
+
 }

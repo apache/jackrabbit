@@ -25,7 +25,7 @@ import java.io.IOException;
 
 /**
  * <code>ExcerptProvider</code> defines an interface to create an excerpt for
- * a matching node. The format of the excerpt is implementation specific. 
+ * a matching node. The format of the excerpt is implementation specific.
  */
 public interface ExcerptProvider {
 

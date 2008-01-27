@@ -30,33 +30,33 @@ import javax.jcr.RepositoryException;
  * Represents binary data which is stored in a file system resource.
  */
 public class BLOBInResource extends BLOBFileValue {
-    
+
     /**
      * The default logger
      */
     private static final Logger LOG = LoggerFactory.getLogger(BLOBInResource.class);
-    
+
     /**
      * the prefix of the string representation of this value
-     */    
+     */
     private static final String PREFIX = "fsResource:";
-    
+
     /**
      * underlying file system resource
      */
     private final FileSystemResource fsResource;
-    
+
     /**
      * the file length
-     */    
+     */
     private final long length;
-    
+
     /**
      * Creates a new instance from a stream.
      *
      * @param in the input stream
-     * @throws IOException 
-     */    
+     * @throws IOException
+     */
     private BLOBInResource(FileSystemResource fsResource) throws IOException {
         try {
             if (!fsResource.exists()) {
@@ -75,11 +75,11 @@ public class BLOBInResource extends BLOBFileValue {
      * Creates a new instance from a file system resource.
      *
      * @param fsResource the resource
-     */    
+     */
     static BLOBInResource getInstance(FileSystemResource fsResource) throws IOException {
         return new BLOBInResource(fsResource);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -90,7 +90,7 @@ public class BLOBInResource extends BLOBFileValue {
             // ignore
             LOG.warn("Error while deleting BLOBFileValue: " + fse.getMessage());
         }
-        
+
     }
 
     /**
@@ -124,8 +124,8 @@ public class BLOBInResource extends BLOBFileValue {
      */
     public String toString() {
         return PREFIX +  fsResource.toString();
-    }    
-    
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -139,7 +139,7 @@ public class BLOBInResource extends BLOBFileValue {
         }
         return false;
     }
-    
+
     /**
      * Returns zero to satisfy the Object equals/hashCode contract.
      * This class is mutable and not meant to be used as a hash key.
@@ -149,6 +149,6 @@ public class BLOBInResource extends BLOBFileValue {
      */
     public int hashCode() {
         return 0;
-    }    
-    
+    }
+
 }

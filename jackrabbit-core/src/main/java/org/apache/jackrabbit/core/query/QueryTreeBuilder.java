@@ -53,7 +53,7 @@ public interface QueryTreeBuilder {
 
     /**
      * Returns the set of query languages supported by this builder.
-     * 
+     *
      * @return String array containing the names of the supported languages.
      */
     String[] getSupportedLanguages();

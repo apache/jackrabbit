@@ -141,7 +141,7 @@ class RowIteratorImpl implements RowIterator {
         this.excerptProvider = exProvider;
         this.spellSuggestion = spellSuggestion;
     }
-    
+
     /**
      * Returns the next <code>Row</code> in the iteration.
      *

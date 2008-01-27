@@ -56,7 +56,7 @@ import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
  *   <dt>*</dt>
  *   <dd>
  *     All other init parameters are used as the JNDI environment when
- *     instantiating {@link InitialContext} for binding up the repository. 
+ *     instantiating {@link InitialContext} for binding up the repository.
  *   </dd>
  * </dl>
  *

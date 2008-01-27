@@ -26,9 +26,9 @@ import org.apache.jackrabbit.ocm.nodemanagement.impl.RepositoryConfiguration;
  */
 public interface RepositorySession
 {
-    
+
     /** Connects to a JCR repository and returns a session to it.
-     * 
+     *
      * @param username Username to connect to repository
      * @param password Password
      * @param configuration Repository configuration

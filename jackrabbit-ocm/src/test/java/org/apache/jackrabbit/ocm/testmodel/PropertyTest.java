@@ -23,7 +23,7 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 /**
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
- * 
+ *
  */
 @Node(jcrType="ocm:propertytest")
 public class PropertyTest
@@ -34,7 +34,7 @@ public class PropertyTest
 	@Field(jcrName="ocm:autoCreatedProp", jcrDefaultValue="aaa") private String autoCreatedProp;
 	@Field(jcrName="ocm:autoCreatedWithConstraintsProp", jcrDefaultValue="ccc", jcrValueConstraints="bbb,ccc,ddd") private String autoCreatedWithConstraintsProp;
 	@Field(jcrName="ocm:mandatoryProp", jcrMandatory=true) private String mandatoryProp;
-	@Field(jcrName="ocm:mandatoryWithConstaintsProp", jcrMandatory=true, jcrValueConstraints="xx,yy") private String mandatoryWithConstaintsProp; 
+	@Field(jcrName="ocm:mandatoryWithConstaintsProp", jcrMandatory=true, jcrValueConstraints="xx,yy") private String mandatoryWithConstaintsProp;
 	@Field(jcrName="ocm:protectedWithDefaultValueProp", jcrProtected=true) private String protectedWithDefaultValueProp;
 	
 	public String getPath() {

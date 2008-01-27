@@ -24,7 +24,7 @@ import junit.framework.TestSuite;
 
 /**
  * Package level tests.
- * 
+ *
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 public class AllTests {
@@ -39,7 +39,7 @@ public class AllTests {
         suite.addTestSuite(AnnotationConcreteClassTest.class);
         suite.addTestSuite(DigesterConcreteClassTest.class);
         suite.addTestSuite(AnnotationInterfaceHierarchyTest.class);
-        suite.addTestSuite(DigesterInterfaceHierarchyTest.class);        
+        suite.addTestSuite(DigesterInterfaceHierarchyTest.class);
         //$JUnit-END$
 
         return suite;

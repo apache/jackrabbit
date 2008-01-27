@@ -22,7 +22,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /** Testcase for RepositoryUtil.
- * 
+ *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
@@ -56,7 +56,7 @@ public class NodeUtilTest extends TestCase
 
     public static Test suite()
     {
-        TestSuite suite = new TestSuite(NodeUtilTest.class); 
+        TestSuite suite = new TestSuite(NodeUtilTest.class);
         // All methods starting with "test" will be executed in the test suite.
         return new TestSetup(suite) {
             protected void setUp() throws Exception {
@@ -68,13 +68,13 @@ public class NodeUtilTest extends TestCase
                 RepositoryUtil.unRegisterRepository("repositoryTest");
                 super.tearDown();
             }
-            
+
         };
     }
 
 
     /**
-     * Test for getParentPath() 
+     * Test for getParentPath()
      *
      */
     public void testGetParentPath()
@@ -88,7 +88,7 @@ public class NodeUtilTest extends TestCase
             parentPath = NodeUtil.getParentPath("/test/test2");
             assertNotNull("parent path is null for /test/test2", parentPath);
             assertTrue("parent path is incorrect for /test/test2", parentPath.equals("/test"));
-            
+
         }
         catch (Exception e)
         {
@@ -96,9 +96,9 @@ public class NodeUtilTest extends TestCase
             fail("Unable to find the repository : " + e);
         }
     }
-    
+
     /**
-     * Test for getNodeName() 
+     * Test for getNodeName()
      *
      */
     public void testGetNodeName()
@@ -108,18 +108,18 @@ public class NodeUtilTest extends TestCase
             String nodeName = NodeUtil.getNodeName("/test");
             assertNotNull("node name is null for /test", nodeName);
             assertTrue("node name is incorrect for /test", nodeName.equals("test"));
-            
+
             nodeName = NodeUtil.getNodeName("/test/test2");
             assertNotNull("node name is null for /test/test2", nodeName);
             assertTrue("node name is incorrect for /test/test2", nodeName.equals("test2"));
-            
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Unable to find the repository : " + e);
         }
-    }   
-    
-     
+    }
+
+
 }

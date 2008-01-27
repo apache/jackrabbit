@@ -35,7 +35,7 @@ public interface HierarchyManager {
     public void dispose();
 
     /**
-     * 
+     *
      * @return
      */
     public NodeEntry getRootEntry();
@@ -76,7 +76,7 @@ public interface HierarchyManager {
 
     /**
      * Retrieves the <code>HierarchyEntry</code> corresponding to the given
-     * path and resolves it to the underlying <code>ItemState</code>. 
+     * path and resolves it to the underlying <code>ItemState</code>.
      *
      * @param qPath
      * @return

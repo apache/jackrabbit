@@ -101,7 +101,7 @@ public class ClientRepositoryFactory implements ObjectFactory {
                     throw new RemoteException("Unknown target: " + url, e);
                 }
             }
-            
+
         };
     }
 

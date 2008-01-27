@@ -428,7 +428,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
         }
         return null;
     }
-    
+
     //----------------------------< Notification about modified lock-tokens >---
     /**
      * Notify all <code>Lock</code>s that have been accessed so far about the

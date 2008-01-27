@@ -20,9 +20,9 @@ package org.apache.jackrabbit.ocm.query;
 
 
 /**
- * The query manager is used to instantiate query objects and execute query based on the object model. 
+ * The query manager is used to instantiate query objects and execute query based on the object model.
  * Internally, this service used the JCR QueryManager
- * 
+ *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  *
  */
@@ -34,20 +34,20 @@ public interface QueryManager
 	 * @return a new instantiated filter object
 	 */
 	 public Filter createFilter(Class classQuery);
-	 
+	
 	 /**
-	  * Create a new empty query 
+	  * Create a new empty query
 	  * @param filter the filter used by the query
 	  * @return a new instantiated query object
 	  */
-     public Query createQuery(Filter filter); 
-     
+     public Query createQuery(Filter filter);
+
      /**
       * Build a JCR search expression from a Query
       * @param query the query matching to the JCR search expression
-      * @return a JCR XPATH search expression 
+      * @return a JCR XPATH search expression
       */
-     public String buildJCRExpression(Query query); 
-     
-       
+     public String buildJCRExpression(Query query);
+
+
 }

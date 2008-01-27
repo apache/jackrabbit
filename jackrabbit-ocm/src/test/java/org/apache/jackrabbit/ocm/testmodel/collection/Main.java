@@ -31,12 +31,12 @@ public class Main
 {
 	@Field(path=true) private String path;
     @Field private String text;
-    @Collection (elementClassName=Element.class, collectionClassName=HashMapElement.class) 
+    @Collection (elementClassName=Element.class, collectionClassName=HashMapElement.class)
     private HashMapElement hashMap;
-    
+
     @Collection (elementClassName=Element.class, collectionClassName=ArrayListElement.class)
     private ArrayListElement list;
-    
+
     public String getPath() {
 		return path;
 	}
@@ -57,13 +57,13 @@ public class Main
     {
         this.hashMap = hashMap;
     }
-    
-    public ArrayListElement getList() 
+
+    public ArrayListElement getList()
     {
 		return list;
 	}
 	
-    public void setList(ArrayListElement list) 
+    public void setList(ArrayListElement list)
     {
 		this.list = list;
 	}
@@ -80,7 +80,7 @@ public class Main
     public void setText(String text)
     {
         this.text = text;
-    } 
-    
-    
+    }
+
+
 }

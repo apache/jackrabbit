@@ -87,8 +87,8 @@ public class NestableRuntimeException extends RuntimeException {
         if (getCause() == null) {
             return super.getMessage();
         } else {
-            return super.getMessage() 
-                + "; nested exception is " 
+            return super.getMessage()
+                + "; nested exception is "
                 + getCause().getClass().getName()
                 + ": " + getCause().getMessage();
         }

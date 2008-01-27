@@ -68,40 +68,40 @@ public class AnnotationMultiValueQueryTest extends AnnotationTestBase
     {
         super.setUp();
 		this.importData();
-        
+
     }
     	
-    
+
     public void testMultiValueSearch()
     {
         try
         {
         	
   	      QueryManager queryManager = this.getQueryManager();
-	      Filter filter = queryManager.createFilter(MultiValue.class);    
+	      Filter filter = queryManager.createFilter(MultiValue.class);
 	      filter.addEqualTo("multiValues", "Value1");
-	      Query query = queryManager.createQuery(filter);    	      
+	      Query query = queryManager.createQuery(filter);    	
 	      ObjectContentManager ocm = this.getObjectContentManager();
 	      Collection result = ocm.getObjects(query);
-	      assertTrue("Invalid number of objects - should be = 3", result.size() == 3);            
-          
+	      assertTrue("Invalid number of objects - should be = 3", result.size() == 3);
+
   	      queryManager = this.getQueryManager();
-	      filter = queryManager.createFilter(MultiValue.class);    
+	      filter = queryManager.createFilter(MultiValue.class);
 	      filter.addEqualTo("multiValues", "Value9");
-	      query = queryManager.createQuery(filter);    	      
+	      query = queryManager.createQuery(filter);    	
 	      ocm = this.getObjectContentManager();
 	      result = ocm.getObjects(query);
 	      assertTrue("Invalid number of objects - should be = 1", result.size() == 1);
 	      MultiValue multiValue = (MultiValue)result.iterator().next();
 	      assertTrue("Incorrect MultiValue found ", multiValue.getName().equals("m3"));
-	      
+	
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
 
 
@@ -127,7 +127,7 @@ public class AnnotationMultiValueQueryTest extends AnnotationTestBase
             values.add("Value4");
             multiValue.setMultiValues(values);
             ocm.insert(multiValue);
-            
+
             multiValue = new MultiValue();
             multiValue.setPath("/test/m2");
             multiValue.setName("m2");
@@ -135,10 +135,10 @@ public class AnnotationMultiValueQueryTest extends AnnotationTestBase
             values.add("Value1");
             values.add("Value5");
             values.add("Value6");
-            values.add("Value7");            
+            values.add("Value7");
             multiValue.setMultiValues(values);
             ocm.insert(multiValue);
-            
+
             multiValue = new MultiValue();
             multiValue.setPath("/test/m3");
             multiValue.setName("m3");
@@ -147,12 +147,12 @@ public class AnnotationMultiValueQueryTest extends AnnotationTestBase
             values.add("Value2");
             values.add("Value8");
             values.add("Value9");
-            
+
             multiValue.setMultiValues(values);
             ocm.insert(multiValue);
-                                   
+
             ocm.save();
-            
+
         }
         catch(Exception e)
         {

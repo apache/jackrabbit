@@ -31,7 +31,7 @@ import java.util.Set;
  * and then the object can be used as a NamespaceResolver. Additionally, it can
  * be based on a underlying NamespaceResolver
  *
- * @deprecated Use the NamespaceMapping class from 
+ * @deprecated Use the NamespaceMapping class from
  *             the org.apache.jackrabbit.spi.commons.namespace package of
  *             the jackrabbit-spi-commons component.
  */

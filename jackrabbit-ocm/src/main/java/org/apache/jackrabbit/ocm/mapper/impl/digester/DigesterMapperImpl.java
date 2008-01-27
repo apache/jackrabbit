@@ -26,12 +26,12 @@ import org.apache.jackrabbit.ocm.mapper.impl.AbstractMapperImpl;
 /**
  *
  * Digester implementation for {@link org.apache.jackrabbit.ocm.mapper.Mapper}
- * 
+ *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart Christophe </a>
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 public class DigesterMapperImpl extends AbstractMapperImpl implements Mapper {
-    
+
 
     /**
      * No-arg constructor.

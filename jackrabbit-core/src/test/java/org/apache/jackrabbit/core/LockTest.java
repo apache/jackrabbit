@@ -174,7 +174,7 @@ public class LockTest extends AbstractJCRTest {
      * implementing a persistent counter with a timeout when the next value of
      * the counter is retrieved. The number of values that can be retrieved by
      * this test depends on system performance and the configured persistence
-     * manager. 
+     * manager.
      */
     public void testSequenceWithTimeout() throws RepositoryException {
         final Node counter = testRootNode.addNode(nodeName1);
