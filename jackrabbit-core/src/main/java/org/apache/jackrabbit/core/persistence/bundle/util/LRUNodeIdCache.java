@@ -27,11 +27,6 @@ import org.slf4j.Logger;
 public class LRUNodeIdCache {
 
     /**
-     * the cvs/svn id
-     */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
-    /**
      * The default logger
      */
     private static Logger log = LoggerFactory.getLogger(LRUNodeIdCache.class);
@@ -106,4 +101,5 @@ public class LRUNodeIdCache {
     public void clear() {
         missing.clear();
     }
+
 }

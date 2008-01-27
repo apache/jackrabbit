@@ -120,11 +120,15 @@ public class SharedFieldSortComparator extends SortComparator {
                 String iTerm = indexes[idx1].terms[i.doc - starts[idx1]];
                 String jTerm = indexes[idx2].terms[j.doc - starts[idx2]];
 
-                if (iTerm == jTerm) return 0;
-                if (iTerm == null) return -1;
-                if (jTerm == null) return 1;
-
-                return iTerm.compareTo(jTerm);
+                if (iTerm == jTerm) {
+                    return 0;
+                } else if (iTerm == null) {
+                    return -1;
+                } else if (jTerm == null) {
+                    return 1;
+                } else {
+                    return iTerm.compareTo(jTerm);
+                }
             }
 
             /**

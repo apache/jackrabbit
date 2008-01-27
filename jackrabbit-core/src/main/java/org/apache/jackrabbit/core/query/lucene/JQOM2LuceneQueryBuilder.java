@@ -257,8 +257,8 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
             throws InvalidQueryException {
         Value v = (Value) bindVariableValues.get(node.getBindVariableQName());
         if (v == null) {
-            throw new InvalidQueryException("No value bound for variable " +
-                    node.getBindVariableName());
+            throw new InvalidQueryException("No value bound for variable "
+                    + node.getBindVariableName());
         } else {
             return v;
         }
@@ -313,8 +313,8 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
                 break;
             default:
                 // TODO: support for new types defined in JSR 283
-                throw new InvalidQueryException("Unsupported property type " +
-                        PropertyType.nameFromValue(v.getType()));
+                throw new InvalidQueryException("Unsupported property type "
+                        + PropertyType.nameFromValue(v.getType()));
         }
 
         final int operator = node.getOperator();
@@ -362,8 +362,8 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
                                 BooleanClause.Occur.MUST_NOT);
                         return b;
                     default:
-                        throw new InvalidQueryException("Unknown operator " +
-                                operator);
+                        throw new InvalidQueryException(
+                                "Unknown operator " + operator);
                 }
             }
 
@@ -396,8 +396,9 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
                 } else if (obj instanceof TermQuery) {
                     return transformTermQuery((TermQuery) obj, true);
                 } else {
-                    throw new InvalidQueryException("upper-case not supported " +
-                            "on operand " + node.getOperand().getClass().getName());
+                    throw new InvalidQueryException(
+                            "upper-case not supported on operand "
+                            + node.getOperand().getClass().getName());
                 }
             }
 
@@ -409,8 +410,9 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
                 } else if (obj instanceof TermQuery) {
                     return transformTermQuery((TermQuery) obj, false);
                 } else {
-                    throw new InvalidQueryException("lower-case not supported " +
-                            "on operand " + node.getOperand().getClass().getName());
+                    throw new InvalidQueryException(
+                            "lower-case not supported on operand "
+                            + node.getOperand().getClass().getName());
                 }
             }
 
@@ -423,8 +425,9 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
                         return new CaseTermQuery.Lower(query.getTerm());
                     }
                 } else {
-                    throw new InvalidQueryException("Upper/LowerCase not " +
-                            "supported on field " + query.getTerm().field());
+                    throw new InvalidQueryException(
+                            "Upper/LowerCase not supported on field "
+                            + query.getTerm().field());
                 }
             }
         }, data);

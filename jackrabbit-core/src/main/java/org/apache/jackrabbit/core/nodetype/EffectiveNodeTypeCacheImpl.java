@@ -362,5 +362,7 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
         public String toString() {
             return Arrays.asList(names).toString() + " (" + weight + ")";
         }
+
     }
+
 }

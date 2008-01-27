@@ -160,4 +160,5 @@ public class FileRecordIterator implements RecordIterator {
         String msg = "No log file found containing revision: " + revision;
         throw new IOException(msg);
     }
+
 }

@@ -278,8 +278,8 @@ public class DefaultHighlighter {
                 for (; skippedChars >= 0; skippedChars--) {
                     if (Character.isWhitespace(cbuf[skippedChars])) {
                         firstWhitespace = skippedChars;
-                        if (skippedChars - 1 >= 0 &&
-                                cbuf[skippedChars - 1] == '.') {
+                        if (skippedChars - 1 >= 0
+                                && cbuf[skippedChars - 1] == '.') {
                             skippedChars++;
                             break;
                         }

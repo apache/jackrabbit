@@ -1550,12 +1550,12 @@ public class DatabaseFileSystem implements FileSystem {
             return super.skip(n);
         }
 
-        public int read(byte b[]) throws IOException {
+        public int read(byte[] b) throws IOException {
             consumed = true;
             return super.read(b);
         }
 
-        public int read(byte b[], int off, int len) throws IOException {
+        public int read(byte[] b, int off, int len) throws IOException {
             consumed = true;
             return super.read(b, off, len);
         }

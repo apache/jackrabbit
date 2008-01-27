@@ -660,9 +660,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         + node.getValueType());
         }
 
-        if (node.getRelativePath() == null &&
-                node.getOperation() != QueryConstants.OPERATION_SIMILAR &&
-                node.getOperation() != QueryConstants.OPERATION_SPELLCHECK) {
+        if (node.getRelativePath() == null
+                && node.getOperation() != QueryConstants.OPERATION_SIMILAR
+                && node.getOperation() != QueryConstants.OPERATION_SPELLCHECK) {
             exceptions.add(new InvalidQueryException("@* not supported in predicate"));
             return data;
         }
@@ -709,17 +709,17 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 
         // support for fn:name()
         Name propName = relPath.getNameElement().getName();
-        if (propName.getNamespaceURI().equals(SearchManager.NS_FN_URI) &&
-                propName.getLocalName().equals("name()")) {
+        if (propName.getNamespaceURI().equals(SearchManager.NS_FN_URI)
+                && propName.getLocalName().equals("name()")) {
             if (node.getValueType() != QueryConstants.TYPE_STRING) {
-                exceptions.add(new InvalidQueryException("Name function can " +
-                        "only be used in conjunction with a string literal"));
+                exceptions.add(new InvalidQueryException("Name function can "
+                        + "only be used in conjunction with a string literal"));
                 return data;
             }
-            if (node.getOperation() != QueryConstants.OPERATION_EQ_VALUE &&
-                    node.getOperation() != QueryConstants.OPERATION_EQ_GENERAL) {
-                exceptions.add(new InvalidQueryException("Name function can " +
-                        "only be used in conjunction with an equals operator"));
+            if (node.getOperation() != QueryConstants.OPERATION_EQ_VALUE
+                    && node.getOperation() != QueryConstants.OPERATION_EQ_GENERAL) {
+                exceptions.add(new InvalidQueryException("Name function can "
+                        + "only be used in conjunction with an equals operator"));
                 return data;
             }
             // check if string literal is a valid XML Name

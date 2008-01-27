@@ -312,6 +312,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
         // fail-fast test: check status of this item's state
         if (isTransient()) {
+            String msg;
             switch (state.getStatus()) {
                 case ItemState.STATUS_EXISTING_MODIFIED:
                     // add this item's state to the list
@@ -319,36 +320,27 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     break;
 
                 case ItemState.STATUS_NEW:
-                    {
-                        String msg = safeGetJCRPath()
-                                + ": cannot save a new item.";
-                        log.debug(msg);
-                        throw new RepositoryException(msg);
-                    }
+                    msg = safeGetJCRPath() + ": cannot save a new item.";
+                    log.debug(msg);
+                    throw new RepositoryException(msg);
 
                 case ItemState.STATUS_STALE_MODIFIED:
-                    {
-                        String msg = safeGetJCRPath()
-                                + ": the item cannot be saved because it has been modified externally.";
-                        log.debug(msg);
-                        throw new InvalidItemStateException(msg);
-                    }
+                    msg = safeGetJCRPath()
+                        + ": the item cannot be saved because it has been modified externally.";
+                    log.debug(msg);
+                    throw new InvalidItemStateException(msg);
 
                 case ItemState.STATUS_STALE_DESTROYED:
-                    {
-                        String msg = safeGetJCRPath()
-                                + ": the item cannot be saved because it has been deleted externally.";
-                        log.debug(msg);
-                        throw new InvalidItemStateException(msg);
-                    }
+                    msg = safeGetJCRPath()
+                        + ": the item cannot be saved because it has been deleted externally.";
+                    log.debug(msg);
+                    throw new InvalidItemStateException(msg);
 
                 case ItemState.STATUS_UNDEFINED:
-                    {
-                        String msg = safeGetJCRPath()
-                                + ": the item cannot be saved; it seems to have been removed externally.";
-                        log.debug(msg);
-                        throw new InvalidItemStateException(msg);
-                    }
+                    msg = safeGetJCRPath()
+                        + ": the item cannot be saved; it seems to have been removed externally.";
+                    log.debug(msg);
+                    throw new InvalidItemStateException(msg);
 
                 default:
                     log.debug("unexpected state status (" + state.getStatus() + ")");
@@ -363,6 +355,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             while (iter.hasNext()) {
                 transientState = (ItemState) iter.next();
                 // fail-fast test: check status of transient state
+                String msg;
                 switch (transientState.getStatus()) {
                     case ItemState.STATUS_NEW:
                     case ItemState.STATUS_EXISTING_MODIFIED:
@@ -371,28 +364,22 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                         break;
 
                     case ItemState.STATUS_STALE_MODIFIED:
-                        {
-                            String msg = transientState.getId()
-                                    + ": the item cannot be saved because it has been modified externally.";
-                            log.debug(msg);
-                            throw new InvalidItemStateException(msg);
-                        }
+                        msg = transientState.getId()
+                            + ": the item cannot be saved because it has been modified externally.";
+                        log.debug(msg);
+                        throw new InvalidItemStateException(msg);
 
                     case ItemState.STATUS_STALE_DESTROYED:
-                        {
-                            String msg = transientState.getId()
-                                    + ": the item cannot be saved because it has been deleted externally.";
-                            log.debug(msg);
-                            throw new InvalidItemStateException(msg);
-                        }
+                        msg = transientState.getId()
+                            + ": the item cannot be saved because it has been deleted externally.";
+                        log.debug(msg);
+                        throw new InvalidItemStateException(msg);
 
                     case ItemState.STATUS_UNDEFINED:
-                        {
-                            String msg = safeGetJCRPath()
-                                    + ": the item cannot be saved; it seems to have been removed externally.";
-                            log.debug(msg);
-                            throw new InvalidItemStateException(msg);
-                        }
+                        msg = safeGetJCRPath()
+                            + ": the item cannot be saved; it seems to have been removed externally.";
+                        log.debug(msg);
+                        throw new InvalidItemStateException(msg);
 
                     default:
                         log.debug("unexpected state status (" + transientState.getStatus() + ")");
@@ -1317,11 +1304,9 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     break;
 
                 case ItemState.STATUS_NEW:
-                    {
-                        String msg = safeGetJCRPath() + ": cannot refresh a new item.";
-                        log.debug(msg);
-                        throw new RepositoryException(msg);
-                    }
+                    String msg = safeGetJCRPath() + ": cannot refresh a new item.";
+                    log.debug(msg);
+                    throw new RepositoryException(msg);
 
                 default:
                     log.debug("unexpected state status (" + transientState.getStatus() + ")");

@@ -201,4 +201,5 @@ abstract class PropertyOperation extends ItemOperation {
     public void setValues(InternalValue[] values) {
         this.values = values;
     }
+
 }

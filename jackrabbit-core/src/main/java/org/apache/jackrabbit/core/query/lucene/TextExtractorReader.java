@@ -94,7 +94,7 @@ class TextExtractorReader extends Reader {
     /**
      * {@inheritDoc}
      */
-    public int read(char cbuf[], int off, int len) throws IOException {
+    public int read(char[] cbuf, int off, int len) throws IOException {
         if (extractedText == null) {
             // no reader present
             // check if job is started already

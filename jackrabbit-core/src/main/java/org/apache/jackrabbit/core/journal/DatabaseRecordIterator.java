@@ -159,4 +159,5 @@ class DatabaseRecordIterator implements RecordIterator {
             }
         }
     }
+
 }

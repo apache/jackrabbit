@@ -26,5 +26,4 @@ import org.apache.jackrabbit.core.state.PersistenceManager;
 public class XMLPersistenceManager
         extends org.apache.jackrabbit.core.persistence.xml.XMLPersistenceManager
         implements PersistenceManager {
-
 }

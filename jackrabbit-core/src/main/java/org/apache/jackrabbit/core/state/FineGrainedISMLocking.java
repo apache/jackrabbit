@@ -94,8 +94,8 @@ public class FineGrainedISMLocking implements ISMLocking {
             Sync shared = writerStateRWLock.readLock();
             shared.acquire();
             try {
-                if (activeWriter == null ||
-                        !hasDependency(activeWriter.changes, id)) {
+                if (activeWriter == null
+                        || !hasDependency(activeWriter.changes, id)) {
                     readLockMap.addLock(id);
                     return new ReadLockImpl(id);
                 } else {
@@ -124,8 +124,8 @@ public class FineGrainedISMLocking implements ISMLocking {
             Sync exclusive = writerStateRWLock.writeLock();
             exclusive.acquire();
             try {
-                if (activeWriter == null &&
-                        !readLockMap.hasDependency(changeLog)) {
+                if (activeWriter == null
+                        && !readLockMap.hasDependency(changeLog)) {
                     activeWriter = new WriteLockImpl(changeLog);
                     activeWriterThread = Thread.currentThread();
                     return activeWriter;

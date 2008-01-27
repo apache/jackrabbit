@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import javax.jcr.Value;
 import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NodeType;
 
@@ -140,4 +139,5 @@ abstract class AbstractItemDefinitionTemplate implements ItemDefinition {
     public boolean isProtected() {
         return protectedStatus;
     }
+
 }

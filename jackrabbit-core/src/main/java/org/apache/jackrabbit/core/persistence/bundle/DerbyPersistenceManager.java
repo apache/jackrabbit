@@ -271,16 +271,16 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
         if (DERBY_EMBEDDED_DRIVER.equals(getDriver())) {
             Statement stmt = connectionManager.getConnection().createStatement();
             try {
-                stmt.execute("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY " +
-                        "('derby.storage.initialPages', '" + derbyStorageInitialPages + "')");
-                stmt.execute("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY " +
-                        "('derby.storage.minimumRecordSize', '" + derbyStorageMinimumRecordSize + "')");
-                stmt.execute("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY " +
-                        "('derby.storage.pageCacheSize', '" + derbyStoragePageCacheSize + "')");
-                stmt.execute("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY " +
-                        "('derby.storage.pageReservedSpace', '" + derbyStoragePageReservedSpace + "')");
-                stmt.execute("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY " +
-                        "('derby.storage.pageSize', '" + derbyStoragePageSize + "')");
+                stmt.execute("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY "
+                        + "('derby.storage.initialPages', '" + derbyStorageInitialPages + "')");
+                stmt.execute("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY "
+                        + "('derby.storage.minimumRecordSize', '" + derbyStorageMinimumRecordSize + "')");
+                stmt.execute("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY "
+                        + "('derby.storage.pageCacheSize', '" + derbyStoragePageCacheSize + "')");
+                stmt.execute("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY "
+                        + "('derby.storage.pageReservedSpace', '" + derbyStoragePageReservedSpace + "')");
+                stmt.execute("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY "
+                        + "('derby.storage.pageSize', '" + derbyStoragePageSize + "')");
 
             } finally {
                 stmt.close();

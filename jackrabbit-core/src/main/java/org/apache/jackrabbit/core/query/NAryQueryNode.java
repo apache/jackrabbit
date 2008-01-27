@@ -157,8 +157,9 @@ public abstract class NAryQueryNode extends QueryNode {
         }
         for (Iterator iter = operands.iterator(); iter.hasNext();) {
             QueryNode queryNode = (QueryNode) iter.next();
-            if (queryNode.needsSystemTree())
+            if (queryNode.needsSystemTree()) {
                 return true;
+            }
         }
         return false;
     }

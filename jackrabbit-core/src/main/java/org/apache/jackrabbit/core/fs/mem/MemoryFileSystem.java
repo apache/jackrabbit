@@ -178,8 +178,9 @@ public class MemoryFileSystem implements FileSystem {
     }
 
     private void assertExistence(String path) throws FileSystemException {
-        if (!exists(path))
+        if (!exists(path)) {
             throw new FileSystemException("no such file " + path);
+        }
     }
 
     public boolean isFolder(String path) throws FileSystemException {

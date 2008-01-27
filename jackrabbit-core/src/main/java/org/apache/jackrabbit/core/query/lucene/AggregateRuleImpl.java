@@ -114,8 +114,8 @@ class AggregateRuleImpl implements AggregateRule {
             throws ItemStateException, RepositoryException {
         for (int i = 0; i < rules.length; i++) {
             NodeState aggregateRoot = rules[i].matches(nodeState);
-            if (aggregateRoot != null &&
-                    aggregateRoot.getNodeTypeName().equals(nodeTypeName)) {
+            if (aggregateRoot != null
+                    && aggregateRoot.getNodeTypeName().equals(nodeTypeName)) {
                 return aggregateRoot;
             }
         }
@@ -258,8 +258,8 @@ class AggregateRuleImpl implements AggregateRule {
         NodeState matches(NodeState nodeState)
                 throws ItemStateException, RepositoryException {
             // first check node type
-            if (nodeTypeName == null ||
-                    nodeState.getNodeTypeName().equals(nodeTypeName)) {
+            if (nodeTypeName == null
+                    || nodeState.getNodeTypeName().equals(nodeTypeName)) {
                 // check pattern
                 Path.Element[] elements = pattern.getElements();
                 for (int e = elements.length - 1; e >= 0; e--) {

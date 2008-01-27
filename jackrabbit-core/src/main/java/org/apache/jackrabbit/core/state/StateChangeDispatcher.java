@@ -157,4 +157,5 @@ public class StateChangeDispatcher {
             ((NodeStateListener) iter.next()).nodeRemoved(state, name, index, id);
         }
     }
+
 }

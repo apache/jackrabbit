@@ -27,11 +27,6 @@ import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 public class NamespaceIndex implements StringIndex {
 
     /**
-     * The CVS/SVN id
-     */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
-    /**
      * the namespace registry
      */
     private final NamespaceRegistryImpl nsReg;
@@ -66,4 +61,5 @@ public class NamespaceIndex implements StringIndex {
             throw new IllegalStateException("URIIndex not valid? " + e.toString());
         }
     }
+
 }

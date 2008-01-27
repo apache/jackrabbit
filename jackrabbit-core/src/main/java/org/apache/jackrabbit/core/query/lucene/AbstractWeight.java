@@ -64,8 +64,8 @@ abstract class AbstractWeight implements Weight {
     public Scorer scorer(IndexReader reader) throws IOException {
         if (reader instanceof MultiIndexReader) {
             MultiIndexReader mir = (MultiIndexReader) reader;
-            IndexReader readers[] = mir.getIndexReaders();
-            int starts[] = new int[readers.length + 1];
+            IndexReader[] readers = mir.getIndexReaders();
+            int[] starts = new int[readers.length + 1];
             int maxDoc = 0;
             for (int i = 0; i < readers.length; i++) {
                 starts[i] = maxDoc;
@@ -73,9 +73,10 @@ abstract class AbstractWeight implements Weight {
             }
 
             starts[readers.length] = maxDoc;
-            Scorer scorers[] = new Scorer[readers.length];
-            for (int i = 0; i < readers.length; i++)
+            Scorer[] scorers = new Scorer[readers.length];
+            for (int i = 0; i < readers.length; i++) {
                 scorers[i] = scorer(readers[i]);
+            }
 
             return new MultiScorer(searcher.getSimilarity(), scorers, starts);
         } else {

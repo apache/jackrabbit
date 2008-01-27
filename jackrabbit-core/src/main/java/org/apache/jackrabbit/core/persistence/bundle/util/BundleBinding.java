@@ -579,8 +579,8 @@ public class BundleBinding extends ItemStateBinding {
                     BLOBFileValue blobVal = val.getBLOBFileValue();
                     long size = blobVal.getLength();
                     if (size < 0) {
-                        log.warn("Blob has negative size. Potential loss of data. " +
-                            "id={} idx={}", state.getId(), String.valueOf(i));
+                        log.warn("Blob has negative size. Potential loss of data. "
+                                + "id={} idx={}", state.getId(), String.valueOf(i));
                         out.writeInt(0);
                         values[i] = InternalValue.create(new byte[0]);
                         blobVal.discard();
@@ -616,8 +616,8 @@ public class BundleBinding extends ItemStateBinding {
                                     values[i] = InternalValue.create(blobStore.get(blobId));
                                 }
                             } catch (Exception e) {
-                                log.error("Error while reloading blob. truncating. id=" + state.getId() +
-                                        " idx=" + i + " size=" + size, e);
+                                log.error("Error while reloading blob. truncating. id="
+                                        + state.getId() + " idx=" + i + " size=" + size, e);
                                 values[i] = InternalValue.create(new byte[0]);
                             }
                             blobVal.discard();

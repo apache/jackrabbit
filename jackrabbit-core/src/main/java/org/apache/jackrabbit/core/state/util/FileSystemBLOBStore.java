@@ -28,4 +28,5 @@ public class FileSystemBLOBStore extends org.apache.jackrabbit.core.persistence.
     public FileSystemBLOBStore(FileSystem fs) {
         super(fs);
     }
+
 }

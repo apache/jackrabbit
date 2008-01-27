@@ -147,8 +147,8 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
                         try {
                         Class clazz = Class.forName(analyzerClassName);
                             if (clazz == JackrabbitAnalyzer.class) {
-                                log.warn("Not allowed to configure " + JackrabbitAnalyzer.class.getName() +  " for a property. " +
-                                        "Using default analyzer for that property.");
+                                log.warn("Not allowed to configure " + JackrabbitAnalyzer.class.getName() +  " for a property. "
+                                        + "Using default analyzer for that property.");
                             }
                             else if (Analyzer.class.isAssignableFrom(clazz)) {
                                 Analyzer analyzer = (Analyzer) clazz.newInstance();
@@ -445,9 +445,9 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
                 elementTest = resolver.getQName(ISO9075.decode(type));
                 idx += ")/@".length();
             } else {
-                if (axis == PathExpression.ANCESTOR ||
-                        axis == PathExpression.CHILD ||
-                        axis == PathExpression.PARENT) {
+                if (axis == PathExpression.ANCESTOR
+                        || axis == PathExpression.CHILD
+                        || axis == PathExpression.PARENT) {
                     // simple name test
                     String name = conditionString.substring(idx,
                             conditionString.indexOf('/', idx));
@@ -778,12 +778,12 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
             while (nodeStates.hasNext()) {
                 try {
                     NodeState current = (NodeState) nodeStates.next();
-                    if (elementTest != null &&
-                            !current.getNodeTypeName().equals(elementTest)) {
+                    if (elementTest != null
+                            && !current.getNodeTypeName().equals(elementTest)) {
                         continue;
                     }
-                    if (nameTest != null &&
-                            !hmgr.getName(current.getNodeId()).equals(nameTest)) {
+                    if (nameTest != null
+                            && !hmgr.getName(current.getNodeId()).equals(nameTest)) {
                         continue;
                     }
                     if (!current.hasPropertyName(propertyName)) {
