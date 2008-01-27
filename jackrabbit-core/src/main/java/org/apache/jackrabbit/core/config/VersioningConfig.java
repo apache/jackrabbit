@@ -105,6 +105,7 @@ public class VersioningConfig {
      * @return name of the ISM locking configuration
      */
     public ISMLockingConfig getISMLockingConfig() {
-    	return ismLockingConfig;
+        return ismLockingConfig;
     }
+
 }
