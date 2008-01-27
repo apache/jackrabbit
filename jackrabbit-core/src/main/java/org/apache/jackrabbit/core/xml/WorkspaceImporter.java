@@ -430,7 +430,7 @@ public class WorkspaceImporter implements Importer {
                     } else {
                         // edge case: colliding node does have same uuid
                         // (see http://issues.apache.org/jira/browse/JCR-1128)
-                        if (! (idExisting.equals(id)
+                        if (!(idExisting.equals(id)
                                 && (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING
                                 || uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING))) {
                             throw new ItemExistsException(itemOps.safeGetJCRPath(existing.getNodeId()));

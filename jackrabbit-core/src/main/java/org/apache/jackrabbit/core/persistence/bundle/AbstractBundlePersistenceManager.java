@@ -134,7 +134,7 @@ public abstract class AbstractBundlePersistenceManager implements
      * @return the size of the bundlecache in megabytes.
      */
     public String getBundleCacheSize() {
-        return String.valueOf(bundleCacheSize/(1024 * 1024));
+        return String.valueOf(bundleCacheSize / (1024 * 1024));
     }
 
     /**

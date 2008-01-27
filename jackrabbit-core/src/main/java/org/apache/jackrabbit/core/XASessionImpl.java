@@ -403,8 +403,8 @@ public class XASessionImpl extends SessionImpl
         super.logout();
         // dispose the caches
         try {
-            ((XAVersionManager)versionMgr).close();
-        } catch(Exception e) {
+            ((XAVersionManager) versionMgr).close();
+        } catch (Exception e) {
             log.warn("error while closing XAVersionManager", e);
         }
     }

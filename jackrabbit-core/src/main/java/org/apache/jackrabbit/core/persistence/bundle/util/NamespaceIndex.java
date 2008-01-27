@@ -52,7 +52,7 @@ public class NamespaceIndex implements StringIndex {
         try {
             return nsReg.getURIIndex(uri);
         } catch (NamespaceException e) {
-            throw new IllegalStateException("URI not valid? "  +e.toString());
+            throw new IllegalStateException("URI not valid? "  + e.toString());
         }
     }
 

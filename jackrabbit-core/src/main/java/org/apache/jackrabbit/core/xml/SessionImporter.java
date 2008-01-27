@@ -198,7 +198,7 @@ public class SessionImporter implements Importer {
                 } else {
                     // edge case: colliding node does have same uuid
                     // (see http://issues.apache.org/jira/browse/JCR-1128)
-                    if (! (existing.getId().equals(id)
+                    if (!(existing.getId().equals(id)
                             && (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING
                             || uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING))) {
                         throw new ItemExistsException(existing.safeGetJCRPath());

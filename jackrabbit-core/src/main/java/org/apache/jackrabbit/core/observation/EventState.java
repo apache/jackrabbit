@@ -505,7 +505,8 @@ public class EventState {
             } catch (NoSuchNodeTypeException e) {
                 log.warn("Unknown node type: " + nodeType);
             }
-            for (Iterator it = mixins.iterator(); it.hasNext(); ) {
+            Iterator it = mixins.iterator();
+            while (it.hasNext()) {
                 Name mixinName = (Name) it.next();
                 try {
                     tmp.add(ntMgr.getNodeType(mixinName));

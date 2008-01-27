@@ -51,8 +51,8 @@ public final class ErrorHandling {
      * @param str flags
      */
     public ErrorHandling(String str) {
-        for (int i=0; i<CODES.length; i++) {
-            if (str.indexOf(CODES[i])>=0) {
+        for (int i = 0; i < CODES.length; i++) {
+            if (str.indexOf(CODES[i]) >= 0) {
                 flags.add(CODES[i]);
             }
         }

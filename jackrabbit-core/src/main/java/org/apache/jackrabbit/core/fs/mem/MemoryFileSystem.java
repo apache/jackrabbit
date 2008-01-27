@@ -248,7 +248,7 @@ public class MemoryFileSystem implements FileSystem {
         moves.put(srcPath, destPath);
         if (getEntry(srcPath).isFolder()) {
             srcPath = srcPath + "/";
-            Iterator iterator= entries.keySet().iterator();
+            Iterator iterator = entries.keySet().iterator();
             while (iterator.hasNext()) {
                 String name = (String) iterator.next();
                 if (name.startsWith(srcPath)) {

@@ -260,7 +260,7 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
      */
     public void namespaceRemoved(String uri) {
         if (uriToPrefix.containsKey(uri)) {
-            String prefix = (String)uriToPrefix.remove(uri);
+            String prefix = (String) uriToPrefix.remove(uri);
             prefixToURI.remove(prefix);
         }
     }

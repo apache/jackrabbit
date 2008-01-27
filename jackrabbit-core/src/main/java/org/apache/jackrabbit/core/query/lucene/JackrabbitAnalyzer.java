@@ -55,7 +55,7 @@ public class JackrabbitAnalyzer  extends Analyzer {
     /**
      * @param analyzer the default jackrabbit analyzer
      */
-    protected void setDefaultAnalyzer(Analyzer analyzer){
+    protected void setDefaultAnalyzer(Analyzer analyzer) {
         defaultAnalyzer = analyzer;
     }
 
@@ -65,9 +65,9 @@ public class JackrabbitAnalyzer  extends Analyzer {
      * analyzer than the default, this analyzer is used for tokenization
      */
     public TokenStream tokenStream(String fieldName, Reader reader) {
-        if(indexingConfig!=null){
+        if (indexingConfig != null) {
             Analyzer propertyAnalyzer = indexingConfig.getPropertyAnalyzer(fieldName);
-            if(propertyAnalyzer!=null){
+            if (propertyAnalyzer != null) {
                 return propertyAnalyzer.tokenStream(fieldName, reader);
             }
         }

@@ -189,9 +189,9 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
         try {
             NodeId id = new NodeId(uuid);
             InternalFreeze[] frozen = getFrozenChildNodes();
-            for (int i=0; i<frozen.length; i++) {
-                if (frozen[i] instanceof InternalFrozenVersionHistory &&
-                    ((InternalFrozenVersionHistory) frozen[i])
+            for (int i = 0; i < frozen.length; i++) {
+                if (frozen[i] instanceof InternalFrozenVersionHistory
+                        && ((InternalFrozenVersionHistory) frozen[i])
                             .getVersionHistoryId().equals(id)) {
                     return true;
                 }

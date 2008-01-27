@@ -383,11 +383,11 @@ public class XAVersionManager extends AbstractVersionManager
             // also put 'successor' and 'predecessor' version items to xaItem sets
             InternalVersion v = history.getVersion(name);
             InternalVersion[] vs = v.getSuccessors();
-            for (int i=0; i<vs.length; i++) {
+            for (int i = 0; i < vs.length; i++) {
                 xaItems.put(vs[i].getId(), vs[i]);
             }
             vs = v.getPredecessors();
-            for (int i=0; i<vs.length; i++) {
+            for (int i = 0; i < vs.length; i++) {
                 xaItems.put(vs[i].getId(), vs[i]);
             }
         }

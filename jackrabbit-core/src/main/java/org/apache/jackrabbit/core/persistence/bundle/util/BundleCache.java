@@ -102,10 +102,10 @@ public class BundleCache {
         } else {
             misses++;
         }
-        if (log.isInfoEnabled() && (hits+misses)%10000 == 0) {
-            long c = curSize/1024;
-            long m = maxSize/1024;
-            long a = bundles.size()>0 ? curSize/bundles.size() : 0;
+        if (log.isInfoEnabled() && (hits + misses) % 10000 == 0) {
+            long c = curSize / 1024;
+            long m = maxSize / 1024;
+            long a = bundles.size() > 0 ? curSize / bundles.size() : 0;
             log.info("num=" + bundles.size() + " mem=" + c + "k max=" + m + "k avg=" + a
                     + " hits=" + hits + " miss=" + misses);
         }
@@ -129,11 +129,11 @@ public class BundleCache {
             entry.size = bundle.getSize();
         }
         bundles.put(bundle.getId(), entry);
-        curSize+= entry.size;
+        curSize += entry.size;
         // now limit size of cache
         while (curSize > maxSize) {
             entry = (Entry) bundles.remove(0);
-            curSize-= entry.size;
+            curSize -= entry.size;
         }
     }
 
@@ -158,7 +158,7 @@ public class BundleCache {
     public NodePropBundle remove(NodeId id) {
         Entry entry = (Entry) bundles.remove(id);
         if (entry != null) {
-            curSize-= entry.size;
+            curSize -= entry.size;
             return entry.bundle;
         } else {
             return null;
@@ -170,9 +170,9 @@ public class BundleCache {
      */
     public void clear() {
         bundles.clear();
-        curSize=0;
-        hits=0;
-        misses=0;
+        curSize = 0;
+        hits = 0;
+        misses = 0;
     }
 
     /**

@@ -423,7 +423,8 @@ public class RangeQuery extends Query implements Transformable {
                 startTerms.add(new Term(lowerTerm.field(), termText.toString()));
             }
 
-            for (Iterator it = startTerms.iterator(); it.hasNext(); ) {
+            Iterator it = startTerms.iterator();
+            while (it.hasNext()) {
                 Term startTerm = (Term) it.next();
 
                 TermEnum terms = reader.terms(startTerm);

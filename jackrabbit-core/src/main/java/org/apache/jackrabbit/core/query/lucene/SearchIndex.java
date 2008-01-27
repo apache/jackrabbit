@@ -1122,7 +1122,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     protected void retrieveAggregateRoot(Set removedNodeIds, Map map) {
         if (indexingConfig != null) {
-            AggregateRule aggregateRules[] = indexingConfig.getAggregateRules();
+            AggregateRule[] aggregateRules = indexingConfig.getAggregateRules();
             if (aggregateRules == null) {
                 return;
             }
@@ -1136,7 +1136,8 @@ public class SearchIndex extends AbstractQueryHandler {
                     TermDocs tDocs = reader.termDocs();
                     try {
                         ItemStateManager ism = getContext().getItemStateManager();
-                        for (Iterator it = removedNodeIds.iterator(); it.hasNext(); ) {
+                        Iterator it = removedNodeIds.iterator();
+                        while (it.hasNext()) {
                             NodeId id = (NodeId) it.next();
                             aggregateUUIDs = aggregateUUIDs.createTerm(
                                     id.getUUID().toString());

@@ -42,7 +42,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
      */
     private static final long[] OR_MASK = new long[BPW];
     static {
-        for (int i=0; i<BPW; i++) {
+        for (int i = 0; i < BPW; i++) {
             OR_MASK[i] = 1L << i;
         }
     }
@@ -168,7 +168,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
                     i = new Integer(idx);
                     nameIndex.put(name, i);
                     if (idx >= names.length) {
-                        Name[] newNames = new Name[names.length*2];
+                        Name[] newNames = new Name[names.length * 2];
                         System.arraycopy(names, 0, newNames, 0, names.length);
                         names = newNames;
                     }
@@ -265,11 +265,11 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
          */
         public BitsetKey(Name[] names, int maxBit) {
             this.names = names;
-            bits = new long[maxBit/BPW+1];
+            bits = new long[maxBit / BPW + 1];
 
-            for (int i=0; i<names.length; i++) {
+            for (int i = 0; i < names.length; i++) {
                 int n = getBitNumber(names[i]);
-                bits[n/BPW] |= OR_MASK[n%BPW];
+                bits[n / BPW] |= OR_MASK[n % BPW];
             }
             hashCode = calcHashCode();
         }
@@ -283,10 +283,10 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
             this.bits = bits;
             names = new Name[numBits];
             int i = nextSetBit(0);
-            int j=0;
+            int j = 0;
             while (i >= 0) {
                 names[j++] = BitsetENTCacheImpl.this.getName(i);
-                i = nextSetBit(i+1);
+                i = nextSetBit(i + 1);
             }
             hashCode = calcHashCode();
         }
@@ -311,7 +311,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
              */
             BitsetKey other = (BitsetKey) otherKey;
             int len = Math.max(bits.length, other.bits.length);
-            for (int i=0; i<len; i++) {
+            for (int i = 0; i < len; i++) {
                 long w1 = i < bits.length ? bits[i] : 0;
                 long w2 = i < other.bits.length ? other.bits[i] : 0;
                 long r = ~w1 & w2;
@@ -337,7 +337,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
             int len = Math.max(bits.length, other.bits.length);
             long[] newBits = new long[len];
             int numBits = 0;
-            for (int i=0; i<len; i++) {
+            for (int i = 0; i < len; i++) {
                 long w1 = i < bits.length ? bits[i] : 0;
                 long w2 = i < other.bits.length ? other.bits[i] : 0;
                 newBits[i] = w1 & ~w2;
@@ -354,8 +354,8 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
          * @return the bit position of the bit or -1 if none found.
          */
         private int nextSetBit(int fromIndex) {
-            int addr = fromIndex/BPW;
-            int off = fromIndex%BPW;
+            int addr = fromIndex / BPW;
+            int off = fromIndex % BPW;
             while (addr < bits.length) {
                 if (bits[addr] != 0) {
                     while (off < BPW) {
@@ -364,7 +364,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
                         }
                         off++;
                     }
-                    off=0;
+                    off = 0;
                 }
                 addr++;
             }
@@ -387,7 +387,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
              val =  (val + (val >>> 4)) & 0x0f0f0f0f0f0f0f0fL;
              val += val >>> 8;
              val += val >>> 16;
-             return ((int)(val) + (int)(val >>> 32)) & 0xff;
+             return ((int) (val) + (int) (val >>> 32)) & 0xff;
          }
 
 
@@ -403,8 +403,8 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
             if (res == 0) {
                 int adr = Math.max(bits.length, o.bits.length) - 1;
                 while (adr >= 0) {
-                    long w1 = adr<bits.length ? bits[adr] : 0;
-                    long w2 = adr<o.bits.length ? o.bits[adr] : 0;
+                    long w1 = adr < bits.length ? bits[adr] : 0;
+                    long w2 = adr < o.bits.length ? o.bits[adr] : 0;
                     if (w1 != w2) {
                         // some signed arithmetic here
                         long h1 = w1 >>> 32;
@@ -413,7 +413,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
                             h1 = w1 & 0x0ffffL;
                             h2 = w2 & 0x0ffffL;
                         }
-                        return (int) (h2-h1);
+                        return (int) (h2 - h1);
                     }
                     adr--;
                 }
@@ -435,8 +435,8 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
                 }
                 int adr = Math.max(bits.length, o.bits.length) - 1;
                 while (adr >= 0) {
-                    long w1 = adr<bits.length ? bits[adr] : 0;
-                    long w2 = adr<o.bits.length ? o.bits[adr] : 0;
+                    long w1 = adr < bits.length ? bits[adr] : 0;
+                    long w2 = adr < o.bits.length ? o.bits[adr] : 0;
                     if (w1 != w2) {
                         return false;
                     }
@@ -460,15 +460,15 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
          */
         private int calcHashCode() {
             long h = 1234;
-            int addr = bits.length -1;
-            while (addr >=0 && bits[addr] == 0) {
+            int addr = bits.length - 1;
+            while (addr >= 0 && bits[addr] == 0) {
                 addr--;
             }
-            while (addr >=0) {
+            while (addr >= 0) {
                 h ^= bits[addr] * (addr + 1);
                 addr--;
             }
-            return (int)((h >> 32) ^ h);
+            return (int) ((h >> 32) ^ h);
         }
 
         /**
@@ -478,10 +478,10 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
             StringBuffer buf = new StringBuffer("w=");
             buf.append(names.length);
             int i = nextSetBit(0);
-            while (i>=0) {
+            while (i >= 0) {
                 buf.append(", ").append(i).append("=");
                 buf.append(BitsetENTCacheImpl.this.getName(i));
-                i = nextSetBit(i+1);
+                i = nextSetBit(i + 1);
             }
             return buf.toString();
         }

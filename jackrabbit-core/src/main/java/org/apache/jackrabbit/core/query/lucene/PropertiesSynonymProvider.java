@@ -151,7 +151,8 @@ public class PropertiesSynonymProvider implements SynonymProvider {
             Map synonyms = new HashMap();
             Properties props = new Properties();
             props.load(config.getInputStream());
-            for (Iterator it = props.entrySet().iterator(); it.hasNext(); ) {
+            Iterator it = props.entrySet().iterator();
+            while (it.hasNext()) {
                 Map.Entry e = (Map.Entry) it.next();
                 String key = (String) e.getKey();
                 String value = (String) e.getValue();

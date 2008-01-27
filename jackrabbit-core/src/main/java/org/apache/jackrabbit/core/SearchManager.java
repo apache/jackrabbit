@@ -217,14 +217,13 @@ public class SearchManager implements SynchronousEventListener {
         try {
             if (nsReg.getPrefix(NS_FN_OLD_URI).equals(NS_FN_PREFIX)) {
                 // old uri is mapped to 'fn' prefix -> re-map
-                String prefix;
-                for (int i = 0; ; i++) {
+                String prefix = null;
+                for (int i = 0; prefix == null; i++) {
                     try {
                         nsReg.getURI(NS_FN_OLD_PREFIX + i);
                     } catch (NamespaceException e) {
                         // not mapped to uri
                         prefix = NS_FN_OLD_PREFIX + i;
-                        break;
                     }
                 }
                 nsReg.registerNamespace(prefix, NS_FN_OLD_URI);

@@ -931,7 +931,7 @@ public class NodeState extends ItemState {
                     if (siblings.size() > 0) {
                         // reuse immutable Name instance from 1st same name sibling
                         // in order to help gc conserving memory
-                        nodeName = ((ChildNodeEntry)siblings.get(0)).getName();
+                        nodeName = ((ChildNodeEntry) siblings.get(0)).getName();
                     }
                 } else {
                     // map entry is a single child node entry,

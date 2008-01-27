@@ -246,7 +246,8 @@ class CachingIndexReader extends FilterIndexReader {
             }
         }
         double foreignParents = 0;
-        for (Iterator it = docs.values().iterator(); it.hasNext(); ) {
+        Iterator it = docs.values().iterator();
+        while (it.hasNext()) {
             NodeInfo info = (NodeInfo) it.next();
             NodeInfo parent = (NodeInfo) docs.get(info.parent);
             if (parent != null) {

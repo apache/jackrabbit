@@ -207,7 +207,8 @@ public class DatabaseFileSystem implements FileSystem {
 
         try {
             // close shared prepared statements
-            for (Iterator it = preparedStatements.values().iterator(); it.hasNext(); ) {
+            Iterator it = preparedStatements.values().iterator();
+            while (it.hasNext()) {
                 closeStatement((PreparedStatement) it.next());
             }
             preparedStatements.clear();
@@ -1007,7 +1008,8 @@ public class DatabaseFileSystem implements FileSystem {
         // gracefully in order to avoid potential memory leaks
 
         // close shared prepared statements
-        for (Iterator it = preparedStatements.values().iterator(); it.hasNext(); ) {
+        Iterator it = preparedStatements.values().iterator();
+        while (it.hasNext()) {
             closeStatement((PreparedStatement) it.next());
         }
         try {

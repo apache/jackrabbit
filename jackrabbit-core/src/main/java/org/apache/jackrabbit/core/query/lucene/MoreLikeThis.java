@@ -153,7 +153,7 @@ public final class MoreLikeThis {
      * Default maximum number of tokens to parse in each example doc field that is not stored with TermVector support.
      * @see #getMaxNumTokensParsed
      */
-    public static final int DEFAULT_MAX_NUM_TOKENS_PARSED=5000;
+    public static final int DEFAULT_MAX_NUM_TOKENS_PARSED = 5000;
 
     /**
      * Default analyzer to parse source doc with.
@@ -253,7 +253,7 @@ public final class MoreLikeThis {
     /**
      * The maximum number of tokens to parse in each example doc field that is not stored with TermVector support
      */
-    private int maxNumTokensParsed=DEFAULT_MAX_NUM_TOKENS_PARSED;
+    private int maxNumTokensParsed = DEFAULT_MAX_NUM_TOKENS_PARSED;
 
     /**
      * Ignore words if less than this len.
@@ -755,22 +755,22 @@ public final class MoreLikeThis {
      */
     private void addTermFrequencies(Map termFreqMap, TermFreqVector vector) {
         String[] terms = vector.getTerms();
-        int freqs[]=vector.getTermFrequencies();
+        int[] freqs = vector.getTermFrequencies();
         for (int j = 0; j < terms.length; j++) {
             String term = terms[j];
 
-            if(isNoiseWord(term)){
+            if (isNoiseWord(term)) {
                 continue;
             }
             // increment frequency
             Int cnt = (Int) termFreqMap.get(term);
             if (cnt == null) {
-                cnt=new Int();
+                cnt = new Int();
                 termFreqMap.put(term, cnt);
-                cnt.x=freqs[j];
+                cnt.x = freqs[j];
             }
             else {
-                cnt.x+=freqs[j];
+                cnt.x += freqs[j];
             }
         }
     }

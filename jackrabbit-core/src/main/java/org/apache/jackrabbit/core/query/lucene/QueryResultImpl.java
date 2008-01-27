@@ -294,7 +294,7 @@ public class QueryResultImpl implements QueryResult {
                 numResults = result.length();
             }
 
-            int start = resultNodes.size() + invalid + (int)offset;
+            int start = resultNodes.size() + invalid + (int) offset;
             int max = Math.min(result.length(), numResults);
             for (int i = start; i < max && resultNodes.size() < maxResultSize; i++) {
                 NodeId id = NodeId.valueOf(result.doc(i).get(FieldNames.UUID));

@@ -146,12 +146,12 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
                         String analyzerClassName = analyzerNode.getAttributes().getNamedItem("class").getNodeValue();
                         try {
                         Class clazz = Class.forName(analyzerClassName);
-                            if(clazz == JackrabbitAnalyzer.class) {
+                            if (clazz == JackrabbitAnalyzer.class) {
                                 log.warn("Not allowed to configure " + JackrabbitAnalyzer.class.getName() +  " for a property. " +
                                         "Using default analyzer for that property.");
                             }
-                            else if(Analyzer.class.isAssignableFrom(clazz)){
-                                Analyzer analyzer = (Analyzer)clazz.newInstance();
+                            else if (Analyzer.class.isAssignableFrom(clazz)) {
+                                Analyzer analyzer = (Analyzer) clazz.newInstance();
                                 NodeList propertyChildNodes = analyzerNode.getChildNodes();
                                 for (int k = 0; k < propertyChildNodes.getLength(); k++) {
                                     Node propertyNode = propertyChildNodes.item(k);
@@ -164,15 +164,16 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
                                         fieldName = fieldName.substring(0, idx + 1)
                                                     + FieldNames.FULLTEXT_PREFIX + fieldName.substring(idx + 1);;
                                         Object prevAnalyzer = analyzers.put(fieldName, analyzer);
-                                        if(prevAnalyzer!=null){
-                                            log.warn("Property " + propName.getLocalName() + " has been configured for multiple analyzers. " +
-                                                    " Last configured analyzer is used");
+                                        if (prevAnalyzer != null) {
+                                            log.warn("Property " + propName.getLocalName()
+                                                    + " has been configured for multiple analyzers. "
+                                                    + " Last configured analyzer is used");
                                         }
                                     }
                                 }
                             } else {
                                 log.warn("org.apache.lucene.analysis.Analyzer is not a superclass of "
-                                        + analyzerClassName +". Ignoring this configure analyzer" );
+                                        + analyzerClassName + ". Ignoring this configure analyzer" );
                             }
                         } catch (ClassNotFoundException e) {
                             log.warn("Analyzer class not found: " + analyzerClassName, e);
@@ -279,8 +280,8 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
      * @return the <code>analyzer</code> to use for indexing this property
      */
     public Analyzer getPropertyAnalyzer(String fieldName) {
-        if(analyzers.containsKey(fieldName)){
-            return (Analyzer)analyzers.get(fieldName);
+        if (analyzers.containsKey(fieldName)) {
+            return (Analyzer) analyzers.get(fieldName);
         }
         return null;
     }
@@ -301,7 +302,8 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
             rules.addAll(r);
         }
 
-        for (Iterator it = state.getMixinTypeNames().iterator(); it.hasNext(); ) {
+        Iterator it = state.getMixinTypeNames().iterator();
+        while (it.hasNext()) {
             r = (List) configElements.get(it.next());
             if (r != null) {
                 if (rules == null) {
@@ -312,7 +314,8 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
         }
 
         if (rules != null) {
-            for (Iterator it = rules.iterator(); it.hasNext(); ) {
+            it = rules.iterator();
+            while (it.hasNext()) {
                 IndexingRule ir = (IndexingRule) it.next();
                 if (ir.appliesTo(state)) {
                     return ir;

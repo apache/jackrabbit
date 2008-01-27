@@ -277,7 +277,8 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
                     Matcher matcher = createRegexp(pattern.substring(idx)).matcher(input);
 
                     // do range scans with patter matcher
-                    for (Iterator it = rangeScans.iterator(); it.hasNext(); ) {
+                    Iterator it = rangeScans.iterator();
+                    while (it.hasNext()) {
                         RangeScan scan = (RangeScan) it.next();
                         do {
                             Term t = scan.term();
@@ -292,7 +293,8 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
 
                 } finally {
                     // close range scans
-                    for (Iterator it = rangeScans.iterator(); it.hasNext(); ) {
+                    Iterator it = rangeScans.iterator();
+                    while (it.hasNext()) {
                         RangeScan scan = (RangeScan) it.next();
                         try {
                             scan.close();

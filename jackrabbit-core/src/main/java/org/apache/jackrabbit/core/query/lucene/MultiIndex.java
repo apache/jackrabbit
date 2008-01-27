@@ -1143,7 +1143,8 @@ public class MultiIndex {
                     new Long(finished.size()));
 
             // remove documents from the queue
-            for (Iterator it = finished.keySet().iterator(); it.hasNext(); ) {
+            Iterator it = finished.keySet().iterator();
+            while (it.hasNext()) {
                 try {
                     indexingQueue.removeDocument(it.next().toString());
                 } catch (IOException e) {

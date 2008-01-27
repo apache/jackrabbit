@@ -80,7 +80,7 @@ public class H2PersistenceManager extends BundleDbPersistenceManager {
             setDriver("org.h2.Driver");
         }
         if (getUrl() == null) {
-            setUrl("jdbc:h2:file:"+ context.getHomeDir().getPath() +"/db/itemState");
+            setUrl("jdbc:h2:file:" + context.getHomeDir().getPath() + "/db/itemState");
         }
         if (getUser() == null) {
             setUser("sa");

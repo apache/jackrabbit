@@ -331,7 +331,7 @@ public class RelationQueryNode extends NAryQueryNode implements QueryConstants {
                     && valueLong == other.valueLong
                     && valuePosition == other.valuePosition
                     && (valueString == null ? other.valueString == null : valueString.equals(other.valueString))
-                    && (relPath == null ? other.relPath== null : relPath.equals(other.relPath));
+                    && (relPath == null ? other.relPath == null : relPath.equals(other.relPath));
         }
         return false;
     }

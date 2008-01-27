@@ -264,7 +264,8 @@ public class ClusterNode implements Runnable,
             synchronized (this) {
                 try {
                     wait(syncDelay);
-                } catch (InterruptedException e) {}
+                } catch (InterruptedException e) {
+                }
 
                 if (status == STOPPED) {
                     return;

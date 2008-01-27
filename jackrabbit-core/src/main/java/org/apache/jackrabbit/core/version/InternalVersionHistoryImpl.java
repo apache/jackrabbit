@@ -149,7 +149,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         rootVersion = createVersionInstance(NameConstants.JCR_ROOTVERSION);
 
         // get version entries
-        ChildNodeEntry[] children = (ChildNodeEntry[])node.getState().getChildNodeEntries().toArray();
+        ChildNodeEntry[] children = (ChildNodeEntry[])
+            node.getState().getChildNodeEntries().toArray();
         for (int i = 0; i < children.length; i++) {
             ChildNodeEntry child = children[i];
             if (child.getName().equals(NameConstants.JCR_VERSIONLABELS)) {
@@ -162,8 +163,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         if (rootVersion.getSuccessors().length == 0) {
             Iterator iter = nameCache.keySet().iterator();
             while (iter.hasNext()) {
-                Name versionName = (Name)iter.next();
-                InternalVersionImpl v = (InternalVersionImpl)createVersionInstance(versionName);
+                Name versionName = (Name) iter.next();
+                InternalVersionImpl v = (InternalVersionImpl) createVersionInstance(versionName);
                 v.legacyResolveSuccessors();
             }
         }
@@ -199,8 +200,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             // add labels
             Iterator iter = labelCache.keySet().iterator();
             while (iter.hasNext()) {
-                Name labelName = (Name)iter.next();
-                Name versionName = (Name)labelCache.get(labelName);
+                Name labelName = (Name) iter.next();
+                Name versionName = (Name) labelCache.get(labelName);
                 if (v.getName().equals(versionName)) {
                     v.internalAddLabel(labelName);
                 }
@@ -250,12 +251,12 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * {@inheritDoc}
      */
     public InternalVersion getVersion(Name versionName) throws VersionException {
-        NodeId versionId = (NodeId)nameCache.get(versionName);
+        NodeId versionId = (NodeId) nameCache.get(versionName);
         if (versionId == null) {
             throw new VersionException("Version " + versionName + " does not exist.");
         }
 
-        InternalVersion v = (InternalVersion)versionCache.get(versionId);
+        InternalVersion v = (InternalVersion) versionCache.get(versionId);
         if (v == null) {
             v = createVersionInstance(versionName);
         }
@@ -280,11 +281,11 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * {@inheritDoc}
      */
     public InternalVersion getVersion(NodeId id) {
-        InternalVersion v = (InternalVersion)versionCache.get(id);
+        InternalVersion v = (InternalVersion) versionCache.get(id);
         if (v == null) {
             Iterator iter = nameCache.keySet().iterator();
             while (iter.hasNext()) {
-                Name versionName = (Name)iter.next();
+                Name versionName = (Name) iter.next();
                 if (nameCache.get(versionName).equals(id)) {
                     v = createVersionInstance(versionName);
                     break;
@@ -298,13 +299,13 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * {@inheritDoc}
      */
     public InternalVersion getVersionByLabel(Name label) {
-        Name versionName = (Name)labelCache.get(label);
+        Name versionName = (Name) labelCache.get(label);
         if (versionName == null) {
             return null;
         }
 
-        NodeId id = (NodeId)nameCache.get(versionName);
-        InternalVersion v = (InternalVersion)versionCache.get(id);
+        NodeId id = (NodeId) nameCache.get(versionName);
+        InternalVersion v = (InternalVersion) versionCache.get(id);
         if (v == null) {
             v = createVersionInstance(versionName);
         }
@@ -414,7 +415,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
                 return null;
             }
         } else {
-            prev = (InternalVersionImpl)getVersion(prevName);
+            prev = (InternalVersionImpl) getVersion(prevName);
             if (prev.equals(version)) {
                 return version;
             } else if (!move) {

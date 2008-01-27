@@ -206,7 +206,8 @@ public class FileJournal extends AbstractJournal {
     /**
      * {@inheritDoc}
      */
-    public void close() {}
+    public void close() {
+    }
 
     /**
      * Bean getters

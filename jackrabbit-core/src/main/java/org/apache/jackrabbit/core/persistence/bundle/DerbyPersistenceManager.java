@@ -249,7 +249,7 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
             setSchema("derby");
         }
         if (getUrl() == null) {
-            setUrl("jdbc:derby:"+ context.getHomeDir().getPath() +"/db/itemState;create=true");
+            setUrl("jdbc:derby:" + context.getHomeDir().getPath() + "/db/itemState;create=true");
         }
         if (getUser() == null) {
             setUser("");

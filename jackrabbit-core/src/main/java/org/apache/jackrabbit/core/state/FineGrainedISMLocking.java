@@ -255,7 +255,8 @@ public class FineGrainedISMLocking implements ISMLocking {
      * only one thread calls this method at a time.
      */
     private void notifyWaitingReaders() {
-        for (Iterator it = waitingReaders.iterator(); it.hasNext(); ) {
+        Iterator it = waitingReaders.iterator();
+        while (it.hasNext()) {
             ((Sync) it.next()).release();
             it.remove();
         }
@@ -269,7 +270,8 @@ public class FineGrainedISMLocking implements ISMLocking {
             if (waitingWriters.isEmpty()) {
                 return;
             }
-            for (Iterator it = waitingWriters.iterator(); it.hasNext(); ) {
+            Iterator it = waitingWriters.iterator();
+            while (it.hasNext()) {
                 ((Sync) it.next()).release();
                 it.remove();
             }
@@ -369,7 +371,8 @@ public class FineGrainedISMLocking implements ISMLocking {
             for (int i = 0; i < slots.length; i++) {
                 Map locks = slots[i];
                 if (!locks.isEmpty()) {
-                    for (Iterator it = locks.keySet().iterator(); it.hasNext(); ) {
+                    Iterator it = locks.keySet().iterator();
+                    while (it.hasNext()) {
                         ItemId id = (ItemId) it.next();
                         if (FineGrainedISMLocking.hasDependency(changes, id)) {
                             return true;
