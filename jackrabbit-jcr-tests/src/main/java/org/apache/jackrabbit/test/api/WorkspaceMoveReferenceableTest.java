@@ -39,7 +39,7 @@ public class WorkspaceMoveReferenceableTest extends AbstractWorkspaceReferenceab
     protected void initNodesW2() throws RepositoryException {
         // nothing to do.
     }
-    
+
     /**
      * Copies of referenceable nodes (nodes with UUIDs) remains their original
      * UUIDs.
@@ -47,7 +47,7 @@ public class WorkspaceMoveReferenceableTest extends AbstractWorkspaceReferenceab
     public void testMoveNodesReferenceableNodesNewUUID() throws RepositoryException {
         // add mixin referenceable to node1
         addMixinReferenceableToNode(node1);
-        
+
         // copy referenceable node below non-referenceable node
         String dstAbsPath = node2.getPath() + "/" + node1.getName();
         String originalUUID = node1.getUUID(); // remember for check

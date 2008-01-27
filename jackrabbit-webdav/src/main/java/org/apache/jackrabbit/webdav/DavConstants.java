@@ -55,7 +55,7 @@ public interface DavConstants {
     // RFC 2518: timeout value for TimeType "Second" MUST NOT be greater than 2^32-1
     public static final long INFINITE_TIMEOUT = Integer.MAX_VALUE;
     public static final long UNDEFINED_TIMEOUT = Integer.MIN_VALUE;
-    
+
     //---------------------------------------------------< Overwrite Header >---
     public static final String HEADER_OVERWRITE = "Overwrite";
 

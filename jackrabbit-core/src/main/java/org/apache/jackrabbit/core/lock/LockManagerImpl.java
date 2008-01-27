@@ -325,7 +325,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         if (eventChannel != null) {
             operation = eventChannel.create(node.getNodeId());
         }
-        
+
         acquire();
 
         try {
@@ -509,7 +509,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     /**
      * {@inheritDoc}
      */
-    public boolean isLockHolder(Session session, NodeImpl node) 
+    public boolean isLockHolder(Session session, NodeImpl node)
             throws RepositoryException {
         acquire();
 

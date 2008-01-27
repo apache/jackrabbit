@@ -21,7 +21,7 @@ package org.apache.jackrabbit.spi;
  * boundary.
  *
  * @see RepositoryService#getLockInfo(SessionInfo, NodeId)
- * @see RepositoryService#lock(SessionInfo, NodeId, boolean, boolean) 
+ * @see RepositoryService#lock(SessionInfo, NodeId, boolean, boolean)
  */
 public interface LockInfo {
 

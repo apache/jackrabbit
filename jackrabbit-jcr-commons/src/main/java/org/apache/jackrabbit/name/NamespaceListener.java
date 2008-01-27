@@ -19,7 +19,7 @@ package org.apache.jackrabbit.name;
 /**
  * Receives notifications when a namespace mapping changes.
  *
- * @deprecated Use the NamespaceListener interface from 
+ * @deprecated Use the NamespaceListener interface from
  *             the org.apache.jackrabbit.spi.commons.namespace package of
  *             the jackrabbit-spi-commons component.
  */

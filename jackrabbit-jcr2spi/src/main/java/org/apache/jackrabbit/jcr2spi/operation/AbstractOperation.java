@@ -66,7 +66,7 @@ public abstract class AbstractOperation implements Operation {
     }
 
     /**
-     * 
+     *
      * @param nodePath
      * @param hierMgr
      * @param resolver

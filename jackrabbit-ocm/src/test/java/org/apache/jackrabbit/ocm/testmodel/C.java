@@ -30,7 +30,7 @@ public class C
 	
 	@Field(jcrName="ocm:id", id=true) private String id;
     @Field(jcrName="ocm:name") private String name;
-     
+
     /**
      * @return Returns the id.
      */

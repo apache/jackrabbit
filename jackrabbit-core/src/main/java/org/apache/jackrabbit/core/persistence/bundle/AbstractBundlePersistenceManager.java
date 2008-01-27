@@ -81,7 +81,7 @@ import javax.jcr.PropertyType;
  * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
  * </ul>
  */
-public abstract class AbstractBundlePersistenceManager implements 
+public abstract class AbstractBundlePersistenceManager implements
     PersistenceManager, CachingPersistenceManager, IterablePersistenceManager {
 
     /** the cvs/svn id */

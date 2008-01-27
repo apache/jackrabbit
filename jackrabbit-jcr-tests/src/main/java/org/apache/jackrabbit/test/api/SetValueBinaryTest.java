@@ -37,7 +37,7 @@ import java.io.IOException;
  * type automatically adds a jcr:content child node of type nt:resource, and
  * <code>propertyName1</code> is specified as "jcr:data", that binary property
  * is used instead.
- * 
+ *
  * @test
  * @sources SetValueBinaryTest.java
  * @executeClass org.apache.jackrabbit.test.api.SetValueBinaryTest
@@ -138,7 +138,7 @@ public class SetValueBinaryTest extends AbstractJCRTest {
         if (property1.getDefinition().isMandatory() || property1.getDefinition().isProtected()) {
             throw new NotExecutableException("property " + property1.getName() + " can not be removed");
         }
-      
+
         property1.setValue((InputStream) null);
         superuser.save();
 

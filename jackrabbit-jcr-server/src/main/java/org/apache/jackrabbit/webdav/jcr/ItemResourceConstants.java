@@ -32,7 +32,7 @@ import javax.jcr.PropertyType;
  * representing repository items.
  */
 public interface ItemResourceConstants {
-    
+
     /**
      * Methods common to all item resources.
      */

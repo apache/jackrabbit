@@ -471,7 +471,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     UpdatableItemStateManager getUpdatableItemStateManager() {
         return wspManager;
     }
-    
+
     ItemStateFactory getItemStateFactory() {
         return wspManager.getItemStateFactory();
     }
@@ -484,7 +484,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     private ItemStateValidator getValidator() {
         return session.getValidator();
     }
-    
+
     //-----------------------------------------------------< initialization >---
     /**
      * Create the workspace state manager. May be overridden by subclasses.

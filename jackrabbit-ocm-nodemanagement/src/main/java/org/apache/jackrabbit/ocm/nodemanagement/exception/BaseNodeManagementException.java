@@ -29,12 +29,12 @@ public class BaseNodeManagementException extends Exception
     /** Root exception.
      */
     private Exception wrappedException;
-    
+
     /** Creates a new instance of BaseNodeManagementException. */
     public BaseNodeManagementException()
     {
     }
-    
+
     /** Creates a new instance of BaseNodeManagementException.
      * @param message Exception message
      */
@@ -42,17 +42,17 @@ public class BaseNodeManagementException extends Exception
     {
         super(message);
     }
-    
+
     /** Creates a new instance of BaseNodeManagementException.
      * @param rootException Root Exception
      */
     public BaseNodeManagementException(Exception rootException)
     {
         setWrappedException(rootException);
-    }    
+    }
 
     /** Getter for property wrappedException.
-     * 
+     *
      * @return wrappedException
      */
     public Exception getWrappedException()
@@ -61,7 +61,7 @@ public class BaseNodeManagementException extends Exception
     }
 
     /** Setter for property wrappedException.
-     * 
+     *
      * @param object wrappedException
      */
     public void setWrappedException(Exception object)

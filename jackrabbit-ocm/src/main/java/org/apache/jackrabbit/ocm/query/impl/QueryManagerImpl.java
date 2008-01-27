@@ -30,7 +30,7 @@ import org.apache.jackrabbit.ocm.query.Query;
 import org.apache.jackrabbit.ocm.query.QueryManager;
 
 public class QueryManagerImpl implements QueryManager {
-    
+
 	private Mapper mapper;
     private Map atomicTypeConverters;
     private ValueFactory valueFactory;
@@ -92,13 +92,13 @@ public class QueryManagerImpl implements QueryManager {
 
     private Filter buildDiscriminatorFilter(Query query, ClassDescriptor classDescriptor) {
         Filter discriminatorFilter = this.createFilter(query.getFilter().getFilterClass());
-        if (!classDescriptor.isAbstract() && (! classDescriptor.isInterface()) ) {        
+        if (!classDescriptor.isAbstract() && (! classDescriptor.isInterface()) ) {
             discriminatorFilter.addJCRExpression("@" + ManagerConstant.DISCRIMINATOR_PROPERTY_NAME + "='" +    classDescriptor.getClassName() + "'");
         }
 
         if (classDescriptor.hasDescendants()) {
             Iterator descendantDescriptorIterator = classDescriptor.getDescendantClassDescriptors().iterator();
-            
+
             while (descendantDescriptorIterator.hasNext()) {
                 ClassDescriptor descendantClassDescriptor = (ClassDescriptor) descendantDescriptorIterator.next();
 

@@ -22,19 +22,19 @@ package org.apache.jackrabbit.ocm.nodemanagement.exception;
  */
 public class NodeTypeCreationException extends BaseNodeManagementException
 {
-    
+
     /** Creates a new instance of NodeTypeCreationException. */
     public NodeTypeCreationException()
     {
     }
-    
+
     /** Creates a new instance of NodeTypeCreationException. */
     public NodeTypeCreationException(String message)
     {
         super(message);
-    }    
-    
-    /** Creates a new instance of NodeTypeCreationException. 
+    }
+
+    /** Creates a new instance of NodeTypeCreationException.
      * @param wrappedException Root exception
      */
     public NodeTypeCreationException(Exception wrappedException)

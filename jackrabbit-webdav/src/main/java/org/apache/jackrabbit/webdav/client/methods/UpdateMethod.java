@@ -43,7 +43,7 @@ public class UpdateMethod extends DavMethodBase {
     public String getName() {
         return DavMethods.METHOD_UPDATE;
     }
-    
+
     //------------------------------------------------------< DavMethodBase >---
     /**
      *

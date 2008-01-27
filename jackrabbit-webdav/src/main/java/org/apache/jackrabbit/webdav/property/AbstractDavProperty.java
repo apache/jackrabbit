@@ -41,7 +41,7 @@ public abstract class AbstractDavProperty implements DavProperty {
     /**
      * Create a new <code>AbstractDavProperty</code> with the given {@link DavPropertyName}
      * and a boolean flag indicating whether this property is protected.
-     * 
+     *
      * @param name
      * @param isProtected
      */

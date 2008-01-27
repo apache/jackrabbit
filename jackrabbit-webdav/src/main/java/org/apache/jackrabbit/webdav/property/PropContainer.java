@@ -85,7 +85,7 @@ public abstract class PropContainer implements XmlSerializable, DavConstants {
      * where ANY consists of a list of elements each reflecting the xml
      * representation of the entries returned by {@link #getContent()}.
      * </pre>
-     * 
+     *
      * @see XmlSerializable#toXml(Document)
      */
     public Element toXml(Document document) {

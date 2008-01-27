@@ -29,14 +29,14 @@ import java.io.OutputStream;
  * An input stream from a temp file that self-destructs when fully read or closed.
  */
 public class TempFileInputStream extends InputStream {
-    
+
     private final File file;
     private final InputStream in;
     private boolean closed;
-    
+
     /**
      * Copy the data to a file and close the input stream afterwards.
-     * 
+     *
      * @param in the input stream
      * @param file the target file
      * @return the size of the file
@@ -55,26 +55,26 @@ public class TempFileInputStream extends InputStream {
         in.close();
         return file.length();
     }
-    
+
     /**
      * Construct a new temporary file input stream.
      * The file is deleted if the input stream is closed or fully read.
      * Deleting is only attempted once.
-     * 
+     *
      * @param file the temporary file
      */
     TempFileInputStream(File file) throws FileNotFoundException {
         this.file = file;
         in = new BufferedInputStream(new FileInputStream(file));
     }
-    
+
     private int closeIfEOF(int read) throws IOException {
         if (read < 0) {
             close();
         }
         return read;
     }
-    
+
     public void close() throws IOException {
         if (!closed) {
             in.close();
@@ -82,27 +82,27 @@ public class TempFileInputStream extends InputStream {
             closed = true;
         }
     }
-    
+
     public int available() throws IOException {
         return in.available();
     }
-    
+
     public void mark(int readlimit) {
         in.mark(readlimit);
     }
-    
+
     public boolean markSupported() {
         return in.markSupported();
     }
-    
+
     public long skip(long n) throws IOException {
         return in.skip(n);
     }
-    
+
     public void reset() throws IOException {
         in.reset();
     }
-    
+
     public int read(byte[] b, int off, int len) throws IOException {
         return closeIfEOF(in.read(b, off, len));
     }

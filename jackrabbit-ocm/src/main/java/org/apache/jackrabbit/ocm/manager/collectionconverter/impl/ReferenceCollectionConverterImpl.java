@@ -43,8 +43,8 @@ import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
 
 /**
  *
- * This collection mapping strategy maps a collection of String into a JCR multi value property based on the reference type 
- * 
+ * This collection mapping strategy maps a collection of String into a JCR multi value property based on the reference type
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  */
 public class ReferenceCollectionConverterImpl extends AbstractCollectionConverterImpl {
@@ -112,7 +112,7 @@ public class ReferenceCollectionConverterImpl extends AbstractCollectionConverte
 
             ManageableCollection collection = ManageableCollectionUtil.getManageableCollection(collectionFieldClass);
             for (int i = 0; i < values.length; i++) {
-                
+
                 collection.addObject(values[i].getString());
             }
 
@@ -125,7 +125,7 @@ public class ReferenceCollectionConverterImpl extends AbstractCollectionConverte
                   vfe);
         }
     }
-    
+
     /**
      * @see AbstractCollectionConverterImpl#doIsNull(Session, Node, CollectionDescriptor, Class)
      */
@@ -140,7 +140,7 @@ public class ReferenceCollectionConverterImpl extends AbstractCollectionConverte
         }
         return false;
     }
-    
+
 	private void addUuidProperties(Session session, Node parentNode, CollectionDescriptor collectionDescriptor, ManageableCollection collection) throws UnsupportedRepositoryOperationException, RepositoryException, VersionException, LockException, ConstraintViolationException {
 		try {
             if (collection == null) {
@@ -154,17 +154,17 @@ public class ReferenceCollectionConverterImpl extends AbstractCollectionConverte
             for (int i = 0; i < collection.getSize(); i++) {
                 String uuid = (String) collectionIterator.next();
                 values[i] = valueFactory.createValue(uuid, PropertyType.REFERENCE);
-                
+
             }
 
             parentNode.setProperty(jcrName, values);
         }
         catch(ValueFormatException vfe) {
-            throw new ObjectContentManagerException("Cannot insert collection field : " 
+            throw new ObjectContentManagerException("Cannot insert collection field : "
                     + collectionDescriptor.getFieldName()
                     + " of class "
                     + collectionDescriptor.getClassDescriptor().getClassName(), vfe);
         }
 	}
-    
+
 }

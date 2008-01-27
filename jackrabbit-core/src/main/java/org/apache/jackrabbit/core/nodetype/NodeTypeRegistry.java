@@ -429,7 +429,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             notifyReRegistered(name);
             return entNew;
         }
-        
+
        	String message = "The following nodetype change contains non-trivial changes."
                 + "Up until now only trivial changes are supported."
                 + " (see javadoc for "
@@ -1780,7 +1780,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         // copy listeners to array to avoid ConcurrentModificationException
         NodeTypeRegistryListener[] la =
                 (NodeTypeRegistryListener[]) listeners.values().toArray(
-                        new NodeTypeRegistryListener[listeners.size()]); 
+                        new NodeTypeRegistryListener[listeners.size()]);
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
                 la[i].nodeTypeRegistered(ntName);

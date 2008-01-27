@@ -22,7 +22,7 @@ import org.apache.jackrabbit.webdav.xml.XmlSerializable;
  * <code>EventBundle</code> defines an empty interface used to represent a bundle
  * of events.
  *
- * @see EventDiscovery#addEventBundle(EventBundle) 
+ * @see EventDiscovery#addEventBundle(EventBundle)
  */
 public interface EventBundle extends XmlSerializable {
 

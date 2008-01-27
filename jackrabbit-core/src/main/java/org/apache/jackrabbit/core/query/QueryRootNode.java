@@ -133,7 +133,7 @@ public class QueryRootNode extends QueryNode {
         }
         return false;
     }
-    
+
     /**
      * {@inheritDoc}
      */

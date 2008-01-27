@@ -24,7 +24,7 @@ package org.apache.jackrabbit.spi;
  * <code>Path</code>s. Similarly the SPI implementation namely the
  * {@link RepositoryService} must be able to deal with the various formats of
  * an <code>ItemId</code>, since a caller may not (yet) be aware of the uniqueID
- * part of an ItemId. 
+ * part of an ItemId.
  */
 public interface IdFactory {
 

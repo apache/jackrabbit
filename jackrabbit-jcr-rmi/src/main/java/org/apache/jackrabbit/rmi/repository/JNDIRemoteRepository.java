@@ -65,7 +65,7 @@ public class JNDIRemoteRepository extends ProxyRepository {
      * local adapter factory.
      *
      * @param location JNDI location in default context
-     * @throws NamingException if the default JNDI context is not available 
+     * @throws NamingException if the default JNDI context is not available
      */
     public JNDIRemoteRepository(String location) throws NamingException {
         this(new InitialContext(), location);

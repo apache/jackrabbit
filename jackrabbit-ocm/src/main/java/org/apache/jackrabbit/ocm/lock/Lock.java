@@ -22,9 +22,9 @@ import org.apache.jackrabbit.ocm.exception.RepositoryException;
 
 /**
  * Wrapper class for a JCR Lock object
- * 
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
- * 
+ *
  */
 public class Lock
 {
@@ -53,7 +53,7 @@ public class Lock
 	}
 
 	public boolean isLive()  {
-		try 
+		try
 		{
 		   return lock.isLive();
 		}
@@ -68,7 +68,7 @@ public class Lock
 	}
 
 	public void refresh() {
-		try 
+		try
 		{
 		   lock.refresh();
 		}

@@ -378,7 +378,7 @@ public class PathTest extends TestCase {
             assertFalse("path is canonical: " + PathFormat.format(path, resolver), path.isCanonical());
         }
     }
-    
+
     private static class Test {
 
         private final String path;

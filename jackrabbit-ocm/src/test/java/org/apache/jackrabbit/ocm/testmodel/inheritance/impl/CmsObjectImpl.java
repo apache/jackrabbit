@@ -28,22 +28,22 @@ import org.apache.jackrabbit.ocm.testmodel.interfaces.Folder;
 
 /**
  * CmsObject test
- * 
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
- * 
- * 
+ *
+ *
  */
 @Node(jcrType="ocm:cmsobjectimpl", discriminator=false, isAbstract=true)
 @Implement(interfaceName=CmsObject.class)
 public class CmsObjectImpl implements CmsObject
 {
-    
-    @Field(path=true) protected String path;        
+
+    @Field(path=true) protected String path;
     @Field(jcrName="ocm:name", id=true) protected String name;
     @Bean(converter=ParentBeanConverterImpl.class) protected Folder parentFolder;
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject#getName()
      */
 	public String getName() {
@@ -51,7 +51,7 @@ public class CmsObjectImpl implements CmsObject
 	}
 	
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject#setName(java.lang.String)
 	 */
 	public void setName(String name) {
@@ -59,28 +59,28 @@ public class CmsObjectImpl implements CmsObject
 	}
 	
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject#getPath()
 	 */
 	public String getPath() {
 		return path;
 	}
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject#setPath(java.lang.String)
 	 */
 	public void setPath(String path) {
 		this.path = path;
 	}
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject#getParentFolder()
 	 */
 	public Folder getParentFolder() {
 		return parentFolder;
 	}
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject#setParentFolder(org.apache.jackrabbit.ocm.testmodel.interfaces.Folder)
 	 */
 	public void setParentFolder(Folder parentFolder) {

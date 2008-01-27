@@ -49,7 +49,7 @@ public class VersioningConfig {
      * ISM locking configuration
      */
     private final ISMLockingConfig ismLockingConfig;
-    
+
     /**
      * Creates a versioning configuration object.
      *

@@ -47,7 +47,7 @@ public class DepthHeader implements Header, DavConstants {
     /**
      * Create a new <code>DepthHeader</code> with either value {@link #DEPTH_0 0}
      * or {@link #DEPTH_INFINITY infinity}.
-     * 
+     *
      * @param isDeep
      */
     public DepthHeader(boolean isDeep) {

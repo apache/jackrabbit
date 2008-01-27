@@ -93,7 +93,7 @@ public class AnnotationProxyTest extends AnnotationTestBase {
 
 			
 			//---------------------------------------------------------------------------------------------------------
-			// Update  
+			// Update
 			//---------------------------------------------------------------------------------------------------------						
 			 detail = new Detail();
 			detail.setField("AnotherFieldValue");			
@@ -166,9 +166,9 @@ public class AnnotationProxyTest extends AnnotationTestBase {
             assertNull("nullcollectionproxy  is not null", main.getNullProxyCollection());
 			
 			//---------------------------------------------------------------------------------------------------------
-			// Update  
+			// Update
 			//---------------------------------------------------------------------------------------------------------
-            
+
             Detail detail = new Detail();
 			detail.setField("newFieldValue");			
 			result.add(detail);
@@ -188,7 +188,7 @@ public class AnnotationProxyTest extends AnnotationTestBase {
 			// Delete the main object
 			//---------------------------------------------------------------------------------------------------------						
 			ocm.remove("/test");
-			ocm.save();            
+			ocm.save();
 	
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -220,7 +220,7 @@ public class AnnotationProxyTest extends AnnotationTestBase {
             assertNull("Collection is not null", result);
             			
 			//---------------------------------------------------------------------------------------------------------
-			// Update  
+			// Update
 			//---------------------------------------------------------------------------------------------------------
 			ArrayList  details= new ArrayList();
 			for(int i=1; i<=100;i++)
@@ -232,7 +232,7 @@ public class AnnotationProxyTest extends AnnotationTestBase {
 			main.setProxyCollection(details);
 			ocm.update(main);
 			ocm.save();
-            
+
 			//---------------------------------------------------------------------------------------------------------
 			// Retrieve the main object
 			//---------------------------------------------------------------------------------------------------------						
@@ -241,11 +241,11 @@ public class AnnotationProxyTest extends AnnotationTestBase {
 
             result = main.getProxyCollection();
             assertEquals("Invalide size", result.size(), 100);
-            
+
 			
 			//---------------------------------------------------------------------------------------------------------
-			// Update  
-			//---------------------------------------------------------------------------------------------------------            
+			// Update
+			//---------------------------------------------------------------------------------------------------------
             NTDetail detail = new NTDetail();
 			detail.setField("newFieldValue");			
 			result.add(detail);
@@ -259,13 +259,13 @@ public class AnnotationProxyTest extends AnnotationTestBase {
 			main = (NTMain) ocm.getObject("/test");
 			assertNotNull("main  is null", main);
             assertEquals("Invalide size",main.getProxyCollection().size(), 101);
-            
+
 
             //---------------------------------------------------------------------------------------------------------
 			// Delete the main object
 			//---------------------------------------------------------------------------------------------------------						
 			ocm.remove("/test");
-			ocm.save();            
+			ocm.save();
 	
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -276,5 +276,5 @@ public class AnnotationProxyTest extends AnnotationTestBase {
 	}
 
 
-	    
+	
 }

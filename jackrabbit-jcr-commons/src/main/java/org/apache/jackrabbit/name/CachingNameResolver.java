@@ -23,7 +23,7 @@ import javax.jcr.NamespaceException;
  * parsing and formatting of JCR names. Uncached names are resolved using
  * the underlying decorated name resolver.
  *
- * @deprecated Use the CachingNameResolver class from 
+ * @deprecated Use the CachingNameResolver class from
  *             the org.apache.jackrabbit.spi.commons.conversion package of
  *             the jackrabbit-spi-commons component.
  */

@@ -30,18 +30,18 @@ import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.BeanDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 /**
- * 
+ *
  * Bean converter used to map some node properties into one nested bean field.
  * The corresponding bean field is not associated to a subnode.
- * 
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  *
  */
 public class InlineBeanConverterImpl extends AbstractBeanConverterImpl  implements BeanConverter {
 
-	SimpleFieldsHelper simpleFieldsHelper; 
+	SimpleFieldsHelper simpleFieldsHelper;
 	
-	public InlineBeanConverterImpl(Mapper mapper, ObjectConverter objectConverter, AtomicTypeConverterProvider atomicTypeConverterProvider) 
+	public InlineBeanConverterImpl(Mapper mapper, ObjectConverter objectConverter, AtomicTypeConverterProvider atomicTypeConverterProvider)
 	{
 		super(mapper, objectConverter, atomicTypeConverterProvider);
 		this.simpleFieldsHelper = new SimpleFieldsHelper(atomicTypeConverterProvider);
@@ -62,7 +62,7 @@ public class InlineBeanConverterImpl extends AbstractBeanConverterImpl  implemen
 			throws ObjectContentManagerException, RepositoryException,JcrMappingException {
 		
 		return simpleFieldsHelper.retrieveSimpleFields(session, beanClassDescriptor, parentNode, bean);
- 
+
 	}
 
 	public void remove(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Object object, ClassDescriptor parentClassDescriptor, Object parent)

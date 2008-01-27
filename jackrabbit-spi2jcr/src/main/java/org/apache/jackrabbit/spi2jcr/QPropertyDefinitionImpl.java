@@ -96,7 +96,7 @@ class QPropertyDefinitionImpl
      */
     private static String[] convertConstraints(String[] constraints,
                                                NamePathResolver resolver,
-                                               QValueFactory factory, 
+                                               QValueFactory factory,
                                                int requiredType)
             throws RepositoryException {
         if (requiredType == PropertyType.REFERENCE

@@ -55,7 +55,7 @@ public class AnnotationAtomicTest extends AnnotationTestBase
         return new RepositoryLifecycleTestSetup(new TestSuite(AnnotationAtomicTest.class));
     }
 
-    
+
     public void testAtomicFields()
     {
         try
@@ -75,7 +75,7 @@ public class AnnotationAtomicTest extends AnnotationTestBase
             a.setString("Test String");
             a.setDate(date);
             a.setInt2boolean(true);
-            
+
             byte[] content = "Test Byte".getBytes();
             a.setByteArray(content);
             a.setCalendar(calendar);
@@ -83,17 +83,17 @@ public class AnnotationAtomicTest extends AnnotationTestBase
             a.setDoublePrimitive(1.23);
             long now = System.currentTimeMillis();
             a.setTimestamp(new Timestamp(now));
-            
+
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream("Test Stream".getBytes());
             a.setInputStream(byteArrayInputStream);
             a.setNamedProperty("ocm:test");
             a.setPathProperty("/node1/node2");
             a.setUndefinedProperty("aStringData");
-            
+
             ocm.insert(a);
             ocm.save();
 
-             
+
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------
@@ -110,70 +110,70 @@ public class AnnotationAtomicTest extends AnnotationTestBase
             assertTrue("Incorrect boolean object", a.getString().equals("Test String"));
             assertNotNull("Byte array object is null", a.getByteArray());
             assertTrue("Incorrect byte object", new String(a.getByteArray()).equals("Test Byte"));
-            
+
             assertNotNull("date object is null", a.getDate());
-            assertTrue("Invalid date", a.getDate().equals(date));            
+            assertTrue("Invalid date", a.getDate().equals(date));
             assertNotNull("calendar object is null", a.getCalendar());
-            
+
             log.debug("Calendar : " + a.getCalendar().get(Calendar.YEAR) + "-" + a.getCalendar().get(Calendar.MONTH) + "-" + a.getCalendar().get(Calendar.DAY_OF_MONTH));
             assertTrue("Invalid calendar object", a.getCalendar().equals(calendar));
-            
+
             assertNotNull("Double object is null", a.getDoubleObject());
             assertTrue("Incorrect double object", a.getDoubleObject().doubleValue() == 2.12);
             assertTrue("Incorrect double primitive", a.getDoublePrimitive() == 1.23);
-            
+
             assertNotNull("Incorrect input stream primitive", a.getInputStream());
             assertNotNull("Incorrect timestamp", a.getTimestamp());
-            assertTrue("Invalid timestamp value ", a.getTimestamp().getTime() == now);            
+            assertTrue("Invalid timestamp value ", a.getTimestamp().getTime() == now);
             assertTrue("Invalid int2boolean value ", a.isInt2boolean());
-            
+
             assertTrue("Invalid namedProperty value ", a.getNamedProperty().equals("ocm:test"));
             assertTrue("Invalid pathProperty value ", a.getPathProperty().equals("/node1/node2"));
             assertTrue("Invalid undefinedProperty value ", ((String) a.getUndefinedProperty()).equals("aStringData"));
             // --------------------------------------------------------------------------------
             // Update the property "namedProperty" with an invalid value
-            // --------------------------------------------------------------------------------            
-            try 
+            // --------------------------------------------------------------------------------
+            try
             {
                // update with an incorrect namespace - Should throws an exception
-               a.setNamedProperty("unknown:test");               
+               a.setNamedProperty("unknown:test");
                ocm.update(a);
                fail("Exception was not triggered with an invalid namespace");
                ocm.save();
             }
             catch (Exception e)
             {
-               
-                
+
+
             }
-            
+
             // --------------------------------------------------------------------------------
             // Update the property "pathProperty" with an invalid value
-            // --------------------------------------------------------------------------------            
-            try 
+            // --------------------------------------------------------------------------------
+            try
             {
                // update with an incorrect namespace - Should throws an exception
-               a.setPathProperty("//node1");               
+               a.setPathProperty("//node1");
                ocm.update(a);
                fail("Exception was not triggered with an invalid path");
                ocm.save();
             }
             catch (Exception e)
             {
-               
-                
+
+
             }
-            
+
             // --------------------------------------------------------------------------------
             // Update the property "undefinedProperty" with an invalid value
-            // --------------------------------------------------------------------------------            
+            // --------------------------------------------------------------------------------
             a = null;
             a = (Atomic) ocm.getObject( "/test");
 
             a.setUndefinedProperty(new Double(1.2));
             ocm.update(a);
             ocm.save();
-            
+
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------
@@ -181,14 +181,14 @@ public class AnnotationAtomicTest extends AnnotationTestBase
             a = (Atomic) ocm.getObject( "/test");
             assertNotNull("a is null", a);
             assertTrue("Invalid undefinedProperty value ", ((Double) a.getUndefinedProperty()).doubleValue() == 1.2);
-            
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
-    
+
 }

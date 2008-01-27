@@ -55,7 +55,7 @@ public class OnParentVersionAbortTest extends AbstractOnParentVersionTest {
 
     /**
      * Test the restore of a OnParentVersion-ABORT node
-     * 
+     *
      * @throws RepositoryException
      * @throws NotExecutableException
      */

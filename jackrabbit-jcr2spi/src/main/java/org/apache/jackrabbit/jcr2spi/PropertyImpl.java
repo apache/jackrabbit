@@ -442,7 +442,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     private QValue getQValue() throws ValueFormatException, RepositoryException {
         checkStatus();
-        if (isMultiple()) {                                                            
+        if (isMultiple()) {
             throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be retrieved as an array of values");
         }
         // avoid unnecessary object creation if possible
@@ -521,7 +521,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * 
+     *
      * @param value
      * @param propertyType
      * @throws ValueFormatException

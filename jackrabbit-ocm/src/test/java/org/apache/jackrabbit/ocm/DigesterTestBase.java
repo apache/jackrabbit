@@ -25,10 +25,10 @@ import org.apache.jackrabbit.ocm.repository.RepositoryUtil;
 /**
  * Base class for testcases. Provides priviledged access to the jcr test
  * repository.
- * 
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
- * 
- * 
+ *
+ *
  */
 public abstract class DigesterTestBase extends AbstractTestBase
 {
@@ -37,7 +37,7 @@ public abstract class DigesterTestBase extends AbstractTestBase
 	 * <p>
 	 * Defines the test case name for junit.
 	 * </p>
-	 * 
+	 *
 	 * @param testName
 	 *            The test case name.
 	 */
@@ -46,17 +46,17 @@ public abstract class DigesterTestBase extends AbstractTestBase
 		super(testName);
 	}
 
-    
+
 	protected void initObjectContentManager() throws UnsupportedRepositoryOperationException, javax.jcr.RepositoryException
 	{
 		Repository repository = RepositoryUtil.getRepository("repositoryTest");
-		String[] files = { "./src/test/test-config/jcrmapping.xml", 
+		String[] files = { "./src/test/test-config/jcrmapping.xml",
 						   "./src/test/test-config/jcrmapping-proxy.xml",
 						   "./src/test/test-config/jcrmapping-atomic.xml",
                            "./src/test/test-config/jcrmapping-default.xml",
                            "./src/test/test-config/jcrmapping-beandescriptor.xml",
                            "./src/test/test-config/jcrmapping-inheritance.xml",
-                           "./src/test/test-config/jcrmapping-jcrnodetypes.xml", 
+                           "./src/test/test-config/jcrmapping-jcrnodetypes.xml",
                            "./src/test/test-config/jcrmapping-uuid.xml"};
 		session = RepositoryUtil.login(repository, "superuser", "superuser");
 		ocm = new ObjectContentManagerImpl(session, files);

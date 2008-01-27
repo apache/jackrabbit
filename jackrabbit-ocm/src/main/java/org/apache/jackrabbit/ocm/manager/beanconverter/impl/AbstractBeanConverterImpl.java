@@ -30,9 +30,9 @@ import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.BeanDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 /**
- * 
+ *
  * Abstract Bean Converter Class
- * 
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  *
  */
@@ -50,9 +50,9 @@ public abstract class AbstractBeanConverterImpl implements BeanConverter {
 	}
 
 	/**
-	 * 
+	 *
 	 * Default implementation for many BeanConverter. This method can be overridden in specific BeanConverter
-	 * 
+	 *
 	 */
     public String getPath(Session session, BeanDescriptor beanDescriptor, Node parentNode)
            throws ObjectContentManagerException

@@ -163,7 +163,7 @@ public class SimpleDbPersistenceManager extends DatabasePersistenceManager {
 
     /**
      * Returns a JDBC connection acquired using the JDBC {@link DriverManager}.
-     * @throws SQLException 
+     * @throws SQLException
      *
      * @throws RepositoryException if the driver could not be loaded
      * @throws SQLException if the connection could not be established

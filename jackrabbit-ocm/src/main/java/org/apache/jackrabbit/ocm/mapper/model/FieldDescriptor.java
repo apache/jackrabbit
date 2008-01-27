@@ -27,7 +27,7 @@ package org.apache.jackrabbit.ocm.mapper.model;
  *
  */
 public class FieldDescriptor implements PropertyDefDescriptor {
-    private String fieldName;    
+    private String fieldName;
     private String jcrName;
     private String jcrType;
     private boolean jcrAutoCreated;
@@ -40,9 +40,9 @@ public class FieldDescriptor implements PropertyDefDescriptor {
     private boolean path;
     private boolean uuid;
     private String converter;
-    private String jcrDefaultValue; 
+    private String jcrDefaultValue;
     private String[] jcrValueConstraints = new String[0];
-   
+
 
     /**
      * @return Returns the fieldName.
@@ -73,9 +73,9 @@ public class FieldDescriptor implements PropertyDefDescriptor {
         this.jcrName = jcrName;
     }
 
-    
+
     /**
-     * 
+     *
      * @return The atomic type converter to use, can be null
      */
     public String getConverter() {
@@ -83,7 +83,7 @@ public class FieldDescriptor implements PropertyDefDescriptor {
 	}
 
     /**
-     * Set the atomic converter 
+     * Set the atomic converter
      * @param converter the atomic converter to use
      */
 	public void setConverter(String converter) {
@@ -147,8 +147,8 @@ public class FieldDescriptor implements PropertyDefDescriptor {
      */
     public void setUuid(boolean uuid) {
         this.uuid = uuid;
-    }    
-    
+    }
+
     /** Getter for property jcrType.
      *
      * @return jcrType
@@ -244,7 +244,7 @@ public class FieldDescriptor implements PropertyDefDescriptor {
     public void setJcrMultiple(boolean value) {
         this.jcrMultiple = value;
     }
-    
+
     public String getJcrDefaultValue() {
 		return jcrDefaultValue;
 	}
@@ -264,16 +264,16 @@ public class FieldDescriptor implements PropertyDefDescriptor {
 
 	}
 	
-    public void setJcrValueConstraints(String jcrValueConstraints) {                
+    public void setJcrValueConstraints(String jcrValueConstraints) {
     	if (jcrValueConstraints != null && ! jcrValueConstraints.equals(""))
     	{
     		this.jcrValueConstraints = jcrValueConstraints.split(" *, *");
     	}
     }
 
-    
+
 	public String toString() {
 		
 		return "Field Descriptor : " +  this.getFieldName();
-	}    
+	}
 }

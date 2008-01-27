@@ -51,7 +51,7 @@ public class LockInfo implements DavConstants, XmlSerializable {
 
     /**
      * Create a new <code>LockInfo</code> used for refreshing an existing lock.
-     * 
+     *
      * @param timeout
      */
     public LockInfo(long timeout) {

@@ -72,7 +72,7 @@ public class CodedUrlHeader implements Header {
         String[] codedUrls = getCodedUrls();
         return (codedUrls != null) ? codedUrls[0] : null;
     }
-    
+
     /**
      * Return an array of coded urls as present in the header value or <code>null</code> if
      * no value is present.

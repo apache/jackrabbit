@@ -86,7 +86,7 @@ public class JCRServer implements JCRServerMBean {
     }
 
     /**
-     * 
+     *
      * @param jndiProps
      *            jndi environment properties
      * @return an InitialContext for the given environment properties

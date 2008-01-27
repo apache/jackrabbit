@@ -36,7 +36,7 @@ import org.apache.jackrabbit.ocm.mapper.model.MappingDescriptor;
 
 /**
  * Helper class that reads the xml mapping file and load all class descriptors into memory (object graph)
- * 
+ *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart Christophe </a>
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
@@ -44,23 +44,23 @@ public class DigesterDescriptorReader implements DescriptorReader
 {
     private boolean validating = true;
     private URL dtdResolver;
-    
+
     private Collection configFileStreams = new ArrayList();
-    
+
     public DigesterDescriptorReader(InputStream stream)
     {
         configFileStreams.add(stream);	
     }
-    
+
     public DigesterDescriptorReader(InputStream[] streams)
     {
-        for (int i = 0; i < streams.length; i++) 
+        for (int i = 0; i < streams.length; i++)
         {
         	configFileStreams.add(streams[i]);	
 		}
     	
     }
-    
+
     public DigesterDescriptorReader(String xmlFile)
     {
     	try
@@ -71,12 +71,12 @@ public class DigesterDescriptorReader implements DescriptorReader
 		{
 			throw new InitMapperException("Mapping file not found : " + xmlFile,e);
 		}
-    } 
-    
+    }
+
     public DigesterDescriptorReader(String[] xmlFiles)
     {
    	
-    	for (int i = 0; i < xmlFiles.length; i++) 
+    	for (int i = 0; i < xmlFiles.length; i++)
     	{
         	try
     		{
@@ -88,9 +88,9 @@ public class DigesterDescriptorReader implements DescriptorReader
     			throw new InitMapperException("Mapping file not found : " + xmlFiles[i],e);
     		}    				
 		}
-    } 
-    
-    
+    }
+
+
     /**
      * Set if the mapping should be validated.
      * @param flag <tt>true</tt> if the mapping should be validated
@@ -102,25 +102,25 @@ public class DigesterDescriptorReader implements DescriptorReader
     public void setResolver(URL dtdResolver) {
         this.dtdResolver = dtdResolver;
     }
-    
+
 	/**
 	 * Load all class descriptors found in the xml mapping file.
-	 * 
+	 *
 	 * @return a {@link MappingDescriptor}
-	 * 
+	 *
 	 */
 	public MappingDescriptor loadClassDescriptors()
 	{
 		try
 		{
 			MappingDescriptor mappingDescriptor = new MappingDescriptor();
-			for (Iterator iter = configFileStreams.iterator(); iter.hasNext();) 
+			for (Iterator iter = configFileStreams.iterator(); iter.hasNext();)
 			{
 				InputStream xmlMappingDescriptorFile = (InputStream) iter.next();
 				
 				Digester digester = new Digester();
 				digester.setValidating(this.validating);
-				if (null != this.dtdResolver) 
+				if (null != this.dtdResolver)
 				{
 	                digester.register("-//The Apache Software Foundation//DTD Repository//EN",
 	                                  this.dtdResolver.toString());
@@ -133,7 +133,7 @@ public class DigesterDescriptorReader implements DescriptorReader
 
 				// --------------------------------------------------------------------------------
 				// Rules used for the class-descriptor element
-				// --------------------------------------------------------------------------------	                        
+				// --------------------------------------------------------------------------------	
 				digester.addObjectCreate("jackrabbit-ocm/class-descriptor", ClassDescriptor.class);
 				digester.addSetProperties("jackrabbit-ocm/class-descriptor");
 				digester.addSetNext("jackrabbit-ocm/class-descriptor", "addClassDescriptor");		
@@ -170,7 +170,7 @@ public class DigesterDescriptorReader implements DescriptorReader
 				
 				mappingDescriptor.getClassDescriptorsByClassName().putAll(currentMappingDescriptor.getClassDescriptorsByClassName());
 				mappingDescriptor.getClassDescriptorsByNodeType().putAll(currentMappingDescriptor.getClassDescriptorsByNodeType());
-                
+
 			}
 			return mappingDescriptor;
 		}

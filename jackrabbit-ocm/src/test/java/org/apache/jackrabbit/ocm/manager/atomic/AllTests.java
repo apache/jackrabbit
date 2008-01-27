@@ -24,7 +24,7 @@ import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 
 /**
  * Package level tests.
- * 
+ *
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 public class AllTests {
@@ -37,10 +37,10 @@ public class AllTests {
         TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.jcr.manager.atomic");
         //$JUnit-BEGIN$
         suite.addTestSuite(AnnotationAtomicTest.class);
-        suite.addTestSuite(AnnotationNullAtomicTest.class);    
+        suite.addTestSuite(AnnotationNullAtomicTest.class);
         suite.addTestSuite(AnnotationDefaultValueTest.class);
         suite.addTestSuite(DigesterAtomicTest.class);
-        suite.addTestSuite(DigesterNullAtomicTest.class);    
+        suite.addTestSuite(DigesterNullAtomicTest.class);
         suite.addTestSuite(DigesterDefaultValueTest.class);
 
         //$JUnit-END$

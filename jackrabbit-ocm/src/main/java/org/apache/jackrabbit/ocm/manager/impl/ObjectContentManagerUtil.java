@@ -34,7 +34,7 @@ public class ObjectContentManagerUtil
 	
     public static String getPath(Session session, BeanDescriptor beanDescriptor, Node parentNode) throws ObjectContentManagerException
     {		
-		 try 
+		 try
 		 {
 			String path = "";
 			if (parentNode != null)
@@ -43,8 +43,8 @@ public class ObjectContentManagerUtil
 			}
 		    return path + "/"  + beanDescriptor.getJcrName();
 
-		} 
-		catch (javax.jcr.RepositoryException e) 
+		}
+		catch (javax.jcr.RepositoryException e)
 		{
 			throw new RepositoryException(e);
 		}

@@ -26,8 +26,8 @@ import org.apache.jackrabbit.ocm.query.Filter;
 import org.apache.jackrabbit.ocm.query.Query;
 
 /**
- * Default Query implementation 
- * 
+ * Default Query implementation
+ *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  *
  */
@@ -37,16 +37,16 @@ public class QueryImpl implements Query
 	private Filter filter;
 	
     ClassDescriptor classDescriptor;
-    
+
     private ArrayList orderByExpressions = new ArrayList();
 
 	/**
-	 * Constructor 
-	 * 
+	 * Constructor
+	 *
 	 * @param filter
 	 * @param mapper
 	 */
-	public QueryImpl(Filter filter, Mapper mapper) 
+	public QueryImpl(Filter filter, Mapper mapper)
 	{				
 		this.filter = filter;
 		classDescriptor = mapper.getClassDescriptorByClass(filter.getFilterClass());
@@ -74,7 +74,7 @@ public class QueryImpl implements Query
 	}
 
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.query.Query#addOrderByAscending(java.lang.String)
 	 */
 	public void addOrderByAscending(String fieldNameAttribute)

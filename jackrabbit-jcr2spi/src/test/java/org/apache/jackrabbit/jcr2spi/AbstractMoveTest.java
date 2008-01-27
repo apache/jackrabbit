@@ -51,7 +51,7 @@ abstract class AbstractMoveTest extends AbstractJCRTest {
         destParentNode = testRootNode.addNode(nodeName3, testNodeType);
         // save the new nodes
         testRootNode.save();
-                   
+
         destinationPath = destParentNode.getPath() + "/" + nodeName2;
     }
 

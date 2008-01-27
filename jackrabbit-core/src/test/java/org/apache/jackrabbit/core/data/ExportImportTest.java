@@ -33,7 +33,7 @@ public class ExportImportTest extends AbstractJCRTest {
 
     /**
      * Test a node type with a binary default value
-     * @throws RepositoryException 
+     * @throws RepositoryException
      */
     public void testExportImportBinary() throws RepositoryException {
         doTestExportImportBinary(0);
@@ -82,7 +82,7 @@ public class ExportImportTest extends AbstractJCRTest {
             assertFalse(e.getMessage(), true);
         }
     }
-    
+
     private byte[] readFromStream(InputStream in) throws IOException {
         ByteArrayOutputStream out2 = new ByteArrayOutputStream();
         while (true) {
@@ -94,7 +94,7 @@ public class ExportImportTest extends AbstractJCRTest {
         }
         return out2.toByteArray();
     }
-    
+
     private void clean(Node root) throws RepositoryException {
         while (root.hasNode("testBinary")) {
             root.getNode("testBinary").remove();

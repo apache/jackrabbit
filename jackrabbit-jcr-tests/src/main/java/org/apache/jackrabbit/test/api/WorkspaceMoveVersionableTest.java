@@ -41,7 +41,7 @@ public class WorkspaceMoveVersionableTest extends AbstractWorkspaceVersionableTe
     protected void initNodesW2() throws RepositoryException {
         // nothing to do.
     }
-    
+
     /**
      * A VersionException is thrown if the parent node of destAbsPath is
      * versionable and checked-in, or is non-versionable but its nearest

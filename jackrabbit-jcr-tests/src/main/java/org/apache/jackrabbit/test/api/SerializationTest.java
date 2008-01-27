@@ -80,7 +80,7 @@ public class SerializationTest extends AbstractJCRTest {
             workspace = session.getWorkspace();
             file = File.createTempFile("serializationTest", ".xml");
             log.print("Tempfile: " + file.getAbsolutePath());
-  
+
             SerializationContext sc = new SerializationContext(this);
             treeComparator = new TreeComparator(sc, session);
             treeComparator.createComplexTree(treeComparator.WORKSPACE);

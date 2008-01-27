@@ -61,5 +61,5 @@ public class TextTest extends TestCase {
         // Handling of the special characters
         checkEscape("%/:[]*'\"|\t\r\n");
     }
-    
+
 }

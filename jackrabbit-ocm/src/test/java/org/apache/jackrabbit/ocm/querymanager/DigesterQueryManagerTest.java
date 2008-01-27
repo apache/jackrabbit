@@ -63,7 +63,7 @@ public class DigesterQueryManagerTest extends DigesterTestBase
     	      filter.addEqualTo("name", "a test value")
                     .addEqualTo("id", new Integer(1));
     	      filter.setScope("/test//");
-    	      
+    	
     	      Query query = queryManager.createQuery(filter);
     	      String jcrExpression = queryManager.buildJCRExpression(query);
     	      assertNotNull("jcrExpression is null", jcrExpression);
@@ -74,7 +74,7 @@ public class DigesterQueryManagerTest extends DigesterTestBase
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
 
     public void testBuildExpression2()
@@ -86,7 +86,7 @@ public class DigesterQueryManagerTest extends DigesterTestBase
     	      Filter filter = queryManager.createFilter(C.class);
     	      filter.addEqualTo("name", "a test value")
     	            .addEqualTo("id", new Integer(1));
-    	      
+    	
     	      Query query = queryManager.createQuery(filter);
     	      String jcrExpression = queryManager.buildJCRExpression(query);
     	      assertNotNull("jcrExpression is null", jcrExpression);
@@ -97,8 +97,8 @@ public class DigesterQueryManagerTest extends DigesterTestBase
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
-    
+
 
 }

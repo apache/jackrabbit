@@ -31,16 +31,16 @@ import org.apache.jackrabbit.ocm.exception.IncorrectAtomicTypeException;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter;
 
 /**
- * 
- * String Type Converter 
- * 
+ *
+ * String Type Converter
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 public class UndefinedTypeConverterImpl implements AtomicTypeConverter
 {
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter#getValue(java.lang.Object)
 	 */
 	public Value getValue(ValueFactory valueFactory, Object propValue)
@@ -50,68 +50,68 @@ public class UndefinedTypeConverterImpl implements AtomicTypeConverter
 		  {
 			return null;
 		  }
-		  
+		
           if (propValue.getClass() == String.class)
           {
-        	  return valueFactory.createValue((String) propValue);  
+        	  return valueFactory.createValue((String) propValue);
           }
 
           if (propValue.getClass() == InputStream.class)
           {
-        	  return valueFactory.createValue((InputStream) propValue);  
+        	  return valueFactory.createValue((InputStream) propValue);
           }
-	        
+	
           if ((propValue.getClass() == Long.class) ||(propValue.getClass() == Integer.class))
           {
-        	  return valueFactory.createValue(((Number) propValue).longValue());  
+        	  return valueFactory.createValue(((Number) propValue).longValue());
           }
 
           if (propValue.getClass() == Double.class )
           {
-        	  return valueFactory.createValue(((Double) propValue).doubleValue());  
+        	  return valueFactory.createValue(((Double) propValue).doubleValue());
           }
 
           if (propValue.getClass() == Boolean.class )
           {
-        	  return valueFactory.createValue(((Boolean) propValue).booleanValue());  
+        	  return valueFactory.createValue(((Boolean) propValue).booleanValue());
           }
 
           if (propValue.getClass() == Calendar.class )
           {
-        	  
-        	  return valueFactory.createValue((Calendar) propValue);  
+        	
+        	  return valueFactory.createValue((Calendar) propValue);
           }
 
           if (propValue.getClass() == GregorianCalendar.class )
           {
-        	  return valueFactory.createValue((GregorianCalendar) propValue);  
+        	  return valueFactory.createValue((GregorianCalendar) propValue);
           }
-          
+
           if (propValue.getClass() == GregorianCalendar.class )
           {
-        	  return valueFactory.createValue((GregorianCalendar) propValue);  
-          }
-          
-          if (propValue.getClass() == Date.class )
-          {
-        	  Calendar calendar = Calendar.getInstance();
-        	  calendar.setTime((Date) propValue);
-        	  return valueFactory.createValue(calendar);  
+        	  return valueFactory.createValue((GregorianCalendar) propValue);
           }
 
           if (propValue.getClass() == Date.class )
           {
         	  Calendar calendar = Calendar.getInstance();
         	  calendar.setTime((Date) propValue);
-        	  return valueFactory.createValue(calendar);  
+        	  return valueFactory.createValue(calendar);
           }
-          
+
+          if (propValue.getClass() == Date.class )
+          {
+        	  Calendar calendar = Calendar.getInstance();
+        	  calendar.setTime((Date) propValue);
+        	  return valueFactory.createValue(calendar);
+          }
+
           throw new IncorrectAtomicTypeException("Impossible to convert the value - property type not found");
 		
 	}
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter#getObject(javax.jcr.Value)
      */
 	public Object getObject(Value value)
@@ -175,7 +175,7 @@ public class UndefinedTypeConverterImpl implements AtomicTypeConverter
 	}
 	
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter#getStringValue(java.lang.Object)
 	 */
 	public String getXPathQueryValue(ValueFactory valueFactory, Object object)

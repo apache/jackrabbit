@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Iterator;
 
 /**
- * @deprecated Use the NamespaceAdder class from 
+ * @deprecated Use the NamespaceAdder class from
  *             the org.apache.jackrabbit.spi.commons.namespace package of
  *             the jackrabbit-spi-commons component.
  */

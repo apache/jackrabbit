@@ -28,21 +28,21 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 /**
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
- * 
+ *
  */
 @Node(jcrType="nt:unstructured", jcrMixinTypes="mix:referenceable")
 public class A
 {	
-	@Field(path=true) private String path; 
-	@Field(uuid=true) private String uuid; 
+	@Field(path=true) private String path;
+	@Field(uuid=true) private String uuid;
     @Field private String a1;
     @Field private String a2;
     @Bean private B b;
-    
-    @Collection(elementClassName=B.class) 
+
+    @Collection(elementClassName=B.class)
     java.util.Collection collection;
-     
-    
+
+
     public String getPath() {
 		return path;
 	}
@@ -102,8 +102,8 @@ public class A
     {
         this.b = b;
     }
-    
-        
+
+
     /**
      * @return Returns the collection.
      */
@@ -111,7 +111,7 @@ public class A
     {
         return collection;
     }
-    
+
     /**
      * @param collection The collection to set.
      */
@@ -119,15 +119,15 @@ public class A
     {
         this.collection = collection;
     }
-    
+
     public void addB(B b)
     {
        if (collection == null )
        {
            collection = new ArrayList();
        }
-       
-       collection.add(b);   
+
+       collection.add(b);
     }
-    
+
 }

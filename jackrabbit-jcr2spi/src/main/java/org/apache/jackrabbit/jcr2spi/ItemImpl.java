@@ -484,7 +484,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      *
      * @throws UnsupportedRepositoryOperationException
      * @throws RepositoryException if the sanity check on this item fails.
-     * See {@link ItemImpl#checkStatus()}. 
+     * See {@link ItemImpl#checkStatus()}.
      * @see ItemStateValidator
      */
     protected boolean isWritable() throws RepositoryException {

@@ -108,7 +108,7 @@ public interface QueryHandler {
                              ItemManager itemMgr,
                              String statement,
                              String language) throws InvalidQueryException;
-    
+
     /**
      * Creates a new query by specifying the query object model. If the query
      * object model is considered invalid for the implementing class, an

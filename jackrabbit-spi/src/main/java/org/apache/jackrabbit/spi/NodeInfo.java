@@ -52,7 +52,7 @@ public interface NodeInfo extends ItemInfo {
     public Name getNodetype();
 
     /**
-     * @return Array of <code>Name</code>s representing the names of mixin nodetypes. 
+     * @return Array of <code>Name</code>s representing the names of mixin nodetypes.
      * This includes only explicitly assigned mixin nodetypes. It does not include
      * mixin types inherited through the additon of supertypes to the primary
      * type hierarchy.

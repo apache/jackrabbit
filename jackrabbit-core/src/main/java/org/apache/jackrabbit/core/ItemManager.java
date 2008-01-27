@@ -310,7 +310,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      * Returns the node at the specified absolute path in the workspace.
      * If no such node exists, then it returns the property at the specified path.
      * If no such property exists a <code>PathNotFoundException</code> is thrown.
-     * 
+     *
      * @deprecated As of JSR 283, a <code>Path</code> doesn't anymore uniquely
      * identify an <code>Item</code>, therefore {@link #getNode(Path)} and
      * {@link #getProperty(Path)} should be used instead.

@@ -55,5 +55,5 @@ public class RenameTest extends AbstractMoveTest {
 
         superuser.refresh(false);
         assertEquals(moveNode.getName(), nodeName2);
-    }  
+    }
 }

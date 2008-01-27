@@ -25,13 +25,13 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  * @version $Id: Exp $
  */
-@Node(extend=Ancestor.class, jcrMixinTypes="mix:referenceable") 	                  
+@Node(extend=Ancestor.class, jcrMixinTypes="mix:referenceable") 	
 public class Descendant extends Ancestor
 {
 
     @Field private String stringData;
 
-    
+
 	public String getStringData() {
 		return stringData;
 	}
@@ -41,6 +41,6 @@ public class Descendant extends Ancestor
 	}
 
 
-    
-    
+
+
 }

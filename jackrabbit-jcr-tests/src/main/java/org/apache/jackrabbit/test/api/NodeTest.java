@@ -105,10 +105,10 @@ public class NodeTest extends AbstractJCRTest {
      * that has no corresponding node in second workspace
      */
     public void testGetCorrespondingNodePathItemNotFoundException() throws RepositoryException, NotExecutableException {
-      
+
         // make sure the repository supports multiple workspaces
         super.ensureMultipleWorkspacesSupported();
-      
+
         // get default workspace test root node using superuser session
         Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
 
@@ -132,7 +132,7 @@ public class NodeTest extends AbstractJCRTest {
      * javax.jcr.Node#getCorrespondingNodePath(String)} works properly.
      */
     public void testGetCorrespondingNodePath() throws RepositoryException, NotExecutableException {
-      
+
         // make sure the repository supports multiple workspaces
         super.ensureMultipleWorkspacesSupported();
 

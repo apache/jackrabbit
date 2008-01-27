@@ -49,7 +49,7 @@ import javax.jcr.RepositoryException;
  * &lt;!ELEMENT uri (#PCDATA) &gt;
  * </pre>
  *
- * @see javax.jcr.Workspace#getNamespaceRegistry() 
+ * @see javax.jcr.Workspace#getNamespaceRegistry()
  */
 public class RegisteredNamespacesReport extends AbstractJcrReport implements ItemResourceConstants {
 

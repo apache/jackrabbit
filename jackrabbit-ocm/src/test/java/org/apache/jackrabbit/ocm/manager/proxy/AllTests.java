@@ -24,7 +24,7 @@ import junit.framework.TestSuite;
 
 /**
  * Package level tests.
- * 
+ *
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 public class AllTests {
@@ -37,7 +37,7 @@ public class AllTests {
         TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.manager.proxy");
         //$JUnit-BEGIN$
         suite.addTestSuite(DigesterProxyTest.class);
-        
+
         //$JUnit-END$
 
         return suite;

@@ -71,10 +71,10 @@ public class FieldNames {
     public static final String PROPERTIES = "_:PROPERTIES".intern();
 
     /**
-     * Name of the field that contains the names of all properties that are set 
-     * on an indexed node. 
+     * Name of the field that contains the names of all properties that are set
+     * on an indexed node.
      */
-    public static final String PROPERTIES_SET = "_:PROPERTIES_SET".intern(); 
+    public static final String PROPERTIES_SET = "_:PROPERTIES_SET".intern();
 
     /**
      * Name of the field that contains the UUIDs of the aggregated nodes. The

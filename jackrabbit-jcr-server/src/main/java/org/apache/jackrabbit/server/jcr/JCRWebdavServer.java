@@ -126,7 +126,7 @@ public class JCRWebdavServer implements DavSessionProvider {
          * Removes the reference from this <code>DavSession</code>. If no
          * more references are present, this <code>DavSession</code> is removed
          * from the internal cache and the underlying session is released by
-         * calling {@link SessionProvider#releaseSession(javax.jcr.Session)} 
+         * calling {@link SessionProvider#releaseSession(javax.jcr.Session)}
          *
          * @see DavSession#removeReference(Object)
          */

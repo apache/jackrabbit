@@ -80,7 +80,7 @@ import java.io.Serializable;
  *                  character *)
  * </pre>
  *
- * @deprecated Use the Path and PathFactory interfaces from 
+ * @deprecated Use the Path and PathFactory interfaces from
  *             the org.apache.jackrabbit.spi package of
  *             the jackrabbit-spi component. A default implementation
  *             is available as
@@ -1237,7 +1237,7 @@ public final class Path implements Serializable {
         private int normalizeIndex(int index) {
             return index == Path.INDEX_UNDEFINED ? Path.INDEX_DEFAULT : index;
         }
-      
+
         /**
          * Returns <code>true</code> if this element denotes the <i>root</i> element,
          * otherwise returns <code>false</code>.

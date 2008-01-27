@@ -172,7 +172,7 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
 
     /**
      * Returns the internal property value as jcr <code>Value</code> array
-     * 
+     *
      * @return the internal property value as jcr <code>Value</code> array
      */
     public Value[] getJcrValues() throws ValueFormatException {

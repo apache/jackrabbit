@@ -26,7 +26,7 @@ import javax.jcr.NamespaceException;
  * the full namespace registry is either not available or some other mechanism
  * is used for resolving namespaces.
  *
- * @deprecated Use the NamespaceResolver interface from 
+ * @deprecated Use the NamespaceResolver interface from
  *             the org.apache.jackrabbit.spi.commons.namespace package of
  *             the jackrabbit-spi-commons component.
  */

@@ -48,7 +48,7 @@ import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
  */
 public class ResidualPropertiesCollectionConverterImpl extends
         AbstractCollectionConverterImpl {
-    
+
     /**
      * Constructor
      *
@@ -176,13 +176,13 @@ public class ResidualPropertiesCollectionConverterImpl extends
             for (Iterator ei = map.entrySet().iterator(); ei.hasNext();) {
                 Map.Entry entry = (Map.Entry) ei.next();
                 String name = String.valueOf(entry.getKey());
-                
+
                 // verify the property is not an existing protected property
                 if (parentNode.hasProperty(name)
                     && parentNode.getProperty(name).getDefinition().isProtected()) {
                     continue;
                 }
-                
+
                 Object value = entry.getValue();
                 if (value instanceof List) {
                     // multi value
@@ -208,17 +208,17 @@ public class ResidualPropertiesCollectionConverterImpl extends
                 + collectionDescriptor.getClassDescriptor().getClassName(), vfe);
         }
     }
-    
+
     /**
      * Returns the AtomicTypeConverter for the element class of the described
      * collection. If no such converter can be found a ObjectContentManagerException
      * is thrown.
-     * 
+     *
      * @param collectionDescriptor The descriptor of the collection for whose
      *      elements an AtomicTypeConverter is requested.
-     *      
+     *
      * @return The AtomicTypeConverter for the elements of the collection
-     * 
+     *
      * @throws ObjectContentManagerException if no such type converter is registered
      */
     private AtomicTypeConverter getAtomicTypeConverter(CollectionDescriptor collectionDescriptor) {
@@ -228,7 +228,7 @@ public class ResidualPropertiesCollectionConverterImpl extends
         if (atc != null) {
             return atc;
         }
-        
+
         throw new ObjectContentManagerException(
             "Cannot get AtomicTypeConverter for element class "
                 + elementClassName + " of class "

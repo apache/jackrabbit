@@ -414,7 +414,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      *
      * @return array of values
      * @throws ValueFormatException if this property is not multi-valued
-     * @throws RepositoryException 
+     * @throws RepositoryException
      */
     public InternalValue[] internalGetValues() throws RepositoryException {
         if (definition.isMultiple()) {

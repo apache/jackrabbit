@@ -67,12 +67,12 @@ public class RepositoryAccessServlet extends HttpServlet {
      * the initialized initial context
      */
     private InitialContext jndiContext;
-    
+
     /**
      * if this is set we try to get a Repository from the ServletContext
      */
     private String repositoryContextAttributeName;
-    
+
     /**
      * the repository
      */
@@ -92,9 +92,9 @@ public class RepositoryAccessServlet extends HttpServlet {
             throw new ServletException("Only one repository access servlet allowed per web-app.");
         }
         getServletContext().setAttribute(CTX_PARAM_THIS, this);
-        
+
         repositoryContextAttributeName = getServletConfig().getInitParameter("repository.context.attribute.name");
-            
+
         log.info("RepositoryAccessServlet initialized.");
     }
 
@@ -250,15 +250,15 @@ public class RepositoryAccessServlet extends HttpServlet {
             return null;
         }
     }
-    
+
     /**
-     *  If our config said so, try to retrieve a Repository from the ServletContext 
+     *  If our config said so, try to retrieve a Repository from the ServletContext
      */
     protected Repository getRepositoryByContextAttribute() {
         Repository result = null;
         if(repositoryContextAttributeName!=null) {
             result = (Repository)getServletContext().getAttribute(repositoryContextAttributeName);
-            
+
             if(log.isDebugEnabled()) {
                 if(result!=null) {
                     log.debug("Got Repository from ServletContext attribute '" + repositoryContextAttributeName + "'");

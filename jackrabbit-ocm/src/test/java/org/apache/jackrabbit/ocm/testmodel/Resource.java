@@ -31,10 +31,10 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 public class Resource
 {
 
-    @Field( jcrName="jcr:mimeType") private String mimeType;    
+    @Field( jcrName="jcr:mimeType") private String mimeType;
     @Field( jcrName="jcr:data") private InputStream data;
     @Field( jcrName="jcr:lastModified") private Calendar lastModified;
-    
+
     public InputStream getData()
     {
         return data;
@@ -60,6 +60,6 @@ public class Resource
     {
         this.mimeType = mimeType;
     }
-    
-    
+
+
 }

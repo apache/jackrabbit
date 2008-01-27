@@ -28,17 +28,17 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 @Node(jcrMixinTypes="mix:referenceable")
 public class A
 {
-	@Field(path=true) private String path; 
+	@Field(path=true) private String path;
 	@Field(uuid=true) private String uuid;
     @Field private String stringData;
 
-    
-    public String getPath() 
+
+    public String getPath()
     {
 		return path;
 	}
 	
-    public void setPath(String path) 
+    public void setPath(String path)
 	{
 		this.path = path;
 	}
@@ -59,6 +59,6 @@ public class A
 	}
 
 
-    
-    
+
+
 }

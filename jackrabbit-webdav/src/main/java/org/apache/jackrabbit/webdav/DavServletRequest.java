@@ -124,7 +124,7 @@ public interface DavServletRequest extends HttpServletRequest {
      * @return Document representing the Xml request body or <code>null</code>
      * if no request body is present.
      * @throws DavException If the request body cannot be parsed into an Xml
-     * Document. 
+     * Document.
      */
     public Document getRequestDocument() throws DavException;
 
@@ -184,7 +184,7 @@ public interface DavServletRequest extends HttpServletRequest {
       * is either of type {@link DavPropertyName}, indicating a &lt;remove&gt;
       * operation, or of type {@link DavProperty}, indicating a &lt;set&gt;
       * operation. Note that ordering is significant here.
-      * 
+      *
       * @return {@link List} of property change operations
       * @throws DavException In case of invalid request body
       */

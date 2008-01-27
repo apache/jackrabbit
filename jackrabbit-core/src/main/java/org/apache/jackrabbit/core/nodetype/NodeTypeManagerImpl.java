@@ -117,7 +117,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      * <code>NodeTypeManager</code>
      */
     private final Map ndCache;
-    
+
     private final DataStore store;
 
     /**
@@ -775,7 +775,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      * Internal helper method for converting a <code>NodeTypeDefinition</code>
      * (using prefixed JCR names) to a <code>NodeTypeDef</code> (using
      * namespace-qualified names).
-     *  
+     *
      * @param definition
      * @return a <code>NodeTypeDef</code>
      * @throws InvalidNodeTypeDefinitionException

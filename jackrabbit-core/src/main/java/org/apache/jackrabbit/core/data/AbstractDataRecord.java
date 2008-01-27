@@ -67,7 +67,7 @@ public abstract class AbstractDataRecord implements DataRecord {
      */
     public boolean equals(Object object) {
         return (object instanceof DataRecord)
-            && identifier.equals(((DataRecord) object).getIdentifier()); 
+            && identifier.equals(((DataRecord) object).getIdentifier());
     }
 
     /**

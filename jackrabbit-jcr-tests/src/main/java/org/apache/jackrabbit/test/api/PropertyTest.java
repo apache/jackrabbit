@@ -33,7 +33,7 @@ import javax.jcr.Session;
  * @tck.config nodename1 name of a child node at <code>testroot</code>.
  * @tck.config propertyname1 name of a string property in
  * <code>nodetype</code>.
- * 
+ *
  * @test
  * @sources PropertyTest.java
  * @executeClass org.apache.jackrabbit.test.api.PropertyTest

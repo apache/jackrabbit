@@ -23,7 +23,7 @@ import javax.jcr.NamespaceException;
  * parsing and formatting of JCR paths. Uncached paths are resolved using
  * the underlying decorated path resolver.
  *
- * @deprecated Use the CachingPathResolver class from 
+ * @deprecated Use the CachingPathResolver class from
  *             the org.apache.jackrabbit.spi.commons.conversion package of
  *             the jackrabbit-spi-commons component.
  */

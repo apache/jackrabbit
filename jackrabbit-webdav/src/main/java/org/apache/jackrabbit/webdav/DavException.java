@@ -157,7 +157,7 @@ public class DavException extends Exception implements XmlSerializable {
             } else {
                 error = DomUtil.createElement(document, XML_ERROR, DavConstants.NAMESPACE);
                 error.appendChild(document.importNode(errorCondition, true));
-            }           
+            }
             return error;
         } else {
             return null;

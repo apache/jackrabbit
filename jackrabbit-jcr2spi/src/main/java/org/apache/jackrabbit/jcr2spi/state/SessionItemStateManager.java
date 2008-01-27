@@ -108,7 +108,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                                    ItemStateValidator validator,
                                    QValueFactory qValueFactory,
                                    ItemStateFactory isf, ManagerProvider mgrProvider) {
-        
+
         this.workspaceItemStateMgr = workspaceItemStateMgr;
         this.transientStateMgr = new TransientItemStateManager();
         isf.addCreationListener(transientStateMgr);
@@ -311,7 +311,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             | ItemStateValidator.CHECK_LOCK
             | ItemStateValidator.CHECK_VERSIONING
             | ItemStateValidator.CHECK_CONSTRAINTS);
-        
+
         // retrieve applicable definition at the new place
         ItemDefinitionProvider defProvider = mgrProvider.getItemDefinitionProvider();
         QNodeDefinition newDefinition = defProvider.getQNodeDefinition(destParent, operation.getDestinationName(), srcState.getNodeTypeName());

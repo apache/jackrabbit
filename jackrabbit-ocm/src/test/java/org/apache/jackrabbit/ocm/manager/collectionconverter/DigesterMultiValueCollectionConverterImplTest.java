@@ -56,7 +56,7 @@ public class DigesterMultiValueCollectionConverterImplTest extends DigesterTestB
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(new TestSuite(DigesterMultiValueCollectionConverterImplTest.class));
     }
-   
+
 
     public void testMultiValue()
     {
@@ -70,26 +70,26 @@ public class DigesterMultiValueCollectionConverterImplTest extends DigesterTestB
 
             MultiValue multiValue = new MultiValue();
             multiValue.setPath("/test");
-            
+
             ArrayList values = new ArrayList();
             values.add("Value1");
             values.add("Value2");
             values.add("Value3");
             values.add("Value4");
             multiValue.setMultiValues(values);
-            
+
             ocm.insert(multiValue);
             ocm.save();
-            
+
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             multiValue = (MultiValue) ocm.getObject( "/test");
             assertNotNull("Object is null", multiValue);
             assertNull("nullMultiValues field is not null", multiValue.getNullMultiValues());
-            assertTrue("Incorrect number of values", multiValue.getMultiValues().size() == 4);            
+            assertTrue("Incorrect number of values", multiValue.getMultiValues().size() == 4);
             assertTrue("Incorrect collection element", ((String) multiValue.getMultiValues().iterator().next()).equals("Value1"));
-            
+
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
@@ -100,29 +100,29 @@ public class DigesterMultiValueCollectionConverterImplTest extends DigesterTestB
             values.add("Value4");
             values.add("Value5");
             multiValue.setMultiValues(values);
-            
+
             ocm.update(multiValue);
             ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
 
             multiValue = (MultiValue) ocm.getObject( "/test");
             assertNotNull("Object is null", multiValue);
             assertNull("nullMultiValues field is not null", multiValue.getNullMultiValues());
-            assertTrue("Incorrect number of values", multiValue.getMultiValues().size() == 5);            
+            assertTrue("Incorrect number of values", multiValue.getMultiValues().size() == 5);
             assertTrue("Incorrect collection element", ((String) multiValue.getMultiValues().iterator().next()).equals("Value1"));
-            
-            
+
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
 
-   
+
 }

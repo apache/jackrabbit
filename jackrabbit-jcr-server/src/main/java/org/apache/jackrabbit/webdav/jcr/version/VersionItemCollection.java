@@ -145,7 +145,7 @@ public class VersionItemCollection extends DefaultItemCollection
      *
      * @return versionhistory that contains this version item
      * @throws RepositoryException
-     * @see javax.jcr.version.Version#getContainingHistory() 
+     * @see javax.jcr.version.Version#getContainingHistory()
      */
     private VersionHistory getVersionHistoryItem() throws RepositoryException {
         return ((Version)item).getContainingHistory();

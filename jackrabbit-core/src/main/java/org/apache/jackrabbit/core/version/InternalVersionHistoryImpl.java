@@ -62,12 +62,12 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * the root version of this history
      */
     private InternalVersion rootVersion;
-    
+
     /**
      * the hashmap of all versions names
      * key = version name
      * value = version id (NodeId)
-     */  
+     */
     private HashMap nameCache = new HashMap();
 
     /**
@@ -96,7 +96,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * the id of the versionable node
      */
     private NodeId versionableId;
-    
+
     /**
      * Creates a new VersionHistory object for the given node state.
      */
@@ -105,7 +105,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         super(vMgr, node);
         init();
     }
-    
+
     /**
      * Initialies the history and loads all internal caches
      *
@@ -118,15 +118,15 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
         // get id
         historyId = node.getNodeId();
-        
+
         // get versionable id
         versionableId = NodeId.valueOf(node.getPropertyValue(NameConstants.JCR_VERSIONABLEUUID).toString());
-        
+
         // get label node
         labelNode = node.getNode(NameConstants.JCR_VERSIONLABELS, 1);
-        
+
         // init label cache
-        try {  
+        try {
             PropertyState[] labels = labelNode.getProperties();
             for (int i = 0; i < labels.length; i++) {
                 PropertyState pState = labels[i];
@@ -144,10 +144,10 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         }
-        
+
         // get root version
         rootVersion = createVersionInstance(NameConstants.JCR_ROOTVERSION);
-        
+
         // get version entries
         ChildNodeEntry[] children = (ChildNodeEntry[])node.getState().getChildNodeEntries().toArray();
         for (int i = 0; i < children.length; i++) {
@@ -157,7 +157,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             }
             nameCache.put(child.getName(), child.getId());
         }
-        
+
         // fix legacy
         if (rootVersion.getSuccessors().length==0) {		
             Iterator iter = nameCache.keySet().iterator();
@@ -185,17 +185,17 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         }
         tempVersionCache.clear();
     }
-    
+
     /**
      * Create a version instance.
      */
     InternalVersionImpl createVersionInstance(Name name) {
         try {
-            NodeStateEx nodeStateEx = node.getNode(name, 1);      
+            NodeStateEx nodeStateEx = node.getNode(name, 1);
             InternalVersionImpl v = createVersionInstance(nodeStateEx);	
             versionCache.put(v.getId(), v);
             vMgr.versionCreated(v);
-            
+
             // add labels
             Iterator iter = labelCache.keySet().iterator();
             while (iter.hasNext()) {
@@ -208,9 +208,9 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             return v;
         } catch (RepositoryException e) {
             throw new IllegalArgumentException("Failed to create version " + name + ".");
-        }  
+        }
     }
-    
+
     /**
      * Create a version instance. May resurrect versions temporarily swapped
      * out when refreshing this history.
@@ -253,12 +253,12 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         NodeId versionId = (NodeId)nameCache.get(versionName);   	
         if (versionId == null) {
             throw new VersionException("Version " + versionName + " does not exist.");
-        }                      
-        
+        }
+
         InternalVersion v = (InternalVersion)versionCache.get(versionId);
         if (v == null) {
             v = createVersionInstance(versionName);
-        }  
+        }
         return v;
     }
 

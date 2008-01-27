@@ -26,7 +26,7 @@ import javax.jcr.observation.EventIterator;
 
 /**
  * Adapter class for turning {@link RangeIterator}s or {@link Iterator}s
- * into {@link EventIterator}s. 
+ * into {@link EventIterator}s.
  */
 public class EventIteratorAdapter extends RangeIteratorDecorator
         implements EventIterator {

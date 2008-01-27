@@ -35,11 +35,11 @@ import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.FieldDescriptor;
 import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
 /**
- * 
- * Map a bean attribute into a reference jcr property. It is not possible to update direclty the referenced bean. 
+ *
+ * Map a bean attribute into a reference jcr property. It is not possible to update direclty the referenced bean.
  * Only the corresponding uuid can be updated in the main object. The modifications on the referenced bean attributes are ignored
- * 
- * 
+ *
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  *
  */
@@ -47,26 +47,26 @@ public class ReferenceBeanConverterImpl extends AbstractBeanConverterImpl  imple
 
 	private final static Log log = LogFactory.getLog(ReferenceBeanConverterImpl.class);
 	
-	public ReferenceBeanConverterImpl(Mapper mapper, ObjectConverter objectConverter, AtomicTypeConverterProvider atomicTypeConverterProvider) 
+	public ReferenceBeanConverterImpl(Mapper mapper, ObjectConverter objectConverter, AtomicTypeConverterProvider atomicTypeConverterProvider)
 	{
 		super(mapper, objectConverter, atomicTypeConverterProvider);	
 	}
 
 	public void insert(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Object object, ClassDescriptor parentClassDescriptor, Object parent)
-			throws ObjectContentManagerException, RepositoryException, 	JcrMappingException 
+			throws ObjectContentManagerException, RepositoryException, 	JcrMappingException
 	{
-		updateReferenceProperty(parentNode, beanDescriptor, beanClassDescriptor, object); 
+		updateReferenceProperty(parentNode, beanDescriptor, beanClassDescriptor, object);
 		
 	}
 
 	public void update(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Object object, ClassDescriptor parentClassDescriptor, Object parent)
-			throws ObjectContentManagerException, RepositoryException,	JcrMappingException 
+			throws ObjectContentManagerException, RepositoryException,	JcrMappingException
 	{
 		updateReferenceProperty(parentNode, beanDescriptor, beanClassDescriptor, object);
 	}
 
 	public Object getObject(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Class beanClass, Object parent)
-			throws ObjectContentManagerException, RepositoryException,JcrMappingException 
+			throws ObjectContentManagerException, RepositoryException,JcrMappingException
 	{
         try {
 			String uuid = parentNode.getProperty(beanDescriptor.getJcrName()).getString();
@@ -81,7 +81,7 @@ public class ReferenceBeanConverterImpl extends AbstractBeanConverterImpl  imple
 	}
 
 	public void remove(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Object object, ClassDescriptor parentClassDescriptor, Object parent)
-	          throws ObjectContentManagerException,	RepositoryException, JcrMappingException 
+	          throws ObjectContentManagerException,	RepositoryException, JcrMappingException
 	{
 		updateReferenceProperty(parentNode, beanDescriptor, beanClassDescriptor, null);	
 	}

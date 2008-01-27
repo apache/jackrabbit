@@ -78,7 +78,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
      *
      * @param ntReg
      * @param ntd
-     * @param ntdMap 
+     * @param ntdMap
      * @return
      * @throws NodeTypeConflictException
      * @throws NoSuchNodeTypeException

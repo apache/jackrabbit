@@ -47,7 +47,7 @@ import org.apache.jackrabbit.ocm.nodemanagement.exception.OperationNotSupportedE
  * @author <a href="mailto:okiessler@apache.org">Oliver Kiessler</a>
  */
 public interface NodeTypeManager {
-    
+
     /** Creates a new namespace in the repository.
      *
      * @param namespace Namespace
@@ -55,19 +55,19 @@ public interface NodeTypeManager {
      */
     void createNamespace(Session session, String namespace, String namespaceUri)
     throws NamespaceCreationException;
-    
+
     /** This method creates JCR node types based on the MappingDescriptor object
      * which is created by a jcr-mapping Mapper implementation. A
      * Mapper reads one to many jcr mapping XML File.
      *
      * @param session Repository session
-     * @param mappingDescriptor Mapping descriptor object created by 
+     * @param mappingDescriptor Mapping descriptor object created by
      * jcr-mapping
      * @throws NodeTypeCreationException NodeTypeCreationException
      */
     void createNodeTypes(Session session, MappingDescriptor mappingDescriptor)
     throws NodeTypeCreationException;
-    
+
     /** This method creates JCR node types based on ClassDescriptor objects
      * which are created by a  jcr-mapping Mapper implementation. A
      * Mapper reads one to many jcr mapping XML File.
@@ -79,7 +79,7 @@ public interface NodeTypeManager {
      */
     void createNodeTypes(Session session, ClassDescriptor[] classDescriptors)
     throws NodeTypeCreationException;
-    
+
     /** This method creates JCR node types based on jcr-mapping xml
      * files.
      *
@@ -90,7 +90,7 @@ public interface NodeTypeManager {
     void createNodeTypesFromMappingFiles(Session session,
             InputStream[] mappingXmlFiles)
             throws NodeTypeCreationException;
-    
+
     /** This method creates a single JCR node type identified by its ClassDescriptor
      * read from the jcr mapping file.
      *
@@ -102,7 +102,7 @@ public interface NodeTypeManager {
      */
     void createSingleNodeType(Session session, ClassDescriptor classDescriptor)
     throws NodeTypeCreationException;
-    
+
     /** This method creates a single JCR node type identified by its jcrNodeType
      * name defined in a jcr-mapping xml file.
      *
@@ -115,7 +115,7 @@ public interface NodeTypeManager {
     void createSingleNodeTypeFromMappingFile(Session session,
             InputStream mappingXmlFile, String jcrNodeType)
             throws NodeTypeCreationException;
-    
+
     /** This method creates a JCR node type from a given Java Bean class by using
      * reflection. It creates required JCR property definitions from primitive
      * Java class properties using the same property name. Non-primitive class
@@ -130,7 +130,7 @@ public interface NodeTypeManager {
     void createNodeTypeFromClass(Session session, Class clazz,
             String jcrNodeType, boolean reflectSuperClasses)
             throws NodeTypeCreationException;
-    
+
     /** This method creates JCR node types from a JCR vendor specific
      * configuration file.
      *
@@ -142,7 +142,7 @@ public interface NodeTypeManager {
     void createNodeTypesFromConfiguration(Session session,
             InputStream jcrRepositoryConfigurationFile)
             throws OperationNotSupportedException, NodeTypeCreationException;
-    
+
     /** This method removes all JCR node types that are defined in one to many
      * jcr-mapping XML files.
      *
@@ -152,7 +152,7 @@ public interface NodeTypeManager {
      */
     void removeNodeTypesFromMappingFile(Session session, InputStream[] mappingXmlFiles)
     throws NodeTypeRemovalException;
-    
+
     /**
      * This method removes JCR node types from a JCR vendor specific configuration file
      * @param session Repository session
@@ -160,8 +160,8 @@ public interface NodeTypeManager {
      * @throws NodeTypeRemovalException
      */
     void removeNodeTypesFromConfiguration(Session session, InputStream jcrRepositoryConfigurationFile)
-    throws NodeTypeRemovalException;    
-    
+    throws NodeTypeRemovalException;
+
     /** This method removes a single JCR node type identified by its jcrNodeType
      * name.
      *
@@ -171,7 +171,7 @@ public interface NodeTypeManager {
      */
     void removeSingleNodeType(Session session, String jcrNodeType)
     throws NodeTypeRemovalException;
-    
+
     /** Returns the names of all node types in the repository identified by a
      * given namespace.
      *
@@ -179,7 +179,7 @@ public interface NodeTypeManager {
      * @return list of matching JCR node types
      */
     List getPrimaryNodeTypeNames(Session session, String namespace);
-    
+
     /** Returns a list of all JCR node types.
      *
      * @return list of all JCR node types

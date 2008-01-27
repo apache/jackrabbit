@@ -23,11 +23,11 @@ import java.util.Arrays;
  * memory than {@link BitSetHits} if the total number of documents is high and
  * and the number of hits is low or if your hits doc numbers are mostly in the
  * upper part of your doc number range.
- * If you don't know about your hit distribution in advance use 
+ * If you don't know about your hit distribution in advance use
  * {@link AdaptingHits} instead.
  */
 public class ArrayHits implements Hits {
-    
+
     private static final int INITIAL_SIZE = 100;
     private int[] hits;
     private int index;

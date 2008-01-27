@@ -23,24 +23,24 @@ import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 
 /**
 * Utility class for managing JCR nodes.
-* 
+*
 *
 * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart Christophe </a>
 * @version $Id: Exp $
 */
 public class NodeUtil
 {
-    
-      
+
+
     /** Item path separator */
     public static final String PATH_SEPARATOR = "/";
-    
+
     private final static Log log = LogFactory.getLog(NodeUtil.class);
-    
-      
+
+
     /**
-     * Check if a path is valid 
-     * 
+     * Check if a path is valid
+     *
      * @param path The path to validate
      * @return true if the path is valid, else false
      */
@@ -49,47 +49,47 @@ public class NodeUtil
         if ((path == null) ||
             (path.equals(PATH_SEPARATOR)) ||
             (path.endsWith(PATH_SEPARATOR)) ||
-            (! path.startsWith(PATH_SEPARATOR)) || 
+            (! path.startsWith(PATH_SEPARATOR)) ||
             (path.equals("")))
         {
-            return false; 
+            return false;
         }
         return true;
-    }    
-    
+    }
+
     /**
      * Get the parent path
      * @param path The path from wich the parent path has to be returned
      * @return The parent path
-     * 
+     *
      * @throws ObjectContentManagerException when the path is invalid
      */
     public static String getParentPath(String path) throws ObjectContentManagerException
     {
         String parentPath = "";
-        
+
         if (!isValidPath(path))
         {
             throw new JcrMappingException("Invalid path : " + path);
         }
-        
-        String[] pathElements = path.split(PATH_SEPARATOR);         
-        
+
+        String[] pathElements = path.split(PATH_SEPARATOR);
+
         // Firts path element should be = empty string because a uri always start with '/'
-        // So, if len=2, means it is a root folder like '/foo'. 
+        // So, if len=2, means it is a root folder like '/foo'.
         // In this case the uri has not parent folder => return "/"
         if (pathElements.length == 2)
         {
             return PATH_SEPARATOR;
         }
-        
+
         for(int i=0; i < pathElements.length -1; i++)
-        {   
+        {
             if (! pathElements[i].equals(""))
-            {    
+            {
                parentPath += PATH_SEPARATOR + pathElements[i];
             }
-        }                  
+        }
         return parentPath;
     }
 
@@ -97,20 +97,20 @@ public class NodeUtil
      * Get the node name
      * @param path  The path from which the node name has to be retrieved
      * @return The node name
-     * 
+     *
      * @throws ObjectContentManagerException when the path is invalid
      */
     public static String getNodeName(String path)  throws ObjectContentManagerException
     {
-        
+
         String[] pathElements = path.split(PATH_SEPARATOR);
-        
+
         if (! isValidPath(path))
         {
             throw new JcrMappingException("Invalid path : " + path);
-        }        
+        }
         return pathElements[pathElements.length-1];
     }
-    
-  
+
+
 }

@@ -33,7 +33,7 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
  * "Test case" that makes sure that the test repository is properly
- * initialized for the JCR API tests. 
+ * initialized for the JCR API tests.
  */
 public class PrepareTestRepository extends AbstractJCRTest {
 

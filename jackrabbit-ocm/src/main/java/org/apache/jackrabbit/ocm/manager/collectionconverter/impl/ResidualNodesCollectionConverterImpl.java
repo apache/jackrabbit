@@ -40,13 +40,13 @@ import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
  * The <code>ResidualNodesCollectionConverterImpl</code> is a collection
  * converter for multiple child nodes accessed through Node.getNodes(String
  * pattern).
- * 
+ *
  * @author <a href="mailto:fmeschbe[at]apache[dot]com">Felix Meschberger</a>
  */
 public class ResidualNodesCollectionConverterImpl extends
         AbstractCollectionConverterImpl {
 
-    
+
     /**
      * Constructor
      *
@@ -67,10 +67,10 @@ public class ResidualNodesCollectionConverterImpl extends
         CollectionDescriptor collectionDescriptor,
         ManageableCollection collection) {
 
-        if (!(collection instanceof Map)) { 
+        if (!(collection instanceof Map)) {
             return;
         }
-        
+
         Map map = (Map) collection;
         for (Iterator ei=map.entrySet().iterator(); ei.hasNext(); ) {
             Map.Entry entry = (Map.Entry) ei.next();
@@ -134,7 +134,7 @@ public class ResidualNodesCollectionConverterImpl extends
     protected ManageableCollection doGetCollection(Session session,
         Node parentNode, CollectionDescriptor collectionDescriptor,
         Class collectionFieldClass) throws RepositoryException {
-        
+
         try {
             String jcrName = getCollectionJcrName(collectionDescriptor);
             NodeIterator ni = parentNode.getNodes(jcrName);

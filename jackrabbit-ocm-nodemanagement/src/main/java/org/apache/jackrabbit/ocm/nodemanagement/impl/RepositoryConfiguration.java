@@ -22,31 +22,31 @@ package org.apache.jackrabbit.ocm.nodemanagement.impl;
  */
 public class RepositoryConfiguration
 {
-    
+
     /**
      */
     private String configurationFile;
-    
+
     /**
      */
     private String repositoryPath;
-    
+
     /**
      */
     private String repositoryName;
-    
+
     /**
      */
     private String workspaceName;
-    
+
     /**
      */
     private boolean useJNDI;
-    
+
     /**
      */
     private String jndiName;
-    
+
     /** Creates a new instance of RepositoryConfiguration. */
     public RepositoryConfiguration()
     {
@@ -62,7 +62,7 @@ public class RepositoryConfiguration
         this.configurationFile = configurationFile;
     }
 
-    public String getRepositoryPath() 
+    public String getRepositoryPath()
     {
         return repositoryPath;
     }

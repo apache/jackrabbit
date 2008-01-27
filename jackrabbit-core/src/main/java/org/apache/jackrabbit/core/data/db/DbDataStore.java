@@ -48,7 +48,7 @@ import javax.jcr.RepositoryException;
 
 /**
  * A data store implementation that stores the records in a database using JDBC.
- * 
+ *
  * Configuration:
  * <pre>
  * &lt;DataStore class="org.apache.jackrabbit.core.data.db.DbDataStore">
@@ -63,7 +63,7 @@ import javax.jcr.RepositoryException;
  * &lt/DataStore>
  * </pre>
  * <p>
- * Only URL, user name and password usually need to be set. 
+ * Only URL, user name and password usually need to be set.
  * The remaining settings are generated using the database URL sub-protocol from the
  * database type resource file.
  * <p>
@@ -88,159 +88,159 @@ import javax.jcr.RepositoryException;
  * blobs at the same time.
  */
 public class DbDataStore implements DataStore {
-    
+
     /**
      * The digest algorithm used to uniquely identify records.
      */
     protected static final String DIGEST = "SHA-1";
-    
+
     /**
      * Logger instance
      */
-    private static Logger log = LoggerFactory.getLogger(DbDataStore.class);    
-    
+    private static Logger log = LoggerFactory.getLogger(DbDataStore.class);
+
     /**
      * The default value for the minimum object size.
      */
     public static final int DEFAULT_MIN_RECORD_LENGTH = 100;
-    
+
     /**
      * The default value for the maximum connections.
      */
     public static final int DEFAULT_MAX_CONNECTIONS = 3;
-    
+
     /**
-     * The minimum modified date. If a file is accessed (read or write) with a modified date 
+     * The minimum modified date. If a file is accessed (read or write) with a modified date
      * older than this value, the modified date is updated to the current time.
      */
     protected long minModifiedDate;
-    
+
     /**
      * The database URL used.
      */
     protected String url;
-    
+
     /**
      * The database driver.
      */
     protected String driver;
-    
+
     /**
      * The user name.
      */
     protected String user;
-    
+
     /**
      * The password
      */
     protected String password;
-    
+
     /**
      * The database type used.
      */
     protected String databaseType;
-    
+
     /**
      * The minimum size of an object that should be stored in this data store.
      */
     protected int minRecordLength = DEFAULT_MIN_RECORD_LENGTH;
-    
+
     /**
      * The maximum number of open connections.
      */
     protected int maxConnections = DEFAULT_MAX_CONNECTIONS;
-    
+
     /**
      * A list of connections
      */
     protected Pool connectionPool;
-    
+
     /**
      * The prefix used for temporary objects.
      */
     protected static final String TEMP_PREFIX = "TEMP_";
-    
+
     /**
      * The prefix for the datastore table, empty by default.
      */
     protected String tablePrefix = "";
-    
+
     /**
      * This is the property 'table'
      * in the [databaseType].properties file, initialized with the default value.
      */
     protected String tableSQL = "DATASTORE";
-    
+
     /**
      * This is the property 'createTable'
      * in the [databaseType].properties file, initialized with the default value.
      */
-    protected String createTableSQL = 
+    protected String createTableSQL =
         "CREATE TABLE ${tablePrefix}${table}(ID VARCHAR(255) PRIMARY KEY, LENGTH BIGINT, LAST_MODIFIED BIGINT, DATA BLOB)";
 
     /**
      * This is the property 'insertTemp'
      * in the [databaseType].properties file, initialized with the default value.
      */
-    protected String insertTempSQL = 
+    protected String insertTempSQL =
         "INSERT INTO ${tablePrefix}${table} VALUES(?, 0, ?, NULL)";
 
     /**
      * This is the property 'updateData'
      * in the [databaseType].properties file, initialized with the default value.
      */
-    protected String updateDataSQL = 
+    protected String updateDataSQL =
         "UPDATE ${tablePrefix}${table} SET DATA=? WHERE ID=?";
-    
+
     /**
      * This is the property 'updateLastModified'
      * in the [databaseType].properties file, initialized with the default value.
      */
-    protected String updateLastModifiedSQL = 
+    protected String updateLastModifiedSQL =
         "UPDATE ${tablePrefix}${table} SET LAST_MODIFIED=? WHERE ID=? AND LAST_MODIFIED<?";
 
     /**
      * This is the property 'update'
      * in the [databaseType].properties file, initialized with the default value.
      */
-    protected String updateSQL = 
+    protected String updateSQL =
         "UPDATE ${tablePrefix}${table} SET ID=?, LENGTH=?, LAST_MODIFIED=? WHERE ID=? AND NOT EXISTS(SELECT ID FROM ${tablePrefix}${table} WHERE ID=?)";
 
     /**
      * This is the property 'delete'
      * in the [databaseType].properties file, initialized with the default value.
      */
-    protected String deleteSQL = 
+    protected String deleteSQL =
         "DELETE FROM ${tablePrefix}${table} WHERE ID=?";
-    
+
     /**
      * This is the property 'deleteOlder'
      * in the [databaseType].properties file, initialized with the default value.
      */
-    protected String deleteOlderSQL = 
+    protected String deleteOlderSQL =
         "DELETE FROM ${tablePrefix}${table} WHERE LAST_MODIFIED<?";
-    
+
     /**
      * This is the property 'selectMeta'
      * in the [databaseType].properties file, initialized with the default value.
      */
-    protected String selectMetaSQL = 
+    protected String selectMetaSQL =
         "SELECT LENGTH, LAST_MODIFIED FROM ${tablePrefix}${table} WHERE ID=?";
-    
+
     /**
      * This is the property 'selectAll'
      * in the [databaseType].properties file, initialized with the default value.
      */
-    protected String selectAllSQL = 
+    protected String selectAllSQL =
         "SELECT ID FROM ${tablePrefix}${table}";
 
     /**
      * This is the property 'selectData'
      * in the [databaseType].properties file, initialized with the default value.
      */
-    protected String selectDataSQL = 
+    protected String selectDataSQL =
         "SELECT ID, DATA FROM ${tablePrefix}${table} WHERE ID=?";
-    
+
     /**
      * The stream storing mechanism used.
      */
@@ -251,27 +251,27 @@ public class DbDataStore implements DataStore {
      * This is the default setting.
      */
     public static final String STORE_TEMP_FILE = "tempFile";
-    
+
     /**
      * Call PreparedStatement.setBinaryStream(..., -1)
      */
     public static final String STORE_SIZE_MINUS_ONE = "-1";
-    
+
     /**
      * Call PreparedStatement.setBinaryStream(..., Integer.MAX_VALUE)
      */
     public static final String STORE_SIZE_MAX = "max";
-    
+
     /**
-     * Copy the stream to a temp file before returning it. 
+     * Copy the stream to a temp file before returning it.
      * Enabled by default to support concurrent reads.
      */
     private boolean copyWhenReading = true;
-    
+
     /**
      * All data identifiers that are currently in use are in this set until they are garbage collected.
      */
-    protected WeakHashMap inUse = new WeakHashMap();    
+    protected WeakHashMap inUse = new WeakHashMap();
 
     /**
      * {@inheritDoc}
@@ -282,8 +282,8 @@ public class DbDataStore implements DataStore {
         ConnectionRecoveryManager conn = getConnection();
         try {
             conn.setAutoReconnect(false);
-            String id = null, tempId = null;            
-            long now;            
+            String id = null, tempId = null;
+            long now;
             for (int i = 0; i < ConnectionRecoveryManager.TRIALS; i++) {
                 try {
                     now = System.currentTimeMillis();
@@ -328,11 +328,11 @@ public class DbDataStore implements DataStore {
             DataIdentifier identifier = new DataIdentifier(digest.digest());
             usesIdentifier(identifier);
             id = identifier.toString();
-            // UPDATE DATASTORE SET ID=?, LENGTH=?, LAST_MODIFIED=? 
-            // WHERE ID=? 
+            // UPDATE DATASTORE SET ID=?, LENGTH=?, LAST_MODIFIED=?
+            // WHERE ID=?
             // AND NOT EXISTS(SELECT ID FROM DATASTORE WHERE ID=?)
             PreparedStatement prep = conn.executeStmt(updateSQL, new Object[]{
-                    id, new Long(length), new Long(now), 
+                    id, new Long(length), new Long(now),
                     tempId, id});
             int count = prep.getUpdateCount();
             if (count == 0) {
@@ -371,11 +371,11 @@ public class DbDataStore implements DataStore {
             }
         }
     }
-    
+
     /**
      * Creates a temp file and copies the data there.
      * The input stream is closed afterwards.
-     * 
+     *
      * @param in the input stream
      * @return the file
      * @throws IOException
@@ -433,7 +433,7 @@ public class DbDataStore implements DataStore {
         } finally {
             conn.closeSilently(rs);
             putBack(conn);
-        }        
+        }
     }
 
     /**
@@ -445,7 +445,7 @@ public class DbDataStore implements DataStore {
 
     /**
      * Set the minimum object length.
-     * 
+     *
      * @param minRecordLength the length
      */
     public void setMinRecordLength(int minRecordLength) {
@@ -501,7 +501,7 @@ public class DbDataStore implements DataStore {
             throw convert("Can not init data store, driver=" + driver + " url=" + url + " user=" + user, e);
         }
     }
-    
+
     protected void initDatabaseType() throws DataStoreException {
         boolean failIfNotFound;
         if (databaseType == null) {
@@ -550,7 +550,7 @@ public class DbDataStore implements DataStore {
         storeStream = getProperty(prop, "storeStream", storeStream);
         if (STORE_SIZE_MINUS_ONE.equals(storeStream)) {
         } else if (STORE_TEMP_FILE.equals(storeStream)) {
-        } else if (STORE_SIZE_MAX.equals(storeStream)) {            
+        } else if (STORE_SIZE_MAX.equals(storeStream)) {
         } else {
             String msg = "Unsupported Stream store mechanism: " + storeStream
                     + " supported are: " + STORE_SIZE_MINUS_ONE + ", "
@@ -559,12 +559,12 @@ public class DbDataStore implements DataStore {
             throw new DataStoreException(msg);
         }
     }
-    
+
     /**
      * Get the expanded property value. The following placeholders are supported:
      * ${table}: the table name (the default is DATASTORE) and
      * ${tablePrefix}: the prefix as set in the configuration (empty by default).
-     * 
+     *
      * @param prop the properties object
      * @param key the key
      * @param defaultValue the default value
@@ -579,7 +579,7 @@ public class DbDataStore implements DataStore {
 
     /**
      * Convert an exception to a data store exception.
-     * 
+     *
      * @param cause the message
      * @param e the root cause
      * @return the data store exception
@@ -603,7 +603,7 @@ public class DbDataStore implements DataStore {
 
     /**
      * Update the modified date of an entry if required.
-     * 
+     *
      * @param identifier the entry identifier
      * @param lastModified the current last modified date
      * @return the new modified date
@@ -631,7 +631,7 @@ public class DbDataStore implements DataStore {
 
     /**
      * {@inheritDoc}
-     */    
+     */
     public InputStream getInputStream(DataIdentifier identifier) throws DataStoreException {
         ConnectionRecoveryManager conn = getConnection();
         try {
@@ -663,10 +663,10 @@ public class DbDataStore implements DataStore {
         return databaseType;
     }
 
-    /** 
+    /**
      * Set the database type. By default the sub-protocol of the JDBC database URL is used if it is not set.
      * It must match the resource file [databaseType].properties. Example: mysql.
-     * 
+     *
      * @param databaseType
      */
     public void setDatabaseType(String databaseType) {
@@ -675,7 +675,7 @@ public class DbDataStore implements DataStore {
 
     /**
      * Get the database driver
-     * 
+     *
      * @return the driver
      */
     public String getDriver() {
@@ -684,9 +684,9 @@ public class DbDataStore implements DataStore {
 
     /**
      * Set the database driver class name.
-     * If not set, the default driver class name for the database type is used, 
+     * If not set, the default driver class name for the database type is used,
      * as set in the [databaseType].properties resource; key 'driver'.
-     * 
+     *
      * @param driver
      */
     public void setDriver(String driver) {
@@ -695,7 +695,7 @@ public class DbDataStore implements DataStore {
 
     /**
      * Get the password.
-     * 
+     *
      * @return the password
      */
     public String getPassword() {
@@ -704,7 +704,7 @@ public class DbDataStore implements DataStore {
 
     /**
      * Set the password.
-     * 
+     *
      * @param password
      */
     public void setPassword(String password) {
@@ -713,7 +713,7 @@ public class DbDataStore implements DataStore {
 
     /**
      * Get the database URL.
-     * 
+     *
      * @return the URL
      */
     public String getUrl() {
@@ -723,7 +723,7 @@ public class DbDataStore implements DataStore {
     /**
      * Set the database URL.
      * Example: jdbc:postgresql:test
-     * 
+     *
      * @param url
      */
     public void setUrl(String url) {
@@ -732,7 +732,7 @@ public class DbDataStore implements DataStore {
 
     /**
      * Get the user name.
-     * 
+     *
      * @return the user name
      */
     public String getUser() {
@@ -741,13 +741,13 @@ public class DbDataStore implements DataStore {
 
     /**
      * Set the user name.
-     * 
+     *
      * @param user
      */
     public void setUser(String user) {
         this.user = user;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -759,18 +759,18 @@ public class DbDataStore implements DataStore {
         }
         list.clear();
     }
-    
+
     protected void usesIdentifier(DataIdentifier identifier) {
         inUse.put(identifier, new WeakReference(identifier));
     }
-    
+
     /**
      * {@inheritDoc}
      */
     public void clearInUse() {
         inUse.clear();
-    }    
-    
+    }
+
     protected synchronized MessageDigest getDigest() throws DataStoreException {
         try {
             return MessageDigest.getInstance(DIGEST);
@@ -778,7 +778,7 @@ public class DbDataStore implements DataStore {
             throw convert("No such algorithm: " + DIGEST, e);
         }
     }
-    
+
     protected ConnectionRecoveryManager getConnection() throws DataStoreException {
         try {
             ConnectionRecoveryManager conn = (ConnectionRecoveryManager) connectionPool.get();
@@ -790,7 +790,7 @@ public class DbDataStore implements DataStore {
             throw new DataStoreException("Can not open a new connection", e);
         }
     }
-    
+
     protected void putBack(ConnectionRecoveryManager conn) throws DataStoreException {
         try {
             connectionPool.add(conn);
@@ -801,7 +801,7 @@ public class DbDataStore implements DataStore {
 
     /**
      * Get the maximum number of concurrent connections.
-     * 
+     *
      * @return the maximum number of connections.
      */
     public int getMaxConnections() {
@@ -810,7 +810,7 @@ public class DbDataStore implements DataStore {
 
     /**
      * Set the maximum number of concurrent connections.
-     * 
+     *
      * @param maxConnections the new value
      */
     public void setMaxConnections(int maxConnections) {
@@ -819,7 +819,7 @@ public class DbDataStore implements DataStore {
 
     /**
      * Create a new connection.
-     * 
+     *
      * @return the new connection
      */
     public ConnectionRecoveryManager createNewConnection() throws RepositoryException {
@@ -829,7 +829,7 @@ public class DbDataStore implements DataStore {
 
     /**
      * Is a stream copied to a temporary file before returning?
-     * 
+     *
      * @return the setting
      */
     public boolean getCopyWhenReading() {
@@ -839,7 +839,7 @@ public class DbDataStore implements DataStore {
     /**
      * The the copy setting. If enabled,
      * a stream is always copied to a temporary file when reading a stream.
-     * 
+     *
      * @param copyWhenReading the new setting
      */
     public void setCopyWhenReading(boolean copyWhenReading) {
@@ -848,7 +848,7 @@ public class DbDataStore implements DataStore {
 
     /**
      * Get the table prefix. The default is empty.
-     * 
+     *
      * @return the table prefix.
      */
     public String getTablePrefix() {
@@ -857,7 +857,7 @@ public class DbDataStore implements DataStore {
 
     /**
      * Set the new table prefix.
-     * 
+     *
      * @param tablePrefix the new value
      */
     public void setTablePrefix(String tablePrefix) {

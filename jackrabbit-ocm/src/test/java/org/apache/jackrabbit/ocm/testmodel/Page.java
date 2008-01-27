@@ -24,25 +24,25 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Collection;
 import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
 import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 
-/** 
+/**
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
- * 
+ *
  */
 @Node(jcrType="ocm:page", discriminator=false)
 public class Page
 {
 	@Field(path=true) String path;
     @Field(jcrName="ocm:title") String title;
-    
-    @Collection(elementClassName=Paragraph.class, collectionConverter=NTCollectionConverterImpl.class) 
+
+    @Collection(elementClassName=Paragraph.class, collectionConverter=NTCollectionConverterImpl.class)
     java.util.Collection paragraphs;
-    
+
     public String getPath()
     {
 		return path;
 	}
-	public void setPath(String path) 
+	public void setPath(String path)
 	{
 		this.path = path;
 	}
@@ -74,7 +74,7 @@ public class Page
     {
         this.title = title;
     }
-    
+
     public void addParagraph(Paragraph paragraph)
     {
     	if (paragraphs == null)
@@ -84,7 +84,7 @@ public class Page
     	
     	paragraphs.add(paragraph);
     }
-    
-    
-    
+
+
+
 }

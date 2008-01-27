@@ -200,7 +200,7 @@ public interface DeltaVConstants {
      * @see OptionsResponse
      */
     public static final String XML_OPTIONS_RESPONSE = "options-response";
-    
+
     /**
      * A DAV:version-history-collection-set element may be included in the OPTIONS
      * request  body to identify collections that may contain version history
@@ -259,7 +259,7 @@ public interface DeltaVConstants {
      * @see org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty
      */
     public static final String XML_REPORT = "report";
-    
+
     /**
      * Top element for the 'DAV:version-tree' report
      */
@@ -308,7 +308,7 @@ public interface DeltaVConstants {
     /**
      * Xml element representing the mandatory root element of a LABEL request
      * body.
-     * 
+     *
      * @see #XML_LABEL_NAME
      * @see #XML_LABEL_ADD
      * @see #XML_LABEL_REMOVE

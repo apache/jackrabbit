@@ -139,10 +139,10 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
      * The synonym provider or <code>null</code> if none is configured.
      */
     private final SynonymProvider synonymProvider;
-    
+
     /**
      * Maps variable names to values.
-     */ 
+     */
     private final Map bindVariableValues;
 
     /**

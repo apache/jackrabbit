@@ -277,7 +277,7 @@ public class LockTest extends AbstractJCRTest {
             // retry with a deep lock
             node.lock(true, false);
         }
-        
+
         assertTrue("Locking of a checked-in node failed.",
                 node.isLocked());
 
@@ -637,7 +637,7 @@ public class LockTest extends AbstractJCRTest {
      * Tests if locks are maintained when child nodes are reordered
      */
     public void testReorder() throws Exception {
-      
+
         Node testNode = setUpSameNameSiblings();
 
         // lock last node (3)
@@ -660,7 +660,7 @@ public class LockTest extends AbstractJCRTest {
      * Tests if locks are maintained when child nodes are reordered
      */
     public void testReorder2() throws Exception {
-        
+
         setUpSameNameSiblings();
 
         // lock first node (1)
@@ -724,7 +724,7 @@ public class LockTest extends AbstractJCRTest {
         Session session = testRootNode.getSession();
 
         Node n1, n2;
-        
+
         try {
             // create two same-name sibling nodes
             n1 = testRootNode.addNode(nodeName1, testNodeType);
@@ -738,7 +738,7 @@ public class LockTest extends AbstractJCRTest {
         n1.addMixin("mix:lockable");
         n2.addMixin("mix:lockable");
         session.save();
-        
+
         // lock both nodes
         n1.lock(true, true);
         n2.lock(true, true);
@@ -768,7 +768,7 @@ public class LockTest extends AbstractJCRTest {
         }
         return false;
     }
-    
+
     /**
      * Create three child nodes with identical names
      */

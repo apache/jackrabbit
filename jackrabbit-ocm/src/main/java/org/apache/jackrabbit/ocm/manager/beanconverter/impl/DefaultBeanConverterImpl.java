@@ -31,10 +31,10 @@ import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.BeanDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 /**
- * 
+ *
  * Default Bean Converter
- * 
- * 
+ *
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  *
  */
@@ -42,50 +42,50 @@ public class DefaultBeanConverterImpl extends AbstractBeanConverterImpl  impleme
 
 	private final static Log log = LogFactory.getLog(DefaultBeanConverterImpl.class);
 	
-	public DefaultBeanConverterImpl(Mapper mapper, ObjectConverter objectConverter, AtomicTypeConverterProvider atomicTypeConverterProvider) 
+	public DefaultBeanConverterImpl(Mapper mapper, ObjectConverter objectConverter, AtomicTypeConverterProvider atomicTypeConverterProvider)
 	{
 		super(mapper, objectConverter, atomicTypeConverterProvider);	
 	}
 
 	public void insert(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Object object, ClassDescriptor parentClassDescriptor, Object parent)
-			throws ObjectContentManagerException, RepositoryException, 	JcrMappingException 
+			throws ObjectContentManagerException, RepositoryException, 	JcrMappingException
 	{
 		objectConverter.insert(session, parentNode, beanDescriptor.getJcrName(), object);
 	}
 
 	public void update(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Object object, ClassDescriptor parentClassDescriptor, Object parent)
-			throws ObjectContentManagerException, RepositoryException,	JcrMappingException 
+			throws ObjectContentManagerException, RepositoryException,	JcrMappingException
 	{
-		try 
+		try
 		{
-			String jcrNodeName = beanDescriptor.getJcrName(); 
+			String jcrNodeName = beanDescriptor.getJcrName();
 			if (parentNode.hasNode(jcrNodeName))
 			{		
 			   objectConverter.update(session, parentNode, beanDescriptor.getJcrName() , object);
 			}
-			else 
+			else
 			{
 			   objectConverter.insert(session, parentNode, beanDescriptor.getJcrName() , object);
 			}
-		} 
-		catch (javax.jcr.RepositoryException e) 
+		}
+		catch (javax.jcr.RepositoryException e)
 		{
 			throw new RepositoryException(e);	
 		}
 	}
 
 	public Object getObject(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Class beanClass, Object parent)
-			throws ObjectContentManagerException, RepositoryException,JcrMappingException 
+			throws ObjectContentManagerException, RepositoryException,JcrMappingException
 	{
         return objectConverter.getObject(session, beanClass, this.getPath(session, beanDescriptor, parentNode));
 		
 	}
 
 	public void remove(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Object object, ClassDescriptor parentClassDescriptor, Object parent)
-	          throws ObjectContentManagerException,	RepositoryException, JcrMappingException 
+	          throws ObjectContentManagerException,	RepositoryException, JcrMappingException
 	{
 		try {
-			if (parentNode.hasNode(beanDescriptor.getJcrName())) 
+			if (parentNode.hasNode(beanDescriptor.getJcrName()))
 			{
 				parentNode.getNode(beanDescriptor.getJcrName()).remove();
 			}

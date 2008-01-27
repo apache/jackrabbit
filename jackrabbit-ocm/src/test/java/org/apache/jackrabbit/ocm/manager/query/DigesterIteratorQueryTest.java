@@ -73,10 +73,10 @@ public class DigesterIteratorQueryTest extends DigesterTestBase
     {
         super.setUp();
 		this.importData();
-        
+
     }
     	
-    
+
     /**
      * Test equalTo
      *
@@ -87,38 +87,38 @@ public class DigesterIteratorQueryTest extends DigesterTestBase
     	try
     	{
     		
-    		  // No scope    		  
+    		  // No scope    		
     	      QueryManager queryManager = this.getQueryManager();
-    	      Filter filter = queryManager.createFilter(Page.class);        	      
-    	      Query query = queryManager.createQuery(filter);    	      
+    	      Filter filter = queryManager.createFilter(Page.class);        	
+    	      Query query = queryManager.createQuery(filter);    	
     	      ObjectContentManager ocm = this.getObjectContentManager();
-    	      
+    	
     	      long  start = System.currentTimeMillis();
     	      Iterator iterator = ocm.getObjectIterator(query);
     	      System.out.println("getObject takes : " + (System.currentTimeMillis() - start));
-    	          	      
+    	          	
     	      start = System.currentTimeMillis();
     	      Collection result = ocm.getObjects(query);
-    	      System.out.println("getObject takes : " + (System.currentTimeMillis() - start));   
-    	      
+    	      System.out.println("getObject takes : " + (System.currentTimeMillis() - start));
+    	
     	      start = System.currentTimeMillis();
     	      iterator = ocm.getObjectIterator(query);
-    	      System.out.println("getObject takes : " + (System.currentTimeMillis() - start));       	      
+    	      System.out.println("getObject takes : " + (System.currentTimeMillis() - start));       	
 
-    	      
+    	
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
 
-    
-    private void importData() throws JcrMappingException 
+
+    private void importData() throws JcrMappingException
     {
-        
+
     	try
 		{
     		ObjectContentManager ocm = getObjectContentManager();
@@ -204,8 +204,8 @@ public class DigesterIteratorQueryTest extends DigesterTestBase
 		{
 			
 			e.printStackTrace();
-		}            
-                
+		}
+
 
     }
 }

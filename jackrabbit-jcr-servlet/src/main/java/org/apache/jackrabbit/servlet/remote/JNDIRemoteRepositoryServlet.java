@@ -58,7 +58,7 @@ import org.apache.jackrabbit.servlet.AbstractRepositoryServlet;
  *   <dt>*</dt>
  *   <dd>
  *     All other init parameters are used as the JNDI environment when
- *     instantiating {@link InitialContext} for looking up the repository. 
+ *     instantiating {@link InitialContext} for looking up the repository.
  *   </dd>
  * </dl>
  * <p>

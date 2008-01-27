@@ -25,15 +25,15 @@ import org.apache.jackrabbit.ocm.exception.IncorrectAtomicTypeException;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter;
 
 /**
- * Double Type Converter 
- * 
+ * Double Type Converter
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 public class DoubleTypeConverterImpl implements AtomicTypeConverter
 {
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter#getValue(java.lang.Object)
 	 */
 	public Value getValue(ValueFactory valueFactory, Object propValue)
@@ -42,13 +42,13 @@ public class DoubleTypeConverterImpl implements AtomicTypeConverter
 		{
 			return null;
 		}
-        
+
 		double value = ((Double) propValue).doubleValue();
 		return valueFactory.createValue(value);
 	}
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter#getObject(javax.jcr.Value)
      */
 	public Object getObject(Value value)
@@ -65,7 +65,7 @@ public class DoubleTypeConverterImpl implements AtomicTypeConverter
 	}
 	
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter#getStringValue(java.lang.Object)
 	 */
 	public String getXPathQueryValue(ValueFactory valueFactory, Object object)

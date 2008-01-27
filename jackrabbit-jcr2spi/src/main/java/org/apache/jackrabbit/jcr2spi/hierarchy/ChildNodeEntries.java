@@ -57,7 +57,7 @@ public interface ChildNodeEntries {
      * @throws RepositoryException
      */
     void reload() throws ItemNotFoundException, RepositoryException;
-    
+
     /**
      * Returns an unmodifiable iterator over all NodeEntry objects present in
      * this ChildNodeEntries collection irrespective of their status.

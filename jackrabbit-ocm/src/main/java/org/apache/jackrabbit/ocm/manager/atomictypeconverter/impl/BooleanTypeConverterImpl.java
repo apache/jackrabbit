@@ -25,14 +25,14 @@ import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter
 
 /**
  * Boolean Type Converter
- * 
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 public class BooleanTypeConverterImpl implements AtomicTypeConverter
 {
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter#getValue(java.lang.Object)
 	 */
 	public Value getValue(ValueFactory valueFactory, Object propValue)
@@ -47,7 +47,7 @@ public class BooleanTypeConverterImpl implements AtomicTypeConverter
 	
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter#getObject(javax.jcr.Value)
      */
 	public Object getObject(Value value)
@@ -63,12 +63,12 @@ public class BooleanTypeConverterImpl implements AtomicTypeConverter
     }
 	
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter#getStringValue(java.lang.Object)
 	 */
 	public String getXPathQueryValue(ValueFactory valueFactory,Object object)
 	{
-		return ((Boolean) object).booleanValue() ? "true()" : "false()"; 
+		return ((Boolean) object).booleanValue() ? "true()" : "false()";
 	}
 
 }

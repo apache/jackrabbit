@@ -65,7 +65,7 @@ import java.io.Serializable;
  * In addition to the prefixed JCR name format, a qualified name can also
  * be represented using the format "<code>{namespaceURI}localPart</code>".
  *
- * @deprecated Use the Name and NameFactory interfaces from 
+ * @deprecated Use the Name and NameFactory interfaces from
  *             the org.apache.jackrabbit.spi package of
  *             the jackrabbit-spi component. A default implementation
  *             is available as

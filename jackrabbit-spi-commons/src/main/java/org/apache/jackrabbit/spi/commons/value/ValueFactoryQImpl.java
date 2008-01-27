@@ -45,10 +45,10 @@ import org.apache.jackrabbit.spi.QValueFactory;
  * @see QValueFactory
  */
 public class ValueFactoryQImpl implements ValueFactory {
-  
+
     private final QValueFactory qfactory;
     private final NamePathResolver resolver;
-  
+
     /**
      * Constructs a new <code>ValueFactoryQImpl</code> based
      * on an existing SPI <code>QValueFactory</code> and a
@@ -60,7 +60,7 @@ public class ValueFactoryQImpl implements ValueFactory {
         this.qfactory = qfactory;
         this.resolver = resolver;
     }
-  
+
     /**
      * Create a new <code>Value</code> based on an existing
      * <code>QValue</code>
@@ -70,7 +70,7 @@ public class ValueFactoryQImpl implements ValueFactory {
     public Value createValue(QValue qvalue) {
         return new QValueValue(qvalue, resolver);
     }
-  
+
     //---------------------------------------------------------< ValueFactory >
 
     /**
@@ -161,7 +161,7 @@ public class ValueFactoryQImpl implements ValueFactory {
     public Value createValue(String value, int type) throws ValueFormatException {
         try {
             QValue qvalue;
-      
+
             if (type == PropertyType.NAME) {
                 Name name = resolver.getQName(value);
                 qvalue = qfactory.create(name);
@@ -171,7 +171,7 @@ public class ValueFactoryQImpl implements ValueFactory {
             } else {
                 qvalue = qfactory.create(value, type);
             }
-      
+
             return new QValueValue(qvalue, resolver);
         } catch (IllegalNameException ex) {
             throw new ValueFormatException(ex);

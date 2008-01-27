@@ -198,11 +198,11 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
 
     /**
      * Sets the JDBC connection URL.
-     * The connection can be created using a JNDI Data Source as well. 
-     * To do that, the driver class name must reference a javax.naming.Context class 
-     * (for example javax.naming.InitialContext), and the URL must be the JNDI URL 
+     * The connection can be created using a JNDI Data Source as well.
+     * To do that, the driver class name must reference a javax.naming.Context class
+     * (for example javax.naming.InitialContext), and the URL must be the JNDI URL
      * (for example java:comp/env/jdbc/Test).
-     * 
+     *
      * @param url the url to set.
      */
     public void setUrl(String url) {
@@ -951,7 +951,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                     }
                 }
                 result.add(current);
-            }        
+            }
             ListNodeIdIterator it = new ListNodeIdIterator(result);
             return it;
         } catch (SQLException e) {
@@ -962,7 +962,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             closeResultSet(rs);
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -1271,7 +1271,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             nodeReferenceUpdateSQL = "update " + schemaObjectPrefix + "REFS set REFS_DATA = ? where NODE_ID = ?";
             nodeReferenceSelectSQL = "select REFS_DATA from " + schemaObjectPrefix + "REFS where NODE_ID = ?";
             nodeReferenceDeleteSQL = "delete from " + schemaObjectPrefix + "REFS where NODE_ID = ?";
-            
+
             bundleSelectAllIdsSQL = "select NODE_ID from " + schemaObjectPrefix + "BUNDLE";
             bundleSelectAllIdsFromSQL = "select NODE_ID from " + schemaObjectPrefix + "BUNDLE WHERE NODE_ID > ? ORDER BY NODE_ID";
         } else {
@@ -1284,13 +1284,13 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             nodeReferenceUpdateSQL = "update " + schemaObjectPrefix + "REFS set REFS_DATA = ? where NODE_ID_HI = ? and NODE_ID_LO = ?";
             nodeReferenceSelectSQL = "select REFS_DATA from " + schemaObjectPrefix + "REFS where NODE_ID_HI = ? and NODE_ID_LO = ?";
             nodeReferenceDeleteSQL = "delete from " + schemaObjectPrefix + "REFS where NODE_ID_HI = ? and NODE_ID_LO = ?";
-            
+
             bundleSelectAllIdsSQL = "select NODE_ID_HI, NODE_ID_LO from " + schemaObjectPrefix + "BUNDLE";
             // need to use HI and LO parameters
             // this is not the exact statement, but not all databases support WHERE (NODE_ID_HI, NODE_ID_LOW) >= (?, ?)
             bundleSelectAllIdsFromSQL = "select NODE_ID_HI, NODE_ID_LO from " + schemaObjectPrefix + "BUNDLE WHERE (NODE_ID_HI >= ?) AND (? IS NOT NULL) ORDER BY NODE_ID_HI, NODE_ID_LO";
         }
-        
+
     }
 
     /**
@@ -1423,20 +1423,20 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     private class ListNodeIdIterator implements NodeIdIterator {
-        
+
         private final ArrayList list;
         private int pos;
-        
+
         ListNodeIdIterator(ArrayList list) {
             this.list = list;
         }
-        
+
         public NodeId nextNodeId() throws NoSuchElementException {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
             return new NodeId((UUID) list.get(pos++));
-        }        
+        }
 
         public boolean hasNext() {
             return pos < list.size();
@@ -1449,7 +1449,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         public void remove() {
             throw new UnsupportedOperationException();
         }
-        
+
     }
 
 }

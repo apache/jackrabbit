@@ -26,7 +26,7 @@ import javax.jcr.RangeIterator;
 
 /**
  * Adapter class for turning {@link RangeIterator}s or {@link Iterator}s
- * into {@link PropertyIterator}s. 
+ * into {@link PropertyIterator}s.
  */
 public class PropertyIteratorAdapter extends RangeIteratorDecorator
         implements PropertyIterator {

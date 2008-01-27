@@ -25,21 +25,21 @@ import org.apache.jackrabbit.ocm.manager.cache.ObjectCache;
 *
 * This is a simple cache implementation that can be used per retrieve requests.
 * This avoids to load duplicated object instance.
-* 
+*
 * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
-* 
+*
 */
-public class RequestObjectCacheImpl implements ObjectCache 
+public class RequestObjectCacheImpl implements ObjectCache
 {
 
 	private Map alreadyCachedObjects = new HashMap();
 	
-	public void cache(String path, Object object) 
+	public void cache(String path, Object object)
 	{		
 		alreadyCachedObjects.put(path, object);
 	}
 	
-	public void clear() 
+	public void clear()
 	{
 		alreadyCachedObjects.clear();
 	}

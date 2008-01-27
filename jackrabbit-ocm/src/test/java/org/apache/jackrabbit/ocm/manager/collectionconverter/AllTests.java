@@ -24,7 +24,7 @@ import junit.framework.TestSuite;
 
 /**
  * Package level tests.
- * 
+ *
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 public class AllTests {
@@ -43,14 +43,14 @@ public class AllTests {
         suite.addTestSuite(AnnotationNTCollectionConverterImplTest.class);
         suite.addTestSuite(AnnotationResidualNodesCollectionConverterImplTest.class);
         suite.addTestSuite(AnnotationResidualPropertiesCollectionConverterImplTest.class);
-        suite.addTestSuite(DigesterArrayListTest.class);        
-        suite.addTestSuite(DigesterDefaultCollectionConverterImplTest.class);                
+        suite.addTestSuite(DigesterArrayListTest.class);
+        suite.addTestSuite(DigesterDefaultCollectionConverterImplTest.class);
         suite.addTestSuite(DigesterHashMapTest.class);
-        suite.addTestSuite(DigesterMultiValueCollectionConverterImplTest.class);                                
+        suite.addTestSuite(DigesterMultiValueCollectionConverterImplTest.class);
         suite.addTestSuite(DigesterNTCollectionConverterImplTest.class);
         suite.addTestSuite(DigesterResidualNodesCollectionConverterImplTest.class);
         suite.addTestSuite(DigesterResidualPropertiesCollectionConverterImplTest.class);
-        
+
         //$JUnit-END$
 
         return suite;

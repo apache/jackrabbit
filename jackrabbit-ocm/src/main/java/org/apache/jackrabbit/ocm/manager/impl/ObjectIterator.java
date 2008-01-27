@@ -40,7 +40,7 @@ import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
  * <p>
  * This Iterator implementation does not support removing elements, therefore
  * the {@link #remove()} method throws a <code>UnsupportOperationException</code>.
- * 
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  *
  */
@@ -48,7 +48,7 @@ public class ObjectIterator implements Iterator
 {
 
     private static final Log log = LogFactory.getLog(ObjectIterator.class);
-    
+
 	private NodeIterator nodeIterator;
 
 	private Session session;
@@ -58,11 +58,11 @@ public class ObjectIterator implements Iterator
     private Object nextResult;
 	
 	/**
-	 * Constructor 
-	 * 
-	 * @param iterator JCR node iterator 
+	 * Constructor
+	 *
+	 * @param iterator JCR node iterator
 	 * @param converter The object converter
-	 * @param session the JCR session 
+	 * @param session the JCR session
 	 */
 	public ObjectIterator(NodeIterator iterator, ObjectConverter converter, Session session)
 	{
@@ -78,24 +78,24 @@ public class ObjectIterator implements Iterator
 	public boolean hasNext() {
         return nextResult != null;
     }
-    
+
 	
     public Object next() {
         if (nextResult == null) {
             throw new NoSuchElementException();
         }
-        
+
         Object result = nextResult;
         seek();
         return result;
     }
 
-    
+
     public void remove() {
         throw new UnsupportedOperationException();
     }
-    
-    
+
+
     private void seek() {
         while (nodeIterator.hasNext()) {
             try {
@@ -113,7 +113,7 @@ public class ObjectIterator implements Iterator
                 log.info("Unexpected Problem while trying to map a node to an object", t);
             }
         }
-        
+
         // no more results
         nextResult = null;
     }

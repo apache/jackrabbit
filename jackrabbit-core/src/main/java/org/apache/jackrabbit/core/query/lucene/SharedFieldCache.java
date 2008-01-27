@@ -101,11 +101,11 @@ class SharedFieldCache {
                                                  SortComparator comparator,
                                                  boolean includeLookup)
             throws IOException {
-        
+
         if (reader instanceof ReadOnlyIndexReader) {
             reader = ((ReadOnlyIndexReader) reader).getBase();
         }
-        
+
         field = field.intern();
         SharedFieldCache.StringIndex ret = lookup(reader, field, prefix, comparator);
         if (ret == null) {

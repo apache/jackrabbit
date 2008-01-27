@@ -29,7 +29,7 @@ import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter
 
 /**
  * Util Date Converter
- * 
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
@@ -37,7 +37,7 @@ public class UtilDateTypeConverterImpl implements AtomicTypeConverter
 {
 	
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter#getValue(java.lang.Object)
 	 */
 	public Value getValue(ValueFactory valueFactory, Object propValue)
@@ -53,7 +53,7 @@ public class UtilDateTypeConverterImpl implements AtomicTypeConverter
 
 
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter#getObject(javax.jcr.Value)
 	 */
 	public Object getObject(Value value)
@@ -71,12 +71,12 @@ public class UtilDateTypeConverterImpl implements AtomicTypeConverter
 	}
 	
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter#getStringValue(java.lang.Object)
 	 */
 	public String getXPathQueryValue(ValueFactory valueFactory, Object object)
 	{
-		try 
+		try
 		{
 			Calendar calendar =  Calendar.getInstance();
 			
@@ -84,8 +84,8 @@ public class UtilDateTypeConverterImpl implements AtomicTypeConverter
 
 			return "xs:dateTime('" + valueFactory.createValue(calendar).getString() + "')";
 
-		} 
-		catch (RepositoryException e) 
+		}
+		catch (RepositoryException e)
 		{
 			throw new IncorrectAtomicTypeException("Impossible to get the sting value ", e);
 		}

@@ -37,17 +37,17 @@ import org.apache.jackrabbit.ocm.nodemanagement.exception.OperationNotSupportedE
  * @author <a href="mailto:okiessler@apache.org">Oliver Kiessler</a>
  */
 public class NodeTypeManagerImpl implements NodeTypeManager {
-    
+
     /**
      * Logging.
      */
     private static Log log = LogFactory.getLog(NodeTypeManagerImpl.class);
-    
+
     /** Creates a new instance of NodeTypeManagerImpl. */
     public NodeTypeManagerImpl()
     {
     }
-    
+
     /**
      * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createNamespace
      */
@@ -55,40 +55,40 @@ public class NodeTypeManagerImpl implements NodeTypeManager {
     throws NamespaceCreationException
     {
     }
-    
+
     public void createNodeTypes(Session session, MappingDescriptor mappingDescriptor)
     throws NodeTypeCreationException
     {
     }
-    
+
     public void createNodeTypes(Session session, ClassDescriptor[] classDescriptors)
     throws NodeTypeCreationException
     {
     }
-    
+
     public void createNodeTypesFromMappingFiles(Session session,
             InputStream[] mappingXmlFiles)
             throws NodeTypeCreationException
     {
     }
-    
+
     public void createSingleNodeType(Session session, ClassDescriptor classDescriptor)
     throws NodeTypeCreationException
     {
     }
-    
+
     public void createSingleNodeTypeFromMappingFile(Session session,
             InputStream mappingXmlFile, String jcrNodeType)
             throws NodeTypeCreationException
     {
     }
-    
+
     public void createNodeTypeFromClass(Session session, Class clazz,
             String jcrNodeType, boolean reflectSuperClasses)
             throws NodeTypeCreationException
     {
     }
-    
+
     /**
      * @see org.apache.jackrabbit.ocm.nodemanagement.NodeTypeManager#createNodeTypesFromConfiguration
      */
@@ -97,22 +97,22 @@ public class NodeTypeManagerImpl implements NodeTypeManager {
             throws OperationNotSupportedException, NodeTypeCreationException
     {
     }
-    
+
     public void removeNodeTypes(Session session, InputStream[] mappingXmlFiles)
     throws NodeTypeRemovalException
     {
     }
-    
+
     public void removeSingleNodeType(Session session, String jcrNodeType)
     throws NodeTypeRemovalException
     {
     }
-    
+
     public List getPrimaryNodeTypeNames(Session session, String namespace)
     {
         return null;
     }
-    
+
     public List getAllPrimaryNodeTypeNames(Session session)
     {
         return null;
@@ -122,6 +122,6 @@ public class NodeTypeManagerImpl implements NodeTypeManager {
 	}
 
 	public void removeNodeTypesFromMappingFile(Session session, InputStream[] mappingXmlFiles) throws NodeTypeRemovalException {
-	}   
-    
+	}
+
 }

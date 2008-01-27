@@ -24,7 +24,7 @@ import junit.framework.TestSuite;
 
 /**
  * Package level tests.
- * 
+ *
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 public class AllTests {
@@ -38,8 +38,8 @@ public class AllTests {
         //$JUnit-BEGIN$
         suite.addTestSuite(AnnotationQueryManagerTest.class);
         suite.addTestSuite(DigesterQueryManagerTest.class);
-       
-        
+
+
         //$JUnit-END$
 
         return suite;

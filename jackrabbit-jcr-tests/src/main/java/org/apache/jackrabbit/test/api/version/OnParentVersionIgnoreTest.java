@@ -71,7 +71,7 @@ public class OnParentVersionIgnoreTest extends AbstractOnParentVersionTest {
         // add 'ignore' child
         String childName = addChildNode(OPVAction).getName();
         versionableNode.save();
-        
+
         versionableNode.restore(v, false);
 
         if (!versionableNode.hasNode(childName)) {

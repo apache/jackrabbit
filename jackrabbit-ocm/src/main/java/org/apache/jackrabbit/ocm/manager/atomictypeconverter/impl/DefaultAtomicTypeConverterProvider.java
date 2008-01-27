@@ -28,7 +28,7 @@ import java.util.Map;
 /**
  * An <code>AtomicTypeConverterProvider</code> that registers by default the
  * convertes available in OCM.
- * 
+ *
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 public class DefaultAtomicTypeConverterProvider extends AtomicTypeConverterProviderImpl {
@@ -38,10 +38,10 @@ public class DefaultAtomicTypeConverterProvider extends AtomicTypeConverterProvi
     public DefaultAtomicTypeConverterProvider() {
         m_converters= registerDefaultAtomicTypeConverters();
     }
-    
+
     /**
      * Full constructor.
-     * 
+     *
      * @param converters a map of classes and their associated <code>AtomicTypeConverter</code>
      * classes.
      */
@@ -49,17 +49,17 @@ public class DefaultAtomicTypeConverterProvider extends AtomicTypeConverterProvi
         this();
         m_converters.putAll(converters);
     }
-    
+
     /**
      * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.AtomicTypeConverterProviderImpl#setAtomicTypeConvertors(java.util.Map)
      */
     public void setAtomicTypeConvertors(Map converters) {
         m_converters.putAll(converters);
     }
-    
+
     protected Map registerDefaultAtomicTypeConverters() {
         Map converters= new HashMap();
-        
+
         converters.put(String.class, StringTypeConverterImpl.class);
         converters.put(InputStream.class, BinaryTypeConverterImpl.class);
         converters.put(long.class, LongTypeConverterImpl.class);
@@ -75,7 +75,7 @@ public class DefaultAtomicTypeConverterProvider extends AtomicTypeConverterProvi
         converters.put(Date.class, UtilDateTypeConverterImpl.class);
         converters.put(byte[].class, ByteArrayTypeConverterImpl.class);
         converters.put(Timestamp.class, TimestampTypeConverterImpl.class);
-        
+
         return converters;
     }
 }

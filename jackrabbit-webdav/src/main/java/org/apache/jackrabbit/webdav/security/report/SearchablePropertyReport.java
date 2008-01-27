@@ -153,7 +153,7 @@ public class SearchablePropertyReport implements Report {
         private final String language;
         private final int hashCode;
 
-        private PrincipalSearchProperty(DavPropertyName propName, 
+        private PrincipalSearchProperty(DavPropertyName propName,
                                         String description,
                                         String language) {
             if (propName == null) {

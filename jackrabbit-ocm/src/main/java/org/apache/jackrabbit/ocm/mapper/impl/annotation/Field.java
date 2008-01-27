@@ -23,40 +23,40 @@ import java.lang.annotation.Target;
 
 /**
  * Allows the annotation of a getter method to show that it will be mapped to a JCR property
- * 
+ *
  * @author Philip Dodds
- * 
+ *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD })
 public @interface Field {
-    
-    String jcrName() default "";    
+
+    String jcrName() default "";
 
     boolean id() default false;
-    
+
     boolean path() default false;
-    
+
     boolean uuid() default false;
-    
-    // Use Object.class as default value 
+
+    // Use Object.class as default value
     // because it is not possible to have a default null value in annotation field
     Class converter() default Object.class;
-    
+
     String jcrDefaultValue() default "";
-    
-    String jcrValueConstraints() default ""; 
-    
-    String jcrType() default ""; 
-    
-    boolean jcrAutoCreated() default false;     
-    
-    boolean jcrMandatory() default false;    
-    
+
+    String jcrValueConstraints() default "";
+
+    String jcrType() default "";
+
+    boolean jcrAutoCreated() default false;
+
+    boolean jcrMandatory() default false;
+
     String jcrOnParentVersion() default "COPY";
-    
+
     boolean jcrProtected() default false;
-    
+
     boolean jcrMultiple () default false;
-    
+
 }

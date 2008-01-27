@@ -49,7 +49,7 @@ import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
  * Only the uuid can be modified, not the associated object
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
- * 
+ *
  */
 public class BeanReferenceCollectionConverterImpl extends AbstractCollectionConverterImpl {
 
@@ -85,7 +85,7 @@ public class BeanReferenceCollectionConverterImpl extends AbstractCollectionConv
     protected void doUpdateCollection(Session session,
                                  Node parentNode,
                                  CollectionDescriptor collectionDescriptor,
-                                 ManageableCollection collection) throws RepositoryException 
+                                 ManageableCollection collection) throws RepositoryException
     {
         String jcrName = getCollectionJcrName(collectionDescriptor);
 
@@ -97,7 +97,7 @@ public class BeanReferenceCollectionConverterImpl extends AbstractCollectionConv
         if (collection == null) {
             return;
         }
-        
+
         addUuidProperties(session, parentNode, collectionDescriptor, collection);
 
     }
@@ -118,7 +118,7 @@ public class BeanReferenceCollectionConverterImpl extends AbstractCollectionConv
             Value[] values = property.getValues();
 
             ManageableCollection collection = ManageableCollectionUtil.getManageableCollection(collectionFieldClass);
-           
+
             for (int i = 0; i < values.length; i++) {
                 String uuid = values[i].getString();
                 String path = session.getNodeByUUID(uuid).getPath();    			
@@ -134,16 +134,16 @@ public class BeanReferenceCollectionConverterImpl extends AbstractCollectionConv
                   + "for class " + collectionDescriptor.getClassDescriptor().getClassName(), e);
         }
     }
-    
+
     /**
      * @see AbstractCollectionConverterImpl#doIsNull(Session, Node, CollectionDescriptor, Class)
      */
-    protected boolean doIsNull(Session session, Node parentNode, CollectionDescriptor collectionDescriptor, Class collectionFieldClass) throws RepositoryException 
+    protected boolean doIsNull(Session session, Node parentNode, CollectionDescriptor collectionDescriptor, Class collectionFieldClass) throws RepositoryException
     {
         String jcrName = getCollectionJcrName(collectionDescriptor);
         return ! parentNode.hasProperty(jcrName);
     }
-    
+
 	private void addUuidProperties(Session session, Node parentNode, CollectionDescriptor collectionDescriptor, ManageableCollection collection) throws UnsupportedRepositoryOperationException, RepositoryException, VersionException, LockException, ConstraintViolationException {
 		try {
             if (collection == null) {
@@ -156,12 +156,12 @@ public class BeanReferenceCollectionConverterImpl extends AbstractCollectionConv
             Iterator collectionIterator = collection.getIterator();
             for (int i = 0; i < collection.getSize(); i++) {
                 Object object = collectionIterator.next();
-				if (object != null) 
+				if (object != null)
 				{
 					ClassDescriptor classDescriptor = mapper.getClassDescriptorByClass(object.getClass());
 
 					FieldDescriptor fieldDescriptor = classDescriptor.getUuidFieldDescriptor();
-					if (fieldDescriptor == null) 
+					if (fieldDescriptor == null)
 					{
 						throw new JcrMappingException("The bean doesn't have an uuid - classdescriptor : "
 										              + classDescriptor.getClassName());
@@ -175,11 +175,11 @@ public class BeanReferenceCollectionConverterImpl extends AbstractCollectionConv
             parentNode.setProperty(jcrName, values);
         }
         catch(Exception e) {
-            throw new ObjectContentManagerException("Cannot insert collection field : " 
+            throw new ObjectContentManagerException("Cannot insert collection field : "
                     + collectionDescriptor.getFieldName()
                     + " of class "
                     + collectionDescriptor.getClassDescriptor().getClassName(), e);
         }
 	}
-    
+
 }

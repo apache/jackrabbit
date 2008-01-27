@@ -194,7 +194,7 @@ abstract class DocId {
          * The previously calculated foreign segment document id.
          */
         private ForeignSegmentDocId doc;
-        
+
         /**
          * Creates a <code>DocId</code> based on a Node uuid.
          *

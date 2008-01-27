@@ -27,8 +27,8 @@ public class NamespaceCreationException extends BaseNodeManagementException
     public NamespaceCreationException()
     {
     }
-    
-    /** Creates a new instance of NamespaceCreationException. 
+
+    /** Creates a new instance of NamespaceCreationException.
      * @param wrappedException Root exception
      */
     public NamespaceCreationException(Exception wrappedException)

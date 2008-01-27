@@ -123,7 +123,7 @@ public class WorkspaceConfig {
     public ISMLockingConfig getISMLockingConfig() {
     	return ismLockingConfig;
     }
-    
+
     /**
      * Returns the file system configuration.
      *

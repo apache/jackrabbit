@@ -33,22 +33,22 @@ public class HierarchyNode
 	@Field(jcrName="jcr:created") private Calendar creationDate;
 	
 	
-	public String getPath() 
+	public String getPath()
 	{
 		return path;
 	}
 
-	public void setPath(String path) 
+	public void setPath(String path)
 	{
 		this.path = path;
 	}
 	
-	public Calendar getCreationDate() 
+	public Calendar getCreationDate()
 	{
 		return creationDate;
 	}
 
-	public void setCreationDate(Calendar creationDate) 
+	public void setCreationDate(Calendar creationDate)
 	{
 		this.creationDate = creationDate;
 	}

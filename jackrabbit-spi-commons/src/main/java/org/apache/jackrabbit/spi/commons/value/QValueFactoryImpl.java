@@ -80,7 +80,7 @@ public final class QValueFactoryImpl implements QValueFactory {
         if (value == null) {
             throw new IllegalArgumentException("Cannot create QValue from null value.");
         }
-        
+
         try {
             switch (type) {
                 case PropertyType.BOOLEAN:
@@ -341,7 +341,7 @@ public final class QValueFactoryImpl implements QValueFactory {
             if (type == PropertyType.DOUBLE) {
                 return ((Double) val).doubleValue();
             } else if (type == PropertyType.DATE) {
-                return ((Calendar) val).getTimeInMillis(); 
+                return ((Calendar) val).getTimeInMillis();
             } else {
                 try {
                     return Double.parseDouble(getString());
@@ -360,7 +360,7 @@ public final class QValueFactoryImpl implements QValueFactory {
             } else if (type == PropertyType.DOUBLE) {
                 return ((Double) val).longValue();
             } else if (type == PropertyType.DATE) {
-                return ((Calendar) val).getTimeInMillis(); 
+                return ((Calendar) val).getTimeInMillis();
             } else {
                 try {
                     return Long.parseLong(getString());
@@ -444,7 +444,7 @@ public final class QValueFactoryImpl implements QValueFactory {
          * @return The formatted String of the internal Calendar value.
          * @throws RepositoryException
          * @see QValue#getString()
-         * @see ISO8601#format(Calendar) 
+         * @see ISO8601#format(Calendar)
          */
         public String getString() throws RepositoryException {
             return formattedStr;

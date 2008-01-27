@@ -365,7 +365,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
-     * 
+     *
      * @param qLabel
      * @return
      * @throws VersionException
@@ -414,7 +414,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
-     * 
+     *
      * @param entry
      * @throws RepositoryException
      */

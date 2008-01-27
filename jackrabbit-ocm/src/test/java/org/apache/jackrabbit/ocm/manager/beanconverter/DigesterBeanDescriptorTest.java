@@ -40,12 +40,12 @@ import org.apache.jackrabbit.ocm.testmodel.Paragraph;
 /**
  * ObjectConverter test for bean-descriptor with inner bean inlined and inner bean with
  * custom converter.
- * 
+ *
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 public class DigesterBeanDescriptorTest extends DigesterTestBase {
 
-    
+
     public DigesterBeanDescriptorTest(String testname) {
         super(testname);
     }
@@ -55,8 +55,8 @@ public class DigesterBeanDescriptorTest extends DigesterTestBase {
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(new TestSuite(DigesterBeanDescriptorTest.class));
     }
-    
-    
+
+
     /**
      * @see org.apache.jackrabbit.ocm.DigesterTestBase#setUp()
      */
@@ -72,12 +72,12 @@ public class DigesterBeanDescriptorTest extends DigesterTestBase {
 		FakeBeanConverter.cleanUpLog();
 		cleanUpRepisotory();
 		super.tearDown();
-	}    
+	}
 
-    public void testBasic() throws Exception 
+    public void testBasic() throws Exception
     {
     	
-    	try 
+    	try
     	{
     		// ------------------------------------------------------------------------
     		// Create a main object (a) with a null attribute (A.b)
@@ -89,7 +89,7 @@ public class DigesterBeanDescriptorTest extends DigesterTestBase {
 			ocm.save();
 			
     		// ------------------------------------------------------------------------
-    		// Retrieve 
+    		// Retrieve
     		// ------------------------------------------------------------------------
 			a = (A) ocm.getObject("/test");
 			assertNotNull("Object is null", a);
@@ -104,7 +104,7 @@ public class DigesterBeanDescriptorTest extends DigesterTestBase {
 			ocm.save();
 
     		// ------------------------------------------------------------------------
-    		// Retrieve 
+    		// Retrieve
     		// ------------------------------------------------------------------------
 			a = (A) ocm.getObject("/test");
 			assertNotNull("Object is null", a);
@@ -115,8 +115,8 @@ public class DigesterBeanDescriptorTest extends DigesterTestBase {
     		// ------------------------------------------------------------------------			
 			ocm.remove("/test");
 			ocm.save();
-		} 
-    	catch (RuntimeException e) 
+		}
+    	catch (RuntimeException e)
     	{
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);    		
@@ -125,7 +125,7 @@ public class DigesterBeanDescriptorTest extends DigesterTestBase {
     	
     }
     public void testInlined() throws Exception {
-        
+
         B expB = new B();
         expB.setB1("b1value");
         expB.setB2("b2value");
@@ -133,60 +133,60 @@ public class DigesterBeanDescriptorTest extends DigesterTestBase {
         expD.setPath("/someD");
         expD.setD1("d1value");
         expD.setB1(expB);
-        
+
        ocm.insert( expD);
        ocm.save();
-        
+
         D actD = (D) ocm.getObject( "/someD");
-        
+
         assertEquals(expD.getD1(), actD.getD1());
         assertEquals(expB.getB1(), actD.getB1().getB1());
         assertEquals(expB.getB2(), actD.getB1().getB2());
-        
+
         DFull actDFull = (DFull) ocm.getObject( DFull.class,  "/someD");
-        
+
         assertEquals(expD.getD1(), actDFull.getD1());
         assertEquals(expB.getB1(), actDFull.getB1());
         assertEquals(expB.getB2(), actDFull.getB2());
-        
+
         expB.setB1("updatedvalue1");
-        
+
         ocm.update( expD);
         getSession().save();
-        
+
         actD = (D) ocm.getObject( "/someD");
-        
+
         assertEquals(expD.getD1(), actD.getD1());
         assertEquals(expB.getB1(), actD.getB1().getB1());
         assertEquals(expB.getB2(), actD.getB1().getB2());
-        
+
         actDFull = (DFull) ocm.getObject( DFull.class,  "/someD");
-        
+
         assertEquals(expD.getD1(), actDFull.getD1());
         assertEquals(expB.getB1(), actDFull.getB1());
         assertEquals(expB.getB2(), actDFull.getB2());
-        
-            
+
+
         expD.setB1(null);
         ocm.update( expD);
         getSession().save();
-        
+
         actD = (D) ocm.getObject(  "/someD");
-        
+
         assertEquals(expD.getD1(), actD.getD1());
         assertNull("b1 was not  removed", actD.getB1());
-        
+
         actDFull = (DFull) ocm.getObject( DFull.class,  "/someD");
         assertEquals(expD.getD1(), actDFull.getD1());
         assertNull("b1 was not  removed", actDFull.getB1());
         assertNull("b2 wan not remove", actDFull.getB2());
 
     }
-    
-    
-    public void testBeanDescriptorConverter() throws Exception 
+
+
+    public void testBeanDescriptorConverter() throws Exception
     {
-        
+
         B expB = new B();
         expB.setB1("b1value");
         expB.setB2("b2value");
@@ -194,34 +194,34 @@ public class DigesterBeanDescriptorTest extends DigesterTestBase {
         expE.setPath("/someD");
         expE.setD1("d1value");
         expE.setB1(expB);
-        
-        
+
+
         ocm.insert( expE);
         ocm.save();
-       
+
         E actE = (E) ocm.getObject( "/someD");
-       
+
         assertEquals(expE.getD1(), actE.getD1());
-        
+
         expE.setD1("updatedvalueD1");
         expB.setB1("updatedvalue1");
-        
+
         ocm.update( expE);
         ocm.save();
-               
+
         actE = (E) ocm.getObject(  "/someD");
-        
+
         assertEquals(expE.getD1(), actE.getD1());
-                        
+
         expE.setB1(null);
         ocm.update( expE);
         ocm.save();
-        
+
         actE = (E) ocm.getObject(  "/someD");
-        
-        assertEquals(expE.getD1(), actE.getD1());        
-        
-   
+
+        assertEquals(expE.getD1(), actE.getD1());
+
+
         List messages = FakeBeanConverter.getLog();
         assertEquals(6, messages.size());
         assertEquals("insert at path /someD", messages.get(0));
@@ -232,7 +232,7 @@ public class DigesterBeanDescriptorTest extends DigesterTestBase {
         assertEquals("get from path /someD", messages.get(5));
 
     }
-    
+
     public void testParentBeanConverter() throws Exception
     {
         try
@@ -246,37 +246,37 @@ public class DigesterBeanDescriptorTest extends DigesterTestBase {
             Page page = new Page();
             page.setPath("/test");
             page.setTitle("Page Title");
-            
+
             Collection paragraphs = new ArrayList();
-            
+
             paragraphs.add(new Paragraph("Para 1"));
             paragraphs.add(new Paragraph("Para 2"));
             paragraphs.add(new Paragraph("Para 3"));
             page.setParagraphs(paragraphs);
-            
+
             ocm.insert(page);
             ocm.save();
-            
+
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             page = (Page) ocm.getObject("/test");
             paragraphs = page.getParagraphs();
             for (Iterator iter = paragraphs.iterator(); iter.hasNext();) {
 				Paragraph paragraph = (Paragraph) iter.next();
 				System.out.println("Paragraph path : " + paragraph.getPath());				
-			}            
+			}
             Paragraph p1 = (Paragraph) ocm.getObject("/test/collection-element[2]");
             Page paraPage = p1.getPage();
             assertNotNull("Parent page is null", paraPage);
             assertTrue("Invalid parent page", paraPage.getPath().equals("/test"));
-            
+
             // --------------------------------------------------------------------------------
             // Remove the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             ocm.remove("/test");
             ocm.save();
-            
+
         }
         catch (Exception e)
         {
@@ -285,5 +285,5 @@ public class DigesterBeanDescriptorTest extends DigesterTestBase {
         }
     	
     }
-    
+
 }

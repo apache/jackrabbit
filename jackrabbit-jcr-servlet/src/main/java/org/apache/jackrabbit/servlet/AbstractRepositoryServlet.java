@@ -166,7 +166,7 @@ public abstract class AbstractRepositoryServlet extends HttpServlet {
 
         String info = request.getPathInfo();
         if (info == null || info.equals("/")) {
-            Properties descriptors = new Properties(); 
+            Properties descriptors = new Properties();
             String[] keys = repository.getDescriptorKeys();
             for (int i = 0; i < keys.length; i++) {
                 descriptors.setProperty(

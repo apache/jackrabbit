@@ -20,23 +20,23 @@ import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 
 /**
  * This component read the mapping file and gives an access to the ClassDescriptors (the mapping object model)
- * 
+ *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart Christophe </a>
- * 
+ *
  */
 public interface Mapper
 {
     /**
      * Get the mapping defition to be used for a specific java bean
      * @param clazz The java bean class
-     * @return The mapping class found for the desired java bean class 
+     * @return The mapping class found for the desired java bean class
      */
     public abstract ClassDescriptor getClassDescriptorByClass(Class clazz);
-    
+
     /**
      * Get the mapping defition to be used for a specific JCR node type
      * @param jcrNodeType the jcr node type
-     * @return The mapping class found for the desired java bean class 
+     * @return The mapping class found for the desired java bean class
      */
-    public abstract ClassDescriptor getClassDescriptorByNodeType(String jcrNodeType);    
+    public abstract ClassDescriptor getClassDescriptorByNodeType(String jcrNodeType);
 }

@@ -34,7 +34,7 @@ import javax.jcr.query.QueryResult;
  * The tests require the following content in the default workspace:
  * <p/>
  * At least three nodes with the name {@link #nodeName1} under the
- * {@link #testRoot}. 
+ * {@link #testRoot}.
  *
  * @test
  * @sources XPathPosIndexTest.java

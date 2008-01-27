@@ -45,7 +45,7 @@ public interface ChildPropertyEntries {
     /**
      * Returns an unmodifiable collection containing all <code>PropertyEntry</code>
      * objects present.
-     * 
+     *
      * @return Collection of all <code>PropertyEntry</code> objects present.
      */
     public Collection getPropertyEntries();

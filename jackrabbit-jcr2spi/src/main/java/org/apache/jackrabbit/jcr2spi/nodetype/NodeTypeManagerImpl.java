@@ -336,7 +336,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
             throw new NoSuchNodeTypeException(nodeTypeName, e);
         }
     }
-    
+
     //-----------------------------------------------------------< Dumpable >---
     /**
      * {@inheritDoc}

@@ -44,9 +44,9 @@ import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
 
 /**
  * Helper class used to map simple fields.
- * 
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
- * 
+ *
  */
 public class SimpleFieldsHelper
 {
@@ -59,11 +59,11 @@ public class SimpleFieldsHelper
 
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param converterProvider The atomic type converter provider
-	 * 
+	 *
 	 */
-	public SimpleFieldsHelper(AtomicTypeConverterProvider converterProvider) 
+	public SimpleFieldsHelper(AtomicTypeConverterProvider converterProvider)
 	{
 		this.atomicTypeConverterProvider = converterProvider;
 	}
@@ -71,19 +71,19 @@ public class SimpleFieldsHelper
 	
 	/**
 	 * Retrieve simple fields (atomic fields)
-	 * 
+	 *
 	 * @throws JcrMappingException
 	 * @throws org.apache.jackrabbit.ocm.exception.RepositoryException
 	 */
-	public Object retrieveSimpleFields(Session session, ClassDescriptor classDescriptor, Node node, Object object) 
+	public Object retrieveSimpleFields(Session session, ClassDescriptor classDescriptor, Node node, Object object)
 	{
 		Object initializedBean = object;
 		try {
 			Iterator fieldDescriptorIterator = classDescriptor.getFieldDescriptors().iterator();
 
-			if (classDescriptor.usesNodeTypePerHierarchyStrategy() && classDescriptor.hasDiscriminator()) 
+			if (classDescriptor.usesNodeTypePerHierarchyStrategy() && classDescriptor.hasDiscriminator())
 			{
-				if (!node.hasProperty(ManagerConstant.DISCRIMINATOR_PROPERTY_NAME)) 
+				if (!node.hasProperty(ManagerConstant.DISCRIMINATOR_PROPERTY_NAME))
 				{
 					throw new ObjectContentManagerException("Class '"
 							+ classDescriptor.getClassName()
@@ -134,11 +134,11 @@ public class SimpleFieldsHelper
 	private Object retrieveSimpleField(ClassDescriptor classDescriptor, Node node, Object initializedBean, FieldDescriptor fieldDescriptor, String fieldName, String propertyName) throws RepositoryException, ValueFormatException, PathNotFoundException {
 
 	    Value propValue;
-		if (node.hasProperty(propertyName)) 
+		if (node.hasProperty(propertyName))
 		{
 			propValue = node.getProperty(propertyName).getValue();
 			
-		} 
+		}
 		else if (fieldDescriptor.getJcrDefaultValue() != null)
 		{
 		    ValueFactory vf = node.getSession().getValueFactory();
@@ -147,7 +147,7 @@ public class SimpleFieldsHelper
 		else
 		{
 		    PropertyDefinition propDef = getPropertyDefinition(node, propertyName);
-		    
+		
 		    if (propDef != null && propDef.getDefaultValues() != null && propDef.getDefaultValues().length == 1)
 		    {
                 log.debug("retrieveSimpleField: Use default value from property definition for missing mapped property " + propertyName + " of class '" + classDescriptor.getClassName() + "'");
@@ -162,13 +162,13 @@ public class SimpleFieldsHelper
         // HINT: lazy initialize target bean - The bean can be null when it is inline
 		if (initializedBean == null)
 		{
-		    
+		
 		    // if we do not have a value, we do nothing at all and just return null
 		    if (propValue == null)
 		    {
 		        return null;
 		    }
-		    
+		
 		    // otherwise create the bean to set the value
 		    initializedBean = ReflectionUtils.newInstance(classDescriptor.getClassName());
 		}
@@ -217,7 +217,7 @@ public class SimpleFieldsHelper
 		
 		boolean protectedProperty = isProtectedProperty(objectNode, fieldDescriptor, jcrName);
 
-		if (!protectedProperty) 
+		if (!protectedProperty)
 		{ // DO NOT TRY TO WRITE PROTECTED  PROPERTIES
 			
 			Object fieldValue = ReflectionUtils.getNestedProperty(object, fieldName);
@@ -240,12 +240,12 @@ public class SimpleFieldsHelper
 	}
 
 
-	private boolean isProtectedProperty(Node objectNode, FieldDescriptor fieldDescriptor, String jcrName) throws RepositoryException, PathNotFoundException 
+	private boolean isProtectedProperty(Node objectNode, FieldDescriptor fieldDescriptor, String jcrName) throws RepositoryException, PathNotFoundException
 	{
 		// Return true if the property is defined as protected in the mapping file
 		if (fieldDescriptor.isJcrProtected())
 		{
-			return true; 
+			return true;
 		}
 
 		// Check if the property is defined as protected in the JCR repo
@@ -255,7 +255,7 @@ public class SimpleFieldsHelper
 		{
 		    return objectNode.getProperty(jcrName).getDefinition().isProtected();
 		}
-		    
+		
 		// 2. Find a definition for the property and checks its protected status
 		PropertyDefinition definition = getPropertyDefinition(objectNode, jcrName);
 		if (definition != null)
@@ -316,12 +316,12 @@ public class SimpleFieldsHelper
 	 * name is found which is single-valued, this property definition is
 	 * returned. Otherwise the first residual property definition which is
 	 * single-valued is returned. Otherwise <code>null</code> is returned.
-	 * 
+	 *
 	 * @param nodeType The <code>NodeType</code> to search for matching node
 	 *         type definitions for the given property.
 	 * @param propertyName The name of the property for which the
 	 *         <code>PropertyDefinition</code> is requested.
-	 *         
+	 *
 	 * @return The <code>PropertyDefinition</code> for the given property or
 	 *         <code>null</code> if none can be found in the type.
 	 */
@@ -335,20 +335,20 @@ public class SimpleFieldsHelper
             {
                 continue;
             }
-            
+
             // if we have an exact match, use this and return
             if (propertyName.equals(pd[i].getName()))
             {
                 return pd[i];
             }
-            
+
             // if we have a residual property definition consider as candidate
             if (pd[i].getName() == null && candidate == null)
             {
                 candidate = pd[i];
             }
         }
-        
+
         // return the potential residal candidate definition
         return candidate;
 	}
@@ -362,44 +362,44 @@ public class SimpleFieldsHelper
 	 * If a definition whose name is the same as the <code>propertyName</code>
 	 * is found, this definition is returned. Otherwise a residual property
 	 * definition may be returned.
-	 * 
+	 *
 	 * @param node The <code>Node</code> whose primary and mixin node types are
 	 *         to be scanned for a single-valued property definition.
 	 * @param propertyName The name of the property for which the property
 	 *         definition is to be returned.
-	 *         
+	 *
 	 * @return The <code>PropertyDefinition</code> for the named property or
 	 *         <code>null</code> if no single-valued exact or residual property
 	 *         definintion may be found in the node's primary or mixin node
 	 *         types.
-	 *         
+	 *
 	 * @throws RepositoryException If an error occurrs accessing the primary or
 	 *         mixin node types of the node.
 	 */
 	private PropertyDefinition getPropertyDefinition(Node node, String propertyName) throws RepositoryException {
-	    
+	
 	    // try to find the definition in the primary node type
         NodeType nt = node.getPrimaryNodeType();
         PropertyDefinition propDef = getPropertyDefinition(nt, propertyName);
-        
+
         // return the definition if it is not residual
         if (propDef != null && propDef.getName() != null)
         {
             return propDef;
         }
-        
+
         // otherwise look it up in any of the mixin node types
         NodeType[] mixins = node.getMixinNodeTypes();
         for (int i = 0; mixins != null && i < mixins.length; i++)
         {
             PropertyDefinition candidate = getPropertyDefinition(mixins[i], propertyName);
-            
+
             // use this property definition if not residual
             if (candidate != null && candidate.getName() != null)
             {
                 return propDef;
             }
-            
+
             // otherwise use this if we do not have a candidate yet
             if (propDef == null)
             {

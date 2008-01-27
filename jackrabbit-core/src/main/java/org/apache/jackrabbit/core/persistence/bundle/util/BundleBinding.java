@@ -569,7 +569,7 @@ public class BundleBinding extends ItemStateBinding {
                             String msg = "Error while storing blob. id="
                                 + state.getId() + " idx=" + i + " size=" + val.getBLOBFileValue().getLength();
                             log.error(msg, e);
-                            throw new IOException(msg);                            
+                            throw new IOException(msg);
                         }
                         out.writeUTF(val.toString());
                         break;

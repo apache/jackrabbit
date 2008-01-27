@@ -303,7 +303,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
                         }
                     }
                 } else {
-                    // a non-SQLException has been thrown, 
+                    // a non-SQLException has been thrown,
                     // proceed with error processing
                     break;
                 }

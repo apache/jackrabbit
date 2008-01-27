@@ -80,8 +80,8 @@ public class FilterImpl implements Filter {
      */
     public String getScope() {
         return this.scope;
-    }    
-    
+    }
+
     public String getNodeName() {
 		return nodeName;
 	}
@@ -228,7 +228,7 @@ public class FilterImpl implements Filter {
         {
     	   if ( null == jcrExpression || "".equals(jcrExpression) )
     	   {
-    		   jcrExpression =    ((FilterImpl) filter).getJcrExpression() ;    		   
+    		   jcrExpression =    ((FilterImpl) filter).getJcrExpression() ;    		
     	   }
     	   else
     	   {
@@ -247,7 +247,7 @@ public class FilterImpl implements Filter {
         {
      	   if ( null == jcrExpression || "".equals(jcrExpression) )
     	   {
-    		   jcrExpression =    ((FilterImpl) filter).getJcrExpression() ;    		   
+    		   jcrExpression =    ((FilterImpl) filter).getJcrExpression() ;    		
     	   }
     	   else
     	   {
@@ -256,7 +256,7 @@ public class FilterImpl implements Filter {
         }
         return this;
     }
-    
+
 
     public Filter addJCRExpression(String jcrExpression) {
        addExpression(jcrExpression);
@@ -286,7 +286,7 @@ public class FilterImpl implements Filter {
     }
 
     private void addExpression(String jcrExpression) {
-            
+
     	     if (this.jcrExpression.length() >0) {
               	this.jcrExpression += " and ";
         }
@@ -296,6 +296,6 @@ public class FilterImpl implements Filter {
 	public String toString() {
 		return getJcrExpression();
 	}
-    
-   
+
+
 }

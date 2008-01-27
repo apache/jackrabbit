@@ -271,14 +271,14 @@ public class QueryResultImpl implements QueryResult {
         if (log.isDebugEnabled()) {
             log.debug("getResults(" + size + ")");
         }
-        
+
         long maxResultSize = size;
-        
+
         // is there any limit?
         if (limit > 0) {
             maxResultSize = limit;
         }
-        
+
         if (resultNodes.size() >= maxResultSize) {
             // we already have them all
             return;
@@ -323,7 +323,7 @@ public class QueryResultImpl implements QueryResult {
             }
         }
     }
-    
+
     /**
      * Returns the total number of hits. This is the number of results you
      * will get get if you don't set any limit or offset. Keep in mind that this

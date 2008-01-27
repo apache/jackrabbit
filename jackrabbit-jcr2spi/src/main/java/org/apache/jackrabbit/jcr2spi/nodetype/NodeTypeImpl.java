@@ -105,7 +105,7 @@ public class NodeTypeImpl implements NodeType {
     private QValueFactory qValueFactory() throws RepositoryException {
         return mgrProvider.getQValueFactory();
     }
-    
+
     /**
      * Returns the applicable property definition for a property with the
      * specified name and type.

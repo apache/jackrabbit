@@ -507,7 +507,7 @@ public class Text {
         buffer.append(name);
         return buffer.toString();
     }
-    
+
     /**
      * Returns the name part of the path
      *

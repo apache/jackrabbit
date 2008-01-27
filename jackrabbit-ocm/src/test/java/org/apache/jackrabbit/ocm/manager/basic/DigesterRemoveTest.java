@@ -69,7 +69,7 @@ public class DigesterRemoveTest extends DigesterTestBase
     {
         super.setUp();
 		this.importData(date);
-        
+
     }
 	
 

@@ -73,11 +73,11 @@ public class DigesterScopeQueryTest extends DigesterTestBase
         super.setUp();
 		this.importData();
 		//this.importDocument("data.xml", "/");
-        
+
 		
     }
     	
-    
+
     /**
      * Test equalTo
      *
@@ -88,78 +88,78 @@ public class DigesterScopeQueryTest extends DigesterTestBase
     	try
     	{
     		
-              	      
+              	
     	      ObjectContentManager ocm = this.getObjectContentManager();
     	      // Search on subtree (test/node1)
     	      QueryManager queryManager = this.getQueryManager();
-    	      Filter filter = queryManager.createFilter(Paragraph.class);    
+    	      Filter filter = queryManager.createFilter(Paragraph.class);
     	      filter.setScope("/test/node1//");
-    	      Query query = queryManager.createQuery(filter);    	      
+    	      Query query = queryManager.createQuery(filter);    	
     	      ocm = this.getObjectContentManager();
     	      Collection result = ocm.getObjects(query);
     	      assertTrue("Invalid number of objects - should be = 8", result.size() == 8);
-    	      
-    	      
+    	
+    	
     	      queryManager = this.getQueryManager();
-    	      filter = queryManager.createFilter(Paragraph.class);    
+    	      filter = queryManager.createFilter(Paragraph.class);
     	      filter.setScope("/test//");
-    	      query = queryManager.createQuery(filter);    	      
+    	      query = queryManager.createQuery(filter);    	
     	      ocm = this.getObjectContentManager();
     	      result = ocm.getObjects(query);
     	      assertTrue("Invalid number of objects - should be = 16", result.size() == 16);
-    	      
-    	      // Test on children 
+    	
+    	      // Test on children
     	      queryManager = this.getQueryManager();
-    	      filter = queryManager.createFilter(Paragraph.class);    
+    	      filter = queryManager.createFilter(Paragraph.class);
     	      filter.setScope("/test/");
-    	      query = queryManager.createQuery(filter);    	      
+    	      query = queryManager.createQuery(filter);    	
     	      ocm = this.getObjectContentManager();
     	      result = ocm.getObjects(query);
     	      assertTrue("Invalid number of objects - should be = 0", result.size() == 0);
-    	      
+    	
               // Search on scope and properties
     	      queryManager = this.getQueryManager();
-    	      filter = queryManager.createFilter(Paragraph.class);    
+    	      filter = queryManager.createFilter(Paragraph.class);
     	      filter.setScope("/test//");
     	      filter.addEqualTo("text", "Para 1");
-    	      query = queryManager.createQuery(filter);    	      
+    	      query = queryManager.createQuery(filter);    	
     	      ocm = this.getObjectContentManager();
     	      result = ocm.getObjects(query);
     	      assertTrue("Invalid number of objects - should be = 3", result.size() == 3);
 
-    	      
+    	
     	      queryManager = this.getQueryManager();
-    	      filter = queryManager.createFilter(Paragraph.class);    
+    	      filter = queryManager.createFilter(Paragraph.class);
     	      filter.setScope("/test//");
     	      filter.addContains("text", "another");
-    	      query = queryManager.createQuery(filter);    	      
+    	      query = queryManager.createQuery(filter);    	
     	      ocm = this.getObjectContentManager();
     	      result = ocm.getObjects(query);
     	      assertTrue("Invalid number of objects - should be = 4", result.size() == 4);
-    	      
+    	
     	      queryManager = this.getQueryManager();
-    	      filter = queryManager.createFilter(Page.class);    
-    	      filter.setScope("/test/node1/");    	      
-    	      query = queryManager.createQuery(filter);    	      
+    	      filter = queryManager.createFilter(Page.class);
+    	      filter.setScope("/test/node1/");    	
+    	      query = queryManager.createQuery(filter);    	
     	      ocm = this.getObjectContentManager();
     	      result = ocm.getObjects(query);
     	      assertTrue("Invalid number of objects - should be = 2", result.size() == 2);
     	      assertTrue ("Invalid object in the collection" , this.contains(result, "/test/node1/page1", Page.class));
     	      assertTrue ("Invalid object in the collection" , this.contains(result, "/test/node1/page2", Page.class));
-    	      
+    	
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
 
-    
-    private void importData() throws JcrMappingException 
+
+    private void importData() throws JcrMappingException
     {
-        
+
     	try
 		{
     		ObjectContentManager ocm = getObjectContentManager();
@@ -236,8 +236,8 @@ public class DigesterScopeQueryTest extends DigesterTestBase
 		{
 			
 			e.printStackTrace();
-		}            
-                
+		}
+
 
     }
 }

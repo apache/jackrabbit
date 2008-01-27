@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.ocm.exception;
 
 /**
- * Throwed if a path is locked and a operation cannot be performed 
- *   
+ * Throwed if a path is locked and a operation cannot be performed
+ *
  * @author markoc
  */
 
@@ -35,7 +35,7 @@ public class LockedException extends LockingException {
     }
 
     /**
-     * 
+     *
      * @return The JCR Lock Owner
      */
     public String getLockOwner() {
@@ -43,8 +43,8 @@ public class LockedException extends LockingException {
     }
 
     /**
-     * 
-     * @return The JCR locked node path 
+     *
+     * @return The JCR locked node path
      */
     public String getLockedNodePath() {
         return lockedNodePath;

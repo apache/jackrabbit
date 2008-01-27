@@ -123,7 +123,7 @@ public class RangeIteratorAdapter implements RangeIterator {
     /**
      * Checks if this iterator has more elements. If there are no more
      * elements and the size of the iterator is unknown, then the size is
-     * set to the current position. 
+     * set to the current position.
      *
      * @return <code>true</code> if this iterator has more elements,
      *         <code>false</code> otherwise

@@ -77,22 +77,22 @@ public class DigesterSameNameSiblingTest extends DigesterTestBase
 			this.importData(date);
 			ObjectContentManager ocm = this.getObjectContentManager();
 				
-			// Query all objects 
+			// Query all objects
 			QueryManager queryManager = this.getQueryManager();
 			Filter filter = queryManager.createFilter(Atomic.class);	
 			filter.setScope("/");
 			Query query = queryManager.createQuery(filter);
 			Collection result = ocm.getObjects(query);
             assertEquals("Incorrect number of objects found", 10, result.size());
-                         
+
             // Get objects
             Atomic atomic = (Atomic) ocm.getObject( "/test[2]");
             assertNotNull("Object /test[2] not found", atomic);
-            
+
             atomic = (Atomic) ocm.getObject( "/test[10]");
-            assertNotNull("Object /test[2] not found", atomic);            
-            
-            // Update the object 
+            assertNotNull("Object /test[2] not found", atomic);
+
+            // Update the object
             atomic.setString("Modified Test String 10");
             ocm.update(atomic);
             ocm.save();
@@ -104,23 +104,23 @@ public class DigesterSameNameSiblingTest extends DigesterTestBase
 			query = queryManager.createQuery(filter);
 			result = ocm.getObjects(query);
 			assertTrue("Incorrect number of objects found", result.size() == 1);
-            
+
 			atomic = (Atomic) ocm.getObject(query);
 			assertNotNull("Object not found", atomic);
-			assertTrue("Incorrect Object", atomic.getString().equals("Modified Test String 10"));   
+			assertTrue("Incorrect Object", atomic.getString().equals("Modified Test String 10"));
 			
             // Delete all objects
             queryManager = this.getQueryManager();
 			filter = queryManager.createFilter(Atomic.class);	
 			filter.setScope("/");
-			query = queryManager.createQuery(filter) ;           
+			query = queryManager.createQuery(filter) ;
             ocm.remove(query);
             ocm.save();
 
 			result = ocm.getObjects(query);
             assertTrue("Incorrect number of objects found", result.size() == 0);
-            
-            
+
+
 		}
 		catch (Exception e)
 		{
@@ -135,22 +135,22 @@ public class DigesterSameNameSiblingTest extends DigesterTestBase
 		     ObjectContentManager ocm = getObjectContentManager();
              try
              {
-            	 
+            	
             	 Page page = new Page();
             	 page.setPath("/page");
-            	 page.setTitle("Page Title");            	 
+            	 page.setTitle("Page Title");            	
             	 ocm.insert(page);
             	 ocm.save();
-            	 
+            	
             	 Paragraph p1 = new Paragraph("para1");
             	 p1.setPath("/page/paragraph");
             	 ocm.insert(p1);
-            	 
+            	
             	 Paragraph p2 = new Paragraph("para1");
             	 p2.setPath("/page/paragraph");
             	 ocm.insert(p2);
-             fail();            	 
-            	 
+             fail();            	
+            	
              }
              catch(Exception e)
              {

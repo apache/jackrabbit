@@ -22,7 +22,7 @@ package org.apache.jackrabbit.name;
  * prefix is not found into a JCR name string. The JCR name string can not be
  * created without the namespace prefix.
  *
- * @deprecated 
+ * @deprecated
  */
 public class NoPrefixDeclaredException extends NameException {
 

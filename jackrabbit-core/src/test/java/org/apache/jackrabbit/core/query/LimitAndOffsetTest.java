@@ -66,7 +66,7 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
     protected void checkResult(QueryResult result, Node[] expectedNodes) throws RepositoryException {
         assertEquals(expectedNodes.length, result.getNodes().getSize());
     }
-    
+
     public void testLimit() throws Exception {
         query.setLimit(1);
         QueryResult result = query.execute();

@@ -475,7 +475,7 @@ public class DynamicRepositoryClassLoader extends RepositoryClassLoader
                 log.warn("onEvent: Cannot get path of event, ignoring", re);
                 continue;
             }
-                
+
             log.debug(
                 "onEvent: Item {} has been modified, checking with cache", path);
 

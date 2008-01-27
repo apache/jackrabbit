@@ -43,7 +43,7 @@ public class QueryTreeBuilderRegistry {
      * List of <code>QueryTreeBuilder</code> instances known to the classloader.
      */
     private static final List BUILDERS = new ArrayList();
-    
+
     /**
      * Set of languages known to the registered builders.
      */
@@ -83,11 +83,11 @@ public class QueryTreeBuilderRegistry {
         }
         throw new InvalidQueryException("Unsupported language: " + language);
     }
-    
+
     /**
      * Returns the set of query languages supported by all registered
      * {@link QueryTreeBuilder} implementations.
-     * 
+     *
      * @return String array containing the names of the supported languages.
      */
     public static String[] getSupportedLanguages() {

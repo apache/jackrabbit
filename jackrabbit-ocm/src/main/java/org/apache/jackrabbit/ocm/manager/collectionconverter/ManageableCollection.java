@@ -18,12 +18,12 @@ package org.apache.jackrabbit.ocm.manager.collectionconverter;
 
 import java.util.Iterator;
 
-/** 
+/**
  * Common interface used to persist any kind of Collection or Map.
- * 
+ *
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
- * 
+ *
  */
 public interface ManageableCollection
 {
@@ -32,16 +32,16 @@ public interface ManageableCollection
      * @param object the object to add
      */
 	public void addObject(Object object);
-   
+
 	/**
 	 * @return The ManageableCollection iterator
 	 */
     public Iterator getIterator();
-    
-    /** 
+
+    /**
      * @return The ManageableCollection size
      */
     public int getSize();
-    
-    
+
+
 }

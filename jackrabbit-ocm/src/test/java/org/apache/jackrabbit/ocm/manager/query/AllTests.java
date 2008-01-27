@@ -24,7 +24,7 @@ import junit.framework.TestSuite;
 
 /**
  * Package level tests.
- * 
+ *
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 public class AllTests {
@@ -46,7 +46,7 @@ public class AllTests {
         suite.addTestSuite(DigesterMultiValueQueryTest.class);
         suite.addTestSuite(DigesterScopeQueryTest.class);
         suite.addTestSuite(DigesterSimpleQueryTest.class);
-        
+
         //$JUnit-END$
 
         return suite;

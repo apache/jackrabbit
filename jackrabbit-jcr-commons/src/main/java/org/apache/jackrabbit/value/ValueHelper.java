@@ -578,7 +578,7 @@ public class ValueHelper {
         throws IllegalStateException, IOException, RepositoryException {
         serialize(value, encodeBlanks, false, writer);
     }
-    
+
       /**
      * Outputs the serialized value to a <code>Writer</code>. The serialization
      * format is the same as used by Document & System View XML, i.e.

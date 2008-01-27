@@ -27,12 +27,12 @@ import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter
  * This is a simple converter which convert a boolean field value into a jcr long property (int type is not defined in the jcr spec).
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
- * 
+ *
  */
 public class Int2BooleanTypeConverterImpl implements AtomicTypeConverter
 {
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter#getValue(java.lang.Object)
 	 */
 	public Value getValue(ValueFactory valueFactory, Object propValue)
@@ -53,7 +53,7 @@ public class Int2BooleanTypeConverterImpl implements AtomicTypeConverter
 	
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter#getObject(javax.jcr.Value)
      */
 	public Object getObject(Value value)
@@ -77,13 +77,13 @@ public class Int2BooleanTypeConverterImpl implements AtomicTypeConverter
     }
 	
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter#getStringValue(java.lang.Object)
 	 */
 	public String getXPathQueryValue(ValueFactory valueFactory, Object object)
 	{
 		
-		return ((Boolean) object).booleanValue() ? "1" : "0"; 
+		return ((Boolean) object).booleanValue() ? "1" : "0";
 	}
 
 }

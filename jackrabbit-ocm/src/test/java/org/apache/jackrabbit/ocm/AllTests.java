@@ -22,7 +22,7 @@ import junit.framework.TestSuite;
 
 /**
  * OCM suite definition. Bundles together all independent and package level test suites.
- * 
+ *
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 public class AllTests {
@@ -33,7 +33,7 @@ public class AllTests {
 
     public static Test buildSuite() throws Exception {
         TestSuite suite= new TestSuite("Jackrabbit OCM Tests");
-             
+
         suite.addTest(org.apache.jackrabbit.ocm.manager.atomic.AllTests.buildSuite());
         suite.addTest(org.apache.jackrabbit.ocm.manager.auto.AllTests.buildSuite());
         suite.addTest(org.apache.jackrabbit.ocm.manager.basic.AllTests.buildSuite());
@@ -41,16 +41,16 @@ public class AllTests {
         suite.addTest(org.apache.jackrabbit.ocm.manager.collectionconverter.AllTests.buildSuite());
         suite.addTest(org.apache.jackrabbit.ocm.manager.inheritance.AllTests.buildSuite());
         suite.addTest(org.apache.jackrabbit.ocm.manager.interfaces.AllTests.buildSuite());
-        suite.addTest(org.apache.jackrabbit.ocm.manager.jcrnodetype.AllTests.buildSuite());        
-        suite.addTest(org.apache.jackrabbit.ocm.manager.lock.AllTests.buildSuite());        
+        suite.addTest(org.apache.jackrabbit.ocm.manager.jcrnodetype.AllTests.buildSuite());
+        suite.addTest(org.apache.jackrabbit.ocm.manager.lock.AllTests.buildSuite());
         suite.addTest(org.apache.jackrabbit.ocm.manager.proxy.AllTests.buildSuite());
         suite.addTest(org.apache.jackrabbit.ocm.manager.query.AllTests.buildSuite());
-        suite.addTest(org.apache.jackrabbit.ocm.manager.uuid.AllTests.buildSuite());        
+        suite.addTest(org.apache.jackrabbit.ocm.manager.uuid.AllTests.buildSuite());
         suite.addTest(org.apache.jackrabbit.ocm.manager.version.AllTests.buildSuite());
         suite.addTest(org.apache.jackrabbit.ocm.mapper.AllTests.buildSuite());
         suite.addTest(org.apache.jackrabbit.ocm.querymanager.AllTests.buildSuite());
         suite.addTest(org.apache.jackrabbit.ocm.repository.AllTests.buildSuite());
-        
+
         return suite;
     }
 }

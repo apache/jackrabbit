@@ -216,7 +216,7 @@ public class RepositoryConfig {
      * Optional cluster configuration.
      */
     private final ClusterConfig cc;
-    
+
     /**
      * Optional data store configuration
      */
@@ -748,7 +748,7 @@ public class RepositoryConfig {
     public ClusterConfig getClusterConfig() {
         return cc;
     }
-    
+
     /**
      * Returns the data store configuration. Returns <code>null</code> if data store
      * has not been configured.

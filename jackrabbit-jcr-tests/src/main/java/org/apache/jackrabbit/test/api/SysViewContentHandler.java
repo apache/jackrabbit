@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 package org.apache.jackrabbit.test.api;
- 
+
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;

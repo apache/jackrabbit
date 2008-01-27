@@ -775,7 +775,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
         String fName = tmp.substring(0, tmp.length() - 1);
         try {
             Name funName = resolver.getQName(fName);
-            
+
             if (FN_NOT.equals(funName) || FN_NOT_10.equals(funName)) {
                 if (queryNode instanceof NAryQueryNode) {
                     QueryNode not = factory.createNotQueryNode(queryNode);

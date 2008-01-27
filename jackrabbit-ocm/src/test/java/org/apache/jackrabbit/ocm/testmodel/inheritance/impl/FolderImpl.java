@@ -31,18 +31,18 @@ import org.apache.jackrabbit.ocm.testmodel.interfaces.Folder;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  * @version $Id: Folder.java,v 1.1 2004/12/22 20:36:59 christophe Exp $
- */	                                    
+ */	
 @Node(jcrType="ocm:folderimpl" , extend=CmsObjectImpl.class, discriminator=false)
 @Implement(interfaceName=Folder.class)
-public class FolderImpl extends CmsObjectImpl implements Folder 
+public class FolderImpl extends CmsObjectImpl implements Folder
 {
-        
-	@Collection(proxy=true,  
+
+	@Collection(proxy=true,
 			  elementClassName=CmsObjectImpl.class, collectionConverter=NTCollectionConverterImpl.class)
 	protected List children = new ArrayList();
 
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Folder#getChildren()
 	 */
 	public List getChildren() {
@@ -50,15 +50,15 @@ public class FolderImpl extends CmsObjectImpl implements Folder
 	}
 
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Folder#setChildren(java.util.List)
 	 */
 	public void setChildren(List children) {
 		this.children = children;
 	}
-    
+
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.testmodel.interfaces.Folder#addChild(org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject)
      */
     public void addChild(CmsObject child)

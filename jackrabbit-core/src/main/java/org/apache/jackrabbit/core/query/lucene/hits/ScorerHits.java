@@ -24,7 +24,7 @@ import org.apache.lucene.search.Scorer;
  * Wraps a {@link org.apache.lucene.search.Scorer} in a {@link Hits} instance.
  */
 public class ScorerHits implements Hits {
-    
+
     private final Scorer scorer;
 
     public ScorerHits(Scorer scorer) {

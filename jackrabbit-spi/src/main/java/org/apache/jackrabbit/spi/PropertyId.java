@@ -30,7 +30,7 @@ public interface PropertyId extends ItemId {
 
     /**
      * Returns the {@link Name} of the property identified by this id.
-     * 
+     *
      * @return The name of the property that is identified by this <code>PropertyId</code>.
      */
     public Name getName();

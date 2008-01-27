@@ -58,12 +58,12 @@ public final class VersionFourGenerator implements Constants {
      * SecureRandom used to generate UUID's
      */
     private static SecureRandom secureRandom;
-    
+
     /**
      * Flag to indicate if the secureRandom instance was initialized
      */
     private static volatile boolean secureRandomSeeded;
-    
+
     /**
      * The maximum number of milliseconds to wait for the the initialization
      */
@@ -88,8 +88,8 @@ public final class VersionFourGenerator implements Constants {
 
     /**
      * Returns a new version four UUID.
-     * A cryptographically secure pseudorandom number generator 
-     * is used to generate the values (because otherwise the probability 
+     * A cryptographically secure pseudorandom number generator
+     * is used to generate the values (because otherwise the probability
      * of duplicates may be significantly higher).
      * See also: https://issues.apache.org/jira/browse/JCR-1206
      * and http://en.wikipedia.org/wiki/UUID
@@ -115,7 +115,7 @@ public final class VersionFourGenerator implements Constants {
         }
         return nextUUID(false);
     }
-    
+
     /**
      * Initialize the secure random and seed it.
      */

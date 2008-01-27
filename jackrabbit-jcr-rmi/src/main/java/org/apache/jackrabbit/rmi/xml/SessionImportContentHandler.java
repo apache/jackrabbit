@@ -44,7 +44,7 @@ public class SessionImportContentHandler extends ImportContentHandler {
     /**
      * Creates a SAX content handler for importing XML data to the given session
      * and path.
-     * 
+     *
      * @param session repository session
      * @param path import content path
      * @param uuidBehaviour UUID behavior mode

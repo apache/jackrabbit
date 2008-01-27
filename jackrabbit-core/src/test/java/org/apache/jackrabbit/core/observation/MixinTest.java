@@ -107,7 +107,7 @@ public class MixinTest extends AbstractObservationTest {
      * Checks if an event listener registered for a mixin type T also gets
      * notifications for an event on a node with a mixin type which is derived
      * from T.
-     */ 
+     */
     public void testDerivedMixin() throws RepositoryException {
         Node node1 = testRootNode.addNode(nodeName1, testNodeType);
         node1.addMixin(mixVersionable);

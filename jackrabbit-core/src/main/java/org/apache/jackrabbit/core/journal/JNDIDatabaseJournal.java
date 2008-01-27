@@ -25,9 +25,9 @@ import javax.sql.DataSource;
 
 /**
  * @deprecated
- * This class should not be used because it is not database vendor specific. 
+ * This class should not be used because it is not database vendor specific.
  * Each DatabaseJournal now supports getting the connection via JNDI
- * by setting the driver to javax.naming.InitialContext 
+ * by setting the driver to javax.naming.InitialContext
  * and the URL to the JNDI name.
  * <p>
  * Database journal that uses JNDI to acquire the database connection.

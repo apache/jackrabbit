@@ -54,7 +54,7 @@ public class WebdavResponseImpl implements WebdavResponse {
 
     /**
      * Create a new <code>WebdavResponse</code>
-     * 
+     *
      * @param httpResponse
      */
     public WebdavResponseImpl(HttpServletResponse httpResponse) {
@@ -151,7 +151,7 @@ public class WebdavResponseImpl implements WebdavResponse {
             try {
                 Document doc = DomUtil.BUILDER_FACTORY.newDocumentBuilder().newDocument();
                 doc.appendChild(serializable.toXml(doc));
-                
+
                 OutputFormat format = new OutputFormat("xml", "UTF-8", false);
                 XMLSerializer serializer = new XMLSerializer(out, format);
                 serializer.setNamespaces(true);

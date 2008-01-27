@@ -29,10 +29,10 @@ import javax.jcr.Value;
 
 public class NodeTypeTest extends AbstractJCRTest {
 
-    
+
     /**
      * Test a node type with a binary default value
-     * @throws RepositoryException 
+     * @throws RepositoryException
      */
     public void testNodeTypesWithBinaryDefaultValue()
             throws RepositoryException, IOException {
@@ -40,7 +40,7 @@ public class NodeTypeTest extends AbstractJCRTest {
         doTestNodeTypesWithBinaryDefaultValue(10);
         doTestNodeTypesWithBinaryDefaultValue(10000);
     }
-    
+
     public void doTestNodeTypesWithBinaryDefaultValue(int len)
             throws RepositoryException, IOException {
         char[] chars = new char[len];

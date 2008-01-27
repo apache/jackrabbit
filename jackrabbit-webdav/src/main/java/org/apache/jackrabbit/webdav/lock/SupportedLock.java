@@ -96,7 +96,7 @@ public class SupportedLock extends AbstractDavProperty {
 
     /**
      * Creates a JDOM element that represents the &lt;supportedlock> tag.
-     * 
+     *
      * @return A JDOM element of this lock support.
      * @param document
      */

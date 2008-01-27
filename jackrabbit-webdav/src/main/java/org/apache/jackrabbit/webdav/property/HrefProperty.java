@@ -147,7 +147,7 @@ public class HrefProperty extends AbstractDavProperty {
      * Returns an array of String.
      *
      * @return an array of String.
-     * @see DavProperty#getValue() 
+     * @see DavProperty#getValue()
      */
     public Object getValue() {
         return value;

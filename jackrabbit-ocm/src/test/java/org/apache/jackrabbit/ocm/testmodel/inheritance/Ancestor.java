@@ -41,7 +41,7 @@ public class Ancestor
 	public void setAncestorField(String ancestorField) {
 		this.ancestorField = ancestorField;
 	}
-    
+
 	public String getDiscriminator() {
 		return discriminator;
 	}

@@ -70,7 +70,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
      * The logger instance for this class
      */
     private static final Logger log = LoggerFactory.getLogger(IndexingConfigurationImpl.class);
-    
+
     /**
      * A namespace resolver for parsing QNames in the configuration.
      */
@@ -100,7 +100,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
      * The configured analyzers for indexing properties.
      */
     private Map analyzers = new HashMap();
-    
+
     /**
      * {@inheritDoc}
      */
@@ -111,7 +111,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
         PathResolver pathResolver = new ParsingPathResolver(PathFactoryImpl.getInstance(),
                 nameResolver);
         hmgr = new HierarchyManagerImpl(context.getRootId(), ism, pathResolver);
-        
+
         NamespaceResolver nsResolver = new AdditionalNamespaceResolver(getNamespaces(config));
         resolver = new ParsingNameResolver(NameFactoryImpl.getInstance(), nsResolver);
 
@@ -171,7 +171,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
                                     }
                                 }
                             } else {
-                                log.warn("org.apache.lucene.analysis.Analyzer is not a superclass of " 
+                                log.warn("org.apache.lucene.analysis.Analyzer is not a superclass of "
                                         + analyzerClassName +". Ignoring this configure analyzer" );
                             }
                         } catch (ClassNotFoundException e) {
@@ -180,7 +180,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
                     }
                 }
             }
-            
+
         }
         aggregateRules = (AggregateRule[]) idxAggregates.toArray(
                 new AggregateRule[idxAggregates.size()]);
@@ -265,18 +265,18 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
         return true;
     }
 
-    
+
     /**
-     * Returns the analyzer configured for the property with this fieldName 
+     * Returns the analyzer configured for the property with this fieldName
      * (the string representation ,JCR-style name, of the given <code>Name</code>
-     * prefixed with <code>FieldNames.FULLTEXT_PREFIX</code>)), 
+     * prefixed with <code>FieldNames.FULLTEXT_PREFIX</code>)),
      * and <code>null</code> if none is configured, or the configured analyzer
      * cannot be found. If <code>null</code> is returned, the default Analyzer
      * is used.
-     * 
+     *
      * @param fieldName the string representation ,JCR-style name, of the given <code>Name</code>
      * prefixed with <code>FieldNames.FULLTEXT_PREFIX</code>))
-     * @return the <code>analyzer</code> to use for indexing this property 
+     * @return the <code>analyzer</code> to use for indexing this property
      */
     public Analyzer getPropertyAnalyzer(String fieldName) {
         if(analyzers.containsKey(fieldName)){

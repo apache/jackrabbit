@@ -23,10 +23,10 @@ import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.ocm.exception.VersionException;
 
 /**
- * 
- * 
+ *
+ *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart Christophe </a>
- * 
+ *
  */
 public class Version
 {

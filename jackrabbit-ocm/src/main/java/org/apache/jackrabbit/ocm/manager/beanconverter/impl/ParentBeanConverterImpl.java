@@ -31,11 +31,11 @@ import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.BeanDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 /**
- * 
- * Bean converter used to access to the parent object. 
- * the mixin type referenceable is not mandatory for the node matching to the parent object. 
- * 
- * 
+ *
+ * Bean converter used to access to the parent object.
+ * the mixin type referenceable is not mandatory for the node matching to the parent object.
+ *
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  *
  */
@@ -43,7 +43,7 @@ public class ParentBeanConverterImpl extends AbstractBeanConverterImpl  implemen
 
 	private final static Log log = LogFactory.getLog(ParentBeanConverterImpl.class);
 	
-	public ParentBeanConverterImpl(Mapper mapper, ObjectConverter objectConverter, AtomicTypeConverterProvider atomicTypeConverterProvider) 
+	public ParentBeanConverterImpl(Mapper mapper, ObjectConverter objectConverter, AtomicTypeConverterProvider atomicTypeConverterProvider)
 	{
 		super(mapper, objectConverter, atomicTypeConverterProvider);	
 	}
@@ -58,7 +58,7 @@ public class ParentBeanConverterImpl extends AbstractBeanConverterImpl  implemen
 
 	public Object getObject(Session session, Node parentNode, BeanDescriptor beanDescriptor, ClassDescriptor beanClassDescriptor, Class beanClass, Object parent)
 			throws ObjectContentManagerException, RepositoryException,JcrMappingException {
-        try 
+        try
         {			
 			Node grandParentNode = parentNode.getParent();
 			if (grandParentNode.getPath().equals("/"))
@@ -67,11 +67,11 @@ public class ParentBeanConverterImpl extends AbstractBeanConverterImpl  implemen
 			}
 			return objectConverter.getObject(session, grandParentNode.getPath());
 			
-		} 
-        catch (javax.jcr.RepositoryException e) 
+		}
+        catch (javax.jcr.RepositoryException e)
 		{
 			throw new RepositoryException(e);
-		} 
+		}
 		
 	}
 
@@ -81,14 +81,14 @@ public class ParentBeanConverterImpl extends AbstractBeanConverterImpl  implemen
 	}
 	
 	/**
-	 * 
+	 *
 	 * Default implementation for many BeanConverter. This method can be overridden in specific BeanConverter
-	 * 
+	 *
 	 */
     public String getPath(Session session, BeanDescriptor beanDescriptor, Node parentNode)
                 throws ObjectContentManagerException
     {		
-		 try 
+		 try
 		 {
 			if (parentNode != null)
 		    {
@@ -97,10 +97,10 @@ public class ParentBeanConverterImpl extends AbstractBeanConverterImpl  implemen
 			}
 			else
 			{
-			    return null; 
+			    return null;
 			}
-		} 
-		catch (javax.jcr.RepositoryException e) 
+		}
+		catch (javax.jcr.RepositoryException e)
 		{
 			throw new RepositoryException(e);
 		}

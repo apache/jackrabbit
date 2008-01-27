@@ -57,7 +57,7 @@ public class SQLJcrPathTest extends AbstractQueryTest {
         }
         super.tearDown();
     }
-    
+
     /**
      * Verify that the jcr:path is present in the query result.
      */

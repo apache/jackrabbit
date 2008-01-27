@@ -31,18 +31,18 @@ import javax.sql.DataSource;
  * JNDI resources.
  */
 public class ConnectionFactory {
-    
+
     /**
      * Open a connection using the specified properties.
      * The connection can be created using a JNDI Data Source as well. To do that,
-     * the driver class name must reference a javax.naming.Context class 
-     * (for example javax.naming.InitialContext), and the URL must be the JNDI URL 
+     * the driver class name must reference a javax.naming.Context class
+     * (for example javax.naming.InitialContext), and the URL must be the JNDI URL
      * (for example java:comp/env/jdbc/Test).
-     * 
+     *
      * @param driver the JDBC driver or the Context class
      * @param url the database URL
      * @param user the user name
-     * @param password the password 
+     * @param password the password
      * @return the connection
      * @throws RepositoryException if the driver could not be loaded
      * @throws SQLException if the connection could not be established
@@ -65,7 +65,7 @@ public class ConnectionFactory {
                 } else {
                     try {
                         // Workaround for Apache Derby:
-                        // The JDBC specification recommends the Class.forName method without the .newInstance() method call, 
+                        // The JDBC specification recommends the Class.forName method without the .newInstance() method call,
                         // but it is required after a Derby 'shutdown'.
                         d.newInstance();
                     } catch (Throwable e) {

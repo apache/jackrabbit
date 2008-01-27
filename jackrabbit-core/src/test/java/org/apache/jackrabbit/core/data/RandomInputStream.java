@@ -54,7 +54,7 @@ public class RandomInputStream extends InputStream {
                 if (x == y) {
                     break;
                 }
-            } 
+            }
             if (x != y) {
                 throw new IOException("Incorrect byte at position " + pos + ": x=" + x + " y=" + y);
             }

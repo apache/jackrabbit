@@ -76,5 +76,5 @@ public interface OperationVisitor {
 
     public void visit(RemoveVersion operation) throws VersionException, AccessDeniedException, ReferentialIntegrityException, RepositoryException;
 
-    public void visit(WorkspaceImport operation) throws RepositoryException;    
+    public void visit(WorkspaceImport operation) throws RepositoryException;
 }

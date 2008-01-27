@@ -37,7 +37,7 @@ import java.io.ObjectOutputStream;
  * <code>PropertyState</code> represents the state of a <code>Property</code>.
  */
 public class PropertyState extends ItemState {
-    
+
     /** Logger instance */
     private static Logger log = LoggerFactory.getLogger(PropertyState.class);
 
@@ -253,7 +253,7 @@ public class PropertyState extends ItemState {
         */
         return 350 + values.length * 100;
     }
-    
+
     //-------------------------------------------------< Serializable support >
     private void writeObject(ObjectOutputStream out) throws IOException {
         // important: fields must be written in same order as they are
@@ -320,17 +320,17 @@ public class PropertyState extends ItemState {
                         log.error(msg, e);
                         throw new IOException(msg);
                     }
-                    
+
                 } else {
                     values[i] = InternalValue.valueOf(in.readUTF(), type);
                 }
             }
         }
     }
-    
+
     private InternalValue createInternalValueFromInputStream(final InputStream stream, final long length) throws RepositoryException {
         return InternalValue.create(new InputStream() {
-            
+
             private long consumed = 0;
 
             public int read() throws IOException {

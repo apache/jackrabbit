@@ -20,12 +20,12 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
 import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 
 @Node
-public class Detail 
+public class Detail
 {
     @Field(path=true) private String path;
 	@Field private String field;
 
-    
+
 	public String getPath() {
 		return path;
 	}
@@ -40,7 +40,7 @@ public class Detail
 
 	public void setField(String field) {
 		this.field = field;
-	} 
-    
-    
+	}
+
+
 }

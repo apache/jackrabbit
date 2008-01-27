@@ -88,7 +88,7 @@ public class MultiValueCollectionConverterImpl extends AbstractCollectionConvert
             parentNode.setProperty(jcrName, values);
         }
         catch(ValueFormatException vfe) {
-            throw new ObjectContentManagerException("Cannot insert collection field : " 
+            throw new ObjectContentManagerException("Cannot insert collection field : "
                     + collectionDescriptor.getFieldName()
                     + " of class "
                     + collectionDescriptor.getClassDescriptor().getClassName(), vfe);
@@ -118,7 +118,7 @@ public class MultiValueCollectionConverterImpl extends AbstractCollectionConvert
         // Add all collection element into an Value array
         Value[] values = new Value[collection.getSize()];
         ValueFactory valueFactory = session.getValueFactory();
-        int i = 0; 
+        int i = 0;
         for (Iterator collectionIterator = collection.getIterator(); collectionIterator.hasNext(); i++) {
             Object fieldValue = collectionIterator.next();
             AtomicTypeConverter atomicTypeConverter = (AtomicTypeConverter) atomicTypeConverters
@@ -162,7 +162,7 @@ public class MultiValueCollectionConverterImpl extends AbstractCollectionConvert
                   vfe);
         }
     }
-    
+
     /**
      * @see AbstractCollectionConverterImpl#doIsNull(Session, Node, CollectionDescriptor, Class)
      */
@@ -176,5 +176,5 @@ public class MultiValueCollectionConverterImpl extends AbstractCollectionConvert
             return true;
         }
         return false;
-    }     
+    }
 }

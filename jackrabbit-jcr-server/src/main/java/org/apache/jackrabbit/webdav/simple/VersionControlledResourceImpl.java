@@ -65,8 +65,8 @@ public class VersionControlledResourceImpl extends DeltaVResourceImpl
      * @param locator
      * @param factory
      * @param session
-     * @param config 
-     * @param item 
+     * @param config
+     * @param item
      * @throws DavException
      */
     public VersionControlledResourceImpl(DavResourceLocator locator, DavResourceFactory factory, DavSession session, ResourceConfig config, Item item) throws DavException {
@@ -80,9 +80,9 @@ public class VersionControlledResourceImpl extends DeltaVResourceImpl
      * @param locator
      * @param factory
      * @param session
-     * @param config 
-     * @param isCollection 
-     * @throws DavException 
+     * @param config
+     * @param isCollection
+     * @throws DavException
      */
     public VersionControlledResourceImpl(DavResourceLocator locator, DavResourceFactory factory, DavSession session, ResourceConfig config, boolean isCollection) throws DavException {
         super(locator, factory, session, config, isCollection);

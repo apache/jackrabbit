@@ -49,7 +49,7 @@ public class DbNameIndex implements StringIndex {
     protected String nameSelectSQL;
     protected String indexSelectSQL;
     protected String nameInsertSQL;
-    
+
     // caches
     private final HashMap string2Index = new HashMap();
     private final HashMap index2String = new HashMap();

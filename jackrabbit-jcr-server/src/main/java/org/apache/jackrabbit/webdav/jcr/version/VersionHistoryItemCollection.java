@@ -120,7 +120,7 @@ public class VersionHistoryItemCollection extends DefaultItemCollection
             throw new JcrDavException(e);
         }
     }
-    
+
     //--------------------------------------------------------------------------
     /**
      * Fill the property set for this resource.
@@ -130,7 +130,7 @@ public class VersionHistoryItemCollection extends DefaultItemCollection
 
         // change resourcetype defined by default item collection
         properties.add(new ResourceType(ResourceType.VERSION_HISTORY));
-        
+
         // jcr specific property pointing to the node this history belongs to
         try {
             properties.add(new DefaultDavProperty(JCR_VERSIONABLEUUID, ((VersionHistory)item).getVersionableUUID()));

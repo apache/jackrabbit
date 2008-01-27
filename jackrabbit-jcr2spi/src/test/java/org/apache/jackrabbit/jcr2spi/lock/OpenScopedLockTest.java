@@ -30,7 +30,7 @@ import javax.jcr.lock.Lock;
 public class OpenScopedLockTest extends AbstractLockTest {
 
     private static Logger log = LoggerFactory.getLogger(OpenScopedLockTest.class);
- 
+
     boolean isSessionScoped() {
         return false;
     }
@@ -169,7 +169,7 @@ public class OpenScopedLockTest extends AbstractLockTest {
             assertFalse("Lock has been release by another session.", lockedNode.holdsLock());
 
             assertFalse("Lock has been release by another session.", lock.isLive());
-            assertFalse("Lock has been release by another session.", lock.getNode().isLocked());            
+            assertFalse("Lock has been release by another session.", lock.getNode().isLocked());
             try {
                 lockedNode.getLock();
                 fail("Lock has been release by another session.");

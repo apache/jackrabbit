@@ -35,7 +35,7 @@ import org.apache.jackrabbit.ocm.mapper.model.MappingDescriptor;
 
 /**
  * Helper class that reads the xml mapping file and load all class descriptors into memory (object graph)
- * 
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
  *
  */
@@ -48,8 +48,8 @@ public class AnnotationDescriptorReader implements DescriptorReader
     {
    	     this.annotatedClassNames = annotatedClassNames;
     }
-    
-    
+
+
 
     public MappingDescriptor loadClassDescriptors()
 	{
@@ -63,7 +63,7 @@ public class AnnotationDescriptorReader implements DescriptorReader
 		
 	}
 	
-	private ClassDescriptor buildClassDescriptor(MappingDescriptor mappingDescriptor, Class clazz)  
+	private ClassDescriptor buildClassDescriptor(MappingDescriptor mappingDescriptor, Class clazz)
 	{
 		ClassDescriptor classDescriptor = null;
 		
@@ -84,7 +84,7 @@ public class AnnotationDescriptorReader implements DescriptorReader
 		
 	}
 
-	private ClassDescriptor createClassDescriptor(Class clazz, Node nodeAnnotation) 
+	private ClassDescriptor createClassDescriptor(Class clazz, Node nodeAnnotation)
 	{
 		ClassDescriptor classDescriptor = new ClassDescriptor();
 		classDescriptor.setClassName(clazz.getName());
@@ -110,10 +110,10 @@ public class AnnotationDescriptorReader implements DescriptorReader
 		return classDescriptor;
 	}
 	
-	private void addImplementDescriptor(ClassDescriptor classDescriptor, Class clazz) 
+	private void addImplementDescriptor(ClassDescriptor classDescriptor, Class clazz)
 	{
 		Implement implementAnnotation = (Implement) clazz.getAnnotation(Implement.class);
-		if (implementAnnotation != null) 
+		if (implementAnnotation != null)
 		{
             ImplementDescriptor implementDescriptor =  new ImplementDescriptor();
             implementDescriptor.setInterfaceName(implementAnnotation.interfaceName().getName());
@@ -124,22 +124,22 @@ public class AnnotationDescriptorReader implements DescriptorReader
 	
 	/**
 	 * Add FieldDescriptors, BeanDescriptors and CollectionDescriptors.
-	 * The descriptots can be defined on the getter methods or on the field declation. 
-	 * 
+	 * The descriptots can be defined on the getter methods or on the field declation.
+	 *
 	 * @param mappingDescriptor The mapping descriptor
 	 * @param classDescriptor the classdescriptor for which the descriptors have to be added
 	 * @param clazz The associated class
 	 */
 	private void addAttributeDescriptors(MappingDescriptor mappingDescriptor, ClassDescriptor classDescriptor,Class clazz) {
- 
+
 		addDescriptorsFromFields(mappingDescriptor, classDescriptor, clazz);
 		addDescriptorsFromGetters(mappingDescriptor, classDescriptor, clazz);
 	}
 
 	private void addDescriptorsFromFields(MappingDescriptor mappingDescriptor, ClassDescriptor classDescriptor, Class clazz) {
-	    
+	
 		java.lang.reflect.Field[] fields = clazz.getDeclaredFields();
-	    for (int index = 0; index < fields.length; index++) 
+	    for (int index = 0; index < fields.length; index++)
 	    {
 			Field fieldAnnotation = fields[index].getAnnotation(Field.class);
 			if (fieldAnnotation != null) {
@@ -155,7 +155,7 @@ public class AnnotationDescriptorReader implements DescriptorReader
 			// Check if there is an Collection annotation
 			Collection collectionAnnotation = fields[index].getAnnotation(Collection.class);
 			if (collectionAnnotation != null) {
-				addCollectionDescriptor(mappingDescriptor, classDescriptor, fields[index].getName(), 
+				addCollectionDescriptor(mappingDescriptor, classDescriptor, fields[index].getName(),
 						                fields[index].getName(), collectionAnnotation);
 			}
 					
@@ -189,7 +189,7 @@ public class AnnotationDescriptorReader implements DescriptorReader
 			// Check if there is an Collection annotation
 			Collection collectionAnnotation = propertyDescriptor.getReadMethod().getAnnotation(Collection.class);
 			if (collectionAnnotation != null) {
-				addCollectionDescriptor(mappingDescriptor, classDescriptor, propertyDescriptor.getName(), 
+				addCollectionDescriptor(mappingDescriptor, classDescriptor, propertyDescriptor.getName(),
 						                propertyDescriptor.getReadMethod().getReturnType().getName(), collectionAnnotation);
 			}
 		}
@@ -270,14 +270,14 @@ public class AnnotationDescriptorReader implements DescriptorReader
 		beanDescriptor.setJcrAutoCreated(beanAnnotation.jcrAutoCreated());
 		beanDescriptor.setJcrMandatory(beanAnnotation.jcrMandatory());
 		beanDescriptor.setJcrOnParentVersion(beanAnnotation.jcrOnParentVersion());
-		beanDescriptor.setJcrProtected(beanAnnotation.jcrProtected());			            
+		beanDescriptor.setJcrProtected(beanAnnotation.jcrProtected());			
 		beanDescriptor.setJcrSameNameSiblings(beanAnnotation.jcrSameNameSiblings());				
 
 		classDescriptor.addBeanDescriptor(beanDescriptor);
 	}
 
 
-	private void addFieldDescriptor(ClassDescriptor classDescriptor, String fieldName, Field fieldAnnotation) 
+	private void addFieldDescriptor(ClassDescriptor classDescriptor, String fieldName, Field fieldAnnotation)
 	{
 				
 		FieldDescriptor fieldDescriptor = new FieldDescriptor();				
@@ -330,7 +330,7 @@ public class AnnotationDescriptorReader implements DescriptorReader
 		
 		//fieldDescriptor.setJcrType(value)
 		classDescriptor.addFieldDescriptor(fieldDescriptor);
-	}    
+	}
 
 
 }

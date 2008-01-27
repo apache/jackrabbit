@@ -32,10 +32,10 @@ public class Pool {
     protected final ArrayList all = new ArrayList();
     protected final DbDataStore factory;
     protected final LinkedQueue pool = new LinkedQueue();
-    
+
     /**
      * Create a new pool using the given factory and maximum pool size.
-     * 
+     *
      * @param factory the db data store
      * @param maxSize the maximum number of objects in the pool.
      */
@@ -43,12 +43,12 @@ public class Pool {
         this.factory = factory;
         this.maxSize = Math.max(1, maxSize);
     }
-    
+
     /**
      * Get a connection from the pool. This method may open a new connection if
      * required, or if the maximum number of connections are opened, it will
      * wait for one to be returned.
-     * 
+     *
      * @return the connection
      */
     protected Object get() throws InterruptedException, RepositoryException {
@@ -66,19 +66,19 @@ public class Pool {
         }
         return o;
     }
-    
+
     /**
      * But a connection back into the pool.
-     * 
+     *
      * @param o the connection
      */
     protected void add(Object o) throws InterruptedException {
         pool.put(o);
     }
-    
+
     /**
      * Get all connections (even if they are currently being used).
-     * 
+     *
      * @return all connections
      */
     protected ArrayList getAll() {

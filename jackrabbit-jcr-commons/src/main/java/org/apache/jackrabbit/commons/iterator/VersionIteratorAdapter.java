@@ -26,7 +26,7 @@ import javax.jcr.version.VersionIterator;
 
 /**
  * Adapter class for turning {@link RangeIterator}s or {@link Iterator}s
- * into {@link VersionIterator}s. 
+ * into {@link VersionIterator}s.
  */
 public class VersionIteratorAdapter extends RangeIteratorDecorator
         implements VersionIterator {

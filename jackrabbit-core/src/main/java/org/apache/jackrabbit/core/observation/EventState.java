@@ -105,11 +105,11 @@ public class EventState {
      * Cached hashCode value for this <code>Event</code>.
      */
     private int hashCode;
-    
+
     /**
      * Flag indicating whether this is an external event, e.g. originating from
      * another node in a clustered environment.
-     */ 
+     */
     private final boolean external;
 
     /**
@@ -178,7 +178,7 @@ public class EventState {
                                             Name nodeType,
                                             Set mixins,
                                             Session session) {
-        
+
         return childNodeAdded(parentId, parentPath, childId,
                 childPath, nodeType, mixins, session, false);
     }
@@ -211,7 +211,7 @@ public class EventState {
         return new EventState(Event.NODE_ADDED, parentId, parentPath,
                 childId, childPath, nodeType, mixins, session, external);
     }
-    
+
     /**
      * Creates a new {@link javax.jcr.observation.Event} of type
      * {@link javax.jcr.observation.Event#NODE_REMOVED}.
@@ -267,7 +267,7 @@ public class EventState {
         return new EventState(Event.NODE_REMOVED, parentId, parentPath,
                 childId, childPath, nodeType, mixins, session, external);
     }
-    
+
     /**
      * Creates a new {@link javax.jcr.observation.Event} of type
      * {@link javax.jcr.observation.Event#PROPERTY_ADDED}.
@@ -288,8 +288,8 @@ public class EventState {
                                            Name nodeType,
                                            Set mixins,
                                            Session session) {
-        
-        return propertyAdded(parentId, parentPath, childPath, 
+
+        return propertyAdded(parentId, parentPath, childPath,
                 nodeType, mixins, session, false);
     }
 
@@ -315,7 +315,7 @@ public class EventState {
                                            Set mixins,
                                            Session session,
                                            boolean external) {
-        
+
         return new EventState(Event.PROPERTY_ADDED, parentId, parentPath,
                 null, childPath, nodeType, mixins, session, external);
     }
@@ -340,7 +340,7 @@ public class EventState {
                                              Name nodeType,
                                              Set mixins,
                                              Session session) {
-        
+
         return propertyRemoved(parentId, parentPath, childPath,
                 nodeType, mixins, session, false);
     }

@@ -70,7 +70,7 @@ public class GarbageCollector {
     private ScanEventListener callback;
 
     private int sleepBetweenNodes;
-    
+
     private int testDelay;
 
     private final DataStore store;
@@ -80,16 +80,16 @@ public class GarbageCollector {
     private final ArrayList listeners = new ArrayList();
 
     private final IterablePersistenceManager[] pmList;
-    
+
     private final Session[] sessionList;
 
     // TODO It should be possible to stop and restart a garbage collection scan.
 
     /**
-     * Create a new garbage collector. 
+     * Create a new garbage collector.
      * This method is usually not called by the application, it is called
      * by SessionImpl.createDataStoreGarbageCollector().
-     * 
+     *
      * @param list the persistence managers
      */
     public GarbageCollector(SessionImpl session, IterablePersistenceManager[] list, Session[] sessionList) {
@@ -103,27 +103,27 @@ public class GarbageCollector {
      * Set the delay between scanning items.
      * The main scan loop sleeps this many milliseconds after
      * scanning a node. The default is 0, meaning the scan should run at full speed.
-     * 
-     * @param sleepBetweenNodes the number of milliseconds to sleep 
+     *
+     * @param sleepBetweenNodes the number of milliseconds to sleep
      */
     public void setSleepBetweenNodes(int millis) {
         this.sleepBetweenNodes = millis;
     }
-    
+
     /**
      * When testing the garbage collection, a delay is used instead of simulating concurrent access.
-     *  
+     *
      * @param testDelay the delay in milliseconds
      */
     public void setTestDelay(int testDelay) {
         this.testDelay = testDelay;
     }
-    
+
     /**
-     * Set the event listener. If set, the event listener will be called 
+     * Set the event listener. If set, the event listener will be called
      * for each item that is scanned. This mechanism can be used
      * to display the progress.
-     * 
+     *
      * @param callback if set, this is called while scanning
      */
     public void setScanEventListener(ScanEventListener callback) {
@@ -131,15 +131,15 @@ public class GarbageCollector {
     }
 
     /**
-     * Scan the repository. The garbage collector will iterate over all nodes in the repository 
-     * and update the last modified date. If all persistence managers implement the 
-     * IterablePersistenceManager interface, this mechanism will be used; if not, the garbage 
+     * Scan the repository. The garbage collector will iterate over all nodes in the repository
+     * and update the last modified date. If all persistence managers implement the
+     * IterablePersistenceManager interface, this mechanism will be used; if not, the garbage
      * collector will scan the repository using the JCR API starting from the root node.
-     * 
+     *
      * @throws RepositoryException
      * @throws IllegalStateException
      * @throws IOException
-     * @throws ItemStateException 
+     * @throws ItemStateException
      */
     public void scan() throws RepositoryException,
             IllegalStateException, IOException, ItemStateException {
@@ -148,7 +148,7 @@ public class GarbageCollector {
             startScanTimestamp = now;
             store.updateModifiedDateOnAccess(startScanTimestamp);
         }
-        
+
         if (pmList == null) {
             for (int i = 0; i < sessionList.length; i++) {
                 scanNodes(sessionList[i]);
@@ -157,7 +157,7 @@ public class GarbageCollector {
             scanPersistenceManagers();
         }
     }
-    
+
     private void scanNodes(Session session) throws UnsupportedRepositoryOperationException, RepositoryException, IllegalStateException, IOException {
 
         // add a listener to get 'new' nodes
@@ -168,7 +168,7 @@ public class GarbageCollector {
         // reading usually doesn't, but when scanning, it does
         recurse(session.getRootNode(), sleepBetweenNodes);
     }
-    
+
     private void scanPersistenceManagers() throws ItemStateException, RepositoryException {
         for (int i = 0; i < pmList.length; i++) {
             IterablePersistenceManager pm = pmList[i];
@@ -269,30 +269,30 @@ public class GarbageCollector {
         /*
          * To delete files early in the garbage collection scan, we could do
          * this:
-         * 
+         *
          * A) If garbage collection was run before, see if there a file with the
          * list of UUIDs ('uuids.txt').
-         * 
+         *
          * B) If yes, and if the checksum is ok, read all those nodes first (if
          * not so many). This updates the modified date of all old files that
          * are still in use. Afterwards, delete all files with an older modified
          * date than the last scan! Newer files, and files that are read have a
          * newer modification date.
-         * 
+         *
          * C) Delete the 'uuids.txt' file (in any case).
-         * 
+         *
          * D) Iterate (recurse) through all nodes and properties like now. If a
          * node has a binary property, store the UUID of the node in the file
          * ('uuids.txt'). Also store the time when the scan started.
-         * 
+         *
          * E) Checksum and close the file.
-         * 
+         *
          * F) Like now, delete files with an older modification date than this
          * scan.
-         * 
+         *
          * We can't use node path for this, UUIDs are required as nodes could be
          * moved around.
-         * 
+         *
          */
     }
 

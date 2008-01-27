@@ -24,16 +24,16 @@ import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollectio
 
 
 /**
- * This class/interface 
+ * This class/interface
  */
 public class ManageableSet extends HashSet implements ManageableCollection {
     public ManageableSet() {
     }
-    
+
     public ManageableSet(Collection collection) {
         super(collection);
     }
-    
+
     /**
      * @see org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection#addObject(java.lang.Object)
      */

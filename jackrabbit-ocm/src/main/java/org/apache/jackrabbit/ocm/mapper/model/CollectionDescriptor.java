@@ -18,35 +18,35 @@ package org.apache.jackrabbit.ocm.mapper.model;
 
 
 /**
- * 
+ *
  * CollectionDescriptor is used by the mapper to read general information on a collection field
- * 
+ *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart Christophe </a>
- * 
+ *
  */
 public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDefDescriptor
 {
 
      private String fieldName;
-     private String jcrName;     
-     private String elementClassName; 
+     private String jcrName;
+     private String elementClassName;
      private String collectionConverterClassName;
      private String collectionClassName;
      private boolean proxy;
      private boolean autoRetrieve = true;
      private boolean autoUpdate = true;
-     private boolean autoInsert = true;          
+     private boolean autoInsert = true;
      private String jcrType;
      private boolean jcrAutoCreated;
      private boolean jcrMandatory;
      private String jcrOnParentVersion;
      private boolean jcrProtected;
-     private boolean jcrSameNameSiblings;     
+     private boolean jcrSameNameSiblings;
      private boolean jcrMultiple;
      private String defaultPrimaryType;
 
      private ClassDescriptor classDescriptor;
-    
+
     /**
      * @return Returns the fieldName.
      */
@@ -75,8 +75,8 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
     {
         this.jcrName = jcrName;
     }
-    
-    
+
+
     /**
      * @return Returns the elementClassName.
      */
@@ -107,9 +107,9 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
     {
         this.proxy = proxy;
     }
-    
-    
-    
+
+
+
     public boolean isAutoInsert() {
 		return autoInsert;
 	}
@@ -129,14 +129,14 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
 		this.autoUpdate = autoUpdate;
 	}
 	/**
-     * 
-     * @return The collection converter class name 
+     *
+     * @return The collection converter class name
      */
     public String getCollectionConverter()
     {
         return collectionConverterClassName;
     }
-    
+
     /**
      * Set the collection converter class name
      * @param collectionConverterClassName The converter to set
@@ -145,18 +145,18 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
     {
         this.collectionConverterClassName = collectionConverterClassName;
     }
-    
+
     /**
-     *  
+     *
      * @return the collection class name (can be also a Map)
      */
     public String getCollectionClassName()
     {
         return collectionClassName;
     }
-    
+
     /**
-     * Set the collection class name. 
+     * Set the collection class name.
      * This collection class has to implement {@link org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection}
      * @param collectionClassName The collection class name to set
      */
@@ -164,29 +164,29 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
     {
         this.collectionClassName = collectionClassName;
     }
-    
+
     /**
-     * 
+     *
      * @return The associated class descriptor
      */
     public ClassDescriptor getClassDescriptor()
     {
         return classDescriptor;
     }
-    
+
     /**
      * Set the associated class descriptor
-     * @param classDescriptor the class descriptor to set 
+     * @param classDescriptor the class descriptor to set
      */
     public void setClassDescriptor(ClassDescriptor classDescriptor)
     {
         this.classDescriptor = classDescriptor;
     }
-    
+
 
     /**
      * Getter for property jcrType.
-     * 
+     *
      * @return jcrType
      */
     public String getJcrType() {
@@ -195,7 +195,7 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
 
     /**
      * Setter for property jcrType.
-     * 
+     *
      * @param value jcrType
      */
     public void setJcrType(String value) {
@@ -203,7 +203,7 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
     }
 
     /** Getter for property jcrAutoCreated.
-     * 
+     *
      * @return jcrAutoCreated
      */
     public boolean isJcrAutoCreated()
@@ -212,7 +212,7 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
     }
 
     /** Setter for property jcrAutoCreated.
-     * 
+     *
      * @param value jcrAutoCreated
      */
     public void setJcrAutoCreated(boolean value)
@@ -221,7 +221,7 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
     }
 
     /** Getter for property jcrMandatory.
-     * 
+     *
      * @return jcrMandatory
      */
     public boolean isJcrMandatory()
@@ -230,7 +230,7 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
     }
 
     /** Setter for property jcrMandatory.
-     * 
+     *
      * @param value jcrMandatory
      */
     public void setJcrMandatory(boolean value)
@@ -239,7 +239,7 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
     }
 
     /** Getter for property jcrOnParentVersion.
-     * 
+     *
      * @return jcrOnParentVersion
      */
     public String getJcrOnParentVersion()
@@ -248,7 +248,7 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
     }
 
     /** Setter for property jcrOnParentVersion.
-     * 
+     *
      * @param value jcrOnParentVersion
      */
     public void setJcrOnParentVersion(String value)
@@ -257,7 +257,7 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
     }
 
     /** Getter for property jcrProtected.
-     * 
+     *
      * @return jcrProtected
      */
     public boolean isJcrProtected()
@@ -266,7 +266,7 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
     }
 
     /** Setter for property jcrProtected.
-     * 
+     *
      * @param value jcrProtected
      */
     public void setJcrProtected(boolean value)
@@ -275,7 +275,7 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
     }
 
     /** Getter for property jcrSameNameSiblings.
-     * 
+     *
      * @return jcrSameNameSiblings
      */
     public boolean isJcrSameNameSiblings()
@@ -284,17 +284,17 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
     }
 
     /** Setter for property jcrSameNameSiblings.
-     * 
+     *
      * @param value jcrSameNameSiblings
      */
     public void setJcrSameNameSiblings(boolean value)
     {
         this.jcrSameNameSiblings = value;
     }
-    
+
     /**
      * Getter for property jcrMultiple.
-     * 
+     *
      * @return jcrMultiple
      */
     public boolean isJcrMultiple() {
@@ -303,7 +303,7 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
 
     /**
      * Setter for property jcrMultiple.
-     * 
+     *
      * @param value jcrMultiple
      */
     public void setJcrMultiple(boolean value) {
@@ -313,7 +313,7 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
 	public String toString() {
 		
 		return "Collection Descriptor : " +  this.getFieldName();
-	}    
+	}
 
     public String getDefaultPrimaryType() {
         return defaultPrimaryType;

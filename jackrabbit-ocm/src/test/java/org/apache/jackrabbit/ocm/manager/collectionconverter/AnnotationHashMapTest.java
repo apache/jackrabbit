@@ -51,8 +51,8 @@ public class AnnotationHashMapTest extends AnnotationTestBase
         // All methods starting with "test" will be executed in the test suite.
         return new RepositoryLifecycleTestSetup(new TestSuite(AnnotationHashMapTest.class));
     }
- 
-    
+
+
     public void testHashMap()
     {
         try
@@ -66,17 +66,17 @@ public class AnnotationHashMapTest extends AnnotationTestBase
             Main main = new Main();
             main.setPath("/test");
             main.setText("Main text");
-                        
+
             ocm.insert(main);
             ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
-            main = (Main) ocm.getObject( "/test");            
-            assertTrue("Incorrect text", main.getText().equals("Main text"));           
+            // --------------------------------------------------------------------------------
+            main = (Main) ocm.getObject( "/test");
+            assertTrue("Incorrect text", main.getText().equals("Main text"));
             assertNull("HashMap is not null", main.getHashMap());
-            
+
             // --------------------------------------------------------------------------------
             // Update an object graph in the repository
             // --------------------------------------------------------------------------------
@@ -84,31 +84,31 @@ public class AnnotationHashMapTest extends AnnotationTestBase
             main = new Main();
             main.setPath("/test");
             main.setText("Main text");
-            
+
             HashMapElement hashMapElement = new HashMapElement();
             Element e1 = new Element();
             e1.setId("e1");
             e1.setText("Element 1");
             hashMapElement.addObject(e1);
-            
+
             Element e2 = new Element();
             e2.setId("e2");
             e2.setText("Element 2");
             hashMapElement.addObject(e2);
-            
+
             main.setHashMap(hashMapElement);
-            
+
             ocm.update(main);
             ocm.save();
-            
+
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             main = (Main) ocm.getObject( "/test");
             assertNotNull("main.getHashMap() is null", main.getHashMap());
-            assertTrue("Incorrect text", main.getText().equals("Main text"));           
+            assertTrue("Incorrect text", main.getText().equals("Main text"));
             assertTrue("Incorrect para element", ((Element) main.getHashMap().get("e1")).getText().equals("Element 1"));
-            
+
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
@@ -117,7 +117,7 @@ public class AnnotationHashMapTest extends AnnotationTestBase
             e1.setId("e1");
             e1.setText("Element 1");
             hashMapElement.addObject(e1);
-            
+
             e2 = new Element();
             e2.setId("e3");
             e2.setText("Element 3");
@@ -128,26 +128,26 @@ public class AnnotationHashMapTest extends AnnotationTestBase
             e3.setText("Element 4");
             hashMapElement.addObject(e3);
             main.setHashMap(hashMapElement);
-            
+
             ocm.update(main);
             ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             assertNotNull("main.getElements() is null", main.getHashMap());
-            assertTrue("Incorrect text", main.getText().equals("Main text"));           
+            assertTrue("Incorrect text", main.getText().equals("Main text"));
             assertTrue("Incorrect para element", ((Element) main.getHashMap().get("e4")).getText().equals("Element 4"));
-            
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
 
 
-   
+
 }

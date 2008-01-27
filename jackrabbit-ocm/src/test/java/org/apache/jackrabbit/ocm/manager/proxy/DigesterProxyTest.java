@@ -92,7 +92,7 @@ public class DigesterProxyTest extends DigesterTestBase {
 
 			
 			//---------------------------------------------------------------------------------------------------------
-			// Update  
+			// Update
 			//---------------------------------------------------------------------------------------------------------						
 			 detail = new Detail();
 			detail.setField("AnotherFieldValue");			
@@ -165,9 +165,9 @@ public class DigesterProxyTest extends DigesterTestBase {
             assertNull("nullcollectionproxy  is not null", main.getNullProxyCollection());
 			
 			//---------------------------------------------------------------------------------------------------------
-			// Update  
+			// Update
 			//---------------------------------------------------------------------------------------------------------
-            
+
             Detail detail = new Detail();
 			detail.setField("newFieldValue");			
 			result.add(detail);
@@ -187,7 +187,7 @@ public class DigesterProxyTest extends DigesterTestBase {
 			// Delete the main object
 			//---------------------------------------------------------------------------------------------------------						
 			ocm.remove("/test");
-			ocm.save();            
+			ocm.save();
 	
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -219,7 +219,7 @@ public class DigesterProxyTest extends DigesterTestBase {
             assertNull("Collection is not null", result);
             			
 			//---------------------------------------------------------------------------------------------------------
-			// Update  
+			// Update
 			//---------------------------------------------------------------------------------------------------------
 			ArrayList  details= new ArrayList();
 			for(int i=1; i<=100;i++)
@@ -231,7 +231,7 @@ public class DigesterProxyTest extends DigesterTestBase {
 			main.setProxyCollection(details);
 			ocm.update(main);
 			ocm.save();
-            
+
 			//---------------------------------------------------------------------------------------------------------
 			// Retrieve the main object
 			//---------------------------------------------------------------------------------------------------------						
@@ -240,11 +240,11 @@ public class DigesterProxyTest extends DigesterTestBase {
 
             result = main.getProxyCollection();
             assertEquals("Invalide size", result.size(), 100);
-            
+
 			
 			//---------------------------------------------------------------------------------------------------------
-			// Update  
-			//---------------------------------------------------------------------------------------------------------            
+			// Update
+			//---------------------------------------------------------------------------------------------------------
             NTDetail detail = new NTDetail();
 			detail.setField("newFieldValue");			
 			result.add(detail);
@@ -258,13 +258,13 @@ public class DigesterProxyTest extends DigesterTestBase {
 			main = (NTMain) ocm.getObject("/test");
 			assertNotNull("main  is null", main);
             assertEquals("Invalide size",main.getProxyCollection().size(), 101);
-            
+
 
             //---------------------------------------------------------------------------------------------------------
 			// Delete the main object
 			//---------------------------------------------------------------------------------------------------------						
 			ocm.remove("/test");
-			ocm.save();            
+			ocm.save();
 	
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -275,5 +275,5 @@ public class DigesterProxyTest extends DigesterTestBase {
 	}
 
 
-	    
+	
 }

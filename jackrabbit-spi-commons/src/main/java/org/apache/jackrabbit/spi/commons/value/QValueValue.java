@@ -164,11 +164,11 @@ public final class QValueValue implements Value {
     }
 
     private static final short STATE_UNDEFINED = 0;
-  
+
     private static final short STATE_VALUE_CONSUMED = 1;
-  
+
     private static final short STATE_STREAM_CONSUMED = 2;
-  
+
     private short state = STATE_UNDEFINED;
 
     /**

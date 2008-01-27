@@ -23,7 +23,7 @@ import javax.jcr.Session;
  * Name resolver that parsers and formats prefixed JCR names.
  * A {@link NamespaceResolver} is used for resolving the namespace prefixes.
  *
- * @deprecated Use the ParsingNameResolver class from 
+ * @deprecated Use the ParsingNameResolver class from
  *             the org.apache.jackrabbit.spi.commons.conversion package of
  *             the jackrabbit-spi-commons component.
  */

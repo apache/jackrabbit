@@ -27,12 +27,12 @@ import org.apache.jackrabbit.ocm.nodemanagement.RepositorySession;
  */
 public class JackrabbitRepositorySession implements RepositorySession
 {
-    
+
     /** Creates a new instance of JackrabbitRepositorySession. */
     public JackrabbitRepositorySession()
     {
     }
-    
+
     /**
      * @see org.apache.jackrabbit.ocm.nodemanagement.RepositorySession#getSession
      */
@@ -43,12 +43,12 @@ public class JackrabbitRepositorySession implements RepositorySession
         RepositoryUtil.registerRepository(configuration.getRepositoryName(),
                 configuration.getConfigurationFile(),
                 configuration.getRepositoryPath());
-        
+
         Repository repository =
                 RepositoryUtil.getRepository(configuration.getRepositoryName());
-        
+
         Session session =  RepositoryUtil.login(repository, username, password);
         RepositoryUtil.setupSession(session);
-        return session; 
+        return session;
     }
 }

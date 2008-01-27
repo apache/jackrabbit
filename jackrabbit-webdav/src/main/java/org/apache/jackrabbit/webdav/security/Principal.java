@@ -39,7 +39,7 @@ import java.util.Map;
 public class Principal implements XmlSerializable, SecurityConstants {
 
     public static final String XML_PRINCIPAL = "principal";
-    
+
     private static final String XML_ALL = "all";
     private static final String XML_AUTHENTICATED  = "authenticated";
     private static final String XML_UNAUTHENTICATED = "unauthenticated";

@@ -33,18 +33,18 @@ import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ProxyManager;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
 
-public class ProxyManagerImpl implements ProxyManager 
+public class ProxyManagerImpl implements ProxyManager
 {
 
 	private final static Log log = LogFactory.getLog(ProxyManagerImpl.class);
 	
-	 
+	
 
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.manager.objectconverter.ProxyManager#createBeanProxy(javax.jcr.Session, org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter, java.lang.Class, java.lang.String)
 	 */
-	public  Object createBeanProxy(Session session, ObjectConverter objectConverter, Class beanClass, String path) 
+	public  Object createBeanProxy(Session session, ObjectConverter objectConverter, Class beanClass, String path)
 	{
 		
        try {
@@ -60,10 +60,10 @@ public class ProxyManagerImpl implements ProxyManager
 	}
 
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.manager.objectconverter.ProxyManager#createCollectionProxy(javax.jcr.Session, org.apache.jackrabbit.ocm.manager.collectionconverter.CollectionConverter, javax.jcr.Node, org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor, java.lang.Class)
 	 */
-	public  Object createCollectionProxy(Session session, CollectionConverter collectionConverter, Node parentNode,  CollectionDescriptor collectionDescriptor, Class collectionFieldClass) 
+	public  Object createCollectionProxy(Session session, CollectionConverter collectionConverter, Node parentNode,  CollectionDescriptor collectionDescriptor, Class collectionFieldClass)
 	{	
 		
 		if (collectionConverter.isNull(session, parentNode, collectionDescriptor, collectionFieldClass)) 	{

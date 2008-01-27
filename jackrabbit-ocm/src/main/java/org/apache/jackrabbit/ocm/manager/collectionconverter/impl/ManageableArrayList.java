@@ -21,28 +21,28 @@ import java.util.Iterator;
 
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
 
-/** 
+/**
  *
  * {@link ManageableCollection} ArrayList implementation
- * 
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
- * 
+ *
  */
 public class ManageableArrayList extends ArrayList implements ManageableCollection
 {
 
 	/**
-	 * 
+	 *
 	 * @see org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection#addObject(java.lang.Object)
 	 */
     public void addObject(Object object)
     {
         this.add(object);
-     
+
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection#getIterator()
      */
     public Iterator getIterator()
@@ -51,7 +51,7 @@ public class ManageableArrayList extends ArrayList implements ManageableCollecti
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection#getSize()
      */
 	public int getSize()
@@ -59,7 +59,7 @@ public class ManageableArrayList extends ArrayList implements ManageableCollecti
 		
 		return this.size();
 	}
-    
-    
+
+
 
 }

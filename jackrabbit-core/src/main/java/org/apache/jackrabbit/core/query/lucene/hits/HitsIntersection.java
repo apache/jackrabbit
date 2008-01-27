@@ -40,7 +40,7 @@ public class HitsIntersection implements Hits {
     public void set(int doc) {
         throw new UnsupportedOperationException();
     }
-    
+
     /**
      * {@inheritDoc}
      */

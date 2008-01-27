@@ -51,7 +51,7 @@ public interface ObservationConstants {
      * NOTE, that this will not reveal any subscription made by another session.
      */
     public static final String XML_SUBSCRIPTION = "subscription";
-    
+
     /**
      * Xml elements
      */

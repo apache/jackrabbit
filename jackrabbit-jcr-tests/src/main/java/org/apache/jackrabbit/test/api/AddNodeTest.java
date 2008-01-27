@@ -195,7 +195,7 @@ public class AddNodeTest extends AbstractJCRTest {
             session.logout();
         }
     }
-    
+
     /**
      * Creates a new node using {@link Node#addNode(String, String)}, then tries
      * to call {@link javax.jcr.Node#save()} on the new node.

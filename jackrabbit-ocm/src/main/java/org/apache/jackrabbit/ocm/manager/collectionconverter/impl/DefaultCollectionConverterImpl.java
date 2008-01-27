@@ -105,10 +105,10 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
         }
 
         Node collectionNode = parentNode.addNode(jcrName);
-        
-        ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass( ReflectionUtils.forName(collectionDescriptor.getElementClassName())); 
 
-        Iterator collectionIterator = collection.getIterator();        
+        ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass( ReflectionUtils.forName(collectionDescriptor.getElementClassName()));
+
+        Iterator collectionIterator = collection.getIterator();
         while (collectionIterator.hasNext()) {
             Object item = collectionIterator.next();
             String elementJcrName = null;
@@ -119,7 +119,7 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
                                                            .getFieldName();
                 elementJcrName = ReflectionUtils.getNestedProperty(item, idFieldName).toString();
             }
-            else {                
+            else {
                 elementJcrName = COLLECTION_ELEMENT_NAME;
             }
 
@@ -135,29 +135,29 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
                                  Node parentNode,
                                  CollectionDescriptor collectionDescriptor,
                                  ManageableCollection collection) throws RepositoryException {
-        
+
     	String jcrName = getCollectionJcrName(collectionDescriptor);
     	boolean hasNode = parentNode.hasNode(jcrName);
         // If the new value for the collection is null, drop the node matching to the collection
     	if (collection == null)
         {
-            if (hasNode) 
+            if (hasNode)
             {
                 parentNode.getNode(jcrName).remove();
             }
             return;
         }
 
-    	// If there is not yet a node matching to the collection, insert the collection 
+    	// If there is not yet a node matching to the collection, insert the collection
     	if (! hasNode)
     	{
     		this.doInsertCollection(session, parentNode, collectionDescriptor, collection);
     		return;
     	}
-        
+
     	// update process
     	
-        ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass( ReflectionUtils.forName(collectionDescriptor.getElementClassName()));         
+        ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass( ReflectionUtils.forName(collectionDescriptor.getElementClassName()));
         Node collectionNode = parentNode.getNode(jcrName);
         //  If the collection elements have not an id, it is not possible to find the matching JCR nodes => delete the complete collection
         if (!elementClassDescriptor.hasIdField()) {
@@ -228,7 +228,7 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
         Node collectionNode = parentNode.getNode(jcrName);
         NodeIterator children = collectionNode.getNodes();
         Class elementClass = ReflectionUtils.forName(collectionDescriptor.getElementClassName());
-        
+
         while (children.hasNext()) {
             Node itemNode = children.nextNode();
             Object item = objectConverter.getObject(session, elementClass, itemNode.getPath());
@@ -237,7 +237,7 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
 
         return collection;
     }
-    
+
     /**
      * @see AbstractCollectionConverterImpl#doIsNull(Session, Node, CollectionDescriptor, Class)
      */
@@ -251,5 +251,5 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
             return true;
         }
         return false;
-    }    
+    }
 }

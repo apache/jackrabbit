@@ -57,7 +57,7 @@ public class AnnotationSimpleTest extends DigesterTestBase
                 new TestSuite(AnnotationSimpleTest.class));
     }
 
-    
+
     public void testClassA()
     {
         try
@@ -76,33 +76,33 @@ public class AnnotationSimpleTest extends DigesterTestBase
             b.setB1("b1");
             b.setB2("b2");
             a.setB(b);
-            
+
             C c1 = new C();
             c1.setId("first");
             c1.setName("First Element");
             C c2 = new C();
             c2.setId("second");
             c2.setName("Second Element");
-            
+
             C c3 = new C();
             c3.setId("third");
             c3.setName("Third Element");
-            
-            
+
+
             Collection collection = new ArrayList();
             collection.add(c1);
             collection.add(c2);
             collection.add(c3);
-            
+
             a.setCollection(collection);
-            
+
             ocm.insert(a);
             ocm.save();
-            
+
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (A) ocm.getObject( "/test");
             assertNotNull("a is null", a);
             assertTrue("Incorrect a1", a.getA1().equals("a1"));
@@ -110,7 +110,7 @@ public class AnnotationSimpleTest extends DigesterTestBase
             assertTrue("Incorrect a.b.b1", a.getB().getB1().equals("b1"));
             assertNotNull("a.collection is null", a.getCollection());
             assertTrue("Incorrect a.collection", ((C) a.getCollection().iterator().next()).getId().equals("first"));
-            
+
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
@@ -119,31 +119,31 @@ public class AnnotationSimpleTest extends DigesterTestBase
             newB.setB1("new B1");
             newB.setB2("new B2");
             a.setB(newB);
-            
-            
+
+
             ocm.update(a);
             ocm.save();
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (A) ocm.getObject("/test");
             assertNotNull("a is null", a);
             assertTrue("Incorrect a1", a.getA1().equals("new value"));
             assertNotNull("a.b is null", a.getB());
             assertTrue("Incorrect a.b.b1", a.getB().getB1().equals("new B1"));
-            
 
-            
+
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
+
     }
-    
+
     /**
      * Test an persistent object mapped with a discriminator and with a nodetype
      *
@@ -161,34 +161,34 @@ public class AnnotationSimpleTest extends DigesterTestBase
          	Discriminator discriminatorObject = new Discriminator();
          	discriminatorObject.setPath("/test");
          	discriminatorObject.setContent("This is my content");
-             ocm.insert(discriminatorObject);             
+             ocm.insert(discriminatorObject);
              ocm.save();
-             
+
 
              // --------------------------------------------------------------------------------
              // Get the object
-             // --------------------------------------------------------------------------------           
+             // --------------------------------------------------------------------------------
              discriminatorObject = (Discriminator) ocm.getObject( "/test");
              assertNotNull("discriminator object  is null", discriminatorObject );
              assertTrue("Incorrect content", discriminatorObject.getContent().equals("This is my content"));
-             
+
              // --------------------------------------------------------------------------------
              // Update the object
              // --------------------------------------------------------------------------------
-             discriminatorObject.setContent("new content");             
-             
+             discriminatorObject.setContent("new content");
+
              ocm.update(discriminatorObject);
              ocm.save();
 
              // --------------------------------------------------------------------------------
              // Get the object
-             // --------------------------------------------------------------------------------           
+             // --------------------------------------------------------------------------------
              discriminatorObject = (Discriminator) ocm.getObject( "/test");
              assertNotNull("discriminator object  is null", discriminatorObject );
              assertTrue("Incorrect content", discriminatorObject.getContent().equals("new content"));
-             
 
-             
+
+
          }
          catch (Exception e)
          {
@@ -196,13 +196,13 @@ public class AnnotationSimpleTest extends DigesterTestBase
              fail("Exception occurs during the unit test : " + e);
          }	
     }
-    
+
     public void testIsPersistent()
-    {    
+    {
     	ObjectContentManager ocm = getObjectContentManager();
     	assertTrue("Class A is not persistent ", ocm.isPersistent(A.class));
     	assertFalse("Class String is  persistent - hum ? ", ocm.isPersistent(String.class));
     }
-    
+
 
 }

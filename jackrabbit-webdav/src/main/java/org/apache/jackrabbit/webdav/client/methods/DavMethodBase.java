@@ -64,7 +64,7 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
      * name (inherited value is {@link GetMethod#getName()}).
      *
      * @return Name of the method.
-     * @see HttpMethod#getName() 
+     * @see HttpMethod#getName()
      */
     public abstract String getName();
 
@@ -124,7 +124,7 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
             } finally {
                 in.close();
             }
-        }     
+        }
     }
 
     /**
@@ -154,7 +154,7 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
         Element responseRoot = getRootElement();
         if (responseRoot != null) {
             return new DavException(getStatusCode(), getStatusText(), null, responseRoot);
-        } else {           
+        } else {
             // fallback: no or unparsable response body
             return new DavException(getStatusCode(), getStatusText());
         }

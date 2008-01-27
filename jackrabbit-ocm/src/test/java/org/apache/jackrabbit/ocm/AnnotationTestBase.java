@@ -67,10 +67,10 @@ import org.apache.jackrabbit.ocm.testmodel.interfaces.Interface;
 /**
  * Base class for testcases. Provides priviledged access to the jcr test
  * repository.
- * 
+ *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
- * 
- * 
+ *
+ *
  */
 public abstract class AnnotationTestBase extends AbstractTestBase
 {
@@ -80,7 +80,7 @@ public abstract class AnnotationTestBase extends AbstractTestBase
 	 * <p>
 	 * Defines the test case name for junit.
 	 * </p>
-	 * 
+	 *
 	 * @param testName
 	 *            The test case name.
 	 */
@@ -89,7 +89,7 @@ public abstract class AnnotationTestBase extends AbstractTestBase
 		super(testName);
 	}
 
-    
+
 	protected void initObjectContentManager() throws UnsupportedRepositoryOperationException, javax.jcr.RepositoryException
 	{
 		Repository repository = RepositoryUtil.getRepository("repositoryTest");	
@@ -112,7 +112,7 @@ public abstract class AnnotationTestBase extends AbstractTestBase
 		classes.add(MultiValue.class);
 		
 
-		classes.add(Residual.class); 
+		classes.add(Residual.class);
 		classes.add(ResidualProperties.class);
 		classes.add(ResidualNodes.class);
 		

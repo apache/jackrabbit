@@ -230,7 +230,7 @@ public class NodeAddMixinTest extends AbstractJCRTest {
         }
         // implementation specific: mixin may take effect only upon save
         testRootNode.save();
-        
+
         // check that it did
         assertTrue(node.isNodeType(mixReferenceable));
 

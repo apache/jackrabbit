@@ -80,7 +80,7 @@ public class DateValue extends BaseValue {
      * Note that the comparison still returns false when comparing the
      * same time in different time zones, but that seems to be the intent
      * of JSR 170. Compare the Value.getDate().getTime() values if you need
-     * an exact time comparison in UTC. 
+     * an exact time comparison in UTC.
      *
      * @param obj the reference object with which to compare.
      * @return <code>true</code> if this object is the same as the obj

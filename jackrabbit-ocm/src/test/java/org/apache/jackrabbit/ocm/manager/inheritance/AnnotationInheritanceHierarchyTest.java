@@ -234,7 +234,7 @@ public class AnnotationInheritanceHierarchyTest extends AnnotationTestBase {
 		assertTrue("Invalid item in the collection", this.contains(result, "/anotherdescendant2", AnotherDescendant.class));
 		assertTrue("Invalid item in the collection", this.contains(result, "/anotherdescendant3", AnotherDescendant.class));		
 
- 
+
 	}
-	    
+	
 }

@@ -40,7 +40,7 @@ import org.apache.jackrabbit.ocm.testmodel.Paragraph;
 
 /**
  * Test QueryManagerImpl Query methods
- * 
+ *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe
  *         Lombart</a>
  */
@@ -51,7 +51,7 @@ public class DigesterSimpleQueryTest extends DigesterTestBase {
      * <p>
      * Defines the test case name for junit.
      * </p>
-     * 
+     *
      * @param testName
      *            The test case name.
      */
@@ -74,7 +74,7 @@ public class DigesterSimpleQueryTest extends DigesterTestBase {
 
     /**
      * Test equalTo
-     * 
+     *
      */
     public void testGetObjectEqualsTo() {
 
@@ -101,7 +101,7 @@ public class DigesterSimpleQueryTest extends DigesterTestBase {
 
     /**
      * Test equalTo
-     * 
+     *
      */
     public void testGetObjectsEqualsTo() {
 
@@ -161,7 +161,7 @@ public class DigesterSimpleQueryTest extends DigesterTestBase {
 
     /**
      * Build an or expression between 2 filters
-     * 
+     *
      */
     public void testGetObjectsOr() {
 
@@ -232,7 +232,7 @@ public class DigesterSimpleQueryTest extends DigesterTestBase {
 
             Page[] pages = (Page[]) result.toArray(new Page[result.size()]);
             assertTrue("Invalid Page found", pages[0].getTitle().equals("Page Title"));
-            
+
             result = ocm.getObjects(Page.class, "/folder/test");
             assertEquals("Invalid number of objects", 4, result.size());
 
@@ -245,7 +245,7 @@ public class DigesterSimpleQueryTest extends DigesterTestBase {
         }
     }
 
-    private void importData() throws JcrMappingException 
+    private void importData() throws JcrMappingException
     {
         try {
 			ObjectContentManager ocm = getObjectContentManager();
@@ -324,13 +324,13 @@ public class DigesterSimpleQueryTest extends DigesterTestBase {
 			ocm.insert(page);
 			
 			ocm.save();
-		} 
-        catch (Exception e) 
+		}
+        catch (Exception e)
         {
         	fail("Impossible to create the data " + e);
         }
 		
-                
+
 
     }
 }

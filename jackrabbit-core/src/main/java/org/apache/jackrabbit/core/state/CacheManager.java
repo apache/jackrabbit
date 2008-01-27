@@ -67,14 +67,14 @@ public class CacheManager implements CacheAccessListener {
 
     /** The maximum memory per cache (unless, there is some unused memory). */
     private long maxMemoryPerCache = DEFAULT_MAX_MEMORY_PER_CACHE;
-    
+
     /** The minimum resize interval time */
     private long minResizeInterval = DEFAULT_MIN_RESIZE_INTERVAL;
-     
+
         /** The last time the caches where resized. */
     private volatile long nextResize = System.currentTimeMillis() + DEFAULT_MIN_RESIZE_INTERVAL;
 
-    
+
     public long getMaxMemory() {
         return maxMemory;
     }
@@ -98,7 +98,7 @@ public class CacheManager implements CacheAccessListener {
     public void setMinMemoryPerCache(final long minMemoryPerCache) {
         this.minMemoryPerCache = minMemoryPerCache;
     }
-    
+
     public long getMinResizeInterval() {
         return minResizeInterval;
     }

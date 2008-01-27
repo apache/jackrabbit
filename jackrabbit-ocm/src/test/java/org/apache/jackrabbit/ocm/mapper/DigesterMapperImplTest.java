@@ -433,7 +433,7 @@ public class DigesterMapperImplTest extends TestCase {
 	/**
 	 * Test interface setting
 	 */
-	public void testInterfaceWithoutDiscriminator() 
+	public void testInterfaceWithoutDiscriminator()
 	{
 		try {
 			String[] files = {"./src/test/test-config/jcrmapping-inheritance.xml"};
@@ -473,7 +473,7 @@ public class DigesterMapperImplTest extends TestCase {
 			assertEquals("Invalid number of implemented interface", classDescriptor.getImplements().size(), 1);				
 			assertFalse("Invalid extend strategy", classDescriptor.usesNodeTypePerHierarchyStrategy());
 			assertTrue("Invalid extend strategy", classDescriptor.usesNodeTypePerConcreteClassStrategy());
-      
+
 			
 		} catch (JcrMappingException e) {
 			e.printStackTrace();
@@ -482,7 +482,7 @@ public class DigesterMapperImplTest extends TestCase {
 	}
 
 	/**
-	 * 
+	 *
 	 * Test Node Type per concrete class setting
 	 */
 	public void testProxy() {

@@ -58,7 +58,7 @@ public class DigesterLockTest extends DigesterTestBase
                 new TestSuite(DigesterLockTest.class));
     }
 
-    
+
     public void testBasicLock()
     {
         try
@@ -77,56 +77,56 @@ public class DigesterLockTest extends DigesterTestBase
             b.setB1("b1");
             b.setB2("b2");
             a.setB(b);
-            
+
             C c1 = new C();
             c1.setId("first");
             c1.setName("First Element");
             C c2 = new C();
             c2.setId("second");
             c2.setName("Second Element");
-            
+
             C c3 = new C();
             c3.setId("third");
             c3.setName("Third Element");
-            
-            
+
+
             Collection collection = new ArrayList();
             collection.add(c1);
             collection.add(c2);
             collection.add(c3);
-            
+
             a.setCollection(collection);
-            
+
             ocm.insert(a);
             ocm.save();
-            
+
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             a = (A) ocm.getObject( "/test");
             assertNotNull("a is null", a);
-            
+
             // --------------------------------------------------------------------------------
             // Check if the object is locked
             // --------------------------------------------------------------------------------
             assertFalse("the object is locked", ocm.isLocked("/test"));
-            
+
             // --------------------------------------------------------------------------------
             // Lock the object
-            // --------------------------------------------------------------------------------           
-            
+            // --------------------------------------------------------------------------------
+
             Lock lock = ocm.lock("/test", true, false);
             assertTrue("the Lock owner is not correct", lock.getLockOwner().equals("superuser"));
-            
+
             // --------------------------------------------------------------------------------
             // Check if the object is locked
             // --------------------------------------------------------------------------------
             assertTrue("the object is not locked", ocm.isLocked("/test"));
-            
+
             // --------------------------------------------------------------------------------
             // Unlock the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             ocm.unlock("/test", lock.getLockToken());
 
             // --------------------------------------------------------------------------------
@@ -135,7 +135,7 @@ public class DigesterLockTest extends DigesterTestBase
             assertFalse("the object is locked", ocm.isLocked("/test"));
 
             // --------------------------------------------------------------------------------
-            // Lock & update 
+            // Lock & update
             // --------------------------------------------------------------------------------
             lock = ocm.lock("/test", true, false);
             a = (A) ocm.getObject("/test");
@@ -143,22 +143,22 @@ public class DigesterLockTest extends DigesterTestBase
             ocm.update(a);
             ocm.save();
             ocm.unlock("/test", lock.getLockToken());
-            
-            
+
+
             // --------------------------------------------------------------------------------
             // Remove the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             ocm.remove(a);
             ocm.save();
-            
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
-    }        
+
+    }
 
     /**
      *  Lock object which is assigned to a custome node type. This jcr node type inherits from mix:lockable
@@ -172,7 +172,7 @@ public class DigesterLockTest extends DigesterTestBase
 
 
             // --------------------------------------------------------------------------------
-            // Create an object which is associated to the 
+            // Create an object which is associated to the
             // --------------------------------------------------------------------------------
             Lockable lockable = new Lockable();
             lockable.setPath("/test");
@@ -180,14 +180,14 @@ public class DigesterLockTest extends DigesterTestBase
             lockable.setA2("a2");
             ocm.insert(lockable);
             ocm.save();
-            
+
 
             // --------------------------------------------------------------------------------
             // Get the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             lockable = (Lockable) ocm.getObject("/test");
             assertNotNull("a is null", lockable);
-            
+
             // --------------------------------------------------------------------------------
             // Check if the object is locked
             // --------------------------------------------------------------------------------
@@ -195,17 +195,17 @@ public class DigesterLockTest extends DigesterTestBase
             assertNull("Attribute lockowner is not null", lockable.getLockOwner());
             // --------------------------------------------------------------------------------
             // Lock the object
-            // --------------------------------------------------------------------------------                       
+            // --------------------------------------------------------------------------------
             Lock lock = ocm.lock("/test", true, false);
-            
+
             // --------------------------------------------------------------------------------
             // Check if the object is locked
             // --------------------------------------------------------------------------------
             assertTrue("the object is not locked", ocm.isLocked("/test"));
-            
+
             // --------------------------------------------------------------------------------
             // Unlock the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             ocm.unlock("/test", lock.getLockToken());
 
             // --------------------------------------------------------------------------------
@@ -215,7 +215,7 @@ public class DigesterLockTest extends DigesterTestBase
 
 
             // --------------------------------------------------------------------------------
-            // Lock & update 
+            // Lock & update
             // --------------------------------------------------------------------------------
             lock = ocm.lock("/test", true, false);
             assertTrue("the object is not locked", ocm.isLocked("/test"));
@@ -225,21 +225,21 @@ public class DigesterLockTest extends DigesterTestBase
             ocm.update(lockable);
             ocm.save();
             ocm.unlock("/test", lock.getLockToken());
-            
-            
+
+
             // --------------------------------------------------------------------------------
             // Remove the object
-            // --------------------------------------------------------------------------------           
+            // --------------------------------------------------------------------------------
             ocm.remove(lockable);
             ocm.save();
-            
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Exception occurs during the unit test : " + e);
         }
-        
-    }        
-    
+
+    }
+
 }

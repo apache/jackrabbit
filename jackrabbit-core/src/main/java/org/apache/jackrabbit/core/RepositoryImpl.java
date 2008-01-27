@@ -162,11 +162,11 @@ public class RepositoryImpl extends AbstractRepository
 
     // sub file system where the repository stores meta data such as uuid of root node, etc.
     private final FileSystem metaDataStore;
-    
+
     /**
      * Data store for binary properties.
      */
-    private final DataStore dataStore;    
+    private final DataStore dataStore;
 
     /**
      * the delegating observation dispatcher for all workspaces
@@ -352,7 +352,7 @@ public class RepositoryImpl extends AbstractRepository
 
     public DataStore getDataStore() {
         return dataStore;
-    }    
+    }
 
     /**
      * Get the cache manager of this repository, useful
@@ -650,7 +650,7 @@ public class RepositoryImpl extends AbstractRepository
             throw new RepositoryException(e);
         }
     }
-    
+
     /**
      * Create a data store object using the data store configuration.
      *

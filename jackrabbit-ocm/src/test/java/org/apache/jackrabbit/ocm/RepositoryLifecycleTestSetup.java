@@ -22,7 +22,7 @@ import junit.framework.Test;
 import org.apache.jackrabbit.ocm.repository.RepositoryUtil;
 /**
  * A TestSetup that opens/close the JCR repository.
- * 
+ *
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
 public class RepositoryLifecycleTestSetup extends TestSetup {
@@ -36,7 +36,7 @@ public class RepositoryLifecycleTestSetup extends TestSetup {
     protected void setUp() throws Exception {
         super.setUp();
         System.out.println("registering repository ... ");
-        RepositoryUtil.registerRepository("repositoryTest", 
+        RepositoryUtil.registerRepository("repositoryTest",
                 "./src/test/test-config/repository-derby.xml", "./target/repository");
     }
 
@@ -48,6 +48,6 @@ public class RepositoryLifecycleTestSetup extends TestSetup {
         System.out.println("repository shutdown");
         super.tearDown();
     }
-    
-    
+
+
 }

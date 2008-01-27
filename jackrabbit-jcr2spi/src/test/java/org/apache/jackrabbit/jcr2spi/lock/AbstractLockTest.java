@@ -316,7 +316,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     /**
      * Test if the lock token has been automatically added to the set of lock
      * tokens present with the Session that created the new Lock.
-     * 
+     *
      * @throws RepositoryException
      */
     public void testLockTokenPresentWithSession() throws RepositoryException {

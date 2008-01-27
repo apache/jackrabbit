@@ -188,7 +188,7 @@ public class OrderQueryNode extends QueryNode {
             return false;
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */

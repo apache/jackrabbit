@@ -47,7 +47,7 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
         super.setUp();
         testNode = testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.save();
-        
+
         // special case for repositories that do allow binary property
         // values, but only on jcr:content/jcr:data
         if (propertyName1.equals("jcr:data") && testNode.hasNode("jcr:content")
@@ -161,7 +161,7 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
     public void testRemoveInputStreamPropertyParent() throws Exception {
         testNode.setProperty(propertyName1, is1);
         testRootNode.save();
-        
+
         Property property = testNode.getProperty(propertyName1);
         if (property.getDefinition().isMandatory() || property.getDefinition().isProtected()) {
             throw new NotExecutableException("property " + property.getName() + " can not be removed");

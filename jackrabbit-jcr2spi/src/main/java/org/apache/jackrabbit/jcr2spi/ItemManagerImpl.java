@@ -58,7 +58,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
 
     /**
      * A cache for item instances created by this <code>ItemManagerImpl</code>.
-     * 
+     *
      * The <code>ItemState</code>s act as keys for the map. In contrast to
      * o.a.j.core the item state are copied to transient space for reading and
      * will therefor not change upon transient modifications.

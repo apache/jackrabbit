@@ -61,7 +61,7 @@ public class LongValue extends BaseNonStreamValue
 
     /**
      * Returns the long value represented by the string <code>value</code>.
-     * 
+     *
      * @throws ValueFormatException if the string <code>value</code> cannot be
      *      parsed to long.
      */

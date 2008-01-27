@@ -66,10 +66,10 @@ import org.apache.jackrabbit.ocm.version.Version;
 import org.apache.jackrabbit.ocm.version.VersionIterator;
 
 /**
- * 
+ *
  * Default implementation for
  * {@link org.apache.jackrabbit.ocm.manager.ObjectContentManager}
- * 
+ *
  * @author Sandro Boehme
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart
  *         Christophe</a>
@@ -107,7 +107,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     /**
      * Creates a new <code>ObjectContentManager</code> that uses the passed in
      * <code>Mapper</code>, and a <code>Session</code>
-     * 
+     *
      * @param mapper
      *            the Mapper component
      * @param session
@@ -134,7 +134,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     /**
      * Creates a new <code>ObjectContentManager</code> based on a JCR session
      * and some xml mapping files.
-     * 
+     *
      * @param session
      *            The JCR session
      * @param xmlMappingFiles
@@ -161,7 +161,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     /**
      * Creates a new <code>ObjectContentManager</code> based on a JCR session
      * and some xml mapping files.
-     * 
+     *
      * @param session
      *            The JCR session
      * @param xmlMappingFiles
@@ -187,7 +187,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
 
     /**
      * Full constructor.
-     * 
+     *
      * @param mapper
      *            the Mapper component
      * @param converter
@@ -208,7 +208,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
 
     /**
      * Sets the <code>Mapper</code> used by this object content manager.
-     * 
+     *
      * @param mapper
      *            mapping solver
      */
@@ -219,7 +219,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     /**
      * Sets the <code>ObjectConverter</code> that is used internally by this
      * object content manager.
-     * 
+     *
      * @param objectConverter
      *            the internal <code>ObjectConverter</code>
      */
@@ -229,7 +229,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
 
     /**
      * Sets the <code>QueryManager</code> used by the object content manager.
-     * 
+     *
      * @param queryManager
      *            a <code>QueryManager</code>
      */
@@ -425,7 +425,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#remove(java.lang.String)
      */
     public void remove(String path) {
@@ -445,7 +445,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#remove(java.lang.Object)
      */
     public void remove(Object object) {
@@ -453,7 +453,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#remove(org.apache.jackrabbit.ocm.query.Query)
      */
     public void remove(Query query) {
@@ -495,7 +495,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#objectExists(java.lang.String)
      */
     public boolean objectExists(String path) {
@@ -508,7 +508,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#isPersistent(java.lang.Class)
      */
     public boolean isPersistent(final Class clazz) {
@@ -523,7 +523,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#getObject(org.apache.jackrabbit.ocm.query.Query)
      */
     public Object getObject(Query query) {
@@ -538,7 +538,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#getObjects(org.apache.jackrabbit.ocm.query.Query)
      */
     public Collection getObjects(Query query) {
@@ -550,7 +550,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
      * Returns a list of objects of that particular class which are directly
      * under that path. This would not return the objects anywhere below the
      * denoted path.
-     * 
+     *
      * @param objectClass
      * @param path
      * @return
@@ -563,13 +563,13 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
         } catch (RepositoryException e) {
             throw new org.apache.jackrabbit.ocm.exception.RepositoryException("Impossible to get the objects at " + path, e);
         }
-        
-        
+
+
         String parentPath = NodeUtil.getParentPath(path);
         if (! parentPath.equals("/")) {
         	parentPath = parentPath + "/";
         }
-        
+
         String nodeName = NodeUtil.getNodeName(path);
         // If nodeName is missing then include *.
         if (nodeName == null || nodeName.length() == 0) {
@@ -580,12 +580,12 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
         filter.setNodeName(nodeName);
         Query query = queryManager.createQuery(filter);
         return getObjects(query);
-             
-        
+
+
     }
-   
+
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#getObjectIterator(org.apache.jackrabbit.ocm.query.Query)
      */
     public Iterator getObjectIterator(Query query) {
@@ -598,7 +598,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#getObjectIterator(String,
      *      String)
      */
@@ -648,7 +648,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#checkin(java.lang.String)
      */
     public void checkin(String path) {
@@ -656,7 +656,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#checkin(java.lang.String,
      *      java.lang.String[])
      */
@@ -694,7 +694,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#checkout(java.lang.String)
      */
     public void checkout(String path) {
@@ -721,7 +721,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#addVersionLabel(java.lang.String,
      *      java.lang.String, java.lang.String)
      */
@@ -749,7 +749,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#getVersion(java.lang.String,
      *      java.lang.String)
      */
@@ -777,7 +777,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#getVersionLabels(java.lang.String,
      *      java.lang.String)
      */
@@ -830,7 +830,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#getAllVersions(java.lang.String)
      */
     public VersionIterator getAllVersions(String path) {
@@ -855,7 +855,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#getRootVersion(java.lang.String)
      */
     public Version getRootVersion(String path) {
@@ -880,7 +880,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#getBaseVersion(java.lang.String)
      */
     public Version getBaseVersion(String path) {
@@ -903,7 +903,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#lock(java.lang.String,
      *      java.lang.Object, boolean, boolean)
      */
@@ -928,7 +928,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#unlock(java.lang.String,
      *      java.lang.Object, java.lang.String)
      */
@@ -962,7 +962,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#isLocked(java.lang.String)
      */
     public boolean isLocked(final String absPath) {
@@ -986,7 +986,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     /**
      * Throws {@link LockedException} id node is locked so alter nopde cannot be
      * done
-     * 
+     *
      * @param absPath
      *            abs path to node
      * @throws RepositoryException
@@ -1039,7 +1039,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#logout()
      */
     public void logout() {
@@ -1060,7 +1060,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#save()
      */
     public void save() {
@@ -1093,7 +1093,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#move(java.lang.String,
      *      java.lang.String)
      */
@@ -1129,7 +1129,7 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
     }
 
     /**
-     * 
+     *
      * @see org.apache.jackrabbit.ocm.manager.ObjectContentManager#copy(java.lang.String,
      *      java.lang.String)
      */

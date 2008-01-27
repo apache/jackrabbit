@@ -75,7 +75,7 @@ public class DavPropertyName implements DavConstants, XmlSerializable {
             map = new HashMap();
             cache.put(namespace, map);
         }
-        // get (or create) property name object 
+        // get (or create) property name object
         DavPropertyName ret = (DavPropertyName) map.get(name);
         if (ret == null) {
             if (namespace.equals(NAMESPACE)) {

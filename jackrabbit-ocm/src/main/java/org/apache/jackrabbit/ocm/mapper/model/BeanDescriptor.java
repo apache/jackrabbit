@@ -26,15 +26,15 @@ import org.apache.jackrabbit.ocm.manager.beanconverter.BeanConverter;
  */
 public class BeanDescriptor implements ChildNodeDefDescriptor, PropertyDefDescriptor {
     private ClassDescriptor classDescriptor;
-    
+
     private String fieldName;
     private String jcrName;
     private boolean proxy;
     private boolean autoRetrieve = true;
     private boolean autoUpdate = true;
-    private boolean autoInsert = true;    
+    private boolean autoInsert = true;
     private String converter;
-    private BeanConverter beanConverter;    
+    private BeanConverter beanConverter;
     private String jcrType;
     private boolean jcrAutoCreated;
     private boolean jcrMandatory;
@@ -85,8 +85,8 @@ public class BeanDescriptor implements ChildNodeDefDescriptor, PropertyDefDescri
     public void setProxy(boolean proxy) {
         this.proxy = proxy;
     }
-       
-    
+
+
     public boolean isAutoInsert() {
 		return autoInsert;
 	}
@@ -115,7 +115,7 @@ public class BeanDescriptor implements ChildNodeDefDescriptor, PropertyDefDescri
     /**
      * Get the <code>BeanConverter</code> fully qualified name or <tt>null</tt>
      * if none specified by the bean descriptor.
-     * 
+     *
      * @return fully qualified class name or <tt>null</tt>
      */
     public String getConverter() {
@@ -124,7 +124,7 @@ public class BeanDescriptor implements ChildNodeDefDescriptor, PropertyDefDescri
 
     /**
      * Sets the fully qualified name of a <code>BeanConverter</code> to be used.
-     * 
+     *
      * @param converterClass a fully qualified class name
      */
     public void setConverter(String converterClass) {
@@ -134,7 +134,7 @@ public class BeanDescriptor implements ChildNodeDefDescriptor, PropertyDefDescri
 
     /**
      * Getter for property jcrType.
-     * 
+     *
      * @return jcrType
      */
     public String getJcrType() {
@@ -143,7 +143,7 @@ public class BeanDescriptor implements ChildNodeDefDescriptor, PropertyDefDescri
 
     /**
      * Setter for property jcrType.
-     * 
+     *
      * @param value jcrType
      */
     public void setJcrType(String value) {
@@ -232,7 +232,7 @@ public class BeanDescriptor implements ChildNodeDefDescriptor, PropertyDefDescri
 
     /**
      * Getter for property jcrMultiple.
-     * 
+     *
      * @return jcrMultiple
      */
     public boolean isJcrMultiple() {
@@ -241,7 +241,7 @@ public class BeanDescriptor implements ChildNodeDefDescriptor, PropertyDefDescri
 
     /**
      * Setter for property jcrMultiple.
-     * 
+     *
      * @param value jcrMultiple
      */
     public void setJcrMultiple(boolean value) {
@@ -261,11 +261,11 @@ public class BeanDescriptor implements ChildNodeDefDescriptor, PropertyDefDescri
     public ClassDescriptor getClassDescriptor() {
         return classDescriptor;
     }
-    
+
 	public String toString() {
 		
 		return "Bean Descriptor : " +  this.fieldName;
-	}    
+	}
 
     public String getDefaultPrimaryType() {
         return defaultPrimaryType;

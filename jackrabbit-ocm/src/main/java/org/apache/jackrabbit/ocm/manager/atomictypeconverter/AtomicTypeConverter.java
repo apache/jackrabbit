@@ -21,13 +21,13 @@ import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 
 /**
- * 
+ *
  * AtomicTypeConverter interface.
- * 
+ *
  * The Object converter used atomic type converters to map atomic fields to JCR Value objects.
  * Amotic fields are primitive java types and their wrapper classes.
- * 
- * 
+ *
+ *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
  */
@@ -36,27 +36,27 @@ public interface AtomicTypeConverter
 	/**
 	 * Convert an object into a JCR value.
 	 *
-     * @param valueFactory The JCR ValueFactory 
+     * @param valueFactory The JCR ValueFactory
 	 * @param object The object to convert
 	 * @return the corresponding JCR value
-	 *  
+	 *
 	 */
 	public Value getValue(ValueFactory valueFactory, Object object);
 
 	/**
 	 * Convert a jcr property value into an object
-	 * 
+	 *
 	 * @param value The JCR property value
 	 * @return the corresponding object	
 	 */
 	public Object getObject(Value value);
 	
 	/**
-	 * Get the string converted value. This is mainly used to build xpath expressions 
-	 * 
+	 * Get the string converted value. This is mainly used to build xpath expressions
+	 *
 	 * @param valueFactory The JCR ValueFactory
 	 * @param object The object value
-	 * @return The string converted value	 
+	 * @return The string converted value	
 	 */
 	public String getXPathQueryValue(ValueFactory valueFactory, Object object);
 }
