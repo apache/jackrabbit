@@ -32,23 +32,23 @@ import javax.jcr.RepositoryException;
  * Represents binary data which is stored in a temporary file.
  */
 public class BLOBInTempFile extends BLOBFileValue {
-    
+
     /**
      * the prefix of the string representation of this value
-     */    
+     */
     private static final String PREFIX = "file:";
-    
+
     private File file;
     private long length;
     private final boolean temp;
-    
+
     /**
      * Creates a new instance from a stream.
      * The input stream is always closed by this method.
      *
      * @param in the input stream
-     * @throws IOException 
-     */    
+     * @throws IOException
+     */
     private BLOBInTempFile(InputStream in, boolean temp) throws RepositoryException {
         this.temp = temp;
         OutputStream out = null;
@@ -63,10 +63,10 @@ public class BLOBInTempFile extends BLOBFileValue {
                     break;
                 }
                 out.write(buffer, 0, len);
-                length += len;                
+                length += len;
             }
         } catch (IOException e) {
-            throw new RepositoryException("Error creating temporary file", e); 
+            throw new RepositoryException("Error creating temporary file", e);
         } finally {
             try {
                 in.close();
@@ -77,7 +77,7 @@ public class BLOBInTempFile extends BLOBFileValue {
                 try {
                     out.close();
                 } catch (IOException e) {
-                    throw new RepositoryException("Error creating temporary file", e); 
+                    throw new RepositoryException("Error creating temporary file", e);
                 }
             }
         }
@@ -87,7 +87,7 @@ public class BLOBInTempFile extends BLOBFileValue {
      * Creates a new instance from file.
      *
      * @param in the input stream
-     */    
+     */
     private BLOBInTempFile(File file, boolean temp) {
         this.file = file;
         this.length = file.length();
@@ -98,20 +98,20 @@ public class BLOBInTempFile extends BLOBFileValue {
      * Creates a new instance from a stream.
      *
      * @param in the stream
-     */    
+     */
     static BLOBInTempFile getInstance(InputStream in, boolean temp) throws RepositoryException {
         return new BLOBInTempFile(in, temp);
     }
-    
+
     /**
      * Creates a new instance from a file.
      *
      * @param file the file
-     */    
+     */
     static BLOBInTempFile getInstance(File file, boolean temp) throws IOException {
         return new BLOBInTempFile(file, temp);
-    }    
-    
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -145,7 +145,7 @@ public class BLOBInTempFile extends BLOBFileValue {
             return new FileInputStream(file);
         } catch (FileNotFoundException fnfe) {
             throw new RepositoryException("file backing binary value not found", fnfe);
-        }        
+        }
     }
 
     /**
@@ -153,8 +153,8 @@ public class BLOBInTempFile extends BLOBFileValue {
      */
     public String toString() {
         return PREFIX + file.toString();
-    }    
-    
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -168,7 +168,7 @@ public class BLOBInTempFile extends BLOBFileValue {
         }
         return false;
     }
-    
+
     /**
      * Returns zero to satisfy the Object equals/hashCode contract.
      * This class is mutable and not meant to be used as a hash key.
@@ -178,6 +178,6 @@ public class BLOBInTempFile extends BLOBFileValue {
      */
     public int hashCode() {
         return 0;
-    }    
-    
+    }
+
 }

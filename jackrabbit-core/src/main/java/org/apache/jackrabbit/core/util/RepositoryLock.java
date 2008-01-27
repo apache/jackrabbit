@@ -63,7 +63,7 @@ public class RepositoryLock {
      * The lock file within the given directory.
      */
     private final File file;
-    
+
     /**
      * The random access file.
      */
@@ -72,7 +72,7 @@ public class RepositoryLock {
     /**
      * Unique identifier (canonical path name) of the locked directory.
      * Used to ensure exclusive locking within a single JVM.
-     * 
+     *
      * @see https://issues.apache.org/jira/browse/JCR-933
      */
     private final String identifier;
@@ -124,10 +124,10 @@ public class RepositoryLock {
             throw e;
         }
     }
-    
+
     /**
      * Try to lock the random access file.
-     * 
+     *
      * @throws RepositoryException
      */
     private void tryLock() throws RepositoryException {
@@ -175,7 +175,7 @@ public class RepositoryLock {
             }
         }
     }
-    
+
     /**
      * Close the random access file if it is open, and set it to null.
      */
@@ -188,7 +188,7 @@ public class RepositoryLock {
             }
             randomAccessFile = null;
         }
-    }    
+    }
 
     /**
      * Releases repository lock.
@@ -219,5 +219,5 @@ public class RepositoryLock {
             }
         }
     }
-    
+
 }
