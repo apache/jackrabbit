@@ -47,7 +47,7 @@ public interface ISMLocking {
      * Acquire a read lock for the given item <code>id</code>.
      * @param id an item id.
      */
-    public ReadLock acquireReadLock(ItemId id) throws InterruptedException;
+    ReadLock acquireReadLock(ItemId id) throws InterruptedException;
 
     /**
      * Acquires a write lock for the given <code>changeLog</code>.
@@ -57,16 +57,15 @@ public interface ISMLocking {
      * @throws InterruptedException if the thread is interrupted while creating
      *                              the write lock.
      */
-    public WriteLock acquireWriteLock(ChangeLog changeLog)
-            throws InterruptedException;
-
+    WriteLock acquireWriteLock(ChangeLog changeLog) throws InterruptedException;
 
     public interface ReadLock {
 
         /**
          * Releases this lock.
          */
-        public void release();
+        void release();
+
     }
 
     public interface WriteLock {
@@ -74,7 +73,7 @@ public interface ISMLocking {
         /**
          * Releases this lock.
          */
-        public void release();
+        void release();
 
         /**
          * Downgrades this lock into a read lock. When this method returns this
@@ -85,6 +84,8 @@ public interface ISMLocking {
          * @throws InterruptedException if the current thread is interrupted
          *                              while downgrading the write lock.
          */
-        public ReadLock downgrade() throws InterruptedException;
+        ReadLock downgrade() throws InterruptedException;
+
     }
+
 }

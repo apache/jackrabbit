@@ -34,5 +34,6 @@ public interface NamespaceMappings extends NamespaceResolver {
      * @param qName     the property name to translate
      * @return the translated JCR property name
      */
-    public String translatePropertyName(Name qName) throws IllegalNameException;
+    String translatePropertyName(Name qName) throws IllegalNameException;
+
 }

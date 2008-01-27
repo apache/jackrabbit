@@ -33,7 +33,7 @@ public interface IndexingConfiguration {
     /**
      * The default boost: 1.0f.
      */
-    public static final float DEFAULT_BOOST = 1.0f;
+    float DEFAULT_BOOST = 1.0f;
 
     /**
      * Initializes the configuration.
@@ -43,7 +43,7 @@ public interface IndexingConfiguration {
      * @param namespaceMappings the namespaceMappings.
      * @throws Exception if initialization fails.
      */
-    public void init(Element config, QueryHandlerContext context, NamespaceMappings namespaceMappings) throws Exception;
+    void init(Element config, QueryHandlerContext context, NamespaceMappings namespaceMappings) throws Exception;
 
     /**
      * Returns the configured indexing aggregate rules or <code>null</code> if
@@ -51,7 +51,7 @@ public interface IndexingConfiguration {
      *
      * @return the configured rules or <code>null</code> if none exist.
      */
-    public AggregateRule[] getAggregateRules();
+    AggregateRule[] getAggregateRules();
 
     /**
      * Returns <code>true</code> if the property with the given name is indexed

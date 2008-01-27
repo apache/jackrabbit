@@ -23,9 +23,6 @@ package org.apache.jackrabbit.core.persistence.bundle.util;
  */
 public interface StringIndex {
 
-    /** the cvs/svn id */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
     /**
      * Returns the index for a given string. if the string does not exist in
      * the underlying index map a new index needs to be created.
@@ -33,7 +30,7 @@ public interface StringIndex {
      * @param string the string to return the index for
      * @return the index of that string.
      */
-    public int stringToIndex(String string);
+    int stringToIndex(String string);
 
     /**
      * Returns the string for a given index. if the index does not exist in the
@@ -42,6 +39,6 @@ public interface StringIndex {
      * @param idx the index tp returns the string for.
      * @return the string or <code>null</code>
      */
-    public String indexToString(int idx);
+    String indexToString(int idx);
 
 }

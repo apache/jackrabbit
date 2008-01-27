@@ -32,6 +32,6 @@ public interface HighlightingExcerptProvider extends ExcerptProvider {
      * @return the highlighted text.
      * @throws IOException if an error occurs while highlighting the text.
      */
-    public String highlight(String text)
-            throws IOException;
+    String highlight(String text) throws IOException;
+
 }

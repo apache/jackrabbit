@@ -36,6 +36,7 @@ public interface PreparedQuery extends Query {
      * @throws IllegalArgumentException if <code>varName</code> is not a valid variable in this query.
      * @throws RepositoryException if an error occurs.
      */
-    public void bindValue(String varName, Value value)
-            throws IllegalArgumentException, RepositoryException;
+    void bindValue(String varName, Value value)
+        throws IllegalArgumentException, RepositoryException;
+
 }

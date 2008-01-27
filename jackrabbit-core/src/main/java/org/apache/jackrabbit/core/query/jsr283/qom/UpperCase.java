@@ -30,12 +30,13 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
  *
  * @since JCR 2.0
  */
-public interface UpperCase
-        extends DynamicOperand {
+public interface UpperCase extends DynamicOperand {
+
     /**
      * Gets the operand whose value is converted to a upper-case string.
      *
      * @return the operand; non-null
      */
-    public DynamicOperand getOperand();
+    DynamicOperand getOperand();
+
 }

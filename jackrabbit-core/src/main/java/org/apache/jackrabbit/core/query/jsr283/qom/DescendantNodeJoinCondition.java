@@ -40,19 +40,20 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
  *
  * @since JCR 2.0
  */
-public interface DescendantNodeJoinCondition
-        extends JoinCondition {
+public interface DescendantNodeJoinCondition extends JoinCondition {
+
     /**
      * Gets the name of the descendant selector.
      *
      * @return the selector name; non-null
      */
-    public String getDescendantSelectorName();
+    String getDescendantSelectorName();
 
     /**
      * Gets the name of the ancestor selector.
      *
      * @return the selector name; non-null
      */
-    public String getAncestorSelectorName();
+    String getAncestorSelectorName();
+
 }

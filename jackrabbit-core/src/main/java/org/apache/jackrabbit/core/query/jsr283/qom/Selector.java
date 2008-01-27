@@ -45,14 +45,14 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
  *
  * @since JCR 2.0
  */
-public interface Selector
-        extends Source {
+public interface Selector extends Source {
+
     /**
      * Gets the name of the required node type.
      *
      * @return the node type name; non-null
      */
-    public String getNodeTypeName();
+    String getNodeTypeName();
 
     /**
      * Gets the selector name.
@@ -62,5 +62,6 @@ public interface Selector
      *
      * @return the selector name; non-null
      */
-    public String getSelectorName();
+    String getSelectorName();
+
 }

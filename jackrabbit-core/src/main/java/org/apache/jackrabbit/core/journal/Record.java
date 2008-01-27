@@ -32,21 +32,21 @@ public interface Record {
      *
      * @return revision
      */
-    public long getRevision();
+    long getRevision();
 
     /**
      * Return this record's journal identifier.
      *
      * @return journal identifier
      */
-    public String getJournalId();
+    String getJournalId();
 
     /**
      * Return this record's producer identifier.
      *
      * @return producer identifier
      */
-    public String getProducerId();
+    String getProducerId();
 
     /**
      * Read a byte from the underlying stream.
@@ -54,7 +54,7 @@ public interface Record {
      * @return byte
      * @throws JournalException if an error occurs
      */
-    public byte readByte() throws JournalException;
+    byte readByte() throws JournalException;
 
     /**
      * Read a character from the underlying stream.
@@ -62,7 +62,7 @@ public interface Record {
      * @return character
      * @throws JournalException if an error occurs
      */
-    public char readChar() throws JournalException;
+    char readChar() throws JournalException;
 
     /**
      * Read a boolean from the underlying stream.
@@ -70,7 +70,7 @@ public interface Record {
      * @return boolean
      * @throws JournalException if an error occurs
      */
-    public boolean readBoolean() throws JournalException;
+    boolean readBoolean() throws JournalException;
 
     /**
      * Read an integer from the underlying stream.
@@ -78,7 +78,7 @@ public interface Record {
      * @return integer
      * @throws JournalException if an error occurs
      */
-    public int readInt() throws JournalException;
+    int readInt() throws JournalException;
 
     /**
      * Read a string from the underlying stream.
@@ -86,7 +86,7 @@ public interface Record {
      * @return string or <code>null</code>
      * @throws JournalException if an error occurs
      */
-    public String readString() throws JournalException;
+    String readString() throws JournalException;
 
     /**
      * Fully read an array of bytes from the underlying stream.
@@ -94,7 +94,7 @@ public interface Record {
      * @param b byte array
      * @throws JournalException if an error occurs
      */
-    public void readFully(byte[] b) throws JournalException;
+    void readFully(byte[] b) throws JournalException;
 
     /**
      * Read a <code>Name</code> frmo the underlying stream.
@@ -102,7 +102,7 @@ public interface Record {
      * @return name name
      * @throws JournalException if an error occurs
      */
-    public Name readQName() throws JournalException;
+    Name readQName() throws JournalException;
 
     /**
      * Read a <code>Path.Element</code> from the underlying stream.
@@ -110,7 +110,7 @@ public interface Record {
      * @return path element
      * @throws JournalException if an error occurs
      */
-    public Path.Element readPathElement() throws JournalException;
+    Path.Element readPathElement() throws JournalException;
 
     /**
      * Read a <code>Path</code> from the underlying stream.
@@ -118,7 +118,7 @@ public interface Record {
      * @return path
      * @throws JournalException if an error occurs
      */
-    public Path readPath() throws JournalException;
+    Path readPath() throws JournalException;
 
     /**
      * Read a <code>NodeId</code> from the underlying stream.
@@ -126,7 +126,7 @@ public interface Record {
      * @return node id
      * @throws JournalException if an error occurs
      */
-    public NodeId readNodeId() throws JournalException;
+    NodeId readNodeId() throws JournalException;
 
     /**
      * Read a <code>PropertyId</code> from the underlying stream.
@@ -134,7 +134,7 @@ public interface Record {
      * @return property id
      * @throws JournalException if an error occurs
      */
-    public PropertyId readPropertyId() throws JournalException;
+    PropertyId readPropertyId() throws JournalException;
 
     /**
      * Read a <code>NodeTypeDef</code> from the underlying stream.
@@ -142,7 +142,7 @@ public interface Record {
      * @return node type definition
      * @throws JournalException if an error occurs
      */
-    public NodeTypeDef readNodeTypeDef() throws JournalException;
+    NodeTypeDef readNodeTypeDef() throws JournalException;
 
     /**
      * Write a byte to the underlying stream.
@@ -150,7 +150,7 @@ public interface Record {
      * @param n byte
      * @throws JournalException if an error occurs
      */
-    public void writeByte(int n) throws JournalException;
+    void writeByte(int n) throws JournalException;
 
     /**
      * Write a character to the underlying stream.
@@ -158,7 +158,7 @@ public interface Record {
      * @param c character
      * @throws JournalException if an error occurs
      */
-    public void writeChar(char c) throws JournalException;
+    void writeChar(char c) throws JournalException;
 
     /**
      * Write a boolean from the underlying stream.
@@ -166,7 +166,7 @@ public interface Record {
      * @param b boolean
      * @throws JournalException if an error occurs
      */
-    public void writeBoolean(boolean b) throws JournalException;
+    void writeBoolean(boolean b) throws JournalException;
 
     /**
      * Write an integer to the underlying stream.
@@ -174,7 +174,7 @@ public interface Record {
      * @param n integer
      * @throws JournalException if an error occurs
      */
-    public void writeInt(int n) throws JournalException;
+    void writeInt(int n) throws JournalException;
 
     /**
      * Write a string to the underlying stream.
@@ -182,7 +182,7 @@ public interface Record {
      * @param s string, may be <code>null</code>
      * @throws JournalException if an error occurs
      */
-    public void writeString(String s) throws JournalException;
+    void writeString(String s) throws JournalException;
 
     /**
      * Write an array of bytes to the underlying stream.
@@ -190,7 +190,7 @@ public interface Record {
      * @param b byte array
      * @throws JournalException if an error occurs
      */
-    public void write(byte[] b) throws JournalException;
+    void write(byte[] b) throws JournalException;
 
     /**
      * Write a <code>Name</code> to the underlying stream.
@@ -198,7 +198,7 @@ public interface Record {
      * @param name name
      * @throws JournalException if an error occurs
      */
-    public void writeQName(Name name) throws JournalException;
+    void writeQName(Name name) throws JournalException;
 
     /**
      * Write a <code>Path.Element</code> to the underlying stream.
@@ -206,7 +206,7 @@ public interface Record {
      * @param element path element
      * @throws JournalException if an error occurs
      */
-    public void writePathElement(Path.Element element) throws JournalException;
+    void writePathElement(Path.Element element) throws JournalException;
 
     /**
      * Write a <code>Path</code> to the underlying stream.
@@ -214,7 +214,7 @@ public interface Record {
      * @param path path
      * @throws JournalException if an error occurs
      */
-    public void writePath(Path path) throws JournalException;
+    void writePath(Path path) throws JournalException;
 
     /**
      * Write a <code>NodeId</code> to the underlying stream.
@@ -222,7 +222,7 @@ public interface Record {
      * @param nodeId node id
      * @throws JournalException if an error occurs
      */
-    public void writeNodeId(NodeId nodeId) throws JournalException;
+    void writeNodeId(NodeId nodeId) throws JournalException;
 
     /**
      * Write a <code>PropertyId</code> to the underlying stream.
@@ -230,7 +230,7 @@ public interface Record {
      * @param propertyId property id
      * @throws JournalException if an error occurs
      */
-    public void writePropertyId(PropertyId propertyId) throws JournalException;
+    void writePropertyId(PropertyId propertyId) throws JournalException;
 
     /**
      * Write a <code>NodeTypeDef</code> to the underlying stream.
@@ -238,7 +238,7 @@ public interface Record {
      * @param ntd node type definition
      * @throws JournalException if an error occurs
      */
-    public void writeNodeTypeDef(NodeTypeDef ntd) throws JournalException;
+    void writeNodeTypeDef(NodeTypeDef ntd) throws JournalException;
 
     /**
      * Update the changes made to an appended record. This will also update
@@ -247,10 +247,11 @@ public interface Record {
      * @throws JournalException if this record has not been appended,
      *                          or if another error occurs
      */
-    public void update() throws JournalException;
+    void update() throws JournalException;
 
     /**
      * Cancel the changes made to an appended record.
      */
-    public void cancelUpdate();
+    void cancelUpdate();
+
 }

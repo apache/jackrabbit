@@ -21,57 +21,58 @@ package org.apache.jackrabbit.core.query.qom;
  */
 public interface QOMTreeVisitor {
 
-    public Object visit(AndImpl node, Object data) throws Exception;
+    Object visit(AndImpl node, Object data) throws Exception;
 
-    public Object visit(BindVariableValueImpl node, Object data) throws Exception;
+    Object visit(BindVariableValueImpl node, Object data) throws Exception;
 
-    public Object visit(ChildNodeImpl node, Object data) throws Exception;
+    Object visit(ChildNodeImpl node, Object data) throws Exception;
 
-    public Object visit(ChildNodeJoinConditionImpl node, Object data) throws Exception;
+    Object visit(ChildNodeJoinConditionImpl node, Object data) throws Exception;
 
-    public Object visit(ColumnImpl node, Object data) throws Exception;
+    Object visit(ColumnImpl node, Object data) throws Exception;
 
-    public Object visit(ComparisonImpl node, Object data) throws Exception;
+    Object visit(ComparisonImpl node, Object data) throws Exception;
 
-    public Object visit(DescendantNodeImpl node, Object data) throws Exception;
+    Object visit(DescendantNodeImpl node, Object data) throws Exception;
 
-    public Object visit(DescendantNodeJoinConditionImpl node, Object data) throws Exception;
+    Object visit(DescendantNodeJoinConditionImpl node, Object data) throws Exception;
 
-    public Object visit(EquiJoinConditionImpl node, Object data) throws Exception;
+    Object visit(EquiJoinConditionImpl node, Object data) throws Exception;
 
-    public Object visit(FullTextSearchImpl node, Object data) throws Exception;
+    Object visit(FullTextSearchImpl node, Object data) throws Exception;
 
-    public Object visit(FullTextSearchScoreImpl node, Object data) throws Exception;
+    Object visit(FullTextSearchScoreImpl node, Object data) throws Exception;
 
-    public Object visit(JoinImpl node, Object data) throws Exception;
+    Object visit(JoinImpl node, Object data) throws Exception;
 
-    public Object visit(LengthImpl node, Object data) throws Exception;
+    Object visit(LengthImpl node, Object data) throws Exception;
 
-    public Object visit(LiteralImpl node, Object data) throws Exception;
+    Object visit(LiteralImpl node, Object data) throws Exception;
 
-    public Object visit(LowerCaseImpl node, Object data) throws Exception;
+    Object visit(LowerCaseImpl node, Object data) throws Exception;
 
-    public Object visit(NodeLocalNameImpl node, Object data) throws Exception;
+    Object visit(NodeLocalNameImpl node, Object data) throws Exception;
 
-    public Object visit(NodeNameImpl node, Object data) throws Exception;
+    Object visit(NodeNameImpl node, Object data) throws Exception;
 
-    public Object visit(NotImpl node, Object data) throws Exception;
+    Object visit(NotImpl node, Object data) throws Exception;
 
-    public Object visit(OrderingImpl node, Object data) throws Exception;
+    Object visit(OrderingImpl node, Object data) throws Exception;
 
-    public Object visit(OrImpl node, Object data) throws Exception;
+    Object visit(OrImpl node, Object data) throws Exception;
 
-    public Object visit(PropertyExistenceImpl node, Object data) throws Exception;
+    Object visit(PropertyExistenceImpl node, Object data) throws Exception;
 
-    public Object visit(PropertyValueImpl node, Object data) throws Exception;
+    Object visit(PropertyValueImpl node, Object data) throws Exception;
 
-    public Object visit(QueryObjectModelTree node, Object data) throws Exception;
+    Object visit(QueryObjectModelTree node, Object data) throws Exception;
 
-    public Object visit(SameNodeImpl node, Object data) throws Exception;
+    Object visit(SameNodeImpl node, Object data) throws Exception;
 
-    public Object visit(SameNodeJoinConditionImpl node, Object data) throws Exception;
+    Object visit(SameNodeJoinConditionImpl node, Object data) throws Exception;
 
-    public Object visit(SelectorImpl node, Object data) throws Exception;
+    Object visit(SelectorImpl node, Object data) throws Exception;
 
-    public Object visit(UpperCaseImpl node, Object data) throws Exception;
+    Object visit(UpperCaseImpl node, Object data) throws Exception;
+
 }

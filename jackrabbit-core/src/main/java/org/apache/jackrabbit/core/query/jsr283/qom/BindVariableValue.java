@@ -29,10 +29,12 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
  */
 public interface BindVariableValue
         extends StaticOperand {
+
     /**
      * Gets the name of the bind variable.
      *
      * @return the bind variable name; non-null
      */
-    public String getBindVariableName();
+    String getBindVariableName();
+
 }

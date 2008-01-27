@@ -32,5 +32,6 @@ public interface UpdateEventListener {
      * @param events events to deliver
      * @throws RepositoryException if the update cannot be processed
      */
-    public void externalUpdate(ChangeLog changes, List events) throws RepositoryException;
+    void externalUpdate(ChangeLog changes, List events) throws RepositoryException;
+
 }

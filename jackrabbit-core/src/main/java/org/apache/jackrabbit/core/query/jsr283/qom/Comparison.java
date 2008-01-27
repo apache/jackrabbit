@@ -96,35 +96,36 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
  *
  * @since JCR 2.0
  */
-public interface Comparison
-        extends Constraint {
+public interface Comparison extends Constraint {
+
     /**
      * Gets the first operand.
      *
      * @return the operand; non-null
      */
-    public DynamicOperand getOperand1();
+    DynamicOperand getOperand1();
 
     /**
      * Gets the operator.
      *
      * @return either
      *         <ul>
-     *         <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_EQUAL_TO},</li>
-     *         <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_NOT_EQUAL_TO},</li>
-     *         <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_LESS_THAN},</li>
-     *         <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_LESS_THAN_OR_EQUAL_TO},</li>
-     *         <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_GREATER_THAN},</li>
-     *         <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_GREATER_THAN_OR_EQUAL_TO}, or</li>
-     *         <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_LIKE}</li>
+     *         <li>{@link QueryObjectModelConstants#OPERATOR_EQUAL_TO},</li>
+     *         <li>{@link QueryObjectModelConstants#OPERATOR_NOT_EQUAL_TO},</li>
+     *         <li>{@link QueryObjectModelConstants#OPERATOR_LESS_THAN},</li>
+     *         <li>{@link QueryObjectModelConstants#OPERATOR_LESS_THAN_OR_EQUAL_TO},</li>
+     *         <li>{@link QueryObjectModelConstants#OPERATOR_GREATER_THAN},</li>
+     *         <li>{@link QueryObjectModelConstants#OPERATOR_GREATER_THAN_OR_EQUAL_TO}, or</li>
+     *         <li>{@link QueryObjectModelConstants#OPERATOR_LIKE}</li>
      *         </ul>
      */
-    public int getOperator();
+    int getOperator();
 
     /**
      * Gets the second operand.
      *
      * @return the operand; non-null
      */
-    public StaticOperand getOperand2();
+    StaticOperand getOperand2();
+
 }

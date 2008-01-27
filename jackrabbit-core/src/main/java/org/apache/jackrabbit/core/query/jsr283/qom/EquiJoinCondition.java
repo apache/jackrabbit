@@ -52,33 +52,34 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
  *
  * @since JCR 2.0
  */
-public interface EquiJoinCondition
-        extends JoinCondition {
+public interface EquiJoinCondition extends JoinCondition {
+
     /**
      * Gets the name of the first selector.
      *
      * @return the selector name; non-null
      */
-    public String getSelector1Name();
+    String getSelector1Name();
 
     /**
      * Gets the property name in the first selector.
      *
      * @return the property name; non-null
      */
-    public String getProperty1Name();
+    String getProperty1Name();
 
     /**
      * Gets the name of the second selector.
      *
      * @return the selector name; non-null
      */
-    public String getSelector2Name();
+    String getSelector2Name();
 
     /**
      * Gets the property name in the second selector.
      *
      * @return the property name; non-null
      */
-    public String getProperty2Name();
+    String getProperty2Name();
+
 }

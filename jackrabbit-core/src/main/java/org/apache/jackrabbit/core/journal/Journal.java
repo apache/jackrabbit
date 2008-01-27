@@ -30,7 +30,7 @@ public interface Journal {
      * @param resolver resolver used when reading/writing records
      * @throws JournalException if an error occurs
      */
-    public void init(String id, NamespaceResolver resolver) throws JournalException;
+    void init(String id, NamespaceResolver resolver) throws JournalException;
 
     /**
      * Register a record consumer.
@@ -38,7 +38,7 @@ public interface Journal {
      * @param consumer record consumer
      * @throws JournalException if an error occurs
      */
-    public void register(RecordConsumer consumer) throws JournalException;
+    void register(RecordConsumer consumer) throws JournalException;
 
     /**
      * Unregister a record processor.
@@ -47,7 +47,7 @@ public interface Journal {
      * @return <code>true</code> if the consumer was previously registered;
      *         <code>false</code> otherwise
      */
-    public boolean unregister(RecordConsumer consumer);
+    boolean unregister(RecordConsumer consumer);
 
     /**
      * Synchronize contents from journal. This will compare the journal's
@@ -57,7 +57,7 @@ public interface Journal {
      *
      * @throws JournalException if an error occurs
      */
-    public void sync() throws JournalException;
+    void sync() throws JournalException;
 
     /**
      * Return the record producer for a given identifier.
@@ -65,10 +65,11 @@ public interface Journal {
      * @param identifier identifier
      * @throws JournalException if an error occurs
      */
-    public RecordProducer getProducer(String identifier) throws JournalException;
+    RecordProducer getProducer(String identifier) throws JournalException;
 
     /**
      * Close this journal. This should release any resources still held by this journal.
      */
-    public void close();
+    void close();
+
 }

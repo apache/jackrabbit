@@ -38,19 +38,20 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
  *
  * @since JCR 2.0
  */
-public interface SameNode
-        extends Constraint {
+public interface SameNode extends Constraint {
+
     /**
      * Gets the name of the selector against which to apply this constraint.
      *
      * @return the selector name; non-null
      */
-    public String getSelectorName();
+    String getSelectorName();
 
     /**
      * Gets the absolute path.
      *
      * @return the path; non-null
      */
-    public String getPath();
+    String getPath();
+
 }

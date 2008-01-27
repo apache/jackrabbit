@@ -32,19 +32,20 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
  *
  * @since JCR 2.0
  */
-public interface PropertyExistence
-        extends Constraint {
+public interface PropertyExistence extends Constraint {
+
     /**
      * Gets the name of the selector against which to apply this constraint.
      *
      * @return the selector name; non-null
      */
-    public String getSelectorName();
+    String getSelectorName();
 
     /**
      * Gets the name of the property.
      *
      * @return the property name; non-null
      */
-    public String getPropertyName();
+    String getPropertyName();
+
 }

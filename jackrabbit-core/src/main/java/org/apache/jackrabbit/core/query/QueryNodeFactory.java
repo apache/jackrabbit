@@ -30,8 +30,7 @@ public interface QueryNodeFactory {
      * @param nodeType the name of the node type.
      * @return a {@link NodeTypeQueryNode}.
      */
-    public NodeTypeQueryNode createNodeTypeQueryNode(
-            QueryNode parent, Name nodeType);
+    NodeTypeQueryNode createNodeTypeQueryNode(QueryNode parent, Name nodeType);
 
     /**
      * Creates a {@link AndQueryNode} instance.
@@ -39,8 +38,7 @@ public interface QueryNodeFactory {
      * @param parent the parent node.
      * @return a {@link AndQueryNode}.
      */
-    public AndQueryNode createAndQueryNode(
-            QueryNode parent);
+    AndQueryNode createAndQueryNode(QueryNode parent);
 
     /**
      * Creates a {@link LocationStepQueryNode} instance.
@@ -48,8 +46,7 @@ public interface QueryNodeFactory {
      * @param parent the parent node.
      * @return a {@link LocationStepQueryNode}.
      */
-    public LocationStepQueryNode createLocationStepQueryNode(
-            QueryNode parent);
+    LocationStepQueryNode createLocationStepQueryNode(QueryNode parent);
 
     /**
      * Creates a {@link DerefQueryNode} instance.
@@ -59,7 +56,7 @@ public interface QueryNodeFactory {
      * @param descendants if the axis is //
      * @return a {@link DerefQueryNode}.
      */
-    public DerefQueryNode createDerefQueryNode(
+    DerefQueryNode createDerefQueryNode(
             QueryNode parent, Name nameTest, boolean descendants);
 
     /**
@@ -68,8 +65,7 @@ public interface QueryNodeFactory {
      * @param parent the parent node.
      * @return a {@link NotQueryNode}.
      */
-    public NotQueryNode createNotQueryNode(
-            QueryNode parent);
+    NotQueryNode createNotQueryNode(QueryNode parent);
 
     /**
      * Creates a {@link OrQueryNode} instance.
@@ -77,8 +73,7 @@ public interface QueryNodeFactory {
      * @param parent the parent node.
      * @return a {@link OrQueryNode}.
      */
-    public OrQueryNode createOrQueryNode(
-            QueryNode parent);
+    OrQueryNode createOrQueryNode(QueryNode parent);
 
     /**
      * Creates a {@link RelationQueryNode} instance.
@@ -87,8 +82,7 @@ public interface QueryNodeFactory {
      * @param operation the operation type.
      * @return a {@link RelationQueryNode}.
      */
-    public RelationQueryNode createRelationQueryNode(
-            QueryNode parent, int operation);
+    RelationQueryNode createRelationQueryNode(QueryNode parent, int operation);
 
     /**
      * Creates a {@link PathQueryNode} instance.
@@ -96,8 +90,7 @@ public interface QueryNodeFactory {
      * @param parent the parent node.
      * @return a {@link PathQueryNode}.
      */
-    public PathQueryNode createPathQueryNode(
-            QueryNode parent);
+    PathQueryNode createPathQueryNode(QueryNode parent);
 
     /**
      * Creates a {@link OrderQueryNode} instance.
@@ -105,8 +98,7 @@ public interface QueryNodeFactory {
      * @param parent the parent node.
      * @return a {@link OrderQueryNode}.
      */
-    public OrderQueryNode createOrderQueryNode(
-            QueryNode parent);
+    OrderQueryNode createOrderQueryNode(QueryNode parent);
 
     /**
      * Creates a {@link PropertyFunctionQueryNode} instance.
@@ -115,7 +107,7 @@ public interface QueryNodeFactory {
      * @param functionName the name of the function.
      * @return a {@link PropertyFunctionQueryNode}.
      */
-    public PropertyFunctionQueryNode createPropertyFunctionQueryNode(
+    PropertyFunctionQueryNode createPropertyFunctionQueryNode(
             QueryNode parent, String functionName);
 
     /**
@@ -123,7 +115,7 @@ public interface QueryNodeFactory {
      *
      * @return a {@link QueryRootNode}.
      */
-    public QueryRootNode createQueryRootNode();
+    QueryRootNode createQueryRootNode();
 
     /**
      * Creates a {@link TextsearchQueryNode} instance.
@@ -132,6 +124,7 @@ public interface QueryNodeFactory {
      * @param query the textsearch statement.
      * @return a {@link TextsearchQueryNode}.
      */
-    public TextsearchQueryNode createTextsearchQueryNode(
+    TextsearchQueryNode createTextsearchQueryNode(
             QueryNode parent, String query);
+
 }

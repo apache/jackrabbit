@@ -31,6 +31,7 @@ public interface NamespaceEventListener {
      * @param uri uri to map prefix to
      * @throws RepositoryException if an error occurs
      */
-    public void externalRemap(String oldPrefix, String newPrefix, String uri)
-            throws RepositoryException;
+    void externalRemap(String oldPrefix, String newPrefix, String uri)
+        throws RepositoryException;
+
 }

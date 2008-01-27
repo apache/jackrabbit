@@ -29,5 +29,6 @@ public interface RecordProducer {
      * @return appended record
      * @throws JournalException if an error occurs
      */
-    public Record append() throws JournalException;
+    Record append() throws JournalException;
+
 }

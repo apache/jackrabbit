@@ -39,61 +39,62 @@ public interface PropertyDefinitionTemplate extends PropertyDefinition {
      *
      * @param name a <code>String</code>.
      */
-    public void setName(String name);
+    void setName(String name);
 
     /**
      * Sets the auto-create status of the property.
      *
      * @param autoCreated a <code>boolean</code>.
      */
-    public void setAutoCreated(boolean autoCreated);
+    void setAutoCreated(boolean autoCreated);
 
     /**
      * Sets the mandatory status of the property.
      *
      * @param mandatory a <code>boolean</code>.
      */
-    public void setMandatory(boolean mandatory);
+    void setMandatory(boolean mandatory);
 
     /**
      * Sets the on-parent-version status of the property.
      *
      * @param opv an <code>int</code> constant member of <code>OnParentVersionAction</code>.
      */
-    public void setOnParentVersion(int opv);
+    void setOnParentVersion(int opv);
 
     /**
      * Sets the protected status of the property.
      *
      * @param protectedStatus a <code>boolean</code>.
      */
-    public void setProtected(boolean protectedStatus);
+    void setProtected(boolean protectedStatus);
 
     /**
      * Sets the required type of the property.
      *
      * @param type an <code>int</code> constant member of <code>PropertyType</code>.
      */
-    public void setRequiredType(int type);
+    void setRequiredType(int type);
 
     /**
      * Sets the value constraints of the property.
      *
      * @param constraints a <code>String</code> array.
      */
-    public void setValueConstarints(String[] constraints);
+    void setValueConstarints(String[] constraints);
 
     /**
      * Sets the default value (or values, in the case of a multi-value property) of the property.
      *
      * @param defaultValues a <code>Value</code> array.
      */
-    public void setDefaultValues(Value[] defaultValues);
+    void setDefaultValues(Value[] defaultValues);
 
     /**
      * Sets the multi-value status of the property.
      *
      * @param multiple a <code>boolean</code>.
      */
-    public void setMultiple(boolean multiple);
+    void setMultiple(boolean multiple);
+
 }

@@ -24,38 +24,39 @@ package org.apache.jackrabbit.core.query.jsr283.qom;
  *
  * @since JCR 2.0
  */
-public interface Join
-        extends Source {
+public interface Join extends Source {
+
     /**
      * Gets the left node-tuple source.
      *
      * @return the left source; non-null
      */
-    public Source getLeft();
+    Source getLeft();
 
     /**
      * Gets the right node-tuple source.
      *
      * @return the right source; non-null
      */
-    public Source getRight();
+    Source getRight();
 
     /**
      * Gets the join type.
      *
      * @return either
      *         <ul>
-     *         <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_INNER},</li>
-     *         <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_LEFT_OUTER},</li>
-     *         <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_RIGHT_OUTER}</li>
+     *         <li>{@link QueryObjectModelConstants#JOIN_TYPE_INNER},</li>
+     *         <li>{@link QueryObjectModelConstants#JOIN_TYPE_LEFT_OUTER},</li>
+     *         <li>{@link QueryObjectModelConstants#JOIN_TYPE_RIGHT_OUTER}</li>
      *         </ul>
      */
-    public int getJoinType();
+    int getJoinType();
 
     /**
      * Gets the join condition.
      *
      * @return the join condition; non-null
      */
-    public JoinCondition getJoinCondition();
+    JoinCondition getJoinCondition();
+
 }
