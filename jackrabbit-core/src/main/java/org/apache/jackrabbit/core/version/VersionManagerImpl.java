@@ -219,7 +219,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
     public VersionHistory createVersionHistory(Session session, final NodeState node)
             throws RepositoryException {
         InternalVersionHistory history = (InternalVersionHistory)
-                escFactory.doSourced((SessionImpl) session, new SourcedTarget(){
+                escFactory.doSourced((SessionImpl) session, new SourcedTarget() {
             public Object run() throws RepositoryException {
                 return createVersionHistory(node);
             }
@@ -296,7 +296,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      */
     public Version checkin(final NodeImpl node) throws RepositoryException {
         InternalVersion version = (InternalVersion)
-                escFactory.doSourced((SessionImpl) node.getSession(), new SourcedTarget(){
+                escFactory.doSourced((SessionImpl) node.getSession(), new SourcedTarget() {
             public Object run() throws RepositoryException {
                 String histUUID = node.getProperty(NameConstants.JCR_VERSIONHISTORY).getString();
                 return checkin((InternalVersionHistoryImpl)
@@ -323,7 +323,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
                     + " does not exist in this VersionHistory");
         }
 
-        escFactory.doSourced((SessionImpl) history.getSession(), new SourcedTarget(){
+        escFactory.doSourced((SessionImpl) history.getSession(), new SourcedTarget() {
             public Object run() throws RepositoryException {
                 InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
                         historyImpl.getInternalVersionHistory();
@@ -345,7 +345,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
             throws RepositoryException {
 
         InternalVersion v = (InternalVersion)
-                escFactory.doSourced((SessionImpl) history.getSession(), new SourcedTarget(){
+                escFactory.doSourced((SessionImpl) history.getSession(), new SourcedTarget() {
             public Object run() throws RepositoryException {
                 InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
                         ((VersionHistoryImpl) history).getInternalVersionHistory();
@@ -471,14 +471,16 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      * <p/>
      * Not used.
      */
-    public void stateCreated(ItemState created) {}
+    public void stateCreated(ItemState created) {
+    }
 
     /**
      * {@inheritDoc}
      * <p/>
      * Not used.
      */
-    public void stateModified(ItemState modified) {}
+    public void stateModified(ItemState modified) {
+    }
 
     /**
      * {@inheritDoc}
@@ -500,7 +502,8 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      * <p/>
      * Not used.
      */
-    public void stateDiscarded(ItemState discarded) {}
+    public void stateDiscarded(ItemState discarded) {
+    }
 
     //--------------------------------------------------< UpdateEventListener >
 

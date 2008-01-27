@@ -121,7 +121,8 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
                     rangeScans.add(new RangeScan(reader, term, term));
                 }
 
-                for (Iterator it = rangeScans.iterator(); it.hasNext(); ) {
+                Iterator it = rangeScans.iterator();
+                while (it.hasNext()) {
                     TermEnum terms = (TermEnum) it.next();
                     do {
                         Term t = terms.term();
@@ -141,7 +142,8 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
                     } while (terms.next());
                 }
             } finally {
-                for (Iterator it = rangeScans.iterator(); it.hasNext(); ) {
+                Iterator it = rangeScans.iterator();
+                while (it.hasNext()) {
                     TermEnum terms = (TermEnum) it.next();
                     try {
                         terms.close();

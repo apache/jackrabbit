@@ -60,7 +60,7 @@ public class IndexFormatVersion {
      * Returns the index format version
      * @return the index format version.
      */
-    public int getVersion(){
+    public int getVersion() {
         return version;
     }
 

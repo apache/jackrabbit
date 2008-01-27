@@ -149,7 +149,7 @@ public class DateVersionSelector implements VersionSelector {
         VersionIterator iter = history.getAllVersions();
         while (iter.hasNext()) {
             Version v = iter.nextVersion();
-            if (v.getPredecessors().length==0) {
+            if (v.getPredecessors().length == 0) {
                 // ignore root version
                 continue;
             }

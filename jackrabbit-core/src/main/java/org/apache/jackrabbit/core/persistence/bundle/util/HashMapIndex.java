@@ -146,7 +146,7 @@ public class HashMapIndex implements StringIndex {
             try {
                 save();
             } catch (Exception e) {
-                throw new IllegalStateException("Unable to store lookup table: "  +e);
+                throw new IllegalStateException("Unable to store lookup table: "  + e);
             }
         }
         return idx.intValue();

@@ -41,7 +41,8 @@ public class Util {
      * @param old the document to dispose.
      */
     public static void disposeDocument(Document old) {
-        for (Enumeration e = old.fields(); e.hasMoreElements();) {
+        Enumeration e = old.fields();
+        while (e.hasMoreElements()) {
             Field f = (Field) e.nextElement();
             if (f.readerValue() != null) {
                 try {
@@ -62,7 +63,8 @@ public class Util {
      *         otherwise.
      */
     public static boolean isDocumentReady(Document doc) {
-        for (Enumeration fields = doc.fields(); fields.hasMoreElements(); ) {
+        Enumeration fields = doc.fields();
+        while (fields.hasMoreElements()) {
             Field f = (Field) fields.nextElement();
             if (f.readerValue() instanceof TextExtractorReader) {
                 TextExtractorReader r = (TextExtractorReader) f.readerValue();

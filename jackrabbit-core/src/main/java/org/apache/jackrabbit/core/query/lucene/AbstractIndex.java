@@ -409,7 +409,8 @@ abstract class AbstractIndex {
     private Document getFinishedDocument(Document doc) throws IOException {
         if (!Util.isDocumentReady(doc)) {
             Document copy = new Document();
-            for (Iterator fields = doc.getFields().iterator(); fields.hasNext(); ) {
+            Iterator fields = doc.getFields().iterator();
+            while (fields.hasNext()) {
                 Field f = (Field) fields.next();
                 Field field = null;
                 Field.TermVector tv = getTermVectorParameter(f);

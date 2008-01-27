@@ -182,7 +182,8 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
         Set relevantTerms = new HashSet();
         query.extractTerms(extractedTerms);
         // only keep terms for fulltext fields
-        for (Iterator it = extractedTerms.iterator(); it.hasNext(); ) {
+        Iterator it = extractedTerms.iterator();
+        while (it.hasNext()) {
             Term t = (Term) it.next();
             if (t.field().equals(FieldNames.FULLTEXT)) {
                 relevantTerms.add(t);

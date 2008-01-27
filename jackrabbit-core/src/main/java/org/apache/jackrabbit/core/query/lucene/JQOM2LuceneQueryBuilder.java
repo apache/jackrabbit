@@ -636,7 +636,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
         }
         Query q;
         if (terms.size() == 1) {
-            q= new TermQuery((Term) terms.get(0));
+            q = new TermQuery((Term) terms.get(0));
         } else {
             BooleanQuery b = new BooleanQuery();
             for (Iterator it = terms.iterator(); it.hasNext();) {

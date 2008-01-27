@@ -162,10 +162,12 @@ public class WeightedHighlighter extends DefaultHighlighter {
 
         Map offsetInfos = new IdentityHashMap();
         // remove overlapping fragment infos
-        for (Iterator it = infos.iterator(); it.hasNext(); ) {
+        Iterator it = infos.iterator();
+        while (it.hasNext()) {
             FragmentInfo fi = (FragmentInfo) it.next();
             boolean overlap = false;
-            for (Iterator fit = fi.iterator(); fit.hasNext() && !overlap; ) {
+            Iterator fit = fi.iterator();
+            while (fit.hasNext() && !overlap) {
                 TermVectorOffsetInfo oi = (TermVectorOffsetInfo) fit.next();
                 if (offsetInfos.containsKey(oi)) {
                     overlap = true;
@@ -174,7 +176,8 @@ public class WeightedHighlighter extends DefaultHighlighter {
             if (overlap) {
                 it.remove();
             } else {
-                for (Iterator oit = fi.iterator(); oit.hasNext(); ) {
+                Iterator oit = fi.iterator();
+                while (oit.hasNext()) {
                     offsetInfos.put(oit.next(), null);
                 }
             }
@@ -182,13 +185,15 @@ public class WeightedHighlighter extends DefaultHighlighter {
 
         // create excerpts
         StringBuffer sb = new StringBuffer(excerptStart);
-        for (Iterator it = infos.iterator(); it.hasNext(); ) {
+        it = infos.iterator();
+        while (it.hasNext()) {
             FragmentInfo fi = (FragmentInfo) it.next();
             sb.append(fragmentStart);
             int limit = Math.max(0, fi.getStartOffset() / 2 + fi.getEndOffset() / 2 - surround);
             int len = startFragment(sb, text, fi.getStartOffset(), limit);
             TermVectorOffsetInfo lastOffsetInfo = null;
-            for (Iterator fIt = fi.iterator(); fIt.hasNext(); ) {
+            Iterator fIt = fi.iterator();
+            while (fIt.hasNext()) {
                 TermVectorOffsetInfo oi = (TermVectorOffsetInfo) fIt.next();
                 if (lastOffsetInfo != null) {
                     // fill in text between terms

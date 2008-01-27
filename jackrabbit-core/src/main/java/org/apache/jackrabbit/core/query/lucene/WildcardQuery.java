@@ -276,7 +276,7 @@ public class WildcardQuery extends Query implements Transformable {
         WildcardQueryScorer(Similarity similarity, IndexReader reader) {
             super(similarity);
             this.reader = reader;
-            this.cacheKey = field + '\uFFFF' + propName + '\uFFFF' + transform +'\uFFFF' + pattern;
+            this.cacheKey = field + '\uFFFF' + propName + '\uFFFF' + transform + '\uFFFF' + pattern;
             // check cache
             PerQueryCache cache = PerQueryCache.getInstance();
             Map m = (Map) cache.get(WildcardQueryScorer.class, reader);

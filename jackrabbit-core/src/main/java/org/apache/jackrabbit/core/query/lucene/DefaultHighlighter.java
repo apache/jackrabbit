@@ -404,7 +404,8 @@ public class DefaultHighlighter {
 
         public void trim() {
             int end = startOffset + (mergeGap / 2);
-            for (Iterator it = offsetInfosList.iterator(); it.hasNext(); ) {
+            Iterator it = offsetInfosList.iterator();
+            while (it.hasNext()) {
                 TermVectorOffsetInfo tvoi = (TermVectorOffsetInfo) it.next();
                 if (tvoi.getStartOffset() > end) {
                     it.remove();

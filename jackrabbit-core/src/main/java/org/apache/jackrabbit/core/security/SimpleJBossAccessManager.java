@@ -70,7 +70,7 @@ public class SimpleJBossAccessManager implements AccessManager {
         while (iterator.hasNext()) {
             Principal principal = (Principal) iterator.next();
             if (principal instanceof Group
-                    && principal.getName().equalsIgnoreCase("Roles")){
+                    && principal.getName().equalsIgnoreCase("Roles")) {
                 Group group = (Group) principal;
                 Enumeration members = group.members();
                 while (members.hasMoreElements()) {

@@ -603,7 +603,7 @@ public class SessionImpl extends AbstractSession
      */
     public GarbageCollector createDataStoreGarbageCollector() throws RepositoryException, ItemStateException {
         ArrayList pmList = new ArrayList();
-        VersionManagerImpl vm = (VersionManagerImpl)rep.getVersionManager();
+        VersionManagerImpl vm = (VersionManagerImpl) rep.getVersionManager();
         PersistenceManager pm = vm.getPersistenceManager();
         pmList.add(pm);
         String[] wspNames = rep.getWorkspaceNames();

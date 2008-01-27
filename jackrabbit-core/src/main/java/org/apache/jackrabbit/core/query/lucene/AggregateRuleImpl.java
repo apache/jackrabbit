@@ -327,7 +327,8 @@ class AggregateRuleImpl implements AggregateRule {
             }
             if (pattern.getLength() - 1 == offset) {
                 // last segment -> add to collector if node type matches
-                for (Iterator it = cne.iterator(); it.hasNext(); ) {
+                Iterator it = cne.iterator();
+                while (it.hasNext()) {
                     NodeId id = ((NodeState.ChildNodeEntry) it.next()).getId();
                     NodeState ns = (NodeState) ism.getItemState(id);
                     if (nodeTypeName == null || ns.getNodeTypeName().equals(nodeTypeName)) {
@@ -337,7 +338,8 @@ class AggregateRuleImpl implements AggregateRule {
             } else {
                 // traverse
                 offset++;
-                for (Iterator it = cne.iterator(); it.hasNext(); ) {
+                Iterator it = cne.iterator();
+                while (it.hasNext()) {
                     NodeId id = ((NodeState.ChildNodeEntry) it.next()).getId();
                     resolve((NodeState) ism.getItemState(id), collector, offset);
                 }

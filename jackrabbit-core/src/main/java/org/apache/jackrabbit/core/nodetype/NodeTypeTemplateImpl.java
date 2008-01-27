@@ -66,7 +66,7 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
         orderableChildNodes = def.hasOrderableChildNodes();
         NodeDefinition[] nodeDefs = def.getDeclaredChildNodeDefinitions();
         for (int i = 0; i < nodeDefs.length; i++) {
-            nodeDefinitionTemplates.add(new NodeDefinitionTemplateImpl(nodeDefs[i])) ;
+            nodeDefinitionTemplates.add(new NodeDefinitionTemplateImpl(nodeDefs[i]));
         }
         PropertyDefinition[] propDefs = def.getDeclaredPropertyDefinitions();
         for (int i = 0; i < propDefs.length; i++) {

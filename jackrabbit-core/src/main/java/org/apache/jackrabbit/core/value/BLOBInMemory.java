@@ -105,7 +105,7 @@ public class BLOBInMemory extends BLOBFileValue {
         byte[] data = new byte[len];
         try {
             for (int i = 0; i < len; i++) {
-                data[i] = (byte) ((Character.digit(s.charAt(i+i), 16) << 4) | (Character.digit(s.charAt(i+i+1), 16)));
+                data[i] = (byte) ((Character.digit(s.charAt(2 * i), 16) << 4) | (Character.digit(s.charAt(2 * i + 1), 16)));
             }
         } catch (NumberFormatException e) {
             String msg = "unable to deserialize byte array " + s;

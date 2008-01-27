@@ -71,7 +71,7 @@ public class LRUNodeIdCache {
             missing.put(id, id);
             hits++;
         }
-        if (log.isInfoEnabled() && (hits+misses)%10000 == 0) {
+        if (log.isInfoEnabled() && (hits + misses) % 10000 == 0) {
             log.info("num=" + missing.size() + "/" + maxSize + " hits=" + hits + " miss=" + misses);
         }
         return o != null;

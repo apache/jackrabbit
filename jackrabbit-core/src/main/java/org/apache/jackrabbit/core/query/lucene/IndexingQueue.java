@@ -91,7 +91,8 @@ class IndexingQueue {
             finished.addAll(pendingDocuments.values());
         }
 
-        for (Iterator it = finished.iterator(); it.hasNext(); ) {
+        Iterator it = finished.iterator();
+        while (it.hasNext()) {
             Document doc = (Document) it.next();
             if (!Util.isDocumentReady(doc)) {
                 it.remove();
@@ -151,7 +152,8 @@ class IndexingQueue {
      */
     public synchronized void close() throws IOException {
         // go through pending documents and close readers
-        for (Iterator it = pendingDocuments.values().iterator(); it.hasNext(); ) {
+        Iterator it = pendingDocuments.values().iterator();
+        while (it.hasNext()) {
             Document doc = (Document) it.next();
             Util.disposeDocument(doc);
             it.remove();

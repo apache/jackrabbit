@@ -178,7 +178,7 @@ public class NodePropBundle {
 
         // add fake property entries
         state.addPropertyName(NameConstants.JCR_PRIMARYTYPE);
-        if (mixinTypeNames.size()>0) {
+        if (mixinTypeNames.size() > 0) {
             state.addPropertyName(NameConstants.JCR_MIXINTYPES);
         }
         // uuid is special...only if 'referenceable'
@@ -376,7 +376,7 @@ public class NodePropBundle {
         return properties.containsKey(name)
                 || name.equals(NameConstants.JCR_PRIMARYTYPE)
                 || (isReferenceable && name.equals(NameConstants.JCR_UUID))
-                || (mixinTypeNames.size()>0 && name.equals(NameConstants.JCR_MIXINTYPES));
+                || (mixinTypeNames.size() > 0 && name.equals(NameConstants.JCR_MIXINTYPES));
     }
 
     /**
@@ -699,7 +699,7 @@ public class NodePropBundle {
         private void destroy(BLOBStore blobStore) {
             // delete blobs if needed
             if (blobIds != null) {
-                for (int i=0; i<blobIds.length; i++) {
+                for (int i = 0; i < blobIds.length; i++) {
                     if (blobIds[i] != null) {
                         try {
                             blobStore.remove(blobIds[i]);
