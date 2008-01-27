@@ -430,11 +430,12 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             return entNew;
         }
 
-       	String message = "The following nodetype change contains non-trivial changes."
-                + "Up until now only trivial changes are supported."
-                + " (see javadoc for "
-                + NodeTypeDefDiff.class.getName()
-                + "):\n" + diff.toString();
+        String message =
+            "The following nodetype change contains non-trivial changes."
+            + "Up until now only trivial changes are supported."
+            + " (see javadoc for "
+            + NodeTypeDefDiff.class.getName()
+            + "):\n" + diff.toString();
         throw new RepositoryException(message);
 
         // TODO Implement checkForConflictingContent()

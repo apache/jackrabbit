@@ -115,7 +115,7 @@ public class SharedFieldSortComparator extends SortComparator {
 
             public final int compare(final ScoreDoc i, final ScoreDoc j) {
                 int idx1 = readerIndex(i.doc);
-                int idx2 = readerIndex(j.doc);             	
+                int idx2 = readerIndex(j.doc);
 
                 String iTerm = indexes[idx1].terms[i.doc - starts[idx1]];
                 String jTerm = indexes[idx2].terms[j.doc - starts[idx2]];

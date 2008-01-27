@@ -121,7 +121,7 @@ public class WorkspaceConfig {
      * @return the configuration for the item state locking.
      */
     public ISMLockingConfig getISMLockingConfig() {
-    	return ismLockingConfig;
+        return ismLockingConfig;
     }
 
     /**

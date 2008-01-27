@@ -159,7 +159,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         }
 
         // fix legacy
-        if (rootVersion.getSuccessors().length==0) {		
+        if (rootVersion.getSuccessors().length == 0) {
             Iterator iter = nameCache.keySet().iterator();
             while (iter.hasNext()) {
                 Name versionName = (Name)iter.next();
@@ -192,7 +192,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     InternalVersionImpl createVersionInstance(Name name) {
         try {
             NodeStateEx nodeStateEx = node.getNode(name, 1);
-            InternalVersionImpl v = createVersionInstance(nodeStateEx);	
+            InternalVersionImpl v = createVersionInstance(nodeStateEx);
             versionCache.put(v.getId(), v);
             vMgr.versionCreated(v);
 
@@ -249,8 +249,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
-    public InternalVersion getVersion(Name versionName) throws VersionException {   	
-        NodeId versionId = (NodeId)nameCache.get(versionName);   	
+    public InternalVersion getVersion(Name versionName) throws VersionException {
+        NodeId versionId = (NodeId)nameCache.get(versionName);
         if (versionId == null) {
             throw new VersionException("Version " + versionName + " does not exist.");
         }
@@ -302,7 +302,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         if (versionName == null) {
             return null;
         }
-    	
+
         NodeId id = (NodeId)nameCache.get(versionName);
         InternalVersion v = (InternalVersion)versionCache.get(id);
         if (v == null) {

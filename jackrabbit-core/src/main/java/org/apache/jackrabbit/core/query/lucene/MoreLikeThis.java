@@ -149,37 +149,36 @@ import java.util.ArrayList;
  */
 public final class MoreLikeThis {
 
-	/**
-	 * Default maximum number of tokens to parse in each example doc field that is not stored with TermVector support.
-	 * @see #getMaxNumTokensParsed
-	 */
+    /**
+     * Default maximum number of tokens to parse in each example doc field that is not stored with TermVector support.
+     * @see #getMaxNumTokensParsed
+     */
     public static final int DEFAULT_MAX_NUM_TOKENS_PARSED=5000;
 
-
-	/**
+    /**
      * Default analyzer to parse source doc with.
-	 * @see #getAnalyzer
+     * @see #getAnalyzer
      */
     public static final Analyzer DEFAULT_ANALYZER = new StandardAnalyzer();
 
     /**
      * Ignore terms with less than this frequency in the source doc.
-	 * @see #getMinTermFreq
-	 * @see #setMinTermFreq
+     * @see #getMinTermFreq
+     * @see #setMinTermFreq
      */
     public static final int DEFAULT_MIN_TERM_FREQ = 2;
 
     /**
      * Ignore words which do not occur in at least this many docs.
-	 * @see #getMinDocFreq
-	 * @see #setMinDocFreq
+     * @see #getMinDocFreq
+     * @see #setMinDocFreq
      */
     public static final int DEFALT_MIN_DOC_FREQ = 5;
 
     /**
      * Boost terms in query based on score.
-	 * @see #isBoost
-	 * @see #setBoost
+     * @see #isBoost
+     * @see #setBoost
      */
     public static final boolean DEFAULT_BOOST = false;
 
@@ -191,38 +190,38 @@ public final class MoreLikeThis {
 
     /**
      * Ignore words less than this length or if 0 then this has no effect.
-	 * @see #getMinWordLen
-	 * @see #setMinWordLen
+     * @see #getMinWordLen
+     * @see #setMinWordLen
      */
     public static final int DEFAULT_MIN_WORD_LENGTH = 0;
 
     /**
      * Ignore words greater than this length or if 0 then this has no effect.
-	 * @see #getMaxWordLen
-	 * @see #setMaxWordLen
+     * @see #getMaxWordLen
+     * @see #setMaxWordLen
      */
     public static final int DEFAULT_MAX_WORD_LENGTH = 0;
 
-	/**
-	 * Default set of stopwords.
-	 * If null means to allow stop words.
-	 *
-	 * @see #setStopWords
-	 * @see #getStopWords
-	 */
-	public static final Set DEFAULT_STOP_WORDS = null;
+    /**
+     * Default set of stopwords.
+     * If null means to allow stop words.
+     *
+     * @see #setStopWords
+     * @see #getStopWords
+     */
+    public static final Set DEFAULT_STOP_WORDS = null;
 
-	/**
-	 * Current set of stop words.
-	 */
-	private Set stopWords = DEFAULT_STOP_WORDS;
+    /**
+     * Current set of stop words.
+     */
+    private Set stopWords = DEFAULT_STOP_WORDS;
 
     /**
      * Return a Query with no more than this many terms.
      *
      * @see BooleanQuery#getMaxClauseCount
-	 * @see #getMaxQueryTerms
-	 * @see #setMaxQueryTerms
+     * @see #getMaxQueryTerms
+     * @see #setMaxQueryTerms
      */
     public static final int DEFAULT_MAX_QUERY_TERMS = 25;
 
@@ -251,12 +250,10 @@ public final class MoreLikeThis {
      */
     private String[] fieldNames = DEFAULT_FIELD_NAMES;
 
-	/**
-	 * The maximum number of tokens to parse in each example doc field that is not stored with TermVector support
-	 */
-	private int maxNumTokensParsed=DEFAULT_MAX_NUM_TOKENS_PARSED;
-
-
+    /**
+     * The maximum number of tokens to parse in each example doc field that is not stored with TermVector support
+     */
+    private int maxNumTokensParsed=DEFAULT_MAX_NUM_TOKENS_PARSED;
 
     /**
      * Ignore words if less than this len.
@@ -295,7 +292,7 @@ public final class MoreLikeThis {
      * is the {@link #DEFAULT_ANALYZER}.
      *
      * @return the analyzer that will be used to parse source doc with.
-	 * @see #DEFAULT_ANALYZER
+     * @see #DEFAULT_ANALYZER
      */
     public Analyzer getAnalyzer() {
         return analyzer;
@@ -357,7 +354,7 @@ public final class MoreLikeThis {
      * {@link #DEFAULT_BOOST}.
      *
      * @return whether to boost terms in query based on "score" or not.
-	 * @see #setBoost
+     * @see #setBoost
      */
     public boolean isBoost() {
         return boost;
@@ -367,7 +364,7 @@ public final class MoreLikeThis {
      * Sets whether to boost terms in query based on "score" or not.
      *
      * @param boost true to boost terms in query based on "score", false otherwise.
-	 * @see #isBoost
+     * @see #isBoost
      */
     public void setBoost(boolean boost) {
         this.boost = boost;
@@ -433,29 +430,28 @@ public final class MoreLikeThis {
         this.maxWordLen = maxWordLen;
     }
 
-	/**
-	 * Set the set of stopwords.
-	 * Any word in this set is considered "uninteresting" and ignored.
-	 * Even if your Analyzer allows stopwords, you might want to tell the MoreLikeThis code to ignore them, as
-	 * for the purposes of document similarity it seems reasonable to assume that "a stop word is never interesting".
-	 *
-	 * @param stopWords set of stopwords, if null it means to allow stop words
-	 *
-	 * @see org.apache.lucene.analysis.StopFilter#makeStopSet StopFilter.makeStopSet()
-	 * @see #getStopWords
-	 */
-	public void setStopWords(Set stopWords) {
-		this.stopWords = stopWords;
-	}
+    /**
+     * Set the set of stopwords.
+     * Any word in this set is considered "uninteresting" and ignored.
+     * Even if your Analyzer allows stopwords, you might want to tell the MoreLikeThis code to ignore them, as
+     * for the purposes of document similarity it seems reasonable to assume that "a stop word is never interesting".
+     *
+     * @param stopWords set of stopwords, if null it means to allow stop words
+     *
+     * @see org.apache.lucene.analysis.StopFilter#makeStopSet StopFilter.makeStopSet()
+     * @see #getStopWords
+     */
+    public void setStopWords(Set stopWords) {
+        this.stopWords = stopWords;
+    }
 
-	/**
-	 * Get the current stop words being used.
-	 * @see #setStopWords
-	 */
-	public Set getStopWords() {
-		return stopWords;
-	}
-
+    /**
+     * Get the current stop words being used.
+     * @see #setStopWords
+     */
+    public Set getStopWords() {
+        return stopWords;
+    }
 
     /**
      * Returns the maximum number of query terms that will be included in any generated query.
@@ -477,25 +473,20 @@ public final class MoreLikeThis {
         this.maxQueryTerms = maxQueryTerms;
     }
 
-	/**
-	 * @return The maximum number of tokens to parse in each example doc field that is not stored with TermVector support
-	 * @see #DEFAULT_MAX_NUM_TOKENS_PARSED
-	 */
-	public int getMaxNumTokensParsed()
-	{
-		return maxNumTokensParsed;
-	}
+    /**
+     * @return The maximum number of tokens to parse in each example doc field that is not stored with TermVector support
+     * @see #DEFAULT_MAX_NUM_TOKENS_PARSED
+     */
+    public int getMaxNumTokensParsed() {
+        return maxNumTokensParsed;
+    }
 
-	/**
-	 * @param i The maximum number of tokens to parse in each example doc field that is not stored with TermVector support
-	 */
-	public void setMaxNumTokensParsed(int i)
-	{
-		maxNumTokensParsed = i;
-	}
-
-
-
+    /**
+     * @param i The maximum number of tokens to parse in each example doc field that is not stored with TermVector support
+     */
+    public void setMaxNumTokensParsed(int i) {
+        maxNumTokensParsed = i;
+    }
 
     /**
      * Return a query that will return docs like the passed lucene document ID.
@@ -716,12 +707,13 @@ public final class MoreLikeThis {
         o.println();
         for (int i = 0; i < Math.min(25, len); i++) {
             Document d = hits.doc(i);
-			String summary = d.get( "summary");
+            String summary = d.get( "summary");
             o.println("score  : " + hits.score(i));
             o.println("url    : " + d.get("url"));
             o.println("\ttitle  : " + d.get("title"));
-			if ( summary != null)
-				o.println("\tsummary: " + d.get("summary"));
+            if (summary != null) {
+                o.println("\tsummary: " + d.get("summary"));
+            }
             o.println();
         }
     }
@@ -739,17 +731,16 @@ public final class MoreLikeThis {
 
             // field does not store term vector info
             if (vector == null) {
-            	Document d=ir.document(docNum);
-            	String text[]=d.getValues(fieldName);
-            	if(text!=null)
-            	{
-                for (int j = 0; j < text.length; j++) {
-                  addTermFrequencies(new StringReader(text[j]), termFreqMap, fieldName);
+                Document d = ir.document(docNum);
+                String[] text = d.getValues(fieldName);
+                if (text != null) {
+                    for (int j = 0; j < text.length; j++) {
+                        addTermFrequencies(new StringReader(text[j]), termFreqMap, fieldName);
+                    }
                 }
-            	}
             }
             else {
-				addTermFrequencies(termFreqMap, vector);
+                addTermFrequencies(termFreqMap, vector);
             }
 
         }
@@ -757,142 +748,138 @@ public final class MoreLikeThis {
         return createQueue(termFreqMap);
     }
 
-	/**
-	 * Adds terms and frequencies found in vector into the Map termFreqMap
-	 * @param termFreqMap a Map of terms and their frequencies
-	 * @param vector List of terms and their frequencies for a doc/field
-	 */
-	private void addTermFrequencies(Map termFreqMap, TermFreqVector vector)
-	{
-		String[] terms = vector.getTerms();
-		int freqs[]=vector.getTermFrequencies();
-		for (int j = 0; j < terms.length; j++) {
-		    String term = terms[j];
+    /**
+     * Adds terms and frequencies found in vector into the Map termFreqMap
+     * @param termFreqMap a Map of terms and their frequencies
+     * @param vector List of terms and their frequencies for a doc/field
+     */
+    private void addTermFrequencies(Map termFreqMap, TermFreqVector vector) {
+        String[] terms = vector.getTerms();
+        int freqs[]=vector.getTermFrequencies();
+        for (int j = 0; j < terms.length; j++) {
+            String term = terms[j];
 
-			if(isNoiseWord(term)){
-				continue;
-			}
-		    // increment frequency
-		    Int cnt = (Int) termFreqMap.get(term);
-		    if (cnt == null) {
-		    	cnt=new Int();
-				termFreqMap.put(term, cnt);
-				cnt.x=freqs[j];
-		    }
-		    else {
-		        cnt.x+=freqs[j];
-		    }
-		}
-	}
-	/**
-	 * Adds term frequencies found by tokenizing text from reader into the Map words
-	 * @param r a source of text to be tokenized
-	 * @param termFreqMap a Map of terms and their frequencies
-	 * @param fieldName Used by analyzer for any special per-field analysis
-	 */
-	private void addTermFrequencies(Reader r, Map termFreqMap, String fieldName)
-		throws IOException
-	{
-		   TokenStream ts = analyzer.tokenStream(fieldName, r);
-			org.apache.lucene.analysis.Token token;
-			int tokenCount=0;
-			while ((token = ts.next()) != null) { // for every token
-				String word = token.termText();
-				tokenCount++;
-				if(tokenCount>maxNumTokensParsed)
-				{
-					break;
-				}
-				if(isNoiseWord(word)){
-					continue;
-				}
+            if(isNoiseWord(term)){
+                continue;
+            }
+            // increment frequency
+            Int cnt = (Int) termFreqMap.get(term);
+            if (cnt == null) {
+                cnt=new Int();
+                termFreqMap.put(term, cnt);
+                cnt.x=freqs[j];
+            }
+            else {
+                cnt.x+=freqs[j];
+            }
+        }
+    }
 
-				// increment frequency
-				Int cnt = (Int) termFreqMap.get(word);
-				if (cnt == null) {
-					termFreqMap.put(word, new Int());
-				}
-				else {
-					cnt.x++;
-				}
-			}
-	}
+    /**
+     * Adds term frequencies found by tokenizing text from reader into the Map words
+     * @param r a source of text to be tokenized
+     * @param termFreqMap a Map of terms and their frequencies
+     * @param fieldName Used by analyzer for any special per-field analysis
+     */
+    private void addTermFrequencies(Reader r, Map termFreqMap, String fieldName)
+            throws IOException {
+        TokenStream ts = analyzer.tokenStream(fieldName, r);
+        org.apache.lucene.analysis.Token token;
+        int tokenCount = 0;
+        while ((token = ts.next()) != null) { // for every token
+            String word = token.termText();
+            tokenCount++;
+            if (tokenCount > maxNumTokensParsed) {
+                break;
+            }
+            if (isNoiseWord(word)) {
+                continue;
+            }
 
+            // increment frequency
+            Int cnt = (Int) termFreqMap.get(word);
+            if (cnt == null) {
+                termFreqMap.put(word, new Int());
+            }
+            else {
+                cnt.x++;
+            }
+        }
+    }
 
-	/** determines if the passed term is likely to be of interest in "more like" comparisons
-	 *
-	 * @param term The word being considered
-	 * @return true if should be ignored, false if should be used in further analysis
-	 */
-	private boolean isNoiseWord(String term)
-	{
-		int len = term.length();
-		if (minWordLen > 0 && len < minWordLen) {
-			return true;
-		}
-		if (maxWordLen > 0 && len > maxWordLen) {
-			return true;
-		}
-		if (stopWords != null && stopWords.contains( term)) {
-			return true;
-		}
-		return false;
-	}
+    /** determines if the passed term is likely to be of interest in "more like" comparisons
+     *
+     * @param term The word being considered
+     * @return true if should be ignored, false if should be used in further analysis
+     */
+    private boolean isNoiseWord(String term) {
+        int len = term.length();
+        if (minWordLen > 0 && len < minWordLen) {
+            return true;
+        }
+        if (maxWordLen > 0 && len > maxWordLen) {
+            return true;
+        }
+        if (stopWords != null && stopWords.contains( term)) {
+            return true;
+        }
+        return false;
+    }
 
 
     /**
      * Find words for a more-like-this query former.
-	 * The result is a priority queue of arrays with one entry for <b>every word</b> in the document.
-	 * Each array has 6 elements.
-	 * The elements are:
-	 * <ol>
-	 * <li> The word (String)
-	 * <li> The top field that this word comes from (String)
-	 * <li> The score for this word (Float)
-	 * <li> The IDF value (Float)
-	 * <li> The frequency of this word in the index (Integer)
-	 * <li> The frequency of this word in the source document (Integer)
-	 * </ol>
-	 * This is a somewhat "advanced" routine, and in general only the 1st entry in the array is of interest.
-	 * This method is exposed so that you can identify the "interesting words" in a document.
-	 * For an easier method to call see {@link #retrieveInterestingTerms retrieveInterestingTerms()}.
+     * The result is a priority queue of arrays with one entry for <b>every word</b> in the document.
+     * Each array has 6 elements.
+     * The elements are:
+     * <ol>
+     * <li> The word (String)
+     * <li> The top field that this word comes from (String)
+     * <li> The score for this word (Float)
+     * <li> The IDF value (Float)
+     * <li> The frequency of this word in the index (Integer)
+     * <li> The frequency of this word in the source document (Integer)
+     * </ol>
+     * This is a somewhat "advanced" routine, and in general only the 1st entry in the array is of interest.
+     * This method is exposed so that you can identify the "interesting words" in a document.
+     * For an easier method to call see {@link #retrieveInterestingTerms retrieveInterestingTerms()}.
      *
      * @param r the reader that has the content of the document
-	 * @return the most intresting words in the document ordered by score, with the highest scoring, or best entry, first
-	 *
-	 * @see #retrieveInterestingTerms
+     * @return the most intresting words in the document ordered by score, with the highest scoring, or best entry, first
+     *
+     * @see #retrieveInterestingTerms
      */
     public PriorityQueue retrieveTerms(Reader r) throws IOException {
         Map words = new HashMap();
         for (int i = 0; i < fieldNames.length; i++) {
             String fieldName = fieldNames[i];
-			addTermFrequencies(r, words, fieldName);
+            addTermFrequencies(r, words, fieldName);
         }
         return createQueue(words);
     }
 
-	/**
-	 * Convenience routine to make it easy to return the most interesting words in a document.
-	 * More advanced users will call {@link #retrieveTerms(java.io.Reader) retrieveTerms()} directly.
-	 * @param r the source document
-	 * @return the most interesting words in the document
-	 *
-	 * @see #retrieveTerms(java.io.Reader)
-	 * @see #setMaxQueryTerms
-	 */
-	public String[] retrieveInterestingTerms( Reader r) throws IOException {
-		ArrayList al = new ArrayList( maxQueryTerms);
-		PriorityQueue pq = retrieveTerms( r);
-		Object cur;
-		int lim = maxQueryTerms; // have to be careful, retrieveTerms returns all words but that's probably not useful to our caller...
-		// we just want to return the top words
-		while (((cur = pq.pop()) != null) && lim-- > 0) {
+    /**
+     * Convenience routine to make it easy to return the most interesting words in a document.
+     * More advanced users will call {@link #retrieveTerms(java.io.Reader) retrieveTerms()} directly.
+     * @param r the source document
+     * @return the most interesting words in the document
+     *
+     * @see #retrieveTerms(java.io.Reader)
+     * @see #setMaxQueryTerms
+     */
+    public String[] retrieveInterestingTerms( Reader r) throws IOException {
+        ArrayList al = new ArrayList( maxQueryTerms);
+        PriorityQueue pq = retrieveTerms( r);
+        int lim = maxQueryTerms;
+        // have to be careful, retrieveTerms returns all words
+        // but that's probably not useful to our caller...
+        // we just want to return the top words
+        for (Object cur = pq.pop(); cur != null && lim-- > 0; cur = pq.pop()) {
             Object[] ar = (Object[]) cur;
-			al.add( ar[ 0]); // the 1st entry is the interesting word
-		}
-		String[] res = new String[ al.size()];
-		return (String[]) al.toArray( res);
-	}
+            al.add(ar[0]); // the 1st entry is the interesting word
+        }
+        return (String[]) al.toArray(new String[al.size()]);
+    }
 
     /**
      * PriorityQueue that orders words by score.
