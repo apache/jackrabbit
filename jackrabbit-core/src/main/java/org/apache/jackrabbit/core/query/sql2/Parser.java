@@ -672,14 +672,16 @@ public class Parser {
                 type = CHAR_DECIMAL;
                 break;
             case '\'':
-                type = types[i] = CHAR_STRING;
+                type = CHAR_STRING;
+                types[i] = CHAR_STRING;
                 startLoop = i;
                 while (command[++i] != '\'') {
                     checkRunOver(i, len, startLoop);
                 }
                 break;
             case '\"':
-                type = types[i] = CHAR_QUOTED;
+                type = CHAR_QUOTED;
+                types[i] = CHAR_QUOTED;
                 startLoop = i;
                 while (command[++i] != '\"') {
                     checkRunOver(i, len, startLoop);
@@ -741,6 +743,7 @@ public class Parser {
         char[] chars = statementChars;
         char c = chars[i++];
         currentToken = "";
+        String result;
         switch (type) {
         case CHAR_NAME:
             while (true) {
@@ -758,8 +761,8 @@ public class Parser {
             currentTokenType = IDENTIFIER;
             parseIndex = i;
             return;
-        case CHAR_QUOTED: {
-            String result = null;
+        case CHAR_QUOTED:
+            result = null;
             while (true) {
                 for (int begin = i;; i++) {
                     if (chars[i] == '\"') {
@@ -781,7 +784,6 @@ public class Parser {
             currentTokenQuoted = true;
             currentTokenType = IDENTIFIER;
             return;
-        }
         case CHAR_SPECIAL_2:
             if (types[i] == CHAR_SPECIAL_2) {
                 i++;
@@ -847,8 +849,8 @@ public class Parser {
             }
             readDecimal(i - 1, i);
             return;
-        case CHAR_STRING: {
-            String result = null;
+        case CHAR_STRING:
+            result = null;
             while (true) {
                 for (int begin = i;; i++) {
                     if (chars[i] == '\'') {
@@ -871,7 +873,6 @@ public class Parser {
             parseIndex = i;
             currentTokenType = VALUE;
             return;
-        }
         case CHAR_END:
             currentToken = "";
             currentTokenType = END;

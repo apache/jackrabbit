@@ -84,8 +84,8 @@ public class PooledTextExtractor implements TextExtractor {
                 new PooledExecutor.BlockedExecutionHandler() {
             public boolean blockedAction(Runnable command) {
                 // execute with current thread and log message
-                log.info("Extractor pool busy, running command with " +
-                        "current thread: {}", command.toString());
+                log.info("Extractor pool busy, running command with "
+                        + "current thread: {}", command.toString());
                 command.run();
                 return true;
             }

@@ -144,7 +144,8 @@ public class FileRecordLog {
                 close(out);
             }
 
-            this.previousRevision = lastRevision = previousRevision;
+            this.previousRevision = previousRevision;
+            this.lastRevision = previousRevision;
             isNew = false;
         }
     }
@@ -229,9 +230,8 @@ public class FileRecordLog {
         String producerId = in.readUTF();
         int length = in.readInt();
 
-        position += 2 + utfLength(journalId) +
-                2 + utfLength(producerId) +
-                4 + length;
+        position +=
+            2 + utfLength(journalId) +  2 + utfLength(producerId) + 4 + length;
 
         long revision = previousRevision + position;
         return new ReadRecord(journalId, producerId, revision, in, length, resolver, npResolver);
@@ -264,9 +264,9 @@ public class FileRecordLog {
             }
             out.flush();
 
-            lastRevision += 2 + utfLength(journalId) +
-                2 + utfLength(producerId) +
-                4 + length;
+            lastRevision +=
+                2 + utfLength(journalId) + 2 + utfLength(producerId)
+                + 4 + length;
             return lastRevision;
         } finally {
             close(out);
@@ -300,16 +300,16 @@ public class FileRecordLog {
 
         for (int i = 0; i < SIGNATURE.length; i++) {
             if (signature[i] != SIGNATURE[i]) {
-                String msg = "Record log '" + logFile.getPath() +
-                        "' has wrong signature: " + toHexString(signature);
+                String msg = "Record log '" + logFile.getPath()
+                    + "' has wrong signature: " + toHexString(signature);
                 throw new IOException(msg);
             }
         }
 
         major = in.readShort();
         if (major != MAJOR_VERSION) {
-            String msg = "Record log '" + logFile.getPath() +
-                    "' has incompatible major version: " + major;
+            String msg = "Record log '" + logFile.getPath()
+                + "' has incompatible major version: " + major;
             throw new IOException(msg);
         }
         minor  = in.readShort();
@@ -387,4 +387,5 @@ public class FileRecordLog {
         }
         return utflen;
     }
+
 }

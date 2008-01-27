@@ -52,4 +52,5 @@ public class PropertyAddedOperation extends PropertyOperation {
         state.setStatus(PropertyState.STATUS_EXISTING);
         changeLog.added(state);
     }
+
 }

@@ -459,7 +459,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
 
         acquire();
 
-        AbstractLockInfo infos[] = getLockInfos(session);
+        AbstractLockInfo[] infos = getLockInfos(session);
 
         try {
             Lock[] locks = new Lock[infos.length];

@@ -173,7 +173,9 @@ public class NodeIndexer {
 
         // special fields
         // UUID
-        doc.add(new Field(FieldNames.UUID, node.getNodeId().getUUID().toString(), Field.Store.YES, Field.Index.NO_NORMS, Field.TermVector.NO));
+        doc.add(new Field(
+                FieldNames.UUID, node.getNodeId().getUUID().toString(),
+                Field.Store.YES, Field.Index.NO_NORMS, Field.TermVector.NO));
         try {
             // parent UUID
             if (node.getParentId() == null) {
@@ -181,14 +183,17 @@ public class NodeIndexer {
                 doc.add(new Field(FieldNames.PARENT, "", Field.Store.YES, Field.Index.NO_NORMS, Field.TermVector.NO));
                 doc.add(new Field(FieldNames.LABEL, "", Field.Store.NO, Field.Index.NO_NORMS, Field.TermVector.NO));
             } else {
-                doc.add(new Field(FieldNames.PARENT, node.getParentId().toString(), Field.Store.YES, Field.Index.NO_NORMS, Field.TermVector.NO));
+                doc.add(new Field(
+                        FieldNames.PARENT, node.getParentId().toString(),
+                        Field.Store.YES, Field.Index.NO_NORMS, Field.TermVector.NO));
                 NodeState parent = (NodeState) stateProvider.getItemState(node.getParentId());
                 NodeState.ChildNodeEntry child = parent.getChildNodeEntry(node.getNodeId());
                 if (child == null) {
                     // this can only happen when jackrabbit
                     // is running in a cluster.
-                    throw new RepositoryException("Missing child node entry " +
-                            "for node with id: " + node.getNodeId());
+                    throw new RepositoryException(
+                            "Missing child node entry for node with id: "
+                            + node.getNodeId());
                 }
                 String name = resolver.getJCRName(child.getName());
                 doc.add(new Field(FieldNames.LABEL, name, Field.Store.NO, Field.Index.NO_NORMS, Field.TermVector.NO));
@@ -328,9 +333,9 @@ public class NodeIndexer {
             case PropertyType.NAME:
                 // jcr:primaryType and jcr:mixinTypes are required for correct
                 // node type resolution in queries
-                if (isIndexed(name) ||
-                        name.equals(NameConstants.JCR_PRIMARYTYPE) ||
-                        name.equals(NameConstants.JCR_MIXINTYPES)) {
+                if (isIndexed(name)
+                        || name.equals(NameConstants.JCR_PRIMARYTYPE)
+                        || name.equals(NameConstants.JCR_MIXINTYPES)) {
                     addNameValue(doc, fieldName, value.getQName());
                 }
                 break;
@@ -672,8 +677,8 @@ public class NodeIndexer {
                     textExtract.append(buffer, 0, len);
                 }
             } catch (IOException e) {
-                log.warn("Exception reading value for fulltext field: " +
-                        e.getMessage());
+                log.warn("Exception reading value for fulltext field: "
+                        + e.getMessage());
                 log.debug("Dump:", e);
             } finally {
                 try {

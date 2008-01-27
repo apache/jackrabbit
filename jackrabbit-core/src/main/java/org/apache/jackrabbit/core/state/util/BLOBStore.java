@@ -23,5 +23,4 @@ package org.apache.jackrabbit.core.state.util;
  */
 public interface BLOBStore
         extends org.apache.jackrabbit.core.persistence.util.BLOBStore {
-
 }

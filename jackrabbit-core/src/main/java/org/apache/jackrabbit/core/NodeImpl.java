@@ -4013,8 +4013,8 @@ public class NodeImpl extends ItemImpl implements Node {
                         // choose the initial one
                         Version[] vs = history.getRootVersion().getSuccessors();
                         if (vs.length == 0) {
-                            String msg = "Unable to select appropariate version for " +
-                                    child.getName() + " using " + vsel;
+                            String msg = "Unable to select appropariate version for "
+                                + child.getName() + " using " + vsel;
                             log.error(msg);
                             throw new VersionException(msg);
                         }

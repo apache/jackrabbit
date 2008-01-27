@@ -173,7 +173,7 @@ public final class CachingMultiIndexReader
      * {@inheritDoc}
      */
     public IndexReader[] getIndexReaders() {
-        IndexReader readers[] = new IndexReader[subReaders.length];
+        IndexReader[] readers = new IndexReader[subReaders.length];
         System.arraycopy(subReaders, 0, readers, 0, subReaders.length);
         return readers;
     }

@@ -293,8 +293,9 @@ class ChildAxisQuery extends Query {
         public boolean skipTo(int target) throws IOException {
             calculateChildren();
             nextDoc = hits.skipTo(target);
-            while (nextDoc > -1 && !indexIsValid(nextDoc))
+            while (nextDoc > -1 && !indexIsValid(nextDoc)) {
                 next();
+            }
             return nextDoc > -1;
         }
 

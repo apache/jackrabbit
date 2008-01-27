@@ -343,7 +343,7 @@ class ReadOnlyIndexReader extends FilterIndexReader {
         /**
          * @inheritDoc
          */
-        public byte[] getPayload(byte data[], int offset) throws IOException {
+        public byte[] getPayload(byte[] data, int offset) throws IOException {
             return ((TermPositions) in).getPayload(data, offset);
         }
 

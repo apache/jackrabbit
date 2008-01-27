@@ -52,4 +52,5 @@ public class NodeAddedOperation extends NodeOperation {
         state.setStatus(NodeState.STATUS_EXISTING);
         changeLog.added(state);
     }
+
 }

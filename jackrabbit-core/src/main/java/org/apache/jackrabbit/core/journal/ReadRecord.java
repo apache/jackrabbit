@@ -216,8 +216,8 @@ class ReadRecord extends AbstractRecord {
             skiplen -= skipped;
         }
         if (skiplen != 0) {
-            String msg = "Should have skipped " + n +
-                    " bytes, only " + (n - skiplen) + " skipped.";
+            String msg = "Should have skipped " + n
+                + " bytes, only " + (n - skiplen) + " skipped.";
             throw new IOException(msg);
         }
     }

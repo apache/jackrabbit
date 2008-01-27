@@ -87,4 +87,5 @@ public final class Serializer {
         // delegate to replacement
         org.apache.jackrabbit.core.persistence.util.Serializer.deserialize(refs, stream);
     }
+
 }

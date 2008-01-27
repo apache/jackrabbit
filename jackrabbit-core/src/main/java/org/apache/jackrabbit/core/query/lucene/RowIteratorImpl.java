@@ -370,8 +370,8 @@ class RowIteratorImpl implements RowIterator {
          *         function, <code>false</code> otherwise.
          */
         private boolean isExcerptFunction(Name name) {
-            return name.getNamespaceURI().equals(Name.NS_REP_URI) &&
-                    name.getLocalName().startsWith(EXCERPT_FUNC_LPAR);
+            return name.getNamespaceURI().equals(Name.NS_REP_URI)
+                && name.getLocalName().startsWith(EXCERPT_FUNC_LPAR);
         }
 
         /**
@@ -487,8 +487,8 @@ class RowIteratorImpl implements RowIterator {
          *         function, <code>false</code> otherwise.
          */
         private boolean isSpellCheckFunction(Name name) {
-            return name.getNamespaceURI().equals(Name.NS_REP_URI) &&
-                    name.getLocalName().startsWith(SPELLCHECK_FUNC_LPAR);
+            return name.getNamespaceURI().equals(Name.NS_REP_URI)
+                && name.getLocalName().startsWith(SPELLCHECK_FUNC_LPAR);
         }
 
         /**

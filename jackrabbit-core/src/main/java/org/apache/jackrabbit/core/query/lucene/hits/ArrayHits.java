@@ -72,10 +72,11 @@ public class ArrayHits implements Hits {
      */
     public int next() {
         initialize();
-        if (index >= hits.length)
+        if (index >= hits.length) {
             return -1;
-
-        return hits[index++];
+        } else {
+            return hits[index++];
+        }
     }
 
     /**

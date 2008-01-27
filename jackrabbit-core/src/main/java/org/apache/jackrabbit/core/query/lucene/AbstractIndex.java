@@ -151,7 +151,7 @@ abstract class AbstractIndex {
      */
     void addDocuments(Document[] docs) throws IOException {
         final IndexWriter writer = getIndexWriter();
-        DynamicPooledExecutor.Command commands[] =
+        DynamicPooledExecutor.Command[] commands =
                 new DynamicPooledExecutor.Command[docs.length];
         for (int i = 0; i < docs.length; i++) {
             // check if text extractor completed its work
@@ -165,7 +165,7 @@ abstract class AbstractIndex {
                 }
             };
         }
-        DynamicPooledExecutor.Result results[] = EXECUTOR.executeAndWait(commands);
+        DynamicPooledExecutor.Result[] results = EXECUTOR.executeAndWait(commands);
         invalidateSharedReader();
         IOException ex = null;
         for (int i = 0; i < results.length; i++) {

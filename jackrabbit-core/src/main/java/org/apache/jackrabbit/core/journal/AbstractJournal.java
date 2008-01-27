@@ -86,8 +86,8 @@ public abstract class AbstractJournal implements Journal {
         synchronized (consumers) {
             String consumerId = consumer.getId();
             if (consumers.containsKey(consumerId)) {
-                String msg = "Record consumer with identifier '" +
-                        consumerId + "' already registered.";
+                String msg = "Record consumer with identifier '"
+                    + consumerId + "' already registered.";
                 throw new JournalException(msg);
             }
             consumers.put(consumerId, consumer);
@@ -190,8 +190,8 @@ public abstract class AbstractJournal implements Journal {
             while (iterator.hasNext()) {
                 Record record = iterator.nextRecord();
                 if (record.getJournalId().equals(id)) {
-                    log.info("Record with revision '" + record.getRevision() +
-                            "' created by this journal, skipped.");
+                    log.info("Record with revision '" + record.getRevision()
+                            + "' created by this journal, skipped.");
                 } else {
                     RecordConsumer consumer = getConsumer(record.getProducerId());
                     if (consumer != null) {
@@ -336,4 +336,5 @@ public abstract class AbstractJournal implements Journal {
     public NamePathResolver getNamePathResolver() {
         return npResolver;
     }
+
 }

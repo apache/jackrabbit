@@ -52,4 +52,5 @@ public class PropertyModifiedOperation extends PropertyOperation {
         state.setStatus(PropertyState.STATUS_EXISTING_MODIFIED);
         changeLog.modified(state);
     }
+
 }

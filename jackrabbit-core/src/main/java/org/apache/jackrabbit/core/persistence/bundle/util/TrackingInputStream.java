@@ -25,11 +25,6 @@ import java.io.IOException;
 public class TrackingInputStream extends InputStream {
 
     /**
-     * the cvs/svn id
-     */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
-    /**
      * The underlying input stream
      */
     private final InputStream in;
@@ -103,7 +98,7 @@ public class TrackingInputStream extends InputStream {
     /**
      * {@inheritDoc}
      */
-    public int read(byte b[]) throws IOException {
+    public int read(byte[] b) throws IOException {
         int read = in.read(b);
         if (read > 0) {
             position += read;
@@ -114,7 +109,7 @@ public class TrackingInputStream extends InputStream {
     /**
      * {@inheritDoc}
      */
-    public int read(byte b[], int off, int len) throws IOException {
+    public int read(byte[] b, int off, int len) throws IOException {
         int read = in.read(b, off, len);
         if (read > 0) {
             position += read;
@@ -140,4 +135,5 @@ public class TrackingInputStream extends InputStream {
     public long getPosition() {
         return position;
     }
+
 }

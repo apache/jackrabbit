@@ -296,7 +296,7 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
             }
 
             public int[] indexesOf(String[] terms, int start, int len) {
-                int res[] = new int[len];
+                int[] res = new int[len];
                 for (int i = 0; i < len; i++) {
                     res[i] = indexOf(terms[i]);
                 }

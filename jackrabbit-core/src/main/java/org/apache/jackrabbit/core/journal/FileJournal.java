@@ -119,8 +119,8 @@ public class FileJournal extends AbstractJournal {
         rootDirectory.mkdirs();
 
         if (!rootDirectory.exists() || !rootDirectory.isDirectory()) {
-            String msg = "Directory specified does either not exist " +
-                    "or is not a directory: " + directory;
+            String msg = "Directory specified does either not exist "
+                + "or is not a directory: " + directory;
             throw new JournalException(msg);
         }
 
@@ -270,8 +270,8 @@ public class FileJournal extends AbstractJournal {
                 } else {
                     try {
                         int version = Integer.parseInt(ext);
-                        String newName = name.substring(0, sep + 1) +
-                                String.valueOf(version + 1);
+                        String newName = name.substring(0, sep + 1)
+                            + String.valueOf(version + 1);
                         file.renameTo(new File(rootDirectory, newName));
                     } catch (NumberFormatException e) {
                         log.warn("Bogusly named journal file, skipped: " + file);

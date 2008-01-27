@@ -487,4 +487,5 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         }
 
     }
+
 }

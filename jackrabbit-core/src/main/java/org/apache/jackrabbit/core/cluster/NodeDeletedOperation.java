@@ -51,4 +51,5 @@ public class NodeDeletedOperation extends NodeOperation {
         state.setStatus(NodeState.STATUS_EXISTING_REMOVED);
         changeLog.deleted(state);
     }
+
 }

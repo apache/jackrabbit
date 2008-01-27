@@ -611,8 +611,8 @@ public class DatabaseJournal extends AbstractJournal {
             // read ddl from resources
             InputStream in = DatabaseJournal.class.getResourceAsStream(schema + ".ddl");
             if (in == null) {
-                String msg = "No schema-specific DDL found: '" + schema + ".ddl" +
-                        "', falling back to '" + DEFAULT_DDL_NAME + "'.";
+                String msg = "No schema-specific DDL found: '" + schema + ".ddl"
+                    + "', falling back to '" + DEFAULT_DDL_NAME + "'.";
                 log.info(msg);
                 in = DatabaseJournal.class.getResourceAsStream(DEFAULT_DDL_NAME);
                 if (in == null) {
@@ -685,19 +685,18 @@ public class DatabaseJournal extends AbstractJournal {
      */
     protected void buildSQLStatements() {
         selectRevisionsStmtSQL =
-                "select REVISION_ID, JOURNAL_ID, PRODUCER_ID, REVISION_DATA " +
-                "from " + schemaObjectPrefix + "JOURNAL " +
-                "where REVISION_ID > ?";
+            "select REVISION_ID, JOURNAL_ID, PRODUCER_ID, REVISION_DATA from "
+            + schemaObjectPrefix + "JOURNAL where REVISION_ID > ?";
         updateGlobalStmtSQL =
-                "update " + schemaObjectPrefix + "GLOBAL_REVISION " +
-                "set revision_id = revision_id + 1";
+            "update " + schemaObjectPrefix + "GLOBAL_REVISION"
+            + " set revision_id = revision_id + 1";
         selectGlobalStmtSQL =
-                "select revision_id " +
-                "from " + schemaObjectPrefix + "GLOBAL_REVISION";
+            "select revision_id from "
+            + schemaObjectPrefix + "GLOBAL_REVISION";
         insertRevisionStmtSQL =
-                "insert into " + schemaObjectPrefix + "JOURNAL" +
-                "(REVISION_ID, JOURNAL_ID, PRODUCER_ID, REVISION_DATA) " +
-                "values (?,?,?,?)";
+            "insert into " + schemaObjectPrefix + "JOURNAL"
+            + " (REVISION_ID, JOURNAL_ID, PRODUCER_ID, REVISION_DATA) "
+            + "values (?,?,?,?)";
     }
 
     /**

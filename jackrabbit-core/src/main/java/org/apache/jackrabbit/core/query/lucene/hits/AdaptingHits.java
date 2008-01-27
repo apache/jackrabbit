@@ -97,8 +97,9 @@ public class AdaptingHits implements Hits {
                 while (i > -1) {
                     try {
                         i = hits.next();
-                        if (i > -1)
+                        if (i > -1) {
                             bitSetHits.set(i);
+                        }
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }

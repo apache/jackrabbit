@@ -167,4 +167,5 @@ class LockableFileRevision {
             unlock();
         }
     }
+
 }

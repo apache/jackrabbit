@@ -172,8 +172,9 @@ public class PathQueryNode extends NAryQueryNode {
         }
 
         // First path step starts with "//"
-        if (firstWorkspaceRelativeStep.getIncludeDescendants())
+        if (firstWorkspaceRelativeStep.getIncludeDescendants()) {
             return true;
+        }
 
         // If the first workspace relative location step is jcr:system we need
         // to include the system tree

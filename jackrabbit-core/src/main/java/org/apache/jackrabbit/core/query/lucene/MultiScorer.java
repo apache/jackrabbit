@@ -107,7 +107,8 @@ class MultiScorer extends Scorer {
                 return next();
             } else {
                 // no more document
-                return hasNext = false;
+                hasNext = false;
+                return hasNext;
             }
         }
     }

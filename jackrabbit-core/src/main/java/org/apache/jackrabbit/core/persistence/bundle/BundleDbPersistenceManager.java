@@ -1244,8 +1244,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             log.error(message);
         }
         log.error("       Reason: " + se.getMessage());
-        log.error("   State/Code: " + se.getSQLState() + "/" +
-                se.getErrorCode());
+        log.error("   State/Code: " + se.getSQLState() + "/" + se.getErrorCode());
         log.debug("   dump:", se);
     }
 

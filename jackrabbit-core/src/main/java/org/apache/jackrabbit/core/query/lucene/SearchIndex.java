@@ -591,7 +591,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * @return A <code>Query</code> object.
      * @throws javax.jcr.query.InvalidQueryException
      *          if the query object model tree is invalid.
-     * @see QueryHandler#createExecutablePreparedQuery(org.apache.jackrabbit.core.SessionImpl, org.apache.jackrabbit.core.ItemManager, org.apache.jackrabbit.core.query.qom.QueryObjectModelTree)
+     * @see QueryHandler#createExecutablePreparedQuery(SessionImpl, ItemManager, QueryObjectModelTree)
      */
     public ExecutablePreparedQuery createExecutablePreparedQuery(
             SessionImpl session,
@@ -906,8 +906,8 @@ public class SearchIndex extends AbstractQueryHandler {
             idxCfg.init(docElement, getContext(), namespaceMappings);
             return idxCfg;
         } catch (Exception e) {
-            log.warn("Exception initializing indexing configuration from: " +
-                    indexingConfigPath, e);
+            log.warn("Exception initializing indexing configuration from: "
+                    + indexingConfigPath, e);
         }
         log.warn(indexingConfigPath + " ignored.");
         return null;
@@ -924,8 +924,8 @@ public class SearchIndex extends AbstractQueryHandler {
                 sp = (SynonymProvider) synonymProviderClass.newInstance();
                 sp.initialize(createSynonymProviderConfigResource());
             } catch (Exception e) {
-                log.warn("Exception initializing synonym provider: " +
-                        synonymProviderClass, e);
+                log.warn("Exception initializing synonym provider: "
+                        + synonymProviderClass, e);
                 sp = null;
             }
         }
@@ -947,8 +947,8 @@ public class SearchIndex extends AbstractQueryHandler {
             // simple sanity check
             if (synonymProviderConfigPath.endsWith(FileSystem.SEPARATOR)) {
                 throw new FileSystemException(
-                        "Invalid synonymProviderConfigPath: " +
-                        synonymProviderConfigPath);
+                        "Invalid synonymProviderConfigPath: "
+                        + synonymProviderConfigPath);
             }
             FileSystem fs = getContext().getFileSystem();
             if (fs == null) {
@@ -991,8 +991,8 @@ public class SearchIndex extends AbstractQueryHandler {
                 spCheck = (SpellChecker) spellCheckerClass.newInstance();
                 spCheck.init(this);
             } catch (Exception e) {
-                log.warn("Exception initializing spell checker: " +
-                        spellCheckerClass, e);
+                log.warn("Exception initializing spell checker: "
+                        + spellCheckerClass, e);
             }
         }
         return spCheck;
@@ -1045,7 +1045,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     protected void mergeAggregatedNodeIndexes(NodeState state, Document doc) {
         if (indexingConfig != null) {
-            AggregateRule aggregateRules[] = indexingConfig.getAggregateRules();
+            AggregateRule[] aggregateRules = indexingConfig.getAggregateRules();
             if (aggregateRules == null) {
                 return;
             }
@@ -1076,8 +1076,8 @@ public class SearchIndex extends AbstractQueryHandler {
                 }
             } catch (Exception e) {
                 // do not fail if aggregate cannot be created
-                log.warn("Exception while building indexing aggregate for " +
-                        "node with UUID: " + state.getNodeId().getUUID(), e);
+                log.warn("Exception while building indexing aggregate for"
+                        + " node with UUID: " + state.getNodeId().getUUID(), e);
             }
         }
     }
@@ -1093,7 +1093,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     protected void retrieveAggregateRoot(NodeState state, Map map) {
         if (indexingConfig != null) {
-            AggregateRule aggregateRules[] = indexingConfig.getAggregateRules();
+            AggregateRule[] aggregateRules = indexingConfig.getAggregateRules();
             if (aggregateRules == null) {
                 return;
             }
@@ -1106,8 +1106,8 @@ public class SearchIndex extends AbstractQueryHandler {
                     }
                 }
             } catch (Exception e) {
-                log.warn("Unable to get aggregate root for " +
-                        state.getNodeId().getUUID(), e);
+                log.warn("Unable to get aggregate root for "
+                        + state.getNodeId().getUUID(), e);
             }
         }
     }
@@ -1178,7 +1178,7 @@ public class SearchIndex extends AbstractQueryHandler {
         /**
          * The sub readers.
          */
-        final private CachingMultiIndexReader[] subReaders;
+        private final CachingMultiIndexReader[] subReaders;
 
         /**
          * Doc number starts for each sub reader
@@ -1214,7 +1214,7 @@ public class SearchIndex extends AbstractQueryHandler {
          * {@inheritDoc}
          */
         public IndexReader[] getIndexReaders() {
-            IndexReader readers[] = new IndexReader[subReaders.length];
+            IndexReader[] readers = new IndexReader[subReaders.length];
             System.arraycopy(subReaders, 0, readers, 0, subReaders.length);
             return readers;
         }
@@ -1616,12 +1616,12 @@ public class SearchIndex extends AbstractQueryHandler {
             if (ExcerptProvider.class.isAssignableFrom(clazz)) {
                 excerptProviderClass = clazz;
             } else {
-                log.warn("Invalid value for excerptProviderClass, {} does " +
-                        "not implement ExcerptProvider interface.", className);
+                log.warn("Invalid value for excerptProviderClass, {} does "
+                        + "not implement ExcerptProvider interface.", className);
             }
         } catch (ClassNotFoundException e) {
-            log.warn("Invalid value for excerptProviderClass, class {} not " +
-                    "found.", className);
+            log.warn("Invalid value for excerptProviderClass, class {} not found.",
+                    className);
         }
     }
 
@@ -1661,13 +1661,13 @@ public class SearchIndex extends AbstractQueryHandler {
             if (IndexingConfiguration.class.isAssignableFrom(clazz)) {
                 indexingConfigurationClass = clazz;
             } else {
-                log.warn("Invalid value for indexingConfigurationClass, {} " +
-                        "does not implement IndexingConfiguration interface.",
+                log.warn("Invalid value for indexingConfigurationClass, {} "
+                        + "does not implement IndexingConfiguration interface.",
                         className);
             }
         } catch (ClassNotFoundException e) {
-            log.warn("Invalid value for indexingConfigurationClass, class {} " +
-                    "not found.", className);
+            log.warn("Invalid value for indexingConfigurationClass, class {} not found.",
+                    className);
         }
     }
 
@@ -1691,13 +1691,13 @@ public class SearchIndex extends AbstractQueryHandler {
             if (SynonymProvider.class.isAssignableFrom(clazz)) {
                 synonymProviderClass = clazz;
             } else {
-                log.warn("Invalid value for synonymProviderClass, {} " +
-                        "does not implement SynonymProvider interface.",
+                log.warn("Invalid value for synonymProviderClass, {} "
+                        + "does not implement SynonymProvider interface.",
                         className);
             }
         } catch (ClassNotFoundException e) {
-            log.warn("Invalid value for synonymProviderClass, class {} " +
-                    "not found.", className);
+            log.warn("Invalid value for synonymProviderClass, class {} not found.",
+                    className);
         }
     }
 
@@ -1706,8 +1706,11 @@ public class SearchIndex extends AbstractQueryHandler {
      *         <code>null</code> if none is set.
      */
     public String getSynonymProviderClass() {
-        return synonymProviderClass != null ?
-                synonymProviderClass.getName() : null;
+        if (synonymProviderClass != null) {
+            return synonymProviderClass.getName();
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -1722,13 +1725,13 @@ public class SearchIndex extends AbstractQueryHandler {
             if (SpellChecker.class.isAssignableFrom(clazz)) {
                 spellCheckerClass = clazz;
             } else {
-                log.warn("Invalid value for spellCheckerClass, {} " +
-                        "does not implement SpellChecker interface.",
+                log.warn("Invalid value for spellCheckerClass, {} "
+                        + "does not implement SpellChecker interface.",
                         className);
             }
         } catch (ClassNotFoundException e) {
-            log.warn("Invalid value for spellCheckerClass, class {} " +
-                    "not found.", className);
+            log.warn("Invalid value for spellCheckerClass,"
+                    + " class {} not found.", className);
         }
     }
 
@@ -1737,8 +1740,11 @@ public class SearchIndex extends AbstractQueryHandler {
      *         <code>null</code> if none is set.
      */
     public String getSpellCheckerClass() {
-        return spellCheckerClass != null ?
-                spellCheckerClass.getName() : null;
+        if (spellCheckerClass != null) {
+            return spellCheckerClass.getName();
+        } else {
+            return null;
+        }
     }
 
     /**

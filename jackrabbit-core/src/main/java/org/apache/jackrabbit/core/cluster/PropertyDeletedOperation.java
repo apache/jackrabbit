@@ -51,4 +51,5 @@ public class PropertyDeletedOperation extends PropertyOperation {
         state.setStatus(PropertyState.STATUS_EXISTING_REMOVED);
         changeLog.deleted(state);
     }
+
 }
