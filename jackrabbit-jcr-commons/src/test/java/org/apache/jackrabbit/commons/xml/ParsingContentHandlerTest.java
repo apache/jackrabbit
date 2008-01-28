@@ -19,8 +19,6 @@ package org.apache.jackrabbit.commons.xml;
 import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
 
-import javax.xml.transform.stream.StreamResult;
-
 import junit.framework.TestCase;
 
 import org.xml.sax.ContentHandler;
@@ -33,7 +31,7 @@ public class ParsingContentHandlerTest extends TestCase {
         StringWriter writer = new StringWriter();
 
         ContentHandler handler =
-            SerializingContentHandler.getSerializer(new StreamResult(writer));
+            SerializingContentHandler.getSerializer(writer);
         new ParsingContentHandler(handler).parse(
                 new ByteArrayInputStream(source.getBytes("UTF-8")));
 
