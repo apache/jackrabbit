@@ -42,8 +42,8 @@ public class ImportContentHandlerTest extends TestCase {
         ch.endDocument();
 
         String xml = new String(ch.getXML(), "UTF-8");
-        assertTrue(xml.contains(
-                "<foo:sample xmlns:foo=\"http://example.com/ns/foo\"/>"));
+        assertTrue(xml.indexOf(
+                "<foo:sample xmlns:foo=\"http://example.com/ns/foo\"/>") != -1);
     }
 
     private static class DummyImportContentHandler extends ImportContentHandler {
