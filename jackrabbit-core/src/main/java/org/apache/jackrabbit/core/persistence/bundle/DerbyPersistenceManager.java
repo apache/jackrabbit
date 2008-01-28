@@ -51,9 +51,6 @@ import javax.jcr.RepositoryException;
  */
 public class DerbyPersistenceManager extends BundleDbPersistenceManager {
 
-    /** the cvs/svn id */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
     /** name of the embedded driver */
     public static final String DERBY_EMBEDDED_DRIVER = "org.apache.derby.jdbc.EmbeddedDriver";
 

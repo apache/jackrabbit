@@ -36,11 +36,6 @@ import java.sql.Statement;
 public class DbNameIndex implements StringIndex {
 
     /**
-     * The CVS/SVN id
-     */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
-    /**
      * The class that manages statement execution and recovery from connection loss.
      */
     protected ConnectionRecoveryManager connectionManager;

@@ -21,7 +21,6 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.uuid.UUID;
 
 import javax.jcr.version.VersionException;
-import java.util.Iterator;
 
 /**
  * This interface defines the internal version history.

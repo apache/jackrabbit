@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeIdIterator;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;

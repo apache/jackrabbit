@@ -36,8 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeTypeManager;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -237,7 +235,8 @@ public final class EventStateCollection {
                                     if (moved.getIndex() == 0) {
                                         oldPath = PathFactoryImpl.getInstance().create(parentPath, moved.getName(), false);
                                     } else {
-                                        oldPath = PathFactoryImpl.getInstance().create(parentPath, moved.getName(), moved.getIndex(), false);
+                                        oldPath = PathFactoryImpl.getInstance().create(
+                                                parentPath, moved.getName(), moved.getIndex(), false);
                                     }
                                 } catch (RepositoryException e) {
                                     // should never happen actually

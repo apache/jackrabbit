@@ -28,7 +28,9 @@
 
     <!-- Checks that a package.html file exists for each package.     -->
     <!-- See http://checkstyle.sf.net/config_javadoc.html#PackageHtml -->
+    <!-- Disabled:
     <module name="PackageHtml"/>
+    -->
 
     <!-- Checks whether files end with a new line.                        -->
     <!-- See http://checkstyle.sf.net/config_misc.html#NewlineAtEndOfFile -->
@@ -47,7 +49,7 @@
         <!-- ************************************************************** -->
 
         <module name="Header">
-            <property name="headerFile" value="${basedir}/HEADER.txt"/>
+            <property name="headerFile" value="HEADER.txt"/>
         </module>
         <!-- <property name="tabWidth" value="4"/> -->
         <module name="LeftCurly">
@@ -70,9 +72,11 @@
 
         <!-- Checks for Javadoc comments.                     -->
         <!-- See http://checkstyle.sf.net/config_javadoc.html -->
-        <module name="JavadocMethod"/>
         <module name="JavadocType"/>
+        <!--  Disabled:
+        <module name="JavadocMethod"/>
         <module name="JavadocVariable"/>
+        -->
 
         <!-- Checks for Naming Conventions.                  -->
         <!-- See http://checkstyle.sf.net/config_naming.html -->
@@ -163,9 +167,9 @@
         <module name="UpperEll"/>
 
     </module>
-    
+
     <module name="SuppressionFilter">
         <property name="file" value="checkstyle-suppressions.xml"/>
-    </module>    
+    </module>
 
 </module>

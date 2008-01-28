@@ -84,9 +84,6 @@ import javax.jcr.PropertyType;
 public abstract class AbstractBundlePersistenceManager implements
     PersistenceManager, CachingPersistenceManager, IterablePersistenceManager {
 
-    /** the cvs/svn id */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
     /** the default logger */
     private static Logger log = LoggerFactory.getLogger(AbstractBundlePersistenceManager.class);
 
@@ -413,8 +410,10 @@ public abstract class AbstractBundlePersistenceManager implements
 
         // init prop defs
         if (context.getNodeTypeRegistry() != null) {
-            idJcrUUID = context.getNodeTypeRegistry().getEffectiveNodeType(NameConstants.MIX_REFERENCEABLE).getApplicablePropertyDef(
-                    NameConstants.JCR_UUID, PropertyType.STRING, false).getId();
+            idJcrUUID = context.getNodeTypeRegistry()
+                .getEffectiveNodeType(NameConstants.MIX_REFERENCEABLE)
+                .getApplicablePropertyDef(NameConstants.JCR_UUID, PropertyType.STRING, false)
+                .getId();
             idJcrPrimaryType = context.getNodeTypeRegistry().getEffectiveNodeType(NameConstants.NT_BASE).getApplicablePropertyDef(
                     NameConstants.JCR_PRIMARYTYPE, PropertyType.NAME, false).getId();
             idJcrMixinTypes = context.getNodeTypeRegistry().getEffectiveNodeType(NameConstants.NT_BASE).getApplicablePropertyDef(

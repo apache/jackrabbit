@@ -81,8 +81,8 @@ public class OracleFileSystem extends DbFileSystem {
     private static Logger log = LoggerFactory.getLogger(OracleFileSystem.class);
 
     private Class blobClass;
-    private Integer DURATION_SESSION_CONSTANT;
-    private Integer MODE_READWRITE_CONSTANT;
+    private Integer durationSessionConstant;
+    private Integer modeReadWriteConstant;
 
     /** the variable for the Oracle table space */
     public static final String TABLE_SPACE_VARIABLE =
@@ -143,9 +143,9 @@ public class OracleFileSystem extends DbFileSystem {
         // class loader that the Oracle driver was loaded with
         try {
             blobClass = con.getClass().getClassLoader().loadClass("oracle.sql.BLOB");
-            DURATION_SESSION_CONSTANT =
+            durationSessionConstant =
                     new Integer(blobClass.getField("DURATION_SESSION").getInt(null));
-            MODE_READWRITE_CONSTANT =
+            modeReadWriteConstant =
                     new Integer(blobClass.getField("MODE_READWRITE").getInt(null));
         } catch (Exception e) {
             String msg = "failed to load/introspect oracle.sql.BLOB";
@@ -427,7 +427,9 @@ public class OracleFileSystem extends DbFileSystem {
     /**
      * {@inheritDoc}
      */
-    public RandomAccessOutputStream getRandomAccessOutputStream(final String filePath) throws FileSystemException, UnsupportedOperationException {
+    public RandomAccessOutputStream getRandomAccessOutputStream(
+            final String filePath)
+            throws FileSystemException, UnsupportedOperationException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -572,9 +574,9 @@ public class OracleFileSystem extends DbFileSystem {
         Method createTemporary = blobClass.getMethod("createTemporary",
                 new Class[]{Connection.class, Boolean.TYPE, Integer.TYPE});
         Object blob = createTemporary.invoke(null,
-                new Object[]{con, Boolean.FALSE, DURATION_SESSION_CONSTANT});
+                new Object[]{con, Boolean.FALSE, durationSessionConstant});
         Method open = blobClass.getMethod("open", new Class[]{Integer.TYPE});
-        open.invoke(blob, new Object[]{MODE_READWRITE_CONSTANT});
+        open.invoke(blob, new Object[]{modeReadWriteConstant});
         Method getBinaryOutputStream =
                 blobClass.getMethod("getBinaryOutputStream", new Class[0]);
         OutputStream out = (OutputStream) getBinaryOutputStream.invoke(blob, null);

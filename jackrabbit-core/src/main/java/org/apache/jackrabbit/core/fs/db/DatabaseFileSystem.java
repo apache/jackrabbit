@@ -138,15 +138,23 @@ public class DatabaseFileSystem implements FileSystem {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (obj instanceof DatabaseFileSystem) {
+        } else if (obj instanceof DatabaseFileSystem) {
             DatabaseFileSystem other = (DatabaseFileSystem) obj;
-            if (((schema != null) ? schema.equals(other.schema) : other.schema == null)
-                    && ((schemaObjectPrefix != null) ? schemaObjectPrefix.equals(other.schemaObjectPrefix) : other.schemaObjectPrefix == null)) {
-                return true;
-            }
+            return equals(schema, other.schema)
+                && equals(schemaObjectPrefix, other.schemaObjectPrefix);
+        } else {
+            return false;
         }
-        return false;
+    }
+
+    private static boolean equals(Object a, Object b) {
+        if (a == null && b == null) {
+            return true;
+        } else if (a == null || b == null) {
+            return false;
+        } else {
+            return a.equals(b);
+        }
     }
 
     /**

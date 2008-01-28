@@ -63,9 +63,6 @@ import java.util.NoSuchElementException;
  */
 public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager {
 
-    /** the cvs/svn id */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
     /** the default logger */
     private static Logger log = LoggerFactory.getLogger(BundleFsPersistenceManager.class);
 

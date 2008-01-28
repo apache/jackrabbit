@@ -204,7 +204,8 @@ public class DbDataStore implements DataStore {
      * in the [databaseType].properties file, initialized with the default value.
      */
     protected String updateSQL =
-        "UPDATE ${tablePrefix}${table} SET ID=?, LENGTH=?, LAST_MODIFIED=? WHERE ID=? AND NOT EXISTS(SELECT ID FROM ${tablePrefix}${table} WHERE ID=?)";
+        "UPDATE ${tablePrefix}${table} SET ID=?, LENGTH=?, LAST_MODIFIED=?"
+        + " WHERE ID=? AND NOT EXISTS(SELECT ID FROM ${tablePrefix}${table} WHERE ID=?)";
 
     /**
      * This is the property 'delete'
@@ -346,7 +347,10 @@ public class DbDataStore implements DataStore {
                     long oldLength = rs.getLong(1);
                     long lastModified = rs.getLong(2);
                     if (oldLength != length) {
-                        String msg = DIGEST + " collision: temp=" + tempId + " id=" + id + " length=" + length + " oldLength=" + oldLength;
+                        String msg =
+                            DIGEST + " collision: temp=" + tempId
+                            + " id=" + id + " length=" + length
+                            + " oldLength=" + oldLength;
                         log.error(msg);
                         throw new DataStoreException(msg);
                     }
@@ -518,7 +522,10 @@ public class DbDataStore implements DataStore {
         InputStream in = DbDataStore.class.getResourceAsStream(databaseType + ".properties");
         if (in == null) {
             if (failIfNotFound) {
-                String msg = "Configuration error: The resource '" + databaseType + ".properties' could not be found; Please verify the databaseType property";
+                String msg =
+                    "Configuration error: The resource '" + databaseType
+                    + ".properties' could not be found;"
+                    + " Please verify the databaseType property";
                 log.debug(msg);
                 throw new DataStoreException(msg);
             } else {

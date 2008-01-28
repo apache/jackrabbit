@@ -46,7 +46,7 @@ public class FineGrainedISMLocking implements ISMLocking {
     /**
      * An anonymous read lock without an id assigned.
      */
-    private final ReadLock ANONYMOUS_READ_LOCK = new ReadLockImpl();
+    private final ReadLock anonymousReadLock = new ReadLockImpl();
 
     /**
      * The active writer or <code>null</code> if there is none.
@@ -195,7 +195,7 @@ public class FineGrainedISMLocking implements ISMLocking {
             } finally {
                 exclusive.release();
             }
-            return ANONYMOUS_READ_LOCK;
+            return anonymousReadLock;
         }
 
     }

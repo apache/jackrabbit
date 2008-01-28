@@ -17,10 +17,8 @@
 package org.apache.jackrabbit.core.persistence.db;
 
 import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionFactory;
-import org.apache.jackrabbit.core.persistence.util.Serializer;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import javax.jcr.RepositoryException;

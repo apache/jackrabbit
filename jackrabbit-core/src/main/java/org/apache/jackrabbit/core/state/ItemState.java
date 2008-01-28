@@ -203,7 +203,9 @@ public abstract class ItemState implements Serializable {
      */
     protected void reconnect() {
         if (this.overlayedState == null) {
-            throw new IllegalStateException("Item state cannot be reconnected because there's no underlying state to reconnect to: " + this);
+            throw new IllegalStateException(
+                    "Item state cannot be reconnected because there's no"
+                    + " underlying state to reconnect to: " + this);
         }
     }
 

@@ -43,9 +43,6 @@ import java.util.Set;
  */
 public class ItemStateBinding {
 
-    /** the cvs/svn id */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
     /**
      * serialization version 1
      */

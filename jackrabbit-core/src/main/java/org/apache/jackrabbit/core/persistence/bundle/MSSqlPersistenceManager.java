@@ -38,9 +38,6 @@ import org.apache.jackrabbit.util.Text;
  */
 public class MSSqlPersistenceManager extends BundleDbPersistenceManager {
 
-    /** the cvs/svn id */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
     /** the MS SQL table space to use */
     protected String tableSpace = "";
 

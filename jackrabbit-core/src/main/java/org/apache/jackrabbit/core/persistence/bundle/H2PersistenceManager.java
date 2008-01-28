@@ -43,9 +43,6 @@ import javax.jcr.RepositoryException;
  */
 public class H2PersistenceManager extends BundleDbPersistenceManager {
 
-    /** the cvs/svn id */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
     /** the lock time out. see*/
     private long lockTimeout = 10000;
 

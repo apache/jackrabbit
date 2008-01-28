@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.core.journal;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -27,11 +24,6 @@ import java.io.RandomAccessFile;
  * Maintains a file-based revision counter with locking, assuring uniqueness.
  */
 public class FileRevision {
-
-    /**
-     * Logger.
-     */
-    private static final Logger log = LoggerFactory.getLogger(FileRevision.class);
 
     /**
      * Underlying random access file.
@@ -59,8 +51,8 @@ public class FileRevision {
                 set(0);
             }
         } catch (IOException e) {
-            String msg = "I/O error while attempting to create new file '" + file + "'.";
-            throw new JournalException(msg, e);
+            throw new JournalException(
+                    "I/O error while attempting to create new file '" + file + "'.", e);
         }
     }
 
@@ -96,4 +88,5 @@ public class FileRevision {
             throw new JournalException("I/O error occurred.", e);
         }
     }
+
 }

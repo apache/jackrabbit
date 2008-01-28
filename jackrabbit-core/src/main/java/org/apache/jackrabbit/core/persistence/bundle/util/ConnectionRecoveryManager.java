@@ -127,7 +127,9 @@ public class ConnectionRecoveryManager {
      * @param password the password to use for the connection
      * @throws RepositoryException if the database driver could not be loaded
      */
-    public ConnectionRecoveryManager(boolean block, String driver, String url, String user, String password) throws RepositoryException {
+    public ConnectionRecoveryManager(
+            boolean block, String driver, String url, String user, String password)
+            throws RepositoryException {
         this.block = block;
         this.driver = driver;
         this.url = url;
@@ -248,7 +250,9 @@ public class ConnectionRecoveryManager {
      * @throws SQLException if an error occurs
      * @throws RepositoryException if the database driver could not be loaded
      */
-    public synchronized PreparedStatement executeStmt(String sql, Object[] params, boolean returnGeneratedKeys, int maxRows) throws SQLException, RepositoryException {
+    public synchronized PreparedStatement executeStmt(
+            String sql, Object[] params, boolean returnGeneratedKeys, int maxRows)
+            throws SQLException, RepositoryException {
         int trials = 2;
         SQLException lastException  = null;
         do {
@@ -273,7 +277,9 @@ public class ConnectionRecoveryManager {
      * @throws SQLException if an error occurs
      * @throws RepositoryException if the database driver could not be loaded
      */
-    private PreparedStatement executeStmtInternal(String sql, Object[] params, boolean returnGeneratedKeys, int maxRows) throws SQLException, RepositoryException {
+    private PreparedStatement executeStmtInternal(
+            String sql, Object[] params, boolean returnGeneratedKeys, int maxRows)
+            throws SQLException, RepositoryException {
         try {
             String key = sql;
             if (returnGeneratedKeys) {

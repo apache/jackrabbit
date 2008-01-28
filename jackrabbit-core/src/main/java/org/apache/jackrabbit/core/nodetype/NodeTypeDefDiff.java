@@ -368,22 +368,18 @@ public class NodeTypeDefDiff {
     }
 
     private String modificationTypeToString(int modifcationType) {
-        String typeString = "unknown";
         switch (modifcationType) {
-            case NONE:
-                typeString = "NONE";
-                break;
-            case TRIVIAL:
-                typeString = "TRIVIAL";
-                break;
-            case MINOR:
-                typeString = "MINOR";
-                break;
-            case MAJOR:
-                typeString = "MAJOR";
-                break;
+        case NONE:
+            return "NONE";
+        case TRIVIAL:
+            return "TRIVIAL";
+        case MINOR:
+            return "MINOR";
+        case MAJOR:
+            return "MAJOR";
+        default:
+            return "unknown";
         }
-        return typeString;
     }
 
 

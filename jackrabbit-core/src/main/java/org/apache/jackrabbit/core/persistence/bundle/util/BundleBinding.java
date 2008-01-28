@@ -48,9 +48,6 @@ import javax.jcr.RepositoryException;
  */
 public class BundleBinding extends ItemStateBinding {
 
-    /** the cvs/svn id */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
     /**
      * default logger
      */

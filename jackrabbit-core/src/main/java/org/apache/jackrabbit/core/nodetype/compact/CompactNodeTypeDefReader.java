@@ -498,7 +498,8 @@ public class CompactNodeTypeDefReader {
                         ValueFactoryImpl.getInstance());
                 value = InternalValue.create(v, resolver);
             } catch (ValueFormatException e) {
-                lexer.fail("'" + currentToken + "' is not a valid string representation of a value of type " + pdi.getRequiredType());
+                lexer.fail("'" + currentToken + "' is not a valid string"
+                        + " representation of a value of type " + pdi.getRequiredType());
             } catch (RepositoryException e) {
                 lexer.fail("An error occured during value conversion of '" + currentToken + "'");
             }
@@ -525,7 +526,8 @@ public class CompactNodeTypeDefReader {
             try {
                 constraint = ValueConstraint.create(pdi.getRequiredType(), currentToken, resolver);
             } catch (InvalidConstraintException e) {
-                lexer.fail("'" + currentToken + "' is not a valid constraint expression for a value of type " + pdi.getRequiredType());
+                lexer.fail("'" + currentToken + "' is not a valid constraint"
+                        + " expression for a value of type " + pdi.getRequiredType());
             }
             constraints.add(constraint);
             nextToken();

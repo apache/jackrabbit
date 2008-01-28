@@ -74,7 +74,8 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
      */
     protected VirtualNodeState createRootNodeState() throws RepositoryException {
         VirtualNodeState root = new VirtualNodeState(this, parentId, rootNodeId, NameConstants.REP_NODETYPES, null);
-        NodeDefId id = ntReg.getEffectiveNodeType(NameConstants.REP_SYSTEM).getApplicableChildNodeDef(NameConstants.JCR_NODETYPES, NameConstants.REP_NODETYPES, ntReg).getId();
+        NodeDefId id = ntReg.getEffectiveNodeType(NameConstants.REP_SYSTEM).getApplicableChildNodeDef(
+                NameConstants.JCR_NODETYPES, NameConstants.REP_NODETYPES, ntReg).getId();
         root.setDefinitionId(id);
         Name[] ntNames = ntReg.getRegisteredNodeTypes();
         for (int i = 0; i < ntNames.length; i++) {
@@ -201,7 +202,9 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
             throws RepositoryException {
         NodeId id = new NodeId(calculateStableUUID(
                 ntDef.getName().toString() + "/" + NameConstants.JCR_PROPERTYDEFINITION.toString() + "/" + n));
-        VirtualNodeState pState = createNodeState(parent, NameConstants.JCR_PROPERTYDEFINITION, id, NameConstants.NT_PROPERTYDEFINITION);
+        VirtualNodeState pState = createNodeState(
+                parent, NameConstants.JCR_PROPERTYDEFINITION, id,
+                NameConstants.NT_PROPERTYDEFINITION);
         // add properties
         if (!propDef.definesResidual()) {
             pState.setPropertyValue(NameConstants.JCR_NAME, InternalValue.create(propDef.getName()));
@@ -212,7 +215,9 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
                 InternalValue.create(OnParentVersionAction.nameFromValue(propDef.getOnParentVersion())));
         pState.setPropertyValue(NameConstants.JCR_PROTECTED, InternalValue.create(propDef.isProtected()));
         pState.setPropertyValue(NameConstants.JCR_MULTIPLE, InternalValue.create(propDef.isMultiple()));
-        pState.setPropertyValue(NameConstants.JCR_REQUIREDTYPE, InternalValue.create(PropertyType.nameFromValue(propDef.getRequiredType()).toUpperCase()));
+        pState.setPropertyValue(
+                NameConstants.JCR_REQUIREDTYPE,
+                InternalValue.create(PropertyType.nameFromValue(propDef.getRequiredType()).toUpperCase()));
         pState.setPropertyValues(NameConstants.JCR_DEFAULTVALUES, PropertyType.STRING, propDef.getDefaultValues());
         ValueConstraint[] vc = propDef.getValueConstraints();
         InternalValue[] vals = new InternalValue[vc.length];
@@ -237,7 +242,8 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
             throws RepositoryException {
         NodeId id = new NodeId(calculateStableUUID(
                 ntDef.getName().toString() + "/" + NameConstants.JCR_CHILDNODEDEFINITION.toString() + "/" + n));
-        VirtualNodeState pState = createNodeState(parent, NameConstants.JCR_CHILDNODEDEFINITION, id, NameConstants.NT_CHILDNODEDEFINITION);
+        VirtualNodeState pState = createNodeState(
+                parent, NameConstants.JCR_CHILDNODEDEFINITION, id, NameConstants.NT_CHILDNODEDEFINITION);
         // add properties
         if (!cnDef.definesResidual()) {
             pState.setPropertyValue(NameConstants.JCR_NAME, InternalValue.create(cnDef.getName()));
