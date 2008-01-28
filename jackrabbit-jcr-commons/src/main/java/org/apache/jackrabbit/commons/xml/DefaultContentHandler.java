@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.commons;
+package org.apache.jackrabbit.commons.xml;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,8 +38,10 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * Adapter class for exposing a {@link ContentHandler} instance as
  * {@link DefaultHandler} object.
+ *
+ * @since Jackrabbit JCR Commons 1.5
  */
-class DefaultContentHandler extends DefaultHandler {
+public class DefaultContentHandler extends DefaultHandler {
 
     /**
      * Logger instance.

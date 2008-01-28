@@ -34,6 +34,7 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.jackrabbit.commons.xml.DefaultContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 

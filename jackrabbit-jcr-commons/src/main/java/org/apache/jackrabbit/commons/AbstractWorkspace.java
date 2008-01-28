@@ -22,6 +22,7 @@ import java.io.InputStream;
 import javax.jcr.RepositoryException;
 import javax.jcr.Workspace;
 
+import org.apache.jackrabbit.commons.xml.DefaultContentHandler;
 import org.xml.sax.ContentHandler;
 
 /**
