@@ -18,39 +18,43 @@
 <document>
   <properties>
     <author email="christophe.lombart@gmail.com">Christophe Lombart</author>
-    <title>OCM: Object Manager</title>
+    <title>Jackrabbit OCM : the Object Content Manager</title>
   </properties>
   <body>
-    <section name="Object Manager">
+     <section name="Jackrabbit OCM">
+      <subsection name="The Object Content Manager Component">
       <p>
-        The main component in the OCM framework is the Object Manager.
-        It converts an object graph into JCR nodes and properties and
-        vice versa. The object manager is always associated with a
-        JCR Session. Usually there is one object manager per user session,
-        but depending on your needs you can use any number of object managers
-        in your application.
+	The main component in the OCM framework is the ObjectContentManager. It converts an object graph into JCR nodes and properties and vice versa. The ObjectContentManager is always associated with a JCR Session. It is used to retrieve, create, update and delete objects from a JCR content repository. Usually there is one ObjectContentManager per user session.
       </p>
       <p>
-        This page describes the how object managers work and how you can
-        configure and use them in your applications.
+       This page describes how an ObjectManager is working and how it can be initialised in your applications.
       </p>
-
-      <subsection name="How do object managers work?">
+      </subsection>
+      <subsection name="How does the Object Content Manager work ?">
         <p>
-          Thanks to a Mapping Descriptor file described below,
-          the Object Manager is able to use the more appropriate mapping
-          strategy for each object. The Mapping Descriptor file contains
-          one class descriptor per persistent class. Each class descriptor
-          contains mapping information for the corresponding class attributes.
+	Thanks to a Mapping Descriptor, the ObjectContentManager is able to use the appropriate mapping strategy for each persistent object (pojo). The Mapping Descriptor contains one Class Descriptor per persistent class. Each Class Descriptor contains mapping information for the corresponding class attributes.
         </p>
+	<p>
+	In point of view implementation, the Mappring Descriptor is an java object injected into the ObjectContentManager (see the interface org.apache.jackrabbit.ocm.mapper.Mapper). Right now,there are 2 different Mapping Descriptor implementations:		
+	<ul>
+		<li>
+		Annotation : each persistent object is annoted in order to provide to the ObjectContentManager all the required information on its mapping strategy (see the class org.apache.jackrabbit.ocm.mapper.impl.annotation.AnnotationMapperImpl). 
+		</li>
+		<li>
+		XML configuration file : the mapping class descriptors are defined in one or more XML config files used by the ObjectContentManager when it is instantiated (see the class org.apache.jackrabbit.ocm.mapper.impl.digester.DigesterMapperImpl). This XML file contains the different class descriptors.
+		</li>
+	</ul>
+	</p>
+	<p>For a business developer, it is not necessary to know how the ObjectContent Manager is using the Class Descriptors. He has to make only a choice between annoted classes or one or more XML files. </p>
+        </subsection>
+	<subsection name="How does an object is persisted into a JCR repository ?">
         <p>
-          In all cases, the desired persistent class is mapped to a JCR node
-          and its fields are mapped to subnodes or properties depending on
-          their type (see below).
+          In all cases, a persistent object (a pojo) is mapped into a JCR node and its fields are mapped into subnodes or properties depending on their types.
         </p>
-        <p>
-          There are 4 "field types":
-        </p>
+	<p>
+		There are 4 "field types":
+	</p>
+	
         <dl>
           <dt>Atomic fields</dt>
           <dd>
@@ -60,65 +64,58 @@
           <dt>Bean fields</dt>
           <dd>
             One class can contain an 1..1 association to another bean.
-            In this case, the attribute is a custom object. Those fields
-            are mapped into JCR subnodes.
+            In this case, the field is a custom object. Those fields
+            are mapped into JCR subnodes or a referenced node.
           </dd>
           <dt>Collection fields</dt>
           <dd>
             One class can contain an 1..n association to a collection of
             beans (or Map). Those fields are mapped into a collection of
-            JCR subnodes.
-          </dd>
-          <dt>Reference fields</dt>
-          <dd>
-            One good example to understand the "reference" type is the
-            Folder concept. A folder "B" can have an attribute called
-            "parentFolder" which is a simple field pointing to the parent
-            folder "A". Of course, in a JCR repository, it is a nonsense
-            for persist this "parentFolder" attribute into a "B" subnode.
-            Another interesting example are references between cms objects
-            (folders, documents, ...). This type is not yet implemented.
+            JCR subnodes or a collection of referenced nodes. It is also possible to map a java collection into a multivalue property.
           </dd>
         </dl>
         <p>
-          Of course, all those "field types" imply different mapping
-          algorithms.
-        </p>
-        <p>
-          The descriptor file contains also information on
-          inheritance/interface mapping strategy, lazy loading,
+          The Mapping descriptor contains also information on inheritances, interface mapping strategy, lazy loading,
           custom converter, cache strategy, etc.
         </p>
       </subsection>
 
-      <subsection name="The Mapping Descriptor File">
-        <p>
-          The mapping descriptor is an xml file with the following structure:
-        </p>
-        <source><![CDATA[
-<jackrabbit-ocm>
-  <class-descriptor ...>
-    ...
-  </class-descriptor>
-  ...
-</jackrabbit-ocm>
-]]></source>
-        <p>
-          The root element is "jackrabbit-ocm" and it contains one or more
-          "class-descriptor". As you can see in the
-          <a href="simple-strategies/introduction-stragegies.html">Mapping Strategies</a>
-          section, each class-descriptor contains the mapping information
-          used for each class attribute.
-        </p>
-        <p>
-          It is possible to have several mapping descriptor files.
-        </p>
+
+      <subsection name="Basic setup (with annoted persistent classes)">
+	      <p>
+		      When you start your application, you need the following code
+		      to initialize correctly the Object Content Manager.
+	      </p>
+	      <source>
+import javax.jcr.Session;
+import javax.jcr.Repository;
+		      
+import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl;
+import org.apache.jackrabbit.ocm.mapper.Mapper;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.AnnotationMapperImpl;
+
+		      
+// 1. Instantiate a JCR session
+Repository repository = ...;
+Session session = repository.login(...);
+		      
+// 2. Register the different persistent classes
+List classes = new ArrayList();
+classes.add(MyContent.class); // Call this method for each persistent class
+
+				      
+// 3. Instantiate the object manager
+Mapper mapper = new AnnotationMapperImpl(classes);
+ocm = new ObjectContentManagerImpl(session, mapper);
+
+		      
+	      </source>
       </subsection>
 
-      <subsection name="Basic setup">
+      <subsection name="Basic setup (with an XML Mapping Descriptor)">
         <p>
           When you start your application, you need the following code
-          to initialize correctly the Object Manager.
+          to initialize correctly the Object Content Manager.
         </p>
         <source>
 import javax.jcr.Session;
@@ -146,18 +143,9 @@ String[] files = {
       "./src/test-config/jcrmapping-beandescriptor.xml"
   };
 
-// 3. Initialize the PersistenceManager dependencies
-Mapper mapper = new DigesterMapperImpl(files).buildMapper();
-AtomicTypeConverterProvider converterProvider =
-    new DefaultAtomicTypeConverterProvider();
-Map atomicTypeConverters = converterProvider.getAtomicTypeConverters();
-QueryManager queryManager = new QueryManagerImpl(mapper, atomicTypeConverters);
-ObjectConverter objectConverter =
-    new ObjectConverterImpl(mapper, converterProvider);
+// 3. Instantiate the object manager
+ObjectContentManager ocm = new ObjectContentManagerImpl(session, files);
 
-// 4. Instantiate the object manager
-ObjectContentManager manager =
-    new ObjectContentManagerImpl(mapper, objectConverter, queryManager, session);
 </source>
       </subsection>
 

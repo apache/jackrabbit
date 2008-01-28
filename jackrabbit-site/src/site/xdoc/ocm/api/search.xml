@@ -18,10 +18,10 @@
 <document>
   <properties>
     <author email="christophe.lombart@gmail.com">Christophe Lombart</author>
-    <title>The Persistence Manager API</title>
+    <title>The Object Content Manager API</title>
   </properties>
   <body>
-    <section name="Searching objects">
+    <section name="Jackrabbit OCM">
       <subsection name="Searching a single object">
         <source>
 QueryManager queryManager = persistenceManager.getQueryManager();
@@ -32,7 +32,7 @@ filter.addEqualTo("text", "Para 1");   // Text is an attribute in the class Para
 
 // Build the query
 Query query = queryManager.createQuery(filter);
-Paragraph paragraph = (Paragraph) persistenceManager.getObject(query);
+Paragraph paragraph = (Paragraph) ocm.getObject(query);
 </source>
       </subsection>
 
@@ -42,8 +42,8 @@ QueryManager queryManager = persistenceManager.getQueryManager();
 Filter filter = queryManager.createFilter(Paragraph.class);
 filter.setScope("/test/node1//");
 Query query = queryManager.createQuery(filter);
-persistenceManager = this.getPersistenceManager();
-Collection result = persistenceManager.getObjects(query);
+
+Collection result = ocm.getObjects(query);
 </source>
       </subsection>
 
@@ -53,8 +53,8 @@ QueryManager queryManager = persistenceManager.getQueryManager();
 Filter filter = queryManager.createFilter(Paragraph.class);
 filter.setScope("/test/node1//");
 Query query = queryManager.createQuery(filter);
-persistenceManager = this.getPersistenceManager();
-Iterator ierator = persistenceManager.getObjectIterator(query);
+
+Iterator ierator = ocm.getObjectIterator(query);
 </source>
       </subsection>
 
@@ -64,8 +64,8 @@ QueryManager queryManager = persistenceManager.getQueryManager();
 Filter filter = queryManager.createFilter(Paragraph.class);
 filter.setScope("/test/node1//");
 Query query = queryManager.createQuery(filter);
-persistenceManager = this.getPersistenceManager();
-persistenceManager.remove(query);
+
+ocm.remove(query);
 </source>
       </subsection>
     </section>

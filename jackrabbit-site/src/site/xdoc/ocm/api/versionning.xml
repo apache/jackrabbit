@@ -20,11 +20,11 @@
     <author email="christophe.lombart@gmail.com">
       Christophe Lombart
     </author>
-    <title>The Persistence Manager API</title>
+    <title>The Object Content Manager API</title>
   </properties>
   <body>
-    <section name="Managing versions">
-      <subsection name="Overview">
+    <section name="Jackrabbit OCM">
+	<subsection name="Managing versions">
         <p>
           Right now, the OCM tools provides basic versioning features:
         </p>
@@ -52,28 +52,28 @@ page.setPath("/page");
 page.setTitle("Page Title");
 page.addParagraph(new Paragraph("para1"));
 page.addParagraph(new Paragraph("para2"));
-persistenceManager.insert(page);
-persistenceManager.save();
+ocm.insert(page);
+ocm.save();
 
 // Update the page object and create a new version
 page.addParagraph(new Paragraph("para3"));
-persistenceManager.checkout("/page");
-persistenceManager.update(page);
-persistenceManager.save();
-persistenceManager.checkin("/page");
+ocm.checkout("/page");
+ocm.update(page);
+ocm.save();
+ocm.checkin("/page");
 
 // Update the page object and create a new version
 page.addParagraph(new Paragraph("para4"));
-persistenceManager.checkout("/page");
-persistenceManager.update(page);
-persistenceManager.save();
-persistenceManager.checkin("/page");
+ocm.checkout("/page");
+ocm.update(page);
+ocm.save();
+ocm.checkin("/page");
 </source>
       </subsection>
 
       <subsection name="Retrieve the version history">
         <source>
-VersionIterator versionIterator = persistenceManager.getAllVersions("/page");
+VersionIterator versionIterator = ocm.getAllVersions("/page");
 while (versionIterator.hasNext())
 {
     Version version = (Version) versionIterator.next();
@@ -86,11 +86,11 @@ while (versionIterator.hasNext())
       <subsection name="Retrieve version description">
         <source>
 // Retrieve the first version description
-Version baseVersion = persistenceManager.getBaseVersion("/page");
+Version baseVersion = ocm.getBaseVersion("/page");
 System.out.println("Base version : " + baseVersion.getName());
 
 // Retrieve the latest version description
-Version rootVersion = persistenceManager.getRootVersion("/page");
+Version rootVersion = ocm.getRootVersion("/page");
 System.out.println("Root version : " + rootVersion.getName());
 </source>
       </subsection>
@@ -98,7 +98,7 @@ System.out.println("Root version : " + rootVersion.getName());
       <subsection name="Retrieve the object state matching to a specific version">
         <source>
 //Get the object matching to the first version
-Page  page = (Page) persistenceManager.getObject( "/page", "1.0");
+Page  page = (Page) ocm.getObject( "/page", "1.0");
 </source>
       </subsection>
 
@@ -109,29 +109,29 @@ page.setPath("/page");
 page.setTitle("Page Title");
 page.addParagraph(new Paragraph("para1"));
 page.addParagraph(new Paragraph("para2"));
-persistenceManager.insert(page);
-persistenceManager.save();
+ocm.insert(page);
+ocm.save();
 
 // Checkin with some labels
 page.addParagraph(new Paragraph("para3"));
-persistenceManager.checkout("/page");
-persistenceManager.update(page);
-persistenceManager.save();
-persistenceManager.checkin("/page", new String[] {"A", "B"});
+ocm.checkout("/page");
+ocm.update(page);
+ocm.save();
+ocm.checkin("/page", new String[] {"A", "B"});
 
 // Checkin with some labels
 page.addParagraph(new Paragraph("para4"));
-persistenceManager.checkout("/page");
-persistenceManager.update(page);
-persistenceManager.save();
-persistenceManager.checkin("/page", new String[] {"C", "D"});
+ocm.checkout("/page");
+ocm.update(page);
+ocm.save();
+ocm.checkin("/page", new String[] {"C", "D"});
 
 // Retrieve all labels
-String[] allLabels = persistenceManager.getAllVersionLabels("/page");
+String[] allLabels = ocm.getAllVersionLabels("/page");
 assertTrue("Incorrect number of labels", allLabels.length == 4);
 
 // Retrieve labels assigned to the version 1.1
-String[] versionLabels = persistenceManager.getVersionLabels("/page", "1.1");
+String[] versionLabels = ocm.getVersionLabels("/page", "1.1");
 assertTrue("Incorrect number of labels", versionLabels.length == 2);
 assertTrue("Incorrect label", versionLabels[0].equals("C") || versionLabels[0].equals("D"));
 assertTrue("Incorrect label", versionLabels[1].equals("C") || versionLabels[0].equals("D"));

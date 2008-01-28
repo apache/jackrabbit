@@ -20,11 +20,11 @@
     <author email="christophe.lombart@gmail.com">
       Christophe Lombart
     </author>
-    <title>The Persistence Manager API</title>
+    <title>The Object Content Manager API</title>
   </properties>
   <body>
-    <section name="Managing Locks">
-      <subsection name="Overview">
+    <section name="Jackrabbit OCM">
+	<subsection name="Managing Locks">
         <p>
           Following the Jcr specification, it is possible to lock nodes and
           their children (see section 8.4). You can see on this page the
@@ -67,14 +67,14 @@ collection.add(c3);
 
 a.setCollection(collection);
 
-persistenceManager.insert(a);
-persistenceManager.save();
+ocm.insert(a);
+ocm.save();
 
 
 // --------------------------------------------------------------------------------
 // Check if the object is not locked
 // --------------------------------------------------------------------------------
-if (persistenceManager.isLocked("/test"))
+if (ocm.isLocked("/test"))
 {
    System.out.println("Error : The object is locked- humm ??");
 }
@@ -82,12 +82,12 @@ if (persistenceManager.isLocked("/test"))
 // --------------------------------------------------------------------------------
 // Lock the object
 // --------------------------------------------------------------------------------
-String lockToken = persistenceManager.lock("/test", true, false);
+String lockToken = ocm.lock("/test", true, false);
 
 // --------------------------------------------------------------------------------
 // Check if the object is not locked
 // --------------------------------------------------------------------------------
-if (! persistenceManager.isLocked("/test"))
+if (! ocm.isLocked("/test"))
 {
    System.out.println("Error : The object is not locked- humm ??");
 }
@@ -95,7 +95,7 @@ if (! persistenceManager.isLocked("/test"))
 // --------------------------------------------------------------------------------
 // Unlock the object
 // --------------------------------------------------------------------------------
-persistenceManager.unlock("/test", lockToken);
+ocm.unlock("/test", lockToken);
 </source>
       </subsection>
     </section>
