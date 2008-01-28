@@ -242,7 +242,15 @@ public class ClassDescriptor {
      * @return the fieldDescriptor ID
      */
     public FieldDescriptor getIdFieldDescriptor() {
-        return idFieldDescriptor;
+        if (null != this.idFieldDescriptor) {
+           return this.idFieldDescriptor;
+       }
+
+       if (null != this.superClassDescriptor) {
+           return this.superClassDescriptor.getIdFieldDescriptor();
+       }
+
+       return null;
     }
 
     /**
