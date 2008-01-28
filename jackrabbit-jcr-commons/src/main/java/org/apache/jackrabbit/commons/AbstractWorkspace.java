@@ -50,7 +50,14 @@ public abstract class AbstractWorkspace implements Workspace {
                 getImportContentHandler(parentAbsPath, uuidBehavior);
             new ParsingContentHandler(handler).parse(in);
         } catch (SAXException e) {
-            throw new RepositoryException("XML import failed", e);
+            Throwable exception = e.getException();
+            if (exception instanceof RepositoryException) {
+                throw (RepositoryException) exception;
+            } else if (exception instanceof IOException) {
+                throw (IOException) exception;
+            } else {
+                throw new RepositoryException("XML import failed", e);
+            }
         }
     }
 
