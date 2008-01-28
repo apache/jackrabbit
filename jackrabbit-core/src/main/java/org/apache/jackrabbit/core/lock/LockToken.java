@@ -26,7 +26,7 @@ class LockToken {
     /**
      * ID of node holding lock
      */
-    public final NodeId id;
+    private final NodeId id;
 
     /**
      * Create a new instance of this class. Used when creating new locks upon
@@ -35,6 +35,10 @@ class LockToken {
      */
     public LockToken(NodeId id) {
         this.id = id;
+    }
+
+    public NodeId getId() {
+        return id;
     }
 
     /**

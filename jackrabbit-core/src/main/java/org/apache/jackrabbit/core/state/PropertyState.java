@@ -328,7 +328,9 @@ public class PropertyState extends ItemState {
         }
     }
 
-    private InternalValue createInternalValueFromInputStream(final InputStream stream, final long length) throws RepositoryException {
+    private InternalValue createInternalValueFromInputStream(
+            final InputStream stream, final long length)
+            throws RepositoryException {
         return InternalValue.create(new InputStream() {
 
             private long consumed = 0;

@@ -180,8 +180,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      */
     private void reapplyLock(LockToken lockToken) {
         try {
-            NodeImpl node = (NodeImpl) session.getItemManager().getItem(lockToken.id);
-            Path path = getPath(lockToken.id);
+            NodeImpl node = (NodeImpl)
+                session.getItemManager().getItem(lockToken.getId());
+            Path path = getPath(lockToken.getId());
 
             LockInfo info = new LockInfo(lockToken, false,
                     node.getProperty(NameConstants.JCR_LOCKISDEEP).getBoolean(),
@@ -587,8 +588,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         try {
             LockToken lockToken = LockToken.parse(lt);
 
-            NodeImpl node = (NodeImpl) this.session.getItemManager().
-                    getItem(lockToken.id);
+            NodeImpl node = (NodeImpl)
+                this.session.getItemManager().getItem(lockToken.getId());
             PathMap.Element element = lockMap.map(node.getPrimaryPath(), true);
             if (element != null) {
                 AbstractLockInfo info = (AbstractLockInfo) element.get();
@@ -619,8 +620,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         try {
             LockToken lockToken = LockToken.parse(lt);
 
-            NodeImpl node = (NodeImpl) this.session.getItemManager().
-                    getItem(lockToken.id);
+            NodeImpl node = (NodeImpl)
+                this.session.getItemManager().getItem(lockToken.getId());
             PathMap.Element element = lockMap.map(node.getPrimaryPath(), true);
             if (element != null) {
                 AbstractLockInfo info = (AbstractLockInfo) element.get();
@@ -797,16 +798,12 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         Iterator iter = consolidateEvents(events);
         while (iter.hasNext()) {
             HierarchyEvent event = (HierarchyEvent) iter.next();
-            switch (event.type) {
-                case Event.NODE_ADDED:
-                    nodeAdded(event.path);
-                    break;
-                case Event.NODE_REMOVED:
-                    nodeRemoved(event.path);
-                    break;
-                case Event.NODE_ADDED | Event.NODE_REMOVED:
-                    nodeMoved(event.getOldPath(), event.getNewPath());
-                    break;
+            if (event.type == Event.NODE_ADDED) {
+                nodeAdded(event.path);
+            } else if (event.type == Event.NODE_REMOVED) {
+                nodeRemoved(event.path);
+            } else if (event.type == (Event.NODE_ADDED | Event.NODE_REMOVED)) {
+                nodeMoved(event.getOldPath(), event.getNewPath());
             }
         }
     }

@@ -186,7 +186,10 @@ public class FileDataStore implements DataStore {
             if (!file.exists()) {
                 temporary.renameTo(file);
                 if (!file.exists()) {
-                    throw new IOException("Can not rename " + temporary.getAbsolutePath() + " to " + file.getAbsolutePath() + " (media read only?)");
+                    throw new IOException(
+                            "Can not rename " + temporary.getAbsolutePath()
+                            + " to " + file.getAbsolutePath()
+                            + " (media read only?)");
                 }
             } else {
                 long now = System.currentTimeMillis();

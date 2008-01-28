@@ -566,13 +566,15 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                     writer = new BufferedWriter(osw);
                 }
 
+                String parentId = (state.getParentId() == null) ? "" : state.getParentId().getUUID().toString();
+                String encodedNodeType = Text.encodeIllegalXMLCharacters(state.getNodeTypeName().toString());
                 writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
                 writer.write("<" + NODE_ELEMENT + " "
                         + UUID_ATTRIBUTE + "=\"" + id.getUUID() + "\" "
-                        + PARENTUUID_ATTRIBUTE + "=\"" + (state.getParentId() == null ? "" : state.getParentId().getUUID().toString()) + "\" "
+                        + PARENTUUID_ATTRIBUTE + "=\"" + parentId + "\" "
                         + DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" "
                         + MODCOUNT_ATTRIBUTE + "=\"" + state.getModCount() + "\" "
-                        + NODETYPE_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(state.getNodeTypeName().toString()) + "\">\n");
+                        + NODETYPE_ATTRIBUTE + "=\"" + encodedNodeType + "\">\n");
 
                 // mixin types
                 writer.write("\t<" + MIXINTYPES_ELEMENT + ">\n");

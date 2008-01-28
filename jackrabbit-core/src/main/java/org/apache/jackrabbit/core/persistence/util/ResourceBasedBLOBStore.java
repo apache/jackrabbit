@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.persistence.util;
 
-import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 
 /**

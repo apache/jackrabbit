@@ -89,9 +89,6 @@ import javax.jcr.RepositoryException;
  */
 public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager {
 
-    /** the cvs/svn id */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
     /** the default logger */
     private static Logger log = LoggerFactory.getLogger(BundleDbPersistenceManager.class);
 
@@ -722,7 +719,9 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                         try {
                             NodePropBundle child = loadBundle(entry.getId());
                             if (child == null) {
-                                log.error("NodeState " + id.getUUID() + " references inexistent child " + entry.getName() + " with id " + entry.getId().getUUID());
+                                log.error("NodeState " + id.getUUID()
+                                        + " references inexistent child " + entry.getName()
+                                        + " with id " + entry.getId().getUUID());
                                 missingChildren.add(entry);
                             } else {
                                 NodeId cp = child.getParentId();
@@ -1279,15 +1278,22 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             bundleSelectSQL = "select BUNDLE_DATA from " + schemaObjectPrefix + "BUNDLE where NODE_ID_HI = ? and NODE_ID_LO = ?";
             bundleDeleteSQL = "delete from " + schemaObjectPrefix + "BUNDLE where NODE_ID_HI = ? and NODE_ID_LO = ?";
 
-            nodeReferenceInsertSQL = "insert into " + schemaObjectPrefix + "REFS (REFS_DATA, NODE_ID_HI, NODE_ID_LO) values (?, ?, ?)";
-            nodeReferenceUpdateSQL = "update " + schemaObjectPrefix + "REFS set REFS_DATA = ? where NODE_ID_HI = ? and NODE_ID_LO = ?";
+            nodeReferenceInsertSQL =
+                "insert into " + schemaObjectPrefix + "REFS"
+                + " (REFS_DATA, NODE_ID_HI, NODE_ID_LO) values (?, ?, ?)";
+            nodeReferenceUpdateSQL =
+                "update " + schemaObjectPrefix + "REFS"
+                + " set REFS_DATA = ? where NODE_ID_HI = ? and NODE_ID_LO = ?";
             nodeReferenceSelectSQL = "select REFS_DATA from " + schemaObjectPrefix + "REFS where NODE_ID_HI = ? and NODE_ID_LO = ?";
             nodeReferenceDeleteSQL = "delete from " + schemaObjectPrefix + "REFS where NODE_ID_HI = ? and NODE_ID_LO = ?";
 
             bundleSelectAllIdsSQL = "select NODE_ID_HI, NODE_ID_LO from " + schemaObjectPrefix + "BUNDLE";
             // need to use HI and LO parameters
             // this is not the exact statement, but not all databases support WHERE (NODE_ID_HI, NODE_ID_LOW) >= (?, ?)
-            bundleSelectAllIdsFromSQL = "select NODE_ID_HI, NODE_ID_LO from " + schemaObjectPrefix + "BUNDLE WHERE (NODE_ID_HI >= ?) AND (? IS NOT NULL) ORDER BY NODE_ID_HI, NODE_ID_LO";
+            bundleSelectAllIdsFromSQL =
+                "select NODE_ID_HI, NODE_ID_LO from " + schemaObjectPrefix + "BUNDLE"
+                + " WHERE (NODE_ID_HI >= ?) AND (? IS NOT NULL)"
+                + " ORDER BY NODE_ID_HI, NODE_ID_LO";
         }
 
     }

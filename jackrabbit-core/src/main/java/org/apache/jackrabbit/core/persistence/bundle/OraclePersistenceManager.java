@@ -47,9 +47,6 @@ import org.slf4j.LoggerFactory;
  */
 public class OraclePersistenceManager extends BundleDbPersistenceManager {
 
-    /** the cvs/svn id */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
     /**
      * the default logger
      */

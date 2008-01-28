@@ -45,9 +45,6 @@ import org.slf4j.LoggerFactory;
  */
 public class NodePropBundle {
 
-    /** the cvs/svn id */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
     /**
      * default logger
      */

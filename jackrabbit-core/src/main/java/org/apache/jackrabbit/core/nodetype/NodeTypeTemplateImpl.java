@@ -25,7 +25,6 @@ import org.apache.jackrabbit.core.nodetype.jsr283.PropertyDefinitionTemplate;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.PropertyDefinition;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**

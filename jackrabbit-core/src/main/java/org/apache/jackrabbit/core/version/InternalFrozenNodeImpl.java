@@ -293,23 +293,18 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
             } else {
                 opv = prop.getDefinition().getOnParentVersion();
             }
-            switch (opv) {
-                case OnParentVersionAction.ABORT:
-                    parent.reload();
-                    throw new VersionException("Checkin aborted due to OPV in " + prop.safeGetJCRPath());
-                case OnParentVersionAction.COMPUTE:
-                case OnParentVersionAction.IGNORE:
-                case OnParentVersionAction.INITIALIZE:
-                    break;
-                case OnParentVersionAction.VERSION:
-                case OnParentVersionAction.COPY:
-                    // ignore frozen properties
-                    if (!prop.getQName().equals(NameConstants.JCR_PRIMARYTYPE)
-                            && !prop.getQName().equals(NameConstants.JCR_MIXINTYPES)
-                            && !prop.getQName().equals(NameConstants.JCR_UUID)) {
-                        node.copyFrom(prop);
-                    }
-                    break;
+
+            if (opv == OnParentVersionAction.ABORT) {
+                parent.reload();
+                throw new VersionException("Checkin aborted due to OPV in " + prop.safeGetJCRPath());
+            } else if (opv == OnParentVersionAction.VERSION
+                    || opv == OnParentVersionAction.COPY) {
+                // ignore frozen properties
+                if (!prop.getQName().equals(NameConstants.JCR_PRIMARYTYPE)
+                        && !prop.getQName().equals(NameConstants.JCR_MIXINTYPES)
+                        && !prop.getQName().equals(NameConstants.JCR_UUID)) {
+                    node.copyFrom(prop);
+                }
             }
         }
 
@@ -323,31 +318,25 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
             } else {
                 opv = child.getDefinition().getOnParentVersion();
             }
-            switch (opv) {
-                case OnParentVersionAction.ABORT:
-                    throw new VersionException("Checkin aborted due to OPV in " + child.safeGetJCRPath());
-                case OnParentVersionAction.COMPUTE:
-                case OnParentVersionAction.IGNORE:
-                case OnParentVersionAction.INITIALIZE:
-                    break;
-                case OnParentVersionAction.VERSION:
-                    if (child.isNodeType(NameConstants.MIX_VERSIONABLE)) {
-                        // create frozen versionable child
-                        NodeStateEx newChild = node.addNode(child.getQName(), NameConstants.NT_VERSIONEDCHILD, null, false);
-                        newChild.setPropertyValue(NameConstants.JCR_CHILDVERSIONHISTORY,
-                                InternalValue.create(new UUID(child.getVersionHistory().getUUID())));
-                        /*
+
+            if (opv == OnParentVersionAction.ABORT) {
+                throw new VersionException("Checkin aborted due to OPV in " + child.safeGetJCRPath());
+            } else if (opv == OnParentVersionAction.VERSION) {
+                if (child.isNodeType(NameConstants.MIX_VERSIONABLE)) {
+                    // create frozen versionable child
+                    NodeStateEx newChild = node.addNode(child.getQName(), NameConstants.NT_VERSIONEDCHILD, null, false);
+                    newChild.setPropertyValue(NameConstants.JCR_CHILDVERSIONHISTORY,
+                            InternalValue.create(new UUID(child.getVersionHistory().getUUID())));
+                    /*
                         newChild.setPropertyValue(JCR_BASEVERSION,
                                 InternalValue.create(child.getBaseVersion().getUUID()));
-                        */
-                        break;
-                    }
+                     */
+                } else {
                     // else copy but do not recurse
                     checkin(node, child.getQName(), child, MODE_COPY);
-                    break;
-                case OnParentVersionAction.COPY:
-                    checkin(node, child.getQName(), child, MODE_COPY_RECURSIVE);
-                    break;
+                }
+            } else if (opv == OnParentVersionAction.COPY) {
+                checkin(node, child.getQName(), child, MODE_COPY_RECURSIVE);
             }
         }
         return node;

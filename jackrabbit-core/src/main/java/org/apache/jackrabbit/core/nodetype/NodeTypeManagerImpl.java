@@ -747,7 +747,8 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      * <p/>
      * Throws a <code>NoSuchNodeTypeException</code> if one of the names listed is not a registered node type.
      * <p/>
-     * Throws an <code>UnsupportedRepositoryOperationException</code> if this implementation does not support node type registration.
+     * Throws an <code>UnsupportedRepositoryOperationException</code>
+     * if this implementation does not support node type registration.
      *
      * @param names a <code>String</code> array
      * @throws UnsupportedRepositoryOperationException if this implementation does not support node type registration.

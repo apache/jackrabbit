@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.spi.Name;
 
-import javax.jcr.version.Version;
 import java.util.Calendar;
 
 /**

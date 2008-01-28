@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.NodeImpl;
-
 import javax.jcr.RepositoryException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;

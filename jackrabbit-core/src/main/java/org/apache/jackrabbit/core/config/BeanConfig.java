@@ -29,7 +29,7 @@ import java.util.Properties;
 public class BeanConfig {
 
     /** The default class loader used by all instances of this class */
-    private static ClassLoader DEFAULT_CLASS_LOADER =
+    private static ClassLoader defaultClassLoader =
         BeanConfig.class.getClassLoader();
 
     /**
@@ -168,7 +168,7 @@ public class BeanConfig {
      * @see #setDefaultClassLoader(ClassLoader)
      */
     public static ClassLoader getDefaultClassLoader() {
-        return DEFAULT_CLASS_LOADER;
+        return defaultClassLoader;
     }
 
     /**
@@ -185,6 +185,6 @@ public class BeanConfig {
      * @see #getDefaultClassLoader()
      */
     public static void setDefaultClassLoader(ClassLoader classLoader) {
-        DEFAULT_CLASS_LOADER = classLoader;
+        defaultClassLoader = classLoader;
     }
 }

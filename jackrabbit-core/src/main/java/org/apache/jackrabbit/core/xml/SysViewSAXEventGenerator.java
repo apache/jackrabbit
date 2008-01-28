@@ -54,9 +54,18 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
     private static final Attributes ATTRS_BINARY_ENCODED_VALUE;
     static {
         AttributesImpl attrs = new AttributesImpl();
-        attrs.addAttribute(Name.NS_XMLNS_URI, NS_XMLSCHEMA_INSTANCE_PREFIX, "xmlns:" + NS_XMLSCHEMA_INSTANCE_PREFIX, CDATA_TYPE, NS_XMLSCHEMA_INSTANCE_URI);
-        attrs.addAttribute(Name.NS_XMLNS_URI, NS_XMLSCHEMA_PREFIX, "xmlns:" + NS_XMLSCHEMA_PREFIX, CDATA_TYPE, NS_XMLSCHEMA_URI);
-        attrs.addAttribute(NS_XMLSCHEMA_INSTANCE_URI, "type", NS_XMLSCHEMA_INSTANCE_PREFIX + ":type", "CDATA", NS_XMLSCHEMA_PREFIX + ":base64Binary");
+        attrs.addAttribute(
+                Name.NS_XMLNS_URI, NS_XMLSCHEMA_INSTANCE_PREFIX,
+                "xmlns:" + NS_XMLSCHEMA_INSTANCE_PREFIX,
+                CDATA_TYPE, NS_XMLSCHEMA_INSTANCE_URI);
+        attrs.addAttribute(
+                Name.NS_XMLNS_URI, NS_XMLSCHEMA_PREFIX,
+                "xmlns:" + NS_XMLSCHEMA_PREFIX,
+                CDATA_TYPE, NS_XMLSCHEMA_URI);
+        attrs.addAttribute(
+                NS_XMLSCHEMA_INSTANCE_URI, "type",
+                NS_XMLSCHEMA_INSTANCE_PREFIX + ":type",
+                CDATA_TYPE, NS_XMLSCHEMA_PREFIX + ":base64Binary");
         ATTRS_BINARY_ENCODED_VALUE = attrs;
     }
 
@@ -173,7 +182,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
 
                 if (val.getType() != PropertyType.BINARY) {
                     String ser = val.getString();
-                    for (int ci = 0; ci < ser.length() && mustSendBinary == false; ci++) {
+                    for (int ci = 0; ci < ser.length() && !mustSendBinary; ci++) {
                         char c = ser.charAt(ci);
                         if (c >= 0 && c < 32 && c != '\r' && c != '\n' && c != '\t') {
                             mustSendBinary = true;

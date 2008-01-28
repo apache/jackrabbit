@@ -85,7 +85,7 @@ public abstract class AbstractLockInfo {
      * @return the id
      */
     public NodeId getId() {
-        return lockToken.id;
+        return lockToken.getId();
     }
 
     /**

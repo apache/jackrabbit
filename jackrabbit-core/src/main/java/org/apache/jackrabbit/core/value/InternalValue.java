@@ -79,7 +79,8 @@ public class InternalValue {
     /**
      * If set to 'true', the data store is used when configured in repository.xml
      */
-    public static final boolean USE_DATA_STORE = Boolean.valueOf(System.getProperty("org.jackrabbit.useDataStore", "true")).booleanValue();
+    public static final boolean USE_DATA_STORE =
+        Boolean.valueOf(System.getProperty("org.jackrabbit.useDataStore", "true")).booleanValue();
 
     /**
      * Temporary binary values smaller or equal this size are kept in memory

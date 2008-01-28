@@ -36,9 +36,6 @@ import org.apache.jackrabbit.core.fs.FileSystemResource;
  */
 public class HashMapIndex implements StringIndex {
 
-    /** the cvs/svn id */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
     /**
      * holds the string-to-index lookups.
      */

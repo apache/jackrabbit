@@ -37,9 +37,6 @@ import org.apache.jackrabbit.core.persistence.PMContext;
  */
 public class MySqlPersistenceManager extends BundleDbPersistenceManager {
 
-    /** the cvs/svn id */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
     /**
      * {@inheritDoc}
      */

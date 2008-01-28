@@ -158,7 +158,8 @@ public class GarbageCollector {
         }
     }
 
-    private void scanNodes(Session session) throws UnsupportedRepositoryOperationException, RepositoryException, IllegalStateException, IOException {
+    private void scanNodes(Session session)
+        throws RepositoryException, IllegalStateException, IOException {
 
         // add a listener to get 'new' nodes
         // actually, new nodes are not the problem, but moved nodes

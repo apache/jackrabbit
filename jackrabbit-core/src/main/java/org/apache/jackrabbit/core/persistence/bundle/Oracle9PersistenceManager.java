@@ -58,11 +58,6 @@ import java.sql.Statement;
 public class Oracle9PersistenceManager extends OraclePersistenceManager {
 
     /**
-     * the cvs/svn id
-     */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
-    /**
      * the default logger
      */
     private static Logger log = LoggerFactory.getLogger(Oracle9PersistenceManager.class);

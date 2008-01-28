@@ -27,11 +27,6 @@ import java.sql.ResultSet;
 public class NGKDbNameIndex extends DbNameIndex {
 
     /**
-     * The CVS/SVN id
-     */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
-    /**
      * Creates a new index that is stored in a db.
      * @param con the ConnectionRecoveryManager
      * @param schemaObjectPrefix the prefix for table names

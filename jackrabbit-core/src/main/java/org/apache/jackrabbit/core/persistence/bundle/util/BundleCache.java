@@ -26,9 +26,6 @@ import org.slf4j.Logger;
  */
 public class BundleCache {
 
-    /** the cvs/svn id */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
-
     /**
      * the default logger
      */
