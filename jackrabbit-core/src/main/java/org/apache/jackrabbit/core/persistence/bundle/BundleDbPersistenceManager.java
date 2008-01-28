@@ -1427,6 +1427,10 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         }
     }
 
+    /**
+     * Iterator over an in-memory list of node ids.
+     * This helper class is used by {@link BundleDbPersistenceManager#getAllNodeIds()}.
+     */
     private class ListNodeIdIterator implements NodeIdIterator {
 
         private final ArrayList list;
