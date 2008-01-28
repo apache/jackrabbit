@@ -41,8 +41,9 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.jackrabbit.commons.xml.DefaultContentHandler;
+import org.apache.jackrabbit.commons.xml.SerializingContentHandler;
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
-import org.apache.jackrabbit.rmi.xml.SessionImportContentHandler;
 import org.apache.jackrabbit.rmi.value.SerialValueFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -263,9 +264,25 @@ public class ClientSession extends ClientObject implements Session {
     }
 
     /** {@inheritDoc} */
-    public ContentHandler getImportContentHandler(String path, int mode)
-            throws RepositoryException {
-        return new SessionImportContentHandler(this, path, mode);
+    public ContentHandler getImportContentHandler(
+            final String path, final int mode) throws RepositoryException {
+        try {
+            final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            ContentHandler handler =
+                SerializingContentHandler.getSerializer(buffer);
+            return new DefaultContentHandler(handler) {
+                public void endDocument() throws SAXException {
+                    super.endDocument();
+                    try {
+                        remote.importXML(path, buffer.toByteArray(), mode);
+                    } catch (Exception e) {
+                        throw new SAXException("XML import failed", e);
+                    }
+                }
+            };
+        } catch (SAXException e) {
+            throw new RepositoryException("XML serialization failed", e);
+        }
     }
 
     /** {@inheritDoc} */
