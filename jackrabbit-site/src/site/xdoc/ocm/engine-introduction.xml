@@ -106,7 +106,7 @@ classes.add(MyContent.class); // Call this method for each persistent class
 				      
 // 3. Instantiate the object manager
 Mapper mapper = new AnnotationMapperImpl(classes);
-ocm = new ObjectContentManagerImpl(session, mapper);
+ObjectContentManager ocm = new ObjectContentManagerImpl(session, mapper);
 
 		      
 	      </source>
