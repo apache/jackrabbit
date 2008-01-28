@@ -18,55 +18,74 @@
 <document>
   <properties>
     <author email="christophe.lombart@gmail.com">Christophe Lombart</author>
-    <title>The Persistence Manager API</title>
+    <title>The Object Content Manager API</title>
   </properties>
   <body>
-    <section name="The Basic Operations">
-      <p>
-        When you have <a href="../engine-setup.html">created a new
-        Persistence Manager</a> in your application, you can use this
+    <section name="Jackrabbit OCM">
+       <subsection name="Basic operations">
+	    <p>
+        When you have <a href="../engine-introduction.html">created a new
+        Object Content Manager</a> in your application, you can use this
         component to insert, update, delete and retrieve objects.
         The class 'Folder' used in the following sections should be
-        associated to a class-descriptor defined in the  mapping descriptor.
+        associated to a class-descriptor defined in the mapping descriptor.
       </p>
       <p>
-        This page describes only the main Persistence Manager methods.
+        This page describes only the main Object Content Manager methods.
         You can see the javadoc to get more information on the API.
       </p>
-
+      </subsection>
       <subsection name="Insert">
 <source>
 Folder folder =  new Folder();
 folder.setPath("/myfolder");
 folder.set...(); // call the setter methods
 
-persistenceManager.insert(myFolder);
+ocm.insert(myFolder);
 
 </source>
       </subsection>
 
       <subsection name="Retrieve and update an object">
 <source>
-Folder folder = (Folder) persistenceManager.getObject(Folder.class, "/myfolder");
+Folder folder = (Folder) ocm.getObject("/myfolder");
 folder.set...(); // call the setter methods
 
-persistenceManager.update(myFolder);
+ocm.update(myFolder);
 
 </source>
       </subsection>
 
       <subsection name="Delete">
 <source>
-persistenceManager.remove("/test");
+ocm.remove("/test");
 </source>
       </subsection>
 
-      <subsection name ="Save last changes">
+      <subsection name ="Save the latest modification">
         <p>
           After some inserts, deletes and/or updates, you can call
-          the method <code>persistenceManager.save()</code> to apply your
+          the method <code>ocm.save()</code> to apply your
           changes into the JCR repository.
         </p>
+	<p>
+	  With Jackrabbit, it is also possible to run the modifications inside a transaction. 
+	  See the class <code>org.apache.jackrabbit.ocm.transaction.jackrabbit.UserTransactionImpl</code> defined in the unit tests.
+	  <source>
+import javax.transaction.UserTransaction;
+import org.apache.jackrabbit.ocm.transaction.jackrabbit.UserTransactionImpl;
+	  
+UserTransaction utx = new UserTransactionImpl(session);
+	  
+// start transaction
+utx.begin();
+
+ocm.remove("/test");	  
+ocm.remove("/test2");
+
+utx.commit(); 
+          </source>
+	</p>	
       </subsection>
     </section>
   </body>

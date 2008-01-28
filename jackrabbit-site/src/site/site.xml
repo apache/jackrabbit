@@ -76,18 +76,18 @@
          <item name="Visualization"           href="/doc/nodetype/visualization.html" />
       </item>
       <item name="Object Content Mapping"     href="/ocm/index.html" collapse="true">
-        <item name="Object Manager"           href="/ocm/engine-introduction.html">
+        <item name="Object Content Manager"   href="/ocm/engine-introduction.html">
           <item name="Basic operations"       href="/ocm/api/basic-operations.html"/>
-          <item name="Search"                 href="/ocm/api/search.html"/>
+          <item name="Basic Searchs"                 href="/ocm/api/search.html"/>
           <item name="Managing Versions"      href="/ocm/api/versionning.html"/>
           <item name="Locking"                href="/ocm/api/locking.html"/>
         </item>
-        <item name="Mapping Stategies"        href="/ocm/simple-strategies/introduction-strategies.html">
+        <!-- item name="Mapping Stategies"        href="/ocm/simple-strategies/introduction-strategies.html">
           <item name="Atomic Fields"          href="/ocm/simple-strategies/atomic-strategy.html"/>
           <item name="Bean Fields"            href="/ocm/simple-strategies/bean-strategy.html"/>
           <item name="Collection Fields"      href="/ocm/simple-strategies/collection-strategy.html"/>
           <item name="Advanced Strategies"    href="/ocm/advanced-strategies.html"/>
-        </item>
+        </item -->
       </item>
     </menu>
     <menu name="Thanks">

@@ -19,34 +19,23 @@
 <document>
   <properties>
     <author email="christophe.lombart@gmail.com">Christophe Lombart</author>
-    <title>Jackrabbit Object/Content Mapping (OCM)</title>
+    <title>Jackrabbit OCM : oveview</title>
   </properties>
   <body>
-    <section name="Overview">
-      <subsection name="Object/Content Mapping framework (ocm)">
-        <p>
-          This subproject is an object/JCR persistence and query service.
-          This tools lets you to persist Java objects into a JCR compliant
-          repository - including association, inheritance, polymorphism,
-          composition, and the Java collections framework. Furthermore,
-          this OCM component allows you to express queries in Java-based
-          criteria, as well as in JCR query language. It offers also
-          features like version support and object locking.
+    <section name="Jackrabbit OCM ">
+      <subsection name="Object/Content Mapping framework (OCM)">
+	 <p>
+	Jackrabbit OCM is a framework used to persist java objects (pojos) in a JCR repository including association, inheritance, polymorphism, composition, and the Java collections framework. It offers also features like version support, object locking and express queries with Java-based criteria, as well as with JCR query languages.
         </p>
+	In order to easily support the JCR specification, any content application managing an high level object model can use this framework. For example, a classic Forum application contains objects like "Forum", "Topic" and "Post". Now, Jackrabbit OCM can manage these pojos and persist them into a JCR compliant repository.
         <p>
-          In order to easily support the JCR specification, any content
-          application managing an high level object model can use this
-          framework. For example, a classic Forum application contains
-          objects like "Forum", "Topic" and "Post". Now, the data objects
-          (pojo) can be managed by our JCR mapping tools in order to persist
-          them into a JCR compliant repository.
+         
         </p>
       </subsection>
 
       <subsection name ="Why an ocm?">
         <p>
-          The object content mapping framework was created for the following
-          different reasons:
+          The object content mapping framework was created for the following reasons:
         </p>
         <ul>
           <li>
