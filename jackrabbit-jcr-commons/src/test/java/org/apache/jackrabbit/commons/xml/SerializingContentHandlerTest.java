@@ -18,12 +18,10 @@ package org.apache.jackrabbit.commons.xml;
 
 import java.io.StringWriter;
 
-import javax.xml.transform.stream.StreamResult;
+import junit.framework.TestCase;
 
 import org.xml.sax.ContentHandler;
 import org.xml.sax.helpers.AttributesImpl;
-
-import junit.framework.TestCase;
 
 public class SerializingContentHandlerTest extends TestCase {
 
@@ -31,7 +29,7 @@ public class SerializingContentHandlerTest extends TestCase {
         StringWriter writer = new StringWriter();
 
         ContentHandler handler =
-            SerializingContentHandler.getSerializer(new StreamResult(writer));
+            SerializingContentHandler.getSerializer(writer);
         handler.startDocument();
         handler.startPrefixMapping("p", "uri");
         handler.startElement("uri", "a", "p:a", new AttributesImpl());

@@ -16,7 +16,9 @@
  */
 package org.apache.jackrabbit.commons.xml;
 
+import java.io.OutputStream;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,6 +57,30 @@ public class SerializingContentHandler extends DefaultContentHandler {
 
     /** The URI for xml namespaces */
     private static final String XML = "http://www.w3.org/XML/1998/namespace";
+
+    /**
+     * Creates a serializing content handler that writes to the given stream.
+     *
+     * @param stream serialization target
+     * @return serializing content handler
+     * @throws SAXException if the content handler could not be initialized
+     */
+    public static DefaultHandler getSerializer(OutputStream output)
+            throws SAXException {
+        return getSerializer(new StreamResult(output));
+    }
+
+    /**
+     * Creates a serializing content handler that writes to the given writer.
+     *
+     * @param writer serialization target
+     * @return serializing content handler
+     * @throws SAXException if the content handler could not be initialized
+     */
+    public static DefaultHandler getSerializer(Writer writer)
+            throws SAXException {
+        return getSerializer(new StreamResult(writer));
+    }
 
     /**
      * Creates a serializing content handler that writes to the given result.
