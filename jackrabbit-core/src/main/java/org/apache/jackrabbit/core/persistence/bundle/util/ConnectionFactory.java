@@ -33,6 +33,12 @@ import javax.sql.DataSource;
 public class ConnectionFactory {
 
     /**
+     * Utility classes should not have a public or default constructor.
+     */
+    private ConnectionFactory() {
+    }
+
+    /**
      * Open a connection using the specified properties.
      * The connection can be created using a JNDI Data Source as well. To do that,
      * the driver class name must reference a javax.naming.Context class

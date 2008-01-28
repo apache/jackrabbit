@@ -321,7 +321,9 @@ public class Parser {
             if (readIf("IS")) {
                 read("NULL");
                 if (!(left instanceof PropertyValue)) {
-                    throw new RepositoryException("Only property values can be tested for NOT IS NULL; got: " + left.getClass().getName());
+                    throw new RepositoryException(
+                            "Only property values can be tested for NOT IS NULL; got: "
+                            + left.getClass().getName());
                 }
                 PropertyValue pv = (PropertyValue) left;
                 c = getPropertyExistence(pv);
@@ -949,10 +951,14 @@ public class Parser {
         return new InvalidQueryException("Query:\n" + query);
     }
 
+    /**
+     * Represents a column or a wildcard in a SQL expression.
+     * This class is temporarily used during parsing.
+     */
     private static class ColumnOrWildcard {
-        String selectorName;
-        String propertyName;
-        String columnName;
+        private String selectorName;
+        private String propertyName;
+        private String columnName;
     }
 
 }
