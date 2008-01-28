@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.commons;
+package org.apache.jackrabbit.commons.xml;
 
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -48,6 +48,8 @@ import org.xml.sax.helpers.DefaultHandler;
  * is included with some modifications here in Apache Jackrabbit. See the
  * org.apache.cocoon.serialization.AbstractTextSerializer class in the
  * cocoon-pipeline-impl component for the original code.
+ *
+ * @since Jackrabbit JCR Commons 1.5
  */
 public class SerializingContentHandler extends DefaultContentHandler {
 
