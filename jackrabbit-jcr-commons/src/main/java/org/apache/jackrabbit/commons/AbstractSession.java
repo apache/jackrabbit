@@ -34,7 +34,7 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
-import org.apache.jackrabbit.commons.xml.DefaultContentHandler;
+import org.apache.jackrabbit.commons.xml.ParsingContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -121,9 +121,13 @@ public abstract class AbstractSession implements Session {
     public void importXML(
             String parentAbsPath, InputStream in, int uuidBehavior)
             throws IOException, RepositoryException {
-        ContentHandler handler =
-            getImportContentHandler(parentAbsPath, uuidBehavior);
-        new DefaultContentHandler(handler).parse(in);
+        try {
+            ContentHandler handler =
+                getImportContentHandler(parentAbsPath, uuidBehavior);
+            new ParsingContentHandler(handler).parse(in);
+        } catch (SAXException e) {
+            throw new RepositoryException("XML import failed", e);
+        }
     }
 
     /**

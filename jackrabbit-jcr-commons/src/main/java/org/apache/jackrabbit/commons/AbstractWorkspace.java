@@ -22,8 +22,9 @@ import java.io.InputStream;
 import javax.jcr.RepositoryException;
 import javax.jcr.Workspace;
 
-import org.apache.jackrabbit.commons.xml.DefaultContentHandler;
+import org.apache.jackrabbit.commons.xml.ParsingContentHandler;
 import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
 
 /**
  * Abstract base class for implementing the JCR {@link Workspace} interface.
@@ -44,9 +45,13 @@ public abstract class AbstractWorkspace implements Workspace {
     public void importXML(
             String parentAbsPath, InputStream in, int uuidBehavior)
             throws IOException, RepositoryException {
-        ContentHandler handler =
-            getImportContentHandler(parentAbsPath, uuidBehavior);
-        new DefaultContentHandler(handler).parse(in);
+        try {
+            ContentHandler handler =
+                getImportContentHandler(parentAbsPath, uuidBehavior);
+            new ParsingContentHandler(handler).parse(in);
+        } catch (SAXException e) {
+            throw new RepositoryException("XML import failed", e);
+        }
     }
 
 }
