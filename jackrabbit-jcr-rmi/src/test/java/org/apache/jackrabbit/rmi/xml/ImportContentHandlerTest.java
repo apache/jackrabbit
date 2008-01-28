@@ -18,32 +18,32 @@
  */
 package org.apache.jackrabbit.rmi.xml;
 
-import java.io.UnsupportedEncodingException;
-
 import javax.jcr.RepositoryException;
 
 import junit.framework.TestCase;
 
 import org.apache.jackrabbit.rmi.xml.ImportContentHandler;
-import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
 
 public class ImportContentHandlerTest extends TestCase {
 
-    public void testImportContentHandler() throws RepositoryException, SAXException {
+    public void testImportContentHandler() throws Exception {
         // fail test if handler cannot be set up
         DummyImportContentHandler ch = new DummyImportContentHandler();
 
         // these may throw SAXException
         ch.startDocument();
-        ch.startElement(null, "sample", "sample", null);
-        ch.endElement(null, "sample", "sample");
+        ch.startPrefixMapping("foo", "http://example.com/ns/foo");
+        ch.startElement(
+                "http://example.com/ns/foo", "sample", "foo:sample",
+                new AttributesImpl());
+        ch.endElement("http://example.com/ns/foo", "sample", "foo:sample");
+        ch.endPrefixMapping("foo");
         ch.endDocument();
 
-        byte[] xml = ch.getXML();
-        assertNotNull("Serialized XML is null", xml);
-        assertTrue("Serialized XML is empty", xml.length > 0);
-
-        // for the moment we don't actually care for the concrete contents
+        String xml = new String(ch.getXML(), "UTF-8");
+        assertTrue(xml.contains(
+                "<foo:sample xmlns:foo=\"http://example.com/ns/foo\"/>"));
     }
 
     private static class DummyImportContentHandler extends ImportContentHandler {
