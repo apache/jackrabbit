@@ -31,7 +31,7 @@ public class SerializingContentHandlerTest extends TestCase {
         StringWriter writer = new StringWriter();
 
         ContentHandler handler =
-            new SerializingContentHandler(new StreamResult(writer));
+            SerializingContentHandler.getSerializer(new StreamResult(writer));
         handler.startDocument();
         handler.startPrefixMapping("p", "uri");
         handler.startElement("uri", "a", "p:a", new AttributesImpl());
