@@ -103,6 +103,14 @@ public class BLOBInResource extends BLOBFileValue {
     /**
      * {@inheritDoc}
      */
+    public boolean isImmutable() {
+        // delete will modify the state.
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public long getLength() {
         return length;
     }

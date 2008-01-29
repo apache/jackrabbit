@@ -119,16 +119,25 @@ public class BLOBInMemory extends BLOBFileValue {
      * {@inheritDoc}
      */
     public void delete(boolean pruneEmptyParentDirs) {
-        // TODO avoid: this makes the value mutable
-        data = EMPTY_BYTE_ARRAY;
+        // do nothing
+        // this object could still be referenced
+        // the data will be garbage collected
     }
 
     /**
      * {@inheritDoc}
      */
     public void discard() {
-        // TODO avoid: this makes the value mutable
-        data = EMPTY_BYTE_ARRAY;
+        // do nothing
+        // this object could still be referenced
+        // the data will be garbage collected
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isImmutable() {
+        return true;
     }
 
     /**
