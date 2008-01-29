@@ -61,6 +61,13 @@ public class BLOBInDataStore extends BLOBFileValue {
         // do nothing
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isImmutable() {
+        return true;
+    }
+
     public boolean equals(Object obj) {
         if (!(obj instanceof BLOBInDataStore) || obj == null) {
             return false;

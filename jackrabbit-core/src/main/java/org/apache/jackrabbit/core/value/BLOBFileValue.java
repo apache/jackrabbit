@@ -69,6 +69,14 @@ public abstract class BLOBFileValue {
     public abstract void delete(boolean pruneEmptyParentDirs);
 
     /**
+     * Checks if this object is immutable.
+     * Immutable objects can not change and can safely copied.
+     *
+     * @return true if the object is immutable
+     */
+    public abstract boolean isImmutable();
+
+    /**
      * {@inheritDoc}
      */
     public abstract boolean equals(Object obj);
