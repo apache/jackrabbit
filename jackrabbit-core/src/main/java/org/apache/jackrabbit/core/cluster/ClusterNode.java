@@ -264,8 +264,7 @@ public class ClusterNode implements Runnable,
             synchronized (this) {
                 try {
                     wait(syncDelay);
-                } catch (InterruptedException e) {
-                }
+                } catch (InterruptedException e) {}
 
                 if (status == STOPPED) {
                     return;
@@ -317,6 +316,8 @@ public class ClusterNode implements Runnable,
             status = STOPPED;
 
             journal.close();
+            instanceRevision.close();
+            
             notifyAll();
         }
     }
@@ -775,8 +776,8 @@ public class ClusterNode implements Runnable,
             try {
                 clusterContext.lockEventsReady(workspace);
             } catch (RepositoryException e) {
-                String msg = "Unable to make lock listener for workspace "
-                    + workspace + " online: " + e.getMessage();
+                String msg = "Unable to make lock listener for workspace " +
+                        workspace + " online: " + e.getMessage();
                 log.warn(msg);
             }
             listener = (LockEventListener) wspLockListeners.get(workspace);
@@ -805,8 +806,8 @@ public class ClusterNode implements Runnable,
             try {
                 clusterContext.lockEventsReady(workspace);
             } catch (RepositoryException e) {
-                String msg = "Unable to make lock listener for workspace "
-                    + workspace + " online: " + e.getMessage();
+                String msg = "Unable to make lock listener for workspace " +
+                        workspace + " online: " + e.getMessage();
                 log.warn(msg);
             }
             listener = (LockEventListener) wspLockListeners.get(workspace);
@@ -908,8 +909,8 @@ public class ClusterNode implements Runnable,
                 try {
                     clusterContext.updateEventsReady(workspace);
                 } catch (RepositoryException e) {
-                    String msg = "Error making update listener for workspace "
-                        + workspace + " online: " + e.getMessage();
+                    String msg = "Error making update listener for workspace " +
+                            workspace + " online: " + e.getMessage();
                     log.warn(msg);
                 }
                 listener = (UpdateEventListener) wspUpdateListeners.get(workspace);
@@ -1049,8 +1050,8 @@ public class ClusterNode implements Runnable,
             String msg = "Unable to read revision '" + record.getRevision() + "'.";
             log.error(msg, e);
         } catch (IllegalArgumentException e) {
-            String msg = "Error while processing revision "
-                + record.getRevision() + ": " + e.getMessage();
+            String msg = "Error while processing revision " +
+                    record.getRevision() + ": " + e.getMessage();
             log.error(msg);
         }
     }
