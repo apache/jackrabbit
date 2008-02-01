@@ -42,6 +42,11 @@ public class FileRevision {
      * Cached value.
      */
     private long value;
+    
+    /**
+     * Flag indicating whether this revision file is closed.
+     */
+    private boolean closed;
 
     /**
      * Creates a new file based revision counter.
@@ -72,6 +77,9 @@ public class FileRevision {
      */
     public synchronized long get() throws JournalException {
         try {
+            if (closed) {
+                throw new JournalException("Revision file closed.");
+            }
             raf.seek(0L);
             value = raf.readLong();
             return value;
@@ -88,12 +96,27 @@ public class FileRevision {
      */
     public synchronized void set(long value) throws JournalException {
         try {
+            if (closed) {
+                throw new JournalException("Revision file closed.");
+            }
             raf.seek(0L);
             raf.writeLong(value);
             raf.getFD().sync();
             this.value = value;
         } catch (IOException e) {
             throw new JournalException("I/O error occurred.", e);
+        }
+    }
+    
+    /**
+     * Close file revision. Closes underlying random access file.
+     */
+    public synchronized void close() {
+        try {
+            raf.close();
+            closed = true;
+        } catch (IOException e) {
+            log.warn("I/O error closing revision file.", e);
         }
     }
 }
