@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.core.journal;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -26,6 +29,11 @@ import java.io.RandomAccessFile;
 public class FileRevision {
 
     /**
+     * Logger.
+     */
+    private static final Logger log = LoggerFactory.getLogger(FileRevision.class);
+
+    /**
      * Underlying random access file.
      */
     private final RandomAccessFile raf;
@@ -34,6 +42,11 @@ public class FileRevision {
      * Cached value.
      */
     private long value;
+    
+    /**
+     * Flag indicating whether this revision file is closed.
+     */
+    private boolean closed;
 
     /**
      * Creates a new file based revision counter.
@@ -51,8 +64,8 @@ public class FileRevision {
                 set(0);
             }
         } catch (IOException e) {
-            throw new JournalException(
-                    "I/O error while attempting to create new file '" + file + "'.", e);
+            String msg = "I/O error while attempting to create new file '" + file + "'.";
+            throw new JournalException(msg, e);
         }
     }
 
@@ -64,6 +77,9 @@ public class FileRevision {
      */
     public synchronized long get() throws JournalException {
         try {
+            if (closed) {
+                throw new JournalException("Revision file closed.");
+            }
             raf.seek(0L);
             value = raf.readLong();
             return value;
@@ -80,6 +96,9 @@ public class FileRevision {
      */
     public synchronized void set(long value) throws JournalException {
         try {
+            if (closed) {
+                throw new JournalException("Revision file closed.");
+            }
             raf.seek(0L);
             raf.writeLong(value);
             raf.getFD().sync();
@@ -88,5 +107,16 @@ public class FileRevision {
             throw new JournalException("I/O error occurred.", e);
         }
     }
-
+    
+    /**
+     * Close file revision. Closes underlying random access file.
+     */
+    public synchronized void close() {
+        try {
+            raf.close();
+            closed = true;
+        } catch (IOException e) {
+            log.warn("I/O error closing revision file.", e);
+        }
+    }
 }
