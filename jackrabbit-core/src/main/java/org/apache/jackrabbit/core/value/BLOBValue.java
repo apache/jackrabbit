@@ -237,7 +237,7 @@ public class BLOBValue extends BLOBFileValue {
      * @see #delete(boolean)
      */
     public void discard() {
-        if (!temp) {
+        if (!temp){
             // do nothing if this instance is not backed by temporarily
             // allocated resource/buffer
             return;
@@ -280,6 +280,14 @@ public class BLOBValue extends BLOBFileValue {
             // this instance is backed by an in-memory buffer
             buffer = EMPTY_BYTE_ARRAY;
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isImmutable() {
+        // delete will modify the state
+        return false;
     }
 
     //-------------------------------------------< java.lang.Object overrides >

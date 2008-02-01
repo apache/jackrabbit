@@ -120,7 +120,7 @@ public class InternalValue {
         switch (value.getType()) {
             case PropertyType.BINARY:
                 if (USE_DATA_STORE) {
-                    return new InternalValue(getBLOBFileValue(store, value.getStream()));
+                    return new InternalValue(getBLOBFileValue(store, value.getStream(), true));
                 }
                 if (value instanceof BLOBFileValue) {
                     return new InternalValue((BLOBFileValue) value);
@@ -225,7 +225,7 @@ public class InternalValue {
      */
     public static InternalValue createTemporary(InputStream value) throws RepositoryException {
         if (USE_DATA_STORE) {        
-            return new InternalValue(getBLOBFileValue(null, value));
+            return new InternalValue(getBLOBFileValue(null, value, true));
         }
         try {
             return new InternalValue(new BLOBValue(value, true));
@@ -245,7 +245,7 @@ public class InternalValue {
      */
     public static InternalValue createTemporary(InputStream value, DataStore store) throws RepositoryException {
         if (USE_DATA_STORE) {
-            return new InternalValue(getBLOBFileValue(store, value));
+            return new InternalValue(getBLOBFileValue(store, value, true));
         }
         try {
             return new InternalValue(new BLOBValue(value, true));
@@ -262,7 +262,7 @@ public class InternalValue {
      */
     public static InternalValue create(InputStream value) throws RepositoryException {
         if (USE_DATA_STORE) {
-            return new InternalValue(getBLOBFileValue(null, value));
+            return new InternalValue(getBLOBFileValue(null, value, false));
         }
         try {
             return new InternalValue(new BLOBValue(value, false));
@@ -439,6 +439,8 @@ public class InternalValue {
     }    
 
     /**
+     * Get the type of this value.
+     *
      * @return the type
      */
     public int getType() {
@@ -446,29 +448,34 @@ public class InternalValue {
     }
 
     /**
-     * @return
+     * Create a copy of this object. Immutable values will return itself,
+     * while mutable values will return a copy.
+     *
+     * @return itself or a copy
      * @throws RepositoryException
      */
     public InternalValue createCopy() throws RepositoryException {
-        if (USE_DATA_STORE) {
-            return this;
-        }
-        if (type == PropertyType.BINARY) {
-            // return a copy since the wrapped BLOBFileValue instance is mutable
-            InputStream stream = ((BLOBFileValue) val).getStream();
-            try {
-                return createTemporary(stream);
-            } finally {
-                try {
-                    stream.close();
-                } catch (IOException e) {
-                    // ignore
-                }
-            }
-        } else {
-            // for all other types it's safe to return 'this' because the
+        if (type != PropertyType.BINARY) {
+            // for all types except BINARY it's safe to return 'this' because the
             // wrapped value is immutable (and therefore this instance as well)
             return this;
+        }
+        BLOBFileValue v = (BLOBFileValue) val;
+        if (USE_DATA_STORE) {
+            if (v.isImmutable()) {
+                return this;
+            }
+        }
+        // return a copy since the wrapped BLOBFileValue instance is mutable
+        InputStream stream = v.getStream();
+        try {
+            return createTemporary(stream);
+        } finally {
+            try {
+                stream.close();
+            } catch (IOException e) {
+                // ignore
+            }
         }
     }
 
@@ -594,7 +601,16 @@ public class InternalValue {
         type = PropertyType.REFERENCE;
     }
     
-    private static BLOBFileValue getBLOBFileValue(DataStore store, InputStream in) throws RepositoryException {
+    /**
+     * Create a BLOB value from in input stream. Small objects will create an in-memory object,
+     * while large objects are stored in the data store or in a temp file (if the store parameter is not set).
+     *
+     * @param store the data store (optional)
+     * @param in the input stream
+     * @param temporary if the file should be deleted when discard is called (ignored if a data store is used)
+     * @return the value
+     */
+    private static BLOBFileValue getBLOBFileValue(DataStore store, InputStream in, boolean temporary) throws RepositoryException {
         int maxMemorySize;
         if (store != null) {
             maxMemorySize = store.getMinRecordLength() - 1;
@@ -627,7 +643,7 @@ public class InternalValue {
             if (store != null) {
                 return BLOBInDataStore.getInstance(store, in);
             } else {
-                return BLOBInTempFile.getInstance(in, true);
+                return BLOBInTempFile.getInstance(in, temporary);
             }
         }
     }
@@ -642,6 +658,13 @@ public class InternalValue {
         }
     }
 
+    /**
+     * Store a value in the data store. This will store temporary files or in-memory objects
+     * in the data store.
+     *
+     * @param dataStore the data store
+     * @throws RepositoryException
+     */
     public void store(DataStore dataStore) throws RepositoryException, IOException {
         assert USE_DATA_STORE;
         assert dataStore != null;
@@ -657,7 +680,7 @@ public class InternalValue {
             }
         }
         // store the temp file to the data store, or (theoretically) load it in memory
-        val = getBLOBFileValue(dataStore, v.getStream());
+        val = getBLOBFileValue(dataStore, v.getStream(), false);
     }
 
 }
