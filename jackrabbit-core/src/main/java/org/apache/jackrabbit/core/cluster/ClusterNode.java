@@ -316,6 +316,8 @@ public class ClusterNode implements Runnable,
             status = STOPPED;
 
             journal.close();
+            instanceRevision.close();
+            
             notifyAll();
         }
     }
