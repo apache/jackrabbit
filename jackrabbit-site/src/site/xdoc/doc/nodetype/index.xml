@@ -62,6 +62,13 @@
                 <p>
                     Mixin node types do not have to have supertypes.
                 </p>
+                <p>
+                    The JSR 170 spec and the current public-review-draft of the JSR 283 spec (4.7.7) leave it up to the
+                    implementation whether e.g. the orderable child nodes setting is inherited from supertypes.
+                    Inheritance semantics, especially with multiple inheritance, are non-trivial at best and up to a
+                    certain degree arbitrary. Jackrabbit therefore, in compliance with the spec, doesn't support
+                    inheritance of node type attributes such as orderable.
+                </p>
             </subsection>
         </section>
         <section name="Node Type Definition">
