@@ -828,19 +828,19 @@
         <version>10.2.1.6</version>
       </dependency>
       <dependency>
-        <groupId>poi</groupId>
+        <groupId>org.apache.poi</groupId>
         <artifactId>poi</artifactId>
-        <version>2.5.1-final-20040804</version>
+        <version>3.0.1-FINAL</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.poi</groupId>
+        <artifactId>poi-scratchpad</artifactId>
+        <version>3.0.1-FINAL</version>
       </dependency>
       <dependency>
         <groupId>pdfbox</groupId>
         <artifactId>pdfbox</artifactId>
         <version>0.6.4</version>
-      </dependency>
-      <dependency>
-        <groupId>org.textmining</groupId>
-        <artifactId>tm-extractors</artifactId>
-        <version>0.4</version>
       </dependency>
       <dependency>
         <groupId>nekohtml</groupId>

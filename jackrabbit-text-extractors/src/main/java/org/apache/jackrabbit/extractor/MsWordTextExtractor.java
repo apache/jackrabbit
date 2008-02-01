@@ -18,7 +18,7 @@ package org.apache.jackrabbit.extractor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.textmining.text.extraction.WordExtractor;
+import org.apache.poi.hwpf.HWPFDocument;
 
 import java.io.Reader;
 import java.io.InputStream;
@@ -40,7 +40,7 @@ public class MsWordTextExtractor extends AbstractTextExtractor {
      * Force loading of dependent class.
      */
     static {
-        WordExtractor.class.getName();
+        HWPFDocument.class.getName();
     }
 
     /**
@@ -61,11 +61,8 @@ public class MsWordTextExtractor extends AbstractTextExtractor {
                               String type,
                               String encoding) throws IOException {
         try {
-            WordExtractor extractor = new WordExtractor();
-
-            // This throws raw Exception - not nice
-            String text = extractor.extractText(stream);
-
+            HWPFDocument doc = new HWPFDocument(stream);
+            String text = doc.getRange().text();
             return new StringReader(text);
         } catch (Exception e) {
             logger.warn("Failed to extract Word text content", e);
