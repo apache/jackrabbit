@@ -47,16 +47,16 @@
 
   <dependencies>
     <dependency>
-      <groupId>poi</groupId>
+      <groupId>org.apache.poi</groupId>
       <artifactId>poi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi-scratchpad</artifactId>
     </dependency>
     <dependency>
       <groupId>pdfbox</groupId>
       <artifactId>pdfbox</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.textmining</groupId>
-      <artifactId>tm-extractors</artifactId>
     </dependency>
     <dependency>
       <groupId>nekohtml</groupId>
