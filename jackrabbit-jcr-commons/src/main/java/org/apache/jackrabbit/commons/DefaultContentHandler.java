@@ -226,4 +226,15 @@ class DefaultContentHandler extends DefaultHandler {
         handler.startPrefixMapping(prefix, uri);
     }
 
+    /**
+     * Returns an empty stream to prevent the XML parser from attempting
+     * to resolve external entity references.
+     *
+     * @see https://issues.apache.org/jira/browse/JCR-1355
+     */
+    public InputSource resolveEntity(String publicId, String systemId)
+            throws SAXException {
+        return new InputSource(new ByteArrayInputStream(new byte[0]));
+    }
+
 }
