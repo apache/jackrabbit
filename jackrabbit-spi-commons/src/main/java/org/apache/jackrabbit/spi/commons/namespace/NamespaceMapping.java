@@ -71,7 +71,7 @@ public class NamespaceMapping extends AbstractNamespaceResolver {
         if (prefixToURI.containsKey(prefix)) {
             return prefixToURI.getProperty(prefix);
         } else if (base == null) {
-            throw new NamespaceException("No URI for pefix '" + prefix + "' declared.");
+            throw new NamespaceException("No URI for prefix '" + prefix + "' declared.");
         } else {
             return base.getURI(prefix);
         }
