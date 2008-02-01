@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.commons.xml;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -47,7 +48,8 @@ public class ParsingContentHandler extends DefaultContentHandler {
 
     /**
      * Utility method that parses the given input stream using this handler.
-     * The parser is namespace-aware.
+     * The parser is namespace-aware and will not resolve external entity
+     * references.
      *
      * @param in XML input stream
      * @throws IOException if an I/O error occurs
@@ -61,6 +63,15 @@ public class ParsingContentHandler extends DefaultContentHandler {
         } catch (ParserConfigurationException e) {
             throw new SAXException("SAX parser configuration error", e);
         }
+    }
+
+    /**
+     * Returns an empty stream to prevent the XML parser from attempting
+     * to resolve external entity references.
+     */
+    public InputSource resolveEntity(String publicId, String systemId)
+            throws SAXException {
+        return new InputSource(new ByteArrayInputStream(new byte[0]));
     }
 
 }

@@ -22,10 +22,11 @@ import java.io.StringWriter;
 import junit.framework.TestCase;
 
 import org.xml.sax.ContentHandler;
+import org.xml.sax.helpers.DefaultHandler;
 
 public class ParsingContentHandlerTest extends TestCase {
 
-    public void testSerializingContentHandler() throws Exception {
+    public void testParsingContentHandler() throws Exception {
         String source =
             "<p:a xmlns:p=\"uri\"><b p:foo=\"bar\">abc</b><c/>xyz</p:a>";
         StringWriter writer = new StringWriter();
@@ -49,6 +50,22 @@ public class ParsingContentHandlerTest extends TestCase {
         assertContains(xml, "<c/>");
         assertContains(xml, "xyz");
         assertContains(xml, "</p:a>");
+    }
+
+    /**
+     * Test case for JCR-1355.
+     * 
+     * @see https://issues.apache.org/jira/browse/JCR-1355
+     */
+    public void testExternalEntities() {
+        try {
+            String source =
+                "<!DOCTYPE foo SYSTEM \"http://invalid.address/\"><foo/>";
+            new ParsingContentHandler(new DefaultHandler()).parse(
+                    new ByteArrayInputStream(source.getBytes("UTF-8")));
+        } catch (Exception e) {
+            fail("JCR-1355: XML import should not access external entities");
+        }
     }
 
     private void assertContains(String haystack, String needle) {
