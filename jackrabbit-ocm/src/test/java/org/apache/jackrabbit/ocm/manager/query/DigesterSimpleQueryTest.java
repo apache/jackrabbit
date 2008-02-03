@@ -148,9 +148,9 @@ public class DigesterSimpleQueryTest extends DigesterTestBase {
             assertEquals("Invalid number of objects - should be = 3", 3, result.size());
 
             Paragraph[] paragraphs = (Paragraph[]) result.toArray(new Paragraph[result.size()]);
-            assertTrue("Invalid paragraph found", paragraphs[0].getText().equals("Para 1"));
-            assertTrue("Invalid paragraph found", paragraphs[1].getText().equals("Para 2"));
-            assertTrue("Invalid paragraph found", paragraphs[2].getText().equals("Para 3"));
+            assertTrue("Invalid paragraph found", this.containsText(paragraphs,"Para 1"));
+            assertTrue("Invalid paragraph found", this.containsText(paragraphs,"Para 2"));
+            assertTrue("Invalid paragraph found", this.containsText(paragraphs,"Para 3"));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -185,8 +185,8 @@ public class DigesterSimpleQueryTest extends DigesterTestBase {
             assertEquals("Invalid number of objects - should be = 2", 2, result.size());
 
             Paragraph[] paragraphs = (Paragraph[]) result.toArray(new Paragraph[result.size()]);
-            assertTrue("Invalid paragraph found", paragraphs[0].getText().equals("Para 1"));
-            assertTrue("Invalid paragraph found", paragraphs[1].getText().equals("Para 2"));
+            assertTrue("Invalid paragraph found", this.containsText(paragraphs,"Para 1"));
+            assertTrue("Invalid paragraph found", this.containsText(paragraphs,"Para 2"));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -213,9 +213,9 @@ public class DigesterSimpleQueryTest extends DigesterTestBase {
             assertEquals("Invalid number of objects - should be = 3", 3, result.size());
 
             Paragraph[] paragraphs = (Paragraph[]) result.toArray(new Paragraph[result.size()]);
-            assertTrue("Invalid paragraph found", paragraphs[0].getText().equals("Para 3"));
-            assertTrue("Invalid paragraph found", paragraphs[1].getText().equals("Para 2"));
-            assertTrue("Invalid paragraph found", paragraphs[2].getText().equals("Para 1"));
+            assertTrue("Invalid paragraph found", this.containsText(paragraphs,"Para 1"));
+            assertTrue("Invalid paragraph found", this.containsText(paragraphs,"Para 2"));
+            assertTrue("Invalid paragraph found", this.containsText(paragraphs,"Para 3"));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -329,8 +329,19 @@ public class DigesterSimpleQueryTest extends DigesterTestBase {
         {
         	fail("Impossible to create the data " + e);
         }
-		
-
-
     }
+    
+    private boolean containsText(Paragraph[] paragraphs, String text)
+    {
+    	
+    	for (int i = 0; i < paragraphs.length; i++) 
+    	{
+    		if (paragraphs[i].getText().equals(text))
+			{
+				return true;
+			}	
+		}
+    	return false; 
+    	
+    }    
 }
