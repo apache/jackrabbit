@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.ocm.manager.collectionconverter;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -99,7 +101,8 @@ public class AnnotationNTCollectionConverterImplTest extends AnnotationTestBase
             assertNotNull("page.getParagraphs is null", page.getParagraphs());
             assertTrue("Incorrect page title", page.getTitle().equals("Page Title"));
             assertTrue("Incorrect page.getParagraphs size", page.getParagraphs().size() == 3);
-            assertTrue("Incorrect para element", ((Paragraph) page.getParagraphs().iterator().next()).getText().equals("Para 1"));
+            assertTrue("Incorrect para element", this.containsText(page.getParagraphs(), "Para 1"));
+            
 
             // --------------------------------------------------------------------------------
             // Update the object
@@ -123,7 +126,7 @@ public class AnnotationNTCollectionConverterImplTest extends AnnotationTestBase
             assertNotNull("page.getParagraphs is null", page.getParagraphs());
             assertTrue("Incorrect page title", page.getTitle().equals("Page Title"));
             assertTrue("Incorrect page.getParagraphs size", page.getParagraphs().size() == 4);
-            assertTrue("Incorrect para element", ((Paragraph) page.getParagraphs().iterator().next()).getText().equals("Para 1"));
+            assertTrue("Incorrect para element", this.containsText(page.getParagraphs(), "Para 1"));
 
             // --------------------------------------------------------------------------------
             // Export to check the content
@@ -137,6 +140,21 @@ public class AnnotationNTCollectionConverterImplTest extends AnnotationTestBase
             fail("Exception occurs during the unit test : " + e);
         }
 
+    }
+    
+    private boolean containsText(Collection paragraphs, String text)
+    {
+    	Iterator iterator = paragraphs.iterator();
+    	while (iterator.hasNext()) {
+			Paragraph paragraph = (Paragraph) iterator.next();
+			if (paragraph.getText().equals(text))
+			{
+				return true;
+			}
+			
+		}
+    	return false; 
+    	
     }
 
 }
