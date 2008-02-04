@@ -314,6 +314,7 @@ public class NodeTypeDef implements Cloneable {
         clone.supertypes = supertypes; // immutable, thus ok to share
         clone.mixin = mixin;
         clone.orderableChildNodes = orderableChildNodes;
+        clone.abstractStatus = abstractStatus;
         clone.nodeDefs = (HashSet) nodeDefs.clone();
         clone.propDefs = (HashSet) propDefs.clone();
         return clone;
@@ -330,6 +331,7 @@ public class NodeTypeDef implements Cloneable {
                     && Arrays.equals(getSupertypes(), other.getSupertypes())
                     && mixin == other.mixin
                     && orderableChildNodes == other.orderableChildNodes
+                    && abstractStatus == other.abstractStatus
                     && propDefs.equals(other.propDefs)
                     && nodeDefs.equals(other.nodeDefs);
         }
