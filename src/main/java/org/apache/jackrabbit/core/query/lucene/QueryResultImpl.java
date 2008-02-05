@@ -411,11 +411,11 @@ public class QueryResultImpl implements QueryResult {
          * nodes or the session does not have access to a node.
          */
         public long getSize() {
-            int totalSize = getTotalSize();
-            if (limit > 0 && totalSize > limit) {
+            long size = getTotalSize() - offset;
+            if (limit > 0 && size > limit) {
                 return limit;
             } else {
-                return totalSize - offset;
+                return size;
             }
         }
 

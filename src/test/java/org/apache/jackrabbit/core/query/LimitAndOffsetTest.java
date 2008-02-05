@@ -63,6 +63,10 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
         return (QueryImpl) queryManager.createQuery(xpath, Query.XPATH);
     }
 
+    protected void checkResult(QueryResult result, Node[] expectedNodes) throws RepositoryException {
+        assertEquals(expectedNodes.length, result.getNodes().getSize());
+    }
+    
     public void testLimit() throws Exception {
         query.setLimit(1);
         QueryResult result = query.execute();
@@ -111,6 +115,12 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
         query.setLimit(2);
         result = query.execute();
         checkResult(result, new Node[] { node1, node2 });
+
+        // Added for JCR-1323
+        query.setOffset(0);
+        query.setLimit(4);
+        result = query.execute();
+        checkResult(result, new Node[] { node1, node2, node3 });
     }
 
     public void testOffsetAndSkip() throws Exception {
