@@ -75,10 +75,6 @@ import javax.jcr.RepositoryException;
  * &lt;param name="url" value="java:comp/env/jdbc/Test" />
  * </pre>
  * <p>
- * A three level directory structure is used to avoid placing too many
- * files in a single directory. The chosen structure is designed to scale
- * up to billions of distinct records.
- * <p>
  * For Microsoft SQL Server 2005, there is a problem reading large BLOBs. You will need to use
  * the JDBC driver version 1.2 or newer, and append ;responseBuffering=adaptive to the database URL.
  * Don't append ;selectMethod=cursor, otherwise it can still run out of memory.
