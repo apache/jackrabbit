@@ -436,6 +436,7 @@ public class LockTest extends AbstractJCRTest {
         assertFalse("lock must not be alive", lock.isLive());
 
         // assert: node must not be locked
+        n1.getSession().refresh(true);
         assertFalse("node must not be locked", n1.isLocked());
     }
 
