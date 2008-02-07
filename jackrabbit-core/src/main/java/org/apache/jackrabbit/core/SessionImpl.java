@@ -928,157 +928,7 @@ public class SessionImpl extends AbstractSession
             throws ItemExistsException, PathNotFoundException,
             VersionException, ConstraintViolationException, LockException,
             RepositoryException {
-        // check sanity of this session
-        sanityCheck();
-
-        // check paths & get node instances
-
-        Path srcPath;
-        Path.Element srcName;
-        Path srcParentPath;
-        NodeImpl targetNode;
-        NodeImpl srcParentNode;
-        try {
-            srcPath = getQPath(srcAbsPath).getNormalizedPath();
-            if (!srcPath.isAbsolute()) {
-                throw new RepositoryException("not an absolute path: " + srcAbsPath);
-            }
-            srcName = srcPath.getNameElement();
-            srcParentPath = srcPath.getAncestor(1);
-            targetNode = getItemManager().getNode(srcPath);
-            srcParentNode = getItemManager().getNode(srcParentPath);
-        } catch (AccessDeniedException ade) {
-            throw new PathNotFoundException(srcAbsPath);
-        } catch (NameException e) {
-            String msg = srcAbsPath + ": invalid path";
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
-
-        Path destPath;
-        Path.Element destName;
-        Path destParentPath;
-        NodeImpl destParentNode;
-        try {
-            destPath = getQPath(destAbsPath).getNormalizedPath();
-            if (!destPath.isAbsolute()) {
-                throw new RepositoryException("not an absolute path: " + destAbsPath);
-            }
-            if (srcPath.isAncestorOf(destPath)) {
-                String msg = destAbsPath + ": invalid destination path (cannot be descendant of source path)";
-                log.debug(msg);
-                throw new RepositoryException(msg);
-            }
-            destName = destPath.getNameElement();
-            destParentPath = destPath.getAncestor(1);
-            destParentNode = getItemManager().getNode(destParentPath);
-        } catch (AccessDeniedException ade) {
-            throw new PathNotFoundException(destAbsPath);
-        } catch (NameException e) {
-            String msg = destAbsPath + ": invalid path";
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
-        int ind = destName.getIndex();
-        if (ind > 0) {
-            // subscript in name element
-            String msg = destAbsPath + ": invalid destination path (subscript in name element is not allowed)";
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
-
-        // verify that both source and destination parent nodes are checked-out
-        if (!srcParentNode.internalIsCheckedOut()) {
-            String msg = srcAbsPath + ": cannot move a child of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-        if (!destParentNode.internalIsCheckedOut()) {
-            String msg = destAbsPath + ": cannot move a target to a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check for name collisions
-
-        NodeImpl existing = null;
-        try {
-            existing = getItemManager().getNode(destPath);
-            // there's already a node with that name:
-            // check same-name sibling setting of existing node
-            if (!existing.getDefinition().allowsSameNameSiblings()) {
-                throw new ItemExistsException(existing.safeGetJCRPath());
-            }
-        } catch (AccessDeniedException ade) {
-            // FIXME by throwing ItemExistsException we're disclosing too much information
-            throw new ItemExistsException(destAbsPath);
-        } catch (PathNotFoundException pnfe) {
-            // no name collision, fall through
-        }
-
-        // check constraints
-
-        // get applicable definition of target node at new location
-        NodeTypeImpl nt = (NodeTypeImpl) targetNode.getPrimaryNodeType();
-        NodeDefinitionImpl newTargetDef;
-        try {
-            newTargetDef = destParentNode.getApplicableChildNodeDefinition(destName.getName(), nt.getQName());
-        } catch (RepositoryException re) {
-            String msg = destAbsPath + ": no definition found in parent node's node type for new node";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg, re);
-        }
-        // if there's already a node with that name also check same-name sibling
-        // setting of new node; just checking same-name sibling setting on
-        // existing node is not sufficient since same-name sibling nodes don't
-        // necessarily have identical definitions
-        if (existing != null && !newTargetDef.allowsSameNameSiblings()) {
-            throw new ItemExistsException(existing.safeGetJCRPath());
-        }
-
-        // check protected flag of old & new parent
-        if (destParentNode.getDefinition().isProtected()) {
-            String msg = destAbsPath + ": cannot add a child node to a protected node";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg);
-        }
-        if (srcParentNode.getDefinition().isProtected()) {
-            String msg = srcAbsPath + ": cannot remove a child node from a protected node";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg);
-        }
-
-        // check lock status
-        srcParentNode.checkLock();
-        destParentNode.checkLock();
-
-        NodeId targetId = targetNode.getNodeId();
-        int index = srcName.getIndex();
-        if (index == 0) {
-            index = 1;
-        }
-
-        if (srcParentNode.isSame(destParentNode)) {
-            // do rename
-            destParentNode.renameChildNode(srcName.getName(), index, targetId, destName.getName());
-        } else {
-            // do move:
-            // 1. remove child node entry from old parent
-            NodeState srcParentState =
-                    (NodeState) srcParentNode.getOrCreateTransientItemState();
-            srcParentState.removeChildNodeEntry(srcName.getName(), index);
-            // 2. re-parent target node
-            NodeState targetState =
-                    (NodeState) targetNode.getOrCreateTransientItemState();
-            targetState.setParentId(destParentNode.getNodeId());
-            // 3. add child node entry to new parent
-            NodeState destParentState =
-                    (NodeState) destParentNode.getOrCreateTransientItemState();
-            destParentState.addChildNodeEntry(destName.getName(), targetId);
-        }
-
-        // change definition of target
-        targetNode.onRedefine(newTargetDef.unwrap().getId());
+        move283(srcAbsPath, destAbsPath);
     }
 
     /**
@@ -1555,6 +1405,243 @@ public class SessionImpl extends AbstractSession
             log.debug(msg);
             throw new RepositoryException(msg, e);
         }
+    }
+
+    //-----------------------------------< Session methods changed in JSR 283 >
+    /**
+     * Moves the node at <code>srcAbsPath</code> (and its entire subtree) to the
+     * new location at <code>destAbsPath</code>. Returns the path of the node at
+     * its new position. Note that the returned path will indicate the resulting
+     * same-name sibling index of the destination (if necessary), unlike the
+     * supplied <code>destAbsPath</code> parameter (see below).
+     * <p>
+     * In order to persist the change, a <code>save</code>
+     * must be called on either the session or a common ancestor to both the source and destination locations.
+     * <p/>
+     * The identifiers of referenceable nodes must not be changed by a
+     * <code>move</code>. The identifiers of non-referenceable nodes <i>may</i> change.
+     * <p/>
+     * A <code>ConstraintViolationException</code> is thrown either immediately or on <code>save</code>
+     * if performing this operation would violate a node type or implementation-specific constraint.
+     * Implementations may differ on when this validation is performed.
+     * <p>
+     * As well, a <code>ConstraintViolationException</code> will be thrown on
+     * <code>save</code> if an attempt is made to seperately <code>save</code>
+     * either the source or destination node.
+     * <p>
+     * Note that this behaviour differs from that of
+     * {@link Workspace#move}, which operates directly in the persistent
+     * workspace and does not require a <code>save</code>.
+     * <p/>
+     * The <code>destAbsPath</code> provided must not have an index on its final
+     * element. If it does then a <code>RepositoryException</code> is thrown.
+     * Strictly speaking, the <code>destAbsPath</code> parameter is actually an
+     * <i>absolute path</i> to the parent node of the new location, appended
+     * with the new <i>name</i> desired for the moved node. It does not specify
+     * a position within the child node ordering (if such ordering is
+     * supported). If ordering is supported by the node type of the parent node
+     * of the new location, then the newly moved node is appended to the end of
+     * the child node list. The resulting position within a same-name sibling set
+     * can, however, be determined from the path returned by this method, which
+     * will include an index if one is required.
+     * <p/>
+     * This method cannot be used to move just an individual property by itself.
+     * It moves an entire node and its subtree (including, of course, any properties
+     * contained therein).
+     * <p/>
+     * If no node exists at <code>srcAbsPath</code> or no node exists one level above <code>destAbsPath</code>
+     * (in other words, there is no node that will serve as the parent of the moved item) then a
+     * <code>PathNotFoundException</code> is thrown either immediately or on <code>save</code>.
+     * Implementations may differ on when this validation is performed.
+     * <p/>
+     * An <code>ItemExistsException</code> is thrown either immediately or on <code>save</code>
+     * if a node already exists at <code>destAbsPath</code> and same-name siblings are not allowed.
+     * Implementations may differ on when this validation is performed.
+     * <p/>
+     * Note that if a property already exists at <code>destAbsPath</code>, the
+     * operation succeeds, since a node may have a child node and property with
+     * the same name.
+     * <p/>
+     * A <code>VersionException</code> is thrown either immediately or on <code>save</code>
+     * if the parent node of <code>destAbsPath</code> or the parent node of <code>srcAbsPath] is versionable and
+     * checked-in, or is non-versionable and its nearest versionable ancestor is checked-in.
+     * Implementations may differ on when this validation is performed.
+     * <p/>
+     * A <code>LockException</code> is thrown either immediately or on <code>save</code>
+     * if a lock prevents the <code>move</code>. Implementations may differ on when this validation is performed.
+     *
+     * @param srcAbsPath the root of the subtree to be moved.
+     * @param destAbsPath the location to which the subtree is to be moved.
+     * @return the path of the node at its new position.
+     * @throws ItemExistsException if a node already exists at <code>destAbsPath</code>
+     * and same-name siblings are not allowed.
+     * @throws PathNotFoundException if either <code>srcAbsPath</code> or <code>destAbsPath</code> cannot be found and this
+     * implementation performs this validation immediately instead of waiting until <code>save</code>.
+     * @throws VersionException if the parent node of <code>destAbsPath</code> or the parent node of <code>srcAbsPath</code>
+     * is versionable and checked-in, or or is non-verionable and its nearest versionable ancestor is checked-in and this
+     * implementation performs this validation immediately instead of waiting until <code>save</code>.
+     * @throws ConstraintViolationException if a node-type or other constraint violation is detected immediately and this
+     * implementation performs this validation immediately instead of waiting until <code>save</code>.
+     * @throws LockException if the move operation would violate a lock and this
+     * implementation performs this validation immediately instead of waiting until <code>save</code>.
+     * @throws RepositoryException if the last element of <code>destAbsPath</code> has an index or if another error occurs.
+     */
+    public String move283(String srcAbsPath, String destAbsPath)
+            throws ItemExistsException, PathNotFoundException, VersionException,
+            ConstraintViolationException, LockException, RepositoryException {
+        // check sanity of this session
+        sanityCheck();
+
+        // check paths & get node instances
+
+        Path srcPath;
+        Path.Element srcName;
+        Path srcParentPath;
+        NodeImpl targetNode;
+        NodeImpl srcParentNode;
+        try {
+            srcPath = getQPath(srcAbsPath).getNormalizedPath();
+            if (!srcPath.isAbsolute()) {
+                throw new RepositoryException("not an absolute path: " + srcAbsPath);
+            }
+            srcName = srcPath.getNameElement();
+            srcParentPath = srcPath.getAncestor(1);
+            targetNode = getItemManager().getNode(srcPath);
+            srcParentNode = getItemManager().getNode(srcParentPath);
+        } catch (AccessDeniedException ade) {
+            throw new PathNotFoundException(srcAbsPath);
+        } catch (NameException e) {
+            String msg = srcAbsPath + ": invalid path";
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+
+        Path destPath;
+        Path.Element destName;
+        Path destParentPath;
+        NodeImpl destParentNode;
+        try {
+            destPath = getQPath(destAbsPath).getNormalizedPath();
+            if (!destPath.isAbsolute()) {
+                throw new RepositoryException("not an absolute path: " + destAbsPath);
+            }
+            if (srcPath.isAncestorOf(destPath)) {
+                String msg = destAbsPath + ": invalid destination path (cannot be descendant of source path)";
+                log.debug(msg);
+                throw new RepositoryException(msg);
+            }
+            destName = destPath.getNameElement();
+            destParentPath = destPath.getAncestor(1);
+            destParentNode = getItemManager().getNode(destParentPath);
+        } catch (AccessDeniedException ade) {
+            throw new PathNotFoundException(destAbsPath);
+        } catch (NameException e) {
+            String msg = destAbsPath + ": invalid path";
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+        int ind = destName.getIndex();
+        if (ind > 0) {
+            // subscript in name element
+            String msg = destAbsPath + ": invalid destination path (subscript in name element is not allowed)";
+            log.debug(msg);
+            throw new RepositoryException(msg);
+        }
+
+        // verify that both source and destination parent nodes are checked-out
+        if (!srcParentNode.internalIsCheckedOut()) {
+            String msg = srcAbsPath + ": cannot move a child of a checked-in node";
+            log.debug(msg);
+            throw new VersionException(msg);
+        }
+        if (!destParentNode.internalIsCheckedOut()) {
+            String msg = destAbsPath + ": cannot move a target to a checked-in node";
+            log.debug(msg);
+            throw new VersionException(msg);
+        }
+
+        // check for name collisions
+
+        NodeImpl existing = null;
+        try {
+            existing = getItemManager().getNode(destPath);
+            // there's already a node with that name:
+            // check same-name sibling setting of existing node
+            if (!existing.getDefinition().allowsSameNameSiblings()) {
+                throw new ItemExistsException(existing.safeGetJCRPath());
+            }
+        } catch (AccessDeniedException ade) {
+            // FIXME by throwing ItemExistsException we're disclosing too much information
+            throw new ItemExistsException(destAbsPath);
+        } catch (PathNotFoundException pnfe) {
+            // no name collision, fall through
+        }
+
+        // check constraints
+
+        // get applicable definition of target node at new location
+        NodeTypeImpl nt = (NodeTypeImpl) targetNode.getPrimaryNodeType();
+        NodeDefinitionImpl newTargetDef;
+        try {
+            newTargetDef = destParentNode.getApplicableChildNodeDefinition(destName.getName(), nt.getQName());
+        } catch (RepositoryException re) {
+            String msg = destAbsPath + ": no definition found in parent node's node type for new node";
+            log.debug(msg);
+            throw new ConstraintViolationException(msg, re);
+        }
+        // if there's already a node with that name also check same-name sibling
+        // setting of new node; just checking same-name sibling setting on
+        // existing node is not sufficient since same-name sibling nodes don't
+        // necessarily have identical definitions
+        if (existing != null && !newTargetDef.allowsSameNameSiblings()) {
+            throw new ItemExistsException(existing.safeGetJCRPath());
+        }
+
+        // check protected flag of old & new parent
+        if (destParentNode.getDefinition().isProtected()) {
+            String msg = destAbsPath + ": cannot add a child node to a protected node";
+            log.debug(msg);
+            throw new ConstraintViolationException(msg);
+        }
+        if (srcParentNode.getDefinition().isProtected()) {
+            String msg = srcAbsPath + ": cannot remove a child node from a protected node";
+            log.debug(msg);
+            throw new ConstraintViolationException(msg);
+        }
+
+        // check lock status
+        srcParentNode.checkLock();
+        destParentNode.checkLock();
+
+        NodeId targetId = targetNode.getNodeId();
+        int index = srcName.getIndex();
+        if (index == 0) {
+            index = 1;
+        }
+
+        if (srcParentNode.isSame(destParentNode)) {
+            // do rename
+            destParentNode.renameChildNode(srcName.getName(), index, targetId, destName.getName());
+        } else {
+            // do move:
+            // 1. remove child node entry from old parent
+            NodeState srcParentState =
+                    (NodeState) srcParentNode.getOrCreateTransientItemState();
+            srcParentState.removeChildNodeEntry(srcName.getName(), index);
+            // 2. re-parent target node
+            NodeState targetState =
+                    (NodeState) targetNode.getOrCreateTransientItemState();
+            targetState.setParentId(destParentNode.getNodeId());
+            // 3. add child node entry to new parent
+            NodeState destParentState =
+                    (NodeState) destParentNode.getOrCreateTransientItemState();
+            destParentState.addChildNodeEntry(destName.getName(), targetId);
+        }
+
+        // change definition of target
+        targetNode.onRedefine(newTargetDef.unwrap().getId());
+
+        return targetNode.safeGetJCRPath();
     }
 
     //-------------------------------------------------------------< Dumpable >
