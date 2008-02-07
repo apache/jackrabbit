@@ -267,22 +267,22 @@ public class DirListingExportHandler implements IOHandler, PropertyHandler {
     }
 
     //----------------------------------------------------< PropertyHandler >---
-
+    /**
+     * Always returns false.
+     * @param context
+     * @param isCollection
+     * @return always returns false.
+     */
     public boolean canExport(PropertyExportContext context, boolean isCollection) {
-        return canExport((ExportContext)context, isCollection);
+        return false;
     }
 
     /**
      * @see PropertyHandler#exportProperties(PropertyExportContext, boolean)
      */
     public boolean exportProperties(PropertyExportContext exportContext, boolean isCollection) throws RepositoryException {
-        if (!canExport(exportContext, isCollection)) {
-            throw new RepositoryException(getName() + ": Cannot export properties for context " + exportContext);
-        }
-        exportContext.setModificationTime(new Date().getTime());
-        exportContext.setContentType("text/html", "UTF-8");
-        exportContext.setETag("");
-        return true;
+        // export-content facility only... no responsible for propfind.
+        throw new RepositoryException(getName() + ": Cannot export properties for context " + exportContext);
     }
 
     public boolean canImport(PropertyImportContext context, boolean isCollection) {

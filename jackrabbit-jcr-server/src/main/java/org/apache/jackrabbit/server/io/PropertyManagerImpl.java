@@ -108,7 +108,6 @@ public class PropertyManagerImpl implements PropertyManager {
             DEFAULT_MANAGER = new PropertyManagerImpl();
             DEFAULT_MANAGER.addPropertyHandler(new ZipHandler());
             DEFAULT_MANAGER.addPropertyHandler(new XmlHandler());
-            DEFAULT_MANAGER.addPropertyHandler(new DirListingExportHandler());
             DEFAULT_MANAGER.addPropertyHandler(new DefaultHandler());
         }
         return DEFAULT_MANAGER;
