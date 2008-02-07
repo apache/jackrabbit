@@ -23,6 +23,7 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateCreationListener;
 import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.version.VersionHistoryImpl;
@@ -30,7 +31,6 @@ import org.apache.jackrabbit.jcr2spi.version.VersionImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.commons.collections.map.ReferenceMap;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -41,14 +41,14 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Item;
+import javax.jcr.Workspace;
 import java.io.PrintStream;
 import java.util.Iterator;
-import java.util.Map;
 
 /**
  * <code>ItemManagerImpl</code> implements the <code>ItemManager</code> interface.
  */
-public class ItemManagerImpl implements Dumpable, ItemManager {
+public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreationListener {
 
     private static Logger log = LoggerFactory.getLogger(ItemManagerImpl.class);
 
@@ -63,19 +63,26 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
      * o.a.j.core the item state are copied to transient space for reading and
      * will therefor not change upon transient modifications.
      */
-    private Map itemCache;
+    private final ItemCache itemCache;
 
     /**
      * Creates a new per-session instance <code>ItemManagerImpl</code> instance.
      *
      * @param hierMgr HierarchyManager associated with the new instance
      * @param session the session associated with the new instance
+     * @param cache the ItemCache to be used.
      */
-    ItemManagerImpl(HierarchyManager hierMgr, SessionImpl session) {
+    ItemManagerImpl(HierarchyManager hierMgr, SessionImpl session, ItemCache cache) {
         this.hierMgr = hierMgr;
         this.session = session;
-        /* Setup item cache with weak keys (ItemState) and weak values (Item).*/
-        itemCache = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
+        itemCache = cache;
+
+        // start listening to creation of ItemStates upon batch-reading in the
+        // workspace item state factory.
+        Workspace wsp = session.getWorkspace();
+        if (wsp instanceof WorkspaceImpl) {
+            ((WorkspaceImpl) wsp).getItemStateFactory().addCreationListener(this);
+        }
     }
 
     //--------------------------------------------------------< ItemManager >---
@@ -83,6 +90,12 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
      * @see ItemManager#dispose()
      */
     public void dispose() {
+        // stop listening
+        Workspace wsp = session.getWorkspace();
+        if (wsp instanceof WorkspaceImpl) {
+            ((WorkspaceImpl) wsp).getItemStateFactory().removeCreationListener(this);
+        }
+        // aftwards clear the cache.
         itemCache.clear();
     }
 
@@ -173,7 +186,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         }
 
         // first try to access item from cache
-        Item item = retrieveItem(itemState);
+        Item item = itemCache.getItem(itemState);
         // not yet in cache, need to create instance
         if (item == null) {
             // create instance of item
@@ -256,54 +269,6 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         return new LazyItemIterator(this, propEntries);
     }
 
-    //----------------------------------------------< ItemLifeCycleListener >---
-    /**
-     * @see ItemLifeCycleListener#itemCreated(Item)
-     */
-    public void itemCreated(Item item) {
-        if (!(item instanceof ItemImpl)) {
-            String msg = "Incompatible Item object: " + ItemImpl.class.getName() + " expected.";
-            throw new IllegalArgumentException(msg);
-        }
-        if (log.isDebugEnabled()) {
-            log.debug("created item " + item);
-        }
-        // add instance to cache
-        cacheItem(((ItemImpl)item).getItemState(), item);
-    }
-
-    /**
-     * @see ItemLifeCycleListener#itemInvalidated(Item)
-     */
-    public void itemInvalidated(Item item) {
-        if (!(item instanceof ItemImpl)) {
-            String msg = "Incompatible Item object: " + ItemImpl.class.getName() + " expected.";
-            throw new IllegalArgumentException(msg);
-        }
-        if (log.isDebugEnabled()) {
-            log.debug("invalidated item " + item);
-        }
-        // remove instance from cache
-        evictItem(((ItemImpl)item).getItemState());
-    }
-
-    /**
-     * @see ItemLifeCycleListener#itemDestroyed(Item)
-     */
-    public void itemDestroyed(Item item) {
-        if (!(item instanceof ItemImpl)) {
-            String msg = "Incompatible Item object: " + ItemImpl.class.getName() + " expected.";
-            throw new IllegalArgumentException(msg);
-        }
-        if (log.isDebugEnabled()) {
-            log.debug("destroyed item " + item);
-        }
-        // we're no longer interested in this item
-        ((ItemImpl)item).removeLifeCycleListener(this);
-        // remove instance from cache
-        evictItem(((ItemImpl)item).getItemState());
-    }
-
     //-----------------------------------------------------------< Dumpable >---
     /**
      * @see Dumpable#dump(PrintStream)
@@ -313,23 +278,10 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         ps.println();
         ps.println("Items in cache:");
         ps.println();
-        Iterator iter = itemCache.keySet().iterator();
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
-            Item item = (Item) itemCache.get(state);
-            if (item.isNode()) {
-                ps.print("Node: ");
-            } else {
-                ps.print("Property: ");
-            }
-            if (item.isNew()) {
-                ps.print("new ");
-            } else if (item.isModified()) {
-                ps.print("modified ");
-            } else {
-                ps.print("- ");
-            }
-            ps.println(state + "\t" + LogUtil.safeGetJCRPath(state, session.getPathResolver()) + " (" + item + ")");
+        if (itemCache instanceof Dumpable) {
+            ((Dumpable) itemCache).dump(ps);
+        } else {
+            ps.println("ItemCache (" + itemCache.toString() + ")");
         }
     }
 
@@ -342,7 +294,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
     private NodeImpl createNodeInstance(NodeState state) throws RepositoryException {
         // we want to be informed on life cycle changes of the new node object
         // in order to maintain item cache consistency
-        ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
+        ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{itemCache};
 
         // check special nodes
         Name ntName = state.getNodeTypeName();
@@ -365,49 +317,32 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
     private PropertyImpl createPropertyInstance(PropertyState state) {
         // we want to be informed on life cycle changes of the new property object
         // in order to maintain item cache consistency
-        ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
+        ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{itemCache};
         // create property object
         PropertyImpl prop = new PropertyImpl(this, session, state, listeners);
         return prop;
     }
 
-    //-------------------------------------------------< item cache methods >---
+    //------------------------------------------< ItemStateCreationListener >---
     /**
-     * Puts the reference of an item in the cache with
-     * the item's path as the key.
      *
-     * @param item the item to cache
+     * @param state
      */
-    private void cacheItem(ItemState state, Item item) {
-        if (itemCache.containsKey(state)) {
-            log.warn("overwriting cached item " + state);
+    public void created(ItemState state) {
+        if (state.isNode()) {
+            try {
+                createNodeInstance((NodeState) state);
+            } catch (RepositoryException e) {
+                // log warning and ignore
+                log.warn("Unable to create Node instance: " + e.getMessage());
+            }
+        } else {
+            createPropertyInstance((PropertyState) state);
         }
-        if (log.isDebugEnabled()) {
-            log.debug("caching item " + state);
-        }
-        itemCache.put(state, item);
     }
 
-    /**
-     * Returns an item reference from the cache.
-     *
-     * @param state State of the item that should be retrieved.
-     * @return the item reference stored in the corresponding cache entry
-     *         or <code>null</code> if there's no corresponding cache entry.
-     */
-    private Item retrieveItem(ItemState state) {
-        return (Item) itemCache.get(state);
-    }
-
-    /**
-     * Removes a cache entry for a specific item.
-     *
-     * @param itemState state of the item to remove from the cache
-     */
-    private void evictItem(ItemState itemState) {
-        if (log.isDebugEnabled()) {
-            log.debug("removing item " + itemState + " from cache");
-        }
-        itemCache.remove(itemState);
+    public void statusChanged(ItemState state, int previousStatus) {
+        // nothing to do -> Item is listening to status changes and forces
+        // cleanup of cache entries through it's own status changes.
     }
 }
