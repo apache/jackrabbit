@@ -50,7 +50,7 @@ import javax.jcr.Item;
  * If the parent <code>Session</code> is an <code>XASession</code>, there is
  * one <code>ItemManager</code> instance per started global transaction.
  */
-public interface ItemManager extends ItemLifeCycleListener {
+public interface ItemManager {
 
     /**
      * Disposes this <code>ItemManager</code> and frees resources.

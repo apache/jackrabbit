@@ -641,7 +641,9 @@ public class SessionImpl implements Session, ManagerProvider {
     }
 
     protected ItemManager createItemManager(HierarchyManager hierarchyManager) {
-        return new ItemManagerImpl(hierarchyManager, this);
+        ItemCache cache = new ItemCacheImpl(1000); // TODO: make configurable
+        ItemManagerImpl imgr = new ItemManagerImpl(hierarchyManager, this, cache);
+        return imgr;
     }
 
     //---------------------------------------------------< ManagerProvider > ---
