@@ -117,9 +117,6 @@
             <class name="org.apache.jackrabbit.server.io.XmlHandler" />
         </propertyhandler>
         <propertyhandler>
-            <class name="org.apache.jackrabbit.server.io.DirListingExportHandler" />
-        </propertyhandler>
-        <propertyhandler>
             <class name="org.apache.jackrabbit.server.io.DefaultHandler" />
         </propertyhandler>
     </propertymanager>
