@@ -103,7 +103,9 @@ public interface Batch {
 
     /**
      * Add a new property to the persistent layer.
-     *
+     * <p>
+     * Note: this call should succeed in case the property already exists.
+     * 
      * @param parentId NodeId identifying the parent node.
      * @param propertyName Name of the property to be created.
      * @param value The qualified value of the property to be created.
@@ -132,6 +134,8 @@ public interface Batch {
 
     /**
      * Add a new multi-valued property to the persistent layer.
+     * <p>
+     * Note: this call should succeed in case the property already exists.
      *
      * @param parentId NodeId identifying the parent node.
      * @param propertyName Name of the property to be created.
