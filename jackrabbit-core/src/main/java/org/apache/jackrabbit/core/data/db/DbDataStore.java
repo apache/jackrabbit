@@ -60,6 +60,7 @@ import javax.jcr.RepositoryException;
  *     &lt;param name="{@link #setMinRecordLength(int) minRecordLength}" value="1024"/>
  *     &lt;param name="{@link #setMaxConnections(int) maxConnections}" value="2"/>
  *     &lt;param name="{@link #setCopyWhenReading(int) copyWhenReading}" value="true"/>
+ *     &lt;param name="{@link #setTablePrefix(int) tablePrefix}" value=""/>
  * &lt/DataStore>
  * </pre>
  * <p>
@@ -82,6 +83,9 @@ import javax.jcr.RepositoryException;
  * <p>
  * By default, the data is copied to a temp file when reading, to avoid problems when reading multiple
  * blobs at the same time.
+ * <p>
+ * The tablePrefix can be used to specify a schema and / or catalog name:
+ * &lt;param name="tablePrefix" value="ds.">
  */
 public class DbDataStore implements DataStore {
 
