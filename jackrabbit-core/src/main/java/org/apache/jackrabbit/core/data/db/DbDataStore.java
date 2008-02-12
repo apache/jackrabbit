@@ -536,6 +536,7 @@ public class DbDataStore implements DataStore {
         Properties prop = new Properties();
         try {
             prop.load(new BufferedInputStream(in));
+            in.close();
         } catch (IOException e) {
             String msg = "Configuration error: Could not read properties '" + databaseType + ".properties'";
             log.debug(msg);
