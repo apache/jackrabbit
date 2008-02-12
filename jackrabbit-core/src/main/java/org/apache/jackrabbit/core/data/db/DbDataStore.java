@@ -449,6 +449,7 @@ public class DbDataStore implements DataStore {
 
     /**
      * Set the minimum object length.
+     * The maximum value is around 32000.
      *
      * @param minRecordLength the length
      */
