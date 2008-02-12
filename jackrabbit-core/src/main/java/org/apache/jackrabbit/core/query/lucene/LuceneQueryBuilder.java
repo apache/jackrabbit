@@ -539,7 +539,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 
         if (node.getIncludeDescendants()) {
             if (nameTest != null) {
-                andQuery.add(new DescendantSelfAxisQuery(context, nameTest), Occur.MUST);
+                andQuery.add(new DescendantSelfAxisQuery(context, nameTest, false), Occur.MUST);
             } else {
                 // descendant-or-self with nametest=*
                 if (predicates.length > 0) {
