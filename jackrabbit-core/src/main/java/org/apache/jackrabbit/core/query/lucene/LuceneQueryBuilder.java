@@ -59,6 +59,7 @@ import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.MatchAllDocsQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -556,19 +557,18 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     }
                 } else {
                     // todo this will traverse the whole index, optimize!
-                    Query subQuery = null;
-                    try {
-                        subQuery = createMatchAllQuery(resolver.getJCRName(NameConstants.JCR_PRIMARYTYPE));
-                    } catch (NamespaceException e) {
-                        // will never happen, prefixes are created when unknown
-                    }
                     // only use descendant axis if path is not //*
                     PathQueryNode pathNode = (PathQueryNode) node.getParent();
                     if (pathNode.getPathSteps()[0] != node) {
-                        context = new DescendantSelfAxisQuery(context, subQuery);
-                        andQuery.add(new ChildAxisQuery(sharedItemMgr, context, null, node.getIndex()), Occur.MUST);
+                        if (node.getIndex() == LocationStepQueryNode.NONE) {
+                            context = new DescendantSelfAxisQuery(context, false);
+                            andQuery.add(context, Occur.MUST);
+                        } else {
+                            context = new DescendantSelfAxisQuery(context, true);
+                            andQuery.add(new ChildAxisQuery(sharedItemMgr, context, null, node.getIndex()), Occur.MUST);
+                        }
                     } else {
-                        andQuery.add(subQuery, Occur.MUST);
+                        andQuery.add(new MatchAllDocsQuery(), Occur.MUST);
                     }
                 }
             }

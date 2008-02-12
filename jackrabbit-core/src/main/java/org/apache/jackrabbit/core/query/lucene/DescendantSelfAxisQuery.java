@@ -24,6 +24,7 @@ import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Weight;
+import org.apache.lucene.search.MatchAllDocsQuery;
 
 import java.io.IOException;
 import java.util.BitSet;
@@ -52,15 +53,30 @@ class DescendantSelfAxisQuery extends Query {
     private final Query subQuery;
 
     /**
-     * If <code>true</code> this query acts on the descendant-or-self axis.
-     * If <code>false</code> this query acts on the descendant axis.
+     * The minimal levels required between context and sub nodes for a sub node
+     * to match.
      */
-    private final boolean includeSelf;
+    private final int minLevels;
 
     /**
      * The scorer of the sub query to filter
      */
     private Scorer subScorer;
+
+    /**
+     * Creates a new <code>DescendantSelfAxisQuery</code> based on a
+     * <code>context</code> and matches all descendants of the context nodes.
+     * Whether the context nodes match as well is controlled by
+     * <code>includeSelf</code>.
+     *
+     * @param context     the context for this query.
+     * @param includeSelf if <code>true</code> this query acts like a
+     *                    descendant-or-self axis. If <code>false</code> this
+     *                    query acts like a descendant axis.
+     */
+    public DescendantSelfAxisQuery(Query context, boolean includeSelf) {
+        this(context, new MatchAllDocsQuery(), includeSelf);
+    }
 
     /**
      * Creates a new <code>DescendantSelfAxisQuery</code> based on a
@@ -84,9 +100,45 @@ class DescendantSelfAxisQuery extends Query {
      *                    a descendant axis.
      */
     public DescendantSelfAxisQuery(Query context, Query sub, boolean includeSelf) {
+        this(context, sub, includeSelf ? 0 : 1);
+    }
+
+    /**
+     * Creates a new <code>DescendantSelfAxisQuery</code> based on a
+     * <code>context</code> query and filtering the <code>sub</code> query.
+     *
+     * @param context   the context for this query.
+     * @param sub       the sub query.
+     * @param minLevels the minimal levels required between context and sub
+     *                  nodes for a sub node to match.
+     */
+    public DescendantSelfAxisQuery(Query context, Query sub, int minLevels) {
         this.contextQuery = context;
         this.subQuery = sub;
-        this.includeSelf = includeSelf;
+        this.minLevels = minLevels;
+    }
+
+    /**
+     * @return the context query of this <code>DescendantSelfAxisQuery</code>.
+     */
+    Query getContextQuery() {
+        return contextQuery;
+    }
+
+    /**
+     * @return <code>true</code> if the sub query of this <code>DescendantSelfAxisQuery</code>
+     *         matches all nodes.
+     */
+    boolean subQueryMatchesAll() {
+        return subQuery instanceof MatchAllDocsQuery;
+    }
+
+    /**
+     * @return the minimal levels required between context and sub nodes for a
+     *         sub node to match.
+     */
+    int getMinLevels() {
+        return minLevels;
     }
 
     /**
@@ -123,10 +175,17 @@ class DescendantSelfAxisQuery extends Query {
     public Query rewrite(IndexReader reader) throws IOException {
         Query cQuery = contextQuery.rewrite(reader);
         Query sQuery = subQuery.rewrite(reader);
+        if (contextQuery instanceof DescendantSelfAxisQuery) {
+            DescendantSelfAxisQuery dsaq = (DescendantSelfAxisQuery) contextQuery;
+            if (dsaq.subQueryMatchesAll()) {
+                return new DescendantSelfAxisQuery(dsaq.getContextQuery(),
+                        sQuery, dsaq.getMinLevels() + getMinLevels()).rewrite(reader);
+            }
+        }
         if (cQuery == contextQuery && sQuery == subQuery) {
             return this;
         } else {
-            return new DescendantSelfAxisQuery(cQuery, sQuery, includeSelf);
+            return new DescendantSelfAxisQuery(cQuery, sQuery, minLevels);
         }
     }
 
@@ -152,6 +211,8 @@ class DescendantSelfAxisQuery extends Query {
         private DescendantSelfAxisWeight(Searcher searcher) {
             this.searcher = searcher;
         }
+
+        //-----------------------------< Weight >-------------------------------
 
         /**
          * Returns this <code>DescendantSelfAxisQuery</code>.
@@ -330,10 +391,8 @@ class DescendantSelfAxisQuery extends Query {
          */
         private boolean isValid(int doc) throws IOException {
             // check self if necessary
-            if (includeSelf) {
-                if (contextHits.get(doc)) {
-                    return true;
-                }
+            if (minLevels == 0 && contextHits.get(doc)) {
+                return true;
             }
 
             // check if doc is a descendant of one of the context nodes
@@ -343,7 +402,7 @@ class DescendantSelfAxisQuery extends Query {
             ancestorDocs[ancestorCount++] = parentDoc;
 
             // traverse
-            while (parentDoc != -1 && !contextHits.get(parentDoc)) {
+            while (parentDoc != -1 && (!contextHits.get(parentDoc) || ancestorCount < minLevels)) {
                 parentDoc = hResolver.getParent(parentDoc);
                 // resize array if needed
                 if (ancestorCount == ancestorDocs.length) {

@@ -20,12 +20,12 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.query.LocationStepQueryNode;
 import org.apache.jackrabbit.core.query.lucene.hits.AdaptingHits;
 import org.apache.jackrabbit.core.query.lucene.hits.Hits;
-import org.apache.jackrabbit.core.query.lucene.hits.HitsIntersection;
 import org.apache.jackrabbit.core.query.lucene.hits.ScorerHits;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -38,12 +38,14 @@ import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.Weight;
+import org.apache.lucene.search.MatchAllDocsQuery;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Implements a lucene <code>Query</code> which returns the child nodes of the
@@ -116,6 +118,21 @@ class ChildAxisQuery extends Query {
     }
 
     /**
+     * @return the name test or <code>null</code> if none was specified.
+     */
+    String getNameTest() {
+        return nameTest;
+    }
+
+    /**
+     * @return the position check or {@link LocationStepQueryNode#NONE} is none
+     *         was specified.
+     */
+    int getPosition() {
+        return position;
+    }
+
+    /**
      * Creates a <code>Weight</code> instance for this query.
      *
      * @param searcher the <code>Searcher</code> instance to use.
@@ -137,6 +154,24 @@ class ChildAxisQuery extends Query {
      */
     public Query rewrite(IndexReader reader) throws IOException {
         Query cQuery = contextQuery.rewrite(reader);
+        // only try to compact if no position is specified
+        if (position == LocationStepQueryNode.NONE) {
+            if (cQuery instanceof DescendantSelfAxisQuery) {
+                DescendantSelfAxisQuery dsaq = (DescendantSelfAxisQuery) cQuery;
+                if (dsaq.subQueryMatchesAll()) {
+                    Query sub;
+                    if (nameTest == null) {
+                        sub = new MatchAllDocsQuery();
+                    } else {
+                        sub = new TermQuery(new Term(FieldNames.LABEL, nameTest));
+                    }
+                    return new DescendantSelfAxisQuery(dsaq.getContextQuery(),
+                            sub, dsaq.getMinLevels() + 1).rewrite(reader);
+                }
+            }
+        }
+
+        // if we get here we could not compact the query
         if (cQuery == contextQuery) {
             return this;
         } else {
@@ -217,7 +252,8 @@ class ChildAxisQuery extends Query {
             if (nameTest != null) {
                 nameTestScorer = new TermQuery(new Term(FieldNames.LABEL, nameTest)).weight(searcher).scorer(reader);
             }
-            return new ChildAxisScorer(searcher.getSimilarity(), reader);
+            return new ChildAxisScorer(searcher.getSimilarity(),
+                    reader, (HierarchyResolver) reader);
         }
 
         /**
@@ -241,6 +277,11 @@ class ChildAxisQuery extends Query {
         private final IndexReader reader;
 
         /**
+         * The <code>HierarchyResolver</code> of the index.
+         */
+        private final HierarchyResolver hResolver;
+
+        /**
          * The next document id to return
          */
         private int nextDoc = -1;
@@ -255,10 +296,14 @@ class ChildAxisQuery extends Query {
          *
          * @param similarity the <code>Similarity</code> instance to use.
          * @param reader     for index access.
+         * @param hResolver  the hierarchy resolver of <code>reader</code>.
          */
-        protected ChildAxisScorer(Similarity similarity, IndexReader reader) {
+        protected ChildAxisScorer(Similarity similarity,
+                                  IndexReader reader,
+                                  HierarchyResolver hResolver) {
             super(similarity);
             this.reader = reader;
+            this.hResolver = hResolver;
         }
 
         /**
@@ -313,7 +358,7 @@ class ChildAxisQuery extends Query {
             if (hits == null) {
 
                 // collect all context nodes
-                List uuids = new ArrayList();
+                Map uuids = new HashMap();
                 final Hits contextHits = new AdaptingHits();
                 contextScorer.score(new HitCollector() {
                     public void collect(int doc, float score) {
@@ -322,39 +367,53 @@ class ChildAxisQuery extends Query {
                 });
 
                 // read the uuids of the context nodes
-                int i = contextHits.next();
-                while (i > -1) {
-                    String uuid = reader.document(i).get(FieldNames.UUID);
-                    uuids.add(uuid);
-                    i = contextHits.next();
+                for (int i = contextHits.next(); i > -1; i = contextHits.next()) {
+                    String uuid = reader.document(i, FieldSelectors.UUID).get(FieldNames.UUID);
+                    uuids.put(new Integer(i), uuid);
                 }
 
                 // collect all children of the context nodes
                 Hits childrenHits = new AdaptingHits();
-
-                TermDocs docs = reader.termDocs();
-                try {
-                    for (Iterator it = uuids.iterator(); it.hasNext();) {
-                        docs.seek(new Term(FieldNames.PARENT, (String) it.next()));
-                        while (docs.next()) {
-                            childrenHits.set(docs.doc());
+                if (nameTestScorer != null) {
+                    Hits nameHits = new ScorerHits(nameTestScorer);
+                    for (int h = nameHits.next(); h > -1; h = nameHits.next()) {
+                        if (uuids.containsKey(new Integer(hResolver.getParent(h)))) {
+                            childrenHits.set(h);
                         }
                     }
-                } finally {
-                    docs.close();
+                } else {
+                    // get child node entries for each hit
+                    for (Iterator it = uuids.values().iterator(); it.hasNext(); ) {
+                        String uuid = (String) it.next();
+                        NodeId id = new NodeId(UUID.fromString(uuid));
+                        try {
+                            NodeState state = (NodeState) itemMgr.getItemState(id);
+                            Iterator entries = state.getChildNodeEntries().iterator();
+                            while (entries.hasNext()) {
+                                NodeId childId = ((NodeState.ChildNodeEntry) entries.next()).getId();
+                                Term uuidTerm = new Term(FieldNames.UUID, childId.getUUID().toString());
+                                TermDocs docs = reader.termDocs(uuidTerm);
+                                try {
+                                    if (docs.next()) {
+                                        childrenHits.set(docs.doc());
+                                    }
+                                } finally {
+                                    docs.close();
+                                }
+                            }
+                        } catch (ItemStateException e) {
+                            // does not exist anymore -> ignore
+                        }
+                    }
                 }
 
-                if (nameTestScorer != null) {
-                    hits = new HitsIntersection(childrenHits, new ScorerHits(nameTestScorer));
-                } else {
-                    hits = childrenHits;
-                }
+                hits = childrenHits;
             }
         }
 
         private boolean indexIsValid(int i) throws IOException {
             if (position != LocationStepQueryNode.NONE) {
-                Document node = reader.document(i);
+                Document node = reader.document(i, FieldSelectors.UUID_AND_PARENT);
                 NodeId parentId = NodeId.valueOf(node.get(FieldNames.PARENT));
                 NodeId id = NodeId.valueOf(node.get(FieldNames.UUID));
                 try {
