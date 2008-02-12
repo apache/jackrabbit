@@ -111,7 +111,7 @@ public interface DataStore {
      * Get the minimum size of an object that should be stored in this data store.
      * Depending on the overhead and configuration, each store may return a different value.
      *
-     * @return the minimum size
+     * @return the minimum size in bytes
      */
     int getMinRecordLength();
 
