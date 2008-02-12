@@ -128,6 +128,10 @@ final class DocNumberCache {
      */
     Entry get(String uuid) {
         LRUMap cacheSegment = docNumbers[getSegmentIndex(uuid.charAt(0))];
+        // uuid may be invalid
+        if (uuid.length() != UUID.UUID_FORMATTED_LENGTH) {
+            return null;
+        }
         UUID key = UUID.fromString(uuid);
         Entry entry;
         synchronized (cacheSegment) {
