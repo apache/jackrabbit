@@ -42,7 +42,8 @@ import javax.jcr.version.OnParentVersionAction;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-import java.util.Vector;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Node type definition reader. This class is used to read the
@@ -117,7 +118,7 @@ public class NodeTypeReader {
      */
     public NodeTypeDef[] getNodeTypeDefs()
             throws InvalidNodeTypeDefException, NameException, NamespaceException {
-        Vector defs = new Vector();
+        List defs = new ArrayList();
         while (walker.iterateElements(Constants.NODETYPE_ELEMENT)) {
             defs.add(getNodeTypeDef());
         }
@@ -153,7 +154,7 @@ public class NodeTypeReader {
 
         // supertype declarations
         if (walker.enterElement(Constants.SUPERTYPES_ELEMENT)) {
-            Vector supertypes = new Vector();
+            List supertypes = new ArrayList();
             while (walker.iterateElements(Constants.SUPERTYPE_ELEMENT)) {
                 supertypes.add(
                         resolver.getQName(walker.getContent()));
@@ -164,7 +165,7 @@ public class NodeTypeReader {
         }
 
         // property definitions
-        Vector properties = new Vector();
+        List properties = new ArrayList();
         while (walker.iterateElements(Constants.PROPERTYDEFINITION_ELEMENT)) {
             PropDefImpl def = getPropDef();
             def.setDeclaringNodeType(type.getName());
@@ -174,7 +175,7 @@ public class NodeTypeReader {
                 properties.toArray(new PropDef[properties.size()]));
 
         // child node definitions
-        Vector nodes = new Vector();
+        List nodes = new ArrayList();
         while (walker.iterateElements(Constants.CHILDNODEDEFINITION_ELEMENT)) {
             NodeDefImpl def = getChildNodeDef();
             def.setDeclaringNodeType(type.getName());
@@ -224,7 +225,7 @@ public class NodeTypeReader {
 
         // value constraints
         if (walker.enterElement(Constants.VALUECONSTRAINTS_ELEMENT)) {
-            Vector constraints = new Vector();
+            List constraints = new ArrayList();
             int type = def.getRequiredType();
             while (walker.iterateElements(Constants.VALUECONSTRAINT_ELEMENT)) {
                 String constraint = walker.getContent();
@@ -243,7 +244,7 @@ public class NodeTypeReader {
 
         // default values
         if (walker.enterElement(Constants.DEFAULTVALUES_ELEMENT)) {
-            Vector values = new Vector();
+            List values = new ArrayList();
             int type = def.getRequiredType();
             if (type == PropertyType.UNDEFINED) {
                 type = PropertyType.STRING;
@@ -306,7 +307,7 @@ public class NodeTypeReader {
 
         // required primary types
         if (walker.enterElement(Constants.REQUIREDPRIMARYTYPES_ELEMENT)) {
-            Vector types = new Vector();
+            List types = new ArrayList();
             while (walker.iterateElements(Constants.REQUIREDPRIMARYTYPE_ELEMENT)) {
                 types.add(resolver.getQName(walker.getContent()));
             }
