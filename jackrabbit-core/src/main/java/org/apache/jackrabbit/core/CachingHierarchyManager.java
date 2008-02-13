@@ -193,7 +193,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
         } else {
             LRUEntry entry = (LRUEntry) element.get();
             if (element.hasPath(path)) {
-                entry.touch();
+                synchronized (cacheMonitor) {
+                    entry.touch();
+                }
                 return entry.getId();
             }
             // first try to resolve node path, then property path
@@ -749,24 +751,26 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * @param ps print stream to dump to
      */
     public void dump(final PrintStream ps) {
-        pathCache.traverse(new PathMap.ElementVisitor() {
-            public void elementVisited(PathMap.Element element) {
-                StringBuffer line = new StringBuffer();
-                for (int i = 0; i < element.getDepth(); i++) {
-                    line.append("--");
+        synchronized (cacheMonitor) {
+            pathCache.traverse(new PathMap.ElementVisitor() {
+                public void elementVisited(PathMap.Element element) {
+                    StringBuffer line = new StringBuffer();
+                    for (int i = 0; i < element.getDepth(); i++) {
+                        line.append("--");
+                    }
+                    line.append(element.getName());
+                    int index = element.getIndex();
+                    if (index != 0 && index != 1) {
+                        line.append('[');
+                        line.append(index);
+                        line.append(']');
+                    }
+                    line.append("  ");
+                    line.append(element.get());
+                    ps.println(line.toString());
                 }
-                line.append(element.getName());
-                int index = element.getIndex();
-                if (index != 0 && index != 1) {
-                    line.append('[');
-                    line.append(index);
-                    line.append(']');
-                }
-                line.append("  ");
-                line.append(element.get());
-                ps.println(line.toString());
-            }
-        }, true);
+            }, true);
+        }
     }
 
     /**
