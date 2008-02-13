@@ -88,7 +88,7 @@ public class QueryRootNode extends QueryNode {
     }
 
     /**
-     * Returns the order node.
+     * Returns the order node or <code>null</code> if no order is specified.
      *
      * @return the order node.
      */
