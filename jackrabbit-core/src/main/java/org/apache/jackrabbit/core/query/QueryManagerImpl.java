@@ -21,7 +21,9 @@ import org.apache.jackrabbit.core.SearchManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.query.jsr283.PreparedQuery;
 import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelFactory;
+import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModel;
 import org.apache.jackrabbit.core.query.qom.QueryObjectModelFactoryImpl;
+import org.apache.jackrabbit.core.query.qom.QueryObjectModelTree;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -76,13 +78,19 @@ public class QueryManagerImpl implements QueryManager {
      * @param itemMgr
      * @param searchMgr
      */
-    public QueryManagerImpl(SessionImpl session,
-                            ItemManager itemMgr,
-                            SearchManager searchMgr) {
+    public QueryManagerImpl(final SessionImpl session,
+                            final ItemManager itemMgr,
+                            final SearchManager searchMgr) {
         this.session = session;
         this.itemMgr = itemMgr;
         this.searchMgr = searchMgr;
-        this.qomFactory = new QueryObjectModelFactoryImpl(session, searchMgr);
+        this.qomFactory = new QueryObjectModelFactoryImpl(session) {
+            protected QueryObjectModel createQuery(QueryObjectModelTree qomTree)
+                    throws InvalidQueryException, RepositoryException {
+                return searchMgr.createQueryObjectModel(
+                        session, qomTree, QueryImpl.JCR_SQL2);
+            }
+        };
     }
 
     /**

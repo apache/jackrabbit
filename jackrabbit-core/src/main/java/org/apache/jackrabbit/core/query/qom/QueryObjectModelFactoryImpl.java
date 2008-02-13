@@ -55,9 +55,6 @@ import org.apache.jackrabbit.core.query.jsr283.qom.UpperCase;
 import org.apache.jackrabbit.core.query.jsr283.qom.BindVariableValue;
 import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants;
 import org.apache.jackrabbit.core.query.jsr283.qom.Literal;
-import org.apache.jackrabbit.core.query.QueryImpl;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.SearchManager;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.RepositoryException;
@@ -68,7 +65,7 @@ import java.util.BitSet;
  * <code>QueryObjectModelFactoryImpl</code> implements the query object model
  * factory from JSR 283.
  */
-public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
+public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
 
     private static final BitSet VALID_OPERATORS = new BitSet();
 
@@ -98,22 +95,22 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
      */
     private final NamePathResolver resolver;
 
-    /**
-     * The session of the user.
-     */
-    private final SessionImpl session;
-
-    /**
-     * The search manager of the workspace.
-     */
-    private final SearchManager searchMgr;
-
-    public QueryObjectModelFactoryImpl(SessionImpl session,
-                                       SearchManager searchMgr) {
-        this.resolver = session;
-        this.session = session;
-        this.searchMgr = searchMgr;
+    public QueryObjectModelFactoryImpl(NamePathResolver resolver) {
+        this.resolver = resolver;
     }
+
+    /**
+     * Creates a query object model from the internal tree representation.
+     *
+     * @param qomTree the qom tree.
+     * @return a query object model that can be executed.
+     * @throws InvalidQueryException the the query object model tree is
+     *                               considered invalid by the query handler
+     *                               implementation.
+     * @throws RepositoryException   if any other error occurs.
+     */
+    protected abstract QueryObjectModel createQuery(QueryObjectModelTree qomTree)
+            throws InvalidQueryException, RepositoryException;
 
     /**
      * Creates a query with one selector.
@@ -197,7 +194,7 @@ public class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
         QueryObjectModelTree qomTree = new QueryObjectModelTree(
                 resolver, (SourceImpl) source,
                 (ConstraintImpl) constraint, ords, cols);
-        return searchMgr.createQueryObjectModel(session, qomTree, QueryImpl.JCR_SQL2);
+        return createQuery(qomTree);
     }
 
     /**
