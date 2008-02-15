@@ -2085,12 +2085,7 @@ public class NodeImpl extends ItemImpl implements Node {
         BitSet status = new BitSet();
         PropertyImpl prop = getOrCreateProperty(name, type, true, true, status);
         try {
-            if (prop.getDefinition().getRequiredType() == PropertyType.UNDEFINED
-                    && type != PropertyType.UNDEFINED) {
-                prop.setValue(ValueHelper.convert(values, type, session.getValueFactory()));
-            } else {
-                prop.setValue(values);
-            }
+            prop.setValue(values, type);
         } catch (RepositoryException re) {
             if (status.get(CREATED)) {
                 // setting value failed, get rid of newly created property
