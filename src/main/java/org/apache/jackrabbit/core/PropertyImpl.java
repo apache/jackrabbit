@@ -615,6 +615,19 @@ public class PropertyImpl extends ItemImpl implements Property {
             throws ValueFormatException, VersionException,
             LockException, ConstraintViolationException,
             RepositoryException {
+        setValue(values, PropertyType.UNDEFINED);
+    }
+
+    /**
+     * Sets the values of this property.
+     *
+     * @param values property values (possibly <code>null</code>)
+     * @param valueType default value type if not set in the node type,
+     *                  may be {@link PropertyType#UNDEFINED}
+     * @throws RepositoryException if the property values could not be set
+     */
+    public void setValue(Value[] values, int valueType)
+            throws RepositoryException {
         // check state of this instance
         sanityCheck();
 
@@ -623,50 +636,46 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         if (values != null) {
             // check type of values
-            int valueType = PropertyType.UNDEFINED;
+            int firstValueType = PropertyType.UNDEFINED;
             for (int i = 0; i < values.length; i++) {
-                if (values[i] == null) {
-                    // skip null values as those will be purged later
-                    continue;
-                }
-                if (valueType == PropertyType.UNDEFINED) {
-                    valueType = values[i].getType();
-                } else if (valueType != values[i].getType()) {
-                    // inhomogeneous types
-                    String msg = "inhomogeneous type of values";
-                    log.debug(msg);
-                    throw new ValueFormatException(msg);
+                if (values[i] != null) {
+                    if (firstValueType == PropertyType.UNDEFINED) {
+                        firstValueType = values[i].getType();
+                    } else if (firstValueType != values[i].getType()) {
+                        throw new ValueFormatException(
+                                "inhomogeneous type of values");
+                    }
                 }
             }
         }
 
         int reqType = definition.getRequiredType();
+        if (reqType == PropertyType.UNDEFINED) {
+            reqType = valueType; // use the given type as property type
+        }
 
         InternalValue[] internalValues = null;
         // convert to internal values of correct type
         if (values != null) {
             internalValues = new InternalValue[values.length];
+
+            // check type of values
             for (int i = 0; i < values.length; i++) {
                 Value value = values[i];
-                InternalValue internalValue = null;
                 if (value != null) {
-                    // check type according to definition of this property
                     if (reqType == PropertyType.UNDEFINED) {
-                        // use the value's type as property type
+                        // Use the type of the fist value as the type
                         reqType = value.getType();
                     }
                     if (reqType != value.getType()) {
-                        // type conversion required
-                        Value targetVal = ValueHelper.convert(
-                                value, reqType,
-                                ValueFactoryImpl.getInstance());
-                        internalValue = InternalValue.create(targetVal, session.getNamePathResolver(), rep.getDataStore());
-                    } else {
-                        // no type conversion required
-                        internalValue = InternalValue.create(value, session.getNamePathResolver(), rep.getDataStore());
+                        value = ValueHelper.convert(
+                                value, reqType, session.getValueFactory());
                     }
+                    internalValues[i] = InternalValue.create(
+                            value, session, rep.getDataStore());
+                } else {
+                    internalValues[i] = null;
                 }
-                internalValues[i] = internalValue;
             }
         }
 
