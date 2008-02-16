@@ -72,7 +72,7 @@ final class DocNumberCache {
      * @param size the cache limit.
      */
     DocNumberCache(int size) {
-        size = size % CACHE_SEGMENTS;
+        size = size / CACHE_SEGMENTS;
         if (size < 0x40) {
             // minimum size is 0x40 * 0x10 = 1024
             size = 0x40;
