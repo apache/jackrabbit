@@ -50,7 +50,7 @@ public class ConnectionFactory {
     public static Connection getConnection(String driver, String url,
             String user, String password) throws RepositoryException,
             SQLException {
-        if (driver != null || driver.length() > 0) {
+        if (driver != null && driver.length() > 0) {
             try {
                 Class d = Class.forName(driver);
                 if (javax.naming.Context.class.isAssignableFrom(d)) {
