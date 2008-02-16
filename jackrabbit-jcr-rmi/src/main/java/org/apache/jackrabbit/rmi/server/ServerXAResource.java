@@ -24,6 +24,7 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
 import org.apache.jackrabbit.rmi.remote.RemoteXAResource;
+import org.apache.jackrabbit.rmi.remote.SerializableXid;
 
 /**
  * Remote adapter for the {@link XAResource} interface.
@@ -91,7 +92,11 @@ public class ServerXAResource extends UnicastRemoteObject
 
     public Xid[] recover(int flag) throws XAException {
         try {
-            return resource.recover(flag);
+            Xid[] xids = resource.recover(flag);
+            for (int i = 0; i < xids.length; i++) {
+                xids[i] = new SerializableXid(xids[i]);
+            }
+            return xids;
         } catch (XAException e) {
             throw getXAException(e);
         }
