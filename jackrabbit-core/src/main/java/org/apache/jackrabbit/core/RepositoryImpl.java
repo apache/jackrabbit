@@ -232,6 +232,7 @@ public class RepositoryImpl extends AbstractRepository
 
         log.info("Starting repository...");
 
+        boolean succeeded = false;
         try {
             this.repConfig = repConfig;
 
@@ -335,12 +336,18 @@ public class RepositoryImpl extends AbstractRepository
                 wspJanitor.setDaemon(true);
                 wspJanitor.start();
             }
+
+            succeeded = true;
+            log.info("Repository started");
         } catch (RepositoryException e) {
             log.error("failed to start Repository: " + e.getMessage(), e);
             throw e;
+        } finally {
+            if (!succeeded) {
+                // repository startup failed, clean up...
+                shutdown();
+            }
         }
-
-        log.info("Repository started");
     }
 
     public DataStore getDataStore() {
@@ -988,24 +995,30 @@ public class RepositoryImpl extends AbstractRepository
             }
         }
 
-        try {
-            vMgr.close();
-        } catch (Exception e) {
-            log.error("Error while closing Version Manager.", e);
+        if (vMgr != null) {
+            try {
+                vMgr.close();
+            } catch (Exception e) {
+                log.error("Error while closing Version Manager.", e);
+            }
         }
 
-        // persist repository properties
-        try {
-            storeRepProps(repProps);
-        } catch (RepositoryException e) {
-            log.error("failed to persist repository properties", e);
+        if (repProps != null) {
+            // persist repository properties
+            try {
+                storeRepProps(repProps);
+            } catch (RepositoryException e) {
+                log.error("failed to persist repository properties", e);
+            }
         }
 
-        try {
-            // close repository file system
-            repStore.close();
-        } catch (FileSystemException e) {
-            log.error("error while closing repository file system", e);
+        if (repStore != null) {
+            try {
+                // close repository file system
+                repStore.close();
+            } catch (FileSystemException e) {
+                log.error("error while closing repository file system", e);
+            }
         }
 
         // make sure this instance is not used anymore
