@@ -21,6 +21,7 @@ import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.version.Version;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
@@ -54,6 +55,38 @@ public class NodeImplTest extends AbstractJCRTest {
                 "JCR-1389: setProperty(name, new Value[0], PropertyType.LONG)"
                 + " loses property type",
                 PropertyType.LONG, property.getType());
+    }
+
+    /**
+     * Test case for JCR-1227.
+     * 
+     * @see https://issues.apache.org/jira/browse/JCR-1227
+     */
+    public void testRestoreEmptyMultiValueProperty() throws Exception {
+        node.addMixin("mix:versionable");
+        node.setProperty("test", new Value[0], PropertyType.LONG);
+        node.save();
+        assertEquals(PropertyType.LONG, node.getProperty("test").getType());
+
+        Version version = node.checkin();
+        assertEquals(PropertyType.LONG, node.getProperty("test").getType());
+
+        node.restore(version, false);
+        assertEquals(
+                "JCR-1227: Restore of empty multivalue property always"
+                + " changes property type to String",
+                PropertyType.LONG, node.getProperty("test").getType());
+
+        node.checkout();
+        node.setProperty("test", new Value[0], PropertyType.BOOLEAN);
+        node.save();
+        assertEquals(PropertyType.BOOLEAN, node.getProperty("test").getType());
+
+        node.restore(version, false);
+        assertEquals(
+                "JCR-1227: Restore of empty multivalue property always"
+                + " changes property type to String",
+                PropertyType.LONG, node.getProperty("test").getType());
     }
 
 }
