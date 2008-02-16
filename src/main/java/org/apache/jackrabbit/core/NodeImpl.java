@@ -3892,7 +3892,8 @@ public class NodeImpl extends ItemImpl implements Node {
             PropertyState prop = props[i];
             propNames.add(prop.getName());
             if (prop.isMultiValued()) {
-                internalSetProperty(props[i].getName(), prop.getValues());
+                internalSetProperty(
+                        props[i].getName(), prop.getValues(), prop.getType());
             } else {
                 internalSetProperty(props[i].getName(), prop.getValues()[0]);
             }
