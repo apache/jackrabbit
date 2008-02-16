@@ -592,17 +592,11 @@ public class NodeStateEx {
     public void copyFrom(PropertyImpl prop) throws RepositoryException {
         if (prop.getDefinition().isMultiple()) {
             InternalValue[] values = prop.internalGetValues();
-            int type;
-            if (values.length > 0) {
-                type = values[0].getType();
-            } else {
-                type = prop.getDefinition().getRequiredType();
-            }
             InternalValue[] copiedValues = new InternalValue[values.length];
             for (int i = 0; i < values.length; i++) {
                 copiedValues[i] = values[i].createCopy();
             }
-            setPropertyValues(prop.getQName(), type, copiedValues);
+            setPropertyValues(prop.getQName(), prop.getType(), copiedValues);
         } else {
             setPropertyValue(prop.getQName(), prop.internalGetValue().createCopy());
         }
