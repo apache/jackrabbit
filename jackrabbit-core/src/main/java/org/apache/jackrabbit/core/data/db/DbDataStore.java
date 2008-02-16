@@ -507,7 +507,9 @@ public class DbDataStore implements DataStore {
         } else {
             failIfNotFound = true;
         }
-        InputStream in = DbDataStore.class.getResourceAsStream(databaseType + ".properties");
+
+        InputStream in =
+            DbDataStore.class.getResourceAsStream(databaseType + ".properties");
         if (in == null) {
             if (failIfNotFound) {
                 String msg = "Configuration error: The resource '" + databaseType + ".properties' could not be found; Please verify the databaseType property";
@@ -517,14 +519,20 @@ public class DbDataStore implements DataStore {
                 return;
             }
         }
+
         Properties prop = new Properties();
         try {
-            prop.load(new BufferedInputStream(in));
+            try {
+                prop.load(in);
+            } finally {
+                in.close();
+            }
         } catch (IOException e) {
             String msg = "Configuration error: Could not read properties '" + databaseType + ".properties'";
             log.debug(msg);
             throw new DataStoreException(msg);
         }
+
         if (driver == null) {
             driver = getProperty(prop, "driver", driver);
         }
