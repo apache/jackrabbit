@@ -689,9 +689,9 @@ public class DatabaseJournal extends AbstractJournal {
             + schemaObjectPrefix + "JOURNAL where REVISION_ID > ?";
         updateGlobalStmtSQL =
             "update " + schemaObjectPrefix + "GLOBAL_REVISION"
-            + " set revision_id = revision_id + 1";
+            + " set REVISION_ID = REVISION_ID + 1";
         selectGlobalStmtSQL =
-            "select revision_id from "
+            "select REVISION_ID from "
             + schemaObjectPrefix + "GLOBAL_REVISION";
         insertRevisionStmtSQL =
             "insert into " + schemaObjectPrefix + "JOURNAL"
