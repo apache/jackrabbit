@@ -23,6 +23,7 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
 import org.apache.jackrabbit.rmi.remote.RemoteXAResource;
+import org.apache.jackrabbit.rmi.remote.SerializableXid;
 
 /**
  * Local adapter for the JCR-RMI {@link RemoteXAResource} interface.
@@ -62,7 +63,7 @@ public class ClientXAResource implements XAResource {
 
     public void commit(Xid xid, boolean onePhase) throws XAException {
         try {
-            remote.commit(xid, onePhase);
+            remote.commit(new SerializableXid(xid), onePhase);
         } catch (RemoteException e) {
             throw getXAException(e);
         }
@@ -70,7 +71,7 @@ public class ClientXAResource implements XAResource {
 
     public void end(Xid xid, int flags) throws XAException {
         try {
-            remote.end(xid, flags);
+            remote.end(new SerializableXid(xid), flags);
         } catch (RemoteException e) {
             throw getXAException(e);
         }
@@ -78,7 +79,7 @@ public class ClientXAResource implements XAResource {
 
     public void forget(Xid xid) throws XAException {
         try {
-            remote.forget(xid);
+            remote.forget(new SerializableXid(xid));
         } catch (RemoteException e) {
             throw getXAException(e);
         }
@@ -94,7 +95,7 @@ public class ClientXAResource implements XAResource {
 
     public int prepare(Xid xid) throws XAException {
         try {
-            return remote.prepare(xid);
+            return remote.prepare(new SerializableXid(xid));
         } catch (RemoteException e) {
             throw getXAException(e);
         }
@@ -110,7 +111,7 @@ public class ClientXAResource implements XAResource {
 
     public void rollback(Xid xid) throws XAException {
         try {
-            remote.rollback(xid);
+            remote.rollback(new SerializableXid(xid));
         } catch (RemoteException e) {
             throw getXAException(e);
         }
@@ -126,7 +127,7 @@ public class ClientXAResource implements XAResource {
 
     public void start(Xid xid, int flags) throws XAException {
         try {
-            remote.start(xid, flags);
+            remote.start(new SerializableXid(xid), flags);
         } catch (RemoteException e) {
             throw getXAException(e);
         }
