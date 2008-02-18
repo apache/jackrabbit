@@ -71,6 +71,15 @@ public abstract class AbstractJournal implements Journal {
     private final ReadWriteLock rwLock = new ReentrantWriterPreferenceReadWriteLock();
 
     /**
+     * The path of the local revision file on disk. Configurable through the repository.xml.
+     * 
+     *  Note: this field is not located in the FileJournal class for upgrade reasons (before
+     *  JCR-1087 had been fixed all Journals used a revision file on the local file system.
+     *  Also see {@link DatabaseJournal#initInstanceRevisionAndJanitor()}).
+     */
+    private String revision;
+
+    /**
      * {@inheritDoc}
      */
     public void init(String id, NamespaceResolver resolver) throws JournalException {
@@ -336,5 +345,22 @@ public abstract class AbstractJournal implements Journal {
     public NamePathResolver getNamePathResolver() {
         return npResolver;
     }
+ 
+    /*
+     * Bean getters and setters.
+     */ 
+     
+     /**
+      * @return the path of the cluster node's local revision file
+      */
+     public String getRevision() {
+         return revision;
+     }
 
+     /**
+      * @param revision the path of the cluster node's local revision file to set
+      */
+     public void setRevision(String revision) {
+         this.revision = revision;
+     }
 }

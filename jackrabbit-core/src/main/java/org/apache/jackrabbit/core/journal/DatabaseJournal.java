@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,6 +33,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Calendar;
 
 import javax.jcr.RepositoryException;
 
@@ -43,8 +45,6 @@ import javax.jcr.RepositoryException;
  * <p/>
  * It is configured through the following properties:
  * <ul>
- * <li><code>revision</code>: the filename where the parent cluster node's revision
- * file should be written to; this is a required property with no default value</li>
  * <li><code>driver</code>: the JDBC driver class name to use; this is a required
  * property with no default value</li>
  * <li><code>url</code>: the JDBC connection url; this is a required property with
@@ -56,7 +56,14 @@ import javax.jcr.RepositoryException;
  * <li><code>user</code>: username to specify when connecting</li>
  * <li><code>password</code>: password to specify when connecting</li>
  * <li><code>reconnectDelayMs</code>: number of milliseconds to wait before
- * trying to reconnect to the database.
+ * trying to reconnect to the database.</li>
+ * <li><code>janitorEnabled</code>: specifies whether the clean-up thread for the
+ * journal table is enabled (default = <code>false</code>)</li>
+ * <li><code>janitorSleep</code>: specifies the sleep time of the clean-up thread
+ * in seconds (only useful when the clean-up thread is enabled, default = 24 * 60 * 60,
+ * which equals 24 hours)</li>
+ * <li><code>janitorFirstRunHourOfDay</code>: specifies the hour at which the clean-up
+ * thread initiates its first run (default = <code>3</code> which means 3:00 at night)</li>
  * <p>
  * JNDI can be used to get the connection. In this case, use the javax.naming.InitialContext as the driver,
  * and the JNDI name as the URL. If the user and password are configured in the JNDI resource,
@@ -84,6 +91,11 @@ public class DatabaseJournal extends AbstractJournal {
      * Default journal table name, used to check schema completeness.
      */
     private static final String DEFAULT_JOURNAL_TABLE = "JOURNAL";
+
+    /**
+     * Local revisions table name, used to check schema completeness.
+     */
+    private static final String LOCAL_REVISIONS_TABLE = "LOCAL_REVISIONS";
 
     /**
      * Default reconnect delay in milliseconds.
@@ -151,6 +163,31 @@ public class DatabaseJournal extends AbstractJournal {
     private PreparedStatement insertRevisionStmt;
 
     /**
+     * Statement returning the minimum of the local revisions.
+     */
+    private PreparedStatement selectMinLocalRevisionStmt;
+
+    /**
+     * Statement removing a set of revisions with from the journal table.
+     */
+    private PreparedStatement cleanRevisionStmt;
+
+    /**
+     * Statement returning the local revision of this cluster node.
+     */
+    private PreparedStatement getLocalRevisionStmt;
+    
+    /**
+     * Statement for inserting the local revision of this cluster node. 
+     */
+    private PreparedStatement insertLocalRevisionStmt;
+    
+    /**
+     * Statement for updating the local revision of this cluster node. 
+     */
+    private PreparedStatement updateLocalRevisionStmt;
+
+    /**
      * Auto commit level.
      */
     private int lockLevel;
@@ -165,6 +202,35 @@ public class DatabaseJournal extends AbstractJournal {
      */
     private long reconnectTimeMs;
 
+    /**
+     * Whether the revision table janitor thread is enabled.
+     */
+    private boolean janitorEnabled = false;
+
+    /**
+     * The sleep time of the revision table janitor in seconds, 1 day default.
+     */
+    private int janitorSleep = 60 * 60 * 24;
+
+    /**
+     * Indicates when the next run of the janitor is scheduled.
+     * The first run is scheduled by default at 03:00 hours.
+     */
+    private Calendar janitorNextRun = Calendar.getInstance();
+    {
+        if (janitorNextRun.get(Calendar.HOUR_OF_DAY) >= 3) {
+            janitorNextRun.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        janitorNextRun.set(Calendar.HOUR_OF_DAY, 3);
+        janitorNextRun.set(Calendar.MINUTE, 0);
+        janitorNextRun.set(Calendar.SECOND, 0);
+        janitorNextRun.set(Calendar.MILLISECOND, 0);
+    }
+
+    /**
+     * The instance that manages the local revision.
+     */
+    private DatabaseRevision databaseRevision;
     /**
      * SQL statement returning all revisions within a range.
      */
@@ -184,6 +250,31 @@ public class DatabaseJournal extends AbstractJournal {
      * SQL statement appending a new record.
      */
     protected String insertRevisionStmtSQL;
+
+    /**
+     * SQL statement returning the minimum of the local revisions.
+     */
+    protected String selectMinLocalRevisionStmtSQL;
+
+    /**
+     * SQL statement removing a set of revisions with from the journal table.
+     */
+    protected String cleanRevisionStmtSQL;
+    
+    /**
+     * SQL statement returning the local revision of this cluster node.
+     */
+    protected String getLocalRevisionStmtSQL;
+    
+    /**
+     * SQL statement for inserting the local revision of this cluster node. 
+     */
+    protected String insertLocalRevisionStmtSQL;
+
+    /**
+     * SQL statement for updating the local revision of this cluster node. 
+     */
+    protected String updateLocalRevisionStmtSQL;
 
     /**
      * Schema object prefix, bean property.
@@ -214,6 +305,7 @@ public class DatabaseJournal extends AbstractJournal {
             checkSchema();
             buildSQLStatements();
             prepareStatements();
+            initInstanceRevisionAndJanitor();
         } catch (Exception e) {
             String msg = "Unable to create connection.";
             throw new JournalException(msg, e);
@@ -256,6 +348,48 @@ public class DatabaseJournal extends AbstractJournal {
             String msg = "Unable to load driver class.";
             throw new JournalException(msg, e);
         }
+    }
+
+    /**
+     * Initialize the instance revision manager and the janitor thread.
+     *
+     * @throws JournalException on error
+     */
+    protected void initInstanceRevisionAndJanitor() throws Exception {
+        databaseRevision = new DatabaseRevision();
+
+        // Make sure that the LOCAL_REVISIONS table exists (checkSchema has already been called) (see JCR-1087)
+        checkLocalRevisionSchema();
+
+        // Get the local file revision from disk (upgrade; see JCR-1087)
+        long localFileRevision = 0L;
+        if (getRevision() != null) {
+            InstanceRevision currentFileRevision = new FileRevision(new File(getRevision()));
+            localFileRevision = currentFileRevision.get();
+            currentFileRevision.close();
+        }
+
+        // Now write the localFileRevision (or 0 if it does not exist) to the LOCAL_REVISIONS
+        // table, but only if the LOCAL_REVISIONS table has no entry yet for this cluster node
+        long localRevision = databaseRevision.init(localFileRevision);
+        log.info("Initialized local revision to " + localRevision);
+
+        // Start the clean-up thread if necessary.
+        if (janitorEnabled) {
+            Thread t1 = new Thread(new RevisionTableJanitor(), "ClusterRevisionJanitor");
+            t1.setDaemon(true);
+            t1.start();
+            log.info("Cluster revision janitor thread started; first run scheduled at " + janitorNextRun.getTime());
+        } else {
+            log.info("Cluster revision janitor thread not started");
+        }
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.jackrabbit.core.journal.Journal#getInstanceRevision()
+     */
+    public InstanceRevision getInstanceRevision() throws JournalException {
+        return databaseRevision;
     }
 
     /**
@@ -452,7 +586,17 @@ public class DatabaseJournal extends AbstractJournal {
         selectGlobalStmt = null;
         close(insertRevisionStmt);
         insertRevisionStmt = null;
-
+        close(selectMinLocalRevisionStmt);
+        selectMinLocalRevisionStmt = null;
+        close(cleanRevisionStmt);
+        cleanRevisionStmt = null;
+        close(getLocalRevisionStmt);
+        getLocalRevisionStmt = null;
+        close(insertLocalRevisionStmt);
+        insertLocalRevisionStmt = null;
+        close(updateLocalRevisionStmt);
+        updateLocalRevisionStmt = null;
+        
         close(connection);
         connection = null;
     }
@@ -607,8 +751,7 @@ public class DatabaseJournal extends AbstractJournal {
      * @throws Exception if an error occurs
      */
     private void checkSchema() throws Exception {
-        if (!schemaExists(connection.getMetaData())) {
-            // read ddl from resources
+        if (!tableExists(connection.getMetaData(), schemaObjectPrefix + DEFAULT_JOURNAL_TABLE)) {            // read ddl from resources
             InputStream in = DatabaseJournal.class.getResourceAsStream(schema + ".ddl");
             if (in == null) {
                 String msg = "No schema-specific DDL found: '" + schema + ".ddl"
@@ -643,6 +786,51 @@ public class DatabaseJournal extends AbstractJournal {
     }
 
     /**
+     * Checks if the local revision schema objects exist and creates them if they
+     * don't exist yet.
+     *
+     * @throws Exception if an error occurs
+     */
+    private void checkLocalRevisionSchema() throws Exception {
+        if (!tableExists(connection.getMetaData(), schemaObjectPrefix + LOCAL_REVISIONS_TABLE)) {
+            log.info("Creating " + schemaObjectPrefix + LOCAL_REVISIONS_TABLE + " table");
+            // read ddl from resources
+            InputStream in = DatabaseJournal.class.getResourceAsStream(schema + ".ddl");
+            if (in == null) {
+                String msg = "No schema-specific DDL found: '" + schema + ".ddl" +
+                        "', falling back to '" + DEFAULT_DDL_NAME + "'.";
+                log.info(msg);
+                in = DatabaseJournal.class.getResourceAsStream(DEFAULT_DDL_NAME);
+                if (in == null) {
+                    msg = "Unable to load '" + DEFAULT_DDL_NAME + "'.";
+                    throw new JournalException(msg);
+                }
+            }
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            Statement stmt = connection.createStatement();
+            try {
+                String sql = reader.readLine();
+                while (sql != null) {
+                    // Skip comments and empty lines, and select only the statement
+                    // to create the LOCAL_REVISIONS table.
+                    if (!sql.startsWith("#") && sql.length() > 0
+                            && sql.contains(LOCAL_REVISIONS_TABLE)) {
+                        // replace prefix variable
+                        sql = createSchemaSQL(sql);
+                        // execute sql stmt
+                        stmt.executeUpdate(sql);
+                    }
+                    // read next sql stmt
+                    sql = reader.readLine();
+                }
+            } finally {
+                close(in);
+                close(stmt);
+            }
+        }
+    }
+
+    /**
      * Checks whether the required table(s) exist in the schema. May be
      * overridden by subclasses to allow different table names.
      *
@@ -650,10 +838,9 @@ public class DatabaseJournal extends AbstractJournal {
      * @return <code>true</code> if the schema exists
      * @throws SQLException if an SQL error occurs
      */
-    protected boolean schemaExists(DatabaseMetaData metaData)
-            throws SQLException {
+    protected boolean tableExists(DatabaseMetaData metaData, String tableName)
+        throws SQLException {
 
-        String tableName = schemaObjectPrefix + DEFAULT_JOURNAL_TABLE;
         if (metaData.storesLowerCaseIdentifiers()) {
             tableName = tableName.toLowerCase();
         } else if (metaData.storesUpperCaseIdentifiers()) {
@@ -697,6 +884,19 @@ public class DatabaseJournal extends AbstractJournal {
             "insert into " + schemaObjectPrefix + "JOURNAL"
             + " (REVISION_ID, JOURNAL_ID, PRODUCER_ID, REVISION_DATA) "
             + "values (?,?,?,?)";
+        selectMinLocalRevisionStmtSQL =
+            "select MIN(REVISION_ID) from " + schemaObjectPrefix + "LOCAL_REVISIONS";
+        cleanRevisionStmtSQL =
+            "delete from " + schemaObjectPrefix + "JOURNAL " + "where REVISION_ID < ?";
+        getLocalRevisionStmtSQL =
+            "select REVISION_ID from " + schemaObjectPrefix + "LOCAL_REVISIONS "
+            + "where JOURNAL_ID = ?";
+        insertLocalRevisionStmtSQL =
+            "insert into " + schemaObjectPrefix + "LOCAL_REVISIONS "
+            + "(REVISION_ID, JOURNAL_ID) values (?,?)";
+        updateLocalRevisionStmtSQL =
+            "update " + schemaObjectPrefix + "LOCAL_REVISIONS "
+            + "set REVISION_ID = ? where JOURNAL_ID = ?";
     }
 
     /**
@@ -709,6 +909,11 @@ public class DatabaseJournal extends AbstractJournal {
         updateGlobalStmt = connection.prepareStatement(updateGlobalStmtSQL);
         selectGlobalStmt = connection.prepareStatement(selectGlobalStmtSQL);
         insertRevisionStmt = connection.prepareStatement(insertRevisionStmtSQL);
+        selectMinLocalRevisionStmt = connection.prepareStatement(selectMinLocalRevisionStmtSQL);
+        cleanRevisionStmt = connection.prepareStatement(cleanRevisionStmtSQL);
+        getLocalRevisionStmt = connection.prepareStatement(getLocalRevisionStmtSQL);
+        insertLocalRevisionStmt = connection.prepareStatement(insertLocalRevisionStmtSQL);
+        updateLocalRevisionStmt = connection.prepareStatement(updateLocalRevisionStmtSQL);
     }
 
     /**
@@ -742,6 +947,18 @@ public class DatabaseJournal extends AbstractJournal {
         return reconnectDelayMs;
     }
 
+    public boolean getJanitorEnabled() {
+        return janitorEnabled;
+    }
+
+    public int getJanitorSleep() {
+        return janitorSleep;
+    }
+
+    public int getJanitorFirstRunHourOfDay() {
+        return janitorNextRun.get(Calendar.HOUR_OF_DAY);
+    }
+
     /**
      * Bean setters
      */
@@ -771,5 +988,194 @@ public class DatabaseJournal extends AbstractJournal {
 
     public void setReconnectDelayMs(long reconnectDelayMs) {
         this.reconnectDelayMs = reconnectDelayMs;
+    }
+
+    public void setJanitorEnabled(boolean enabled) {
+        this.janitorEnabled = enabled;
+    }
+
+    public void setJanitorSleep(int sleep) {
+        this.janitorSleep = sleep;
+    }
+
+    public void setJanitorFirstRunHourOfDay(int hourOfDay) {
+        janitorNextRun = Calendar.getInstance();
+        if (janitorNextRun.get(Calendar.HOUR_OF_DAY) >= hourOfDay) {
+            janitorNextRun.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        janitorNextRun.set(Calendar.HOUR_OF_DAY, hourOfDay);
+        janitorNextRun.set(Calendar.MINUTE, 0);
+        janitorNextRun.set(Calendar.SECOND, 0);
+        janitorNextRun.set(Calendar.MILLISECOND, 0);
+    }
+   
+    /**
+     * This class manages the local revision of the cluster node. It
+     * persists the local revision in the LOCAL_REVISIONS table in the
+     * clustering database.
+     */
+    public class DatabaseRevision implements InstanceRevision {
+
+        /**
+         * The cached local revision of this cluster node.
+         */
+        private long localRevision;
+
+        /**
+         * Indicates whether the init method has been called. 
+         */
+        private boolean initialized = false;
+
+        /**
+         * Checks whether there's a local revision value in the database for this
+         * cluster node. If not, it writes the given default revision to the database.
+         *
+         * @param revision the default value for the local revision counter
+         * @return the local revision
+         * @throws JournalException on error
+         */
+        protected synchronized long init(long revision) throws JournalException {
+            try {
+                // Check whether the connection is available
+                checkConnection();
+
+                // Check whether there is an entry in the database.
+                getLocalRevisionStmt.clearParameters();
+                getLocalRevisionStmt.clearWarnings();
+                getLocalRevisionStmt.setString(1, getId());
+                getLocalRevisionStmt.execute();
+                ResultSet rs = getLocalRevisionStmt.getResultSet();
+                boolean exists = rs.next();
+                if (exists) {
+                    revision = rs.getLong(1);
+                }
+                rs.close();
+
+                // Insert the given revision in the database
+                if (!exists) {
+                    insertLocalRevisionStmt.clearParameters();
+                    insertLocalRevisionStmt.clearWarnings();
+                    insertLocalRevisionStmt.setLong(1, revision);
+                    insertLocalRevisionStmt.setString(2, getId());
+                    insertLocalRevisionStmt.execute();
+                }
+
+                // Set the cached local revision and return
+                localRevision = revision;
+                initialized = true;
+                return revision;
+
+            } catch (SQLException e) {
+                log.warn("Failed to initialize local revision.", e);
+                DatabaseJournal.this.close(true);
+                throw new JournalException("Failed to initialize local revision", e);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public synchronized long get() {
+            if (!initialized) {
+                throw new IllegalStateException("instance has not yet been initialized");
+            }
+            return localRevision;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public synchronized void set(long localRevision) throws JournalException {
+
+            if (!initialized) {
+                throw new IllegalStateException("instance has not yet been initialized");
+            }
+
+            // Update the cached value and the table with local revisions.
+            try {
+                // Check whether the connection is available
+                checkConnection();
+                updateLocalRevisionStmt.clearParameters();
+                updateLocalRevisionStmt.clearWarnings();
+                updateLocalRevisionStmt.setLong(1, localRevision);
+                updateLocalRevisionStmt.setString(2, getId());
+                updateLocalRevisionStmt.execute();
+                this.localRevision = localRevision;
+            } catch (SQLException e) {
+                log.warn("Failed to update local revision.", e);
+                DatabaseJournal.this.close(true);
+            }
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        public synchronized void close() {
+            // Do nothing: The statements are closed in DatabaseJournal.close()
+        }
+    }
+
+    /**
+     * Class for maintaining the revision table. This is only useful if all
+     * JR information except the search index is in the database (i.e., node types
+     * etc). In that case, revision data can safely be thrown away from the JOURNAL table.
+     */
+    public class RevisionTableJanitor implements Runnable {
+
+        /**
+         * {@inheritDoc}
+         */
+        public void run() {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    log.info("Next clean-up run scheduled at " + janitorNextRun.getTime());
+                    long sleepTime = janitorNextRun.getTimeInMillis() - System.currentTimeMillis();
+                    if (sleepTime > 0) {
+                        Thread.sleep(sleepTime);
+                    }
+                    cleanUpOldRevisions();
+                    janitorNextRun.add(Calendar.SECOND, janitorSleep);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            log.info("Interrupted: stopping clean-up task.");
+        }
+        
+        /**
+         * Cleans old revisions from the clustering table.
+         */
+        protected void cleanUpOldRevisions() {
+            try {
+                long minRevision = 0;
+
+                // Check whether the connection is available
+                checkConnection();
+
+                // Find the minimal local revision
+                selectMinLocalRevisionStmt.clearParameters();
+                selectMinLocalRevisionStmt.clearWarnings();
+                selectMinLocalRevisionStmt.execute();
+                ResultSet rs = selectMinLocalRevisionStmt.getResultSet();
+                boolean cleanUp = rs.next();
+                if (cleanUp) {
+                    minRevision = rs.getLong(1);
+                }
+                rs.close();
+
+                // Clean up if necessary:
+                if (cleanUp) {
+                    cleanRevisionStmt.clearParameters();
+                    cleanRevisionStmt.clearWarnings();
+                    cleanRevisionStmt.setLong(1, minRevision);
+                    cleanRevisionStmt.execute();
+                    log.info("Cleaned old revisions up to revision " + minRevision + ".");
+                }
+
+            } catch (Exception e) {
+                log.warn("Failed to clean up old revisions.", e);
+                close(true);
+            }
+        }
     }
 }

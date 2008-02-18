@@ -72,4 +72,11 @@ public interface Journal {
      */
     void close();
 
+    /**
+     * Gets the instance that manages the cluster node's local revision.
+     *
+     * @return the InstanceRevision manager
+     * @throws JournalException on error
+     */
+    public InstanceRevision getInstanceRevision() throws JournalException;
 }

@@ -32,6 +32,8 @@ import java.util.Comparator;
  * file.<p/>
  * It is configured through the following properties:
  * <ul>
+ * <li><code>revision</code>: the filename where the parent cluster node's revision
+ * file should be written to; this is a required property with no default value</li>
  * <li><code>directory</code>: the directory where to keep the journal file as
  * well as the rotated files; this is a required property with no default value</li>
  * <li><code>basename</code>: the basename of journal files; the default
@@ -103,6 +105,10 @@ public class FileJournal extends AbstractJournal {
     public void init(String id, NamespaceResolver resolver) throws JournalException {
         super.init(id, resolver);
 
+        if (getRevision() == null) {
+            String msg = "Revision not specified.";
+            throw new JournalException(msg);
+        }
         if (directory == null) {
             String msg = "Directory not specified.";
             throw new JournalException(msg);
@@ -133,7 +139,7 @@ public class FileJournal extends AbstractJournal {
     /**
      * {@inheritDoc}
      */
-    protected long getRevision() throws JournalException {
+    protected long getGlobalRevision() throws JournalException {
         return globalRevision.get();
     }
 
@@ -143,7 +149,7 @@ public class FileJournal extends AbstractJournal {
     protected RecordIterator getRecords(long startRevision)
             throws JournalException {
 
-        long stopRevision = getRevision();
+        long stopRevision = getGlobalRevision();
 
         File[] logFiles = null;
         if (startRevision < stopRevision) {
@@ -207,6 +213,13 @@ public class FileJournal extends AbstractJournal {
      * {@inheritDoc}
      */
     public void close() {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public InstanceRevision getInstanceRevision() throws JournalException {
+        return new FileRevision(new File(getRevision()));
     }
 
     /**

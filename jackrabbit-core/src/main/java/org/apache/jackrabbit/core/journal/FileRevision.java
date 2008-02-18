@@ -26,7 +26,7 @@ import java.io.RandomAccessFile;
 /**
  * Maintains a file-based revision counter with locking, assuring uniqueness.
  */
-public class FileRevision {
+public class FileRevision implements InstanceRevision {
 
     /**
      * Logger.
