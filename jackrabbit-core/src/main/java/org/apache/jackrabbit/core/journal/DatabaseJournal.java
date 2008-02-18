@@ -814,7 +814,7 @@ public class DatabaseJournal extends AbstractJournal {
                     // Skip comments and empty lines, and select only the statement
                     // to create the LOCAL_REVISIONS table.
                     if (!sql.startsWith("#") && sql.length() > 0
-                            && sql.contains(LOCAL_REVISIONS_TABLE)) {
+                            && sql.indexOf(LOCAL_REVISIONS_TABLE) != -1) {
                         // replace prefix variable
                         sql = createSchemaSQL(sql);
                         // execute sql stmt
