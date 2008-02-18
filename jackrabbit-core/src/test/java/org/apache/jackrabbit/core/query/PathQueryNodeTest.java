@@ -20,9 +20,11 @@ import java.util.Arrays;
 
 import junit.framework.TestCase;
 
-import org.apache.jackrabbit.core.query.xpath.XPathQueryBuilder;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeFactory;
+import org.apache.jackrabbit.spi.commons.query.QueryRootNode;
+import org.apache.jackrabbit.spi.commons.query.xpath.XPathQueryBuilder;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;

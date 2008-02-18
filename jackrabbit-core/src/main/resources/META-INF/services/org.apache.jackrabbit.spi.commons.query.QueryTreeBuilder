@@ -18,5 +18,5 @@
 # with Jackrabbit.
 #
 
-org.apache.jackrabbit.core.query.xpath.QueryBuilder
-org.apache.jackrabbit.core.query.sql.QueryBuilder
+org.apache.jackrabbit.spi.commons.query.xpath.QueryBuilder
+org.apache.jackrabbit.spi.commons.query.sql.QueryBuilder

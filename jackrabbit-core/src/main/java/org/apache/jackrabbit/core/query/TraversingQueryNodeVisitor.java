@@ -16,6 +16,16 @@
  */
 package org.apache.jackrabbit.core.query;
 
+import org.apache.jackrabbit.spi.commons.query.AndQueryNode;
+import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeVisitor;
+import org.apache.jackrabbit.spi.commons.query.DerefQueryNode;
+import org.apache.jackrabbit.spi.commons.query.LocationStepQueryNode;
+import org.apache.jackrabbit.spi.commons.query.NotQueryNode;
+import org.apache.jackrabbit.spi.commons.query.OrQueryNode;
+import org.apache.jackrabbit.spi.commons.query.OrderQueryNode;
+import org.apache.jackrabbit.spi.commons.query.PathQueryNode;
+import org.apache.jackrabbit.spi.commons.query.QueryRootNode;
+
 /**
  * <code>TraversingQueryNodeVisitor</code> implements a base class for a
  * traversing query node visitor.
