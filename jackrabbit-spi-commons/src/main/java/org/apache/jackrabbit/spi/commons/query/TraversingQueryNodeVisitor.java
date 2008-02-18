@@ -14,17 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.query;
-
-import org.apache.jackrabbit.spi.commons.query.AndQueryNode;
-import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeVisitor;
-import org.apache.jackrabbit.spi.commons.query.DerefQueryNode;
-import org.apache.jackrabbit.spi.commons.query.LocationStepQueryNode;
-import org.apache.jackrabbit.spi.commons.query.NotQueryNode;
-import org.apache.jackrabbit.spi.commons.query.OrQueryNode;
-import org.apache.jackrabbit.spi.commons.query.OrderQueryNode;
-import org.apache.jackrabbit.spi.commons.query.PathQueryNode;
-import org.apache.jackrabbit.spi.commons.query.QueryRootNode;
+package org.apache.jackrabbit.spi.commons.query;
 
 /**
  * <code>TraversingQueryNodeVisitor</code> implements a base class for a
