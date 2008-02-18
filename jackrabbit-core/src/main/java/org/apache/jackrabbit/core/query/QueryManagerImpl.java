@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelFactory;
 import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModel;
 import org.apache.jackrabbit.core.query.qom.QueryObjectModelFactoryImpl;
 import org.apache.jackrabbit.core.query.qom.QueryObjectModelTree;
+import org.apache.jackrabbit.spi.commons.query.QueryTreeBuilderRegistry;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;

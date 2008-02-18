@@ -41,27 +41,6 @@
         <artifactId>maven-antrun-plugin</artifactId>
         <executions>
           <execution>
-            <id>delete-sources</id>
-            <phase>process-sources</phase>
-            <configuration>
-              <tasks>
-                <echo>Remove files that have been customized in Jackrabbit</echo>
-                <delete>
-                  <fileset dir="${project.build.directory}/generated-src/main/java/org/apache/jackrabbit/core/query">
-                    <include name="sql/ASTLiteral.java"/>
-                    <include name="sql/ASTContainsExpression.java"/>
-                    <include name="sql/ASTPredicate.java"/>
-                    <include name="sql/ASTIdentifier.java"/>
-                    <include name="xpath/SimpleNode.java"/>
-                  </fileset>
-                </delete>
-              </tasks>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-          <execution>
             <id>process-test-resources</id>
             <phase>process-test-resources</phase>
             <configuration>
@@ -108,54 +87,6 @@
               <outputDirectory>${project.build.directory}/generated-src/main/java</outputDirectory>
               <timestampDirectory>${project.build.directory}/generated-src/javacc-timestamp</timestampDirectory>
               <packageName>org.apache.jackrabbit.core.query.lucene.fulltext</packageName>
-            </configuration>
-            <goals>
-              <goal>javacc</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>sql-jjtree</id>
-            <configuration>
-              <sourceDirectory>${basedir}/src/main/javacc/sql</sourceDirectory>
-              <outputDirectory>${project.build.directory}/generated-src/main/java/org/apache/jackrabbit/core/query/sql</outputDirectory>
-              <timestampDirectory>${project.build.directory}/generated-src/javacc-timestamp</timestampDirectory>
-              <packageName>org.apache.jackrabbit.core.query.sql</packageName>
-            </configuration>
-            <goals>
-              <goal>jjtree</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>sql-javacc</id>
-            <configuration>
-              <sourceDirectory>${project.build.directory}/generated-src/main/java/org/apache/jackrabbit/core/query/sql</sourceDirectory>
-              <outputDirectory>${project.build.directory}/generated-src/main/java</outputDirectory>
-              <timestampDirectory>${project.build.directory}/generated-src/javacc-timestamp</timestampDirectory>
-              <packageName>org.apache.jackrabbit.core.query.sql</packageName>
-            </configuration>
-            <goals>
-              <goal>javacc</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>xpath-jjtree</id>
-            <configuration>
-              <sourceDirectory>${basedir}/src/main/javacc/xpath</sourceDirectory>
-              <outputDirectory>${project.build.directory}/generated-src/main/java/org/apache/jackrabbit/core/query/xpath</outputDirectory>
-              <timestampDirectory>${project.build.directory}/generated-src/javacc-timestamp</timestampDirectory>
-              <packageName>org.apache.jackrabbit.core.query.xpath</packageName>
-            </configuration>
-            <goals>
-              <goal>jjtree</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>xpath-javacc</id>
-            <configuration>
-              <sourceDirectory>${project.build.directory}/generated-src/main/java/org/apache/jackrabbit/core/query/xpath</sourceDirectory>
-              <outputDirectory>${project.build.directory}/generated-src/main/java</outputDirectory>
-              <timestampDirectory>${project.build.directory}/generated-src/javacc-timestamp</timestampDirectory>
-              <packageName>org.apache.jackrabbit.core.query.xpath</packageName>
             </configuration>
             <goals>
               <goal>javacc</goal>

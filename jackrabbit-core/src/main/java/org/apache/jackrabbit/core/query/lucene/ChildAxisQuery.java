@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.query.LocationStepQueryNode;
 import org.apache.jackrabbit.core.query.lucene.hits.AdaptingHits;
 import org.apache.jackrabbit.core.query.lucene.hits.Hits;
 import org.apache.jackrabbit.core.query.lucene.hits.ScorerHits;
@@ -25,6 +24,7 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.query.LocationStepQueryNode;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;

@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.query.QueryHandler;
-import org.apache.jackrabbit.core.query.QueryRootNode;
+import org.apache.jackrabbit.spi.commons.query.QueryRootNode;
 
 import java.io.IOException;
 

@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.query.QueryRootNode;
-
 import java.io.IOException;
+
+import org.apache.jackrabbit.spi.commons.query.QueryRootNode;
 
 /**
  * <code>SpellSuggestion</code> implements a spell suggestion, which uses the
