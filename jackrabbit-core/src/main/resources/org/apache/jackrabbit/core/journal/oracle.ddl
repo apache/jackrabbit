@@ -16,6 +16,7 @@ create table ${schemaObjectPrefix}JOURNAL (REVISION_ID number(20,0) NOT NULL, JO
 create unique index ${schemaObjectPrefix}JOURNAL_IDX on ${schemaObjectPrefix}JOURNAL (REVISION_ID) ${tableSpace}
 create table ${schemaObjectPrefix}GLOBAL_REVISION (REVISION_ID number(20,0) NOT NULL) ${tableSpace}
 create unique index ${schemaObjectPrefix}GLOBAL_REVISION_IDX on ${schemaObjectPrefix}GLOBAL_REVISION (REVISION_ID) ${tableSpace}
+create table ${schemaObjectPrefix}LOCAL_REVISIONS (JOURNAL_ID varchar(255) NOT NULL, REVISION_ID number(20,0) NOT NULL)
 
 # Inserting the one and only revision counter record now helps avoiding race conditions
 insert into ${schemaObjectPrefix}GLOBAL_REVISION VALUES(0)

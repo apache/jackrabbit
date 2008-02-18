@@ -26,7 +26,7 @@ import org.apache.jackrabbit.core.journal.Journal;
 import org.apache.jackrabbit.core.journal.RecordConsumer;
 import org.apache.jackrabbit.core.journal.Record;
 import org.apache.jackrabbit.core.journal.JournalException;
-import org.apache.jackrabbit.core.journal.FileRevision;
+import org.apache.jackrabbit.core.journal.InstanceRevision;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.observation.EventState;
@@ -50,7 +50,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
-import java.io.File;
 
 /**
  * Default clustered node implementation.
@@ -62,11 +61,6 @@ public class ClusterNode implements Runnable,
      * System property specifying a node id to use.
      */
     public static final String SYSTEM_PROPERTY_NODE_ID = "org.apache.jackrabbit.core.cluster.node_id";
-
-    /**
-     * Revision counter parameter name.
-     */
-    private static final String REVISION_NAME = "revision";
 
     /**
      * Used for padding short string representations.
@@ -174,9 +168,9 @@ public class ClusterNode implements Runnable,
     private NodeTypeEventListener nodeTypeListener;
 
     /**
-     * Instance revision file.
+     * Instance revision manager.
      */
-    private FileRevision instanceRevision;
+    private InstanceRevision instanceRevision;
 
     /**
      * Workspace name used when consuming records.
@@ -219,18 +213,11 @@ public class ClusterNode implements Runnable,
         clusterNodeId = getClusterNodeId(cc.getId());
         syncDelay = cc.getSyncDelay();
 
-        JournalConfig jc = cc.getJournalConfig();
-
-        String revisionName = jc.getParameters().getProperty(REVISION_NAME);
-        if (revisionName == null) {
-            String msg = "Revision not specified.";
-            throw new ClusterException(msg);
-        }
         try {
-            instanceRevision = new FileRevision(new File(revisionName));
-
+            JournalConfig jc = cc.getJournalConfig();
             journal = (Journal) jc.newInstance();
             journal.init(clusterNodeId, clusterContext.getNamespaceResovler());
+            instanceRevision = journal.getInstanceRevision();
             journal.register(this);
         } catch (ConfigurationException e) {
             throw new ClusterException(e.getMessage(), e.getCause());
