@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.lucene.document.Document;
-
 import java.io.IOException;
 
 /**
