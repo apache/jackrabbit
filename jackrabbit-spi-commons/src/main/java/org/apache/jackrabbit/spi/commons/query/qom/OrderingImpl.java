@@ -18,8 +18,8 @@ package org.apache.jackrabbit.core.query.qom;
 
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
-import org.apache.jackrabbit.core.query.jsr283.qom.Ordering;
-import org.apache.jackrabbit.core.query.jsr283.qom.DynamicOperand;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Ordering;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DynamicOperand;
 
 /**
  * <code>OrderingImpl</code>...
@@ -61,8 +61,8 @@ public class OrderingImpl extends AbstractQOMNode implements Ordering {
     /**
      * Gets the order.
      *
-     * @return either <ul> <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#ORDER_ASCENDING}
-     *         or</li> <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#ORDER_DESCENDING}</li>
+     * @return either <ul> <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#ORDER_ASCENDING}
+     *         or</li> <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#ORDER_DESCENDING}</li>
      *         </ul>
      */
     public int getOrder() {

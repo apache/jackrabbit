@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.query.qom;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.Name;
 
-import org.apache.jackrabbit.core.query.jsr283.qom.DescendantNodeJoinCondition;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DescendantNodeJoinCondition;
 
 /**
  * <code>DescendantNodeJoinConditionImpl</code>...

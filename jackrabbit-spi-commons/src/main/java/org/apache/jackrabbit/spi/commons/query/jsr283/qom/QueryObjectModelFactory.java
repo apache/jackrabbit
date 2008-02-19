@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.query.jsr283.qom;
+package org.apache.jackrabbit.spi.commons.query.jsr283.qom;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.RepositoryException;
@@ -24,7 +24,7 @@ import javax.jcr.Value;
  * A <code>QueryObjectModelFactory</code> creates instances of the JCR query
  * object model.
  * <p/>
- * Refer to {@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModel} for a description of the query object
+ * Refer to {@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel} for a description of the query object
  * model.
  *
  * @since JCR 2.0

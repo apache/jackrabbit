@@ -21,40 +21,40 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Path;
 
-import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelFactory;
-import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModel;
-import org.apache.jackrabbit.core.query.jsr283.qom.Selector;
-import org.apache.jackrabbit.core.query.jsr283.qom.Constraint;
-import org.apache.jackrabbit.core.query.jsr283.qom.Ordering;
-import org.apache.jackrabbit.core.query.jsr283.qom.Column;
-import org.apache.jackrabbit.core.query.jsr283.qom.Source;
-import org.apache.jackrabbit.core.query.jsr283.qom.Join;
-import org.apache.jackrabbit.core.query.jsr283.qom.JoinCondition;
-import org.apache.jackrabbit.core.query.jsr283.qom.EquiJoinCondition;
-import org.apache.jackrabbit.core.query.jsr283.qom.SameNodeJoinCondition;
-import org.apache.jackrabbit.core.query.jsr283.qom.ChildNodeJoinCondition;
-import org.apache.jackrabbit.core.query.jsr283.qom.DescendantNodeJoinCondition;
-import org.apache.jackrabbit.core.query.jsr283.qom.And;
-import org.apache.jackrabbit.core.query.jsr283.qom.Or;
-import org.apache.jackrabbit.core.query.jsr283.qom.Not;
-import org.apache.jackrabbit.core.query.jsr283.qom.Comparison;
-import org.apache.jackrabbit.core.query.jsr283.qom.DynamicOperand;
-import org.apache.jackrabbit.core.query.jsr283.qom.StaticOperand;
-import org.apache.jackrabbit.core.query.jsr283.qom.PropertyExistence;
-import org.apache.jackrabbit.core.query.jsr283.qom.FullTextSearch;
-import org.apache.jackrabbit.core.query.jsr283.qom.SameNode;
-import org.apache.jackrabbit.core.query.jsr283.qom.ChildNode;
-import org.apache.jackrabbit.core.query.jsr283.qom.DescendantNode;
-import org.apache.jackrabbit.core.query.jsr283.qom.PropertyValue;
-import org.apache.jackrabbit.core.query.jsr283.qom.Length;
-import org.apache.jackrabbit.core.query.jsr283.qom.NodeName;
-import org.apache.jackrabbit.core.query.jsr283.qom.NodeLocalName;
-import org.apache.jackrabbit.core.query.jsr283.qom.FullTextSearchScore;
-import org.apache.jackrabbit.core.query.jsr283.qom.LowerCase;
-import org.apache.jackrabbit.core.query.jsr283.qom.UpperCase;
-import org.apache.jackrabbit.core.query.jsr283.qom.BindVariableValue;
-import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants;
-import org.apache.jackrabbit.core.query.jsr283.qom.Literal;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Selector;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Constraint;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Ordering;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Column;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Source;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Join;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.JoinCondition;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.EquiJoinCondition;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.SameNodeJoinCondition;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.ChildNodeJoinCondition;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DescendantNodeJoinCondition;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.And;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Or;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Not;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Comparison;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DynamicOperand;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.StaticOperand;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyExistence;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.FullTextSearch;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.SameNode;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.ChildNode;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DescendantNode;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyValue;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Length;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.NodeName;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.NodeLocalName;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.FullTextSearchScore;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.LowerCase;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.UpperCase;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.BindVariableValue;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Literal;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.RepositoryException;
@@ -235,9 +235,9 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
      *
      * @param left          the left node-tuple source; non-null
      * @param right         the right node-tuple source; non-null
-     * @param joinType      either <ul> <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_INNER},</li>
-     *                      <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_LEFT_OUTER},</li>
-     *                      <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_RIGHT_OUTER}</li>
+     * @param joinType      either <ul> <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_INNER},</li>
+     *                      <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_LEFT_OUTER},</li>
+     *                      <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_RIGHT_OUTER}</li>
      *                      </ul>
      * @param joinCondition the join condition; non-null
      * @return the join; non-null

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.query.jsr283.qom;
+package org.apache.jackrabbit.spi.commons.query.jsr283.qom;
 
 /**
  * An operand whose value can be determined from static analysis of the query,

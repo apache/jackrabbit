@@ -18,9 +18,9 @@ package org.apache.jackrabbit.core.query.qom;
 
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
-import org.apache.jackrabbit.core.query.jsr283.qom.Comparison;
-import org.apache.jackrabbit.core.query.jsr283.qom.DynamicOperand;
-import org.apache.jackrabbit.core.query.jsr283.qom.StaticOperand;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Comparison;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DynamicOperand;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.StaticOperand;
 
 /**
  * <code>ComparisonImpl</code>...
@@ -64,13 +64,13 @@ public class ComparisonImpl extends ConstraintImpl implements Comparison {
     /**
      * Gets the operator.
      *
-     * @return either <ul> <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_EQUAL_TO},</li>
-     *         <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_NOT_EQUAL_TO},</li>
-     *         <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_LESS_THAN},</li>
-     *         <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_LESS_THAN_OR_EQUAL_TO},</li>
-     *         <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_GREATER_THAN},</li>
-     *         <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_GREATER_THAN_OR_EQUAL_TO},
-     *         or</li> <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_LIKE}</li>
+     * @return either <ul> <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_EQUAL_TO},</li>
+     *         <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_NOT_EQUAL_TO},</li>
+     *         <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_LESS_THAN},</li>
+     *         <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_LESS_THAN_OR_EQUAL_TO},</li>
+     *         <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_GREATER_THAN},</li>
+     *         <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_GREATER_THAN_OR_EQUAL_TO},
+     *         or</li> <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_LIKE}</li>
      *         </ul>
      */
     public int getOperator() {

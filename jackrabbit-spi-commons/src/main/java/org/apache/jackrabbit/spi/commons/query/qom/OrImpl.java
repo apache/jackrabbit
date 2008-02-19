@@ -18,8 +18,8 @@ package org.apache.jackrabbit.core.query.qom;
 
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
-import org.apache.jackrabbit.core.query.jsr283.qom.Or;
-import org.apache.jackrabbit.core.query.jsr283.qom.Constraint;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Or;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Constraint;
 
 /**
  * <code>OrImpl</code>...
