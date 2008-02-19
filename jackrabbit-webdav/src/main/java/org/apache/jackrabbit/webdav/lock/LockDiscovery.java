@@ -90,11 +90,11 @@ public class LockDiscovery extends AbstractDavProperty {
     }
 
     /**
-     * Creates a JDOM  <code>&lt;lockdiscovery&gt;</code> element in order to respond to a LOCK
-     * request or to the lockdiscovery property of a PROPFIND request.<br>
+     * Creates a <code>&lt;lockdiscovery&gt;</code> element in response
+     * to a LOCK request or to the lockdiscovery property of a PROPFIND request.<br>
      * NOTE: if the {@link #activeLocks} list is empty an empty lockdiscovery
      * property is created ( <code>&lt;lockdiscovery/&gt;</code>)
-     * @return A JDOM element of the &lt;active> lock tag.
+     * @return A <code>&lt;lockdiscovery&gt;</code> element.
      * @param document
      */
     public Element toXml(Document document) {
@@ -103,8 +103,8 @@ public class LockDiscovery extends AbstractDavProperty {
         while (it.hasNext()) {
             ActiveLock lock = (ActiveLock) it.next();
             lockdiscovery.appendChild(lock.toXml(document));
-	}
-	return lockdiscovery;
+        }
+        return lockdiscovery;
     }
 
     //---------------------------------------------------< factory from xml >---
