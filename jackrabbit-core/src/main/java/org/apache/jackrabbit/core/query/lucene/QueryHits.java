@@ -16,94 +16,43 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.lucene.search.Hits;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.document.Document;
 
 import java.io.IOException;
 
 /**
- * Wraps the lucene <code>Hits</code> object and adds a close method that allows
- * to release resources after a query has been executed and the results have
- * been read completely.
+ * Defines an interface for reading query hits. A client will call {@link
+ * #close()} to release resources after a query has been executed and the
+ * results have been read.
  */
-public class QueryHits {
-
-    /**
-     * The lucene hits we wrap.
-     */
-    private final Hits hits;
-
-    /**
-     * The IndexReader in use by the lucene hits.
-     */
-    private final IndexReader reader;
-
-    /**
-     * Number of results.
-     */
-    private final int length;
-
-    /**
-     * Creates a new <code>QueryHits</code> instance wrapping <code>hits</code>.
-     * @param hits the lucene hits.
-     * @param reader the IndexReader in use by <code>hits</code>.
-     */
-    public QueryHits(Hits hits, IndexReader reader) {
-        this.hits = hits;
-        this.reader = reader;
-        this.length = hits.length();
-    }
+public interface QueryHits {
 
     /**
      * Releases resources held by this hits instance.
      *
      * @throws IOException if an error occurs while releasing resources.
      */
-    public final void close() throws IOException {
-        reader.close();
-        PerQueryCache.getInstance().dispose();
-    }
+    void close() throws IOException;
 
     /**
-     * Returns the number of results.
-     * @return the number of results.
+     * @return the number of results or <code>-1</code> if the size is unknown.
      */
-    public final int length() {
-      return length;
-    }
+    int getSize();
 
     /**
-     * Returns the <code>n</code><sup>th</sup> document in this QueryHits.
+     * Returns the next score node in this QueryHits or <code>null</code> if
+     * there are no more score nodes.
      *
-     * @param n index.
-     * @return the <code>n</code><sup>th</sup> document in this QueryHits.
+     * @return the next score node in this QueryHits.
      * @throws IOException if an error occurs while reading from the index.
      */
-    public final Document doc(int n) throws IOException {
-        return hits.doc(n);
-    }
+    ScoreNode nextScoreNode() throws IOException;
 
     /**
-     * Returns the score for the <code>n</code><sup>th</sup> document in this
-     * QueryHits.
-     * @param n index.
-     * @return the score for the <code>n</code><sup>th</sup> document.
-     */
-    public final float score(int n) throws IOException {
-      return hits.score(n);
-    }
-
-    /**
-     * Returns the document number for the <code>n</code><sup>th</sup> document
-     * in this QueryHits.
+     * Skips a <code>n</code> score nodes.
      *
-     * @param n index.
-     * @return the document number for the <code>n</code><sup>th</sup>
-     *         document.
-     * @throws IOException if an error occurs.
+     * @param n the number of score nodes to skip.
+     * @throws IOException if an error occurs while skipping.
      */
-    public final int id(int n) throws IOException {
-        return hits.id(n);
-    }
+    void skip(int n) throws IOException;
 }

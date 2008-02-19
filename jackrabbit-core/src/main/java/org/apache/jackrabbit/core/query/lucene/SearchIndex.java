@@ -47,8 +47,6 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.search.Hits;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
@@ -638,6 +636,7 @@ public class SearchIndex extends AbstractQueryHandler {
 
     /**
      * Executes the query on the search index.
+     * @param session the session that executes the query.
      * @param queryImpl the query impl.
      * @param query the lucene query.
      * @param orderProps name of the properties for sort order.
@@ -647,22 +646,17 @@ public class SearchIndex extends AbstractQueryHandler {
      * @return the lucene Hits object.
      * @throws IOException if an error occurs while searching the index.
      */
-    public QueryHits executeQuery(AbstractQueryImpl queryImpl,
+    public QueryHits executeQuery(SessionImpl session,
+                                  AbstractQueryImpl queryImpl,
                                   Query query,
                                   Name[] orderProps,
                                   boolean[] orderSpecs) throws IOException {
         checkOpen();
-        SortField[] sortFields = createSortFields(orderProps, orderSpecs);
+
+        Sort sort = new Sort(createSortFields(orderProps, orderSpecs));
 
         IndexReader reader = getIndexReader(queryImpl.needsSystemTree());
-        IndexSearcher searcher = new IndexSearcher(reader);
-        Hits hits;
-        if (sortFields.length > 0) {
-            hits = searcher.search(query, new Sort(sortFields));
-        } else {
-            hits = searcher.search(query);
-        }
-        return new QueryHits(hits, reader);
+        return new JackrabbitIndexSearcher(session, reader).execute(query, sort);
     }
 
     /**

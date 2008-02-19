@@ -45,7 +45,8 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Implements the {@link ExecutableQuery} interface.
+ * Implements the {@link org.apache.jackrabbit.core.query.ExecutableQuery}
+ * interface.
  */
 public class QueryImpl extends AbstractQueryImpl {
 
@@ -105,13 +106,6 @@ public class QueryImpl extends AbstractQueryImpl {
             log.debug("Executing query: \n" + root.dump());
         }
 
-        // check for special query
-        if (allNodesQueryNode.equals(root)) {
-            return new WorkspaceTraversalResult(session,
-                    new Name[] { NameConstants.JCR_PRIMARYTYPE, NameConstants.JCR_PATH, NameConstants.JCR_SCORE },
-                    session.getNamePathResolver());
-        }
-
         // build lucene query
         Query query = LuceneQueryBuilder.createQuery(root, session,
                 index.getContext().getItemStateManager(),
@@ -135,7 +129,7 @@ public class QueryImpl extends AbstractQueryImpl {
         }
 
         return new QueryResultImpl(index, itemMgr,
-                session.getNamePathResolver(), session.getAccessManager(),
+                session, session.getAccessManager(),
                 this, query, new SpellSuggestion(index.getSpellChecker(), root),
                 getSelectProperties(), orderProperties, ascSpecs,
                 getRespectDocumentOrder(), offset, limit);
