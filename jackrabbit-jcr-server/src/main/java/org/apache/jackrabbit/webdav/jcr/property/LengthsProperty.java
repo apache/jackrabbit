@@ -18,6 +18,7 @@ package org.apache.jackrabbit.webdav.jcr.property;
 
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
+import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -37,8 +38,8 @@ public class LengthsProperty extends AbstractDavProperty implements ItemResource
      * @param lengths as retrieved from the JCR property
      */
     public LengthsProperty(long[] lengths) {
-	super(JCR_LENGTHS, true);
-	this.value = lengths;
+        super(JCR_LENGTHS, true);
+        this.value = lengths;
     }
 
     /**
@@ -48,7 +49,7 @@ public class LengthsProperty extends AbstractDavProperty implements ItemResource
      * @return an array of {@link long}s
      */
     public Object getValue() {
-	return value;
+        return value;
     }
 
     /**
@@ -58,8 +59,8 @@ public class LengthsProperty extends AbstractDavProperty implements ItemResource
         Element elem = getName().toXml(document);
         for (int i = 0; i < value.length; i++) {
             String txtContent = String.valueOf(value[i]);
-	    DomUtil.addChildElement(elem, XML_LENGTH, ItemResourceConstants.NAMESPACE, txtContent);
-	}
+            DomUtil.addChildElement(elem, XML_LENGTH, ItemResourceConstants.NAMESPACE, txtContent);
+        }
         return elem;
     }
 
