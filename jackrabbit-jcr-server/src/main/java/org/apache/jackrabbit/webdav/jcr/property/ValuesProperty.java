@@ -219,7 +219,8 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
      * property.
      *
      * @return an array of {@link Value}s
-     * @see #getJcrValues(int)
+     * @see #getJcrValues()
+     * @see #getJcrValue()
      */
     public Object getValue() {
         return jcrValues;
