@@ -83,7 +83,7 @@ public abstract class AbstractDavProperty implements DavProperty {
 
 
     /**
-     * Return a JDOM element representation of this property. The value of the
+     * Return a XML element representation of this property. The value of the
      * property will be added as text or as child element.
      * <pre>
      * new DavProperty("displayname", "WebDAV Directory").toXml
@@ -103,21 +103,21 @@ public abstract class AbstractDavProperty implements DavProperty {
      * &lt;/Z:custom-property&gt;
      * </pre>
      *
-     * @return a JDOM element of this property
+     * @return a XML element of this property
      * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
      * @param document
      */
     public Element toXml(Document document) {
-	Element elem = getName().toXml(document);
+        Element elem = getName().toXml(document);
         Object value = getValue();
         // todo: improve....
-	if (value != null) {
-	    if (value instanceof XmlSerializable) {
+        if (value != null) {
+            if (value instanceof XmlSerializable) {
                 elem.appendChild(((XmlSerializable)value).toXml(document));
             } else if (value instanceof Node) {
                 Node n = document.importNode((Node)value, true);
-		elem.appendChild(n);
-	    } else if (value instanceof Node[]) {
+                elem.appendChild(n);
+            } else if (value instanceof Node[]) {
                 for (int i = 0; i < ((Node[])value).length; i++) {
                     Node n = document.importNode(((Node[])value)[i], true);
                     elem.appendChild(n);
@@ -137,9 +137,9 @@ public abstract class AbstractDavProperty implements DavProperty {
                 }
             } else {
                 DomUtil.setText(elem, value.toString());
-	    }
-	}
-	return elem;
+            }
+        }
+        return elem;
     }
 
     /**

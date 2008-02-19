@@ -108,15 +108,15 @@ public class DavPropertyName implements DavConstants, XmlSerializable {
      * @return <code>DavPropertyName</code> instance
      */
     public synchronized static DavPropertyName createFromXml(Element nameElement) {
-	if (nameElement == null) {
-	    throw new IllegalArgumentException("Cannot build DavPropertyName from a 'null' element.");
-	}
-	String ns = nameElement.getNamespaceURI();
-	if (ns == null) {
-	    return create(nameElement.getLocalName(), Namespace.EMPTY_NAMESPACE);
-	} else {
-	    return create(nameElement.getLocalName(), Namespace.getNamespace(nameElement.getPrefix(), ns));
-	}
+        if (nameElement == null) {
+            throw new IllegalArgumentException("Cannot build DavPropertyName from a 'null' element.");
+        }
+        String ns = nameElement.getNamespaceURI();
+        if (ns == null) {
+            return create(nameElement.getLocalName(), Namespace.EMPTY_NAMESPACE);
+        } else {
+            return create(nameElement.getLocalName(), Namespace.getNamespace(nameElement.getPrefix(), ns));
+        }
     }
 
     /**
@@ -188,15 +188,15 @@ public class DavPropertyName implements DavConstants, XmlSerializable {
     }
 
     /**
-     * Creates a JDOM element with the name and namespace of this
-     * DavPropertyName.
+     * Creates a element with the name and namespace of this
+     * <code>DavPropertyName</code>.
      *
-     * @return A JDOM Element.
+     * @return A element with the name and namespace of this
+     * <code>DavPropertyName</code>.
      * @param document
      */
     public Element toXml(Document document) {
         return DomUtil.createElement(document, name, namespace);
     }
-
 }
 
