@@ -148,10 +148,7 @@ public class DefaultItemCollection extends AbstractItemResource
         String ms = super.getSupportedMethods();
         if (isOrderable()) {
             StringBuffer sb = new StringBuffer(ms);
-            // Ordering
-            if (isOrderable()) {
-                sb.append(", ").append(OrderingResource.METHODS);
-            }
+            sb.append(", ").append(OrderingResource.METHODS);
             return sb.toString();
         } else {
             return ms;
