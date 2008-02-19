@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.query.qom;
 
 import org.apache.jackrabbit.test.api.query.AbstractQueryTest;
 
-import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelFactory;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 
 /**

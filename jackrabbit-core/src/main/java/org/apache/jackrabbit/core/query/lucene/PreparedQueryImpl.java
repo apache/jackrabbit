@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.query.ExecutablePreparedQuery;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
-import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
 import org.apache.jackrabbit.core.query.qom.QueryObjectModelTree;
 import org.apache.jackrabbit.core.query.qom.DefaultTraversingQOMTreeVisitor;
 import org.apache.jackrabbit.core.query.qom.BindVariableValueImpl;
