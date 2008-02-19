@@ -17,11 +17,10 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.lucene.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,9 +58,9 @@ public class QueryResultImpl implements QueryResult {
     private final ItemManager itemMgr;
 
     /**
-     * The name and path resolver of the session executing the query
+     * The session executing the query
      */
-    protected final NamePathResolver resolver;
+    protected final SessionImpl session;
 
     /**
      * The access manager of the session that executes the query.
@@ -107,8 +106,7 @@ public class QueryResultImpl implements QueryResult {
     /**
      * This is the raw number of results that matched the query. This number
      * also includes matches which will not be returned due to access
-     * restrictions. This value is set when the query is executed the first
-     * time.
+     * restrictions. This value is set whenever hits are obtained.
      */
     private int numResults = -1;
 
@@ -144,8 +142,7 @@ public class QueryResultImpl implements QueryResult {
      * @param index           the search index where the query is executed.
      * @param itemMgr         the item manager of the session executing the
      *                        query.
-     * @param resolver        the namespace resolver of the session executing
-     *                        the query.
+     * @param session         the session executing the query.
      * @param accessMgr       the access manager of the session executiong the
      *                        query.
      * @param queryImpl       the query instance which created this query
@@ -164,7 +161,7 @@ public class QueryResultImpl implements QueryResult {
      */
     public QueryResultImpl(SearchIndex index,
                            ItemManager itemMgr,
-                           NamePathResolver resolver,
+                           SessionImpl session,
                            AccessManager accessMgr,
                            AbstractQueryImpl queryImpl,
                            Query query,
@@ -177,7 +174,7 @@ public class QueryResultImpl implements QueryResult {
                            long limit) throws RepositoryException {
         this.index = index;
         this.itemMgr = itemMgr;
-        this.resolver = resolver;
+        this.session = session;
         this.accessMgr = accessMgr;
         this.queryImpl = queryImpl;
         this.query = query;
@@ -199,7 +196,7 @@ public class QueryResultImpl implements QueryResult {
         try {
             String[] propNames = new String[selectProps.length];
             for (int i = 0; i < selectProps.length; i++) {
-                propNames[i] = resolver.getJCRName(selectProps[i]);
+                propNames[i] = session.getJCRName(selectProps[i]);
             }
             return propNames;
         } catch (NamespaceException npde) {
@@ -228,7 +225,7 @@ public class QueryResultImpl implements QueryResult {
             }
         }
         return new RowIteratorImpl(getNodeIterator(), selectProps,
-                resolver, excerptProvider, spellSuggestion);
+                session, excerptProvider, spellSuggestion);
     }
 
     /**
@@ -239,7 +236,8 @@ public class QueryResultImpl implements QueryResult {
      * @throws IOException if an error occurs while executing the query.
      */
     protected QueryHits executeQuery() throws IOException {
-        return index.executeQuery(queryImpl, query, orderProps, orderSpecs);
+        return index.executeQuery(session, queryImpl,
+                query, orderProps, orderSpecs);
     }
 
     //--------------------------------< internal >------------------------------
@@ -269,7 +267,7 @@ public class QueryResultImpl implements QueryResult {
      */
     private void getResults(long size) throws RepositoryException {
         if (log.isDebugEnabled()) {
-            log.debug("getResults(" + size + ")");
+            log.debug("getResults({}) limit={}", new Long(size), new Long(limit));
         }
 
         long maxResultSize = size;
@@ -287,21 +285,21 @@ public class QueryResultImpl implements QueryResult {
         // execute it
         QueryHits result = null;
         try {
+            long time = System.currentTimeMillis();
             result = executeQuery();
-
-            // set num results with the first query execution
-            if (numResults == -1) {
-                numResults = result.length();
-            }
+            log.debug("query executed in {} ms",
+                    new Long(System.currentTimeMillis() - time));
 
             int start = resultNodes.size() + invalid + (int) offset;
-            int max = Math.min(result.length(), numResults);
-            for (int i = start; i < max && resultNodes.size() < maxResultSize; i++) {
-                NodeId id = NodeId.valueOf(result.doc(i).get(FieldNames.UUID));
+            time = System.currentTimeMillis();
+            result.skip(start);
+            for (ScoreNode sn = result.nextScoreNode();
+                 sn != null && resultNodes.size() < maxResultSize;
+                 sn = result.nextScoreNode()) {
                 // check access
                 try {
-                    if (accessMgr.isGranted(id, AccessManager.READ)) {
-                        resultNodes.add(new ScoreNode(id, result.score(i)));
+                    if (accessMgr.isGranted(sn.getNodeId(), AccessManager.READ)) {
+                        resultNodes.add(sn);
                     } else {
                         invalid++;
                     }
@@ -310,6 +308,11 @@ public class QueryResultImpl implements QueryResult {
                     invalid++;
                 }
             }
+            log.debug("retrieved ScoreNodes in {} ms",
+                    new Long(System.currentTimeMillis() - time));
+
+            // update numResults
+            numResults = result.getSize();
         } catch (IOException e) {
             log.error("Exception while executing query: ", e);
             // todo throw?
@@ -328,10 +331,15 @@ public class QueryResultImpl implements QueryResult {
      * Returns the total number of hits. This is the number of results you
      * will get get if you don't set any limit or offset. Keep in mind that this
      * number may get smaller if nodes are found in the result set which the
-     * current session has no permission to access.
+     * current session has no permission to access. This method may return
+     * <code>-1</code> if the total size is unknown.
      */
     public int getTotalSize() {
-        return numResults - invalid;
+        if (numResults == -1) {
+            return -1;
+        } else {
+            return numResults - invalid;
+        }
     }
 
     private final class LazyScoreNodeIterator implements ScoreNodeIterator {
@@ -381,9 +389,6 @@ public class QueryResultImpl implements QueryResult {
             if (skipNum < 0) {
                 throw new IllegalArgumentException("skipNum must not be negative");
             }
-            if ((position + invalid + skipNum) > numResults) {
-                throw new NoSuchElementException();
-            }
             if (skipNum == 0) {
                 // do nothing
             } else {
@@ -411,7 +416,11 @@ public class QueryResultImpl implements QueryResult {
          * nodes or the session does not have access to a node.
          */
         public long getSize() {
-            long size = getTotalSize() - offset;
+            int total = getTotalSize();
+            if (total == -1) {
+                return -1;
+            }
+            long size = total - offset;
             if (limit > 0 && size > limit) {
                 return limit;
             } else {
@@ -467,8 +476,14 @@ public class QueryResultImpl implements QueryResult {
         private void fetchNext() {
             next = null;
             int nextPos = position + 1;
-            while (next == null && (nextPos + invalid) < numResults) {
+            while (next == null) {
                 if (nextPos >= resultNodes.size()) {
+                    // quick check if there are more results at all
+                    // this check is only possible if we have numResults
+                    if (numResults != -1 && (nextPos + invalid) >= numResults) {
+                        break;
+                    }
+
                     // fetch more results
                     try {
                         int num;
@@ -484,7 +499,7 @@ public class QueryResultImpl implements QueryResult {
                     // check again
                     if (nextPos >= resultNodes.size()) {
                         // no more valid results
-                        return;
+                        break;
                     }
                 }
                 ScoreNode sn = (ScoreNode) resultNodes.get(nextPos);

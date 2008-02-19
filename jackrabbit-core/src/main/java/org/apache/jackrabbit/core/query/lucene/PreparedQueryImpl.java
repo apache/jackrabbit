@@ -120,7 +120,7 @@ public class PreparedQueryImpl
             orderSpecs[i] = orderings[i].getOrder() == QueryObjectModelConstants.ORDER_ASCENDING;
         }
         return new QueryResultImpl(index, itemMgr,
-                session.getNamePathResolver(), session.getAccessManager(),
+                session, session.getAccessManager(),
                 // TODO: spell suggestion missing
                 this, query, null, selectProps, orderProps, orderSpecs,
                 getRespectDocumentOrder(), offset, limit);
