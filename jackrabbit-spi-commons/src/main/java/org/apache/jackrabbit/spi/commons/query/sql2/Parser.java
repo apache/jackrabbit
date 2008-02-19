@@ -16,21 +16,21 @@
  */
 package org.apache.jackrabbit.core.query.sql2;
 
-import org.apache.jackrabbit.core.query.jsr283.PreparedQuery;
-import org.apache.jackrabbit.core.query.jsr283.qom.BindVariableValue;
-import org.apache.jackrabbit.core.query.jsr283.qom.Column;
-import org.apache.jackrabbit.core.query.jsr283.qom.Constraint;
-import org.apache.jackrabbit.core.query.jsr283.qom.DynamicOperand;
-import org.apache.jackrabbit.core.query.jsr283.qom.JoinCondition;
-import org.apache.jackrabbit.core.query.jsr283.qom.Literal;
-import org.apache.jackrabbit.core.query.jsr283.qom.Ordering;
-import org.apache.jackrabbit.core.query.jsr283.qom.PropertyExistence;
-import org.apache.jackrabbit.core.query.jsr283.qom.PropertyValue;
-import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants;
-import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelFactory;
-import org.apache.jackrabbit.core.query.jsr283.qom.Selector;
-import org.apache.jackrabbit.core.query.jsr283.qom.Source;
-import org.apache.jackrabbit.core.query.jsr283.qom.StaticOperand;
+import org.apache.jackrabbit.spi.commons.query.jsr283.PreparedQuery;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.BindVariableValue;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Column;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Constraint;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DynamicOperand;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.JoinCondition;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Literal;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Ordering;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyExistence;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyValue;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Selector;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Source;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.StaticOperand;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

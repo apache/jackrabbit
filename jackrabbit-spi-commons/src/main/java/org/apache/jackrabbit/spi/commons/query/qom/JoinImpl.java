@@ -18,9 +18,9 @@ package org.apache.jackrabbit.core.query.qom;
 
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
-import org.apache.jackrabbit.core.query.jsr283.qom.Join;
-import org.apache.jackrabbit.core.query.jsr283.qom.Source;
-import org.apache.jackrabbit.core.query.jsr283.qom.JoinCondition;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Join;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Source;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.JoinCondition;
 
 /**
  * <code>JoinImpl</code>...
@@ -80,9 +80,9 @@ public class JoinImpl extends SourceImpl implements Join {
     /**
      * Gets the join type.
      *
-     * @return either <ul> <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_INNER},</li>
-     *         <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_LEFT_OUTER},</li>
-     *         <li>{@link org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_RIGHT_OUTER}</li>
+     * @return either <ul> <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_INNER},</li>
+     *         <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_LEFT_OUTER},</li>
+     *         <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_RIGHT_OUTER}</li>
      *         </ul>
      */
     public int getJoinType() {

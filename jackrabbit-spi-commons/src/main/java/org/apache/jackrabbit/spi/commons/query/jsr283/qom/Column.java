@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.query.jsr283.qom;
+package org.apache.jackrabbit.spi.commons.query.jsr283.qom;
 
 /**
  * Defines a column to include in the tabular view of query results.

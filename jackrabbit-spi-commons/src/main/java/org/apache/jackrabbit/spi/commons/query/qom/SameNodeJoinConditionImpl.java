@@ -20,7 +20,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 
-import org.apache.jackrabbit.core.query.jsr283.qom.SameNodeJoinCondition;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.SameNodeJoinCondition;
 
 /**
  * <code>SameNodeJoinConditionImpl</code>...
