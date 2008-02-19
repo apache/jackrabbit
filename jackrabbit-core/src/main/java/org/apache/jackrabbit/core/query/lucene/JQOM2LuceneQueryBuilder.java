@@ -49,7 +49,7 @@ import org.apache.jackrabbit.core.query.qom.StaticOperandImpl;
 import org.apache.jackrabbit.core.query.qom.DynamicOperandImpl;
 import org.apache.jackrabbit.core.query.qom.DefaultTraversingQOMTreeVisitor;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
-import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
 import org.apache.jackrabbit.core.query.lucene.fulltext.QueryParser;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.HierarchyManager;

@@ -14,15 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.query.qom;
+package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.core.query.PreparedQueryImpl;
-
-import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModel;
-import org.apache.jackrabbit.core.query.jsr283.qom.Source;
-import org.apache.jackrabbit.core.query.jsr283.qom.Ordering;
-import org.apache.jackrabbit.core.query.jsr283.qom.Constraint;
-import org.apache.jackrabbit.core.query.jsr283.qom.Column;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Source;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Ordering;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Constraint;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Column;
 
 /**
  * <code>QueryObjectModelImpl</code>...
