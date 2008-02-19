@@ -559,7 +559,7 @@ public class DomUtil {
      * following valid values for depths: 0, 1, infinity
      *
      * @param depth
-     * @return 'deep' JDOM element
+     * @return 'deep' XML element
      */
     public static Element depthToXml(String depth, Document factory) {
         Element dElem = createElement(factory, DavConstants.XML_DEPTH, DavConstants.NAMESPACE, depth);
