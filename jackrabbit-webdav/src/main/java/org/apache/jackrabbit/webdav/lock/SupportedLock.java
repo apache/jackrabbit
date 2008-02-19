@@ -95,9 +95,9 @@ public class SupportedLock extends AbstractDavProperty {
     }
 
     /**
-     * Creates a JDOM element that represents the &lt;supportedlock> tag.
+     * Creates an XML element that represents the &lt;supportedlock> tag.
      *
-     * @return A JDOM element of this lock support.
+     * @return An XML element of this lock support.
      * @param document
      */
     public Element toXml(Document document) {
@@ -107,7 +107,7 @@ public class SupportedLock extends AbstractDavProperty {
             LockEntry le = (LockEntry) iter.next();
             support.appendChild(le.toXml(document));
         }
-	return support;
+        return support;
     }
 
     /**
