@@ -24,9 +24,9 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * <code>NodeTraversingQueryHits</code> implements query hits that traverse
@@ -40,36 +40,31 @@ public class NodeTraversingQueryHits extends AbstractQueryHits {
     private final Iterator nodes;
 
     /**
-     * Creates query hits that consist of the nodes that are traversed from
-     * a given <code>start</code> node.
+     * Creates query hits that consist of the nodes that are traversed from a
+     * given <code>start</code> node.
      *
-     * @param start the start node of the traversal.
+     * @param start        the start node of the traversal.
      * @param includeStart whether to include the start node in the result.
      */
     public NodeTraversingQueryHits(Node start, boolean includeStart) {
-        this.nodes = new TraversingNodeIterator(start);
+        this(start, includeStart, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Creates query hits that consist of the nodes that are traversed from a
+     * given <code>start</code> node.
+     *
+     * @param start        the start node of the traversal.
+     * @param includeStart whether to include the start node in the result.
+     * @param maxDepth     the maximum depth of nodes to traverse.
+     */
+    public NodeTraversingQueryHits(Node start,
+                                   boolean includeStart,
+                                   int maxDepth) {
+        this.nodes = new TraversingNodeIterator(start, maxDepth);
         if (!includeStart) {
             nodes.next();
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Does nothing.
-     */
-    protected void doClose() throws IOException {
-        // nothing to do
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * This implementation always returns <code>-1</code>.
-     */
-    public int getSize() {
-        // don't know
-        return -1;
     }
 
     /**
@@ -97,17 +92,28 @@ public class NodeTraversingQueryHits extends AbstractQueryHits {
         private final Node currentNode;
 
         /**
+         * The maximum depth of the traversal.
+         */
+        private final int maxDepth;
+
+        /**
          * The chain of iterators which includes the iterators of the children
          * of the current node.
          */
-        private IteratorChain selfAndChildren;
+        private Iterator selfAndChildren;
 
         /**
          * Creates a <code>TraversingNodeIterator</code>.
-         * @param start the node from where to start the traversal.
+         *
+         * @param start    the node from where to start the traversal.
+         * @param maxDepth the maximum depth of nodes to traverse.
          */
-        TraversingNodeIterator(Node start) {
+        TraversingNodeIterator(Node start, int maxDepth) {
+            if (maxDepth < 0) {
+                throw new IllegalArgumentException("maxDepth must be >= 0");
+            }
             currentNode = start;
+            this.maxDepth = maxDepth;
         }
 
         /**
@@ -139,18 +145,27 @@ public class NodeTraversingQueryHits extends AbstractQueryHits {
          */
         private void init() {
             if (selfAndChildren == null) {
-                Iterator current = Arrays.asList(new Node[]{currentNode}).iterator();
                 List allIterators = new ArrayList();
+                Iterator current = Collections.singletonList(currentNode).iterator();
                 allIterators.add(current);
-
-                // create new TraversingNodeIterator for each child
-                try {
-                    NodeIterator children = currentNode.getNodes();
-                    while (children.hasNext()) {
-                        allIterators.add(new TraversingNodeIterator(children.nextNode()));
+                if (maxDepth == 0) {
+                    // only current node
+                } else if (maxDepth == 1) {
+                    try {
+                        allIterators.add(currentNode.getNodes());
+                    } catch (RepositoryException e) {
+                        // currentNode is probably stale
                     }
-                } catch (RepositoryException e) {
-                    // currentNode is probably stale
+                } else {
+                    // create new TraversingNodeIterator for each child
+                    try {
+                        NodeIterator children = currentNode.getNodes();
+                        while (children.hasNext()) {
+                            allIterators.add(new TraversingNodeIterator(children.nextNode(), maxDepth - 1));
+                        }
+                    } catch (RepositoryException e) {
+                        // currentNode is probably stale
+                    }
                 }
                 selfAndChildren = new IteratorChain(allIterators);
             }

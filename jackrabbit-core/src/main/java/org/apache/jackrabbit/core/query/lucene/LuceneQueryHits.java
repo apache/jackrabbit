@@ -57,13 +57,6 @@ public class LuceneQueryHits extends AbstractQueryHits {
     /**
      * {@inheritDoc}
      */
-    protected final void doClose() throws IOException {
-        reader.close();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public final int getSize() {
       return hits.length();
     }
