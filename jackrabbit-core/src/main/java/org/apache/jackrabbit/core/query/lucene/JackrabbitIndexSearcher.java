@@ -19,11 +19,9 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.index.IndexReader;
 import org.apache.jackrabbit.core.SessionImpl;
 
-import javax.jcr.RepositoryException;
 import java.io.IOException;
 
 /**
@@ -63,20 +61,14 @@ public class JackrabbitIndexSearcher extends IndexSearcher {
      * @throws IOException if an error occurs while executing the query.
      */
     public QueryHits execute(Query query, Sort sort) throws IOException {
-        // optimize certain queries
-        if (sort.getSort().length == 0) {
-            query = query.rewrite(reader);
-            if (query instanceof MatchAllDocsQuery) {
-                try {
-                    return new NodeTraversingQueryHits(
-                            session.getRootNode(), true);
-                } catch (RepositoryException e) {
-                    IOException ex = new IOException(e.getMessage());
-                    ex.initCause(e);
-                    throw ex;
-                }
-            }
+        query = query.rewrite(reader);
+        QueryHits hits = null;
+        if (query instanceof JackrabbitQuery) {
+            hits = ((JackrabbitQuery) query).execute(this, session, sort);
         }
-        return new LuceneQueryHits(search(query, sort), reader);
+        if (hits == null) {
+            hits = new LuceneQueryHits(search(query, sort), reader);
+        }
+        return hits;
     }
 }

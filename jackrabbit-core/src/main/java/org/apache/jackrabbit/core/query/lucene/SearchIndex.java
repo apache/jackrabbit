@@ -655,8 +655,17 @@ public class SearchIndex extends AbstractQueryHandler {
 
         Sort sort = new Sort(createSortFields(orderProps, orderSpecs));
 
-        IndexReader reader = getIndexReader(queryImpl.needsSystemTree());
-        return new JackrabbitIndexSearcher(session, reader).execute(query, sort);
+        final IndexReader reader = getIndexReader(queryImpl.needsSystemTree());
+        return new FilterQueryHits(new JackrabbitIndexSearcher(session, reader).execute(query, sort)) {
+            public void close() throws IOException {
+                try {
+                    super.close();
+                } finally {
+                    PerQueryCache.getInstance().dispose();
+                    reader.close();
+                }
+            }
+        };
     }
 
     /**

@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.query.lucene.hits.AdaptingHits;
 import org.apache.jackrabbit.core.query.lucene.hits.Hits;
 import org.apache.jackrabbit.core.query.lucene.hits.ScorerHits;
@@ -38,7 +39,7 @@ import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.Weight;
-import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.Sort;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -51,7 +52,7 @@ import java.util.Map;
  * Implements a lucene <code>Query</code> which returns the child nodes of the
  * nodes selected by another <code>Query</code>.
  */
-class ChildAxisQuery extends Query {
+class ChildAxisQuery extends Query implements JackrabbitQuery {
 
     /**
      * The item state manager containing persistent item states.
@@ -115,6 +116,21 @@ class ChildAxisQuery extends Query {
         this.contextQuery = context;
         this.nameTest = nameTest;
         this.position = position;
+    }
+
+    /**
+     * @return the context query of this child axis query.
+     */
+    Query getContextQuery() {
+        return contextQuery;
+    }
+
+    /**
+     * @return <code>true</code> if this child axis query matches any child
+     *         node; <code>false</code> otherwise.
+     */
+    boolean matchesAnyChildNode() {
+        return nameTest == null && position == LocationStepQueryNode.NONE;
     }
 
     /**
@@ -187,6 +203,23 @@ class ChildAxisQuery extends Query {
      */
     public String toString(String field) {
         return "ChildAxisQuery";
+    }
+
+    //-------------------< JackrabbitQuery >------------------------------------
+
+    /**
+     * {@inheritDoc}
+     */
+    public QueryHits execute(JackrabbitIndexSearcher searcher,
+                             SessionImpl session,
+                             Sort sort)
+            throws IOException {
+        if (sort.getSort().length == 0 && matchesAnyChildNode()) {
+            Query context = getContextQuery();
+            return new ChildNodesQueryHits(searcher.execute(context, sort), session);
+        } else {
+            return null;
+        }
     }
 
     //-------------------< ChildAxisWeight >------------------------------------

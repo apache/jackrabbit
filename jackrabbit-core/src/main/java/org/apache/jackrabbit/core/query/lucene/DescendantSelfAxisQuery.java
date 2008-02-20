@@ -24,18 +24,24 @@ import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Weight;
-import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.Sort;
+import org.apache.jackrabbit.core.SessionImpl;
 
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import java.io.IOException;
 import java.util.BitSet;
 import java.util.Set;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.Iterator;
 
 /**
  * Implements a lucene <code>Query</code> which filters a sub query by checking
  * whether the nodes selected by that sub query are descendants or self of
  * nodes selected by a context query.
  */
-class DescendantSelfAxisQuery extends Query {
+class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
 
     /**
      * The context query
@@ -134,6 +140,17 @@ class DescendantSelfAxisQuery extends Query {
     }
 
     /**
+     * Returns the minimal levels required between context and sub nodes for a
+     * sub node to match.
+     * <ul>
+     * <li><code>0</code>: a sub node <code>S</code> matches if it is a context
+     * node or one of the ancestors of <code>S</code> is a context node.</li>
+     * <li><code>1</code>: a sub node <code>S</code> matches if one of the
+     * ancestors of <code>S</code> is a context node.</li>
+     * <li><code>n</code>: a sub node <code>S</code> matches if
+     * <code>S.getAncestor(S.getDepth() - n)</code> is a context node.</li>
+     * </ul>
+     *
      * @return the minimal levels required between context and sub nodes for a
      *         sub node to match.
      */
@@ -189,7 +206,108 @@ class DescendantSelfAxisQuery extends Query {
         }
     }
 
-    //------------------------< DescendantSelfAxisWeight >--------------------------
+    //------------------------< JackrabbitQuery >-------------------------------
+
+    /**
+     * {@inheritDoc}
+     */
+    public QueryHits execute(final JackrabbitIndexSearcher searcher,
+                             final SessionImpl session,
+                             final Sort sort) throws IOException {
+        if (sort.getSort().length == 0 && subQueryMatchesAll()) {
+            // maps path String to NodeId
+            Map startingPoints = new TreeMap();
+            QueryHits result = searcher.execute(getContextQuery(), sort);
+            try {
+                // minLevels 0 and 1 are handled with a series of
+                // NodeTraversingQueryHits directly on result. For minLevels >= 2
+                // intermediate ChildNodesQueryHits are required.
+                for (int i = 2; i <= getMinLevels(); i++) {
+                    result = new ChildNodesQueryHits(result, session);
+                }
+
+                ScoreNode sn;
+                try {
+                    while ((sn = result.nextScoreNode()) != null) {
+                        Node node = session.getNodeById(sn.getNodeId());
+                        startingPoints.put(node.getPath(), sn);
+                    }
+                } catch (RepositoryException e) {
+                    IOException ex = new IOException(e.getMessage());
+                    ex.initCause(e);
+                    throw ex;
+                }
+            } finally {
+                result.close();
+            }
+
+            // prune overlapping starting points
+            String previousPath = null;
+            for (Iterator it = startingPoints.keySet().iterator(); it.hasNext(); ) {
+                String path = (String) it.next();
+                // if the previous path is a prefix of this path then the
+                // current path is obsolete
+                if (previousPath != null && path.startsWith(previousPath)) {
+                    it.remove();
+                } else {
+                    previousPath = path;
+                }
+            }
+
+            final Iterator scoreNodes = startingPoints.values().iterator();
+            return new AbstractQueryHits() {
+
+                private NodeTraversingQueryHits currentTraversal;
+
+                {
+                    fetchNextTraversal();
+                }
+
+                public void close() throws IOException {
+                    if (currentTraversal != null) {
+                        currentTraversal.close();
+                    }
+                }
+
+                public ScoreNode nextScoreNode() throws IOException {
+                    while (currentTraversal != null) {
+                        ScoreNode sn = currentTraversal.nextScoreNode();
+                        if (sn != null) {
+                            return sn;
+                        } else {
+                            fetchNextTraversal();
+                        }
+                    }
+                    // if we get here there are no more score nodes
+                    return null;
+                }
+
+                private void fetchNextTraversal() throws IOException {
+                    if (currentTraversal != null) {
+                        currentTraversal.close();
+                    }
+                    if (scoreNodes.hasNext()) {
+                        ScoreNode sn = (ScoreNode) scoreNodes.next();
+                        try {
+                            Node node = session.getNodeById(sn.getNodeId());
+                            currentTraversal = new NodeTraversingQueryHits(node,
+                                    getMinLevels() == 0);
+                        } catch (RepositoryException e) {
+                            IOException ex = new IOException(e.getMessage());
+                            ex.initCause(e);
+                            throw ex;
+                        }
+                    } else {
+                        currentTraversal = null;
+                    }
+                }
+            };
+        } else {
+            return null;
+        }
+    }
+
+    //--------------------< DescendantSelfAxisWeight >--------------------------
 
     /**
      * The <code>Weight</code> implementation for this

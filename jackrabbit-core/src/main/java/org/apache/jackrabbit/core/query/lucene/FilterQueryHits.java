@@ -19,46 +19,51 @@ package org.apache.jackrabbit.core.query.lucene;
 import java.io.IOException;
 
 /**
- * <code>AbstractQueryHits</code> serves as a base class for {@link QueryHits}
- * implementations.
+ * <code>FilterQueryHits</code> implements a {@link QueryHits} filter that
+ * forwards each call to the underlying query hits.
  */
-public abstract class AbstractQueryHits implements QueryHits {
+public class FilterQueryHits implements QueryHits {
 
     /**
-     * This default implemetation does nothing.
+     * The underlying query hits.
+     */
+    private final QueryHits hits;
+
+    /**
+     * Creates a new <code>FilterQueryHits</code>, which forwards each call to
+     * <code>hits</code>.
+     *
+     * @param hits the underlying query hits.
+     */
+    public FilterQueryHits(QueryHits hits) {
+        this.hits = hits;
+    }
+
+    /**
+     * {@inheritDoc}
      */
     public void close() throws IOException {
+        hits.close();
     }
 
     /**
-     * Provides a default implementation:
-     * <pre>
-     * while (n-- > 0) {
-     *     if (nextScoreNode() == null) {
-     *         return;
-     *     }
-     * }
-     * </pre>
-     * Sub classes may overwrite this method and implement are more efficient
-     * way to skip hits.
-     *
-     * @param n the number of hits to skip.
-     * @throws IOException if an error occurs while skipping.
-     */
-    public void skip(int n) throws IOException {
-        while (n-- > 0) {
-            if (nextScoreNode() == null) {
-                return;
-            }
-        }
-    }
-
-    /**
-     * This default implementation returns <code>-1</code>.
-     *
-     * @return <code>-1</code>.
+     * {@inheritDoc}
      */
     public int getSize() {
-        return -1;
+        return hits.getSize();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public ScoreNode nextScoreNode() throws IOException {
+        return hits.nextScoreNode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void skip(int n) throws IOException {
+        hits.skip(n);
     }
 }
