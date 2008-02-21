@@ -23,7 +23,7 @@ import javax.jcr.query.Query;
 
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.query.qom.QueryObjectModelTree;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 
 /**
  * Defines common initialization methods for all query implementations.

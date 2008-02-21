@@ -22,10 +22,10 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateIterator;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
-import org.apache.jackrabbit.core.query.qom.QueryObjectModelTree;
 
 import java.io.IOException;
 

@@ -19,8 +19,8 @@ package org.apache.jackrabbit.core.query;
 import org.apache.jackrabbit.core.NodeIdIterator;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.query.qom.QueryObjectModelTree;
 import org.apache.jackrabbit.core.state.NodeStateIterator;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
