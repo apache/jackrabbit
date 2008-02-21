@@ -134,7 +134,7 @@ public class DateValue extends BaseValue {
         setValueConsumed();
 
         if (date != null) {
-            return date;
+            return (Calendar) date.clone();
         } else {
             throw new ValueFormatException("empty value");
         }
