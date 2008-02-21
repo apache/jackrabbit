@@ -18,8 +18,9 @@ package org.apache.jackrabbit.core.query.sql2;
 
 import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
-import org.apache.jackrabbit.core.query.qom.QueryObjectModelFactoryImpl;
 import org.apache.jackrabbit.test.api.query.AbstractQueryTest;
+import org.apache.jackrabbit.spi.commons.query.sql2.Parser;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelFactoryImpl;
 
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
