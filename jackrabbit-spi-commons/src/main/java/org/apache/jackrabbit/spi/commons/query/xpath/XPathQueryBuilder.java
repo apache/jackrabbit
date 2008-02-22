@@ -660,7 +660,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     }
 
     /**
-     * Creates a new {@link org.apache.jackrabbit.core.query.RelationQueryNode}
+     * Creates a new {@link org.apache.jackrabbit.spi.commons.query.RelationQueryNode}
      * with <code>queryNode</code> as its parent node.
      *
      * @param node      a comparison expression node.

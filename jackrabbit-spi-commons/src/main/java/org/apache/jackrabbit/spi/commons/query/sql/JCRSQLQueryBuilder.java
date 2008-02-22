@@ -69,7 +69,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
     /**
      * DateFormat pattern for type
-     * {@link org.apache.jackrabbit.core.query.QueryConstants#TYPE_DATE}.
+     * {@link org.apache.jackrabbit.spi.commons.query.QueryConstants#TYPE_DATE}.
      */
     private static final String DATE_PATTERN = "yyyy-MM-dd";
 
@@ -593,7 +593,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     //------------------------< internal >--------------------------------------
 
     /**
-     * Creates a new {@link org.apache.jackrabbit.core.query.RelationQueryNode}.
+     * Creates a new {@link org.apache.jackrabbit.spi.commons.query.RelationQueryNode}.
      *
      * @param parent        the parent node for the created <code>RelationQueryNode</code>.
      * @param propertyName  the property name for the relation.
@@ -826,9 +826,9 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         /**
          * Creates a new <code>MergingPathQueryNode</code> with the operation
          * tpye of a parent node. <code>operation</code> must be one of:
-         * {@link org.apache.jackrabbit.core.query.QueryNode#TYPE_OR},
-         * {@link org.apache.jackrabbit.core.query.QueryNode#TYPE_AND} or
-         * {@link org.apache.jackrabbit.core.query.QueryNode#TYPE_NOT}.
+         * {@link org.apache.jackrabbit.spi.commons.query.QueryNode#TYPE_OR},
+         * {@link org.apache.jackrabbit.spi.commons.query.QueryNode#TYPE_AND} or
+         * {@link org.apache.jackrabbit.spi.commons.query.QueryNode#TYPE_NOT}.
          *
          * @param operation the operation type of the parent node.
          * @param validJcrSystemNodeTypeNames names of valid node types under
