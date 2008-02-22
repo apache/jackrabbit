@@ -26,6 +26,7 @@ import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 
+import javax.jcr.Session;
 import javax.jcr.ValueFactory;
 import javax.jcr.RepositoryException;
 

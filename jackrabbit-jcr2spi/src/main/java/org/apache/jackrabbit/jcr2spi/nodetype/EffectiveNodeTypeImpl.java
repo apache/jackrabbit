@@ -76,7 +76,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
      * node types must exist (i.e. must be registered), the definition itself
      * is not required to be registered.
      *
-     * @param ntReg
+     * @param entProvider
      * @param ntd
      * @param ntdMap
      * @return

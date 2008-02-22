@@ -94,7 +94,8 @@ public class ResolveMergeConflict extends AbstractOperation {
     /**
      *
      * @param nodeState
-     * @param versionState
+     * @param mergeFailedIds
+     * @param predecessorIds
      * @param resolveDone
      */
     public static Operation create(NodeState nodeState, NodeId[] mergeFailedIds, NodeId[] predecessorIds, boolean resolveDone) {
