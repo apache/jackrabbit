@@ -823,7 +823,7 @@ public class PathFactoryImpl implements PathFactory {
 
         /**
          * @return Always returns false.
-         * @see Path.Element#denotesParent()
+         * @see Path.Element#denotesName()
          */
         public boolean denotesName() {
             return false;

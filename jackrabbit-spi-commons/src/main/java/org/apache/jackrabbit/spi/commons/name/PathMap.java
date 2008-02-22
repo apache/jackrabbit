@@ -592,7 +592,7 @@ public class PathMap {
 
         /**
          * Return an iterator over all of this element's children. Every
-         * element returned by this iterator is of type {@link #Element}.
+         * element returned by this iterator is of type {@link Element}.
          */
         public Iterator getChildren() {
             ArrayList result = new ArrayList();

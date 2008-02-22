@@ -42,7 +42,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
      * Create a new <code>NamespaceRegistryImpl</code>.
      *
      * @param storage
-     * @param pathFactory
+     * @param nsCache
      */
     public NamespaceRegistryImpl(NamespaceStorage storage,
                                  NamespaceCache nsCache) {

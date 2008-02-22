@@ -102,7 +102,10 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * Creates a new <code>SessionItemStateManager</code> instance.
      *
      * @param workspaceItemStateMgr
-     * @param definitionProvider
+     * @param validator
+     * @param qValueFactory
+     * @param isf
+     * @param mgrProvider
      */
     public SessionItemStateManager(UpdatableItemStateManager workspaceItemStateMgr,
                                    ItemStateValidator validator,

@@ -67,7 +67,7 @@ class RowIteratorImpl implements RowIterator {
      * nodes.
      *
      * @param queryInfo the query info.
-     * @param nameResolver  <code>NameResolver</code> of the user
+     * @param resolver  <code>NameResolver</code> of the user
      *                  <code>Session</code>.
      * @param vFactory  the JCR value factory.
      */
