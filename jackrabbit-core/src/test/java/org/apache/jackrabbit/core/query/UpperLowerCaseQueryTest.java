@@ -22,6 +22,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Random;
 
 /**
  * <code>UpperLowerCaseQueryTest</code> tests the functions fn:lower-case() and
@@ -136,10 +137,39 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest {
                 "like",
                 "_oo",
                 new boolean[]{true, true, true, true});
-        check(new String[]{"foo", "Foa", "fOO", "FO", "foRm"},
+        check(new String[]{"foo", "Foa", "fOO", "FO", "foRm", "fPo", "fno", "FPo", "Fno"},
                 "like",
                 "fo%",
-                new boolean[]{true, true, true, true, true});
+                new boolean[]{true, true, true, true, true, false, false, false, false});
+    }
+
+    public void testLikeComparisonRandom() throws RepositoryException {
+        String abcd = "abcd";
+        Random random = new Random();
+        for (int i = 0; i < 50; i++) {
+            String pattern = "";
+            pattern += getRandomChar(abcd, random);
+            pattern += getRandomChar(abcd, random);
+
+            // create 10 random values with 4 characters
+            String[] values = new String[10];
+            boolean[] matches = new boolean[10];
+            for (int n = 0; n < 10; n++) {
+                // at least the first character always matches
+                String value = String.valueOf(pattern.charAt(0));
+                for (int r = 1; r < 4; r++) {
+                    char c = getRandomChar(abcd, random);
+                    if (random.nextBoolean()) {
+                        c = Character.toUpperCase(c);
+                    }
+                    value += c;
+                }
+                matches[n] = value.toLowerCase().startsWith(pattern);
+                values[n] = value;
+            }
+            pattern += "%";
+            check(values, "like", pattern, matches);
+        }
     }
 
     public void testRangeWithEmptyString() throws RepositoryException {
@@ -191,6 +221,23 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest {
         if (values.length != matches.length) {
             throw new IllegalArgumentException("values and matches must have same length");
         }
+        // create log message
+        StringBuffer logMsg = new StringBuffer();
+        logMsg.append("queryTerm: ").append(queryTerm);
+        logMsg.append(" values: ");
+        String separator = "";
+        for (int i = 0; i < values.length; i++) {
+            logMsg.append(separator);
+            separator = ", ";
+            if (matches[i]) {
+                logMsg.append("+");
+            } else {
+                logMsg.append("-");
+            }
+            logMsg.append(values[i]);
+        }
+        log.write(logMsg.toString());
+        log.flush();
         for (NodeIterator it = testRootNode.getNodes(); it.hasNext();) {
             it.nextNode().remove();
         }
@@ -241,5 +288,9 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest {
                 testRoot + "/%' and UPPER(" + propertyName1 + ") " +
                 sqlOperation + " '" + queryTerm.toUpperCase() + "'";
         executeSQLQuery(sql, nodes);
+    }
+
+    private char getRandomChar(String pool, Random random) {
+        return pool.charAt(random.nextInt(pool.length()));
     }
 }
