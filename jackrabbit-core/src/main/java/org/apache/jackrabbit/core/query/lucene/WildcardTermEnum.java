@@ -93,15 +93,22 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
         this.transform = transform;
 
         int idx = 0;
-        while (idx < pattern.length()
-                && Character.isLetterOrDigit(pattern.charAt(idx))) {
-            idx++;
-        }
 
-        if (propName == null) {
-            prefix = pattern.substring(0, idx);
+        if (transform == TRANSFORM_NONE) {
+            // optimize the term comparison by removing the prefix from the pattern
+            // and therefore use a more precise range scan
+            while (idx < pattern.length()
+                    && Character.isLetterOrDigit(pattern.charAt(idx))) {
+                idx++;
+            }
+
+            if (propName == null) {
+                prefix = pattern.substring(0, idx);
+            } else {
+                prefix = FieldNames.createNamedValue(propName, pattern.substring(0, idx));
+            }
         } else {
-            prefix = FieldNames.createNamedValue(propName, pattern.substring(0, idx));
+            prefix = FieldNames.createNamedValue(propName, "");
         }
 
         // initialize with prefix as dummy value
@@ -271,19 +278,14 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
                                 new Term(field, prefix), new Term(field, limit)));
                     }
 
-                    String prefix = FieldNames.createNamedValue(propName, patternPrefix);
-                    // initialize with prefix as dummy value
-                    OffsetCharSequence input = new OffsetCharSequence(prefix.length(), prefix, transform);
-                    Matcher matcher = createRegexp(pattern.substring(idx)).matcher(input);
-
-                    // do range scans with patter matcher
+                    // do range scans with pattern matcher
                     for (Iterator it = rangeScans.iterator(); it.hasNext(); ) {
                         RangeScan scan = (RangeScan) it.next();
                         do {
                             Term t = scan.term();
                             if (t != null) {
                                 input.setBase(t.text());
-                                if (matcher.reset().matches()) {
+                                if (WildcardTermEnum.this.pattern.reset().matches()) {
                                     orderedTerms.put(t, new Integer(scan.docFreq()));
                                 }
                             }
