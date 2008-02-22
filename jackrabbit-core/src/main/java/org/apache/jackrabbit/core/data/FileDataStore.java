@@ -281,6 +281,11 @@ public class FileDataStore implements DataStore {
             for (int i = 0; i < list.length; i++) {
                 count += deleteOlderRecursive(list[i], min);
             }
+            // JCR-1396: FileDataStore Garbage Collector and empty directories
+            // Automatic removal of empty directories (but not the root!)
+            if (file != directory && file.list().length == 0) {
+                file.delete();
+            }
         }
         return count;
     }
