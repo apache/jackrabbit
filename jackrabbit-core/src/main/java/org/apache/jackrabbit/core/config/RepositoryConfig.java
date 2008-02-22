@@ -225,17 +225,18 @@ public class RepositoryConfig {
     /**
      * Creates a repository configuration object.
      *
-     * @param template workspace configuration template
      * @param home repository home directory
      * @param sec the security configuration
      * @param fsc file system configuration
      * @param workspaceDirectory workspace root directory
      * @param workspaceConfigDirectory optional workspace configuration directory
-     * @param workspaceMaxIdleTime maximum workspace idle time in seconds
      * @param defaultWorkspace name of the default workspace
+     * @param workspaceMaxIdleTime maximum workspace idle time in seconds
+     * @param template workspace configuration template
      * @param vc versioning configuration
      * @param sc search configuration for system search manager.
      * @param cc optional cluster configuration
+     * @param dataStoreConfig configuration for data store
      * @param parser configuration parser
      */
     public RepositoryConfig(String home, SecurityConfig sec, FileSystemConfig fsc,
@@ -757,4 +758,5 @@ public class RepositoryConfig {
         return dataStoreConfig;
     }
 }
+
 
