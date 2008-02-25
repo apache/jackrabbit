@@ -63,7 +63,9 @@ public class NGKDbNameIndex extends DbNameIndex {
             connectionManager.executeStmt(nameInsertSQL, new Object[]{string});
             return getIndex(string);
         } catch (Exception e) {
-            throw new IllegalStateException("Unable to insert index: " + e);
+            IllegalStateException ise = new IllegalStateException("Unable to insert index for string: " + string);
+            ise.initCause(e);
+            throw ise;
         } finally {
             closeResultSet(rs);
         }

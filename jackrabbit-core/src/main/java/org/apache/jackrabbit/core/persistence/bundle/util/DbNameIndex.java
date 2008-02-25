@@ -143,7 +143,9 @@ public class DbNameIndex implements StringIndex {
                 return rs.getInt(1);
             }
         } catch (Exception e) {
-            throw new IllegalStateException("Unable to insert index: " + e);
+            IllegalStateException ise = new IllegalStateException("Unable to insert index for string: " + string);
+            ise.initCause(e);
+            throw ise;
         } finally {
             closeResultSet(rs);
         }
@@ -165,7 +167,9 @@ public class DbNameIndex implements StringIndex {
                 return rs.getInt(1);
             }
         } catch (Exception e) {
-            throw new IllegalStateException("Unable to read index: " + e);
+            IllegalStateException ise = new IllegalStateException("Unable to read index for string: " + string);
+            ise.initCause(e);
+            throw ise;
         } finally {
             closeResultSet(rs);
         }
@@ -187,7 +191,9 @@ public class DbNameIndex implements StringIndex {
                 return rs.getString(1);
             }
         } catch (Exception e) {
-            throw new IllegalStateException("Unable to read name: " + e);
+            IllegalStateException ise = new IllegalStateException("Unable to read name for index: " + index);
+            ise.initCause(e);
+            throw ise;
         } finally {
             closeResultSet(rs);
         }

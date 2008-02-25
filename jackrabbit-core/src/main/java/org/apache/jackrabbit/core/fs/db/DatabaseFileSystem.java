@@ -773,7 +773,9 @@ public class DatabaseFileSystem implements FileSystem {
                         }
 
                     } catch (Exception e) {
-                        throw new IOException(e.getMessage());
+                        IOException ioe = new IOException(e.getMessage());
+                        ioe.initCause(e);
+                        throw ioe;
                     } finally {
                         if (in != null) {
                             in.close();
@@ -872,7 +874,9 @@ public class DatabaseFileSystem implements FileSystem {
                         }
 
                     } catch (Exception e) {
-                        throw new IOException(e.getMessage());
+                        IOException ioe = new IOException(e.getMessage());
+                        ioe.initCause(e);
+                        throw ioe;
                     } finally {
                         if (in != null) {
                             in.close();

@@ -63,7 +63,9 @@ public class PostgreSQLNameIndex extends DbNameIndex {
             connectionManager.executeStmt(nameInsertSQL, new Object[]{string});
             return getGeneratedKey();
         } catch (Exception e) {
-            throw new IllegalStateException("Unable to insert index: " + e);
+            IllegalStateException ise = new IllegalStateException("Unable to insert index for string: " + string);
+            ise.initCause(e);
+            throw ise ;
         }
     }
 
@@ -84,7 +86,9 @@ public class PostgreSQLNameIndex extends DbNameIndex {
                 rs.close();
             }
         } catch (Exception e) {
-            throw new IllegalStateException("Unable to read index: " + e);
+            IllegalStateException ise = new IllegalStateException("Unable to read generated index");
+            ise.initCause(e);
+            throw ise;
         }
     }
 

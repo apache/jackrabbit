@@ -140,7 +140,9 @@ public final class FileSystemPathUtil {
                 try {
                     out.write(Integer.parseInt(pathOrName.substring(i + 1, i + 3), 16));
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException();
+                    IllegalArgumentException iae = new IllegalArgumentException("Failed to unescape escape sequence");
+                    iae.initCause(e);
+                    throw iae;
                 }
                 i += 2;
             } else {

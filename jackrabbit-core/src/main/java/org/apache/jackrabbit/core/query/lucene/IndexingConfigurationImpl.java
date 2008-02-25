@@ -722,7 +722,9 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
                         try {
                             return (NodeState) ism.getItemState(cne.getId());
                         } catch (ItemStateException e) {
-                            throw new NoSuchElementException();
+                            NoSuchElementException nsee = new NoSuchElementException("No node with id " + cne.getId() + " found in child axis");
+                            nsee.initCause(e);
+                            throw nsee;
                         }
                     }
                 };

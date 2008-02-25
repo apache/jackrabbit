@@ -398,7 +398,9 @@ public class OracleFileSystem extends DbFileSystem {
                             }
                         }
                     } catch (Exception e) {
-                        throw new IOException(e.getMessage());
+                        IOException ioe = new IOException(e.getMessage());
+                        ioe.initCause(e);
+                        throw ioe;
                     } finally {
                         if (blob != null) {
                             try {
@@ -509,7 +511,9 @@ public class OracleFileSystem extends DbFileSystem {
                             }
                         }
                     } catch (Exception e) {
-                        throw new IOException(e.getMessage());
+                        IOException ioe = new IOException(e.getMessage());
+                        ioe.initCause(e);
+                        throw ioe;
                     } finally {
                         if (blob != null) {
                             try {
