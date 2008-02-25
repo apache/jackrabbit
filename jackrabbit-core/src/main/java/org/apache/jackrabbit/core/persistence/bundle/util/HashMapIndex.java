@@ -131,7 +131,9 @@ public class HashMapIndex implements StringIndex {
             try {
                 load();
             } catch (Exception e) {
-                throw new IllegalStateException("Unable to load lookup table: " + e);
+                IllegalStateException ise = new IllegalStateException("Unable to load lookup table for uri: " + nsUri);
+                ise.initCause(e);
+                throw ise;
             }
             idx = (Integer) stringToIndex.get(nsUri);
         }
@@ -143,7 +145,9 @@ public class HashMapIndex implements StringIndex {
             try {
                 save();
             } catch (Exception e) {
-                throw new IllegalStateException("Unable to store lookup table: "  + e);
+                IllegalStateException ise = new IllegalStateException("Unable to store lookup table for uri: "  + nsUri);
+                ise.initCause(e);
+                throw ise;
             }
         }
         return idx.intValue();
@@ -162,7 +166,9 @@ public class HashMapIndex implements StringIndex {
             try {
                 load();
             } catch (Exception e) {
-                throw new IllegalStateException("Unable to load lookup table: " + e);
+                IllegalStateException ise = new IllegalStateException("Unable to load lookup table for index: " + i);
+                ise.initCause(e);
+                throw ise;
             }
             s = (String) indexToString.get(idx);
         }

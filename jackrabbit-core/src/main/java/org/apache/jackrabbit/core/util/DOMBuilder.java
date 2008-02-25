@@ -80,9 +80,13 @@ public final class DOMBuilder {
             transformer.transform(
                     new DOMSource(document), new StreamResult(xml));
         } catch (TransformerConfigurationException e) {
-            throw new IOException(e.getMessage());
+            IOException ioe = new IOException(e.getMessage());
+            ioe.initCause(e);
+            throw ioe;
         } catch (TransformerException e) {
-            throw new IOException(e.getMessage());
+            IOException ioe = new IOException(e.getMessage());
+            ioe.initCause(e);
+            throw ioe;
         }
     }
 

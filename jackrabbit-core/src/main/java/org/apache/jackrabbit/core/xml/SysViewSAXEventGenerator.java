@@ -211,7 +211,9 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
                         try {
                             contentHandler.characters(cbuf, off, len);
                         } catch (SAXException se) {
-                            throw new IOException(se.toString());
+                            IOException ioe = new IOException(se.toString());
+                            ioe.initCause(se);
+                            throw ioe;
                         }
                     }
                 };

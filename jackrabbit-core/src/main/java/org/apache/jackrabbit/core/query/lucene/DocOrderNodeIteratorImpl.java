@@ -181,7 +181,9 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
                                 log.warn("Node " + n1.getNodeId() + " does not exist anymore: " + e);
                                 // node does not exist anymore
                                 invalidIDs.add(n1.getNodeId());
-                                throw new SortFailedException();
+                                SortFailedException sfe = new SortFailedException();
+                                sfe.initCause(e);
+                                throw sfe;
                             }
                             NodeImpl node2;
                             try {
@@ -190,7 +192,9 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
                                 log.warn("Node " + n2.getNodeId() + " does not exist anymore: " + e);
                                 // node does not exist anymore
                                 invalidIDs.add(n2.getNodeId());
-                                throw new SortFailedException();
+                                SortFailedException sfe = new SortFailedException();
+                                sfe.initCause(e);
+                                throw sfe;
                             }
                             Path.Element[] path1 = node1.getPrimaryPath().getElements();
                             Path.Element[] path2 = node2.getPrimaryPath().getElements();
