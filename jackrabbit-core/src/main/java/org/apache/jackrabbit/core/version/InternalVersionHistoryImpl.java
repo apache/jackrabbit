@@ -4,7 +4,7 @@
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * the License.  You may obtain a copy of the License at195
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.NodeState.ChildNodeEntry;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.uuid.UUID;
@@ -52,7 +53,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * the cache of the version labels
      * key = version label (String)
-     * value = version
+     * value = version name
      */
     private HashMap labelCache = new HashMap();
 
@@ -60,10 +61,17 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * the root version of this history
      */
     private InternalVersion rootVersion;
+    
+    /**
+     * the hashmap of all versions names
+     * key = version name
+     * value = version id (NodeId)
+     */  
+    private HashMap nameCache = new HashMap();
 
     /**
      * the hashmap of all versions
-     * key = versionId (NodeId)
+     * key = version id (NodeId)
      * value = version
      */
     private HashMap versionCache = new HashMap();
@@ -87,7 +95,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * the id of the versionable node
      */
     private NodeId versionableId;
-
+    
     /**
      * Creates a new VersionHistory object for the given node state.
      */
@@ -96,60 +104,37 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         super(vMgr, node);
         init();
     }
-
+    
     /**
      * Initialies the history and loads all internal caches
      *
      * @throws RepositoryException
      */
     private void init() throws RepositoryException {
+        nameCache.clear();
         versionCache.clear();
         labelCache.clear();
 
         // get id
         historyId = node.getNodeId();
-
+        
         // get versionable id
         versionableId = NodeId.valueOf(node.getPropertyValue(QName.JCR_VERSIONABLEUUID).toString());
-
-        // get entries
-        NodeStateEx[] children = node.getChildNodes();
-        for (int i = 0; i < children.length; i++) {
-            NodeStateEx child = children[i];
-            if (child.getName().equals(QName.JCR_VERSIONLABELS)) {
-                labelNode = child;
-                continue;
-            }
-            InternalVersionImpl v = createVersionInstance(child);
-            versionCache.put(v.getId(), v);
-            if (v.isRootVersion()) {
-                rootVersion = v;
-            }
-            vMgr.versionCreated(v);
-        }
-
-        // check for legacy version nodes that had 'virtual' jcr:successor property
-        if (rootVersion.getSuccessors().length==0 && versionCache.size()>1) {
-            // resolve successors and predecessors
-            Iterator iter = versionCache.values().iterator();
-            while (iter.hasNext()) {
-                InternalVersionImpl v = (InternalVersionImpl) iter.next();
-                v.legacyResolveSuccessors();
-            }
-        }
-
-        try {
-            // init label cache
+        
+        // get label node
+        labelNode = node.getNode(QName.JCR_VERSIONLABELS, 1);
+        
+        // init label cache
+        try {  
             PropertyState[] labels = labelNode.getProperties();
             for (int i = 0; i < labels.length; i++) {
                 PropertyState pState = labels[i];
                 if (pState.getType() == PropertyType.REFERENCE) {
-                    QName name = pState.getName();
+                    QName labelName = pState.getName();
                     UUID ref = (UUID) pState.getValues()[0].internalValue();
-                    InternalVersionImpl v = (InternalVersionImpl) getVersion(new NodeId(ref));
-                    if (v != null) {
-                        labelCache.put(name, v);
-                        v.internalAddLabel(name);
+                    NodeId id = new NodeId(ref);
+                    if (node.getState().hasChildNodeEntry(id)) {
+                        labelCache.put(labelName, node.getState().getChildNodeEntry(id).getName());
                     } else {
                         log.warn("Error while resolving label reference. Version missing: " + ref);
                     }
@@ -157,6 +142,29 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             }
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
+        }
+        
+        // get root version
+        rootVersion = createVersionInstance(QName.JCR_ROOTVERSION);
+        
+        // get version entries
+        ChildNodeEntry[] children = (ChildNodeEntry[])node.getState().getChildNodeEntries().toArray();
+        for (int i = 0; i < children.length; i++) {
+            ChildNodeEntry child = children[i];
+            if (child.getName().equals(QName.JCR_VERSIONLABELS)) {
+                continue;
+            }
+            nameCache.put(child.getName(), child.getId());
+        }
+        
+        // fix legacy
+        if (rootVersion.getSuccessors().length==0) {		
+            Iterator iter = nameCache.keySet().iterator();
+            while (iter.hasNext()) {
+                QName versionName = (QName)iter.next();
+                InternalVersionImpl v = (InternalVersionImpl)createVersionInstance(versionName);
+                v.legacyResolveSuccessors();
+            }
         }
     }
 
@@ -176,7 +184,32 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         }
         tempVersionCache.clear();
     }
-
+    
+    /**
+     * Create a version instance.
+     */
+    InternalVersionImpl createVersionInstance(QName name) {
+        try {
+            NodeStateEx nodeStateEx = node.getNode(name, 1);      
+            InternalVersionImpl v = createVersionInstance(nodeStateEx);	
+            versionCache.put(v.getId(), v);
+            vMgr.versionCreated(v);
+            
+            // add labels
+            Iterator iter = labelCache.keySet().iterator();
+            while (iter.hasNext()) {
+                QName labelName = (QName)iter.next();
+                QName versionName = (QName)labelCache.get(labelName);
+                if (v.getName().equals(versionName)) {
+                    v.internalAddLabel(labelName);
+                }
+            }
+            return v;
+        } catch (RepositoryException e) {
+            throw new IllegalArgumentException("Failed to create version " + name + ".");
+        }  
+    }
+    
     /**
      * Create a version instance. May resurrect versions temporarily swapped
      * out when refreshing this history.
@@ -215,66 +248,74 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
-    public InternalVersion getVersion(QName versionName) throws VersionException {
-        // maybe add cache by name?
-        Iterator iter = versionCache.values().iterator();
-        while (iter.hasNext()) {
-            InternalVersion v = (InternalVersion) iter.next();
-            if (v.getName().equals(versionName)) {
-                return v;
-            }
-        }
-        throw new VersionException("Version " + versionName + " does not exist.");
+
+    public InternalVersion getVersion(QName versionName) throws VersionException {   	
+        NodeId versionId = (NodeId)nameCache.get(versionName);   	
+        if (versionId == null) {
+            throw new VersionException("Version " + versionName + " does not exist.");
+        }                      
+        
+        InternalVersion v = (InternalVersion)versionCache.get(versionId);
+        if (v == null) {
+            v = createVersionInstance(versionName);
+        }  
+        return v;
     }
 
     /**
      * {@inheritDoc}
      */
     public boolean hasVersion(QName versionName) {
-        // maybe add cache?
-        Iterator iter = versionCache.values().iterator();
-        while (iter.hasNext()) {
-            InternalVersion v = (InternalVersion) iter.next();
-            if (v.getName().equals(versionName)) {
-                return true;
-            }
-        }
-        return false;
+        return nameCache.containsKey(versionName);
     }
 
     /**
      * {@inheritDoc}
      */
     public boolean hasVersion(NodeId id) {
-        return versionCache.containsKey(id);
+        return nameCache.containsValue(id);
     }
 
     /**
      * {@inheritDoc}
      */
     public InternalVersion getVersion(NodeId id) {
-        return (InternalVersion) versionCache.get(id);
+        InternalVersion v = (InternalVersion)versionCache.get(id);
+        if (v == null) {
+            Iterator iter = nameCache.keySet().iterator();
+            while (iter.hasNext()) {
+                QName versionName = (QName)iter.next();
+                if (nameCache.get(versionName).equals(id)) {
+                    v = createVersionInstance(versionName);
+                    break;
+                }
+            }
+        }
+        return v;
     }
 
     /**
      * {@inheritDoc}
      */
     public InternalVersion getVersionByLabel(QName label) {
-        return (InternalVersion) labelCache.get(label);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Iterator getVersions() {
-        return versionCache.values().iterator();
+        QName versionName = (QName)labelCache.get(label);
+        if (versionName == null) {
+            return null;
+        }
+    	
+        NodeId id = (NodeId)nameCache.get(versionName);
+        InternalVersion v = (InternalVersion)versionCache.get(id);
+        if (v == null) {
+            v = createVersionInstance(versionName);
+        }
+        return v;
     }
 
     /**
      * {@inheritDoc}
      */
     public int getNumVersions() {
-        return versionCache.size();
+        return nameCache.size();
     }
 
     /**
@@ -338,6 +379,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
         // and remove from history
         versionCache.remove(v.getId());
+        nameCache.remove(versionName);
         vMgr.versionDestroyed(v);
 
         // store changes
@@ -360,18 +402,19 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      */
     InternalVersion setVersionLabel(QName versionName, QName label, boolean move)
             throws VersionException {
-
         InternalVersion version =
             (versionName != null) ? getVersion(versionName) : null;
         if (versionName != null && version == null) {
             throw new VersionException("Version " + versionName + " does not exist in this version history.");
         }
-        InternalVersionImpl prev = (InternalVersionImpl) labelCache.get(label);
-        if (prev == null) {
+        QName prevName = (QName) labelCache.get(label);
+        InternalVersionImpl prev = null;
+        if (prevName == null) {
             if (version == null) {
                 return null;
             }
         } else {
+            prev = (InternalVersionImpl)getVersion(prevName);
             if (prev.equals(version)) {
                 return version;
             } else if (!move) {
@@ -398,7 +441,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             labelCache.remove(label);
         }
         if (version != null) {
-            labelCache.put(label, version);
+            labelCache.put(label, version.getName());
             ((InternalVersionImpl) version).internalAddLabel(label);
         }
         return prev;
@@ -422,7 +465,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         for (int i = 0; i < preds.length; i++) {
             UUID predId = UUID.fromString(preds[i].getString());
             // check if version exist
-            if (!versionCache.containsKey(new NodeId(predId))) {
+            if (!nameCache.containsValue(new NodeId(predId))) {
                 throw new RepositoryException("invalid predecessor in source node");
             }
             predecessors[i] = InternalValue.create(predId);
@@ -450,6 +493,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
         // update cache
         versionCache.put(version.getId(), version);
+        nameCache.put(version.getName(), version.getId());
 
         return version;
     }
