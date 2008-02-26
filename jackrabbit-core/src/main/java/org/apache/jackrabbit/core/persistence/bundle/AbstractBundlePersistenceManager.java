@@ -16,39 +16,39 @@
  */
 package org.apache.jackrabbit.core.persistence.bundle;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.state.ItemState;
-import org.apache.jackrabbit.core.state.ChangeLog;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.NoSuchItemStateException;
-import org.apache.jackrabbit.core.state.NodeReferencesId;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.NamespaceRegistryImpl;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.persistence.PMContext;
-import org.apache.jackrabbit.core.persistence.PersistenceManager;
-import org.apache.jackrabbit.core.persistence.bundle.util.StringIndex;
-import org.apache.jackrabbit.core.persistence.bundle.util.NamespaceIndex;
-import org.apache.jackrabbit.core.persistence.bundle.util.NodePropBundle;
-import org.apache.jackrabbit.core.persistence.bundle.util.BundleCache;
-import org.apache.jackrabbit.core.persistence.bundle.util.LRUNodeIdCache;
-import org.apache.jackrabbit.core.persistence.bundle.util.HashMapIndex;
-import org.apache.jackrabbit.name.QName;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
 import javax.jcr.PropertyType;
+
+import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.nodetype.PropDefId;
+import org.apache.jackrabbit.core.persistence.PMContext;
+import org.apache.jackrabbit.core.persistence.PersistenceManager;
+import org.apache.jackrabbit.core.persistence.bundle.util.BundleCache;
+import org.apache.jackrabbit.core.persistence.bundle.util.HashMapIndex;
+import org.apache.jackrabbit.core.persistence.bundle.util.LRUNodeIdCache;
+import org.apache.jackrabbit.core.persistence.bundle.util.NamespaceIndex;
+import org.apache.jackrabbit.core.persistence.bundle.util.NodePropBundle;
+import org.apache.jackrabbit.core.persistence.bundle.util.StringIndex;
+import org.apache.jackrabbit.core.state.ChangeLog;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.name.QName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>AbstractBundlePersistenceManager</code> acts as base for all
