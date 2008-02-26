@@ -146,7 +146,7 @@ public class ISO9075 {
         if (decoded == name.getLocalName()) {
             return name;
         } else {
-            return new QName(name.getNamespaceURI(), decoded.toString());
+            return new QName(name.getNamespaceURI(), decoded);
         }
     }
 
