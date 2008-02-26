@@ -149,7 +149,7 @@
     the Cluster element configures the optional participation of this
     repository in a clustered environment. a literal id may be
     specified that uniquely identifies this node in a cluster, as well
-    as the delay in seconds before changes to the journal are
+    as the delay in milliseconds before changes to the journal are
     automatically detected.
 -->
 <!ELEMENT Cluster (Journal)>
