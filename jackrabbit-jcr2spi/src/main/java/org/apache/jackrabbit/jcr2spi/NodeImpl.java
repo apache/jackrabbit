@@ -114,7 +114,6 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public String getName() throws RepositoryException {
         checkStatus();
-        Name qName = getQName();
         return session.getNameResolver().getJCRName(getQName());
     }
 
