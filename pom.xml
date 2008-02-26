@@ -693,6 +693,16 @@
         <version>10.2.1.6</version>
       </dependency>
       <dependency>
+        <groupId>org.apache.derby</groupId>
+        <artifactId>derbynet</artifactId>
+        <version>10.2.1.6</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.derby</groupId>
+        <artifactId>derbyclient</artifactId>
+        <version>10.2.1.6</version>
+      </dependency>
+      <dependency>
         <groupId>poi</groupId>
         <artifactId>poi</artifactId>
         <version>2.5.1-final-20040804</version>
