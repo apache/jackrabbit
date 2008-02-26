@@ -22,6 +22,8 @@ import java.sql.SQLException;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.bundle.util.DbNameIndex;
 import org.apache.jackrabbit.core.persistence.bundle.util.NGKDbNameIndex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Extends the {@link BundleDbPersistenceManager} by Oracle specific code.
@@ -45,6 +47,11 @@ public class OraclePersistenceManager extends BundleDbPersistenceManager {
 
     /** the cvs/svn id */
     static final String CVS_ID = "$URL$ $Rev$ $Date$";
+
+    /**
+     * the default logger
+     */
+    private static Logger log = LoggerFactory.getLogger(OraclePersistenceManager.class);
 
     /**
      * Creates a new oracle persistence manager
@@ -76,19 +83,21 @@ public class OraclePersistenceManager extends BundleDbPersistenceManager {
         }
         super.init(context);
 
-/*
         // check driver version
-        DatabaseMetaData metaData =
-            connectionManager.getConnection().getMetaData();
-        if (metaData.getDriverMajorVersion() < 10) {
-            // oracle drivers prior to version 10 only support
-            // writing BLOBs up to 32k in size...
-            log.warn("unsupported driver version detected: "
-                    + metaData.getDriverName()
-                    + " v" + metaData.getDriverVersion());
+        try {
+            DatabaseMetaData metaData =
+                connectionManager.getConnection().getMetaData();
+            if (metaData.getDriverMajorVersion() < 10) {
+                // Oracle drivers prior to version 10 only support
+                // writing BLOBs up to 32k in size...
+                log.warn("Unsupported driver version detected: "
+                        + metaData.getDriverName()
+                        + " v" + metaData.getDriverVersion());
+            }
+        } catch (SQLException e) {
+            log.warn("Can not retrieve driver version", e);
         }
-*/
-        }
+    }
 
     /**
      * Retruns a new instance of a NGKDbNameIndex.
