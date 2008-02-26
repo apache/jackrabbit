@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.persistence.bundle.util;
 
 import java.io.InputStream;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -329,6 +330,13 @@ public class ConnectionRecoveryManager {
             throw e;
         }
         connection.setAutoCommit(true);
+        try {
+            DatabaseMetaData meta = connection.getMetaData();
+            log.info("Database: " + meta.getDatabaseProductName() + " / " + meta.getDatabaseProductVersion());
+            log.info("Driver: " + meta.getDriverName() + " / " + meta.getDriverVersion());
+        } catch (SQLException e) {
+            log.warn("Can not retrieve database and driver name / version", e);
+        }
     }
 
     /**
