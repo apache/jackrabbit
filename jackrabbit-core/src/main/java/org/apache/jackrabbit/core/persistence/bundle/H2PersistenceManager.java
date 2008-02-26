@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.persistence.bundle;
 
 import org.apache.jackrabbit.core.persistence.PMContext;
-import org.apache.jackrabbit.core.persistence.PersistenceManager;
 
 import java.sql.Statement;
 import java.sql.SQLException;
@@ -103,7 +102,7 @@ public class H2PersistenceManager extends BundleDbPersistenceManager {
      * {@inheritDoc}
      */
     protected void checkSchema() throws SQLException, RepositoryException {
-        Statement stmt = con.createStatement();
+        Statement stmt = connectionManager.getConnection().createStatement();
         try {
             stmt.execute("SET LOCK_TIMEOUT " + lockTimeout);
         } finally {
@@ -121,7 +120,7 @@ public class H2PersistenceManager extends BundleDbPersistenceManager {
         }
         if (getUrl().startsWith("jdbc:h2:file:")) {
             // have to explicitly shutdown in-proc h2
-            Statement stmt = con.createStatement();
+            Statement stmt = connectionManager.getConnection().createStatement();
             stmt.execute("shutdown");
             stmt.close();
         }

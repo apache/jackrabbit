@@ -16,11 +16,8 @@
  */
 package org.apache.jackrabbit.core.persistence.bundle.util;
 
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.Statement;
 
 /**
  * Same as {@link DbNameIndex} but does not make use of the
@@ -36,23 +33,23 @@ public class NGKDbNameIndex extends DbNameIndex {
 
     /**
      * Creates a new index that is stored in a db.
-     * @param con the jdbc connection
+     * @param con the ConnectionRecoveryManager
      * @param schemaObjectPrefix the prefix for table names
      * @throws SQLException if the statements cannot be prepared.
      */
-    public NGKDbNameIndex(Connection con, String schemaObjectPrefix)
+    public NGKDbNameIndex(ConnectionRecoveryManager conMgr, String schemaObjectPrefix)
             throws SQLException {
-        super(con, schemaObjectPrefix);
+        super(conMgr, schemaObjectPrefix);
     }
 
     /**
      * {@inheritDoc}
      */
-    protected void init(Connection con, String schemaObjectPrefix)
+    protected void init(String schemaObjectPrefix)
             throws SQLException {
-        nameSelect = con.prepareStatement("select NAME from " + schemaObjectPrefix + "NAMES where ID = ?");
-        indexSelect = con.prepareStatement("select ID from " + schemaObjectPrefix + "NAMES where NAME = ?");
-        nameInsert = con.prepareStatement("insert into " + schemaObjectPrefix + "NAMES (NAME) values (?)");
+        nameSelectSQL = "select NAME from " + schemaObjectPrefix + "NAMES where ID = ?";
+        indexSelectSQL = "select ID from " + schemaObjectPrefix + "NAMES where NAME = ?";
+        nameInsertSQL = "insert into " + schemaObjectPrefix + "NAMES (NAME) values (?)";
     }
 
     /**
@@ -66,17 +63,14 @@ public class NGKDbNameIndex extends DbNameIndex {
      */
     protected int insertString(String string) {
         // assert index does not exist
-        PreparedStatement stmt = nameInsert;
         ResultSet rs = null;
         try {
-            stmt.setString(1, string);
-            stmt.executeUpdate();
+            connectionManager.executeStmt(nameInsertSQL, new Object[]{string});
             return getIndex(string);
         } catch (Exception e) {
             throw new IllegalStateException("Unable to insert index: " + e);
         } finally {
             closeResultSet(rs);
-            resetStatement(stmt);
         }
     }
 }

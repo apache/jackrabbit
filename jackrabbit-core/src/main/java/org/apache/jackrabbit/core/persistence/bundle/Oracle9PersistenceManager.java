@@ -33,9 +33,9 @@ import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.sql.Blob;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
  * <code>OracleLegacyPersistenceManager</code> provides support for Oracle jdbc
@@ -68,8 +68,8 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
     private static Logger log = LoggerFactory.getLogger(Oracle9PersistenceManager.class);
 
     private Class blobClass;
-    private Integer DURATION_SESSION_CONSTANT;
-    private Integer MODE_READWRITE_CONSTANT;
+    private Integer duractionSessionConstant;
+    private Integer modeReadWriteConstant;
 
     public Oracle9PersistenceManager() {
     }
@@ -92,10 +92,10 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
 
         // use the Connection object for using the exact same
         // class loader that the Oracle driver was loaded with
-        blobClass = con.getClass().getClassLoader().loadClass("oracle.sql.BLOB");
-        DURATION_SESSION_CONSTANT =
+        blobClass = connectionManager.getConnection().getClass().getClassLoader().loadClass("oracle.sql.BLOB");
+        duractionSessionConstant =
                 new Integer(blobClass.getField("DURATION_SESSION").getInt(null));
-        MODE_READWRITE_CONSTANT =
+        modeReadWriteConstant =
                 new Integer(blobClass.getField("MODE_READWRITE").getInt(null));
     }
 
@@ -111,7 +111,6 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
      */
     protected synchronized void storeBundle(NodePropBundle bundle)
             throws ItemStateException {
-        PreparedStatement stmt = null;
         Blob blob = null;
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
@@ -119,21 +118,15 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
             binding.writeBundle(dout, bundle);
             dout.close();
 
-            if (bundle.isNew()) {
-                stmt = bundleInsert;
-            } else {
-                stmt = bundleUpdate;
-            }
+            String sql = bundle.isNew() ? bundleInsertSQL : bundleUpdateSQL;
             blob = createTemporaryBlob(new ByteArrayInputStream(out.toByteArray()));
-            stmt.setBlob(1, blob);
-            stmt.setBytes(2, bundle.getId().getUUID().getRawBytes());
-            stmt.execute();
+            Object[] params = createParams(bundle.getId().getUUID(), blob, true);
+            connectionManager.executeStmt(sql, params);
         } catch (Exception e) {
             String msg = "failed to write bundle: " + bundle.getId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
-            resetStatement(stmt);
             if (blob != null) {
                 try {
                     freeTemporaryBlob(blob);
@@ -152,15 +145,11 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        PreparedStatement stmt = null;
         Blob blob = null;
         try {
             // check if insert or update
-            if (exists(refs.getId())) {
-                stmt = nodeReferenceUpdate;
-            } else {
-                stmt = nodeReferenceInsert;
-            }
+            boolean update = exists(refs.getId());
+            String sql = (update) ? nodeReferenceUpdateSQL : nodeReferenceInsertSQL;
 
             ByteArrayOutputStream out = new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
             // serialize references
@@ -170,9 +159,8 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
             // not have to additionally synchronize on the preparedStatement
 
             blob = createTemporaryBlob(new ByteArrayInputStream(out.toByteArray()));
-            stmt.setBlob(1, blob);
-            stmt.setBytes(2, refs.getTargetId().getUUID().getRawBytes());
-            stmt.execute();
+            Object[] params = createParams(refs.getTargetId().getUUID(), blob, true);
+            connectionManager.executeStmt(sql, params);
 
             // there's no need to close a ByteArrayOutputStream
             //out.close();
@@ -181,7 +169,6 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
-            resetStatement(stmt);
             if (blob != null) {
                 try {
                     freeTemporaryBlob(blob);
@@ -210,9 +197,9 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
         Method createTemporary = blobClass.getMethod("createTemporary",
                 new Class[]{Connection.class, Boolean.TYPE, Integer.TYPE});
         Object blob = createTemporary.invoke(null,
-                new Object[]{con, Boolean.FALSE, DURATION_SESSION_CONSTANT});
+                new Object[]{connectionManager.getConnection(), Boolean.FALSE, duractionSessionConstant});
         Method open = blobClass.getMethod("open", new Class[]{Integer.TYPE});
-        open.invoke(blob, new Object[]{MODE_READWRITE_CONSTANT});
+        open.invoke(blob, new Object[]{modeReadWriteConstant});
         Method getBinaryOutputStream = blobClass.getMethod("getBinaryOutputStream", new Class[0]);
         OutputStream out = (OutputStream) getBinaryOutputStream.invoke(blob, null);
         try {
@@ -253,29 +240,23 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
          */
         public synchronized void put(String blobId, InputStream in, long size)
                 throws Exception {
-            PreparedStatement stmt = blobSelectExist;
+
             Blob blob = null;
             try {
-                stmt.setString(1, blobId);
-                stmt.execute();
+                Statement stmt = connectionManager.executeStmt(blobSelectExistSQL, new Object[]{blobId});
                 ResultSet rs = stmt.getResultSet();
                 // a BLOB exists if the result has at least one entry
                 boolean exists = rs.next();
-                resetStatement(stmt);
                 closeResultSet(rs);
 
-                stmt = (exists) ? blobUpdate : blobInsert;
-
+                String sql = (exists) ? blobUpdateSQL : blobInsertSQL;
                 blob = createTemporaryBlob(in);
-                stmt.setBlob(1, blob);
-                stmt.setString(2, blobId);
-                stmt.executeUpdate();
+                connectionManager.executeStmt(sql, new Object[]{blob, blobId});
             } finally {
-                resetStatement(stmt);
                 if (blob != null) {
                     try {
                         freeTemporaryBlob(blob);
-                    } catch (Exception e1) {
+                    } catch (Exception e) {
                     }
                 }
             }

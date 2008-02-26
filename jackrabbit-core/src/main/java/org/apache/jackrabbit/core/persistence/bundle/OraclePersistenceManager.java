@@ -20,8 +20,8 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 import org.apache.jackrabbit.core.persistence.PMContext;
-import org.apache.jackrabbit.core.persistence.bundle.util.NGKDbNameIndex;
 import org.apache.jackrabbit.core.persistence.bundle.util.DbNameIndex;
+import org.apache.jackrabbit.core.persistence.bundle.util.NGKDbNameIndex;
 
 /**
  * Extends the {@link BundleDbPersistenceManager} by Oracle specific code.
@@ -75,9 +75,11 @@ public class OraclePersistenceManager extends BundleDbPersistenceManager {
             setSchemaObjectPrefix(context.getHomeDir().getName() + "_");
         }
         super.init(context);
+
 /*
         // check driver version
-        DatabaseMetaData metaData = con.getMetaData();
+        DatabaseMetaData metaData =
+            connectionManager.getConnection().getMetaData();
         if (metaData.getDriverMajorVersion() < 10) {
             // oracle drivers prior to version 10 only support
             // writing BLOBs up to 32k in size...
@@ -86,7 +88,7 @@ public class OraclePersistenceManager extends BundleDbPersistenceManager {
                     + " v" + metaData.getDriverVersion());
         }
 */
-    }
+        }
 
     /**
      * Retruns a new instance of a NGKDbNameIndex.
@@ -94,7 +96,7 @@ public class OraclePersistenceManager extends BundleDbPersistenceManager {
      * @throws SQLException if an SQL error occurs.
      */
     protected DbNameIndex createDbNameIndex() throws SQLException {
-        return new NGKDbNameIndex(con, schemaObjectPrefix);
+        return new NGKDbNameIndex(connectionManager, schemaObjectPrefix);
     }
 
     /**
@@ -114,7 +116,7 @@ public class OraclePersistenceManager extends BundleDbPersistenceManager {
      * @inheritDoc
      */
     protected void prepareSchemaObjectPrefix() throws Exception {
-        DatabaseMetaData metaData = con.getMetaData();
+        DatabaseMetaData metaData = connectionManager.getConnection().getMetaData();
         String legalChars = metaData.getExtraNameCharacters();
         legalChars += "ABCDEFGHIJKLMNOPQRSTUVWXZY0123456789_";
 
