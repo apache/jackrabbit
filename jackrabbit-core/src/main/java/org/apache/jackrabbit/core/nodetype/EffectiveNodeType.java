@@ -1150,19 +1150,24 @@ public class EffectiveNodeType implements Cloneable {
     }
 
     protected Object clone() {
-        EffectiveNodeType clone = new EffectiveNodeType();
+        try {
+            EffectiveNodeType clone = (EffectiveNodeType) super.clone();
 
-        clone.mergedNodeTypes.addAll(mergedNodeTypes);
-        clone.inheritedNodeTypes.addAll(inheritedNodeTypes);
-        clone.allNodeTypes.addAll(allNodeTypes);
-        Iterator iter = namedItemDefs.keySet().iterator();
-        while (iter.hasNext()) {
-            Object key = iter.next();
-            List list = (List) namedItemDefs.get(key);
-            clone.namedItemDefs.put(key, new ArrayList(list));
+            clone.mergedNodeTypes.addAll(mergedNodeTypes);
+            clone.inheritedNodeTypes.addAll(inheritedNodeTypes);
+            clone.allNodeTypes.addAll(allNodeTypes);
+            Iterator iter = namedItemDefs.keySet().iterator();
+            while (iter.hasNext()) {
+                Object key = iter.next();
+                List list = (List) namedItemDefs.get(key);
+                clone.namedItemDefs.put(key, new ArrayList(list));
+            }
+            clone.unnamedItemDefs.addAll(unnamedItemDefs);
+
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            // won't happen
+            throw new InternalError("Failed to clone EffectiveNodeType object");
         }
-        clone.unnamedItemDefs.addAll(unnamedItemDefs);
-
-        return clone;
     }
 }
