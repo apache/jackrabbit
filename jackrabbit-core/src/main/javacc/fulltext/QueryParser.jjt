@@ -795,7 +795,7 @@ Query Clause(String field) : {
       if (boost != null) {
         float f = (float)1.0;
   try {
-    f = Float.valueOf(boost.image).floatValue();
+    f = Float.parseFloat(boost.image);
           q.setBoost(f);
   } catch (Exception ignored) { }
       }
@@ -838,7 +838,7 @@ Query Term(String field) : {
        } else if (fuzzy) {
        	  float fms = fuzzyMinSim;
        	  try {
-            fms = Float.valueOf(fuzzySlop.image.substring(1)).floatValue();
+            fms = Float.parseFloat(fuzzySlop.image.substring(1));
        	  } catch (Exception ignored) { }
        	 if(fms < 0.0f || fms > 1.0f){
        	   throw new ParseException("Minimum similarity for a FuzzyQuery has to be between 0.0f and 1.0f !");

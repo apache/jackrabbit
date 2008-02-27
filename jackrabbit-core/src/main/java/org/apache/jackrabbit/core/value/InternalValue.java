@@ -501,9 +501,9 @@ public class InternalValue {
             case PropertyType.DATE:
                 return create(ISO8601.parse(s));
             case PropertyType.DOUBLE:
-                return create(Double.valueOf(s).doubleValue());
+                return create(Double.parseDouble(s));
             case PropertyType.LONG:
-                return create(Long.valueOf(s).longValue());
+                return create(Long.parseLong(s));
             case PropertyType.REFERENCE:
                 return create(new UUID(s));
             case PropertyType.PATH:
