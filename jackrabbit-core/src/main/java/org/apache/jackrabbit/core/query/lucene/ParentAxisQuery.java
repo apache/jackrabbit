@@ -309,7 +309,16 @@ class ParentAxisQuery extends Query {
                     try {
                         for (int i = hits.nextSetBit(0); i >= 0; i = hits.nextSetBit(i + 1)) {
                             if (!tDocs.skipTo(i)) {
-                                hits.clear(i);
+                                // no more name tests, clear remaining
+                                hits.clear(i, hits.length());
+                            } else {
+                                // assert doc >= i
+                                int doc = tDocs.doc();
+                                if (doc > i) {
+                                    // clear hits
+                                    hits.clear(i, doc);
+                                    i = doc;
+                                }
                             }
                         }
                     } finally {
