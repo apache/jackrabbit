@@ -308,21 +308,16 @@ public class NodeTypeDef implements Cloneable {
 
     //-------------------------------------------< java.lang.Object overrides >
     public Object clone() {
-        try {
-            NodeTypeDef clone = (NodeTypeDef) super.clone();
-            clone.name = name;
-            clone.primaryItemName = primaryItemName;
-            clone.supertypes = supertypes; // immutable, thus ok to share
-            clone.mixin = mixin;
-            clone.orderableChildNodes = orderableChildNodes;
-            clone.abstractStatus = abstractStatus;
-            clone.nodeDefs = (HashSet) nodeDefs.clone();
-            clone.propDefs = (HashSet) propDefs.clone();
-            return clone;
-        } catch (CloneNotSupportedException e) {
-            // won't happen
-            throw new InternalError("Failed to clone NodeTypeDef object");
-        }
+        NodeTypeDef clone = new NodeTypeDef();
+        clone.name = name;
+        clone.primaryItemName = primaryItemName;
+        clone.supertypes = supertypes; // immutable, thus ok to share
+        clone.mixin = mixin;
+        clone.orderableChildNodes = orderableChildNodes;
+        clone.abstractStatus = abstractStatus;
+        clone.nodeDefs = (HashSet) nodeDefs.clone();
+        clone.propDefs = (HashSet) propDefs.clone();
+        return clone;
     }
 
     public boolean equals(Object obj) {

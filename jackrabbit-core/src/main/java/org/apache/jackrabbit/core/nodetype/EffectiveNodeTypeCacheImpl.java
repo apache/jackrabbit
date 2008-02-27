@@ -163,15 +163,10 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
      * {@inheritDoc}
      */
     public Object clone() {
-        try {
-            EffectiveNodeTypeCacheImpl clone = (EffectiveNodeTypeCacheImpl) super.clone();
-            clone.sortedKeys.addAll(sortedKeys);
-            clone.aggregates.putAll(aggregates);
-            return clone;
-        } catch (CloneNotSupportedException e) {
-            // won't happen
-            throw new InternalError("Failed to clone EffectiveNodeTypeCacheImpl object");
-        }
+        EffectiveNodeTypeCacheImpl clone = new EffectiveNodeTypeCacheImpl();
+        clone.sortedKeys.addAll(sortedKeys);
+        clone.aggregates.putAll(aggregates);
+        return clone;
     }
 
     //-------------------------------------------------------------< Dumpable >

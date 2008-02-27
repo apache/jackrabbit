@@ -210,18 +210,13 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
      * {@inheritDoc}
      */
     public Object clone() {
-        try {
-            BitsetENTCacheImpl clone = (BitsetENTCacheImpl) super.clone();
-            clone.sortedKeys.addAll(sortedKeys);
-            clone.aggregates.putAll(aggregates);
-            clone.names = new Name[names.length];
-            System.arraycopy(names, 0, clone.names, 0, names.length);
-            clone.nameIndex.putAll(nameIndex);
-            return clone;
-        } catch (CloneNotSupportedException e) {
-            // won't happen
-            throw new InternalError("Failed to clone BitsetENTCacheImpl");
-        }
+        BitsetENTCacheImpl clone = new BitsetENTCacheImpl();
+        clone.sortedKeys.addAll(sortedKeys);
+        clone.aggregates.putAll(aggregates);
+        clone.names = new Name[names.length];
+        System.arraycopy(names, 0, clone.names, 0, names.length);
+        clone.nameIndex.putAll(nameIndex);
+        return clone;
     }
 
     /**
