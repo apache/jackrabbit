@@ -82,54 +82,30 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>javacc-maven-plugin</artifactId>
-        <version>2.1</version>
+        <version>2.4</version>
         <executions>
           <execution>
-            <id>sql-jjtree</id>
+            <id>sql</id>
             <configuration>
               <sourceDirectory>${basedir}/src/main/javacc/sql</sourceDirectory>
-              <outputDirectory>${project.build.directory}/generated-src/main/java/org/apache/jackrabbit/spi/commons/query/sql</outputDirectory>
-              <timestampDirectory>${project.build.directory}/generated-src/javacc-timestamp</timestampDirectory>
-              <packageName>org.apache.jackrabbit.spi.commons.query.sql</packageName>
-            </configuration>
-            <goals>
-              <goal>jjtree</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>sql-javacc</id>
-            <configuration>
-              <sourceDirectory>${project.build.directory}/generated-src/main/java/org/apache/jackrabbit/spi/commons/query/sql</sourceDirectory>
               <outputDirectory>${project.build.directory}/generated-src/main/java</outputDirectory>
               <timestampDirectory>${project.build.directory}/generated-src/javacc-timestamp</timestampDirectory>
               <packageName>org.apache.jackrabbit.spi.commons.query.sql</packageName>
             </configuration>
             <goals>
-              <goal>javacc</goal>
+              <goal>jjtree-javacc</goal>
             </goals>
           </execution>
           <execution>
-            <id>xpath-jjtree</id>
+            <id>xpath</id>
             <configuration>
               <sourceDirectory>${basedir}/src/main/javacc/xpath</sourceDirectory>
-              <outputDirectory>${project.build.directory}/generated-src/main/java/org/apache/jackrabbit/spi/commons/query/xpath</outputDirectory>
-              <timestampDirectory>${project.build.directory}/generated-src/javacc-timestamp</timestampDirectory>
-              <packageName>org.apache.jackrabbit.spi.commons.query.xpath</packageName>
-            </configuration>
-            <goals>
-              <goal>jjtree</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>xpath-javacc</id>
-            <configuration>
-              <sourceDirectory>${project.build.directory}/generated-src/main/java/org/apache/jackrabbit/spi/commons/query/xpath</sourceDirectory>
               <outputDirectory>${project.build.directory}/generated-src/main/java</outputDirectory>
               <timestampDirectory>${project.build.directory}/generated-src/javacc-timestamp</timestampDirectory>
               <packageName>org.apache.jackrabbit.spi.commons.query.xpath</packageName>
             </configuration>
             <goals>
-              <goal>javacc</goal>
+              <goal>jjtree-javacc</goal>
             </goals>
           </execution>
         </executions>
