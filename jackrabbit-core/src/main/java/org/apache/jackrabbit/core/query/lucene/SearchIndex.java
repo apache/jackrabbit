@@ -25,7 +25,6 @@ import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
 import org.apache.jackrabbit.core.query.AbstractQueryHandler;
-import org.apache.jackrabbit.core.query.ExecutablePreparedQuery;
 import org.apache.jackrabbit.core.query.ExecutableQuery;
 import org.apache.jackrabbit.core.query.QueryHandler;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
@@ -589,13 +588,13 @@ public class SearchIndex extends AbstractQueryHandler {
      * @return A <code>Query</code> object.
      * @throws javax.jcr.query.InvalidQueryException
      *          if the query object model tree is invalid.
-     * @see QueryHandler#createExecutablePreparedQuery(SessionImpl, ItemManager, QueryObjectModelTree)
+     * @see QueryHandler#createExecutableQuery(SessionImpl, ItemManager, QueryObjectModelTree)
      */
-    public ExecutablePreparedQuery createExecutablePreparedQuery(
+    public ExecutableQuery createExecutableQuery(
             SessionImpl session,
             ItemManager itemMgr,
             QueryObjectModelTree qomTree) throws InvalidQueryException {
-        PreparedQueryImpl query = new PreparedQueryImpl(session, itemMgr, this,
+        QueryObjectModelImpl query = new QueryObjectModelImpl(session, itemMgr, this,
                 getContext().getPropertyTypeRegistry(), qomTree);
         query.setRespectDocumentOrder(documentOrder);
         return query;

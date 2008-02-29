@@ -20,6 +20,15 @@ import org.apache.jackrabbit.core.query.ExecutableQuery;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.spi.Name;
+
+import javax.jcr.Value;
+import javax.jcr.RepositoryException;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
 
 /**
  * <code>AbstractQueryImpl</code> provides a base class for executable queries
@@ -52,6 +61,17 @@ public abstract class AbstractQueryImpl implements ExecutableQuery {
      * document order.
      */
     private boolean documentOrder = true;
+
+    /**
+     * Set&lt;Name>, where Name is a variable name in the query statement.
+     */
+    private final Set variableNames = new HashSet();
+
+    /**
+     * Binding of variable name to value. Maps {@link Name} to {@link Value}.
+     */
+    private final Map bindValues = new HashMap();
+
 
     /**
      * Creates a new query instance from a query string.
@@ -96,6 +116,42 @@ public abstract class AbstractQueryImpl implements ExecutableQuery {
      */
     public void setRespectDocumentOrder(boolean documentOrder) {
         this.documentOrder = documentOrder;
+    }
+
+    /**
+     * Binds the given <code>value</code> to the variable named
+     * <code>varName</code>.
+     *
+     * @param varName name of variable in query
+     * @param value   value to bind
+     * @throws IllegalArgumentException if <code>varName</code> is not a valid
+     *                                  variable in this query.
+     * @throws RepositoryException      if an error occurs.
+     */
+    public void bindValue(Name varName, Value value)
+            throws IllegalArgumentException, RepositoryException {
+        if (!variableNames.contains(varName)) {
+            throw new IllegalArgumentException("not a valid variable in this query");
+        } else {
+            bindValues.put(varName, value);
+        }
+    }
+
+    /**
+     * Adds a name to the set of variables.
+     *
+     * @param varName the name of the variable.
+     */
+    protected void addVariableName(Name varName) {
+        variableNames.add(varName);
+    }
+
+    /**
+     * @return an unmodifieable map, which contains the variable names and their
+     *         respective value.
+     */
+    protected Map getBindVariableValues() {
+        return Collections.unmodifiableMap(bindValues);
     }
 
     /**

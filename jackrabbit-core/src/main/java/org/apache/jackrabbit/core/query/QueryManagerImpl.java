@@ -22,7 +22,6 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.commons.query.QueryTreeBuilderRegistry;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
-import org.apache.jackrabbit.spi.commons.query.jsr283.PreparedQuery;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
 
@@ -120,30 +119,6 @@ public class QueryManagerImpl implements QueryManager {
     }
 
     //---------------------------< JSR 283 >------------------------------------
-
-    /**
-     * Creates a new prepared query by specifying the query
-     * <code>statement</code> itself and the <code>language</code> in which the
-     * query is stated. If the query statement is syntactically invalid, given
-     * the language specified, an <code>InvalidQueryException</code> is thrown.
-     * The language parameter must be a string from among those returned by
-     * <code>QueryManager.getSupportedQueryLanguages()</code>; if it is not,
-     * then an <code>InvalidQueryException</code> is thrown.
-     *
-     * @param statement a <code>String</code>
-     * @param language  a <code>String</code>
-     * @return a <code>PreparedQuery</code> object
-     * @throws InvalidQueryException if the query statement is syntactically
-     *                               invalid or the specified language is not
-     *                               supported
-     * @throws RepositoryException   if another error occurs
-     * @since JCR 2.0
-     */
-    public PreparedQuery createPreparedQuery(String statement, String language)
-            throws InvalidQueryException, RepositoryException {
-        sanityCheck();
-        return searchMgr.createPreparedQuery(session, itemMgr, statement, language);
-    }
 
     /**
      * Returns a <code>QueryObjectModelFactory</code> with which a JCR-JQOM

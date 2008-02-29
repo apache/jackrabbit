@@ -105,9 +105,10 @@ public interface QueryHandler {
      * @return A <code>Query</code> object.
      */
     ExecutableQuery createExecutableQuery(SessionImpl session,
-                             ItemManager itemMgr,
-                             String statement,
-                             String language) throws InvalidQueryException;
+                                          ItemManager itemMgr,
+                                          String statement,
+                                          String language)
+            throws InvalidQueryException;
 
     /**
      * Creates a new query by specifying the query object model. If the query
@@ -121,8 +122,8 @@ public interface QueryHandler {
      * @return A <code>Query</code> object.
      * @throws InvalidQueryException if the query object model tree is invalid.
      */
-    ExecutablePreparedQuery createExecutablePreparedQuery(
-            SessionImpl session,
-            ItemManager itemMgr,
-            QueryObjectModelTree qomTree) throws InvalidQueryException;
+    ExecutableQuery createExecutableQuery(SessionImpl session,
+                                          ItemManager itemMgr,
+                                          QueryObjectModelTree qomTree)
+            throws InvalidQueryException;
 }

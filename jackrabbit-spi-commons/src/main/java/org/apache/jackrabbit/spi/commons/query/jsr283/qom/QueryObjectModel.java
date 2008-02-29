@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.spi.commons.query.jsr283.qom;
 
-import org.apache.jackrabbit.spi.commons.query.jsr283.PreparedQuery;
+import javax.jcr.query.Query;
 
 /**
  * A query in the JCR query object model.
@@ -55,7 +55,7 @@ import org.apache.jackrabbit.spi.commons.query.jsr283.PreparedQuery;
  *
  * @since JCR 2.0
  */
-public interface QueryObjectModel extends PreparedQuery {
+public interface QueryObjectModel extends Query {
 
     /**
      * Gets the node-tuple source for this query.

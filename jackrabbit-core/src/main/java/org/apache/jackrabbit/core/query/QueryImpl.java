@@ -29,6 +29,7 @@ import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.query.InvalidQueryException;
@@ -242,6 +243,26 @@ public class QueryImpl extends AbstractQueryImpl {
             return node;
         } catch (NameException e) {
             throw new RepositoryException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Binds the given <code>value</code> to the variable named
+     * <code>varName</code>.
+     *
+     * @param varName name of variable in query
+     * @param value   value to bind
+     * @throws IllegalArgumentException      if <code>varName</code> is not a
+     *                                       valid variable in this query.
+     * @throws javax.jcr.RepositoryException if an error occurs.
+     */
+    public void bindValue(String varName, Value value)
+            throws IllegalArgumentException, RepositoryException {
+        checkInitialized();
+        try {
+            query.bindValue(session.getQName(varName), value);
+        } catch (NameException e) {
+            throw new RepositoryException(e.getMessage());
         }
     }
 
