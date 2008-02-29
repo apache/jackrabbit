@@ -57,15 +57,7 @@ public class BLOBInTempFile extends BLOBFileValue {
             TransientFileFactory fileFactory = TransientFileFactory.getInstance();
             file = fileFactory.createTransientFile("bin", null, null);
             out = new FileOutputStream(file);
-            byte[] buffer = new byte[4 * 1024];
-            while (true) {
-                int len = in.read(buffer);
-                if (len < 0) {
-                    break;
-                }
-                out.write(buffer, 0, len);
-                length += len;
-            }
+            length = IOUtils.copyLarge(in, out);
         } catch (IOException e) {
             throw new RepositoryException("Error creating temporary file", e);
         } finally {

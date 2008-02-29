@@ -272,10 +272,7 @@ public class ItemStateBinding {
     public UUID readUUID(DataInputStream in) throws IOException {
         if (in.readBoolean()) {
             byte[] bytes = new byte[16];
-            int pos = 0;
-            while (pos < 16) {
-                pos += in.read(bytes, pos, 16 - pos);
-            }
+            in.readFully(bytes);
             return new UUID(bytes);
         } else {
             return null;

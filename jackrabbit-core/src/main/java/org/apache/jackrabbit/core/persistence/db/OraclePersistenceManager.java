@@ -378,11 +378,7 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
                 blobClass.getMethod("getBinaryOutputStream", new Class[0]);
         OutputStream out = (OutputStream) getBinaryOutputStream.invoke(blob, null);
         try {
-            int read;
-            byte[] buf = new byte[8192];
-            while ((read = in.read(buf, 0, buf.length)) > -1) {
-                out.write(buf, 0, read);
-            }
+            IOUtils.copy(in, out);
         } finally {
             try {
                 out.flush();

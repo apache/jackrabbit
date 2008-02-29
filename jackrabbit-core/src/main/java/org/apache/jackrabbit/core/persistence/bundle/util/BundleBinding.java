@@ -34,7 +34,6 @@ import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
@@ -369,10 +368,7 @@ public class BundleBinding extends ItemStateBinding {
                     // Strings are serialized as <length><byte[]>
                     int len = in.readInt();
                     byte[] bytes = new byte[len];
-                    int pos = 0;
-                    while (pos < len) {
-                        pos += in.read(bytes, pos, len - pos);
-                    }
+                    in.readFully(bytes);
                     val = InternalValue.valueOf(new String(bytes, "UTF-8"), type);
             }
             values[i] = val;
@@ -522,10 +518,7 @@ public class BundleBinding extends ItemStateBinding {
                     }
                     try {
                         byte[] bytes = new byte[len];
-                        int pos = 0;
-                        while (pos < len) {
-                            pos += in.read(bytes, pos, len - pos);
-                        }
+                        in.readFully(bytes);
                         log.info("  string: " + new String(bytes, "UTF-8"));
                     } catch (IOException e) {
                         log.error("Error while reading string value: " + e);
@@ -623,22 +616,12 @@ public class BundleBinding extends ItemStateBinding {
                         out.writeInt((int) size);
                         byte[] data = new byte[(int) size];
                         try {
-                            InputStream in = blobVal.getStream();
+                            DataInputStream in =
+                                new DataInputStream(blobVal.getStream());
                             try {
-                                int pos = 0;
-                                while (pos < size) {
-                                    int n = in.read(data, pos, (int) size - pos);
-                                    if (n < 0) {
-                                        throw new EOFException();
-                                    }
-                                    pos += n;
-                                }
+                                in.readFully(data);
                             } finally {
-                                try {
-                                    in.close();
-                                } catch (IOException e) {
-                                    // ignore
-                                }
+                                IOUtils.closeQuietly(in);
                             }
                         } catch (Exception e) {
                             String msg = "Error while storing blob. id="

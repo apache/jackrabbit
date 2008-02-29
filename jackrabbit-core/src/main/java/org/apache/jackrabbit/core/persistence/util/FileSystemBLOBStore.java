@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.persistence.util;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
@@ -85,21 +86,14 @@ public class FileSystemBLOBStore implements ResourceBasedBLOBStore {
      * {@inheritDoc}
      */
     public void put(String blobId, InputStream in, long size) throws Exception {
-        OutputStream out = null;
         // the blobId is an absolute file system path
         FileSystemResource internalBlobFile = new FileSystemResource(fs, blobId);
         internalBlobFile.makeParentDirs();
+        OutputStream out = internalBlobFile.getOutputStream();
         try {
-            out = new BufferedOutputStream(internalBlobFile.getOutputStream());
-            byte[] buffer = new byte[8192];
-            int read;
-            while ((read = in.read(buffer)) > 0) {
-                out.write(buffer, 0, read);
-            }
+            IOUtils.copy(in, out);
         } finally {
-            if (out != null) {
-                out.close();
-            }
+            out.close();
         }
     }
 

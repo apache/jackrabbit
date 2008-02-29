@@ -456,11 +456,7 @@ public class OracleFileSystem extends DbFileSystem {
                 InputStream in = getInputStream(filePath);
                 OutputStream out = new FileOutputStream(tmpFile);
                 try {
-                    int read;
-                    byte[] ba = new byte[8192];
-                    while ((read = in.read(ba, 0, ba.length)) != -1) {
-                        out.write(ba, 0, read);
-                    }
+                    IOUtils.copy(in, out);
                 } finally {
                     out.close();
                     in.close();
@@ -576,11 +572,7 @@ public class OracleFileSystem extends DbFileSystem {
                 blobClass.getMethod("getBinaryOutputStream", new Class[0]);
         OutputStream out = (OutputStream) getBinaryOutputStream.invoke(blob, null);
         try {
-            int read;
-            byte[] buf = new byte[8192];
-            while ((read = in.read(buf, 0, buf.length)) > -1) {
-                out.write(buf, 0, read);
-            }
+            IOUtils.copy(in, out);
         } finally {
             try {
                 out.flush();

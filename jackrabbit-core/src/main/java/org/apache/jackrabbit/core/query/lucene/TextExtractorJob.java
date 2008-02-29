@@ -202,14 +202,10 @@ public class TextExtractorJob extends FutureResult implements Runnable {
         }
 
         // spool into temp file
-        char[] buffer = new char[1024];
-        int len;
         InputStream in = null;
         try {
             try {
-                while ((len = r.read(buffer)) >= 0) {
-                    out.write(buffer, 0, len);
-                }
+                IOUtils.copy(r, out);
                 out.close();
             } finally {
                 r.close();

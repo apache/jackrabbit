@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.journal;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.slf4j.Logger;
@@ -256,12 +257,7 @@ public class FileRecordLog {
             out.writeUTF(producerId);
             out.writeInt(length);
 
-            byte[] buffer = new byte[8192];
-            int len;
-
-            while ((len = in.read(buffer)) > 0) {
-                out.write(buffer, 0, len);
-            }
+            IOUtils.copy(in, out);
             out.flush();
 
             lastRevision +=

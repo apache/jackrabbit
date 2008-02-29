@@ -826,11 +826,7 @@ public class DatabaseFileSystem implements FileSystem {
                 InputStream in = getInputStream(filePath);
                 OutputStream out = new FileOutputStream(tmpFile);
                 try {
-                    int read;
-                    byte[] ba = new byte[8192];
-                    while ((read = in.read(ba, 0, ba.length)) != -1) {
-                        out.write(ba, 0, read);
-                    }
+                    IOUtils.copy(in, out);
                 } finally {
                     out.close();
                     in.close();

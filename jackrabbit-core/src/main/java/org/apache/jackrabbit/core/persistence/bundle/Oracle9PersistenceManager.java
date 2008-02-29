@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.persistence.bundle;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.bundle.util.NodePropBundle;
 import org.apache.jackrabbit.core.persistence.util.Serializer;
@@ -198,11 +199,7 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
         Method getBinaryOutputStream = blobClass.getMethod("getBinaryOutputStream", new Class[0]);
         OutputStream out = (OutputStream) getBinaryOutputStream.invoke(blob, null);
         try {
-            int read;
-            byte[] buf = new byte[8192];
-            while ((read = in.read(buf, 0, buf.length)) > -1) {
-                out.write(buf, 0, read);
-            }
+            IOUtils.copy(in, out);
         } finally {
             try {
                 out.flush();
