@@ -57,7 +57,11 @@ public class ConnectionFactory {
                     // JNDI context
                     Context context = (Context) d.newInstance();
                     DataSource ds = (DataSource) context.lookup(url);
-                    return ds.getConnection(user, password);
+                    if (user == null && password == null) {
+                        return ds.getConnection();
+                    } else {
+                        return ds.getConnection(user, password);
+                    }
                 } else {
                     try {
                         // Workaround for Apache Derby:
