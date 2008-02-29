@@ -157,7 +157,7 @@ public abstract class ItemState implements Serializable {
     /**
      * Pull state information from overlayed state.
      */
-    void pull() {
+    synchronized void pull() {
         ItemState state = overlayedState;
         if (state != null) {
             // sync modification count
