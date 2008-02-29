@@ -33,6 +33,7 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
@@ -220,13 +221,8 @@ public class TransientRepository
                             InputStream input =
                                 TransientRepository.class.getResourceAsStream(
                                         DEFAULT_REPOSITORY_XML);
-                            byte[] buffer = new byte[BUFFER_SIZE];
                             try {
-                                int n = input.read(buffer);
-                                while (n != -1) {
-                                    output.write(buffer, 0, n);
-                                    n = input.read(buffer);
-                                }
+                                IOUtils.copy(input, output);
                             } finally {
                                input.close();
                             }

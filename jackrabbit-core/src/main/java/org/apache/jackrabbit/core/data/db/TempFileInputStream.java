@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.apache.commons.io.IOUtils;
+
 /**
  * An input stream from a temp file that self-destructs when fully read or closed.
  */
@@ -43,14 +45,7 @@ public class TempFileInputStream extends InputStream {
      */
     public static long writeToFileAndClose(InputStream in, File file) throws IOException {
         OutputStream out = new FileOutputStream(file);
-        byte[] b = new byte[4096];
-        while (true) {
-            int n = in.read(b);
-            if (n < 0) {
-                break;
-            }
-            out.write(b, 0, n);
-        }
+        IOUtils.copy(in, out);
         out.close();
         in.close();
         return file.length();

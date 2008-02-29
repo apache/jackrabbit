@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.state;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.ItemId;
@@ -272,14 +273,10 @@ public class PropertyState extends ItemState {
                     if (type == PropertyType.BINARY) {
                         // special handling required for binary value
                         BLOBFileValue blob = val.getBLOBFileValue();
-                        InputStream in = blob.getStream();
                         out.writeLong(blob.getLength());
-                        byte[] buf = new byte[0x2000];
+                        InputStream in = blob.getStream();
                         try {
-                            int read;
-                            while ((read = in.read(buf)) > 0) {
-                                out.write(buf, 0, read);
-                            }
+                            IOUtils.copy(in, out);
                         } finally {
                             in.close();
                         }

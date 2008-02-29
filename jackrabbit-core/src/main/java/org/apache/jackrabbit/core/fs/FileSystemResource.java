@@ -161,11 +161,7 @@ public class FileSystemResource {
     public void spool(OutputStream out) throws FileSystemException, IOException {
         InputStream in = fs.getInputStream(path);
         try {
-            byte[] buffer = new byte[8192];
-            int read;
-            while ((read = in.read(buffer)) > 0) {
-                out.write(buffer, 0, read);
-            }
+            IOUtils.copy(in, out);
         } finally {
             IOUtils.closeQuietly(in);
         }

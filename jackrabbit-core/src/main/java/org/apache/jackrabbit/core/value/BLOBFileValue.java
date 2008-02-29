@@ -100,11 +100,7 @@ public abstract class BLOBFileValue {
     public void spool(OutputStream out) throws RepositoryException, IOException {
         InputStream in = getStream();
         try {
-            byte[] buffer = new byte[0x2000];
-            int read;
-            while ((read = in.read(buffer)) > 0) {
-                out.write(buffer, 0, read);
-            }
+            IOUtils.copy(in, out);
         } finally {
             IOUtils.closeQuietly(in);
         }

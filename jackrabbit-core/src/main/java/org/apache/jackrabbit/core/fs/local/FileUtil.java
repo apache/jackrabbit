@@ -17,9 +17,9 @@
 package org.apache.jackrabbit.core.fs.local;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+
+import org.apache.commons.io.FileUtils;
 
 /**
  * Static utility methods for recursively copying and deleting files and
@@ -74,17 +74,7 @@ public final class FileUtil {
                 throw new IOException("can't write to " + destParent.getPath());
             }
 
-            FileInputStream fis = new FileInputStream(src);
-            FileOutputStream fos = new FileOutputStream(dest);
-
-            byte[] buffer = new byte[8192];
-            int read = 0;
-            while ((read = fis.read(buffer)) > 0) {
-                fos.write(buffer, 0, read);
-            }
-
-            fis.close();
-            fos.close();
+            FileUtils.copyFile(src, dest);
         }
     }
 

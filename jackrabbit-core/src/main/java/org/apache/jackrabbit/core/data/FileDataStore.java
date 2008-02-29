@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
+import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -30,6 +31,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+
+import org.apache.commons.io.IOUtils;
 
 /**
  * Simple file-based data store. Data records are stored as normal files
@@ -166,14 +169,10 @@ public class FileDataStore implements DataStore {
             // stream length and the message digest of the stream
             long length = 0;
             MessageDigest digest = MessageDigest.getInstance(DIGEST);
-            OutputStream output = new FileOutputStream(temporary);
+            OutputStream output = new DigestOutputStream(
+                    new FileOutputStream(temporary), digest);
             try {
-                byte[] b = new byte[4096];
-                for (int n = input.read(b); n != -1; n = input.read(b)) {
-                    output.write(b, 0, n);
-                    digest.update(b, 0, n);
-                    length += n;
-                }
+                length = IOUtils.copyLarge(input, output);
             } finally {
                 output.close();
             }
