@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.persistence.xml;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
@@ -361,11 +362,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                                 try {
                                     values.add(InternalValue.create(in));
                                 } finally {
-                                    try {
-                                        in.close();
-                                    } catch (IOException e) {
-                                        // ignore
-                                    }
+                                    IOUtils.closeQuietly(in);
                                 }
                             }
                         } catch (Exception e) {
@@ -680,11 +677,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                                 try {
                                     blobStore.put(blobId, in, blobVal.getLength());
                                 } finally {
-                                    try {
-                                        in.close();
-                                    } catch (IOException e) {
-                                        // ignore
-                                    }
+                                    IOUtils.closeQuietly(in);
                                 }
                                 // store id of BLOB as property value
                                 writer.write(blobId);

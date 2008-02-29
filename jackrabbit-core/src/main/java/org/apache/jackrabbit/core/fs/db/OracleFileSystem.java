@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.fs.db;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.jackrabbit.core.fs.FileSystemException;
@@ -215,7 +216,7 @@ public class OracleFileSystem extends DbFileSystem {
                     sql = reader.readLine();
                 }
             } finally {
-                closeStream(in);
+                IOUtils.closeQuietly(in);
                 closeStatement(stmt);
             }
         }
@@ -408,12 +409,7 @@ public class OracleFileSystem extends DbFileSystem {
                             } catch (Exception e1) {
                             }
                         }
-                        if (in != null) {
-                            try {
-                                in.close();
-                            } catch (Exception e1) {
-                            }
-                        }
+                        IOUtils.closeQuietly(in);
                         // temp file can now safely be removed
                         tmpFile.delete();
                     }
@@ -521,12 +517,7 @@ public class OracleFileSystem extends DbFileSystem {
                             } catch (Exception e1) {
                             }
                         }
-                        if (in != null) {
-                            try {
-                                in.close();
-                            } catch (Exception e1) {
-                            }
-                        }
+                        IOUtils.closeQuietly(in);
                         // temp file can now safely be removed
                         tmpFile.delete();
                     }

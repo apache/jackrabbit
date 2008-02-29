@@ -21,6 +21,7 @@ import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.WriterPreferenceReadWriteLock;
 import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.commons.AbstractRepository;
 import org.apache.jackrabbit.core.cluster.ClusterContext;
@@ -455,11 +456,7 @@ public class RepositoryImpl extends AbstractRepository
                     try {
                         reader.read(chars);
                     } finally {
-                        try {
-                            reader.close();
-                        } catch (IOException ioe) {
-                            // ignore
-                        }
+                        IOUtils.closeQuietly(reader);
                     }
                     return NodeId.valueOf(new String(chars));
                 } catch (Exception e) {
@@ -499,11 +496,7 @@ public class RepositoryImpl extends AbstractRepository
                     try {
                         writer.write(ROOT_NODE_ID.toString());
                     } finally {
-                        try {
-                            writer.close();
-                        } catch (IOException ioe) {
-                            // ignore
-                        }
+                        IOUtils.closeQuietly(writer);
                     }
                     return ROOT_NODE_ID;
                 } catch (Exception e) {

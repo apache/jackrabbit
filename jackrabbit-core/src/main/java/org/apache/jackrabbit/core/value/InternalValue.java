@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.value;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
@@ -130,11 +131,7 @@ public class InternalValue {
                     try {
                         return createTemporary(stream);
                     } finally {
-                        try {
-                            stream.close();
-                        } catch (IOException e) {
-                            // ignore
-                        }
+                        IOUtils.closeQuietly(stream);
                     }
                 }
             case PropertyType.BOOLEAN:

@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -681,11 +682,7 @@ public class NodeIndexer {
                         + e.getMessage());
                 log.debug("Dump:", e);
             } finally {
-                try {
-                    value.close();
-                } catch (IOException e) {
-                    // ignore
-                }
+                IOUtils.closeQuietly(value);
             }
             return createFulltextField(textExtract.toString());
         } else {

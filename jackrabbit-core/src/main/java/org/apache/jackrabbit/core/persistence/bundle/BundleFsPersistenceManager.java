@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.persistence.bundle;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
@@ -42,7 +43,6 @@ import org.apache.jackrabbit.uuid.UUID;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.SQLException;
@@ -254,7 +254,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             log.error(msg);
             throw new ItemStateException(msg, e);
         } finally {
-            closeStream(din);
+            IOUtils.closeQuietly(din);
         }
     }
 
@@ -376,7 +376,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             BundleFsPersistenceManager.log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
-            closeStream(in);
+            IOUtils.closeQuietly(in);
         }
     }
 
@@ -441,20 +441,6 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             String msg = "failed to check existence of node references: " + targetId;
             BundleFsPersistenceManager.log.error(msg, e);
             throw new ItemStateException(msg, e);
-        }
-    }
-
-    /**
-     * closes the input stream
-     * @param ins
-     */
-    protected void closeStream(InputStream ins) {
-        if (ins != null) {
-            try {
-                ins.close();
-            } catch (IOException ignore) {
-                // ignore
-            }
         }
     }
 

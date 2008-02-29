@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.persistence.bundle;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -443,11 +444,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                 log.debug(msg);
                 throw new RepositoryException(msg, e);
             } finally {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    // ignore
-                }
+                IOUtils.closeQuietly(in);
                 stmt.close();
             }
         }
@@ -762,7 +759,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         } catch (Exception e) {
             log.error("Error in bundle", e);
         } finally {
-            closeStream(din);
+            IOUtils.closeQuietly(din);
             closeResultSet(rs);
         }
 
@@ -993,7 +990,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             log.error(msg);
             throw new ItemStateException(msg, e);
         } finally {
-            closeStream(in);
+            IOUtils.closeQuietly(in);
             closeResultSet(rs);
         }
     }
@@ -1085,7 +1082,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
-            closeStream(in);
+            IOUtils.closeQuietly(in);
             closeResultSet(rs);
         }
     }
@@ -1201,20 +1198,6 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                 rs.close();
             } catch (SQLException se) {
                 logException("Failed closing ResultSet", se);
-            }
-        }
-    }
-
-    /**
-     * closes the input stream
-     * @param ins the input stream
-     */
-    protected void closeStream(InputStream ins) {
-        if (ins != null) {
-            try {
-                ins.close();
-            } catch (IOException ignore) {
-                // ignore
             }
         }
     }

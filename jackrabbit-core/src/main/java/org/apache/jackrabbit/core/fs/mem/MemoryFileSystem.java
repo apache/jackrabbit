@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.RandomAccessOutputStream;
@@ -49,11 +50,7 @@ public class MemoryFileSystem implements FileSystem {
         } catch (IOException e) {
             throw new FileSystemException(e.getMessage(), e);
         } finally {
-            try {
-                destinationOutputStream.close();
-            } catch (IOException e) {
-                // ignore
-            }
+            IOUtils.closeQuietly(destinationOutputStream);
         }
     }
 

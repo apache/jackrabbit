@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.config;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
@@ -419,12 +420,7 @@ public class RepositoryConfig {
         } catch (FileSystemException e) {
             throw new ConfigurationException("Failed to load workspace configuration", e);
         } finally {
-            if (configReader != null) {
-                try {
-                    configReader.close();
-                } catch (IOException ignore) {
-                }
-            }
+            IOUtils.closeQuietly(configReader);
         }
     }
 
@@ -540,10 +536,7 @@ public class RepositoryConfig {
                 throw new ConfigurationException(
                         "Cannot create a workspace configuration file", e);
             } finally {
-                try {
-                    configWriter.close();
-                } catch (IOException ignore) {
-                }
+                IOUtils.closeQuietly(configWriter);
             }
 
             // Load the created workspace configuration.
