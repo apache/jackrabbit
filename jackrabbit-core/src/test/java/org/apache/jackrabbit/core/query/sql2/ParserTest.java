@@ -66,7 +66,7 @@ public class ParserTest extends AbstractQueryTest {
             }
             // System.out.println(line);
             try {
-                parser.createPreparedQuery(line);
+                parser.createQueryObjectModel(line);
                 fuzz(line);
             } catch (RepositoryException e) {
                 line = reader.readLine();
@@ -108,7 +108,7 @@ public class ParserTest extends AbstractQueryTest {
             }
             String q = buff.toString();
             try {
-                parser.createPreparedQuery(q);
+                parser.createQueryObjectModel(q);
             } catch (InvalidQueryException e) {
                 // OK
             } catch (NamespaceException e) {
