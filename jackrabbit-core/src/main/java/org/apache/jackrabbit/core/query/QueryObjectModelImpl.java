@@ -21,13 +21,84 @@ import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Source;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Ordering;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Constraint;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Column;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.ItemManager;
+
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 
 /**
  * <code>QueryObjectModelImpl</code>...
  */
-public class QueryObjectModelImpl
-        extends PreparedQueryImpl
-        implements QueryObjectModel {
+public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel {
+
+    /**
+     * The query object model tree.
+     */
+    protected QueryObjectModelTree qomTree;
+
+    /**
+     * @inheritDoc
+     */
+    public void init(SessionImpl session,
+                     ItemManager itemMgr,
+                     QueryHandler handler,
+                     String statement,
+                     String language) throws InvalidQueryException {
+        checkNotInitialized();
+        this.session = session;
+        this.language = language;
+        this.handler = handler;
+        this.statement = statement;
+        this.query = handler.createExecutableQuery(session, itemMgr,
+                createQOMTree(statement, language));
+        setInitialized();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public void init(SessionImpl session,
+                     ItemManager itemMgr,
+                     QueryHandler handler,
+                     Node node) throws InvalidQueryException, RepositoryException {
+        checkNotInitialized();
+        this.session = session;
+        this.node = node;
+        this.handler = handler;
+
+        if (!node.isNodeType(session.getJCRName(NameConstants.NT_QUERY))) {
+            throw new InvalidQueryException("node is not of type nt:query");
+        }
+        this.statement = node.getProperty(session.getJCRName(NameConstants.JCR_STATEMENT)).getString();
+        this.language = node.getProperty(session.getJCRName(NameConstants.JCR_LANGUAGE)).getString();
+        this.query = handler.createExecutableQuery(session, itemMgr,
+                createQOMTree(statement, language));
+        setInitialized();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public void init(SessionImpl session,
+                     ItemManager itemMgr,
+                     QueryHandler handler,
+                     QueryObjectModelTree qomTree,
+                     String language)
+            throws InvalidQueryException, RepositoryException {
+        checkNotInitialized();
+        this.session = session;
+        this.language = language;
+        this.handler = handler;
+        this.qomTree = qomTree;
+        this.statement = null; // TODO: format qomTree into a SQL2 statement
+        this.query = handler.createExecutableQuery(session, itemMgr, qomTree);
+        setInitialized();
+    }
+
 
     //-------------------------< QueryObjectModel >-----------------------------
 
@@ -65,5 +136,23 @@ public class QueryObjectModelImpl
      */
     public Column[] getColumns() {
         return qomTree.getColumns();
+    }
+
+    //------------------------------< internal >--------------------------------
+
+    /**
+     * Creates a {@link QueryObjectModelTree} representation for the query
+     * <code>statement</code>.
+     *
+     * @param statement the query statement.
+     * @param language  the language of the query statement.
+     * @return the {@link QueryObjectModelTree} representation.
+     * @throws InvalidQueryException if the query statement is malformed.
+     */
+    private QueryObjectModelTree createQOMTree(String statement,
+                                               String language)
+            throws InvalidQueryException {
+        // TODO: implement
+        return null;
     }
 }

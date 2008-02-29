@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.spi.commons.query.sql2;
 
-import org.apache.jackrabbit.spi.commons.query.jsr283.PreparedQuery;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.BindVariableValue;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Column;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Constraint;
@@ -31,6 +30,7 @@ import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactor
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Selector;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Source;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.StaticOperand;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -43,7 +43,7 @@ import javax.jcr.ValueFactory;
 import javax.jcr.query.InvalidQueryException;
 
 /**
- * The SQL2 parser can convert a JCR-SQL2 query to a PreparedQuery.
+ * The SQL2 parser can convert a JCR-SQL2 query to a QueryObjectModel.
  */
 public class Parser {
 
@@ -93,14 +93,14 @@ public class Parser {
     }
 
     /**
-     * Parse a JCR-SQL2 query and return the prepared query.
+     * Parse a JCR-SQL2 query and return the query object model
      *
      * @param query the query string
-     * @return the prepared query
+     * @return the query object model
      * @throws RepositoryException if parsing failed
      */
     // Page 125
-    public PreparedQuery createPreparedQuery(String query) throws RepositoryException {
+    public QueryObjectModel createQueryObjectModel(String query) throws RepositoryException {
         initialize(query);
         selectors = new ArrayList();
         expected = new ArrayList();

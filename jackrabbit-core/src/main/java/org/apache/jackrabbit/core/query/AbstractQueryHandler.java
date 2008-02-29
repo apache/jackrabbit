@@ -83,17 +83,4 @@ public abstract class AbstractQueryHandler implements QueryHandler {
             addNode(add.nextNodeState());
         }
     }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Throws {@link UnsupportedOperationException}.
-     */
-    public ExecutablePreparedQuery createExecutablePreparedQuery(
-            SessionImpl session,
-            ItemManager itemMgr,
-            QueryObjectModelTree qomTree) throws InvalidQueryException {
-        throw new UnsupportedOperationException(
-                "This query handler does not support prepared queries");
-    }
 }

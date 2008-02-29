@@ -555,6 +555,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
 
     public Object visit(PropertyExistenceImpl node, Object data) throws Exception {
         String propName = npResolver.getJCRName(node.getPropertyQName());
+        // TODO respect index version
         return new MatchAllQuery(propName);
     }
 
