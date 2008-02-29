@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.lock;
 
 import EDU.oswego.cs.dl.util.concurrent.ReentrantLock;
 import org.apache.commons.collections.map.LinkedMap;
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.core.ItemId;
@@ -163,13 +164,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         } catch (IOException e) {
             throw new FileSystemException("error while reading locks file", e);
         } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e2) {
-                    /* ignore */
-                }
-            }
+            IOUtils.closeQuietly(reader);
         }
     }
 
@@ -235,13 +230,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                     + locksFile.getPath() + "': " + ioe.getMessage());
             log.debug("Root cause: ", ioe);
         } finally {
-            if (writer != null) {
-                try {
-                    writer.close();
-                } catch (IOException e) {
-                    // ignore
-                }
-            }
+            IOUtils.closeQuietly(writer);
         }
     }
 

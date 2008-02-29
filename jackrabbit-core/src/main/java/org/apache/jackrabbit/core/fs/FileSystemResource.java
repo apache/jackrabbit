@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.apache.commons.io.IOUtils;
+
 /**
  * A <code>FileSystemResource</code> represents a resource (i.e. file) in a
  * <code>FileSystem</code>.
@@ -165,10 +167,7 @@ public class FileSystemResource {
                 out.write(buffer, 0, read);
             }
         } finally {
-            try {
-                in.close();
-            } catch (IOException ioe) {
-            }
+            IOUtils.closeQuietly(in);
         }
     }
 

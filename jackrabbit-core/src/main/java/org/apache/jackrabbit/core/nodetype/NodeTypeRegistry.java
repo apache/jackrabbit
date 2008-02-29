@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.nodetype;
 
 import EDU.oswego.cs.dl.util.concurrent.ConcurrentReaderHashMap;
 import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.cluster.NodeTypeEventChannel;
 import org.apache.jackrabbit.core.cluster.NodeTypeEventListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
@@ -800,13 +801,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             log.debug(error);
             throw new RepositoryException(error, intde);
         } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException ioe) {
-                    // ignore
-                }
-            }
+            IOUtils.closeQuietly(in);
         }
     }
 

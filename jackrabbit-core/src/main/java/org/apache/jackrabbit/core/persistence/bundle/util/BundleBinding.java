@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.persistence.bundle.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.ResourceBasedBLOBStore;
 import org.apache.jackrabbit.core.NodeId;
@@ -592,11 +593,7 @@ public class BundleBinding extends ItemStateBinding {
                                     blobStore.put(blobId, in, size);
                                     state.setBlobId(blobId, i);
                                 } finally {
-                                    try {
-                                        in.close();
-                                    } catch (IOException e) {
-                                        // ignore
-                                    }
+                                    IOUtils.closeQuietly(in);
                                 }
                             } catch (Exception e) {
                                 String msg = "Error while storing blob. id="

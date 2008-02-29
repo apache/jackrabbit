@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.fs.db;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
@@ -1186,7 +1187,7 @@ public class DatabaseFileSystem implements FileSystem {
                     sql = reader.readLine();
                 }
             } finally {
-                closeStream(in);
+                IOUtils.closeQuietly(in);
                 closeStatement(stmt);
             }
         }
@@ -1509,16 +1510,6 @@ public class DatabaseFileSystem implements FileSystem {
                 rs.close();
             } catch (SQLException se) {
                 log.error("failed closing ResultSet", se);
-            }
-        }
-    }
-
-    protected void closeStream(InputStream in) {
-        if (in != null) {
-            try {
-                in.close();
-            } catch (IOException ignore) {
-                // ignore
             }
         }
     }

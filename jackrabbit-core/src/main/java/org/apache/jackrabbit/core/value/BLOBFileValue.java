@@ -22,6 +22,8 @@ import java.io.OutputStream;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.commons.io.IOUtils;
+
 /**
  * Represents binary data which is backed by a resource or byte[].
  * Unlike <code>BinaryValue</code> it has no state, i.e.
@@ -104,10 +106,7 @@ public abstract class BLOBFileValue {
                 out.write(buffer, 0, read);
             }
         } finally {
-            try {
-                in.close();
-            } catch (IOException ignore) {
-            }
+            IOUtils.closeQuietly(in);
         }
     }
 

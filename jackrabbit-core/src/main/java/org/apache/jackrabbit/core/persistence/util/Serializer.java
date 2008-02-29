@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.persistence.util;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
@@ -200,11 +201,7 @@ public final class Serializer {
                 try {
                     blobStore.put(blobId, in, blobVal.getLength());
                 } finally {
-                    try {
-                        in.close();
-                    } catch (IOException e) {
-                        // ignore
-                    }
+                    IOUtils.closeQuietly(in);
                 }
                 // store id of BLOB as property value
                 out.writeUTF(blobId);   // value
@@ -222,11 +219,7 @@ public final class Serializer {
                     try {
                         values[i] = InternalValue.create(in);
                     } finally {
-                        try {
-                            in.close();
-                        } catch (IOException e) {
-                            // ignore
-                        }
+                        IOUtils.closeQuietly(in);
                     }
                 }
                 blobVal.discard();

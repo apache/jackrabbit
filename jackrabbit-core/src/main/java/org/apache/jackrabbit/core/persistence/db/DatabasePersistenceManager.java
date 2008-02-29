@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.persistence.db;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.fs.FileSystem;
@@ -367,7 +368,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
                 log.error(msg, e);
                 throw new ItemStateException(msg, e);
             } finally {
-                closeStream(in);
+                IOUtils.closeQuietly(in);
                 closeResultSet(rs);
             }
         }
@@ -405,7 +406,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
                 log.error(msg, e);
                 throw new ItemStateException(msg, e);
             } finally {
-                closeStream(in);
+                IOUtils.closeQuietly(in);
                 closeResultSet(rs);
             }
         }
@@ -583,7 +584,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
                 log.error(msg, e);
                 throw new ItemStateException(msg, e);
             } finally {
-                closeStream(in);
+                IOUtils.closeQuietly(in);
                 closeResultSet(rs);
             }
         }
@@ -924,15 +925,6 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         }
     }
 
-    protected void closeStream(InputStream in) {
-        if (in != null) {
-            try {
-                in.close();
-            } catch (IOException ignore) {
-            }
-        }
-    }
-
     protected void closeStatement(Statement stmt) {
         if (stmt != null) {
             try {
@@ -1030,7 +1022,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
                 // commit the changes
                 con.commit();
             } finally {
-                closeStream(in);
+                IOUtils.closeQuietly(in);
                 closeStatement(stmt);
             }
         }

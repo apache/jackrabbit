@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import EDU.oswego.cs.dl.util.concurrent.FutureResult;
 import EDU.oswego.cs.dl.util.concurrent.Callable;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.extractor.TextExtractor;
 import org.apache.jackrabbit.util.LazyFileInputStream;
 import org.slf4j.LoggerFactory;
@@ -225,19 +227,8 @@ public class TextExtractorJob extends FutureResult implements Runnable {
             };
         } catch (IOException e) {
             // do some clean up
-            try {
-                out.close();
-            } catch (IOException e1) {
-                // ignore
-            }
-
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e1) {
-                    // ignore
-                }
-            }
+            IOUtils.closeQuietly(out);
+            IOUtils.closeQuietly(in);
 
             if (!temp.delete()) {
                 temp.deleteOnExit();
