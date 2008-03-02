@@ -288,7 +288,7 @@ public class ClassDescriptor {
      * @return true if the class has an ID
      */
     public boolean hasIdField() {
-        return (this.idFieldDescriptor != null && ! this.idFieldDescriptor.equals(""));
+        return (this.idFieldDescriptor != null && this.idFieldDescriptor.isId());
     }
 
     /**
