@@ -153,6 +153,8 @@ public abstract class AnnotationTestBase extends AbstractTestBase
 		classes.add(org.apache.jackrabbit.ocm.testmodel.uuid.B2.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.uuid.Ancestor.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.uuid.Descendant.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.unstructured.UnstructuredParagraph.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.unstructured.UnstructuredPage.class);
 		Mapper mapper = new AnnotationMapperImpl(classes);
 		ocm = new ObjectContentManagerImpl(session, mapper);
 		
