@@ -196,6 +196,14 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
     public DynamicESCFactory getEscFactory() {
         return escFactory;
     }
+    
+    /**
+     * Returns the persistence manager used by the version manager.
+     * @return the persistence manager used by the version manager
+     */
+    public PersistenceManager getPersistenceManager() {
+        return pMgr;
+    }
 
     /**
      * {@inheritDoc}
