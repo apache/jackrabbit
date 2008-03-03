@@ -82,7 +82,7 @@ public class ExternalDerbyProcess {
 		classPath += File.pathSeparatorChar + derbyJar;
 		classPath += File.pathSeparatorChar + derbyNetJar;
 		
-		String cmd = "java -cp " + classPath + " " + DERBY_JAVA_CMD;
+		String cmd = "java -cp \"" + classPath + "\" " + DERBY_JAVA_CMD;
 		logger.info(prefix + "Starting " + cmd);
 		
 		final Process p = Runtime.getRuntime().exec(cmd);
