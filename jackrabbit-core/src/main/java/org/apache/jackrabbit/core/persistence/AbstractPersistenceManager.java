@@ -98,6 +98,14 @@ public abstract class AbstractPersistenceManager implements PersistenceManager {
     }
 
     /**
+     * This implementation does nothing.
+     *
+     * {@inheritDoc}
+     */
+    public void checkConsistency(String[] uuids, boolean recursive, boolean fix) {
+    }
+
+    /**
      * Store a node state. Subclass responsibility.
      *
      * @param state node state to store

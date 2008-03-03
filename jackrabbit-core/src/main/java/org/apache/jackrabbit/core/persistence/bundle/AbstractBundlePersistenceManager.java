@@ -711,4 +711,12 @@ public abstract class AbstractBundlePersistenceManager implements
         }
     }
 
+    /**
+     * This implementation does nothing.
+     *
+     * {@inheritDoc}
+     */
+    public void checkConsistency(String[] uuids, boolean recursive, boolean fix) {
+    }
+
 }
