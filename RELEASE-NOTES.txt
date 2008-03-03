@@ -18,7 +18,25 @@ information.
 Changes in this release
 -----------------------
 
+New features
+
+  [JCR-954]  - Allow to disable referential integrity checking for workspace
+  [JCR-1112] - CacheManager interval between recalculation of cache sizes ...
+  [JCR-1428] - Add API for selective bundle consistency check ...
+
+Improvements
+
+  [JCR-948]  - Support for JNDI configuration of BundleDbPersistenceManager
+  [JCR-1116] - Database persistence managers: log database and driver ...
+  [JCR-1209] - NodeImpl.checkout() calls save() two times
+  [JCR-1400] - Backport JCR-940: add db connection autoConnect for ...
+  [JCR-1421] - Backport JCR-1111: Accesss to version history results ...
+
+Bug fixes
+
   [JCR-1185] - building trunk fails with javacc plugin version 2.2
+  [JCR-1305] - JNDI data sources with BundleDbPersistenceManager: ...
+  [JCR-1399] - Backport JCR-1197: Node.restore() may throw ...
 
 Release Contents
 ----------------
