@@ -701,4 +701,12 @@ abstract public class AbstractBundlePersistenceManager implements
             bundles.put(bundle);
         }
     }
+
+    /**
+     * This implementation does nothing.
+     *  
+     * {@inheritDoc}
+     */
+    public void checkConsistency(String[] uuids, boolean recursive, boolean fix) {
+    }
 }

@@ -36,6 +36,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("Persistence tests");
 
+        suite.addTestSuite(ConsistencyCheckTest.class);
         suite.addTestSuite(DatabaseConnectionFailureTest.class);
 
         return suite;

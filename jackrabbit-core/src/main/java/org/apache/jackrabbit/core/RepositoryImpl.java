@@ -1163,6 +1163,78 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         return new SharedItemStateManager(persistMgr, rootNodeId, ntReg, true, cacheFactory);
     }
 
+    /**
+     * Checks the consistency of the given nodes in the given workspace or the
+     * versioning subtree. Use <code>jcr:system</code> as workspace name for
+     * checking the versioning tree. The <code>recursive</code> flag indicates
+     * whether the tree below the given nodes shall be traversed and checked as
+     * well.
+     * 
+     * <p>
+     * Note: This must be called right after Jackrabbit startup before the
+     * workspace in question (or the system tree) was accessed, ie. a session
+     * was opened. Otherwise Jackrabbit will be in an inconsistent state and
+     * various errors will happen. Be also sure to have logging enabled before
+     * this method is called to catch all messages of the check.
+     * 
+     * <p>
+     * To use this method, you will have to subclass {@link RepositoryImpl},
+     * make it public and use an instance of the subclass as the repository.
+     * 
+     * <h4>Consistency check details:</h4>
+     * <p>
+     * The check is currently restricted to {@link PersistenceManager}s, more
+     * specifically the {@link BundleDbPersistenceManager}s. They will check
+     * for parent-child relationships of nodes, where either parent or child
+     * nodes no longer exist. In the case of missing child nodes, these will be
+     * repaired by removing them. Any other problems will be logged with ERROR
+     * log level for further analysis. When bundles are fixed, ie.
+     * <code>fix==true</code>, set INFO logging on the specific persistence
+     * manager, to see which bundles get repaired:
+     * 
+     * <pre>
+     * log4j.logger.org.apache.jackrabbit.core.persistence.bundle.BundleDbPersistenceManager=INFO, stdout
+     * </pre>
+     * 
+     * When more details for all checked node bundles shall be displayed, enable
+     * INFO logging for the BundleBinding:
+     * 
+     * <pre>
+     * log4j.logger.org.apache.jackrabbit.core.persistence.bundle.util.BundleBinding=INFO, stdout
+     * </pre>
+     * 
+     * @param workspaceName
+     *            name of the workspace to be checked. Use
+     *            <code>jcr:system</code> to check the versioning subtree.
+     * @param uuids
+     *            list of UUIDs of nodes to be checked. if null, all nodes in
+     *            the workspace will be checked (and the recursive flag will be
+     *            ignored)
+     * @param recursive
+     *            if true, the tree(s) below the given node(s) will be traversed
+     *            and checked as well
+     * @param fix
+     *            if true, any problems found that can be repaired will be
+     *            repaired. if false, no data will be modified, instead all
+     *            inconsistencies will only get logged
+     * 
+     * @throws NoSuchWorkspaceException
+     *             if the workspace does not exist
+     * @throws IllegalStateException
+     *             if this repository has been shut down
+     * @throws RepositoryException
+     *             if the persistence manager could not be initialized
+     */
+    protected void checkConsistency(String workspaceName, String[] uuids, boolean recursive, boolean fix) throws IllegalStateException, NoSuchWorkspaceException, RepositoryException {
+        if ("jcr:system".equals(workspaceName)) {
+            PersistenceManager pm = vMgr.getPersistenceManager();
+            pm.checkConsistency(uuids, recursive, fix);
+        } else {
+            PersistenceManager pm = getWorkspaceInfo(workspaceName).getPersistenceManager();
+            pm.checkConsistency(uuids, recursive, fix);
+        }
+    }
+    
     //-----------------------------------------------------------< Repository >
     /**
      * {@inheritDoc}
