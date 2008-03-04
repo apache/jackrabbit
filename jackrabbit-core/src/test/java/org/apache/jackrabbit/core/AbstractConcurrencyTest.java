@@ -29,11 +29,6 @@ import javax.jcr.RepositoryException;
 public abstract class AbstractConcurrencyTest extends AbstractJCRTest {
 
     /**
-     * Execute random queries for this amount of time.
-     */
-    protected static final int RUN_NUM_SECONDS = getTestScale();
-
-    /**
      * Runs a task with the given concurrency and creates an individual test
      * node for each thread.
      *

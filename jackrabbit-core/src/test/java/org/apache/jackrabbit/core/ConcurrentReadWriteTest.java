@@ -37,6 +37,8 @@ public class ConcurrentReadWriteTest extends AbstractConcurrencyTest {
 
     private static final int NUM_THREADS = 5;
 
+    private static final int RUN_NUM_SECONDS = 20;
+
     public void testReadWrite() throws RepositoryException {
         final List uuids = new ArrayList();
         for (int i = 0; i < NUM_NODES; i++) {

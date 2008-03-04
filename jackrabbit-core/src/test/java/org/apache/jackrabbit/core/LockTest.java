@@ -33,11 +33,11 @@ import java.util.Random;
  */
 public class LockTest extends AbstractJCRTest {
 
-    private static final int NUM_THREADS = 10;
+    private static final int NUM_THREADS = 100;
 
-    private static final int NUM_CHANGES = 10 * getTestScale();
+    private static final int NUM_CHANGES = 10;
 
-    private static final int NUM_VALUE_GETS = 10 * getTestScale();
+    private static final int NUM_VALUE_GETS = 10;
 
     /**
      * Tests the utility {@link org.apache.jackrabbit.util.Locked} by

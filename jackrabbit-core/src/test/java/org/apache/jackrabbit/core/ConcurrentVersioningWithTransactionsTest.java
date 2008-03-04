@@ -37,13 +37,13 @@ public class ConcurrentVersioningWithTransactionsTest extends AbstractConcurrenc
     /**
      * The number of threads.
      */
-    private static final int CONCURRENCY = 10;
+    private static final int CONCURRENCY = 100;
 
     /**
      * The total number of operations to execute. E.g. number of checkins
      * performed by the threads.
      */
-    private static final int NUM_OPERATIONS = 10 * getTestScale();
+    private static final int NUM_OPERATIONS = 100;
 
     public void testConcurrentAddVersionableInTransaction()
             throws RepositoryException {

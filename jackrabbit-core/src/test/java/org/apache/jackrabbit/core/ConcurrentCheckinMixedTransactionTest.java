@@ -40,6 +40,8 @@ public class ConcurrentCheckinMixedTransactionTest
 
     private static final int NUM_THREADS = 10;
 
+    private static final int RUN_NUM_SECONDS = 20;
+
     public void testCheckInOut() throws RepositoryException {
         final List exceptions = Collections.synchronizedList(new ArrayList());
         final long end = System.currentTimeMillis() + RUN_NUM_SECONDS * 1000;

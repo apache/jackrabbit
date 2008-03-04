@@ -146,8 +146,7 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest {
     public void testLikeComparisonRandom() throws RepositoryException {
         String abcd = "abcd";
         Random random = new Random();
-        long end = System.currentTimeMillis() + 1000 * RUN_NUM_SECONDS;
-        while (end > System.currentTimeMillis()) {
+        for (int i = 0; i < 50; i++) {
             String pattern = "";
             pattern += getRandomChar(abcd, random);
             pattern += getRandomChar(abcd, random);

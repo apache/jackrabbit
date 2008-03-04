@@ -36,7 +36,7 @@ public class ConcurrentSaveTest extends AbstractJCRTest {
     /** logger instance */
     private static final Logger log = LoggerFactory.getLogger(ConcurrentSaveTest.class);
 
-    private final int NUM_NODES = 10 * getTestScale();
+    private final int NUM_NODES = 1000;
     private Session addNodeSession;
     private Session removePropertySession;
 
