@@ -21,9 +21,9 @@ import javax.jcr.NodeIterator;
 import javax.jcr.query.Query;
 
 /**
- * <code>SelectorQueryTest</code>...
+ * <code>SelectorTest</code>...
  */
-public class SelectorQueryTest extends AbstractQOMTest {
+public class SelectorTest extends AbstractQOMTest {
 
     public void testSelector() throws RepositoryException {
         // make sure there's at least one node with this node type
