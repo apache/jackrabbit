@@ -667,4 +667,15 @@ public abstract class AbstractJCRTest extends JUnitTest {
         s.save();
         return testRootNode;
     }
+
+    /**
+     * @return the test scale value.
+     */
+    protected static int getTestScale() {
+        try {
+            return Integer.parseInt(System.getProperty("jackrabbit.test.scale", "1"));
+        } catch (NumberFormatException e) {
+            return 1;
+        }
+    }
 }
