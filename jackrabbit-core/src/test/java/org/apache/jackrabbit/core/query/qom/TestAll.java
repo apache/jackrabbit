@@ -33,7 +33,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(DescendantNodeTest.class);
         suite.addTestSuite(QueryObjectModelFactoryTest.class);
         suite.addTestSuite(SameNodeTest.class);
-        suite.addTestSuite(SelectorQueryTest.class);
+        suite.addTestSuite(SelectorTest.class);
 
         return suite;
     }
