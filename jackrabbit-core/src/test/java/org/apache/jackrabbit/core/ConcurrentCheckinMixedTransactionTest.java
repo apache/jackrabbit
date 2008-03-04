@@ -16,14 +16,20 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.core.state.StaleItemStateException;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Node;
+import javax.jcr.InvalidItemStateException;
 import javax.transaction.NotSupportedException;
 import javax.transaction.SystemException;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.RollbackException;
+import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <code>ConcurrentCheckinMixedTransactionTest</code> performs concurrent
@@ -34,9 +40,8 @@ public class ConcurrentCheckinMixedTransactionTest
 
     private static final int NUM_THREADS = 10;
 
-    private static final int RUN_NUM_SECONDS = 20;
-
     public void testCheckInOut() throws RepositoryException {
+        final List exceptions = Collections.synchronizedList(new ArrayList());
         final long end = System.currentTimeMillis() + RUN_NUM_SECONDS * 1000;
         // tasks with even ids run within transactions
         final int[] taskId = new int[1];
@@ -75,13 +80,24 @@ public class ConcurrentCheckinMixedTransactionTest
                                 } catch (HeuristicRollbackException e) {
                                     throw new RepositoryException(e);
                                 } catch (RollbackException e) {
-                                    throw new RepositoryException(e);
+                                    Throwable t = e;
+                                    do {
+                                        t = t.getCause();
+                                        if (t instanceof StaleItemStateException) {
+                                            break;
+                                        }
+                                    } while (t != null);
+                                    if (t == null) {
+                                        throw new RepositoryException(e);
+                                    }
+                                } catch (InvalidItemStateException e) {
+                                    // try again
                                 }
                             }
                         }
                     }, NUM_THREADS);
                 } catch (RepositoryException e) {
-                    e.printStackTrace();
+                    exceptions.add(e);
                 }
             }
         });
@@ -90,6 +106,9 @@ public class ConcurrentCheckinMixedTransactionTest
             t.join();
         } catch (InterruptedException e) {
             // ignore
+        }
+        if (!exceptions.isEmpty()) {
+            fail(((RepositoryException) exceptions.get(0)).getMessage());
         }
     }
 }

@@ -57,11 +57,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ExcerptTest.class);
         suite.addTestSuite(IndexingAggregateTest.class);
         suite.addTestSuite(AxisQueryTest.class);
-
-        // exclude long running tests per default
-        //suite.addTestSuite(MassiveRangeTest.class);
-        //suite.addTestSuite(ConcurrentQueryTest.class);
-        //suite.addTestSuite(MassiveWildcardTest.class);
+        suite.addTestSuite(ConcurrentQueryTest.class);
 
         return suite;
     }

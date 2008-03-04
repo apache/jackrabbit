@@ -67,13 +67,14 @@ public class ConcurrentQueryTest extends AbstractJCRTest {
     }
 
     /**
-     * Writes 1000 nodes in transactions of 5 nodes to the workspace while
-     * other threads query the workspace. Query results must always return
-     * a consistent view of the workspace, that is:<br/>
+     * Writes 100 * {@link #getTestScale()} nodes in transactions of 5 nodes to
+     * the workspace while other threads query the workspace. Query results must
+     * always return a consistent view of the workspace, that is:<br/>
      * <code>result.numNodes % 5 == 0</code>
      */
     public void testConcurrentQueryWithWrite() throws Exception {
 
+        final int testScale = getTestScale();
         final List exceptions = Collections.synchronizedList(new ArrayList());
         List readers = new ArrayList();
         String query = "/jcr:root" + testRoot + "//*[@testprop = 'foo']";
@@ -87,7 +88,7 @@ public class ConcurrentQueryTest extends AbstractJCRTest {
                 try {
                     for (int i = 0; i < 20; i++) {
                         Node n = testRootNode.addNode("node" + i);
-                        for (int j = 0; j < 10; j++) {
+                        for (int j = 0; j < testScale; j++) {
                             Node n1 = n.addNode("node" + j);
                             for (int k = 0; k < 5; k++) {
                                 n1.addNode("node" + k).setProperty("testprop", "foo");
@@ -124,17 +125,17 @@ public class ConcurrentQueryTest extends AbstractJCRTest {
     }
 
     /**
-     * Deletes 1000 nodes in transactions of 5 nodes while
-     * other threads query the workspace. Query results must always return
+     * Deletes 100 * {@link #getTestScale()} nodes in transactions of 5 nodes
+     * while other threads query the workspace. Query results must always return
      * a consistent view of the workspace, that is:<br/>
      * <code>result.numNodes % 5 == 0</code>
      */
     public void testConcurrentQueryWithDeletes() throws Exception {
-
-        // create 1000 nodes
+        final int testScale = getTestScale();
+        // create 100 * getTestScale() nodes
         for (int i = 0; i < 20; i++) {
             Node n = testRootNode.addNode("node" + i);
-            for (int j = 0; j < 10; j++) {
+            for (int j = 0; j < testScale; j++) {
                 Node n1 = n.addNode("node" + j);
                 for (int k = 0; k < 5; k++) {
                     n1.addNode("node" + k).setProperty("testprop", "foo");
@@ -156,7 +157,7 @@ public class ConcurrentQueryTest extends AbstractJCRTest {
                 try {
                     for (int i = 0; i < 20; i++) {
                         Node n = testRootNode.getNode("node" + i);
-                        for (int j = 0; j < 10; j++) {
+                        for (int j = 0; j < testScale; j++) {
                             Node n1 = n.getNode("node" + j);
                             for (int k = 0; k < 5; k++) {
                                 n1.getNode("node" + k).remove();
@@ -187,7 +188,7 @@ public class ConcurrentQueryTest extends AbstractJCRTest {
         }
 
         // fail in case of exceptions
-        if (exceptions.size() > 0) {
+        if (!exceptions.isEmpty()) {
             fail(exceptions.get(0).toString());
         }
     }

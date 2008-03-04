@@ -14,24 +14,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core;
+package org.apache.jackrabbit.core.integration;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import junit.framework.Test;
+import org.apache.jackrabbit.core.ConcurrencyTest;
+import org.apache.jackrabbit.core.ConcurrentLoginTest;
+import org.apache.jackrabbit.core.ConcurrentNodeModificationTest;
+import org.apache.jackrabbit.core.ConcurrentReadWriteTest;
+import org.apache.jackrabbit.core.ConcurrentSaveTest;
+import org.apache.jackrabbit.core.ConcurrentVersioningTest;
+import org.apache.jackrabbit.core.ConcurrentVersioningWithTransactionsTest;
+import org.apache.jackrabbit.core.ConcurrentCheckinMixedTransactionTest;
+import org.apache.jackrabbit.core.LockTest;
+import org.apache.jackrabbit.core.ReadVersionsWhileModified;
 
 /**
- * <code>MultiThreadingTests</code> is a test suite that includes all
+ * <code>MultiThreadingTest</code> is a test suite that includes all
  * multi-threading related tests.
  */
-public class MultiThreadingTests extends TestCase {
+public class MultiThreadingTest extends TestCase {
 
     public static Test suite() {
         TestSuite suite = new TestSuite("Multi-threading tests");
 
         suite.addTestSuite(ConcurrencyTest.class);
         suite.addTestSuite(ConcurrentLoginTest.class);
-        suite.addTestSuite(ConcurrentNodeModificationTest.class);
+        //suite.addTestSuite(ConcurrentNodeModificationTest.class);
         suite.addTestSuite(ConcurrentReadWriteTest.class);
         suite.addTestSuite(ConcurrentSaveTest.class);
         suite.addTestSuite(ConcurrentVersioningTest.class);
