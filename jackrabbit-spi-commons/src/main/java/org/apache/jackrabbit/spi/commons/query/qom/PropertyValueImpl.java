@@ -29,11 +29,6 @@ public class PropertyValueImpl
         implements PropertyValue {
 
     /**
-     * The name of the selector against which to apply this constraint.
-     */
-    private final Name selectorName;
-
-    /**
      * The name of the property.
      */
     private final Name propertyName;
@@ -41,18 +36,8 @@ public class PropertyValueImpl
     PropertyValueImpl(NamePathResolver resolver,
                       Name selectorName,
                       Name propertyName) {
-        super(resolver);
-        this.selectorName = selectorName;
+        super(resolver, selectorName);
         this.propertyName = propertyName;
-    }
-
-    /**
-     * Gets the name of the selector against which to evaluate this operand.
-     *
-     * @return the selector name; non-null
-     */
-    public Name getSelectorQName() {
-        return selectorName;
     }
 
     /**
@@ -65,15 +50,6 @@ public class PropertyValueImpl
     }
 
     //------------------------------< PropertyValue >---------------------------
-
-    /**
-     * Gets the name of the selector against which to evaluate this operand.
-     *
-     * @return the selector name; non-null
-     */
-    public String getSelectorName() {
-        return getJCRName(selectorName);
-    }
 
     /**
      * Gets the name of the property.

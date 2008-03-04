@@ -65,6 +65,15 @@ public class SelectorImpl extends SourceImpl implements Selector {
         return selectorName;
     }
 
+    //---------------------------< SourceImpl >---------------------------------
+
+    /**
+     * {@inheritDoc}
+     */ 
+    public SelectorImpl[] getSelectors() {
+        return new SelectorImpl[]{this};
+    }
+
     //-----------------------------< Selector >---------------------------------
 
     /**

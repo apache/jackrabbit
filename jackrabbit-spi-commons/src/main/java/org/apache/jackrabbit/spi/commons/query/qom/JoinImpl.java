@@ -98,6 +98,21 @@ public class JoinImpl extends SourceImpl implements Join {
         return joinCondition;
     }
 
+    //---------------------------< SourceImpl >---------------------------------
+
+    /**
+     * {@inheritDoc}
+     */
+    public SelectorImpl[] getSelectors() {
+        SelectorImpl[] leftSelectors = left.getSelectors();
+        SelectorImpl[] rightSelectors = right.getSelectors();
+        SelectorImpl[] both =
+                new SelectorImpl[leftSelectors.length + rightSelectors.length];
+        System.arraycopy(leftSelectors, 0, both, 0, leftSelectors.length);
+        System.arraycopy(rightSelectors, 0, both, leftSelectors.length, rightSelectors.length);
+        return both;
+    }
+
     //------------------------< AbstractQOMNode >-------------------------------
 
     /**

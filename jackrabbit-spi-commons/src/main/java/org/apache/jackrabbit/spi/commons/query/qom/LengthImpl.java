@@ -32,7 +32,7 @@ public class LengthImpl extends DynamicOperandImpl implements Length {
     private final PropertyValueImpl propertyValue;
 
     LengthImpl(NamePathResolver resolver, PropertyValueImpl propertyValue) {
-        super(resolver);
+        super(resolver, propertyValue.getSelectorQName());
         this.propertyValue = propertyValue;
     }
 

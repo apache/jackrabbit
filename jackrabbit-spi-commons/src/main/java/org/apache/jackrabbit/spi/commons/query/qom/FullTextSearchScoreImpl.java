@@ -28,23 +28,8 @@ public class FullTextSearchScoreImpl
         extends DynamicOperandImpl
         implements FullTextSearchScore {
 
-    /**
-     * Name of the selector against which to evaluate this operand.
-     */
-    private final Name selectorName;
-
     FullTextSearchScoreImpl(NamePathResolver resolver, Name selectorName) {
-        super(resolver);
-        this.selectorName = selectorName;
-    }
-
-    /**
-     * Gets the name of the selector against which to evaluate this operand.
-     *
-     * @return the selector name; non-null
-     */
-    public String getSelectorName() {
-        return getJCRName(selectorName);
+        super(resolver, selectorName);
     }
 
     //------------------------< AbstractQOMNode >-------------------------------

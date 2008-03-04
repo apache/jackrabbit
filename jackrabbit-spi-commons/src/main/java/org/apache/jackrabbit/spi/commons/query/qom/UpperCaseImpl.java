@@ -32,7 +32,7 @@ public class UpperCaseImpl extends DynamicOperandImpl implements UpperCase {
     private final DynamicOperandImpl operand;
 
     UpperCaseImpl(NamePathResolver resolver, DynamicOperandImpl operand) {
-        super(resolver);
+        super(resolver, operand.getSelectorQName());
         this.operand = operand;
     }
 

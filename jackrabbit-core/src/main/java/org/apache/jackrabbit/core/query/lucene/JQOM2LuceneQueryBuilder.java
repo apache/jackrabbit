@@ -73,6 +73,9 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.PropertyType;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.NodeIterator;
+import javax.jcr.Node;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeType;
@@ -83,6 +86,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Collections;
 
 /**
  * Implements a query builder that takes an JQOM and creates a lucene {@link
@@ -265,8 +269,25 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
     }
 
     public Object visit(ChildNodeImpl node, Object data) {
-        // TODO: implement
-        throw new UnsupportedOperationException("not yet implemented");
+        Name ntName = qomTree.getSelector(node.getSelectorQName()).getNodeTypeQName();
+        List scoreNodes = new ArrayList();
+        try {
+            Node parent = session.getNode(node.getPath());
+            for (NodeIterator it = parent.getNodes(); it.hasNext(); ) {
+                NodeImpl n = (NodeImpl) it.nextNode();
+                if (n.isNodeType(ntName)) {
+                    scoreNodes.add(new ScoreNode(n.getNodeId(), 1.0f));
+                }
+            }
+            return new QueryHitsQuery(new DefaultQueryHits(scoreNodes));
+        } catch (PathNotFoundException e) {
+            // node does not exist
+        } catch (RepositoryException e) {
+            log.warn("Exception while constructing query: " + e);
+            log.debug("Stacktrace: ", e);
+        }
+        // return a dummy query, which does not match any nodes
+        return new BooleanQuery();
     }
 
     public Object visit(ChildNodeJoinConditionImpl node, Object data) {
@@ -433,9 +454,23 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
         }, data);
     }
 
-    public Object visit(DescendantNodeImpl node, Object data) {
-        // TODO: implement
-        throw new UnsupportedOperationException("not yet implemented");
+    public Object visit(DescendantNodeImpl node, Object data) throws Exception {
+        // TODO simplify, is there a way to aggregate constraints for the same selector?
+        Query selectorQuery = (Query) qomTree.getSelector(node.getSelectorQName()).accept(this, null);
+        try {
+            NodeImpl n = (NodeImpl) session.getNode(node.getPath());
+            ScoreNode sn = new ScoreNode(n.getNodeId(), 1.0f);
+            Query context = new QueryHitsQuery(new DefaultQueryHits(
+                    Collections.singletonList(sn)));
+            return new DescendantSelfAxisQuery(context, selectorQuery, false);
+        } catch (PathNotFoundException e) {
+            // node does not exist
+        } catch (RepositoryException e) {
+            log.warn("Exception while constructing query: " + e);
+            log.debug("Stacktrace: ", e);
+        }
+        // return a dummy query, which does not match any nodes
+        return new BooleanQuery();
     }
 
     public Object visit(DescendantNodeJoinConditionImpl node, Object data) {
@@ -579,8 +614,22 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
     }
 
     public Object visit(SameNodeImpl node, Object data) {
-        // TODO: implement
-        throw new UnsupportedOperationException("not yet implemented");
+        Name ntName = qomTree.getSelector(node.getSelectorQName()).getNodeTypeQName();
+        try {
+            NodeImpl n = (NodeImpl) session.getNode(node.getPath());
+            if (n.isNodeType(ntName)) {
+                ScoreNode sn = new ScoreNode(n.getNodeId(), 1.0f);
+                return new QueryHitsQuery(new DefaultQueryHits(
+                        Collections.singletonList(sn)));
+            }
+        } catch (PathNotFoundException e) {
+            // node does not exist
+        } catch (RepositoryException e) {
+            log.warn("Exception while constructing query: " + e);
+            log.debug("Stacktrace: ", e);
+        }
+        // return a dummy query, which does not match any nodes
+        return new BooleanQuery();
     }
 
     public Object visit(SameNodeJoinConditionImpl node, Object data) {
