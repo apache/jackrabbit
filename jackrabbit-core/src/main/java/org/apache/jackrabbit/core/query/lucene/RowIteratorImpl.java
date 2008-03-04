@@ -37,6 +37,7 @@ import javax.jcr.Value;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.NamespaceException;
 import javax.jcr.ValueFactory;
+import javax.jcr.Node;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 import java.util.Arrays;
@@ -363,6 +364,120 @@ class RowIteratorImpl implements RowIterator {
                 }
             }
         }
+
+        /**
+         * Returns the <code>Node</code> corresponding to this <code>Row</code>.
+         * <p/>
+         * A <code>RepositoryException</code> is thrown if this <code>Row</code>
+         * contains values from more than one node. This will be the case when more
+         * than one selector is included among the columns specified for the query.
+         *
+         * @return a <code>Node</code>
+         * @throws RepositoryException if this query has more than one selector
+         * (and therefore, this <code>Row</code> corresponds to more than one
+         * <code>Node</code>) or if another error occurs.
+         * @since JCR 2.0
+         */
+        public Node getNode() throws RepositoryException {
+            return node;
+        }
+
+        /**
+         * Returns the <code>Node</code> corresponding to this <code>Row</code> and
+         * the specified selector.
+         *
+         * @param selectorName a <code>String</code>
+         * @return a <code>Node</code>
+         * @throws RepositoryException if <code>selectorName</code> is not the alias
+         * of a selector in this query or if another error occurs.
+         * @since JCR 2.0
+         */
+        public Node getNode(String selectorName) throws RepositoryException {
+            // TODO: implement
+            throw new UnsupportedOperationException("not yet implemented");
+        }
+
+        /**
+         * Equivalent to <code>Row.getNode().getPath()</code>. However, some
+         * implementations may be able gain efficiency by not resolving the actual
+         * <code>Node</code>.
+         *
+         * @return a <code>String</code>
+         * @throws RepositoryException if this query has more than one selector
+         * (and therefore, this <code>Row</code> corresponds to more than one
+         * <code>Node</code>) or if another error occurs.
+         * @since JCR 2.0
+         */
+        public String getPath() throws RepositoryException {
+            return node.getPath();
+        }
+
+        /**
+         * Equivalent to <code>Row.getNode(selectorName).getPath()</code>. However, some
+         * implementations may be able gain efficiency by not resolving the actual
+         * <code>Node</code>.
+         *
+         * @param selectorName a <code>String</code>
+         * @return a <code>String</code>
+         * @throws RepositoryException if <code>selectorName</code> is not the alias
+         * of a selector in this query or if another error occurs.
+         * @since JCR 2.0
+         */
+        public String getPath(String selectorName) throws RepositoryException {
+            // TODO: implement
+            throw new UnsupportedOperationException("not yet implemented");
+        }
+
+        /**
+         * Returns the full text search score for this row associated with the
+         * default selector. This corresponds to the score of a particular node.
+         * <p/>
+         * If no <code>FullTextSearchScore</code> AQM object is associated with the
+         * default selector this method will still return a value. However, in that
+         * case the returned value may not be meaningful or may simply reflect the
+         * minimum possible relevance level (for example, in some systems this might
+         * be a score of 0).
+         * <p/>
+         * Note, in JCR-SQL2 a <code>FullTextSearchScore</code> AQM object is represented
+         * by a <code>SCORE()</code> function. In JCR-JQOM it is represented by a
+         * Java object of type <code>javax.jcr.query.qom.FullTextSearchScore</code>.
+         *
+         * @return a <code>double</code>
+         * @throws RepositoryException if this query has more than one selector
+         * (and therefore, this <code>Row</code> corresponds to more than one
+         * <code>Node</code>) or if another error occurs.
+         * @since JCR 2.0
+         */
+        public double getScore() throws RepositoryException {
+            return score;
+        }
+
+        /**
+         * Returns the full text search score for this row associated with the
+         * specified selector. This corresponds to the score of a particular node.
+         * <p/>
+         * If no <code>FullTextSearchScore</code> AQM object is associated with the
+         * selector <code>selectorName</code> this method will still return a value.
+         * However, in that case the returned value may not be meaningful or may
+         * simply reflect the minimum possible relevance level (for example, in some
+         * systems this might be a score of 0).
+         * <p/>
+         * Note, in JCR-SQL2 a <code>FullTextSearchScore</code> AQM object is represented
+         * by a <code>SCORE()</code> function. In JCR-JQOM it is represented by a
+         * Java object of type <code>javax.jcr.query.qom.FullTextSearchScore</code>.
+         *
+         * @param selectorName a <code>String</code>
+         * @return a <code>String</code>
+         * @throws RepositoryException if <code>selectorName</code> is not the alias
+         * of a selector in this query or if another error occurs.
+         * @since JCR 2.0
+         */
+        public double getScore(String selectorName) throws RepositoryException {
+            // TODO: implement
+            throw new UnsupportedOperationException("not yet implemented");
+        }
+
+        //-----------------------------< internal >-----------------------------
 
         /**
          * @param name a Name.
