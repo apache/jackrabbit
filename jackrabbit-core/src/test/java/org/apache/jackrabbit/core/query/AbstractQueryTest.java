@@ -37,11 +37,6 @@ import java.util.Iterator;
  */
 public class AbstractQueryTest extends AbstractJCRTest {
 
-    /**
-     * Execute random queries for this amount of time.
-     */
-    protected static final int RUN_NUM_SECONDS = getTestScale();
-
     protected QueryManager qm;
 
     protected void setUp() throws Exception {

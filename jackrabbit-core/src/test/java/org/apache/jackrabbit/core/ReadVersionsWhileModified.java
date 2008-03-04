@@ -31,6 +31,8 @@ import javax.jcr.version.Version;
  */
 public class ReadVersionsWhileModified extends AbstractConcurrencyTest {
 
+    private static final int RUN_NUM_SECONDS = 20;
+
     public void testVersionHistory() throws RepositoryException {
         final Node n = testRootNode.addNode(nodeName1);
         n.addMixin(mixVersionable);
@@ -38,7 +40,7 @@ public class ReadVersionsWhileModified extends AbstractConcurrencyTest {
         final Session s = helper.getSuperuserSession();
         Thread t = new Thread(new Runnable() {
             public void run() {
-                long end = System.currentTimeMillis() + 1000 * getTestScale();
+                long end = System.currentTimeMillis() + RUN_NUM_SECONDS * 1000;
                 try {
                     Node vn = (Node) s.getItem(n.getPath());
                     while (end > System.currentTimeMillis()) {

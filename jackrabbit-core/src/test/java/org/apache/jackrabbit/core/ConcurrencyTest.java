@@ -28,8 +28,8 @@ import java.util.Iterator;
 public class ConcurrencyTest extends AbstractJCRTest {
 
     private static final int NUM_ITERATIONS = 2;
-    private static final int NUM_SESSIONS = getTestScale();
-    private static final int NUM_NODES = getTestScale();
+    private static final int NUM_SESSIONS = 100;
+    private static final int NUM_NODES = 100;
 
     final ArrayList exceptions = new ArrayList();
 

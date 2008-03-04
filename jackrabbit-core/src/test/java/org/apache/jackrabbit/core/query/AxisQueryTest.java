@@ -43,6 +43,11 @@ public class AxisQueryTest extends AbstractQueryTest {
     private static final int NODES_PER_LEVEL = 3;
 
     /**
+     * Execute random queries for this amount of time.
+     */
+    private static final int RUN_NUM_SECONDS = 10;
+
+    /**
      * Controls if query results are checked for their correctness. When the
      * number of test nodes increases this becomes expensive and should be
      * disabled.
