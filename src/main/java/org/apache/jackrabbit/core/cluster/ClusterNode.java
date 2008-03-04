@@ -341,6 +341,15 @@ public class ClusterNode implements Runnable,
     public LockEventChannel createLockChannel(String workspace) {
         return new WorkspaceLockChannel(workspace);
     }
+    
+    /**
+     * Return the journal created by this cluster node.
+     * 
+     * @return journal
+     */
+    public Journal getJournal() {
+        return journal;
+    }
 
     /**
      * Return the instance id to be used for this node in the cluster.
