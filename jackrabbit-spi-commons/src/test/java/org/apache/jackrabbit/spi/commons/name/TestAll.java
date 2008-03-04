@@ -36,8 +36,8 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("name tests");
 
         suite.addTestSuite(NameFactoryTest.class);
-        // TODO: add PathFactory test
         suite.addTestSuite(PathBuilderTest.class);
+        suite.addTestSuite(PathTest.class);
 
         return suite;
     }
