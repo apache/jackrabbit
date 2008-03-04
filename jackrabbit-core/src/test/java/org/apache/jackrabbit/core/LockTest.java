@@ -33,11 +33,11 @@ import java.util.Random;
  */
 public class LockTest extends AbstractJCRTest {
 
-    private static final int NUM_THREADS = 100;
+    private static final int NUM_THREADS = 10;
 
-    private static final int NUM_CHANGES = 10;
+    private static final int NUM_CHANGES = 10 * getTestScale();
 
-    private static final int NUM_VALUE_GETS = 10;
+    private static final int NUM_VALUE_GETS = 10 * getTestScale();
 
     /**
      * Tests the utility {@link org.apache.jackrabbit.util.Locked} by
@@ -74,7 +74,7 @@ public class LockTest extends AbstractJCRTest {
                                         n.addNode(nodeName);
                                     }
                                     n.save();
-                                    System.out.println("Thread" + threadNumber + ": saved modification");
+                                    log.println("Thread" + threadNumber + ": saved modification");
 
                                     return null;
                                 }
@@ -83,9 +83,9 @@ public class LockTest extends AbstractJCRTest {
                             Thread.sleep(new Random().nextInt(100));
                         }
                     } catch (RepositoryException e) {
-                        System.out.println("exception while running code with lock:" + e.getMessage());
+                        log.println("exception while running code with lock:" + e.getMessage());
                     } catch (InterruptedException e) {
-                        System.out.println(Thread.currentThread() + " interrupted while waiting for lock");
+                        log.println(Thread.currentThread() + " interrupted while waiting for lock");
                     } finally {
                         s.logout();
                     }
@@ -141,14 +141,14 @@ public class LockTest extends AbstractJCRTest {
                                     return new Long(value);
                                 }
                             }.with(n, false)).longValue();
-                            System.out.println("Thread" + threadNumber + ": got sequence number: " + currentValue);
+                            log.println("Thread" + threadNumber + ": got sequence number: " + currentValue);
                             // do a random wait
                             Thread.sleep(new Random().nextInt(100));
                         }
                     } catch (RepositoryException e) {
-                        System.out.println("exception while running code with lock:" + e.getMessage());
+                        log.println("exception while running code with lock:" + e.getMessage());
                     } catch (InterruptedException e) {
-                        System.out.println(Thread.currentThread() + " interrupted while waiting for lock");
+                        log.println(Thread.currentThread() + " interrupted while waiting for lock");
                     } finally {
                         s.logout();
                     }
@@ -208,18 +208,18 @@ public class LockTest extends AbstractJCRTest {
                                 }
                             }.with(n, false, 10 * 1000); // expect a value after ten seconds
                             if (ret == Locked.TIMED_OUT) {
-                                System.out.println("Thread" + threadNumber + ": could not get a sequence number within 10 seconds");
+                                log.println("Thread" + threadNumber + ": could not get a sequence number within 10 seconds");
                             } else {
                                 long currentValue = ((Long) ret).longValue();
-                                System.out.println("Thread" + threadNumber + ": got sequence number: " + currentValue);
+                                log.println("Thread" + threadNumber + ": got sequence number: " + currentValue);
                             }
                             // do a random wait
                             Thread.sleep(new Random().nextInt(100));
                         }
                     } catch (RepositoryException e) {
-                        System.out.println("exception while running code with lock:" + e.getMessage());
+                        log.println("exception while running code with lock:" + e.getMessage());
                     } catch (InterruptedException e) {
-                        System.out.println(Thread.currentThread() + " interrupted while waiting for lock");
+                        log.println(Thread.currentThread() + " interrupted while waiting for lock");
                     } finally {
                         s.logout();
                     }

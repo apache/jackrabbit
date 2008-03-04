@@ -28,8 +28,8 @@ import java.util.Iterator;
 public class ConcurrencyTest extends AbstractJCRTest {
 
     private static final int NUM_ITERATIONS = 2;
-    private static final int NUM_SESSIONS = 100;
-    private static final int NUM_NODES = 100;
+    private static final int NUM_SESSIONS = getTestScale();
+    private static final int NUM_NODES = getTestScale();
 
     final ArrayList exceptions = new ArrayList();
 
@@ -93,7 +93,7 @@ public class ConcurrencyTest extends AbstractJCRTest {
         }
 
         private void randomSleep() {
-            long l = r.nextInt(900) + 200;
+            long l = r.nextInt(90) + 20;
             try {
                 Thread.sleep(l);
             } catch (InterruptedException ie) {

@@ -146,7 +146,8 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest {
     public void testLikeComparisonRandom() throws RepositoryException {
         String abcd = "abcd";
         Random random = new Random();
-        for (int i = 0; i < 50; i++) {
+        long end = System.currentTimeMillis() + 1000 * RUN_NUM_SECONDS;
+        while (end > System.currentTimeMillis()) {
             String pattern = "";
             pattern += getRandomChar(abcd, random);
             pattern += getRandomChar(abcd, random);
@@ -236,8 +237,7 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest {
             }
             logMsg.append(values[i]);
         }
-        log.write(logMsg.toString());
-        log.flush();
+        log.println(logMsg.toString());
         for (NodeIterator it = testRootNode.getNodes(); it.hasNext();) {
             it.nextNode().remove();
         }

@@ -57,7 +57,7 @@ public class ReadWhileSaveTest extends AbstractJCRTest {
                 // ignore
             }
         }
-        System.out.println("numReads: " + numReads);
+        log.println("numReads: " + numReads);
     }
 
     private Thread runExpensiveSave() throws RepositoryException, IOException {

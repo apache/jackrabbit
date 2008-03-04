@@ -87,7 +87,7 @@ public class ConcurrentNodeModificationTest extends AbstractJCRTest {
         }
 
         private void randomSleep() {
-            long l = r.nextInt(900) + 200;
+            long l = r.nextInt(90) + 20;
             try {
                 Thread.sleep(l);
             } catch (InterruptedException ie) {

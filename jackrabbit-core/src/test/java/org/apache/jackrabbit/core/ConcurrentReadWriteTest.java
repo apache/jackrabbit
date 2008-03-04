@@ -25,6 +25,7 @@ import javax.jcr.InvalidItemStateException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Collections;
 
 /**
  * <code>ConcurrentReadWriteTest</code> performs a test with a number of
@@ -36,8 +37,6 @@ public class ConcurrentReadWriteTest extends AbstractConcurrencyTest {
 
     private static final int NUM_THREADS = 5;
 
-    private static final int RUN_NUM_SECONDS = 20;
-
     public void testReadWrite() throws RepositoryException {
         final List uuids = new ArrayList();
         for (int i = 0; i < NUM_NODES; i++) {
@@ -45,6 +44,7 @@ public class ConcurrentReadWriteTest extends AbstractConcurrencyTest {
             n.addMixin(mixReferenceable);
             uuids.add(n.getUUID());
         }
+        final List exceptions = Collections.synchronizedList(new ArrayList());
         final long[] numReads = new long[]{0};
         testRootNode.save();
         Thread t = new Thread(new Runnable() {
@@ -70,8 +70,6 @@ public class ConcurrentReadWriteTest extends AbstractConcurrencyTest {
                                     }
                                 } catch (InvalidItemStateException e) {
                                     // ignore
-                                } catch (RepositoryException e) {
-                                    System.out.println(e);
                                 }
                                 reads++;
                             }
@@ -81,7 +79,7 @@ public class ConcurrentReadWriteTest extends AbstractConcurrencyTest {
                         }
                     }, NUM_THREADS, testRoot);
                 } catch (RepositoryException e) {
-                    e.printStackTrace();
+                    exceptions.add(e);
                 }
             }
         });
@@ -99,7 +97,10 @@ public class ConcurrentReadWriteTest extends AbstractConcurrencyTest {
             n.save();
             numWrites++;
         }
-        System.out.println("#writes performed: " + numWrites);
-        System.out.println("#reads performed: " + numReads[0]);
+        log.println("#writes performed: " + numWrites);
+        log.println("#reads performed: " + numReads[0]);
+        if (!exceptions.isEmpty()) {
+            fail(((RepositoryException) exceptions.get(0)).getMessage());
+        }
     }
 }

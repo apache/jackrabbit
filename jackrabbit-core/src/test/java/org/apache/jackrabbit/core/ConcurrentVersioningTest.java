@@ -39,7 +39,7 @@ public class ConcurrentVersioningTest extends AbstractConcurrencyTest {
      * The total number of operations to execute. E.g. number of checkins
      * performed by the threads.
      */
-    private static final int NUM_OPERATIONS = 200;
+    private static final int NUM_OPERATIONS = 10 * getTestScale();
 
     public void testConcurrentAddVersionable() throws RepositoryException {
         runTask(new Task() {

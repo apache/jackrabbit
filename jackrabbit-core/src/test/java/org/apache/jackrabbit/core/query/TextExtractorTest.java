@@ -45,7 +45,7 @@ public class TextExtractorTest extends AbstractQueryTest {
                 testRootNode.addNode(sourceFolder.getName(), "nt:folder"));
         superuser.save();
         time = System.currentTimeMillis() - time;
-        System.out.println("Imported " + fileCount + " files in " + time + " ms.");
+        log.println("Imported " + fileCount + " files in " + time + " ms.");
     }
 
     /**
@@ -57,11 +57,11 @@ public class TextExtractorTest extends AbstractQueryTest {
             File f = new File(folder, names[i]);
             if (f.canRead()) {
                 if (f.isDirectory()) {
-                    System.out.println("Added folder: " + f.getAbsolutePath());
+                    log.println("Added folder: " + f.getAbsolutePath());
                     addContents(f, n.addNode(names[i], "nt:folder"));
                 } else {
                     addFile(n, f);
-                    System.out.println("Added file: " + f.getAbsolutePath());
+                    log.println("Added file: " + f.getAbsolutePath());
                     // save after 100 files
                     if (++fileCount % 100 == 0) {
                         n.getSession().save();
@@ -91,7 +91,7 @@ public class TextExtractorTest extends AbstractQueryTest {
             } finally {
                 in.close();
             }
-            System.out.println("updating resource...");
+            log.println("updating resource...");
             superuser.save();
         }
     }
