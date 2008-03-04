@@ -306,11 +306,7 @@ public class CompactNodeTypeDefWriter {
         out.write("\n" + INDENT + "+ ");
 
         Name name = nd.getName();
-        if (name.equals(ItemDef.ANY_NAME)) {
-            out.write('*');
-        } else {
-            writeItemDefName(name);
-        }
+        writeItemDefName(name);
         writeRequiredTypes(nd.getRequiredPrimaryTypes());
         writeDefaultType(nd.getDefaultPrimaryType());
         out.write(ntd.getPrimaryItemName() != null && ntd.getPrimaryItemName().equals(nd.getName()) ? " primary" : "");
@@ -338,7 +334,11 @@ public class CompactNodeTypeDefWriter {
      * @throws IOException
      */
     private void writeItemDefName(Name name) throws IOException {
-        out.write(resolve(name));
+        if (name.equals(ItemDef.ANY_NAME)) {
+            out.write('*');
+        } else {
+            out.write(resolve(name));
+        }
     }
     /**
      * write required types
@@ -378,18 +378,18 @@ public class CompactNodeTypeDefWriter {
         }
         try {
             String prefix = resolver.getPrefix(qname.getNamespaceURI());
-            if (prefix != null && !prefix.equals(Name.NS_EMPTY_PREFIX)) {
-                // check for writing namespaces
-                if (nsWriter != null) {
-                    if (!usedNamespaces.contains(prefix)) {
-                        usedNamespaces.add(prefix);
-                        nsWriter.write("<'");
-                        nsWriter.write(prefix);
-                        nsWriter.write("'='");
-                        nsWriter.write(escape(qname.getNamespaceURI()));
-                        nsWriter.write("'>\n");
-                    }
+            // check for writing namespaces
+            if (nsWriter != null) {
+                if (!usedNamespaces.contains(prefix)) {
+                    usedNamespaces.add(prefix);
+                    nsWriter.write("<'");
+                    nsWriter.write(prefix);
+                    nsWriter.write("'='");
+                    nsWriter.write(escape(qname.getNamespaceURI()));
+                    nsWriter.write("'>\n");
                 }
+            }
+            if (!prefix.equals(Name.NS_EMPTY_PREFIX)) {
                 prefix += ":";
             }
 
