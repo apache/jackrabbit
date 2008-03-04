@@ -19,12 +19,15 @@ package org.apache.jackrabbit.core.query.qom;
 import org.apache.jackrabbit.test.api.query.AbstractQueryTest;
 
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 
 /**
  * <code>AbstractQOMTest</code> is a base class for test cases on the JQOM.
  */
-public class AbstractQOMTest extends AbstractQueryTest {
+public class AbstractQOMTest
+        extends AbstractQueryTest
+        implements QueryObjectModelConstants {
 
     protected QueryObjectModelFactory qomFactory;
 

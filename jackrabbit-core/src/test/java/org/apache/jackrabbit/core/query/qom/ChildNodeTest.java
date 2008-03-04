@@ -28,7 +28,6 @@ import javax.jcr.query.InvalidQueryException;
 
 /**
  * <code>ChildNodeTest</code>...
- * TODO: add tests with default selector
  */
 public class ChildNodeTest extends AbstractQOMTest {
 
