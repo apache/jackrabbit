@@ -105,9 +105,4 @@ public class GCConcurrentTest extends AbstractJCRTest {
     static Node node(Node n, String x) throws RepositoryException {
         return n.hasNode(x) ? n.getNode(x) : n.addNode(x);
     }
-
-    static int getTestScale() {
-        return Integer.parseInt(System.getProperty("jackrabbit.test.scale", "1"));
-    }
-
 }
