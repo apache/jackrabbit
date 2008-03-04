@@ -26,6 +26,7 @@ import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
 import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefWriter;
 import org.apache.jackrabbit.core.nodetype.compact.ParseException;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -245,7 +246,8 @@ public abstract class AbstractRecord implements Record {
         try {
             StringReader sr = new StringReader(readString());
 
-            CompactNodeTypeDefReader reader = new CompactNodeTypeDefReader(sr, "(internal)");
+            CompactNodeTypeDefReader reader = new CompactNodeTypeDefReader(
+                    sr, "(internal)", new NamespaceMapping(nsResolver));
             List ntds = reader.getNodeTypeDefs();
             if (ntds.size() != 1) {
                 throw new JournalException("Expected one node type definition: got " + ntds.size());
