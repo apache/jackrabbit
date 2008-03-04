@@ -286,4 +286,49 @@ public class ConfigurationParser {
         }
     }
 
+    /**
+     * Returns the value of the named attribute of the given element.
+     * If the attribute is not found, then the given default value is returned.
+     *
+     * @param element element
+     * @param name attribute name
+     * @param def default value
+     * @return attribute value, or the default value
+     */
+    protected boolean getAttribute(Element element, String name, boolean def) {
+        Attr attribute = element.getAttributeNode(name);
+        if (attribute != null) {
+            return Boolean.valueOf(attribute.getValue()).booleanValue();
+        } else {
+            return def;
+        }
+    }
+
+    /**
+     * Returns the value of the named attribute of the given element.
+     * If the attribute is not found, then the given default value is returned.
+     *
+     * @param element element
+     * @param name attribute name
+     * @param def default value
+     * @return attribute value, or the default value
+     */
+    protected int getAttribute(Element element, String name, int def) 
+            throws ConfigurationException {
+        
+        Attr attribute = element.getAttributeNode(name);
+        if (attribute != null) {
+            String s = attribute.getValue();
+            
+            try {
+                return Integer.parseInt(s);
+            } catch (NumberFormatException e) {
+                throw new ConfigurationException(
+                        "Value of attribute " + name + 
+                        " is not an integer: " + s, e);
+            }
+        } else {
+            return def;
+        }
+    }
 }
