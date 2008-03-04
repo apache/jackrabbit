@@ -69,7 +69,10 @@ public class QueryObjectModelTree extends AbstractQOMNode {
         this.columns = columns;
         for (Iterator it = Arrays.asList(source.getSelectors()).iterator(); it.hasNext(); ) {
             SelectorImpl selector = (SelectorImpl) it.next();
-            selectors.put(selector.getSelectorQName(), selector);
+            if (selectors.put(selector.getSelectorQName(), selector) != null) {
+                throw new InvalidQueryException("Duplicate selector name: " +
+                        selector.getSelectorName());
+            }
         }
         if (selectors.size() == 1) {
             // there is only one selector, which is also a default selector
