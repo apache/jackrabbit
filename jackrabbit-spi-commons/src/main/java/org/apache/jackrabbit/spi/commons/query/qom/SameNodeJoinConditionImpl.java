@@ -81,6 +81,24 @@ public class SameNodeJoinConditionImpl
         return getJCRPath(selector2Path);
     }
 
+    /**
+     * Gets the name of the first selector.
+     *
+     * @return the selector name; non-null
+     */
+    public Name getSelector1QName() {
+        return selector1Name;
+    }
+
+    /**
+     * Gets the name of the second selector.
+     *
+     * @return the selector name; non-null
+     */
+    public Name getSelector2QName() {
+        return selector2Name;
+    }
+
     //------------------------< AbstractQOMNode >-------------------------------
 
     /**

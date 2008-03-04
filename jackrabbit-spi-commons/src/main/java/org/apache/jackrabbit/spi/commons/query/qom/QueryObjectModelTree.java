@@ -17,8 +17,13 @@
 package org.apache.jackrabbit.spi.commons.query.qom;
 
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.query.InvalidQueryException;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Iterator;
 
 /**
  * <code>QueryObjectModelTree</code> implements the root node of an object
@@ -46,6 +51,11 @@ public class QueryObjectModelTree extends AbstractQOMNode {
      */
     private final ColumnImpl[] columns;
 
+    /**
+     * All selectors available in this query object model. Key=Name
+     */
+    private final Map selectors = new HashMap();
+
     public QueryObjectModelTree(NamePathResolver resolver,
                                 SourceImpl source,
                                 ConstraintImpl constraint,
@@ -57,6 +67,14 @@ public class QueryObjectModelTree extends AbstractQOMNode {
         this.constraint = constraint;
         this.orderings = orderings;
         this.columns = columns;
+        for (Iterator it = Arrays.asList(source.getSelectors()).iterator(); it.hasNext(); ) {
+            SelectorImpl selector = (SelectorImpl) it.next();
+            selectors.put(selector.getSelectorQName(), selector);
+        }
+        if (selectors.size() == 1) {
+            // there is only one selector, which is also a default selector
+            selectors.put(null, selectors.values().iterator().next());
+        }
         checkQuery();
     }
 
@@ -100,6 +118,17 @@ public class QueryObjectModelTree extends AbstractQOMNode {
         return temp;
     }
 
+    /**
+     * Returns the selector with the given <code>name</code> or
+     * <code>null</code> if there is no selector with this name.
+     *
+     * @param name the name of a selector.
+     * @return the selector or <code>null</code> if there is no such selector.
+     */
+    public SelectorImpl getSelector(Name name) {
+        return (SelectorImpl) selectors.get(name);
+    }
+
     //-----------------------< AbstractQOMNode >--------------------------------
 
     /**
@@ -118,6 +147,81 @@ public class QueryObjectModelTree extends AbstractQOMNode {
      * @throws InvalidQueryException if the QOM is invalid.
      */
     private void checkQuery() throws InvalidQueryException {
-        // TODO: validate query
+        // TODO: validate query completely.
+        // checks currently implemented:
+        // - check for selector names
+        try {
+            accept(new DefaultTraversingQOMTreeVisitor() {
+                public Object visit(ChildNodeImpl node, Object data) throws Exception {
+                    return checkSelector(node.getSelectorQName());
+                }
+
+                public Object visit(ColumnImpl node, Object data) throws Exception {
+                    return checkSelector(node.getSelectorQName());
+                }
+
+                public Object visit(DescendantNodeImpl node, Object data) throws Exception {
+                    return checkSelector(node.getSelectorQName());
+                }
+
+                public Object visit(EquiJoinConditionImpl node, Object data)
+                        throws Exception {
+                    checkSelector(node.getSelector1QName());
+                    return checkSelector(node.getSelector2QName());
+                }
+
+                public Object visit(FullTextSearchImpl node, Object data) throws Exception {
+                    return checkSelector(node.getSelectorQName());
+                }
+
+                public Object visit(FullTextSearchScoreImpl node, Object data)
+                        throws Exception {
+                    return checkSelector(node.getSelectorQName());
+                }
+
+                public Object visit(NodeLocalNameImpl node, Object data) throws Exception {
+                    return checkSelector(node.getSelectorQName());
+                }
+
+                public Object visit(NodeNameImpl node, Object data) throws Exception {
+                    return checkSelector(node.getSelectorQName());
+                }
+
+                public Object visit(PropertyExistenceImpl node, Object data)
+                        throws Exception {
+                    return checkSelector(node.getSelectorQName());
+                }
+
+                public Object visit(PropertyValueImpl node, Object data) throws Exception {
+                    return checkSelector(node.getSelectorQName());
+                }
+
+                public Object visit(SameNodeImpl node, Object data) throws Exception {
+                    return checkSelector(node.getSelectorQName());
+                }
+
+                public Object visit(SameNodeJoinConditionImpl node, Object data)
+                        throws Exception {
+                    checkSelector(node.getSelector1QName());
+                    return checkSelector(node.getSelector2QName());
+                }
+
+                private Object checkSelector(Name selectorName)
+                        throws InvalidQueryException {
+                    if (!selectors.containsKey(selectorName)) {
+                        String msg = "Unknown selector: ";
+                        if (selectorName != null) {
+                            msg += QueryObjectModelTree.this.getJCRName(selectorName);
+                        } else {
+                            msg += "<default>";
+                        }
+                        throw new InvalidQueryException(msg);
+                    }
+                    return null;
+                }
+            }, null);
+        } catch (Exception e) {
+            throw new InvalidQueryException(e.getMessage());
+        }
     }
 }

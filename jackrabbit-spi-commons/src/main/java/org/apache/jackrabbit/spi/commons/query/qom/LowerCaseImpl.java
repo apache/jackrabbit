@@ -32,7 +32,7 @@ public class LowerCaseImpl extends DynamicOperandImpl implements LowerCase {
     private final DynamicOperandImpl operand;
 
     LowerCaseImpl(NamePathResolver resolver, DynamicOperandImpl operand) {
-        super(resolver);
+        super(resolver, operand.getSelectorQName());
         this.operand = operand;
     }
 

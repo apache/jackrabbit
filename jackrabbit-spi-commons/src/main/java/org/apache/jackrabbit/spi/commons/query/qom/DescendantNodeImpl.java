@@ -22,6 +22,9 @@ import org.apache.jackrabbit.spi.Path;
 
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DescendantNode;
 
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.NamespaceException;
+
 /**
  * <code>DescendantNodeImpl</code>...
  */
@@ -41,10 +44,15 @@ public class DescendantNodeImpl
 
     DescendantNodeImpl(NamePathResolver resolver,
                        Name selectorName,
-                       Path path) {
+                       Path path)
+            throws InvalidQueryException, NamespaceException {
         super(resolver);
         this.selectorName = selectorName;
         this.path = path;
+        if (!path.isAbsolute()) {
+            throw new InvalidQueryException(resolver.getJCRPath(path) +
+                    " is not an absolute path");
+        }
     }
 
     /**
@@ -63,6 +71,24 @@ public class DescendantNodeImpl
      */
     public String getPath() {
         return getJCRPath(path);
+    }
+
+    /**
+     * Gets the name of the selector against which to apply this constraint.
+     *
+     * @return the selector name; non-null
+     */
+    public Name getSelectorQName() {
+        return selectorName;
+    }
+
+    /**
+     * Gets the absolute path.
+     *
+     * @return the path; non-null
+     */
+    public Path getQPath() {
+        return path;
     }
 
     //------------------------< AbstractQOMNode >-------------------------------

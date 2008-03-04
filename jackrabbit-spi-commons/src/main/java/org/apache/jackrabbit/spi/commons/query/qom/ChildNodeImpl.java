@@ -22,6 +22,9 @@ import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.ChildNode;
 
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.RepositoryException;
+
 /**
  * <code>ChildNodeImpl</code>...
  */
@@ -37,10 +40,15 @@ public class ChildNodeImpl extends ConstraintImpl implements ChildNode {
      */
     private final Path path;
 
-    ChildNodeImpl(NamePathResolver resolver, Name selectorName, Path path) {
+    ChildNodeImpl(NamePathResolver resolver, Name selectorName, Path path)
+            throws InvalidQueryException, RepositoryException {
         super(resolver);
         this.selectorName = selectorName;
         this.path = path;
+        if (!path.isAbsolute()) {
+            throw new InvalidQueryException(resolver.getJCRPath(path) +
+                    " is not an absolute path");
+        }
     }
 
     /**
@@ -59,6 +67,24 @@ public class ChildNodeImpl extends ConstraintImpl implements ChildNode {
      */
     public String getPath() {
         return getJCRPath(path);
+    }
+
+    /**
+     * Gets the name of the selector against which to apply this constraint.
+     *
+     * @return the selector name; non-null
+     */
+    public Name getSelectorQName() {
+        return selectorName;
+    }
+
+    /**
+     * Gets the absolute path.
+     *
+     * @return the path; non-null
+     */
+    public Path getQPath() {
+        return path;
     }
 
     //------------------------< AbstractQOMNode >-------------------------------

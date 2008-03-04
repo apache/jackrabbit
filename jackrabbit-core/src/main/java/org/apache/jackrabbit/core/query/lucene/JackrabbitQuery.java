@@ -33,9 +33,10 @@ public interface JackrabbitQuery {
      * Executes this query and returns {@link QueryHits} or <code>null</code> if
      * this query should be executed using the regular Lucene API.
      * <p/>
-     * <b>Important note:</b> an implementation <b>must not</b> call {@link
-     * JackrabbitIndexSearcher#execute(Query, Sort)} with this query instance as
-     * a parameter, otherwise a stack overflow will occur.
+     * <b>Important note:</b> an implementation <b>must not</b> call
+     * {@link JackrabbitIndexSearcher#execute(org.apache.lucene.search.Query, Sort)}
+     * with this query instance as a parameter, otherwise a stack overflow will
+     * occur.
      *
      * @param searcher the jackrabbit index searcher.
      * @param session  the session that executes the query.

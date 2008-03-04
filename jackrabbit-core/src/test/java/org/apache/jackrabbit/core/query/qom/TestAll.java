@@ -14,23 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi.commons.query.qom;
+package org.apache.jackrabbit.core.query.qom;
 
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Source;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 /**
- * <code>SourceImpl</code>...
+ * <code>TestAll</code> includes tests that are related to the
+ * <code>QueryObjectModel</code>.
  */
-public abstract class SourceImpl extends AbstractQOMNode implements Source {
+public class TestAll extends TestCase {
 
-    public SourceImpl(NamePathResolver resolver) {
-        super(resolver);
+    public static Test suite() {
+        TestSuite suite = new TestSuite("QOM tests");
+
+        suite.addTestSuite(ChildNodeTest.class);
+        suite.addTestSuite(DescendantNodeTest.class);
+        suite.addTestSuite(QueryObjectModelFactoryTest.class);
+        suite.addTestSuite(SameNodeTest.class);
+        suite.addTestSuite(SelectorQueryTest.class);
+
+        return suite;
     }
-
-    /**
-     * @return the selectors that are contained in this source.
-     */
-    public abstract SelectorImpl[] getSelectors();
 }
