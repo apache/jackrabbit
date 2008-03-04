@@ -233,9 +233,9 @@ public interface Path extends Serializable {
      *
      * @return <code>true</code> if <code>other</code> is an ancestor;
      * otherwise <code>false</code>
-     * @throws IllegalArgumentException If the given path is null.
-     * @throws RepositoryException if not both paths are either absolute or
-     * relative.
+     * @throws IllegalArgumentException if the given path is <code>null</code>
+     * or if not both paths are either absolute or relative.
+     * @throws RepositoryException if any of the path cannot be normalized.
      * @see #getDepth()
      */
     public boolean isDescendantOf(Path other) throws IllegalArgumentException, RepositoryException;
