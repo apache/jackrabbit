@@ -23,6 +23,7 @@ import java.util.Random;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.version.Version;
 import javax.transaction.UserTransaction;
 
@@ -66,6 +67,8 @@ public class ConcurrentVersioningWithTransactionsTest extends AbstractConcurrenc
                         n.addMixin(mixVersionable);
                         session.save();
                         utx.commit();
+                    } catch (InvalidItemStateException e) {
+                        // ignore
                     } catch (Exception e) {
                         final Throwable deepCause = getLevel2Cause(e);
                         if (deepCause != null && deepCause instanceof StaleItemStateException) {
