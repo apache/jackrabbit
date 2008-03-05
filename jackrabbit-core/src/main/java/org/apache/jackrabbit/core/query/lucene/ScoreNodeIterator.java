@@ -39,6 +39,16 @@ public interface ScoreNodeIterator extends NodeIterator {
     float getScore();
 
     /**
+     * Returns the score nodes related to the node returned by
+     * {@link #nextNodeImpl()} but does not move the iterator forward.
+     *
+     * @return the score nodes related to the {@link #nextNodeImpl()}.
+     * @throws java.util.NoSuchElementException
+     *          if there is no next node.
+     */
+    ScoreNode[] getScoreNodes();
+
+    /**
      * Returns the next <code>Node</code> in the result set.
      *
      * @return the next <code>Node</code> in the result set.

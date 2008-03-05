@@ -100,6 +100,8 @@ public class QueryResultImpl implements QueryResult {
     /**
      * The result nodes including their score. This list is populated on a lazy
      * basis while a client iterates through the results.
+     * <p/>
+     * The exact type is: <code>List&lt;ScoreNode[]></code>
      */
     private final List resultNodes = new ArrayList();
 
@@ -225,7 +227,8 @@ public class QueryResultImpl implements QueryResult {
             }
         }
         return new RowIteratorImpl(getNodeIterator(), selectProps,
-                session, excerptProvider, spellSuggestion);
+                queryImpl.getSelectorNames(), itemMgr, session,
+                excerptProvider, spellSuggestion);
     }
 
     /**
@@ -235,7 +238,7 @@ public class QueryResultImpl implements QueryResult {
      * @return hits for this query result.
      * @throws IOException if an error occurs while executing the query.
      */
-    protected QueryHits executeQuery() throws IOException {
+    protected MultiColumnQueryHits executeQuery() throws IOException {
         return index.executeQuery(session, queryImpl,
                 query, orderProps, orderSpecs);
     }
@@ -249,9 +252,9 @@ public class QueryResultImpl implements QueryResult {
      */
     private ScoreNodeIterator getNodeIterator() {
         if (docOrder) {
-            return new DocOrderNodeIteratorImpl(itemMgr, resultNodes);
+            return new DocOrderNodeIteratorImpl(itemMgr, resultNodes, 0);
         } else {
-            return new LazyScoreNodeIterator();
+            return new LazyScoreNodeIterator(0);
         }
     }
 
@@ -283,7 +286,7 @@ public class QueryResultImpl implements QueryResult {
         }
 
         // execute it
-        QueryHits result = null;
+        MultiColumnQueryHits result = null;
         try {
             long time = System.currentTimeMillis();
             result = executeQuery();
@@ -293,12 +296,12 @@ public class QueryResultImpl implements QueryResult {
             int start = resultNodes.size() + invalid + (int) offset;
             time = System.currentTimeMillis();
             result.skip(start);
-            for (ScoreNode sn = result.nextScoreNode();
+            for (ScoreNode[] sn = result.nextScoreNodes();
                  sn != null && resultNodes.size() < maxResultSize;
-                 sn = result.nextScoreNode()) {
+                 sn = result.nextScoreNodes()) {
                 // check access
                 try {
-                    if (accessMgr.isGranted(sn.getNodeId(), AccessManager.READ)) {
+                    if (isAccessGranted(sn)) {
                         resultNodes.add(sn);
                     } else {
                         invalid++;
@@ -328,6 +331,28 @@ public class QueryResultImpl implements QueryResult {
     }
 
     /**
+     * Checks if access is granted to all <code>nodes</code>.
+     *
+     * @param nodes the nodes to check.
+     * @return <code>true</code> if read access is granted to all
+     *         <code>nodes</code>.
+     * @throws ItemNotFoundException if one of the <code>nodes</code> is not
+     *                               found.
+     * @throws RepositoryException   if an error occurs while checking access
+     *                               rights.
+     */
+    private boolean isAccessGranted(ScoreNode[] nodes)
+            throws ItemNotFoundException, RepositoryException {
+        for (int i = 0; i < nodes.length; i++) {
+            if (nodes[i] != null && !accessMgr.isGranted(
+                    nodes[i].getNodeId(), AccessManager.READ)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Returns the total number of hits. This is the number of results you
      * will get get if you don't set any limit or offset. Keep in mind that this
      * number may get smaller if nodes are found in the result set which the
@@ -350,6 +375,12 @@ public class QueryResultImpl implements QueryResult {
 
         private NodeImpl next;
 
+        private final int selectorIndex;
+
+        private LazyScoreNodeIterator(int selectorIndex) {
+            this.selectorIndex = selectorIndex;
+        }
+
         /**
          * {@inheritDoc}
          */
@@ -358,7 +389,18 @@ public class QueryResultImpl implements QueryResult {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            return ((ScoreNode) resultNodes.get(position)).getScore();
+            return ((ScoreNode[]) resultNodes.get(position))[selectorIndex].getScore();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public ScoreNode[] getScoreNodes() {
+            initialize();
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            return (ScoreNode[]) resultNodes.get(position);
         }
 
         /**
@@ -502,12 +544,12 @@ public class QueryResultImpl implements QueryResult {
                         break;
                     }
                 }
-                ScoreNode sn = (ScoreNode) resultNodes.get(nextPos);
+                ScoreNode[] sn = (ScoreNode[]) resultNodes.get(nextPos);
                 try {
-                    next = (NodeImpl) itemMgr.getItem(sn.getNodeId());
+                    next = (NodeImpl) itemMgr.getItem(sn[selectorIndex].getNodeId());
                 } catch (RepositoryException e) {
                     log.warn("Exception retrieving Node with UUID: "
-                            + sn.getNodeId() + ": " + e.toString());
+                            + sn[selectorIndex].getNodeId() + ": " + e.toString());
                     // remove score node and try next
                     resultNodes.remove(nextPos);
                     invalid++;
