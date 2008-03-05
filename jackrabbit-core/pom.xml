@@ -72,8 +72,6 @@
             <id>fulltext</id>
             <configuration>
               <sourceDirectory>${basedir}/src/main/javacc/fulltext</sourceDirectory>
-              <outputDirectory>${project.build.directory}/generated-src/main/java</outputDirectory>
-              <timestampDirectory>${project.build.directory}/generated-src/javacc-timestamp</timestampDirectory>
               <packageName>org.apache.jackrabbit.core.query.lucene.fulltext</packageName>
             </configuration>
             <goals>

@@ -56,7 +56,7 @@
               <tasks>
                 <echo>Remove files that have been customized in Jackrabbit</echo>
                 <delete>
-                  <fileset dir="${project.build.directory}/generated-src/main/java/org/apache/jackrabbit/spi/commons/query">
+                  <fileset dir="${project.build.directory}/generated-sources/javacc/org/apache/jackrabbit/spi/commons/query">
                     <include name="sql/ASTLiteral.java"/>
                     <include name="sql/ASTContainsExpression.java"/>
                     <include name="sql/ASTPredicate.java"/>
@@ -88,8 +88,6 @@
             <id>sql</id>
             <configuration>
               <sourceDirectory>${basedir}/src/main/javacc/sql</sourceDirectory>
-              <outputDirectory>${project.build.directory}/generated-src/main/java</outputDirectory>
-              <timestampDirectory>${project.build.directory}/generated-src/javacc-timestamp</timestampDirectory>
               <packageName>org.apache.jackrabbit.spi.commons.query.sql</packageName>
             </configuration>
             <goals>
@@ -100,8 +98,6 @@
             <id>xpath</id>
             <configuration>
               <sourceDirectory>${basedir}/src/main/javacc/xpath</sourceDirectory>
-              <outputDirectory>${project.build.directory}/generated-src/main/java</outputDirectory>
-              <timestampDirectory>${project.build.directory}/generated-src/javacc-timestamp</timestampDirectory>
               <packageName>org.apache.jackrabbit.spi.commons.query.xpath</packageName>
             </configuration>
             <goals>
