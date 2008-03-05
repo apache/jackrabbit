@@ -825,6 +825,12 @@ public class SessionItemStateManager
                 transientState.setStatus(ItemState.STATUS_STALE_MODIFIED);
                 visibleState = transientState;
             }
+            // check attic as well (JCR-1432)
+            transientState = atticStore.get(modified.getId());
+            if (transientState != null) {
+                transientState.setStatus(ItemState.STATUS_STALE_MODIFIED);
+                visibleState = transientState;
+            }
         }
         dispatcher.notifyStateModified(visibleState);
     }
