@@ -932,7 +932,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                 // see also bundleSelectAllIdsFrom SQL statement
                 maxCount += 10;
             }
-            Statement stmt = connectionManager.executeStmt(sql, keys, false, maxCount + 10);
+            Statement stmt = connectionManager.executeStmt(sql, keys, false, maxCount);
             rs = stmt.getResultSet();
             ArrayList result = new ArrayList();
             while ((maxCount == 0 || result.size() < maxCount) && rs.next()) {

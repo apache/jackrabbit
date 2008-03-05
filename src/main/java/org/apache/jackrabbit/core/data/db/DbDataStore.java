@@ -40,7 +40,9 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 import java.util.WeakHashMap;
 
@@ -263,7 +265,7 @@ public class DbDataStore implements DataStore {
     /**
      * All data identifiers that are currently in use are in this set until they are garbage collected.
      */
-    protected WeakHashMap inUse = new WeakHashMap();    
+    protected Map inUse = Collections.synchronizedMap(new WeakHashMap());
 
     /**
      * {@inheritDoc}
@@ -384,7 +386,7 @@ public class DbDataStore implements DataStore {
     public synchronized int deleteAllOlderThan(long min) throws DataStoreException {
         ConnectionRecoveryManager conn = getConnection();
         try {
-            Iterator it = inUse.keySet().iterator();
+            Iterator it = new ArrayList(inUse.keySet()).iterator();
             while (it.hasNext()) {
                 DataIdentifier identifier = (DataIdentifier) it.next();
                 if (identifier != null) {
@@ -519,20 +521,18 @@ public class DbDataStore implements DataStore {
                 return;
             }
         }
-
         Properties prop = new Properties();
         try {
             try {
                 prop.load(in);
             } finally {
-                in.close();
+            in.close();
             }
         } catch (IOException e) {
             String msg = "Configuration error: Could not read properties '" + databaseType + ".properties'";
             log.debug(msg);
             throw new DataStoreException(msg);
         }
-
         if (driver == null) {
             driver = getProperty(prop, "driver", driver);
         }

@@ -23,6 +23,7 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
@@ -175,19 +176,24 @@ public class GarbageCollector {
             Iterator it = pm.getAllNodeIds(null, 0);
             while (it.hasNext()) {
                 NodeId id = (NodeId) it.next();
-                NodeState state = pm.load(id);
-                Set propertyNames = state.getPropertyNames();
-                for (Iterator nameIt = propertyNames.iterator(); nameIt
-                        .hasNext();) {
-                    Name name = (Name) nameIt.next();
-                    PropertyId pid = new PropertyId(id, name);
-                    PropertyState ps = pm.load(pid);
-                    if (ps.getType() == PropertyType.BINARY) {
-                        InternalValue[] values = ps.getValues();
-                        for (int j = 0; j < values.length; j++) {
-                            values[j].getBLOBFileValue().getLength();
+                try {
+                    NodeState state = pm.load(id);
+                    Set propertyNames = state.getPropertyNames();
+                    for (Iterator nameIt = propertyNames.iterator(); nameIt
+                            .hasNext();) {
+                        Name name = (Name) nameIt.next();
+                        PropertyId pid = new PropertyId(id, name);
+                        PropertyState ps = pm.load(pid);
+                        if (ps.getType() == PropertyType.BINARY) {
+                            InternalValue[] values = ps.getValues();
+                            for (int j = 0; j < values.length; j++) {
+                                values[j].getBLOBFileValue().getLength();
+                            }
                         }
                     }
+                } catch (NoSuchItemStateException e) {
+                    // the node may have been deleted or moved in the meantime
+                    // ignore it
                 }
             }
         }
