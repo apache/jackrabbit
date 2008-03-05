@@ -17,10 +17,7 @@
 package org.apache.jackrabbit.core.config;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Properties;
-
-import javax.jcr.observation.Event;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -95,9 +92,6 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     /** Name of the ism locking configuration element. */
     public static final String ISM_LOCKING_ELEMENT = "ISMLocking";
 
-    /** Name of the event listener configuration element. */
-    public static final String EVENT_LISTENER_ELEMENT = "EventListener";
-    
     /** Name of the application name configuration attribute. */
     public static final String APP_NAME_ATTRIBUTE = "appName";
 
@@ -130,32 +124,6 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     /** Default synchronization delay, in milliseconds. */
     public static final String DEFAULT_SYNC_DELAY = "5000";
 
-    /** Name of the eventTypes attribute */
-    public static final String EVENT_TYPES_ATTRIBUTE = "eventTypes";
-    
-    /** Default value of the eventTypes attribute */
-    public static final int EVENT_TYPES_VALUE = 
-        Event.NODE_ADDED | Event.NODE_REMOVED | Event.PROPERTY_ADDED |
-        Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED;
-
-    /** Name of the absPath attribute */
-    public static final String ABS_PATH_ATTRIBUTE = "absPath";
-
-    /** Name of the isDeep attribute */
-    public static final String IS_DEEP_ATTRIBUTE = "isDeep";
-
-    /** Name of the uuid attribute */
-    public static final String UUID_ATTRIBUTE = "uuid";
-
-    /** Name of the nodeTypeName attribute */
-    public static final String NODE_TYPE_NAME_ATTRIBUTE = "nodeTypeName";
-    
-    /** Name of the noLocal attribute */
-    public static final String NO_LOCAL_ATTRIBUTE = "noLocal";
-    
-    /** Name of the workspace property */
-    public static final String WORKSPACE_PROP_NAME = "workspace";
-    
     /**
      * Creates a new configuration parser with the given parser variables.
      *
@@ -403,10 +371,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         // Item state manager locking configuration (optional)
         ISMLockingConfig ismLockingConfig = tmpParser.parseISMLockingConfig(root);
 
-        // Event listeners configuration (optional)
-        EventListenerConfig[] elcs = tmpParser.parseEventListenersConfig(root);
-        
-        return new WorkspaceConfig(home, name, clustered, fsc, pmc, sc, ismLockingConfig, elcs);
+        return new WorkspaceConfig(home, name, clustered, fsc, pmc, sc, ismLockingConfig);
     }
 
     /**
@@ -507,70 +472,6 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         return null;
     }
 
-    
-    /**
-     * Parse event listeners config.
-     * 
-     * @param parent parent of the <code>EventListener</code> elements.
-     * @return event listener configuration array
-     * @throws ConfigurationException if the configuration is broken
-     */
-    protected EventListenerConfig[] parseEventListenersConfig(Element parent)
-            throws ConfigurationException {
-        
-        ArrayList configs = new ArrayList();
-        
-        NodeList children = parent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            if (child.getNodeType() == Node.ELEMENT_NODE
-                    && EVENT_LISTENER_ELEMENT.equals(child.getNodeName())) {
-                Element element = (Element) child;
-                configs.add(parseEventListenerConfig(element));
-            }
-        }
-        EventListenerConfig[] rv = new EventListenerConfig[configs.size()];
-        configs.toArray(rv);
-        return rv;
-    }
-
-    /**
-     * Parse event listener config.
-     * 
-     * @param element an  <code>EventListener</code> element.
-     * @return event listener configuration
-     * @throws ConfigurationException if the configuration is broken
-     */
-    protected EventListenerConfig parseEventListenerConfig(Element element)
-            throws ConfigurationException {
-        
-        String className = getAttribute(element, CLASS_ATTRIBUTE);
-        Properties parameters = parseParameters(element);
-        
-        // Provide a meaningful default for the workspace property
-        if (!parameters.containsKey(WORKSPACE_PROP_NAME)) {
-            parameters.put(WORKSPACE_PROP_NAME, 
-                    replaceVariables("${" + WORKSPACE_NAME_VARIABLE + "}"));
-        }
-
-        EventListenerConfig config = new EventListenerConfig(className, parameters);
-        config.setEventTypes(getAttribute(element, 
-                EVENT_TYPES_ATTRIBUTE, EVENT_TYPES_VALUE));
-        config.setAbsPath(getAttribute(element, ABS_PATH_ATTRIBUTE, "/"));
-        config.setDeep(getAttribute(element, IS_DEEP_ATTRIBUTE, true));
-        
-        String s = getAttribute(element, UUID_ATTRIBUTE, null);
-        if (s != null) {
-            config.setUUID(s.split(","));
-        }
-        s = getAttribute(element, NODE_TYPE_NAME_ATTRIBUTE, null);
-        if (s != null) {
-            config.setNodeTypeName(s.split(","));
-        }
-        config.setNoLocal(getAttribute(element, NO_LOCAL_ATTRIBUTE, false));
-        return config;
-    }
-    
     /**
      * Parses versioning configuration. Versioning configuration uses the
      * following format:
