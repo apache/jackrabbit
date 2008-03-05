@@ -25,8 +25,10 @@ import java.lang.ref.WeakReference;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.WeakHashMap;
 
 /**
@@ -94,7 +96,7 @@ public class FileDataStore implements DataStore {
     /**
      * All data identifiers that are currently in use are in this set until they are garbage collected.
      */
-    private WeakHashMap inUse = new WeakHashMap();
+    protected Map inUse = Collections.synchronizedMap(new WeakHashMap());
 
     /**
      * Creates a uninitialized data store.
@@ -129,12 +131,14 @@ public class FileDataStore implements DataStore {
      */
     public DataRecord getRecord(DataIdentifier identifier) {
         File file = getFile(identifier);
-        if (minModifiedDate != 0 && file.exists() && file.canWrite()) {
-            if (file.lastModified() < minModifiedDate) {
-                file.setLastModified(System.currentTimeMillis());
+        synchronized (this) {
+            if (minModifiedDate != 0 && file.exists() && file.canWrite()) {
+                if (file.lastModified() < minModifiedDate) {
+                    file.setLastModified(System.currentTimeMillis());
+                }
             }
+            usesIdentifier(identifier);
         }
-        usesIdentifier(identifier);
         return new FileDataRecord(identifier, file);
     }
     
@@ -173,35 +177,40 @@ public class FileDataStore implements DataStore {
             } finally {
                 output.close();
             }
-
-            // Check if the same record already exists, or
-            // move the temporary file in place if needed
             DataIdentifier identifier = new DataIdentifier(digest.digest());
-            usesIdentifier(identifier);
-            File file = getFile(identifier);
-            File parent = file.getParentFile();
-            if (!parent.isDirectory()) {
-                parent.mkdirs();
-            }
-            if (!file.exists()) {
-                temporary.renameTo(file);
-                if (!file.exists()) {
-                    throw new IOException("Can not rename " + temporary.getAbsolutePath() + " to " + file.getAbsolutePath() + " (media read only?)");
-                }
-            } else {
-                long now = System.currentTimeMillis();
-                if (file.lastModified() < now) {
-                    file.setLastModified(now);
-                }
-            }
+            File file;
 
-            // Sanity checks on the record file. These should never fail,
-            // but better safe than sorry...
-            if (!file.isFile()) {
-                throw new IOException("Not a file: " + file);
-            }
-            if (file.length() != length) {
-                throw new IOException(DIGEST + " collision: " + file);
+            synchronized (this) {
+                // Check if the same record already exists, or
+                // move the temporary file in place if needed
+                usesIdentifier(identifier);
+                file = getFile(identifier);
+                File parent = file.getParentFile();
+                if (!parent.isDirectory()) {
+                    parent.mkdirs();
+                }
+                if (!file.exists()) {
+                    temporary.renameTo(file);
+                    if (!file.exists()) {
+                        throw new IOException(
+                                "Can not rename " + temporary.getAbsolutePath()
+                                + " to " + file.getAbsolutePath()
+                                + " (media read only?)");
+                    }
+                } else {
+                    long now = System.currentTimeMillis();
+                    if (file.lastModified() < now) {
+                        file.setLastModified(now);
+                    }
+                }
+                // Sanity checks on the record file. These should never fail,
+                // but better safe than sorry...
+                if (!file.isFile()) {
+                    throw new IOException("Not a file: " + file);
+                }
+                if (file.length() != length) {
+                    throw new IOException(DIGEST + " collision: " + file);
+                }
             }
 
             return new FileDataRecord(identifier, file);
@@ -266,17 +275,26 @@ public class FileDataStore implements DataStore {
     private int deleteOlderRecursive(File file, long min) {
         int count = 0;
         if (file.isFile() && file.exists() && file.canWrite()) {
-            if (file.lastModified() < min) {
-                DataIdentifier id = new DataIdentifier(file.getName());
-                if (!inUse.containsKey(id)) {
-                    file.delete();
-                    count++;
+            synchronized (this) {
+                if (file.lastModified() < min) {
+                    DataIdentifier id = new DataIdentifier(file.getName());
+                    if (!inUse.containsKey(id)) {
+                        file.delete();
+                        count++;
+                    }
                 }
             }
         } else if (file.isDirectory()) {
             File[] list = file.listFiles();
             for (int i = 0; i < list.length; i++) {
                 count += deleteOlderRecursive(list[i], min);
+            }
+            // JCR-1396: FileDataStore Garbage Collector and empty directories
+            // Automatic removal of empty directories (but not the root!)
+            synchronized (this) {
+                if (file != directory && file.list().length == 0) {
+                    file.delete();
+                }
             }
         }
         return count;
