@@ -32,16 +32,32 @@ public class OverwriteHeader implements Header {
     public static final String OVERWRITE_TRUE = "T";
     public static final String OVERWRITE_FALSE = "F";
 
-    private boolean doOverwrite;
+    /**
+     * Set 'doOverwrite' to <code>true</code> by default. See RFC 2518:
+     * "If the overwrite header is not included in a COPY or MOVE request then
+     * the resource MUST treat the request as if it has an overwrite header of
+     * value {@link #OVERWRITE_TRUE}".
+     */
+    private final boolean doOverwrite;
 
     public OverwriteHeader(boolean doOverwrite) {
         this.doOverwrite = doOverwrite;
     }
 
+    /**
+     * Create a new <code>OverwriteHeader</code> for the given request object.
+     * If the latter does not contain an "Overwrite" header field, the default
+     * applies, which is {@link #OVERWRITE_TRUE} according to RFC 2518.
+     *
+     * @param request
+     */
     public OverwriteHeader(HttpServletRequest request) {
         String overwriteHeader = request.getHeader(DavConstants.HEADER_OVERWRITE);
         if (overwriteHeader != null) {
             doOverwrite = overwriteHeader.equalsIgnoreCase(OVERWRITE_TRUE);
+        } else {
+            // no Overwrite header -> default is 'true'
+            doOverwrite = true;
         }
     }
 
