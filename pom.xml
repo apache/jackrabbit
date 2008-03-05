@@ -57,6 +57,7 @@
     <module>jackrabbit-api</module>
     <module>jackrabbit-jcr-commons</module>
     <module>jackrabbit-jcr-tests</module>
+    <module>jackrabbit-jcr-benchmark</module>
     <module>jackrabbit-core</module>
     <module>jackrabbit-text-extractors</module>
     <module>jackrabbit-jcr-rmi</module>
