@@ -16,19 +16,29 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import org.apache.jackrabbit.spi.Name;
+
 import java.io.IOException;
 
 /**
- * Defines an interface for reading {@link ScoreNode}s
+ * <code>MultiColumnQueryHits</code> defines an interface for reading tuples of
+ * {@link ScoreNode}s. The {@link ScoreNode}s within a tuple are identified by
+ * selector {@link Name}s.
  */
-public interface QueryHits extends CloseableHits {
+public interface MultiColumnQueryHits extends CloseableHits {
 
     /**
-     * Returns the next score node in this QueryHits or <code>null</code> if
+     * Returns the next score nodes in this QueryHits or <code>null</code> if
      * there are no more score nodes.
      *
-     * @return the next score node in this QueryHits.
+     * @return the next score nodes in this QueryHits.
      * @throws IOException if an error occurs while reading from the index.
      */
-    ScoreNode nextScoreNode() throws IOException;
+    ScoreNode[] nextScoreNodes() throws IOException;
+
+    /**
+     * @return the selector names that correspond to the {@link ScoreNode}s
+     *         returned by {@link #nextScoreNodes()}.
+     */
+    Name[] getSelectorNames();
 }

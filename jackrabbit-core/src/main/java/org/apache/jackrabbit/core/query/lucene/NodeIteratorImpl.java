@@ -35,7 +35,10 @@ class NodeIteratorImpl implements ScoreNodeIterator {
     private static final Logger log = LoggerFactory.getLogger(NodeIteratorImpl.class);
 
     /** The node ids of the nodes in the result set with their score value */
-    protected final ScoreNode[] scoreNodes;
+    protected final ScoreNode[][] scoreNodes;
+
+    /** The index for the default selector withing {@link #scoreNodes} */
+    private final int selectorIndex;
 
     /** ItemManager to turn UUIDs into Node instances */
     protected final ItemManager itemMgr;
@@ -51,14 +54,19 @@ class NodeIteratorImpl implements ScoreNodeIterator {
 
     /**
      * Creates a new <code>NodeIteratorImpl</code> instance.
-     * @param itemMgr the <code>ItemManager</code> to turn UUIDs into
-     *   <code>Node</code> instances.
-     * @param scoreNodes the node ids of the matching nodes.
+     *
+     * @param itemMgr       the <code>ItemManager</code> to turn UUIDs into
+     *                      <code>Node</code> instances.
+     * @param scoreNodes    the node ids of the matching nodes.
+     * @param selectorIndex the index for the default selector within
+     *                      <code>scoreNodes</code>.
      */
     NodeIteratorImpl(ItemManager itemMgr,
-                     ScoreNode[] scoreNodes) {
+                     ScoreNode[][] scoreNodes,
+                     int selectorIndex) {
         this.itemMgr = itemMgr;
         this.scoreNodes = scoreNodes;
+        this.selectorIndex = selectorIndex;
         fetchNext();
     }
 
@@ -169,7 +177,14 @@ class NodeIteratorImpl implements ScoreNodeIterator {
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
-        return scoreNodes[pos].getScore();
+        return scoreNodes[pos][selectorIndex].getScore();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public ScoreNode[] getScoreNodes() {
+        return scoreNodes[pos];
     }
 
     /**
@@ -183,10 +198,10 @@ class NodeIteratorImpl implements ScoreNodeIterator {
         next = null;
         while (next == null && (pos + 1) < scoreNodes.length) {
             try {
-                next = (NodeImpl) itemMgr.getItem(scoreNodes[pos + 1].getNodeId());
+                next = (NodeImpl) itemMgr.getItem(scoreNodes[pos + 1][selectorIndex].getNodeId());
             } catch (RepositoryException e) {
                 log.warn("Exception retrieving Node with UUID: "
-                        + scoreNodes[pos + 1].getNodeId() + ": " + e.toString());
+                        + scoreNodes[pos + 1][selectorIndex].getNodeId() + ": " + e.toString());
                 // try next
                 invalid++;
                 pos++;

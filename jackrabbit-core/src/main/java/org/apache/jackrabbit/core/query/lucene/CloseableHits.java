@@ -19,16 +19,29 @@ package org.apache.jackrabbit.core.query.lucene;
 import java.io.IOException;
 
 /**
- * Defines an interface for reading {@link ScoreNode}s
+ * Defines an interface for query hits that need to be closed when done reading
+ * from it. A client will call {@link #close()} to release resources after a
+ * query has been executed and the results have been read.
  */
-public interface QueryHits extends CloseableHits {
+public interface CloseableHits {
 
     /**
-     * Returns the next score node in this QueryHits or <code>null</code> if
-     * there are no more score nodes.
+     * Releases resources held by this hits instance.
      *
-     * @return the next score node in this QueryHits.
-     * @throws IOException if an error occurs while reading from the index.
+     * @throws IOException if an error occurs while releasing resources.
      */
-    ScoreNode nextScoreNode() throws IOException;
+    void close() throws IOException;
+
+    /**
+     * @return the number of results or <code>-1</code> if the size is unknown.
+     */
+    int getSize();
+
+    /**
+     * Skips a <code>n</code> score nodes.
+     *
+     * @param n the number of score nodes to skip.
+     * @throws IOException if an error occurs while skipping.
+     */
+    void skip(int n) throws IOException;
 }

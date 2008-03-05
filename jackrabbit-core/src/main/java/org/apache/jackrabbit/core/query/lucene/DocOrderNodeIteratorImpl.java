@@ -41,22 +41,34 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
     /** A node iterator with ordered nodes */
     private NodeIteratorImpl orderedNodes;
 
-    /** Unordered list of {@link ScoreNode}s. */
+    /** Unordered list of {@link ScoreNode}[]s. */
     private final List scoreNodes;
 
     /** ItemManager to turn UUIDs into Node instances */
     protected final ItemManager itemMgr;
 
     /**
+     * Apply document order on the score nodes with this selectorIndex.
+     */
+    private final int selectorIndex;
+
+    /**
      * Creates a <code>DocOrderNodeIteratorImpl</code> that orders the nodes in
      * <code>scoreNodes</code> in document order.
      *
-     * @param itemMgr    the item manager of the session executing the query.
-     * @param scoreNodes the ids of the matching nodes with their score value.
+     * @param itemMgr       the item manager of the session executing the
+     *                      query.
+     * @param scoreNodes    the ids of the matching nodes with their score
+     *                      value. <code>List&lt;ScoreNode[]></code>
+     * @param selectorIndex apply document order on the score nodes with this
+     *                      selectorIndex.
      */
-    DocOrderNodeIteratorImpl(final ItemManager itemMgr, List scoreNodes) {
+    DocOrderNodeIteratorImpl(ItemManager itemMgr,
+                             List scoreNodes,
+                             int selectorIndex) {
         this.itemMgr = itemMgr;
         this.scoreNodes = scoreNodes;
+        this.selectorIndex = selectorIndex;
     }
 
     /**
@@ -140,6 +152,14 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
         return orderedNodes.getScore();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public ScoreNode[] getScoreNodes() {
+        initOrderedIterator();
+        return orderedNodes.getScoreNodes();
+    }
+
     //------------------------< internal >--------------------------------------
 
     /**
@@ -150,7 +170,7 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
             return;
         }
         long time = System.currentTimeMillis();
-        ScoreNode[] nodes = (ScoreNode[]) scoreNodes.toArray(new ScoreNode[scoreNodes.size()]);
+        ScoreNode[][] nodes = (ScoreNode[][]) scoreNodes.toArray(new ScoreNode[scoreNodes.size()][]);
 
         final List invalidIDs = new ArrayList(2);
 
@@ -159,11 +179,11 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
                 // previous sort run was not successful -> remove failed uuids
                 List tmp = new ArrayList();
                 for (int i = 0; i < nodes.length; i++) {
-                    if (!invalidIDs.contains(nodes[i].getNodeId())) {
+                    if (!invalidIDs.contains(nodes[i][selectorIndex].getNodeId())) {
                         tmp.add(nodes[i]);
                     }
                 }
-                nodes = (ScoreNode[]) tmp.toArray(new ScoreNode[tmp.size()]);
+                nodes = (ScoreNode[][]) tmp.toArray(new ScoreNode[tmp.size()][]);
                 invalidIDs.clear();
             }
 
@@ -171,8 +191,17 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
                 // sort the uuids
                 Arrays.sort(nodes, new Comparator() {
                     public int compare(Object o1, Object o2) {
-                        ScoreNode n1 = (ScoreNode) o1;
-                        ScoreNode n2 = (ScoreNode) o2;
+                        ScoreNode n1 = ((ScoreNode[]) o1)[selectorIndex];
+                        ScoreNode n2 = ((ScoreNode[]) o2)[selectorIndex];
+                        // handle null values
+                        // null is considered less than any value
+                        if (n1 == n2) {
+                            return 0;
+                        } else if (n1 == null) {
+                            return -1;
+                        } else if (n2 == null) {
+                            return 1;
+                        }
                         try {
                             NodeImpl node1;
                             try {
@@ -257,7 +286,7 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
         if (log.isDebugEnabled()) {
             log.debug("" + nodes.length + " node(s) ordered in " + (System.currentTimeMillis() - time) + " ms");
         }
-        orderedNodes = new NodeIteratorImpl(itemMgr, nodes);
+        orderedNodes = new NodeIteratorImpl(itemMgr, nodes, selectorIndex);
     }
 
     /**

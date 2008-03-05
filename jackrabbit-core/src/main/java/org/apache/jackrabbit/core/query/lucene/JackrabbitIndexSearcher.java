@@ -60,7 +60,20 @@ public class JackrabbitIndexSearcher extends IndexSearcher {
      * @return the query hits.
      * @throws IOException if an error occurs while executing the query.
      */
-    public QueryHits execute(Query query, Sort sort) throws IOException {
+    public MultiColumnQueryHits execute(Query query, Sort sort) throws IOException {
+        return new QueryHitsAdapter(evaluate(query, sort),
+                QueryImpl.DEFAULT_SELECTOR_NAME);
+    }
+
+    /**
+     * Evaluates the query and returns the hits that match the query.
+     *
+     * @param query the query to execute.
+     * @param sort  the sort criteria.
+     * @return the query hits.
+     * @throws IOException if an error occurs while executing the query.
+     */
+    public QueryHits evaluate(Query query, Sort sort) throws IOException {
         query = query.rewrite(reader);
         QueryHits hits = null;
         if (query instanceof JackrabbitQuery) {

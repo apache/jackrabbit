@@ -163,4 +163,8 @@ public abstract class AbstractQueryImpl implements ExecutableQuery {
      */
     public abstract boolean needsSystemTree();
 
+    /**
+     * @return the selector names for this query.
+     */
+    public abstract Name[] getSelectorNames();
 }

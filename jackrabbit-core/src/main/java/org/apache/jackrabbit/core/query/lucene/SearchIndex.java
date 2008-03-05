@@ -642,10 +642,10 @@ public class SearchIndex extends AbstractQueryHandler {
      * @param orderSpecs the order specs for the sort order properties.
      * <code>true</code> indicates ascending order, <code>false</code> indicates
      * descending.
-     * @return the lucene Hits object.
+     * @return the query hits.
      * @throws IOException if an error occurs while searching the index.
      */
-    public QueryHits executeQuery(SessionImpl session,
+    public MultiColumnQueryHits executeQuery(SessionImpl session,
                                   AbstractQueryImpl queryImpl,
                                   Query query,
                                   Name[] orderProps,
@@ -655,7 +655,8 @@ public class SearchIndex extends AbstractQueryHandler {
         Sort sort = new Sort(createSortFields(orderProps, orderSpecs));
 
         final IndexReader reader = getIndexReader(queryImpl.needsSystemTree());
-        return new FilterQueryHits(new JackrabbitIndexSearcher(session, reader).execute(query, sort)) {
+        return new FilterMultiColumnQueryHits(new JackrabbitIndexSearcher(
+                session, reader).execute(query, sort)) {
             public void close() throws IOException {
                 try {
                     super.close();

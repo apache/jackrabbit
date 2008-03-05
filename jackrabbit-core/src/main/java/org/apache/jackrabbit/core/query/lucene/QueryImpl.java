@@ -23,12 +23,12 @@ import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.AndQueryNode;
 import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeVisitor;
 import org.apache.jackrabbit.spi.commons.query.LocationStepQueryNode;
 import org.apache.jackrabbit.spi.commons.query.NodeTypeQueryNode;
 import org.apache.jackrabbit.spi.commons.query.OrderQueryNode;
-import org.apache.jackrabbit.spi.commons.query.PathQueryNode;
 import org.apache.jackrabbit.spi.commons.query.QueryNodeFactory;
 import org.apache.jackrabbit.spi.commons.query.QueryParser;
 import org.apache.jackrabbit.spi.commons.query.QueryRootNode;
@@ -56,9 +56,9 @@ public class QueryImpl extends AbstractQueryImpl {
     private static final Logger log = LoggerFactory.getLogger(QueryImpl.class);
 
     /**
-     * Represents a query that selects all nodes. E.g. in XPath: //*
+     * The default selector name 's'.
      */
-    protected final QueryRootNode allNodesQueryNode;
+    public static final Name DEFAULT_SELECTOR_NAME = NameFactoryImpl.getInstance().create("", "s");
 
     /**
      * The root node of the query tree
@@ -90,7 +90,6 @@ public class QueryImpl extends AbstractQueryImpl {
         // build query tree using the passed factory
         this.root = QueryParser.parse(statement, language,
                 session.getNamePathResolver(), factory);
-        allNodesQueryNode = createMatchAllNodesQuery(factory);
     }
 
     /**
@@ -195,25 +194,10 @@ public class QueryImpl extends AbstractQueryImpl {
         return this.root.needsSystemTree();
     }
 
-    //----------------------------< internal >----------------------------------
-
     /**
-     * Creates an abstract query tree that matches all nodes. XPath example:
-     * //element(*, nt:base)
-     *
-     * @param factory the query node factory.
-     * @return the abstract query tree.
+     * {@inheritDoc}
      */
-    private static QueryRootNode createMatchAllNodesQuery(
-            QueryNodeFactory factory) {
-        QueryRootNode allNodesQueryNode = factory.createQueryRootNode();
-        PathQueryNode pathNode = factory.createPathQueryNode(allNodesQueryNode);
-        LocationStepQueryNode lsNode = factory.createLocationStepQueryNode(pathNode);
-        lsNode.setNameTest(null);
-        lsNode.setIncludeDescendants(true);
-        pathNode.addPathStep(lsNode);
-        pathNode.setAbsolute(true);
-        allNodesQueryNode.setLocationNode(pathNode);
-        return allNodesQueryNode;
+    public Name[] getSelectorNames() {
+        return new Name[]{DEFAULT_SELECTOR_NAME};
     }
 }

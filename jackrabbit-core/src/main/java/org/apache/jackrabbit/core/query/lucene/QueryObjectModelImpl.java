@@ -23,6 +23,7 @@ import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DefaultTraversingQOMTreeVisitor;
 import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.spi.Name;
@@ -70,6 +71,18 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
     public boolean needsSystemTree() {
         // TODO: analyze QOM tree
         return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */ 
+    public Name[] getSelectorNames() {
+        SelectorImpl[] selectors = qomTree.getSource().getSelectors();
+        Name[] names = new Name[selectors.length];
+        for (int i = 0; i < names.length; i++) {
+            names[i] = selectors[i].getSelectorQName();
+        };
+        return names;
     }
 
     //-------------------------< ExecutableQuery >------------------------------

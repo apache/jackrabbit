@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -44,6 +45,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.io.IOException;
 
 /**
@@ -90,6 +93,16 @@ class RowIteratorImpl implements RowIterator {
     private final Name[] properties;
 
     /**
+     * List of valid selector {@link Name}s.
+     */
+    private final List selectorNames = new ArrayList();
+
+    /**
+     * The item manager of the session that executes the query.
+     */
+    private final ItemManager itemMgr;
+
+    /**
      * The <code>NamePathResolver</code> of the user <code>Session</code>.
      */
     private final NamePathResolver resolver;
@@ -108,22 +121,12 @@ class RowIteratorImpl implements RowIterator {
      * Creates a new <code>RowIteratorImpl</code> that iterates over the result
      * nodes.
      *
-     * @param nodes      a <code>ScoreNodeIterator</code> that contains the nodes of
-     *                   the query result.
-     * @param properties <code>Name</code> of the select properties.
-     * @param resolver   <code>NamespaceResolver</code> of the user
-     */
-    RowIteratorImpl(ScoreNodeIterator nodes, Name[] properties, NamePathResolver resolver) {
-        this(nodes, properties, resolver, null, null);
-    }
-
-    /**
-     * Creates a new <code>RowIteratorImpl</code> that iterates over the result
-     * nodes.
-     *
      * @param nodes           a <code>ScoreNodeIterator</code> that contains the
      *                        nodes of the query result.
      * @param properties      <code>Name</code> of the select properties.
+     * @param selectorNames   the selector names.
+     * @param itemMgr         the item manager of the session that executes the
+     *                        query.
      * @param resolver        <code>NamespaceResolver</code> of the user
      *                        <code>Session</code>.
      * @param exProvider      the excerpt provider associated with the query
@@ -133,11 +136,15 @@ class RowIteratorImpl implements RowIterator {
      */
     RowIteratorImpl(ScoreNodeIterator nodes,
                     Name[] properties,
+                    Name[] selectorNames,
+                    ItemManager itemMgr,
                     NamePathResolver resolver,
                     ExcerptProvider exProvider,
                     SpellSuggestion spellSuggestion) {
         this.nodes = nodes;
         this.properties = properties;
+        this.selectorNames.addAll(Arrays.asList(selectorNames));
+        this.itemMgr = itemMgr;
         this.resolver = resolver;
         this.excerptProvider = exProvider;
         this.spellSuggestion = spellSuggestion;
@@ -151,7 +158,8 @@ class RowIteratorImpl implements RowIterator {
      *                                <code>Row</code>s.
      */
     public Row nextRow() throws NoSuchElementException {
-        return new RowImpl(nodes.getScore(), nodes.nextNodeImpl());
+        return new RowImpl(nodes.getScore(),
+                nodes.getScoreNodes(), nodes.nextNodeImpl());
     }
 
     /**
@@ -235,6 +243,11 @@ class RowIteratorImpl implements RowIterator {
         private final NodeImpl node;
 
         /**
+         * The score nodes associated with this row.
+         */
+        private final ScoreNode[] sn;
+
+        /**
          * Cached value array for returned by {@link #getValues()}.
          */
         private Value[] values;
@@ -248,10 +261,12 @@ class RowIteratorImpl implements RowIterator {
          * Creates a new <code>RowImpl</code> instance based on <code>node</code>.
          *
          * @param score the score value for this result row
+         * @param sn    the score nodes associated with this row.
          * @param node  the underlying <code>Node</code> for this <code>Row</code>.
          */
-        RowImpl(float score, NodeImpl node) {
+        RowImpl(float score, ScoreNode[] sn, NodeImpl node) {
             this.score = score;
+            this.sn = sn;
             this.node = node;
         }
 
@@ -379,6 +394,7 @@ class RowIteratorImpl implements RowIterator {
          * @since JCR 2.0
          */
         public Node getNode() throws RepositoryException {
+            checkSingleSelector("Use getNode(String) instead.");
             return node;
         }
 
@@ -393,8 +409,12 @@ class RowIteratorImpl implements RowIterator {
          * @since JCR 2.0
          */
         public Node getNode(String selectorName) throws RepositoryException {
-            // TODO: implement
-            throw new UnsupportedOperationException("not yet implemented");
+            ScoreNode s = sn[getSelectorIndex(selectorName)];
+            if (s == null) {
+                // TODO correct?
+                return null;
+            }
+            return (Node) itemMgr.getItem(s.getNodeId());
         }
 
         /**
@@ -409,6 +429,7 @@ class RowIteratorImpl implements RowIterator {
          * @since JCR 2.0
          */
         public String getPath() throws RepositoryException {
+            checkSingleSelector("Use getPath(String) instead.");
             return node.getPath();
         }
 
@@ -424,8 +445,12 @@ class RowIteratorImpl implements RowIterator {
          * @since JCR 2.0
          */
         public String getPath(String selectorName) throws RepositoryException {
-            // TODO: implement
-            throw new UnsupportedOperationException("not yet implemented");
+            Node n = getNode(selectorName);
+            if (n != null) {
+                return n.getPath();
+            } else {
+                return null;
+            }
         }
 
         /**
@@ -449,6 +474,7 @@ class RowIteratorImpl implements RowIterator {
          * @since JCR 2.0
          */
         public double getScore() throws RepositoryException {
+            checkSingleSelector("Use getScore(String) instead.");
             return score;
         }
 
@@ -473,11 +499,47 @@ class RowIteratorImpl implements RowIterator {
          * @since JCR 2.0
          */
         public double getScore(String selectorName) throws RepositoryException {
-            // TODO: implement
-            throw new UnsupportedOperationException("not yet implemented");
+            ScoreNode s = sn[getSelectorIndex(selectorName)];
+            if (s == null) {
+                // TODO correct?
+                return Double.NaN;
+            }
+            return s.getScore();
         }
 
         //-----------------------------< internal >-----------------------------
+
+        /**
+         * Checks if there is a single selector and otherwise throws a
+         * RepositoryException.
+         *
+         * @param useInstead message telling, which method to use instead.
+         * @throws RepositoryException if there is more than one selector.
+         */
+        private void checkSingleSelector(String useInstead) throws RepositoryException {
+            if (sn.length > 1) {
+                String msg = "More than one selector. " + useInstead;
+                throw new RepositoryException(msg);
+            }
+        }
+
+        /**
+         * Gets the selector index for the given <code>selectorName</code>.
+         *
+         * @param selectorName the selector name.
+         * @return the selector index.
+         * @throws RepositoryException if the selector name is not a valid JCR
+         *                             name or the selector name is not the
+         *                             alias of a selector in this query.
+         */
+        private int getSelectorIndex(String selectorName)
+                throws RepositoryException {
+            int idx = selectorNames.indexOf(resolver.getQName(selectorName));
+            if (idx == -1) {
+                throw new RepositoryException("Unknown selector name: " + selectorName);
+            }
+            return idx;
+        }
 
         /**
          * @param name a Name.
