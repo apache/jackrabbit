@@ -63,11 +63,6 @@ public class WorkspaceConfig {
     private ISMLockingConfig ismLockingConfig;
 
     /**
-     * Event listeners configuration.
-     */
-    private EventListenerConfig[] elcs;
-    
-    /**
      * Creates a workspace configuration object.
      *
      * @param home home directory
@@ -80,8 +75,7 @@ public class WorkspaceConfig {
      */
     public WorkspaceConfig(String home, String name, boolean clustered,
                            FileSystemConfig fsc, PersistenceManagerConfig pmc,
-                           SearchConfig sc, ISMLockingConfig ismLockingConfig,
-                           EventListenerConfig[] elcs) {
+                           SearchConfig sc, ISMLockingConfig ismLockingConfig) {
         this.home = home;
         this.name = name;
         this.clustered = clustered;
@@ -93,7 +87,6 @@ public class WorkspaceConfig {
         } else {
             this.ismLockingConfig = ISMLockingConfig.createDefaultConfig();
         }
-        this.elcs = elcs;
     }
 
     /**
@@ -131,13 +124,6 @@ public class WorkspaceConfig {
         return ismLockingConfig;
     }
 
-    /**
-     * @return the configuration for the event listeners.
-     */
-    public EventListenerConfig[] getEventListenersConfig() {
-        return elcs;
-    }
-    
     /**
      * Returns the file system configuration.
      *

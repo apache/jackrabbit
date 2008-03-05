@@ -32,7 +32,6 @@ import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
 import org.apache.jackrabbit.core.cluster.UpdateEventListener;
 import org.apache.jackrabbit.core.config.ClusterConfig;
 import org.apache.jackrabbit.core.config.DataStoreConfig;
-import org.apache.jackrabbit.core.config.EventListenerConfig;
 import org.apache.jackrabbit.core.config.FileSystemConfig;
 import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
@@ -604,24 +603,6 @@ public class RepositoryImpl extends AbstractRepository
                     | Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED
                     | Event.PROPERTY_CHANGED,
                     "/", true, null, null, false);
-        }
-        
-        // create and register user-defined event listeners
-        EventListenerConfig[] elcs = wspInfo.config.getEventListenersConfig();
-        if (elcs != null) {
-            for (int i = 0; i < elcs.length; i++) {
-                EventListenerConfig elc = elcs[i];
-                
-                try {
-                    EventListener el = elcs[i].createEventListener();
-                    wsp.getObservationManager().addEventListener(el, 
-                            elc.getEventTypes(), elc.getAbsPath(), elc.isDeep(),
-                            elc.getUUID(), elc.getNodeTypeName(), elc.isNoLocal());
-                } catch (RepositoryException e) {
-                    log.error("Unable to create and register event listener: " +
-                            elc.getClassName() + ": " + e.getMessage(), e);
-                }
-            }
         }
     }
 
