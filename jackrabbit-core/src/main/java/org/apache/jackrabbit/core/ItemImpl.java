@@ -1185,11 +1185,17 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     while (depIt.hasNext()) {
                         NodeId id = (NodeId) depIt.next();
                         if (!affectedIds.contains(id)) {
-                            // need to save dependency as well
-                            String msg = itemMgr.safeGetJCRPath(id)
-                                    + " needs to be saved as well.";
-                            log.debug(msg);
-                            throw new ConstraintViolationException(msg);
+                            // JCR-1359 workaround: check whether unresolved
+                            // dependencies originate from 'this' session;
+                            // otherwise ignore them
+                            if (stateMgr.hasTransientItemState(id)
+                                    || stateMgr.hasTransientItemStateInAttic(id)) {
+                                // need to save dependency as well
+                                String msg = itemMgr.safeGetJCRPath(id)
+                                        + " needs to be saved as well.";
+                                log.debug(msg);
+                                throw new ConstraintViolationException(msg);
+                            }
                         }
                     }
                 }
