@@ -41,7 +41,7 @@ public class MultiThreadingTest extends TestCase {
 
         suite.addTestSuite(ConcurrencyTest.class);
         suite.addTestSuite(ConcurrentLoginTest.class);
-        //suite.addTestSuite(ConcurrentNodeModificationTest.class);
+        suite.addTestSuite(ConcurrentNodeModificationTest.class);
         suite.addTestSuite(ConcurrentReadWriteTest.class);
         suite.addTestSuite(ConcurrentSaveTest.class);
         suite.addTestSuite(ConcurrentVersioningTest.class);
