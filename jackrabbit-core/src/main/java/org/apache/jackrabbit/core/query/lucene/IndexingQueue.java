@@ -53,12 +53,29 @@ class IndexingQueue {
     private final Map pendingDocuments = new HashMap();
 
     /**
+     * Flag that indicates whether this indexing queue had been
+     * {@link #initialize(MultiIndex) initialized}.
+     */
+    private volatile boolean initialized = false;
+
+    /**
      * Creates an indexing queue.
      *
      * @param queueStore the store where to read the pending extraction jobs.
      */
-    IndexingQueue(IndexingQueueStore queueStore, MultiIndex index) {
+    IndexingQueue(IndexingQueueStore queueStore) {
         this.queueStore = queueStore;
+    }
+
+    /**
+     * Initializes the indexing queue.
+     *
+     * @param index the multi index this indexing queue belongs to.
+     */
+    void initialize(MultiIndex index) {
+        if (initialized) {
+            throw new IllegalStateException("already initialized");
+        }
         String[] uuids = queueStore.getPending();
         for (int i = 0; i < uuids.length; i++) {
             try {
@@ -78,6 +95,7 @@ class IndexingQueue {
                 }
             }
         }
+        initialized = true;
     }
 
     /**
@@ -86,6 +104,7 @@ class IndexingQueue {
      * @return the {@link Document}s that are finished.
      */
     public Document[] getFinishedDocuments() {
+        checkInitialized();
         List finished = new ArrayList();
         synchronized (this) {
             finished.addAll(pendingDocuments.values());
@@ -113,6 +132,7 @@ class IndexingQueue {
      *                     queue.
      */
     public synchronized Document removeDocument(String uuid) throws IOException {
+        checkInitialized();
         Document doc = (Document) pendingDocuments.remove(uuid);
         if (doc != null) {
             queueStore.removeUUID(uuid);
@@ -133,6 +153,7 @@ class IndexingQueue {
      *                     queue.
      */
     public synchronized Document addDocument(Document doc) throws IOException {
+        checkInitialized();
         String uuid = doc.get(FieldNames.UUID);
         Document existing = (Document) pendingDocuments.put(uuid, doc);
         log.debug("added node {}. New size of indexing queue: {}",
@@ -151,6 +172,7 @@ class IndexingQueue {
      * @throws IOException if an error occurs while closing this queue.
      */
     public synchronized void close() throws IOException {
+        checkInitialized();
         // go through pending documents and close readers
         Iterator it = pendingDocuments.values().iterator();
         while (it.hasNext()) {
@@ -168,6 +190,17 @@ class IndexingQueue {
      *                     disk.
      */
     public synchronized void commit() throws IOException {
+        checkInitialized();
         queueStore.commit();
+    }
+
+    /**
+     * Checks if this indexing queue is initialized and otherwise throws a
+     * {@link IllegalStateException}.
+     */
+    private void checkInitialized() {
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
+        }
     }
 }
