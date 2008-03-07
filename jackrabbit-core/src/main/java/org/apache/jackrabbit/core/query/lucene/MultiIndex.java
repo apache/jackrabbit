@@ -261,7 +261,7 @@ public class MultiIndex {
         }
 
         // initialize indexing queue
-        this.indexingQueue = new IndexingQueue(store, this);
+        this.indexingQueue = new IndexingQueue(store);
 
         // open persistent indexes
         for (int i = 0; i < indexNames.size(); i++) {
@@ -297,6 +297,8 @@ public class MultiIndex {
         } finally {
             reader.close();
         }
+
+        indexingQueue.initialize(this);
 
         redoLogApplied = redoLog.hasEntries();
 
