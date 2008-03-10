@@ -19,12 +19,11 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.commons.collections.map.LinkedMap;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.RAMDirectory;
+import org.apache.lucene.search.Similarity;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -56,11 +55,14 @@ class VolatileIndex extends AbstractIndex {
      * Creates a new <code>VolatileIndex</code> using an <code>analyzer</code>.
      *
      * @param analyzer the analyzer to use.
+     * @param similarity the similarity implementation.
      * @param indexingQueue the indexing queue.
      * @throws IOException if an error occurs while opening the index.
      */
-    VolatileIndex(Analyzer analyzer, IndexingQueue indexingQueue) throws IOException {
-        super(analyzer, new RAMDirectory(), null, indexingQueue);
+    VolatileIndex(Analyzer analyzer,
+                  Similarity similarity,
+                  IndexingQueue indexingQueue) throws IOException {
+        super(analyzer, similarity, new RAMDirectory(), null, indexingQueue);
     }
 
     /**

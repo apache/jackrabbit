@@ -24,6 +24,7 @@ import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.store.IndexOutput;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.NativeFSLockFactory;
+import org.apache.lucene.search.Similarity;
 
 import java.io.IOException;
 import java.io.File;
@@ -49,6 +50,7 @@ class PersistentIndex extends AbstractIndex {
      * @param name the name of this index.
      * @param indexDir the directory to store the index.
      * @param analyzer the analyzer for text tokenizing.
+     * @param similarity the similarity implementation.
      * @param cache the document number cache
      * @param indexingQueue the indexing queue.
      * @throws IOException if an error occurs while opening / creating the
@@ -56,11 +58,11 @@ class PersistentIndex extends AbstractIndex {
      * @throws IOException if an error occurs while opening / creating
      *  the index.
      */
-    PersistentIndex(String name, File indexDir,
-                    Analyzer analyzer, DocNumberCache cache,
+    PersistentIndex(String name, File indexDir, Analyzer analyzer,
+                    Similarity similarity, DocNumberCache cache,
                     IndexingQueue indexingQueue)
             throws IOException {
-        super(analyzer, FSDirectory.getDirectory(indexDir, new NativeFSLockFactory(indexDir)),
+        super(analyzer, similarity, FSDirectory.getDirectory(indexDir, new NativeFSLockFactory(indexDir)),
                 cache, indexingQueue);
         this.name = name;
     }

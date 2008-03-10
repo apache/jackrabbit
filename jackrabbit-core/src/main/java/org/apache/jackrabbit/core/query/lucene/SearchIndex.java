@@ -49,6 +49,7 @@ import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.Similarity;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.commons.collections.iterators.AbstractIteratorDecorator;
@@ -362,6 +363,11 @@ public class SearchIndex extends AbstractQueryHandler {
     private SpellChecker spellChecker;
 
     /**
+     * The similarity in use for indexing and searching.
+     */
+    private Similarity similarity = Similarity.getDefault();
+
+    /**
      * Indicates if this <code>SearchIndex</code> is closed and cannot be used
      * anymore.
      */
@@ -655,8 +661,9 @@ public class SearchIndex extends AbstractQueryHandler {
         Sort sort = new Sort(createSortFields(orderProps, orderSpecs));
 
         final IndexReader reader = getIndexReader(queryImpl.needsSystemTree());
-        return new FilterMultiColumnQueryHits(new JackrabbitIndexSearcher(
-                session, reader).execute(query, sort)) {
+        JackrabbitIndexSearcher searcher = new JackrabbitIndexSearcher(session, reader);
+        searcher.setSimilarity(getSimilarity());
+        return new FilterMultiColumnQueryHits(searcher.execute(query, sort)) {
             public void close() throws IOException {
                 try {
                     super.close();
@@ -746,6 +753,13 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public SpellChecker getSpellChecker() {
         return spellChecker;
+    }
+
+    /**
+     * @return the similarity, which should be used for indexing and searching.
+     */
+    public Similarity getSimilarity() {
+        return similarity;
     }
 
     /**
@@ -1783,6 +1797,28 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public String getSynonymProviderConfigPath() {
         return synonymProviderConfigPath;
+    }
+
+    /**
+     * Sets the similarity implementation, which will be used for indexing and
+     * searching. The implementation must extend {@link Similarity}.
+     *
+     * @param className a {@link Similarity} implementation.
+     */
+    public void setSimilarityClass(String className) {
+        try {
+            Class similarityClass = Class.forName(className);
+            similarity = (Similarity) similarityClass.newInstance();
+        } catch (Exception e) {
+            log.warn("Invalid Similarity class: " + className, e);
+        }
+    }
+
+    /**
+     * @return the name of the similarity class.
+     */
+    public String getSimilarityClass() {
+        return similarity.getClass().getName();
     }
 
     //----------------------------< internal >----------------------------------

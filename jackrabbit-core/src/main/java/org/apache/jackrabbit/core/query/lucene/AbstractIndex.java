@@ -23,6 +23,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.search.Similarity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +71,9 @@ abstract class AbstractIndex {
     /** Analyzer we use to tokenize text */
     private Analyzer analyzer;
 
+    /** The similarity in use for indexing and searching. */
+    private final Similarity similarity;
+
     /** Compound file flag */
     private boolean useCompoundFile = true;
 
@@ -108,6 +112,7 @@ abstract class AbstractIndex {
      * <code>directory</code>.
      *
      * @param analyzer      the analyzer for text tokenizing.
+     * @param similarity    the similarity implementation.
      * @param directory     the underlying directory.
      * @param cache         the document number cache if this index should use
      *                      one; otherwise <code>cache</code> is
@@ -116,10 +121,12 @@ abstract class AbstractIndex {
      * @throws IOException if the index cannot be initialized.
      */
     AbstractIndex(Analyzer analyzer,
+                  Similarity similarity,
                   Directory directory,
                   DocNumberCache cache,
                   IndexingQueue indexingQueue) throws IOException {
         this.analyzer = analyzer;
+        this.similarity = similarity;
         this.directory = directory;
         this.cache = cache;
         this.indexingQueue = indexingQueue;
@@ -291,6 +298,7 @@ abstract class AbstractIndex {
         }
         if (indexWriter == null) {
             indexWriter = new IndexWriter(getDirectory(), analyzer);
+            indexWriter.setSimilarity(similarity);
             // since lucene 2.0 setMaxBuffereDocs is equivalent to previous minMergeDocs attribute
             indexWriter.setMaxBufferedDocs(minMergeDocs);
             indexWriter.setMaxMergeDocs(maxMergeDocs);
