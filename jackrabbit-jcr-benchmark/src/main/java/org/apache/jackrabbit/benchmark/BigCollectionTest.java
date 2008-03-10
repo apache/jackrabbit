@@ -31,6 +31,13 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Several tests for benchmarking the performance when iterating over
+ * "big" collections. 
+ * <p>
+ * Assumes the store supports nt:folder/nt:file/nt:resource below
+ * the test root node.
+ */
 public class BigCollectionTest extends AbstractJCRTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(BigCollectionTest.class);
@@ -87,23 +94,27 @@ public class BigCollectionTest extends AbstractJCRTest {
       super.tearDown();
   }
   
-  public void testBrowse() throws RepositoryException {
+  private void performTest(String testName, boolean getContentNode, boolean getLength) throws RepositoryException {
       Session session = testRootNode.getSession();
       
       long start = System.currentTimeMillis();
       long cnt = 0;
-
+  
       while (System.currentTimeMillis() - start < MINTIME || cnt < MINCOUNT) {
           Node dir = testRootNode.getNode("bigcoll");
           int members = 0;
           for (NodeIterator it = dir.getNodes(); it.hasNext(); ) {
               Node child = it.nextNode();
-              Node content = child.getNode("jcr:content");
-              String type = content.getProperty("jcr:mimeType").getString();
-              long length = content.getProperty("jcr:data").getLength();
+              Node content = getContentNode ? child.getNode("jcr:content") : null;
+              String type = getContentNode ? content.getProperty("jcr:mimeType").getString() : null;
+              long length = getLength ? content.getProperty("jcr:data").getLength() : -1;
               assertTrue(child.isNode());
-              assertEquals(MIMETYPE, type);
-              assertEquals(MEMBERSIZE, length);
+              if (getContentNode) {
+                  assertEquals(MIMETYPE, type);
+              }
+              if (getLength) {
+                  assertEquals(MEMBERSIZE, length);
+              }
               members += 1;
           }
           assertEquals(MEMBERS, members);
@@ -113,27 +124,53 @@ public class BigCollectionTest extends AbstractJCRTest {
       
       long elapsed = System.currentTimeMillis() - start;
       
-      LOG.info("testBrowse: " +  (double)elapsed / cnt + "ms per call (" + cnt + " iterations)");
+      LOG.info(testName + ": " +  (double)elapsed / cnt + "ms per call (" + cnt + " iterations)");
+  }
+  
+  /**
+   * Get all children, but do not visit jcr:content child nodes
+   */
+  public void testGetChildren() throws RepositoryException {
+      performTest("testGetChildren", false, false);
+  } 
+
+  /**
+   * Get all children and their jcr:content child nodes, but
+   * do not visit jcr:data.
+   */
+  public void testBrowseMinusJcrData() throws RepositoryException {
+      performTest("testBrowseMinusJcrData", true, false);
   }
 
+  /**
+   * Simulate what a UI usually does on a collection of files:
+   * obtain type and length of the files.
+   */
+  public void testBrowse() throws RepositoryException {
+      performTest("testBrowse", true, true);
+  }
+
+  /**
+   * Generator for test content of a specific length.
+   */
   private class ContentGenerator extends InputStream {
 
-    private long length;
-    private long position;
-
-    public ContentGenerator(long length) {
-        this.length = length;
-        this.position = 0;
-    }
-
-    public int read() {
-        if (this.position++ < this.length) {
-            return 0;
-        }
-        else {
-            return -1;
-        }
-    }
+      private long length;
+      private long position;
+  
+      public ContentGenerator(long length) {
+          this.length = length;
+          this.position = 0;
+      }
+  
+      public int read() {
+          if (this.position++ < this.length) {
+              return 0;
+          }
+          else {
+              return -1;
+          }
+      }
   }
 
 }
