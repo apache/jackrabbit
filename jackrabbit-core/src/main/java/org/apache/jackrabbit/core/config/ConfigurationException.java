@@ -28,7 +28,7 @@ public class ConfigurationException extends RepositoryException {
      *
      * @param message configuration message
      */
-    ConfigurationException(String message) {
+    public ConfigurationException(String message) {
         super(message);
     }
 
@@ -38,7 +38,7 @@ public class ConfigurationException extends RepositoryException {
      * @param message configuration error message
      * @param cause root cause of the configuration error
      */
-    ConfigurationException(String message, Exception cause) {
+    public ConfigurationException(String message, Exception cause) {
         super(message, cause);
     }
 
