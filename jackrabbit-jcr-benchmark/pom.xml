@@ -31,7 +31,7 @@
     <artifactId>jackrabbit</artifactId>
     <version>1.5-SNAPSHOT</version>
   </parent>
-  <artifactId>jackrabbit-jcr-benchmarks</artifactId>
+  <artifactId>jackrabbit-jcr-benchmark</artifactId>
   <name>Jackrabbit JCR Benchmarks</name>
   <description>JCR Benchmarks</description>
 
