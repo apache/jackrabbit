@@ -275,9 +275,9 @@ public class MultiIndex {
                 // move on to next index
                 continue;
             }
-            PersistentIndex index = new PersistentIndex(
-                    indexNames.getName(i), sub,
-                    handler.getTextAnalyzer(), cache, indexingQueue);
+            PersistentIndex index = new PersistentIndex(indexNames.getName(i),
+                    sub, handler.getTextAnalyzer(), handler.getSimilarity(),
+                    cache, indexingQueue);
             index.setMaxMergeDocs(handler.getMaxMergeDocs());
             index.setMergeFactor(handler.getMergeFactor());
             index.setMinMergeDocs(handler.getMinMergeDocs());
@@ -581,7 +581,8 @@ public class MultiIndex {
             sub = new File(indexDir, indexName);
         }
         PersistentIndex index = new PersistentIndex(indexName, sub,
-                handler.getTextAnalyzer(), cache, indexingQueue);
+                handler.getTextAnalyzer(), handler.getSimilarity(),
+                cache, indexingQueue);
         index.setMaxMergeDocs(handler.getMaxMergeDocs());
         index.setMergeFactor(handler.getMergeFactor());
         index.setMinMergeDocs(handler.getMinMergeDocs());
@@ -908,8 +909,8 @@ public class MultiIndex {
      * Resets the volatile index to a new instance.
      */
     private void resetVolatileIndex() throws IOException {
-        volatileIndex = new VolatileIndex(
-                handler.getTextAnalyzer(), indexingQueue);
+        volatileIndex = new VolatileIndex(handler.getTextAnalyzer(),
+                handler.getSimilarity(), indexingQueue);
         volatileIndex.setUseCompoundFile(handler.getUseCompoundFile());
         volatileIndex.setMaxFieldLength(handler.getMaxFieldLength());
         volatileIndex.setBufferSize(handler.getBufferSize());
