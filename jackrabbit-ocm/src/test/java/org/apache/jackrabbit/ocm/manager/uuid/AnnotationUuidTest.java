@@ -78,14 +78,16 @@ public class AnnotationUuidTest extends AnnotationTestBase
             a.setPath("/test");
             a.setStringData("testdata");
             ocm.insert(a);
+            String uuidA = a.getUuid();
+            assertNotNull("uuid is null", uuidA);
             ocm.save();
-
+            
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------
             a = (A) ocm.getObject( "/test");
             assertNotNull("a is null", a);
-            String uuidA = a.getUuid();
+            uuidA = a.getUuid();
             assertNotNull("uuid is null", uuidA);
             System.out.println("UUID : " + uuidA);
 

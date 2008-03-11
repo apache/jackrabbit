@@ -130,6 +130,37 @@ public class SimpleFieldsHelper
 		return initializedBean;
 	}
 
+	public Object refreshUuidPath(Session session, ClassDescriptor classDescriptor, Node node, Object object)
+	{
+		Object initializedBean = object;
+		try {
+			if (initializedBean == null)
+			{
+				return null;
+			}
+			
+			FieldDescriptor pathField = classDescriptor.getPathFieldDescriptor();
+			if (pathField != null)
+			{
+			    ReflectionUtils.setNestedProperty(initializedBean, pathField.getFieldName(), node.getPath());
+			}
+			
+			FieldDescriptor uuidField = classDescriptor.getUuidFieldDescriptor();
+			if (uuidField != null)
+			{
+				ReflectionUtils.setNestedProperty(initializedBean, uuidField.getFieldName(), node.getUUID());
+			}
+			
+		} catch (ValueFormatException vfe) {
+			throw new ObjectContentManagerException(
+					"Cannot retrieve properties of object " + object + " from node " + node, vfe);
+		} catch (RepositoryException re) {
+			throw new org.apache.jackrabbit.ocm.exception.RepositoryException( "Cannot retrieve properties of object " + object
+							+ " from node " + node, re);
+		}
+
+		return initializedBean;
+	}
 
 	private Object retrieveSimpleField(ClassDescriptor classDescriptor, Node node, Object initializedBean, FieldDescriptor fieldDescriptor, String fieldName, String propertyName) throws RepositoryException, ValueFormatException, PathNotFoundException {
 
