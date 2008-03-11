@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.config;
 
 import org.apache.commons.collections.BeanMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.Properties;
@@ -27,6 +29,8 @@ import java.util.Properties;
  * with the JavaBean conventions.
  */
 public class BeanConfig {
+
+    private static Logger log = LoggerFactory.getLogger(BeanConfig.class);
 
     /** The default class loader used by all instances of this class */
     private static ClassLoader defaultClassLoader =
@@ -107,6 +111,13 @@ public class BeanConfig {
                 String value = properties.getProperty(name);
                 if (value != null) {
                     map.put(name, properties.getProperty(name));
+                }
+            }
+            Iterator it = properties.keySet().iterator();
+            while (it.hasNext()) {
+                String key = (String) it.next();
+                if (map.get(key) == null && properties.getProperty(key) != null) {
+                    log.warn(object.getClass().getName() + " does not support '" + key + "'; the setting is ignored.");
                 }
             }
             return object;
