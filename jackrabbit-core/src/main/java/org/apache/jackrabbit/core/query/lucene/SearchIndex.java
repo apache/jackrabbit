@@ -1139,7 +1139,7 @@ public class SearchIndex extends AbstractQueryHandler {
                                     id.getUUID().toString());
                             tDocs.seek(aggregateUUIDs);
                             while (tDocs.next()) {
-                                Document doc = reader.document(tDocs.doc());
+                                Document doc = reader.document(tDocs.doc(), FieldSelectors.UUID);
                                 String uuid = doc.get(FieldNames.UUID);
                                 NodeId nId = new NodeId(UUID.fromString(uuid));
                                 map.put(nId, ism.getItemState(nId));

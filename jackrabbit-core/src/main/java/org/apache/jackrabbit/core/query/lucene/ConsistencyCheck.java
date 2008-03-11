@@ -162,7 +162,7 @@ class ConsistencyCheck {
                 if (reader.isDeleted(i)) {
                     continue;
                 }
-                Document d = reader.document(i);
+                Document d = reader.document(i, FieldSelectors.UUID);
                 UUID uuid = UUID.fromString(d.get(FieldNames.UUID));
                 if (stateMgr.hasItemState(new NodeId(uuid))) {
                     if (!documentUUIDs.add(uuid)) {
@@ -192,7 +192,7 @@ class ConsistencyCheck {
                 if (reader.isDeleted(i)) {
                     continue;
                 }
-                Document d = reader.document(i);
+                Document d = reader.document(i, FieldSelectors.UUID_AND_PARENT);
                 UUID uuid = UUID.fromString(d.get(FieldNames.UUID));
                 String parentUUIDString = d.get(FieldNames.PARENT);
                 UUID parentUUID = null;
