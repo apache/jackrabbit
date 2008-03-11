@@ -104,7 +104,7 @@ class CachingIndexReader extends FilterIndexReader {
         }
 
         if (parent == null) {
-            Document doc = document(n);
+            Document doc = document(n, FieldSelectors.UUID_AND_PARENT);
             String parentUUID = doc.get(FieldNames.PARENT);
             if (parentUUID == null || parentUUID.length() == 0) {
                 parent = DocId.NULL;
