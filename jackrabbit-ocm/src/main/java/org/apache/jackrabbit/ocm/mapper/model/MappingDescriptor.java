@@ -75,7 +75,7 @@ public class MappingDescriptor {
         if (null != classDescriptor.getJcrType() && !  "".equals(classDescriptor.getJcrType()) &&
         		 ! ManagerConstant.NT_UNSTRUCTURED.equals(classDescriptor.getJcrType()))
         {
-        	if ((classDescriptorsByNodeType.get(classDescriptor.getClassName()) != null) &&
+        	if ((classDescriptorsByNodeType.get(classDescriptor.getJcrType()) != null) &&
         		classDescriptor.usesNodeTypePerConcreteClassStrategy()	)
         	{
         	    log.warn("Duplicate classdescriptor for node type : " + classDescriptor.getJcrType());	
