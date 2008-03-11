@@ -219,6 +219,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 		simpleFieldsHelp.storeSimpleFields(session, object, classDescriptor, objectNode);
 		insertBeanFields(session, object, classDescriptor, objectNode);
 		insertCollectionFields(session, object, classDescriptor, objectNode);
+		simpleFieldsHelp.refreshUuidPath(session, classDescriptor, objectNode, object);
 	}
 
 	/**
@@ -257,6 +258,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 			simpleFieldsHelp.storeSimpleFields(session, object, classDescriptor, objectNode);
 			updateBeanFields(session, object, classDescriptor, objectNode);
 			updateCollectionFields(session, object, classDescriptor, objectNode);
+			simpleFieldsHelp.refreshUuidPath(session, classDescriptor, objectNode, object);
 		} catch (PathNotFoundException pnfe) {
 			throw new ObjectContentManagerException("Impossible to update the object: " + nodeName + " at node : " + parentNode, pnfe);
 		} catch (RepositoryException re) {
@@ -396,8 +398,8 @@ public class ObjectConverterImpl implements ObjectConverter {
 
             simpleFieldsHelp.retrieveSimpleFields(session, classDescriptor, node, object);
 			retrieveBeanFields(session, classDescriptor, node, path, object, false);
-			retrieveCollectionFields(session, classDescriptor, node, object, false);
-
+			retrieveCollectionFields(session, classDescriptor, node, object, false);			
+			
 			return object;
 		} catch (PathNotFoundException pnfe) {
 			// HINT should never get here

@@ -196,6 +196,14 @@ public class DigesterSameNameSiblingTest extends DigesterTestBase
 					 a.setInputStream(new ByteArrayInputStream("Another Stream".getBytes()));
 				}
 				ocm.insert(a);
+				if (i==1)
+				{
+				    assertTrue("Invalid Path" , a.getPath().equals("/test") );
+				}
+				else
+				{
+					assertTrue("Invalid Path" , a.getPath().equals("/test" + "[" + i + "]") );
+				}
 				
 				
 			}
