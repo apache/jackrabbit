@@ -675,8 +675,8 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                                 QPropertyDefinition pd = (QPropertyDefinition) qDef;
                                 QPropertyDefinition epd = (QPropertyDefinition) qItemDef;
                                 // compare type & multiValued flag
-                                if (pd.getRequiredType() == epd.getRequiredType()
-                                        && pd.isMultiple() == epd.isMultiple()) {
+                                if (pd.getRequiredType() != epd.getRequiredType()
+                                        || pd.isMultiple() != epd.isMultiple()) {
                                     // conflict
                                     String msg = "The property definition for '"
                                             + name + "' in node type '"
