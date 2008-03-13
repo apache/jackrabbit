@@ -93,7 +93,7 @@ public class QueryManagerImpl implements QueryManager {
     private Filter buildDiscriminatorFilter(Query query, ClassDescriptor classDescriptor) {
         Filter discriminatorFilter = this.createFilter(query.getFilter().getFilterClass());
         if (!classDescriptor.isAbstract() && (! classDescriptor.isInterface()) ) {
-            discriminatorFilter.addJCRExpression("@" + ManagerConstant.DISCRIMINATOR_PROPERTY_NAME + "='" +    classDescriptor.getClassName() + "'");
+            discriminatorFilter.addJCRExpression("@" + ManagerConstant.DISCRIMINATOR_CLASS_NAME_PROPERTY + "='" +    classDescriptor.getClassName() + "'");
         }
 
         if (classDescriptor.hasDescendants()) {

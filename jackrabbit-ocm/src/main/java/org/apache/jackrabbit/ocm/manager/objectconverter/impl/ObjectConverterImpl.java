@@ -24,9 +24,13 @@ import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.ValueFormatException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.version.VersionException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -202,10 +206,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 
 			// If required, add the discriminator node type
 			if (classDescriptor.hasDiscriminator()) {
-				mixinTypeName = ManagerConstant.DISCRIMINATOR_NODE_TYPE;
-				objectNode.addMixin(mixinTypeName);
-				objectNode.setProperty(ManagerConstant.DISCRIMINATOR_PROPERTY_NAME, ReflectionUtils.getBeanClass(object)
-						.getName());
+				addDiscriminatorProperty(object, objectNode);
 			}
 
 
@@ -220,6 +221,27 @@ public class ObjectConverterImpl implements ObjectConverter {
 		insertBeanFields(session, object, classDescriptor, objectNode);
 		insertCollectionFields(session, object, classDescriptor, objectNode);
 		simpleFieldsHelp.refreshUuidPath(session, classDescriptor, objectNode, object);
+	}
+
+	private void addDiscriminatorProperty(Object object, Node objectNode)
+			throws NoSuchNodeTypeException, VersionException,
+			ConstraintViolationException, LockException, RepositoryException,
+			ValueFormatException {
+		
+		try {
+			objectNode.setProperty(ManagerConstant.DISCRIMINATOR_CLASS_NAME_PROPERTY,
+					ReflectionUtils.getBeanClass(object).getName());
+			
+		} catch (Exception e) {
+			// if it is not possible to add the CLASS_NAME_PROPERTY due to strong constraints in the 
+			// node type definition, try to add the Discriminator node type.
+			String mixinTypeName;
+			mixinTypeName = ManagerConstant.DISCRIMINATOR_NODE_TYPE;
+			objectNode.addMixin(mixinTypeName);
+			objectNode.setProperty(ManagerConstant.DISCRIMINATOR_CLASS_NAME_PROPERTY,
+					ReflectionUtils.getBeanClass(object).getName());
+		}
+		
 	}
 
 	/**
@@ -284,8 +306,8 @@ public class ObjectConverterImpl implements ObjectConverter {
 
 			ClassDescriptor classDescriptor = null;
 			Node node = (Node) session.getItem(path);
-			if (node.hasProperty(ManagerConstant.DISCRIMINATOR_PROPERTY_NAME)) {
-				String className = node.getProperty(ManagerConstant.DISCRIMINATOR_PROPERTY_NAME).getValue().getString();
+			if (node.hasProperty(ManagerConstant.DISCRIMINATOR_CLASS_NAME_PROPERTY)) {
+				String className = node.getProperty(ManagerConstant.DISCRIMINATOR_CLASS_NAME_PROPERTY).getValue().getString();
 				classDescriptor = mapper.getClassDescriptorByClass(ReflectionUtils.forName(className));
 			} else {
 				String nodeType = node.getPrimaryNodeType().getName();
@@ -350,8 +372,8 @@ public class ObjectConverterImpl implements ObjectConverter {
 
 			ClassDescriptor alternativeDescriptor = null;
 			if (classDescriptor.usesNodeTypePerHierarchyStrategy()) {
-				if (node.hasProperty(ManagerConstant.DISCRIMINATOR_PROPERTY_NAME)) {
-	                String className = node.getProperty(ManagerConstant.DISCRIMINATOR_PROPERTY_NAME).getValue().getString();
+				if (node.hasProperty(ManagerConstant.DISCRIMINATOR_CLASS_NAME_PROPERTY)) {
+	                String className = node.getProperty(ManagerConstant.DISCRIMINATOR_CLASS_NAME_PROPERTY).getValue().getString();
 	                alternativeDescriptor = getClassDescriptor(ReflectionUtils.forName(className));
 				}
 			} else {

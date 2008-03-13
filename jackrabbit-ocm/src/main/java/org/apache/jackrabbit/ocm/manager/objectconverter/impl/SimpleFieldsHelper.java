@@ -83,7 +83,7 @@ public class SimpleFieldsHelper
 
 			if (classDescriptor.usesNodeTypePerHierarchyStrategy() && classDescriptor.hasDiscriminator())
 			{
-				if (!node.hasProperty(ManagerConstant.DISCRIMINATOR_PROPERTY_NAME))
+				if (!node.hasProperty(ManagerConstant.DISCRIMINATOR_CLASS_NAME_PROPERTY))
 				{
 					throw new ObjectContentManagerException("Class '"
 							+ classDescriptor.getClassName()

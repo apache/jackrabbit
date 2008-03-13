@@ -29,8 +29,8 @@ public interface ManagerConstant
 {
 	public static final String NT_UNSTRUCTURED = "nt:unstructured";
 	public static final String DISCRIMINATOR_NODE_TYPE = "ocm:discriminator";
-	public static final String DISCRIMINATOR_PROPERTY_NAME = "ocm:classname";
-	
+	public static final String DISCRIMINATOR_CLASS_NAME_PROPERTY = "ocm_classname";
+
 	
 	public static final String FROZEN_NODE_TYPE = "nt:frozenNode";
 	public static final String FROZEN_PRIMARY_TYPE_PROPERTY = "jcr:frozenPrimaryType";
