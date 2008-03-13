@@ -100,7 +100,10 @@ public class ClientObservationManager extends ClientObject implements
 
     /** {@inheritDoc} */
     public EventListenerIterator getRegisteredEventListeners() {
-        return new ArrayEventListenerIterator(poller.getListeners());
+        EventListener[] listeners = (poller != null)
+                ? poller.getListeners()
+                : new EventListener[0];
+        return new ArrayEventListenerIterator(listeners);
     }
 
     //---------- internal ------------------------------------------------------
