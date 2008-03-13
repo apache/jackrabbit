@@ -36,6 +36,7 @@ import java.util.List;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 
@@ -308,6 +309,9 @@ abstract class AbstractVersionManager implements VersionManager {
                     root.store();
                 }
                 root = root.getNode(name, 1);
+                if (root == null) {
+                    throw new InvalidItemStateException();
+                }
             }
             Name historyNodeName = NameFactoryImpl.getInstance().create(Name.NS_DEFAULT_URI, uuid);
             if (root.hasNode(historyNodeName)) {
