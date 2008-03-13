@@ -51,7 +51,6 @@
               <tasks>
                 <rmic base="${project.build.outputDirectory}"
                       verify="true"
-                      includes="org/apache/jackrabbit/rmi/server/**/Server*.class"
                       classpathref="maven.compile.classpath"/>
               </tasks>
             </configuration>
