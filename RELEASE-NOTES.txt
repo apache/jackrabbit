@@ -1,15 +1,15 @@
-Release Notes -- Apache Jackrabbit Core -- Version 1.4.1
+Release Notes -- Apache Jackrabbit Core -- Version 1.4.2
 
 Introduction
 ------------
 
-This is the 1.4.1 patch release of the jackrabbit-core component of
+This is the 1.4.2 patch release of the jackrabbit-core component of
 Apache Jackrabbit, a fully conforming implementation of the Content
 Repository for Java Technology API (JCR).
 
-This release fixes a binary property regression (JCR-1346) as well as other
-issues reported against the Apache Jackrabbit 1.4 release. See below for
-a full list of changes in this release.
+This release contains fixes to a number of issues, most notably the
+concurrent modification exception reported in JCR-1359. See below for
+the full list of changes in this release.
 
 See the Apache Jackrabbit website at http://jackrabbit.apache.org/ for
 more information.
@@ -21,18 +21,18 @@ Unlike previous Jackrabbit releases that contained a full set of components,
 this patch release only contains the jackrabbit-core component. The component
 is distributed both as a source archive and a pre-compiled binary.
 
-    * Source archive (jackrabbit-core-1.4.1-src.jar)
+    * Source archive (jackrabbit-core-1.4.2-src.jar)
 
         The source archive contains the full source code of this release
-        in a "jackrabbit-core-1.4.1" directory. Use the following commands
+        in a "jackrabbit-core-1.4.2" directory. Use the following commands
         (or the equivalent in your environment) to build the component
         with Maven 2 and Java 1.4 or higher:
 
-          $ jar xf jackrabbit-core-1.4.1-src.jar
-          $ cd jackrabbit-1.4.1
+          $ jar xf jackrabbit-core-1.4.2-src.jar
+          $ cd jackrabbit-1.4.2
           $ mvn install
 
-    * Pre-compiled binary (jackrabbit-core-1.4.1.jar)
+    * Pre-compiled binary (jackrabbit-core-1.4.2.jar)
 
         Core of the Apache Jackrabbit content repository implementation.
 
@@ -50,23 +50,21 @@ The issue identifier and title is listed for each change and known issue.
 You can look up individual issues for more details in the Jackrabbit
 issue tracker at http://issues.apache.org/jira/browse/JCR
 
+  Improvements
+  [JCR-1375] Limit fields read from index
+
   Bug fixes
-  [JCR-1046] Non-versionable children of a versionable node should not be ...
-  [JCR-1227] Restore of empty multivalue property always changes property ...
-  [JCR-1305] JNDI data sources with BundleDbPersistenceManager: ...
-  [JCR-1318] Repository Home locked not released despite ...
-  [JCR-1322] Cluster information is not persisted to database when ...
-  [JCR-1323] When using QueryImpl.setLimit() and QueryImpl.setOffset(), ...
-  [JCR-1332] CLONE -Aggregate include ignored if no primaryType set
-  [JCR-1341] Cluster Journal directory should be created automatically
-  [JCR-1346] InternalValue.createCopy for binary properties (jcr:data) ...
-  [JCR-1358] Cluster revision file not closed on repository shutdown.
-  [JCR-1372] [PATCH] Fix possible Null Ptr exception in ConnectionFactory
-  [JCR-1374] [PATCH] DbDataStore: Make sure streams are closed
-  [JCR-1376] SearchIndex parameter cacheSize is ignored
-  [JCR-1379] AbstractExcerpt uses wrong logger
-  [JCR-1380] CachingHierarchyManager synchronization problem
-  [JCR-1389] setProperty("name", new Value[0], PropertyType.LONG) loses ...
+  [JCR-1275] NullPointerException in AbstractVersionManager....
+  [JCR-1359] Adding nodes from concurrently running sessions cause exceptions
+  [JCR-1414] Data store garbage collection: inUse not correctly synchronized
+  [JCR-1408] Invalid query results when using jcr:like with a case ...
+  [JCR-1459] NullPointerException on startup if IndexingQueue has ...
+  [JCR-1449] Registering nodetypes with empty namespace prefix causes ...
+  [JCR-1427] XPath query with child axis predicates
+  [JCR-1453] Allow access to journal inside ClusterNode
+  [JCR-1415] Clustering configuration documentation for syncDelay ...
+  [JCR-1432] Saving a node deletion that has been modified externally ...
+  [JCR-1460] Typo in repository.xml
 
   Known issues
   [JCR-43]   Restore on nodes creates same-name-sibling of ...
@@ -101,11 +99,14 @@ issue tracker at http://issues.apache.org/jira/browse/JCR
   [JCR-1211] QueryManager does not throw exception if jcr:deref is used in ...
   [JCR-1223] Occasional NPE on node checkin
   [JCR-1248] ParseException if search string ends with '!'
-  [JCR-1275] NullPointerException in AbstractVersionManager....
   [JCR-1334] Deadlock with XA enabled
   [JCR-1354] Repository shutdown reposts ERROR: failed to close connection
-  [JCR-1359] Adding nodes from concurrently running sessions cause exceptions
   [JCR-1360] Parsing built-in CND and XML nodetypes does not result in ...
   [JCR-1362] DatabaseJournal improperly finds tables in external schemas ...
   [JCR-1367] Exception when closing connection under db2
   [JCR-1387] Lock token not removed from session when node is removed
+  [JCR-1440] NPE Thrown when two Cluster Nodes are hitting the same ...
+  [JCR-1450] move method of the MemoryFileSystem may accept invalid ...
+  [JCR-1461] Deadlock on concurrent commit/checkin operations
+  [JCR-1463] Core: Failing version tests (testRestore...)
+  [JCR-1469] Data store garbage collection: ScanEventListener not working
