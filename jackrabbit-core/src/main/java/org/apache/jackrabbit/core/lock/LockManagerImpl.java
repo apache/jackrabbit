@@ -390,11 +390,15 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      * @throws RepositoryException if an error occurs
      */
     public AbstractLockInfo getLockInfo(NodeId id) throws RepositoryException {
-        acquire();
-
+        Path path;
         try {
-            Path path = getPath(id);
+            path = getPath(id);
+        } catch (ItemNotFoundException e) {
+            return null;
+        }
 
+        acquire();
+        try {
             PathMap.Element element = lockMap.map(path, false);
             AbstractLockInfo info = (AbstractLockInfo) element.get();
             if (info != null) {
@@ -402,8 +406,6 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                     return info;
                 }
             }
-            return null;
-        } catch (ItemNotFoundException e) {
             return null;
         } finally {
             release();
