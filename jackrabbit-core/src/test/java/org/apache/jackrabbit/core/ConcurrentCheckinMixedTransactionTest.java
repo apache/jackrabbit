@@ -47,68 +47,54 @@ public class ConcurrentCheckinMixedTransactionTest
         final long end = System.currentTimeMillis() + RUN_NUM_SECONDS * 1000;
         // tasks with even ids run within transactions
         final int[] taskId = new int[1];
-        Thread t = new Thread(new Runnable() {
-            public void run() {
-                try {
-                    runTask(new Task() {
-                        public void execute(Session session, Node test)
-                                throws RepositoryException {
-                            int id;
-                            synchronized (ConcurrentCheckinMixedTransactionTest.this) {
-                                id = taskId[0]++;
-                            }
-                            int i = 0;
-                            while (end > System.currentTimeMillis()) {
-                                UserTransactionImpl uTx = null;
-                                try {
-                                    if (id % 2 == 0) {
-                                        uTx = new UserTransactionImpl(session);
-                                        uTx.begin();
-                                    }
-                                    Node n = test.addNode("node" + i++);
-                                    n.addMixin(mixVersionable);
-                                    session.save();
-                                    n.checkout();
-                                    n.checkin();
-                                    if (uTx != null) {
-                                        uTx.commit();
-                                    }
-                                } catch (NotSupportedException e) {
-                                    throw new RepositoryException(e);
-                                } catch (SystemException e) {
-                                    throw new RepositoryException(e);
-                                } catch (HeuristicMixedException e) {
-                                    throw new RepositoryException(e);
-                                } catch (HeuristicRollbackException e) {
-                                    throw new RepositoryException(e);
-                                } catch (RollbackException e) {
-                                    Throwable t = e;
-                                    do {
-                                        t = t.getCause();
-                                        if (t instanceof StaleItemStateException) {
-                                            break;
-                                        }
-                                    } while (t != null);
-                                    if (t == null) {
-                                        throw new RepositoryException(e);
-                                    }
-                                } catch (InvalidItemStateException e) {
-                                    // try again
-                                }
-                            }
+        runTask(new Task() {
+            public void execute(Session session, Node test)
+                    throws RepositoryException {
+                int id;
+                synchronized (ConcurrentCheckinMixedTransactionTest.this) {
+                    id = taskId[0]++;
+                }
+                int i = 0;
+                while (end > System.currentTimeMillis()) {
+                    UserTransactionImpl uTx = null;
+                    try {
+                        if (id % 2 == 0) {
+                            uTx = new UserTransactionImpl(session);
+                            uTx.begin();
                         }
-                    }, NUM_THREADS);
-                } catch (RepositoryException e) {
-                    exceptions.add(e);
+                        Node n = test.addNode("node" + i++);
+                        n.addMixin(mixVersionable);
+                        session.save();
+                        n.checkout();
+                        n.checkin();
+                        if (uTx != null) {
+                            uTx.commit();
+                        }
+                    } catch (NotSupportedException e) {
+                        throw new RepositoryException(e);
+                    } catch (SystemException e) {
+                        throw new RepositoryException(e);
+                    } catch (HeuristicMixedException e) {
+                        throw new RepositoryException(e);
+                    } catch (HeuristicRollbackException e) {
+                        throw new RepositoryException(e);
+                    } catch (RollbackException e) {
+                        Throwable t = e;
+                        do {
+                            t = t.getCause();
+                            if (t instanceof StaleItemStateException) {
+                                break;
+                            }
+                        } while (t != null);
+                        if (t == null) {
+                            throw new RepositoryException(e);
+                        }
+                    } catch (InvalidItemStateException e) {
+                        // try again
+                    }
                 }
             }
-        });
-        t.start();
-        try {
-            t.join();
-        } catch (InterruptedException e) {
-            // ignore
-        }
+        }, NUM_THREADS);
         if (!exceptions.isEmpty()) {
             fail(((RepositoryException) exceptions.get(0)).getMessage());
         }
