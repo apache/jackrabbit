@@ -662,7 +662,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                             String msg = "The item definition for '" + name
                                     + "' in node type '"
                                     + qDef.getDeclaringNodeType()
-                                    + "' conflicts with node type '"
+                                    + "' conflicts with the one of node type '"
                                     + qItemDef.getDeclaringNodeType()
                                     + "': name collision with auto-create definition";
                             log.debug(msg);
@@ -675,15 +675,17 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                                 QPropertyDefinition pd = (QPropertyDefinition) qDef;
                                 QPropertyDefinition epd = (QPropertyDefinition) qItemDef;
                                 // compare type & multiValued flag
-                                if (pd.getRequiredType() != epd.getRequiredType()
-                                        || pd.isMultiple() != epd.isMultiple()) {
+                                if (pd.getRequiredType() == epd.getRequiredType()
+                                        && pd.isMultiple() == epd.isMultiple()) {
                                     // conflict
                                     String msg = "The property definition for '"
                                             + name + "' in node type '"
                                             + qDef.getDeclaringNodeType()
-                                            + "' conflicts with node type '"
+                                            + "' conflicts with the one of node type '"
                                             + qItemDef.getDeclaringNodeType()
-                                            + "': ambiguous property definition";
+                                            + "': ambiguous property definition. "
+                                            + "they must differ in required type "
+                                            + "or cardinality.";
                                     log.debug(msg);
                                     throw new NodeTypeConflictException(msg);
                                 }
@@ -693,9 +695,9 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                                 String msg = "The child node definition for '"
                                         + name + "' in node type '"
                                         + qDef.getDeclaringNodeType()
-                                        + "' conflicts with node type '"
+                                        + "' conflicts with the one of node type '"
                                         + qItemDef.getDeclaringNodeType()
-                                        + "': ambiguous child node definition";
+                                        + "': ambiguous child node definition. name must differ.";
                                 log.debug(msg);
                                 throw new NodeTypeConflictException(msg);
                             }
