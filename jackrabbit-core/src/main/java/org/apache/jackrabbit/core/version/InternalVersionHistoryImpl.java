@@ -384,6 +384,11 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
         // store changes
         node.store();
+
+        // now also remove from labelCache
+        for (int i = 0; i < labels.length; i++) {
+            labelCache.remove(labels[i]);
+        }
     }
 
     /**
