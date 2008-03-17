@@ -84,6 +84,8 @@ public class GarbageCollector {
     
     private final Session[] sessionList;
 
+    private boolean persistenceManagerScan;
+
     // TODO It should be possible to stop and restart a garbage collection scan.
 
     /**
@@ -97,6 +99,7 @@ public class GarbageCollector {
         RepositoryImpl rep = (RepositoryImpl) session.getRepository();
         store = rep.getDataStore();
         this.pmList = list;
+        this.persistenceManagerScan = list != null;
         this.sessionList = sessionList;
     }
 
@@ -150,7 +153,7 @@ public class GarbageCollector {
             store.updateModifiedDateOnAccess(startScanTimestamp);
         }
         
-        if (pmList == null) {
+        if (pmList == null || !persistenceManagerScan) {
             for (int i = 0; i < sessionList.length; i++) {
                 scanNodes(sessionList[i]);
             }
@@ -170,12 +173,36 @@ public class GarbageCollector {
         recurse(session.getRootNode(), sleepBetweenNodes);
     }
     
+    /**
+     * Enable or disable using the IterablePersistenceManager interface
+     * to scan the items. This is important for clients that need
+     * the complete Node implementation in the ScanEventListener
+     * callback.
+     *
+     * @param allow true if using the IterablePersistenceManager interface is allowed
+     */
+    public void setPersistenceManagerScan(boolean allow) {
+        persistenceManagerScan = allow;
+    }
+
+    /**
+     * Check if using the IterablePersistenceManager interface is allowed.
+     *
+     * @return true if using IterablePersistenceManager is possible.
+     */
+    public boolean getPersistenceManagerScan() {
+        return persistenceManagerScan;
+    }
+
     private void scanPersistenceManagers() throws ItemStateException, RepositoryException {
         for (int i = 0; i < pmList.length; i++) {
             IterablePersistenceManager pm = pmList[i];
             Iterator it = pm.getAllNodeIds(null, 0);
             while (it.hasNext()) {
                 NodeId id = (NodeId) it.next();
+                if (callback != null) {
+                    callback.beforeScanning(null);
+                }
                 try {
                     NodeState state = pm.load(id);
                     Set propertyNames = state.getPropertyNames();
@@ -194,6 +221,9 @@ public class GarbageCollector {
                 } catch (NoSuchItemStateException e) {
                     // the node may have been deleted or moved in the meantime
                     // ignore it
+                }
+                if (callback != null) {
+                    callback.afterScanning(null);
                 }
             }
         }
