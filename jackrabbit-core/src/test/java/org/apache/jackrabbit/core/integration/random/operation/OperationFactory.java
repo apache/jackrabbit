@@ -175,8 +175,10 @@ public class OperationFactory {
     public Operation createNodes(String path,
                                  int numLevels,
                                  int nodesPerLevel,
-                                 String[] mixins) {
-        return new CreateNodes(session, path, numLevels, nodesPerLevel, mixins);
+                                 String[] mixins,
+                                 int saveInterval) {
+        return new CreateNodes(session, path, numLevels,
+                nodesPerLevel, mixins, saveInterval);
     }
 
     /**

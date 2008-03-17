@@ -24,7 +24,9 @@ import javax.jcr.RepositoryException;
 
 /**
  * <code>RandomOperationTest</code> executes randomly chosen operations using
- * multiple threads.
+ * multiple threads. Each thread operates on its own subtree to avoid
+ * conflicting changes.
+ * <p/>
  * Please note that this test is disabled by default!
  * You can enable them by setting {@link #NUM_THREADS} to 1 or higher.
  */
@@ -55,6 +57,11 @@ public class RandomOperationTest extends AbstractConcurrencyTest {
      */
     private static final int NODES_PER_LEVEL = 3;
 
+    /**
+     * While creating nodes, save whenever 1000 nodes have been created.
+     */
+    private static final int SAVE_INTERVAL = 1000;
+
     private long end;
 
     protected void setUp() throws Exception {
@@ -63,46 +70,56 @@ public class RandomOperationTest extends AbstractConcurrencyTest {
     }
 
     public void testRandomContentOperations() throws RepositoryException {
-        runTask(new ContentOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, end), NUM_THREADS);
+        runTask(new ContentOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, SAVE_INTERVAL, end), NUM_THREADS);
     }
 
     public void testRandomContentOperationsXA() throws RepositoryException {
-        ContentOperationsTask task = new ContentOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, end);
+        ContentOperationsTask task = new ContentOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, SAVE_INTERVAL, end);
         task.setUseXA(true);
         runTask(task, NUM_THREADS);
     }
 
     public void testRandomVersionOperations() throws RepositoryException {
-        runTask(new VersionOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, end), NUM_THREADS);
+        runTask(new VersionOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, SAVE_INTERVAL, end), NUM_THREADS);
     }
 
     public void testRandomVersionOperationsXA() throws RepositoryException {
-        VersionOperationsTask task = new VersionOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, end);
+        VersionOperationsTask task = new VersionOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, SAVE_INTERVAL, end);
         task.setUseXA(true);
         runTask(task, NUM_THREADS);
     }
 
     public void testContentAndVersionOperations() throws RepositoryException {
         runTasks(new Task[]{
-            new ContentOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, end),
-            new VersionOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, end)
+            new ContentOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, SAVE_INTERVAL, end),
+            new VersionOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, SAVE_INTERVAL, end)
         }, NUM_THREADS, end + MAX_WAIT_SECONDS * 1000);
     }
 
     public void testContentAndVersionOperationsXA() throws RepositoryException {
-        ContentOperationsTask task1 = new ContentOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, end);
+        ContentOperationsTask task1 = new ContentOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, SAVE_INTERVAL, end);
         task1.setUseXA(true);
-        VersionOperationsTask task2 = new VersionOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, end);
+        VersionOperationsTask task2 = new VersionOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, SAVE_INTERVAL, end);
         task2.setUseXA(true);
         runTasks(new Task[]{task1, task2}, NUM_THREADS, end + MAX_WAIT_SECONDS * 1000);
     }
 
     public void testContentAndVersionOperationsXAMixed() throws RepositoryException {
-        ContentOperationsTask task1 = new ContentOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, end);
-        ContentOperationsTask task2 = new ContentOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, end);
+        ContentOperationsTask task1 = new ContentOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, SAVE_INTERVAL, end);
+        ContentOperationsTask task2 = new ContentOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, SAVE_INTERVAL, end);
         task2.setUseXA(true);
-        VersionOperationsTask task3 = new VersionOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, end);
-        VersionOperationsTask task4 = new VersionOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, end);
+        VersionOperationsTask task3 = new VersionOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, SAVE_INTERVAL, end);
+        VersionOperationsTask task4 = new VersionOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, SAVE_INTERVAL, end);
+        task4.setUseXA(true);
+        runTasks(new Task[]{task1, task2, task3, task4}, NUM_THREADS, end + MAX_WAIT_SECONDS * 1000);
+    }
+
+    public void testContentAndVersionOperationsXAMixedShortSaveInterval() throws RepositoryException {
+        ContentOperationsTask task1 = new ContentOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, 1, end);
+        ContentOperationsTask task2 = new ContentOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, 1, end);
+        task2.setUseXA(true);
+        VersionOperationsTask task3 = new VersionOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, 1, end);
+        VersionOperationsTask task4 = new VersionOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, 1, end);
         task4.setUseXA(true);
         runTasks(new Task[]{task1, task2, task3, task4}, NUM_THREADS, end + MAX_WAIT_SECONDS * 1000);
     }

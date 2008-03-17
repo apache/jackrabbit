@@ -26,8 +26,9 @@ import javax.jcr.NodeIterator;
  */
 public class ContentOperationsTask extends RandomOperationsTask {
 
-    public ContentOperationsTask(int numLevels, int nodesPerLevel, long end) {
-        super(new String[0], numLevels, nodesPerLevel, end);
+    public ContentOperationsTask(int numLevels, int nodesPerLevel,
+                                 int saveInterval, long end) {
+        super(new String[0], numLevels, nodesPerLevel, saveInterval, end);
     }
 
     protected Operation getRandomOperations(OperationFactory f,
