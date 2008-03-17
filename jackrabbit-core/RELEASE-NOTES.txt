@@ -8,7 +8,8 @@ Apache Jackrabbit, a fully conforming implementation of the Content
 Repository for Java Technology API (JCR).
 
 This release contains fixes to a number of issues, most notably the
-concurrent modification exception reported in JCR-1359. See below for
+concurrent modification exception reported in JCR-1359 and two concurrent
+versioning deadlocks reported in JCR-1462 and JCR-1480. See below for
 the full list of changes in this release.
 
 See the Apache Jackrabbit website at http://jackrabbit.apache.org/ for
@@ -52,19 +53,24 @@ issue tracker at http://issues.apache.org/jira/browse/JCR
 
   Improvements
   [JCR-1375] Limit fields read from index
+  [JCR-1469] Data store garbage collection: ScanEventListener not working
 
   Bug fixes
   [JCR-1275] NullPointerException in AbstractVersionManager....
+  [JCR-1330] repository.xml DTD doesn't allow <DataStore> element
   [JCR-1359] Adding nodes from concurrently running sessions cause exceptions
-  [JCR-1414] Data store garbage collection: inUse not correctly synchronized
   [JCR-1408] Invalid query results when using jcr:like with a case ...
-  [JCR-1459] NullPointerException on startup if IndexingQueue has ...
-  [JCR-1449] Registering nodetypes with empty namespace prefix causes ...
-  [JCR-1427] XPath query with child axis predicates
-  [JCR-1453] Allow access to journal inside ClusterNode
+  [JCR-1414] Data store garbage collection: inUse not correctly synchronized
   [JCR-1415] Clustering configuration documentation for syncDelay ...
+  [JCR-1427] XPath query with child axis predicates
   [JCR-1432] Saving a node deletion that has been modified externally ...
+  [JCR-1449] Registering nodetypes with empty namespace prefix causes ...
+  [JCR-1453] Allow access to journal inside ClusterNode
+  [JCR-1459] NullPointerException on startup if IndexingQueue has ...
   [JCR-1460] Typo in repository.xml
+  [JCR-1461] Deadlock on concurrent commit/checkin operations
+  [JCR-1475] Inconsistency when version with a label is removed
+  [JCR-1480] Deadlock when executing Version operations
 
   Known issues
   [JCR-43]   Restore on nodes creates same-name-sibling of ...
@@ -107,6 +113,7 @@ issue tracker at http://issues.apache.org/jira/browse/JCR
   [JCR-1387] Lock token not removed from session when node is removed
   [JCR-1440] NPE Thrown when two Cluster Nodes are hitting the same ...
   [JCR-1450] move method of the MemoryFileSystem may accept invalid ...
-  [JCR-1461] Deadlock on concurrent commit/checkin operations
   [JCR-1463] Core: Failing version tests (testRestore...)
-  [JCR-1469] Data store garbage collection: ScanEventListener not working
+  [JCR-1474] consistency check fails with derbypm if bundle size exceeds 32k
+  [JCR-1476] Restore to base version throws NullPointerException
+  [JCR-1481] VersionHistory.removeVersion() does not throw ...
