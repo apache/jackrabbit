@@ -108,7 +108,7 @@ public abstract class AbstractConcurrencyTest extends AbstractJCRTest {
         boolean stacksDumped = false;
         for (int i = 0; i < threads.length; i++) {
             try {
-                long wait = Math.max(timeout - System.currentTimeMillis(), 1);
+                long wait = Math.max(timeout - System.currentTimeMillis(), 1000);
                 threads[i].join(wait);
                 if (threads[i].isAlive()) {
                     if (!stacksDumped) {

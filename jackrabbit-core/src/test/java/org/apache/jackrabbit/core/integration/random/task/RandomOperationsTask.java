@@ -36,14 +36,18 @@ public abstract class RandomOperationsTask implements AbstractConcurrencyTest.Ta
 
     private final int nodesPerLevel;
 
+    private final int saveInterval;
+
     private final long end;
 
     private boolean useXA = false;
 
-    public RandomOperationsTask(String mixins[], int numLevels, int nodesPerLevel, long end) {
+    public RandomOperationsTask(String mixins[], int numLevels,
+                                int nodesPerLevel, int saveInterval, long end) {
         this.mixins = mixins;
         this.numLevels = numLevels;
         this.nodesPerLevel = nodesPerLevel;
+        this.saveInterval = saveInterval;
         this.end = end;
     }
 
@@ -51,7 +55,8 @@ public abstract class RandomOperationsTask implements AbstractConcurrencyTest.Ta
         try {
             OperationFactory f = new OperationFactory(session);
             // create nodes
-            f.createNodes(test.getPath(), numLevels, nodesPerLevel, mixins).execute();
+            f.createNodes(test.getPath(), numLevels, nodesPerLevel,
+                    mixins, saveInterval).execute();
             // save nodes
             f.save(test.getPath()).execute();
 

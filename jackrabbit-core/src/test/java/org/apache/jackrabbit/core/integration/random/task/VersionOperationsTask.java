@@ -26,8 +26,10 @@ import javax.jcr.NodeIterator;
  */
 public class VersionOperationsTask extends RandomOperationsTask {
 
-    public VersionOperationsTask(int numLevels, int nodesPerLevel, long end) {
-        super(new String[]{"mix:versionable"}, numLevels, nodesPerLevel, end);
+    public VersionOperationsTask(int numLevels, int nodesPerLevel,
+                                 int saveInterval, long end) {
+        super(new String[]{"mix:versionable"}, numLevels, nodesPerLevel,
+                saveInterval, end);
     }
 
     protected Operation getRandomOperations(OperationFactory f,

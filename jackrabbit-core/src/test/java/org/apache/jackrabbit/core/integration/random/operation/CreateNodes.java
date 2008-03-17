@@ -38,15 +38,19 @@ public class CreateNodes extends Operation {
 
     private final String[] mixins;
 
+    private final int saveInterval;
+
     public CreateNodes(Session s,
                        String path,
                        int numLevels,
                        int nodesPerLevel,
-                       String[] mixins) {
+                       String[] mixins,
+                       int saveInterval) {
         super(s, path);
         this.numLevels = numLevels;
         this.nodesPerLevel = nodesPerLevel;
         this.mixins = mixins;
+        this.saveInterval = saveInterval;
     }
 
     /**
@@ -64,9 +68,10 @@ public class CreateNodes extends Operation {
         levels--;
         for (int i = 0; i < nodesPerLevel; i++) {
             Node child = n.addNode("node" + i);
+            count++;
             addMixins(child);
             log.info("Create node {}", child.getPath());
-            if (count % 1000 == 0) {
+            if (count % saveInterval == 0) {
                 getSession().save();
                 log.debug("Created " + (count / 1000) + "k nodes");
             }
