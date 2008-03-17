@@ -188,7 +188,9 @@ public class ConfigurationParser {
         try {
             DocumentBuilderFactory factory =
                 DocumentBuilderFactory.newInstance();
+            factory.setValidating(true);
             DocumentBuilder builder = factory.newDocumentBuilder();
+            builder.setErrorHandler(new ConfigurationErrorHandler());
             builder.setEntityResolver(ConfigurationEntityResolver.INSTANCE);
             Document document = builder.parse(xml);
             return document.getDocumentElement();
