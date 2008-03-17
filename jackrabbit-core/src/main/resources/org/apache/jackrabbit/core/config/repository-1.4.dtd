@@ -50,7 +50,7 @@
         clustering node that synchronizes changes made in a cluster
        
 -->
-<!ELEMENT Repository (FileSystem,Security,Workspaces,Workspace,Versioning,SearchIndex?,Cluster?)>
+<!ELEMENT Repository (FileSystem,Security,Workspaces,Workspace,Versioning,SearchIndex?,Cluster?,DataStore?)>
 
 <!--
     a virtual file system
@@ -172,3 +172,11 @@
 -->
 <!ELEMENT ISMLocking (param*)>
 <!ATTLIST ISMLocking class CDATA #REQUIRED>
+
+<!--
+    the DataStore element configures the data store
+    to be used for the workspace; the class attribute specifies the
+    FQN of the class implementing the DataStore interface
+-->
+<!ELEMENT DataStore (param*)>
+<!ATTLIST DataStore class CDATA #REQUIRED>
