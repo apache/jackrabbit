@@ -37,6 +37,7 @@ Bug fixes
   [JCR-1185] - building trunk fails with javacc plugin version 2.2
   [JCR-1305] - JNDI data sources with BundleDbPersistenceManager: ...
   [JCR-1399] - Backport JCR-1197: Node.restore() may throw ...
+  [JCR-1461] - Deadlock on concurrent commit/checkin operations
 
 Release Contents
 ----------------
