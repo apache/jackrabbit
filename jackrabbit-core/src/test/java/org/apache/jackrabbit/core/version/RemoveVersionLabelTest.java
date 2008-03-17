@@ -37,13 +37,10 @@ public class RemoveVersionLabelTest extends AbstractJCRTest {
         n.checkin();
         VersionHistory vh = n.getVersionHistory();
         vh.addVersionLabel(v10.getName(), "test", true);
-        // either the next call should fail
+        // the next call must not fail
         vh.removeVersion(v10.getName());
-        // or the label 'test' should be gone
+        // now the label must be gone
         String[] labels = vh.getVersionLabels();
-        for (int i = 0; i < labels.length; i++) {
-            // and this is never called
-            vh.removeVersionLabel(labels[i]);
-        }
+        assertEquals("Label of a removed version must be removed as well", 0, labels.length);
     }
 }
