@@ -42,6 +42,7 @@ import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
@@ -53,6 +54,7 @@ import org.apache.jackrabbit.core.persistence.bundle.util.DbNameIndex;
 import org.apache.jackrabbit.core.persistence.bundle.util.ErrorHandling;
 import org.apache.jackrabbit.core.persistence.bundle.util.NodePropBundle;
 import org.apache.jackrabbit.core.persistence.bundle.util.StringIndex;
+import org.apache.jackrabbit.core.persistence.bundle.util.NodePropBundle.ChildNodeEntry;
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.FileSystemBLOBStore;
 import org.apache.jackrabbit.core.persistence.util.Serializer;
@@ -654,6 +656,76 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     }
     
     /**
+     * Helper method that returns the jcr path for a node bundle.
+     * 
+     * <p>
+     * Resolves the special root nodes (eg. <code>/jcr:system</code>). If a
+     * node cannot be found in the list of child nodes of its parent (ie. has no
+     * name), <code>{{missing}}</code> will be used instead.
+     * 
+     * @param id
+     *            NodeId for which the path should be displayed
+     * @param bundle
+     *            bundle for id, optional (if <code>null</code>, will be
+     *            loaded via given id)
+     * @return the path of the node identified by id, with namespaces not
+     *         resolved (eg. <code>{http://www.jcp.org/jcr/1.0}</code> instead
+     *         of <code>jcr:</code>)
+     * @throws ItemStateException
+     *             if loading one of the parent nodes failed
+     */
+    protected String getBundlePath(NodeId id, NodePropBundle bundle) throws ItemStateException {
+        // load bundle on demand
+        if (bundle == null) {
+            bundle = loadBundle(id);
+            if (bundle == null) {
+                return "{{missing}}";
+            }
+        }
+        
+        // check for the various special root nodes
+        if (id.equals(RepositoryImpl.VERSION_STORAGE_NODE_ID)) {
+            return "/jcr:system/jcr:versionStorage";
+        } else if (id.equals(RepositoryImpl.NODETYPES_NODE_ID)) {
+            return "/jcr:system/jcr:nodeTypes";
+        } else if (id.equals(RepositoryImpl.SYSTEM_ROOT_NODE_ID)) {
+            return "/jcr:system";
+        } else if (id.equals(RepositoryImpl.ROOT_NODE_ID)) {
+            return "";
+        } else if (bundle.getParentId() == null) {
+            return "";
+        } else if (bundle.getParentId().equals(id)) {
+            return "";
+        }
+        
+        // get the name of this bundle by looking at the parent
+        NodePropBundle parentBundle = loadBundle(bundle.getParentId());
+        if (parentBundle == null) {
+            return "{{missing}}";
+        }
+        
+        String name = "{{missing}}";
+        Iterator iter = parentBundle.getChildNodeEntries().iterator();
+        while (iter.hasNext()) {
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+            if (entry.getId().equals(id)) {
+                String uri = entry.getName().getNamespaceURI();
+                // hide the empty {}Ênamespace if none is present
+                if (uri == null || uri.equals("")) {
+                    name = entry.getName().getLocalName();
+                } else {
+                    // pattern: {uri}localName
+                    name = entry.getName().toString();
+                }
+                break;
+            }
+        }
+        
+        // recursive call (building the path from right-to-left)
+        return getBundlePath(parentBundle.getId(), parentBundle) + "/" + name;
+    }
+
+    /**
      * Checks a single bundle for inconsistencies, ie. inexistent child nodes
      * and inexistent parents.
      * 
@@ -688,14 +760,14 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                 // analyze child node bundles
                 NodePropBundle child = loadBundle(entry.getId(), true);
                 if (child == null) {
-                    log.error("NodeState '" + id + "' references inexistent child '" + entry.getName() + "' with id '" + entry.getId() + "'");
+                    log.error("NodeState '" + getBundlePath(id, bundle) + "' ('" + id + "') references inexistent child '" + entry.getName() + "' with id '" + entry.getId() + "'");
                     missingChildren.add(entry);
                 } else {
                     NodeId cp = child.getParentId();
                     if (cp == null) {
-                        log.error("ChildNode has invalid parent uuid: <null>");
+                        log.error("ChildNode '" + entry.getName() + "' has invalid parent uuid: <null>");
                     } else if (!cp.equals(id)) {
-                        log.error("ChildNode has invalid parent uuid: '" + cp + "' (instead of '" + id + "')");
+                        log.error("ChildNode '" + entry.getName() + "' has invalid parent uuid: '" + cp + "' (instead of '" + id + "')");
                     }
                 }
             } catch (ItemStateException e) {
@@ -724,7 +796,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             log.error("Error reading node '" + parentId + "' (parent of '" + id + "'): " + e);
         }
     }
-
+    
     /**
      * {@inheritDoc}
      */
