@@ -29,6 +29,7 @@ import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.util.Dumpable;
@@ -593,6 +594,21 @@ public class SharedItemStateManager
 
                                         public boolean isDeleted(ItemId id) {
                                             return local.deleted(id);
+                                        }
+
+                                        public boolean allowsSameNameSiblings(NodeId id) {
+                                            NodeState ns;
+                                            try {
+                                                if (local.has(id)) {
+                                                    ns = (NodeState) local.get(id);
+                                                } else {
+                                                    ns = (NodeState) getItemState(id);
+                                                }
+                                            } catch (ItemStateException e) {
+                                                return false;
+                                            }
+                                            NodeDef def = ntReg.getNodeDef(ns.getDefinitionId());
+                                            return def != null ? def.allowsSameNameSiblings() : false;
                                         }
                                     };
 
