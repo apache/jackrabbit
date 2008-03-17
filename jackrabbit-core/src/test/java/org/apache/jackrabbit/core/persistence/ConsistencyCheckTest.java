@@ -170,7 +170,6 @@ public class ConsistencyCheckTest extends TestCase {
         
         if (JCR_SYSTEM.equals(workspace)) {
             conn = DriverManager.getConnection(PROTOCOL + DIRECTORY.getPath() + VERSIONING_DB_PATH, props);
-            log.debug(conn.getMetaData().getURL());
         } else {
             String basePath = DIRECTORY.getPath() + File.separatorChar + "workspaces" + File.separatorChar;
             conn = DriverManager.getConnection(PROTOCOL + basePath + workspace + DB_PATH, props);
@@ -305,7 +304,7 @@ public class ConsistencyCheckTest extends TestCase {
         session.save();
         node.checkin();
         
-        displayTree(session.getRootNode().getNode("jcr:system/jcr:versionStorage"));
+        //displayTree(session.getRootNode().getNode("jcr:system/jcr:versionStorage"));
         
         brokenVersion = "1.1";
         Version v = node.getVersionHistory().getVersion(brokenVersion);
@@ -439,6 +438,6 @@ public class ConsistencyCheckTest extends TestCase {
     
     public void testRepositoryShutdown() {
         // last test, stop (not necessarily needed, but cleans up file system)
-        //deleteRepository();
+        deleteRepository();
     }
 }
