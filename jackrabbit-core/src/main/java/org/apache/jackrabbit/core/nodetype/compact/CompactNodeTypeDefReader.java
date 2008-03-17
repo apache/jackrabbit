@@ -290,7 +290,7 @@ public class CompactNodeTypeDefReader {
             supertypes.add(toQName(currentToken));
             nextToken();
         } while (currentTokenEquals(Lexer.LIST_DELIMITER));
-        ntd.setSupertypes((Name[]) supertypes.toArray(new Name[0]));
+        ntd.setSupertypes((Name[]) supertypes.toArray(new Name[supertypes.size()]));
     }
 
     /**
@@ -363,11 +363,11 @@ public class CompactNodeTypeDefReader {
         }
 
         if (propertyDefinitions.size() > 0) {
-            ntd.setPropertyDefs((PropDef[]) propertyDefinitions.toArray(new PropDef[0]));
+            ntd.setPropertyDefs((PropDef[]) propertyDefinitions.toArray(new PropDef[propertyDefinitions.size()]));
         }
 
         if (nodeDefinitions.size() > 0) {
-            ntd.setChildNodeDefs((NodeDef[]) nodeDefinitions.toArray(new NodeDef[0]));
+            ntd.setChildNodeDefs((NodeDef[]) nodeDefinitions.toArray(new NodeDef[nodeDefinitions.size()]));
         }
     }
 
@@ -506,7 +506,7 @@ public class CompactNodeTypeDefReader {
             defaultValues.add(value);
             nextToken();
         } while (currentTokenEquals(Lexer.LIST_DELIMITER));
-        pdi.setDefaultValues((InternalValue[]) defaultValues.toArray(new InternalValue[0]));
+        pdi.setDefaultValues((InternalValue[]) defaultValues.toArray(new InternalValue[defaultValues.size()]));
     }
 
     /**
@@ -532,7 +532,7 @@ public class CompactNodeTypeDefReader {
             constraints.add(constraint);
             nextToken();
         } while (currentTokenEquals(Lexer.LIST_DELIMITER));
-        pdi.setValueConstraints((ValueConstraint[]) constraints.toArray(new ValueConstraint[0]));
+        pdi.setValueConstraints((ValueConstraint[]) constraints.toArray(new ValueConstraint[constraints.size()]));
     }
 
     /**
@@ -571,7 +571,7 @@ public class CompactNodeTypeDefReader {
             types.add(toQName(currentToken));
             nextToken();
         } while (currentTokenEquals(Lexer.LIST_DELIMITER));
-        ndi.setRequiredPrimaryTypes((Name[]) types.toArray(new Name[0]));
+        ndi.setRequiredPrimaryTypes((Name[]) types.toArray(new Name[types.size()]));
         nextToken();
     }
 

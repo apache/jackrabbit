@@ -214,7 +214,7 @@ public class MemoryFileSystem implements FileSystem {
                 selectedNames.add(name.substring(folderPath.length() + 1));
             }
         }
-        return (String[]) selectedNames.toArray(new String[0]);
+        return (String[]) selectedNames.toArray(new String[selectedNames.size()]);
     }
 
     public String[] listFiles(String folderPath) {
@@ -236,7 +236,7 @@ public class MemoryFileSystem implements FileSystem {
                 result.add(names[i]);
             }
         }
-        return (String[]) result.toArray(new String[0]);
+        return (String[]) result.toArray(new String[result.size()]);
     }
 
     public void move(String srcPath, String destPath)

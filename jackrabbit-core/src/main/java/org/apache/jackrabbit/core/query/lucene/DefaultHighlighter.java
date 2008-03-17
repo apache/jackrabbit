@@ -155,7 +155,7 @@ public class DefaultHighlighter {
             }
         }
 
-        TermVectorOffsetInfo[] offsets = (TermVectorOffsetInfo[]) list.toArray(new TermVectorOffsetInfo[0]);
+        TermVectorOffsetInfo[] offsets = (TermVectorOffsetInfo[]) list.toArray(new TermVectorOffsetInfo[list.size()]);
         // sort offsets
         if (terms.length > 1) {
             java.util.Arrays.sort(offsets, new TermVectorOffsetInfoSorter());
