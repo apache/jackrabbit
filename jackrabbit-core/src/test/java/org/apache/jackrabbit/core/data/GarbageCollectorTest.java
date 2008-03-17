@@ -151,7 +151,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
     }
 
     public void afterScanning(Node n) throws RepositoryException {
-        if (n.getPath().startsWith("/testroot/node")) {
+        if (n != null && n.getPath().startsWith("/testroot/node")) {
             String path = n.getPath();
             LOG.debug("scanned: " + path);
         }
@@ -166,7 +166,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
     }
 
     public void beforeScanning(Node n) throws RepositoryException {
-        if (n.getPath().equals("/testroot/node2")) {
+        if (n != null && n.getPath().equals("/testroot/node2")) {
             Session session = n.getSession();
             list(session.getRootNode());
             session.move("/testroot/node2/nodeWithBlob", "/testroot/node1/nodeWithBlob");
