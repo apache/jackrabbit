@@ -23,6 +23,8 @@ import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.ZombieHierarchyManager;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.apache.jackrabbit.spi.Name;
@@ -76,6 +78,11 @@ public class SessionItemStateManager
     private AtticItemStateManager attic;
 
     /**
+     * Node Type Registry
+     */
+    private final NodeTypeRegistry ntReg;
+
+    /**
      * State change dispatcher.
      */
     private final transient StateChangeDispatcher dispatcher = new StateChangeDispatcher();
@@ -86,10 +93,12 @@ public class SessionItemStateManager
      * @param rootNodeId the root node id
      * @param stateMgr the local item state manager
      * @param resolver path resolver for outputting user-friendly paths
+     * @param ntReg node type registry
      */
     public SessionItemStateManager(NodeId rootNodeId,
                                    LocalItemStateManager stateMgr,
-                                   PathResolver resolver) {
+                                   PathResolver resolver,
+                                   NodeTypeRegistry ntReg) {
         transientStore = new ItemStateMap();
         atticStore = new ItemStateMap();
 
@@ -99,6 +108,8 @@ public class SessionItemStateManager
         // create hierarchy manager that uses both transient and persistent state
         hierMgr = new CachingHierarchyManager(rootNodeId, this, resolver);
         addListener(hierMgr);
+
+        this.ntReg = ntReg;
     }
 
     /**
@@ -815,6 +826,17 @@ public class SessionItemStateManager
 
                                 public boolean isDeleted(ItemId id) {
                                     return atticStore.contains(id);
+                                }
+
+                                public boolean allowsSameNameSiblings(NodeId id) {
+                                    NodeState ns;
+                                    try {
+                                        ns = (NodeState) getItemState(id);
+                                    } catch (ItemStateException e) {
+                                        return false;
+                                    }
+                                    NodeDef def = ntReg.getNodeDef(ns.getDefinitionId());
+                                    return def != null ? def.allowsSameNameSiblings() : false;
                                 }
                             };
                     if (NodeStateMerger.merge((NodeState) transientState, context)) {
