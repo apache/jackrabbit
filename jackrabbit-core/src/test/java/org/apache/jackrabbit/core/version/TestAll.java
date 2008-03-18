@@ -32,8 +32,7 @@ public class TestAll extends TestCase {
      */
     public static Test suite() {
         TestSuite suite = new TestSuite("Version tests");
-        // disabled because JCR-1481 is not yet fixed
-        //suite.addTestSuite(CheckinRemoveVersionTest.class);
+        suite.addTestSuite(CheckinRemoveVersionTest.class);
         suite.addTestSuite(RemoveVersionLabelTest.class);
         suite.addTestSuite(RestoreTest.class);
         suite.addTestSuite(VersionIteratorImplTest.class);
