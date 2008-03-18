@@ -1030,7 +1030,10 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         }
 
         /**
-         * TODO SN: document
+         * Replace the state of all nodes that are in the same shared set
+         * as the given node.
+         * 
+         * @param node node in shared set.
          */
         public synchronized void stateReplaced(NodeImpl node) {
             NodeState state = (NodeState) node.getItemState();

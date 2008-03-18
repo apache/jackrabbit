@@ -1,66 +1,42 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.jackrabbit.core;
 
 import java.util.ArrayList;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Workspace;
 import javax.jcr.nodetype.ConstraintViolationException;
 
-import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
-import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.NameFactory;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
+/**
+ * Tests features available with shareable nodes. 
+ */
 public class ShareableNodeTest extends AbstractJCRTest {
 
-    private NameFactory factory;
-    private Name testShareable;
-    
-    protected void setUp() throws Exception {
-        super.setUp();
-        
-        factory = NameFactoryImpl.getInstance();
-        testShareable = factory.create("http://www.apache.org/jackrabbit/test", "shareable");
-
-        checkNodeTypes();
-    }
-    
-    private void checkNodeTypes() 
-            throws RepositoryException, InvalidNodeTypeDefException {
-        
-        NodeTypeRegistry ntreg = ((NodeTypeManagerImpl) superuser.getWorkspace().
-                getNodeTypeManager()).getNodeTypeRegistry(); 
-        if (!ntreg.isRegistered(testShareable)) {
-            NodeDefImpl nd = new NodeDefImpl();
-            nd.setAllowsSameNameSiblings(false);
-            nd.setDeclaringNodeType(testShareable);
-            nd.setDefaultPrimaryType(null);
-            nd.setMandatory(false);
-            nd.setName(factory.create("", "*"));
-            nd.setProtected(false);
-            nd.setRequiredPrimaryTypes(new Name[]{NameConstants.NT_BASE});
-            
-            NodeTypeDef ntd = new NodeTypeDef();
-            ntd.setName(testShareable);
-            ntd.setSupertypes(new Name[]{factory.create(Name.NS_NT_URI, "base")});
-            ntd.setOrderableChildNodes(false);
-            ntd.setChildNodeDefs(new NodeDef[] { nd });
-            
-            ntreg.registerNodeType(ntd);
-        }
-    }
-    
+    /**
+     * Add a child to a shareable node and verify that another node in the
+     * same shared set has the same child and is modified when the first
+     * one is.
+     */
     public void testAddChild() throws Exception {
         // setup parent nodes and first child 
         Node a1 = testRootNode.addNode("a1");
@@ -93,6 +69,9 @@ public class ShareableNodeTest extends AbstractJCRTest {
         b1.save();
     }
     
+    /**
+     * Adds the mix:shareable mixin to a node.
+     */
     public void testAddMixin() throws Exception {
         // setup parent node and first child 
         Node a = testRootNode.addNode("a");
@@ -103,6 +82,9 @@ public class ShareableNodeTest extends AbstractJCRTest {
         b.save();
     }
     
+    /**
+     * Clones a mix:shareable node to the same workspace.
+     */
     public void testClone() throws Exception {
         // setup parent nodes and first child 
         Node a1 = testRootNode.addNode("a1");
@@ -120,6 +102,10 @@ public class ShareableNodeTest extends AbstractJCRTest {
                 a2.getPath() + "/b2", true);
     }
     
+    /**
+     * Clones a mix:shareable node to the same workspace, with the same
+     * parent. This is unsupported in Jackrabbit.
+     */
     public void testCloneToSameParent() throws Exception {
         // setup parent nodes and first child 
         Node a = testRootNode.addNode("a");
@@ -142,6 +128,9 @@ public class ShareableNodeTest extends AbstractJCRTest {
         }
     }
 
+    /**
+     * Verifies that Node.getIndex returns the correct index in a shareable node.
+     */
     public void testGetIndex() throws Exception {
         // setup parent nodes and first child 
         Node a1 = testRootNode.addNode("a1");
@@ -173,6 +162,9 @@ public class ShareableNodeTest extends AbstractJCRTest {
         assertEquals(b2.getIndex(), 2);
     }
     
+    /**
+     * Verifies that Node.getName returns the correct name in a shareable node.
+     */
     public void testGetName() throws Exception {
         // setup parent nodes and first child 
         Node a1 = testRootNode.addNode("a1");
@@ -203,6 +195,9 @@ public class ShareableNodeTest extends AbstractJCRTest {
         assertEquals(b2.getName(), "b2");
     }
     
+    /**
+     * Verifies that Node.getPath returns the correct path in a shareable node.
+     */
     public void testGetPath() throws Exception {
         // setup parent nodes and first child 
         Node a1 = testRootNode.addNode("a1");
@@ -233,6 +228,10 @@ public class ShareableNodeTest extends AbstractJCRTest {
         assertEquals(b2.getPath(), "/testroot/a2/b2");
     }
 
+    /**
+     * Verifies that Node.isSame returns <code>true</code> for shareable nodes
+     * in the same shared set.
+     */
     public void testIsSame() throws Exception {
         // setup parent nodes and first child 
         Node a1 = testRootNode.addNode("a1");
@@ -263,6 +262,9 @@ public class ShareableNodeTest extends AbstractJCRTest {
         assertTrue(b2.isSame(b1));
     }
     
+    /**
+     * Checks Node.removeShare().
+     */
     public void testRemoveShare() throws Exception {
         // setup parent nodes and first child 
         Node a1 = testRootNode.addNode("a1");
@@ -296,6 +298,9 @@ public class ShareableNodeTest extends AbstractJCRTest {
         a1.save();
     }
 
+    /**
+     * Checks Node.removeSharedSet().
+     */
     public void testRemoveSharedSet() throws Exception {
         // setup parent nodes and first child 
         Node a1 = testRootNode.addNode("a1");
@@ -316,6 +321,10 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
     }
     
+    /**
+     * Invokes Node.removeSharedSet(), but saves only of the parent nodes of
+     * the shared set. This is illegal according to the specification (6.13.4).
+     */
     public void testRemoveSharedSetSaveOneParentOnly() throws Exception {
         // setup parent nodes and first child 
         Node a1 = testRootNode.addNode("a1");
@@ -342,6 +351,9 @@ public class ShareableNodeTest extends AbstractJCRTest {
         }
     }
 
+    /**
+     * Checks Node.getSharedSet().
+     */
     public void testIterateSharedSet() throws Exception {
         // setup parent nodes and first child 
         Node a1 = testRootNode.addNode("a1");
@@ -367,6 +379,9 @@ public class ShareableNodeTest extends AbstractJCRTest {
         assertEquals(items, 2);
     }
 
+    /**
+     * Moves a node in a shared set. This is unsupported in Jackrabbit.
+     */
     public void testMoveShareableNode() throws Exception {
         // setup parent nodes and first childs 
         Node a1 = testRootNode.addNode("a1");
@@ -389,6 +404,10 @@ public class ShareableNodeTest extends AbstractJCRTest {
         }
     }
     
+    /**
+     * Transiently moves a node in a shared set. This is unsupported in 
+     * Jackrabbit.
+     */
     public void testTransientMoveShareableNode() throws Exception {
         // setup parent nodes and first childs 
         Node a1 = testRootNode.addNode("a1");
@@ -412,6 +431,10 @@ public class ShareableNodeTest extends AbstractJCRTest {
         }
     }
 
+    /**
+     * Removes mix:shareable from a shareable node. This is unsupported in
+     * Jackrabbit.
+     */
     public void testRemoveMixin() throws Exception {
         // setup parent node and first child 
         Node a = testRootNode.addNode("a");
