@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Session;
 import javax.jcr.Node;
@@ -29,6 +31,11 @@ import java.lang.reflect.InvocationTargetException;
  * using concurrent threads.
  */
 public abstract class AbstractConcurrencyTest extends AbstractJCRTest {
+
+    /**
+     * Logger instance for this class.
+     */
+    private static final Logger log = LoggerFactory.getLogger(AbstractConcurrencyTest.class);
 
     /**
      * Runs a task with the given concurrency and creates an individual test
@@ -139,20 +146,22 @@ public abstract class AbstractConcurrencyTest extends AbstractJCRTest {
 
     /**
      * If tests are run in a 1.5 JVM or higher the stack of the given threads
-     * are dumped to system out.
+     * are dumped to the logger with level ERROR.
      */
     protected static void dumpStacks(Thread[] threads) {
         try {
             Method m = Thread.class.getMethod("getStackTrace", null);
+            StringBuffer dumps = new StringBuffer();
             for (int t = 0; t < threads.length; t++) {
                 StackTraceElement[] elements = (StackTraceElement[]) m.invoke(
                         threads[t], null);
-                System.out.println(threads[t]);
+                dumps.append(threads[t].toString()).append('\n');
                 for (int i = 0; i < elements.length; i++) {
-                    System.out.println("\tat " + elements[i]);
+                    dumps.append("\tat " + elements[i]).append('\n');
                 }
-                System.out.println();
+                dumps.append('\n');
             }
+            log.error("Thread dumps:\n{}", dumps);
         } catch (NoSuchMethodException e) {
             // not a 1.5 JVM
         } catch (IllegalAccessException e) {
