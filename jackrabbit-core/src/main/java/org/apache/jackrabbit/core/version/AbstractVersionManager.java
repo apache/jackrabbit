@@ -32,8 +32,6 @@ import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
@@ -287,16 +285,20 @@ abstract class AbstractVersionManager implements VersionManager {
     protected abstract boolean hasItem(NodeId id);
 
     /**
-     * Returns the item references that reference the given version item.
-     * Subclass responsiblity.
+     * Checks if there are item references (from outside the version storage)
+     * that reference the given version item. Subclass responsiblity.
      * <p/>
      * Please note, that the overridden method must aquire the readlock before
      * reading the state manager.
      *
      * @param item version item
-     * @return list of item references, may be empty.
+     * @return <code>true</code> if there are item references from outside the
+     *         version storage; <code>false</code> otherwise.
+     * @throws RepositoryException if an error occurs while reading from the
+     *                             repository.
      */
-    protected abstract List getItemReferences(InternalVersionItem item);
+    protected abstract boolean hasItemReferences(InternalVersionItem item)
+            throws RepositoryException;
 
     /**
      * Creates a new Version History.

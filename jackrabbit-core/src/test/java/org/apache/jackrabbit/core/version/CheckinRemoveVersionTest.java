@@ -36,6 +36,7 @@ public class CheckinRemoveVersionTest extends AbstractJCRTest {
         tx.begin();
         try {
             Version v10 = n.checkin();
+            assertTrue("Version.getReferences() must return base version", v10.getReferences().hasNext());
             try {
                 n.getVersionHistory().removeVersion(v10.getName());
                 fail("VersionHistory.removeVersion() must throw ReferentialIntegrityException when" +

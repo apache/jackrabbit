@@ -48,7 +48,6 @@ import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -343,8 +342,9 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * {@inheritDoc}
      */
-    protected List getItemReferences(InternalVersionItem item) {
-        return vMgr.getItemReferences(item);
+    protected boolean hasItemReferences(InternalVersionItem item)
+            throws RepositoryException {
+        return session.getNodeById(item.getId()).getReferences().hasNext();
     }
 
     /**
