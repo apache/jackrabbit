@@ -27,9 +27,6 @@ import javax.transaction.SystemException;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.RollbackException;
-import java.util.Collections;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * <code>ConcurrentCheckinMixedTransactionTest</code> performs concurrent
@@ -43,7 +40,6 @@ public class ConcurrentCheckinMixedTransactionTest
     private static final int RUN_NUM_SECONDS = 20;
 
     public void testCheckInOut() throws RepositoryException {
-        final List exceptions = Collections.synchronizedList(new ArrayList());
         final long end = System.currentTimeMillis() + RUN_NUM_SECONDS * 1000;
         // tasks with even ids run within transactions
         final int[] taskId = new int[1];
@@ -95,8 +91,5 @@ public class ConcurrentCheckinMixedTransactionTest
                 }
             }
         }, NUM_THREADS);
-        if (!exceptions.isEmpty()) {
-            fail(((RepositoryException) exceptions.get(0)).getMessage());
-        }
     }
 }
