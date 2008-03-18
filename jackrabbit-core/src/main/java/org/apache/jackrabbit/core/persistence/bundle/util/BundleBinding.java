@@ -131,6 +131,19 @@ public class BundleBinding extends ItemStateBinding {
         if (version >= VERSION_1) {
             bundle.setModCount(readModCount(in));
         }
+        
+        // read shared set, since version 2.0
+        Set sharedSet = new HashSet();
+        if (version >= VERSION_2) {
+            // shared set (list of parent uuids)
+            NodeId parentId = readID(in);
+            while (parentId != null) {
+                sharedSet.add(parentId);
+                parentId = readID(in);
+            }
+        }
+        bundle.setSharedSet(sharedSet);
+        
         return bundle;
     }
 
@@ -286,6 +299,13 @@ public class BundleBinding extends ItemStateBinding {
 
         // write mod count
         writeModCount(out, bundle.getModCount());
+        
+        // write shared set
+        iter = bundle.getSharedSet().iterator();
+        while (iter.hasNext()) {
+            writeID(out, (NodeId) iter.next());
+        }
+        writeID(out, null);
 
         // set size of bundle
         bundle.setSize(out.size() - size);

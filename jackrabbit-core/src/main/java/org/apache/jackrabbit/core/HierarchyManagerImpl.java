@@ -423,7 +423,6 @@ public class HierarchyManagerImpl implements HierarchyManager {
             throws ItemNotFoundException, RepositoryException {
         if (itemId.denotesNode()) {
             NodeId nodeId = (NodeId) itemId;
-            NodeState parentState;
             try {
                 NodeState nodeState = (NodeState) getItemState(nodeId);
                 NodeId parentId = getParentId(nodeState);
@@ -432,7 +431,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
                     // FIXME
                     return EMPTY_NAME;
                 }
-                parentState = (NodeState) getItemState(parentId);
+                return getName(nodeId, parentId);
             } catch (NoSuchItemStateException nsis) {
                 String msg = "failed to resolve name of " + nodeId;
                 log.debug(msg);
@@ -442,20 +441,41 @@ public class HierarchyManagerImpl implements HierarchyManager {
                 log.debug(msg);
                 throw new RepositoryException(msg, ise);
             }
-
-            NodeState.ChildNodeEntry entry =
-                    getChildNodeEntry(parentState, nodeId);
-            if (entry == null) {
-                String msg = "failed to resolve name of " + nodeId;
-                log.debug(msg);
-                throw new RepositoryException(msg);
-            }
-            return entry.getName();
         } else {
             return ((PropertyId) itemId).getName();
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public Name getName(NodeId id, NodeId parentId)
+            throws ItemNotFoundException, RepositoryException {
+
+        NodeState parentState;
+        
+        try {
+            parentState = (NodeState) getItemState(parentId);
+        } catch (NoSuchItemStateException nsis) {
+            String msg = "failed to resolve name of " + id;
+            log.debug(msg);
+            throw new ItemNotFoundException(id.toString());
+        } catch (ItemStateException ise) {
+            String msg = "failed to resolve name of " + id;
+            log.debug(msg);
+            throw new RepositoryException(msg, ise);
+        }
+
+        NodeState.ChildNodeEntry entry =
+                getChildNodeEntry(parentState, id);
+        if (entry == null) {
+            String msg = "failed to resolve name of " + id;
+            log.debug(msg);
+            throw new RepositoryException(msg);
+        }
+        return entry.getName();
+    }
+    
     /**
      * {@inheritDoc}
      */

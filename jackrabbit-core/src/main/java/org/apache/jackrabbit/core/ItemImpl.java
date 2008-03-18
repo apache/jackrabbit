@@ -54,6 +54,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -73,7 +74,7 @@ import java.util.Set;
 /**
  * <code>ItemImpl</code> implements the <code>Item</code> interface.
  */
-public abstract class ItemImpl implements Item, ItemStateListener {
+public abstract class ItemImpl implements Item {
 
     private static Logger log = LoggerFactory.getLogger(ItemImpl.class);
 
@@ -733,6 +734,47 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             }
         }
     }
+    
+    /**
+     * Process all items given in iterator and check whether <code>mix:shareable</code>
+     * or (some derived node type) has been added or removed:
+     * <ul>
+     * <li>If the mixin <code>mix:shareable</code> (or some derived node type),
+     * then initialize the shared set inside the state.</li>
+     * <li>If the mixin <code>mix:shareable</code> (or some derived node type)
+     * has been removed, throw.</li>
+     * </ul>
+     */
+    private void processShareableNodes(Iterator iter) throws RepositoryException {
+        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+        ItemValidator validator = new ItemValidator(ntMgr.getNodeTypeRegistry(),
+                session.getHierarchyManager(), session);
+        while (iter.hasNext()) {
+            ItemState is = (ItemState) iter.next();
+            if (is.isNode()) {
+                NodeState ns = (NodeState) is;
+                boolean wasShareable = false;
+                if (ns.hasOverlayedState()) {
+                    NodeState old = (NodeState) ns.getOverlayedState();
+                    EffectiveNodeType ntOld = validator.getEffectiveNodeType(old);
+                    wasShareable = ntOld.includesNodeType(NameConstants.MIX_SHAREABLE);
+                }
+                EffectiveNodeType ntNew = validator.getEffectiveNodeType(ns);
+                boolean isShareable = ntNew.includesNodeType(NameConstants.MIX_SHAREABLE);
+
+                if (!wasShareable && isShareable) {
+                    // mix:shareable has been added
+                    ns.addShare(ns.getParentId());
+                    
+                } else if (wasShareable && !isShareable) {
+                    // mix:shareable has been removed: not supported
+                    String msg = "Removing mix:shareable is not supported.";
+                    log.debug(msg);
+                    throw new UnsupportedRepositoryOperationException(msg);
+                }
+            }
+        }
+    }
 
     /**
      * Initializes the version history of all new nodes of node type
@@ -1113,7 +1155,11 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                             if (newParentId == null) {
                                 // node has been removed, add old parent
                                 // to dependencies
-                                dependentIDs.add(oldParentId);
+                                if (overlayedState.isShareable()) {
+                                    dependentIDs.addAll(overlayedState.getSharedSet());
+                                } else {
+                                    dependentIDs.add(oldParentId);
+                                }
                             } else {
                                 if (!oldParentId.equals(newParentId)) {
                                     // node has been moved to a new location,
@@ -1209,6 +1255,9 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
                 // process transient items marked as 'removed'
                 removeTransientItems(removed.iterator());
+                
+                // process transient items that have change in mixins
+                processShareableNodes(dirty.iterator());
 
                 // initialize version histories for new nodes (might generate new transient state)
                 if (initVersionHistories(dirty.iterator())) {

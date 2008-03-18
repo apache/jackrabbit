@@ -93,6 +93,19 @@ public interface HierarchyManager {
      * @throws RepositoryException
      */
     Name getName(ItemId id) throws ItemNotFoundException, RepositoryException;
+    
+    /**
+     * Returns the name of the specified item, with the given parent id. If the
+     * given item is not shareable, this is identical to {@link #getName(ItemId)}.
+     * 
+     * @param id node id
+     * @param parentId parent node id
+     * @return name
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
+     */
+    Name getName(NodeId id, NodeId parentId) 
+            throws ItemNotFoundException, RepositoryException;
 
     /**
      * Returns the depth of the specified item which is equivalent to

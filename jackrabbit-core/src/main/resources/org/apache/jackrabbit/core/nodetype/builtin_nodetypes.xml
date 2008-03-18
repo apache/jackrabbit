@@ -335,6 +335,11 @@ commented out by default.
         </propertyDefinition>
         <propertyDefinition name="jcr:mergeFailed" requiredType="Reference" autoCreated="false" mandatory="false" onParentVersion="ABORT" protected="true" multiple="true" />
     </nodeType>
+    <nodeType name="mix:shareable" isMixin="true" hasOrderableChildNodes="false" primaryItemName="">
+        <supertypes>
+            <supertype>mix:referenceable</supertype>
+        </supertypes>
+    </nodeType>
 
     <!-- internal node types -->
     <nodeType name="rep:root" isMixin="false" hasOrderableChildNodes="true" primaryItemName="">

@@ -92,7 +92,12 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      * A cache for item instances created by this <code>ItemManager</code>
      */
     private final Map itemCache;
-
+    
+    /**
+     * Shareable node cache.
+     */
+    private final ShareableNodesCache shareableNodesCache;
+    
     /**
      * Creates a new per-session instance <code>ItemManager</code> instance.
      *
@@ -115,6 +120,9 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         // setup item cache with weak references to items
         itemCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
         itemStateProvider.addListener(this);
+        
+        // setup shareable nodes cache
+        shareableNodesCache = new ShareableNodesCache();
     }
 
     /**
@@ -124,6 +132,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         synchronized (itemCache) {
             itemCache.clear();
         }
+        shareableNodesCache.clear();
     }
 
     private NodeDefinition getDefinition(NodeState state)
@@ -398,6 +407,31 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
     }
 
     /**
+     * Returns a shareble node with a given id and parent id.
+     * @param id
+     * @return
+     * @throws RepositoryException
+     */
+    public synchronized NodeImpl getNode(NodeId id, NodeId parentId)
+            throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+        // check sanity of session
+        session.sanityCheck();
+        
+        // check shareable nodes
+        NodeImpl node = shareableNodesCache.retrieve(id, parentId);
+        if (node != null) {
+            return node;
+        }
+        
+        node = (NodeImpl) getItem(id);
+        if (!node.getParentId().equals(parentId)) {
+            node = new NodeImpl(node, parentId);
+            shareableNodesCache.cache(node);
+        }
+        return node;
+    }
+
+    /**
      * Returns the item instance for the given item state.
      * @param state the item state
      * @return the item instance for the given item <code>state</code>.
@@ -669,7 +703,11 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      */
     private ItemImpl retrieveItem(ItemId id) {
         synchronized (itemCache) {
-            return (ItemImpl) itemCache.get(id);
+            ItemImpl item = (ItemImpl) itemCache.get(id);
+            if (item == null && id.denotesNode()) {
+                item = shareableNodesCache.retrieve((NodeId) id);
+            }
+            return item;
         }
     }
 
@@ -750,6 +788,13 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
             log.debug("created item " + item.getId());
         }
         // add instance to cache
+        if (item.isNode()) {
+            NodeImpl node = (NodeImpl) item;
+            if (node.isShareable()) {
+                shareableNodesCache.cache(node);
+                return;
+            }
+        }
         cacheItem(item);
     }
 
@@ -762,6 +807,9 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         }
         // remove instance from cache
         evictItem(id);
+        if (item.isNode()) {
+            shareableNodesCache.evict((NodeImpl) item);
+        }
     }
 
     /**
@@ -775,6 +823,9 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         item.removeLifeCycleListener(this);
         // remove instance from cache
         evictItem(id);
+        if (item.isNode()) {
+            shareableNodesCache.evict((NodeImpl) item);
+        }
     }
 
     //-------------------------------------------------------------< Dumpable >
@@ -845,6 +896,155 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         ItemImpl item = retrieveItem(discarded.getId());
         if (item != null) {
             item.stateDiscarded(discarded);
+        }
+    }
+    
+    /**
+     * Invoked by a <code>NodeImpl</code> when it is has become transient
+     * and has therefore replaced its state. Will inform all other nodes
+     * in the shareable set about this change.
+     */
+    public void becameTransient(NodeImpl node) {
+        NodeState state = (NodeState) node.getItemState();
+        
+        NodeImpl n = (NodeImpl) retrieveItem(node.getId());
+        if (n != null && n != node) {
+            n.stateReplaced(state);
+        }
+        shareableNodesCache.stateReplaced(node);
+    }
+
+    /**
+     * Invoked by a <code>NodeImpl</code> when it is has become transient
+     * and has therefore replaced its state. Will inform all other nodes
+     * in the shareable set about this change.
+     */
+    public void persisted(NodeImpl node) {
+        NodeState state = (NodeState) node.getItemState();
+        
+        NodeImpl n = (NodeImpl) retrieveItem(node.getId());
+        if (n != null && n != node) {
+            n.stateReplaced(state);
+        }
+        shareableNodesCache.stateReplaced(node);
+    }
+    
+    /**
+     * Cache of shareable nodes.
+     */
+    class ShareableNodesCache {
+        
+        /**
+         * This cache is based on a reference map, that maps an item id to a map,
+         * which again maps a (hard-ref) parent id to a (weak-ref) shareable node.
+         */
+        private final ReferenceMap cache;
+        
+        /**
+         * Create a new instance of this class.
+         */
+        public ShareableNodesCache() {
+            cache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.HARD);
+        }
+        
+        /**
+         * Clear cache.
+         * 
+         * @see ReferenceMap#clear()
+         */
+        public void clear() {
+            cache.clear();
+        }
+
+        /**
+         * Return the first available node that maps to the given id.
+         * 
+         * @param id node id
+         * @return node or <code>null</code>
+         */
+        public synchronized NodeImpl retrieve(NodeId id) {
+            ReferenceMap map = (ReferenceMap) cache.get(id);
+            if (map != null) {
+                Iterator iter = map.values().iterator();
+                while (iter.hasNext()) {
+                    NodeImpl node = (NodeImpl) iter.next();
+                    if (node != null) {
+                        return node;
+                    }
+                }
+            }
+            return null;
+        }
+
+        /**
+         * Return the node with the given id and parent id.
+         * 
+         * @param id node id
+         * @param parentId parent id
+         * @return node or <code>null</code>
+         */
+        public synchronized NodeImpl retrieve(NodeId id, NodeId parentId) {
+            ReferenceMap map = (ReferenceMap) cache.get(id);
+            if (map != null) {
+                return (NodeImpl) map.get(parentId);
+            }
+            return null;
+        }
+        
+        /**
+         * Cache some node.
+         * 
+         * @param node node to cache
+         */
+        public synchronized void cache(NodeImpl node) {
+            ReferenceMap map = (ReferenceMap) cache.get(node.getId());
+            if (map == null) {
+                map = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+                cache.put(node.getId(), map);
+            }
+            Object old = map.put(node.getParentId(), node);
+            if (old != null) {
+                log.warn("overwriting cached item: " + old);
+            }
+        }
+        
+        /**
+         * Evict some node from the cache.
+         * 
+         * @param node node to evict
+         */
+        public synchronized void evict(NodeImpl node) {
+            ReferenceMap map = (ReferenceMap) cache.get(node.getId());
+            if (map != null) {
+                map.remove(node.getParentId());
+            }
+        }
+        
+        /**
+         * Evict all nodes with a given node id from the cache.
+         * 
+         * @param id node id to evict
+         */
+        public synchronized void evictAll(NodeId id) {
+            cache.remove(id);
+        }
+
+        /**
+         * TODO SN: document
+         */
+        public synchronized void stateReplaced(NodeImpl node) {
+            NodeState state = (NodeState) node.getItemState();
+
+            ReferenceMap map = (ReferenceMap) cache.get(node.getId());
+            if (map != null) {
+                Iterator iter = map.values().iterator();
+                while (iter.hasNext()) {
+                    NodeImpl n = (NodeImpl) iter.next();
+                    if (n != null && n != node) {
+                        n.stateReplaced(state);
+                    }
+                }
+            }
         }
     }
 }

@@ -110,6 +110,11 @@ public class NodeImpl extends ItemImpl implements Node {
 
     /** the definition of this node */
     protected NodeDefinition definition;
+    
+    /**
+     * Parent id, if this is a shareable node, <code>null</code> otherwise.
+     */
+    private NodeId parentId;
 
     // flag set in status passed to getOrCreateProperty if property was created
     protected static final short CREATED = 0;
@@ -144,6 +149,20 @@ public class NodeImpl extends ItemImpl implements Node {
         }
     }
 
+    /**
+     * Protected constructor. Used when creating a node that is a shared
+     * sibling of another node, and that has the same properties, children nodes,
+     * etc. as the other node.
+     */
+    protected NodeImpl(NodeImpl sharedSibling, NodeId parentId) {
+        super(sharedSibling.itemMgr, sharedSibling.session, 
+                sharedSibling.id, sharedSibling.state, null);
+        
+        this.definition = sharedSibling.definition;
+        this.primaryTypeName = sharedSibling.primaryTypeName;
+        this.parentId = parentId;
+    }
+    
     /**
      * Returns the id of the property at <code>relPath</code> or <code>null</code>
      * if no property exists at <code>relPath</code>.
@@ -263,6 +282,9 @@ public class NodeImpl extends ItemImpl implements Node {
                         stateMgr.createTransientNodeState((NodeState) state, ItemState.STATUS_EXISTING_MODIFIED);
                 // replace persistent with transient state
                 state = transientState;
+                if (isShareable()) {
+                    itemMgr.becameTransient(this);
+                }
             } catch (ItemStateException ise) {
                 String msg = "failed to create transient state";
                 log.debug(msg);
@@ -600,7 +622,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // notify target of removal
         NodeId childId = entry.getId();
         NodeImpl childNode = (NodeImpl) itemMgr.getItem(childId);
-        childNode.onRemove();
+        childNode.onRemove(getNodeId());
 
         // remove the child node entry
         if (!thisState.removeChildNodeEntry(nodeName, index)) {
@@ -621,10 +643,25 @@ public class NodeImpl extends ItemImpl implements Node {
         definition = newDef;
     }
 
-    protected void onRemove() throws RepositoryException {
+    protected void onRemove(NodeId parentId) throws RepositoryException {
         // modify the state of 'this', i.e. the target node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
 
+        // remove this node from its shared set
+        if (thisState.isShareable()) {
+            if (thisState.removeShare(parentId) > 0) {
+                // this state is still connected to some parents, so
+                // leave the child node entries and properties
+                
+                // set state of this instance to 'invalid'
+                status = STATUS_INVALIDATED;
+                // notify the listeners that this instance has been
+                // temporarily invalidated
+                notifyInvalidated();
+                return;
+            }
+        }
+        
         if (thisState.hasChildNodeEntries()) {
             // remove child nodes
             // use temp array to avoid ConcurrentModificationException
@@ -636,7 +673,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 // recursively remove child node
                 NodeId childId = entry.getId();
                 NodeImpl childNode = (NodeImpl) itemMgr.getItem(childId);
-                childNode.onRemove();
+                childNode.onRemove(thisState.getNodeId());
                 // remove the child node entry
                 thisState.removeChildNodeEntry(entry.getName(), entry.getIndex());
             }
@@ -949,6 +986,8 @@ public class NodeImpl extends ItemImpl implements Node {
             persistentState.setChildNodeEntries(transientState.getChildNodeEntries());
             // property entries
             persistentState.setPropertyNames(transientState.getPropertyNames());
+            // shared set
+            persistentState.setSharedSet(transientState.getSharedSet());
 
             // make state persistent
             stateMgr.store(persistentState);
@@ -960,6 +999,10 @@ public class NodeImpl extends ItemImpl implements Node {
         state = persistentState;
         // reset status
         status = STATUS_NORMAL;
+        
+        if (isShareable()) {
+            itemMgr.persisted(this);
+        }
     }
 
     protected void restoreTransient(NodeState transientState)
@@ -976,6 +1019,7 @@ public class NodeImpl extends ItemImpl implements Node {
         thisState.setDefinitionId(transientState.getDefinitionId());
         thisState.setChildNodeEntries(transientState.getChildNodeEntries());
         thisState.setPropertyNames(transientState.getPropertyNames());
+        thisState.setSharedSet(transientState.getSharedSet());
     }
 
     /**
@@ -1928,7 +1972,15 @@ public class NodeImpl extends ItemImpl implements Node {
             return "";
         }
 
-        return session.getJCRName(session.getHierarchyManager().getName(id));
+        HierarchyManager hierMgr = session.getHierarchyManager();
+        Name name;
+        
+        if (!isShareable()) {
+            name = hierMgr.getName(id);
+        } else {
+            name = hierMgr.getName(getNodeId(), getParentId());
+        }
+        return session.getJCRName(name);
     }
 
     /**
@@ -1949,14 +2001,17 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // check if root node
-        NodeId parentId = state.getParentId();
+        // check if shareable node
+        NodeId parentId = this.parentId;
         if (parentId == null) {
-            String msg = "root node doesn't have a parent";
-            log.debug(msg);
-            throw new ItemNotFoundException(msg);
+            // check if root node
+            parentId = state.getParentId();
+            if (parentId == null) {
+                String msg = "root node doesn't have a parent";
+                log.debug(msg);
+                throw new ItemNotFoundException(msg);
+            }
         }
-
         return (Node) itemMgr.getItem(parentId);
     }
 
@@ -2904,7 +2959,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        NodeId parentId = state.getParentId();
+        NodeId parentId = getParentId();
         if (parentId == null) {
             // the root node cannot have same-name siblings; always return 1
             return 1;
@@ -2922,6 +2977,166 @@ public class NodeImpl extends ItemImpl implements Node {
             log.error(msg, ise);
             throw new RepositoryException(msg, ise);
         }
+    }
+    
+    //-------------------------------------------------------< shareable nodes >
+    
+    /**
+     * Returns an iterator over all nodes that are in the shared set of this
+     * node. If this node is not shared then the returned iterator contains
+     * only this node.
+     *  
+     * @return a <code>NodeIterator</code>
+     * @throws RepositoryException if an error occurs.
+     * @since JCR 2.0
+     */
+    public NodeIterator getSharedSet() throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+        
+        ArrayList list = new ArrayList();
+        
+        if (!isShareable()) {
+            list.add(this);
+        } else {
+            NodeState state = (NodeState) this.state;
+            Iterator iter = state.getSharedSet().iterator();
+            while (iter.hasNext()) {
+                NodeId parentId = (NodeId) iter.next();
+                list.add(itemMgr.getNode(getNodeId(), parentId));
+            }
+        }
+        return new NodeIteratorAdapter(list);
+    }
+
+    /**
+     * A special kind of <code>remove()</code> that removes this node and every
+     * other node in the shared set of this node.
+     * <p/>
+     * This removal must be done atomically, i.e., if one of the nodes cannot be
+     * removed, the function throws the exception <code>remove()</code> would
+     * have thrown in that case, and none of the nodes are removed.
+     * <p/>
+     * If this node is not shared this method removes only this node.
+     *
+     * @throws VersionException
+     * @throws LockException
+     * @throws ConstraintViolationException
+     * @throws RepositoryException
+     * @see #removeShare()
+     * @see Item#remove()
+     * @since JCR 2.0
+     */
+    public void removeSharedSet() throws VersionException, LockException, 
+            ConstraintViolationException, RepositoryException {
+        
+        // check state of this instance
+        sanityCheck();
+
+        NodeIterator iter = getSharedSet();
+        while (iter.hasNext()) {
+            ((NodeImpl) iter.nextNode()).removeShare();
+        }
+    }
+
+    /**
+     * A special kind of <code>remove()</code> that removes this node, but does
+     * not remove any other node in the shared set of this node.
+     * <p/>
+     * All of the exceptions defined for <code>remove()</code> apply to this
+     * function. In addition, a <code>RepositoryException</code> is thrown if
+     * this node cannot be removed without removing another node in the shared
+     * set of this node.
+     * <p/>
+     * If this node is not shared this method removes only this node.
+     *
+     * @throws VersionException
+     * @throws LockException
+     * @throws ConstraintViolationException
+     * @throws RepositoryException
+     * @see #removeSharedSet()
+     * @see Item#remove()
+     * @since JCR 2.0
+     */
+    public void removeShare() throws VersionException, LockException, 
+            ConstraintViolationException, RepositoryException {
+        
+        // check state of this instance
+        sanityCheck();
+
+        // Standard remove() will remove just this node 
+        remove();
+    }
+    
+    /**
+     * Helper method, returning a flag that indicates whether this node is
+     * shareable.
+     * 
+     * @return <code>true</code> if this node is shareable;
+     *         <code>false</code> otherwise.
+     * @see NodeState#isShareable()
+     */
+    protected boolean isShareable() {
+       return ((NodeState) state).isShareable(); 
+    }
+    
+    /**
+     * Helper method, returning the parent id this shareable node is attached
+     * to.
+     * 
+     * @return parent id
+     */
+    public NodeId getParentId() {
+        if (parentId != null) {
+            return parentId;
+        }
+        return state.getParentId();
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * Overridden to return a different path for shareable nodes.
+     * 
+     * TODO SN: copies functionality in that is already available in
+     *          HierarchyManagerImpl, namely composing a path by
+     *          concatenating the parent path + this node's name and index:
+     *          rather use hierarchy manager to do this
+     */
+    public Path getPrimaryPath() throws RepositoryException {
+        if (!isShareable()) {
+            return super.getPrimaryPath();
+        }
+        
+        NodeId parentId = getParentId();
+        NodeImpl parentNode = (NodeImpl) getParent();
+        Path parentPath = parentNode.getPrimaryPath();
+        PathBuilder builder = new PathBuilder(parentPath);
+
+        NodeState.ChildNodeEntry entry = ((NodeState) parentNode.getItemState()).
+                getChildNodeEntry(getNodeId());
+        if (entry == null) {
+            String msg = "failed to build path of " + state.getId() + ": "
+                    + parentId + " has no child entry for "
+                    + id;
+            log.debug(msg);
+            throw new ItemNotFoundException(msg);
+        }
+        // add to path
+        if (entry.getIndex() == 1) {
+            builder.addLast(entry.getName());
+        } else {
+            builder.addLast(entry.getName(), entry.getIndex());
+        }
+        return builder.getPath();
+    }
+    
+    /**
+     * Invoked when another node in the same shared set has replaced the
+     * node state.
+     */
+    protected void stateReplaced(NodeState state) {
+        this.state = state;
     }
 
     //------------------------------< versioning support: public Node methods >
