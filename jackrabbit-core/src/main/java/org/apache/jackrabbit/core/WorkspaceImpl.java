@@ -404,6 +404,79 @@ public class WorkspaceImpl extends AbstractWorkspace
             }
         }
     }
+    
+    /**
+     * Handles a clone inside the same workspace, which is supported with
+     * shareable nodes.
+     * 
+     * @see {@link #clone()}
+     * 
+     * @param srcAbsPath source path
+     * @param destAbsPath destination path
+     * @return the path of the node at its new position
+     * @throws ConstraintViolationException
+     * @throws AccessDeniedException
+     * @throws VersionException
+     * @throws PathNotFoundException
+     * @throws ItemExistsException
+     * @throws LockException
+     * @throws RepositoryException
+     */
+    private String internalClone(String srcAbsPath, String destAbsPath)
+            throws ConstraintViolationException, AccessDeniedException,
+                   VersionException, PathNotFoundException, ItemExistsException,
+                   LockException, RepositoryException {
+        
+        Path srcPath;
+        try {
+            srcPath = session.getQPath(srcAbsPath).getNormalizedPath();
+        } catch (NameException e) {
+            String msg = "invalid path: " + srcAbsPath;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+        if (!srcPath.isAbsolute()) {
+            throw new RepositoryException("not an absolute path: " + srcAbsPath);
+        }
+
+        Path destPath;
+        try {
+            destPath = session.getQPath(destAbsPath).getNormalizedPath();
+        } catch (NameException e) {
+            String msg = "invalid path: " + destAbsPath;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+        if (!destPath.isAbsolute()) {
+            throw new RepositoryException("not an absolute path: " + destAbsPath);
+        }
+
+        BatchedItemOperations ops = new BatchedItemOperations(
+                stateMgr, rep.getNodeTypeRegistry(), session.getLockManager(),
+                session, hierMgr);
+
+        try {
+            ops.edit();
+        } catch (IllegalStateException e) {
+            String msg = "unable to start edit operation";
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+
+        boolean succeeded = false;
+
+        try {
+            ItemId id = ops.clone(srcPath, destPath);
+            ops.update();
+            succeeded = true;
+            return session.getJCRPath(hierMgr.getPath(id));
+        } finally {
+            if (!succeeded) {
+                // update operation failed, cancel all modifications
+                ops.cancel();
+            }
+        }
+    }
 
     /**
      * Return the lock manager for this workspace. If not already done, creates
@@ -1016,10 +1089,8 @@ public class WorkspaceImpl extends AbstractWorkspace
 
         // check workspace name
         if (getName().equals(srcWorkspace)) {
-            // same as current workspace
-            String msg = srcWorkspace + ": illegal workspace (same as current)";
-            log.debug(msg);
-            throw new RepositoryException(msg);
+            // same as current workspace: is allowed for mix:shareable nodes
+            return internalClone(srcAbsPath, destAbsPath);
         }
 
         // check authorization for specified workspace

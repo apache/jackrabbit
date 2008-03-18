@@ -109,6 +109,12 @@ public class NodePropBundle {
      * the size
      */
     private long size = 0;
+    
+    /**
+     * Shared set, consisting of the parent ids of this shareable node. This
+     * entry is <code>null</code> if this node is not shareable.
+     */
+    private Set sharedSet;
 
     /**
      * Creates a "new" bundle with the given id
@@ -152,6 +158,7 @@ public class NodePropBundle {
             NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) iter.next();
             addChildNodeEntry(cne.getName(), cne.getId());
         }
+        sharedSet = state.getSharedSet();
     }
 
     /**
@@ -182,7 +189,10 @@ public class NodePropBundle {
         if (isReferenceable) {
             state.addPropertyName(NameConstants.JCR_UUID);
         }
-
+        iter = sharedSet.iterator();
+        while (iter.hasNext()) {
+            state.addShare((NodeId) iter.next());
+        }
         return state;
     }
 
@@ -422,6 +432,22 @@ public class NodePropBundle {
         if (pe != null) {
             pe.destroy(binding.getBlobStore());
         }
+    }
+    
+    /**
+     * Sets the shared set of this bundle.
+     * @return the shared set of this bundle.
+     */
+    public Set getSharedSet() {
+        return sharedSet;
+    }
+
+    /**
+     * Sets the shared set.
+     * @param sharedSet shared set
+     */
+    public void setSharedSet(Set sharedSet) {
+        this.sharedSet = sharedSet;
     }
 
     /**

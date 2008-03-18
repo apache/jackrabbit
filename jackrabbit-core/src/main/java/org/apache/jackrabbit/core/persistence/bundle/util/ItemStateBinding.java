@@ -49,9 +49,14 @@ public class ItemStateBinding {
     public static final int VERSION_1 = 1;
 
     /**
+     * serialization version 2
+     */
+    public static final int VERSION_2 = 2;
+
+    /**
      * current version
      */
-    public static final int VERSION_CURRENT = VERSION_1;
+    public static final int VERSION_CURRENT = VERSION_2;
 
     /**
      * the namespace index
@@ -220,6 +225,13 @@ public class ItemStateBinding {
         if (version >= VERSION_1) {
             state.setModCount(readModCount(in));
         }
+        if (version >= VERSION_2) {
+            // shared set (list of parent uuids)
+            count = in.readInt();   // count
+            for (int i = 0; i < count; i++) {
+                state.addShare(readID(in));
+            }
+        }
         return state;
     }
 
@@ -261,6 +273,13 @@ public class ItemStateBinding {
             writeID(out, entry.getId());  // uuid
         }
         writeModCount(out, state.getModCount());
+        
+        // shared set (list of parent uuids)
+        c = state.getSharedSet();
+        out.writeInt(c.size()); // count
+        for (Iterator iter = c.iterator(); iter.hasNext();) {
+            writeID(out, (NodeId) iter.next());
+        }
     }
 
     /**

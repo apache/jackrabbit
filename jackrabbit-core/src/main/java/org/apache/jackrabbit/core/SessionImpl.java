@@ -1624,6 +1624,13 @@ public class SessionImpl extends AbstractSession
             // do rename
             destParentNode.renameChildNode(srcName.getName(), index, targetId, destName.getName());
         } else {
+            // check shareable case
+            if (((NodeState) targetNode.getItemState()).isShareable()) {
+                String msg = "Moving a shareable node is not supported.";
+                log.debug(msg);
+                throw new UnsupportedRepositoryOperationException(msg);
+            }
+            
             // do move:
             // 1. remove child node entry from old parent
             NodeState srcParentState =
