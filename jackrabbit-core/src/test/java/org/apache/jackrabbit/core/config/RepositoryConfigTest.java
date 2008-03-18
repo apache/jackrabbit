@@ -60,8 +60,7 @@ public class RepositoryConfigTest extends TestCase {
 
         // Copy the repository configuration file in place
         ClassLoader loader = getClass().getClassLoader();
-        InputStream input = loader.getResourceAsStream(
-                "org/apache/jackrabbit/core/config/repository.xml");
+        InputStream input = loader.getResourceAsStream("org/apache/jackrabbit/core/repository.xml");
         try {
             OutputStream output = new FileOutputStream(REPOSITORY_XML);
             try {
@@ -189,9 +188,8 @@ public class RepositoryConfigTest extends TestCase {
         VersioningConfig vc = config.getVersioningConfig();
         assertEquals(new File(REPOSITORY_HOME, "version"), vc.getHomeDir());
         assertEquals(
-                "org.apache.jackrabbit.core.persistence.obj.ObjectPersistenceManager",
+                "org.apache.jackrabbit.core.persistence.bundle.DerbyPersistenceManager",
                 vc.getPersistenceManagerConfig().getClassName());
-        assertTrue(vc.getPersistenceManagerConfig().getParameters().isEmpty());
     }
 
     public void testInit() throws Exception {
