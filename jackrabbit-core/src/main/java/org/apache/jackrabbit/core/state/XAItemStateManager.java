@@ -284,8 +284,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
             return true;
         }
         try {
-            NodeReferences refs = getReferences(id);
-            return refs.getReferences().size() > 0;
+            return getReferences(id).hasReferences();
         } catch (ItemStateException e) {
             return false;
         }
