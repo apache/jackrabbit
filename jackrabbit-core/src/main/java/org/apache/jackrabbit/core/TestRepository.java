@@ -42,7 +42,7 @@ public class TestRepository {
      * The test repository configuration is located inside the Jackrabbit
      * jar file to enforce a standard test environment.
      */
-    private static final String CONF_RESOURCE = "test-repository.xml";
+    private static final String CONF_RESOURCE = "repository.xml";
 
     /**
      * Name of the system property that can be used to override the
