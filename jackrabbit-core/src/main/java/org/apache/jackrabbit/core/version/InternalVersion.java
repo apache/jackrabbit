@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.core.NodeId;
 
 import java.util.Calendar;
 
@@ -39,6 +40,13 @@ public interface InternalVersion extends InternalVersionItem {
      * @return the frozen node.
      */
     InternalFrozenNode getFrozenNode();
+
+    /**
+     * Returns the node id of the frozen node.
+     *
+     * @return the node id of the frozen node;
+     */
+    NodeId getFrozenNodeId();
 
     /**
      * Equivalent to {@link Version#getCreated()}
