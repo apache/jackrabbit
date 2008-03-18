@@ -35,7 +35,7 @@ public abstract class AbstractConcurrencyTest extends AbstractJCRTest {
     /**
      * Logger instance for this class.
      */
-    private static final Logger log = LoggerFactory.getLogger(AbstractConcurrencyTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractConcurrencyTest.class);
 
     /**
      * Runs a task with the given concurrency and creates an individual test
@@ -161,7 +161,7 @@ public abstract class AbstractConcurrencyTest extends AbstractJCRTest {
                 }
                 dumps.append('\n');
             }
-            log.error("Thread dumps:\n{}", dumps);
+            logger.error("Thread dumps:\n{}", dumps);
         } catch (NoSuchMethodException e) {
             // not a 1.5 JVM
         } catch (IllegalAccessException e) {
