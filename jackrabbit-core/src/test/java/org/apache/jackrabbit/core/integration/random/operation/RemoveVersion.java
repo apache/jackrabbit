@@ -38,8 +38,7 @@ public class RemoveVersion extends VersionOperation {
     public NodeIterator execute() throws Exception {
         Node n = getNode();
         Version v = getRandomVersion(true);
-        // TODO: for now only remove version without labels, see: JCR-1475
-        if (v != null && v.getContainingHistory().getVersionLabels(v).length == 0) {
+        if (v != null) {
             log.info(n.getPath() + ":" + v.getName());
             n.getVersionHistory().removeVersion(v.getName());
         }
