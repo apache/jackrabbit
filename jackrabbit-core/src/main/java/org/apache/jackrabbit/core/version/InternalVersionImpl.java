@@ -108,14 +108,21 @@ class InternalVersionImpl extends InternalVersionItemImpl
     public InternalFrozenNode getFrozenNode() {
         // get frozen node
         try {
-            NodeState.ChildNodeEntry entry = node.getState().getChildNodeEntry(NameConstants.JCR_FROZENNODE, 1);
-            if (entry == null) {
-                throw new InternalError("version has no frozen node: " + getId());
-            }
-            return (InternalFrozenNode) vMgr.getItem(entry.getId());
+            return (InternalFrozenNode) vMgr.getItem(getFrozenNodeId());
         } catch (RepositoryException e) {
             throw new IllegalStateException("unable to retrieve frozen node: " + e);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public NodeId getFrozenNodeId() {
+        NodeState.ChildNodeEntry entry = node.getState().getChildNodeEntry(NameConstants.JCR_FROZENNODE, 1);
+        if (entry == null) {
+            throw new InternalError("version has no frozen node: " + getId());
+        }
+        return entry.getId();
     }
 
     /**

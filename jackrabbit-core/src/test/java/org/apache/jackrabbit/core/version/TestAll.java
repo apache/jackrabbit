@@ -16,27 +16,27 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.core.UserTransactionImpl;
-
-import javax.jcr.Node;
-import javax.jcr.version.Version;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 /**
- * Test case for JCR-1476.
+ * Test suite that includes all jackrabbit core version tests.
  */
-public class RestoreTest extends AbstractJCRTest {
+public class TestAll extends TestCase {
 
-    public void testRestoreWithXA() throws Exception {
-        Node n = testRootNode.addNode(nodeName1);
-        n.addMixin(mixVersionable);
-        testRootNode.save();
-        UserTransactionImpl tx = new UserTransactionImpl(superuser);
-        tx.begin();
-        Version v10 = n.checkin();
-        String versionName = v10.getName();
-        n.restore(v10, true);
-        assertEquals("Wrong version restored", versionName, n.getBaseVersion().getName());
-        tx.commit();
+    /**
+     * Returns a test suite that executes all tests inside this package.
+     *
+     * @return a test suite that executes all tests inside this package
+     */
+    public static Test suite() {
+        TestSuite suite = new TestSuite("Version tests");
+        // disabled because JCR-1481 is not yet fixed
+        //suite.addTestSuite(CheckinRemoveVersionTest.class);
+        suite.addTestSuite(RemoveVersionLabelTest.class);
+        suite.addTestSuite(RestoreTest.class);
+        suite.addTestSuite(VersionIteratorImplTest.class);
+        return suite;
     }
 }

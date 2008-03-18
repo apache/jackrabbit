@@ -75,11 +75,6 @@ public class XAVersionManager extends AbstractVersionManager
     private final VersionManagerImpl vMgr;
 
     /**
-     * Node type registry.
-     */
-    private NodeTypeRegistry ntReg;
-
-    /**
      * The session that uses this version manager.
      */
     private SessionImpl session;
@@ -100,9 +95,8 @@ public class XAVersionManager extends AbstractVersionManager
     public XAVersionManager(VersionManagerImpl vMgr, NodeTypeRegistry ntReg,
                             SessionImpl session, ItemStateCacheFactory cacheFactory)
             throws RepositoryException {
-
+        super(ntReg);
         this.vMgr = vMgr;
-        this.ntReg = ntReg;
         this.session = session;
         this.stateMgr = new XAItemStateManager(vMgr.getSharedStateMgr(),
                 this, CHANGE_LOG_ATTRIBUTE_NAME, cacheFactory);
@@ -366,7 +360,13 @@ public class XAVersionManager extends AbstractVersionManager
             history = makeLocalCopy(history);
             xaItems.put(history.getId(), history);
         }
-        return super.checkin(history, node);
+        InternalVersion version = super.checkin(history, node);
+        NodeId frozenNodeId = version.getFrozenNodeId();
+        InternalVersionItem frozenNode = createInternalVersionItem(frozenNodeId);
+        if (frozenNode != null) {
+            xaItems.put(frozenNodeId, frozenNode);
+        }
+        return version;
     }
 
     /**
