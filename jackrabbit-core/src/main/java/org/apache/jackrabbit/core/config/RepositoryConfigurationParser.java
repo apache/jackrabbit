@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import java.io.File;
-import java.util.Properties;
-
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+
+import java.io.File;
+import java.util.Properties;
 
 /**
  * Configuration parser. This class is used to parse the repository and
@@ -55,11 +55,20 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     /** Name of the security configuration element. */
     public static final String SECURITY_ELEMENT = "Security";
 
+    /** Name of the security manager configuration element. */
+    public static final String SECURITY_MANAGER_ELEMENT = "SecurityManager";
+
     /** Name of the access manager configuration element. */
     public static final String ACCESS_MANAGER_ELEMENT = "AccessManager";
 
     /** Name of the login module configuration element. */
     public static final String LOGIN_MODULE_ELEMENT = "LoginModule";
+
+    /**
+     * Name of the optional WorkspaceAccessManager element defining which
+     * implementation of WorkspaceAccessManager to be used.
+     */
+    private static final String WORKSPACE_ACCESS_ELEMENT = "WorkspaceAccessManager";
 
     /** Name of the general workspace configuration element. */
     public static final String WORKSPACES_ELEMENT = "Workspaces";
@@ -95,6 +104,9 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     /** Name of the application name configuration attribute. */
     public static final String APP_NAME_ATTRIBUTE = "appName";
 
+    /** Name of the workspace conaining security data. */
+    public static final String WSP_NAME_ATTRIBUTE = "workspaceName";
+
     /** Name of the root path configuration attribute. */
     public static final String ROOT_PATH_ATTRIBUTE = "rootPath";
 
@@ -124,6 +136,15 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     /** Default synchronization delay, in milliseconds. */
     public static final String DEFAULT_SYNC_DELAY = "5000";
 
+    /** Name of the workspace specific security configuration element */
+    private static final String WSP_SECURITY_ELEMENT = "WorkspaceSecurity";
+
+    /**
+     * Name of the optional AccessControlProvider element defining which
+     * implementation of AccessControlProvider should be used.
+     */
+    private static final String AC_PROVIDER_ELEMENT = "AccessControlProvider";
+
     /**
      * Creates a new configuration parser with the given parser variables.
      *
@@ -140,6 +161,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      *   &lt;Repository&gt;
      *     &lt;FileSystem ...&gt;
      *     &lt;Security appName="..."&gt;
+     *       &lt;SecurityManager ...&gt;
      *       &lt;AccessManager ...&gt;
      *       &lt;LoginModule ... (optional)&gt;
      *     &lt;/Security&gt;
@@ -236,13 +258,15 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * uses the following format:
      * <pre>
      *   &lt;Security appName="..."&gt;
+     *     &lt;SecurityManager ...&gt;
      *     &lt;AccessManager ...&gt;
      *     &lt;LoginModule ... (optional)&gt;
      *   &lt;/Security&gt;
      * </pre>
      * <p/>
-     * Both the <code>AccessManager</code> and <code>LoginModule</code>
-     * elements are {@link #parseBeanConfig(Element,String) bean configuration}
+     * The <code>SecurityManager</code>, the <code>AccessManager</code>
+     * and <code>LoginModule</code> are all
+     * {@link #parseBeanConfig(Element,String) bean configuration}
      * elements.
      * <p/>
      * The login module is an optional feature of repository configuration.
@@ -254,9 +278,35 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     public SecurityConfig parseSecurityConfig(Element security)
             throws ConfigurationException {
         String appName = getAttribute(security, APP_NAME_ATTRIBUTE);
+
+        SecurityManagerConfig smc = parseSecurityManagerConfig(security);
         AccessManagerConfig amc = parseAccessManagerConfig(security);
         LoginModuleConfig lmc = parseLoginModuleConfig(security);
-        return new SecurityConfig(appName, amc, lmc);
+
+        return new SecurityConfig(appName, smc, amc, lmc);
+    }
+
+    /**
+     * Parses the security manager configuration.
+     *
+     * @param security the &lt;security> element.
+     * @return the security manager configuration.
+     * @throws ConfigurationException if the configuration is broken
+     */
+    public SecurityManagerConfig parseSecurityManagerConfig(Element security)
+            throws ConfigurationException {
+
+        BeanConfig bc = parseBeanConfig(security, SECURITY_MANAGER_ELEMENT);
+
+        Element smElement = getElement(security, SECURITY_MANAGER_ELEMENT);
+        String wspAttr = getAttribute(smElement, WSP_NAME_ATTRIBUTE, null);
+
+        BeanConfig wac = null;
+        Element element = getElement(smElement, WORKSPACE_ACCESS_ELEMENT, false);
+        if (element != null) {
+            wac = parseBeanConfig(smElement, WORKSPACE_ACCESS_ELEMENT);
+        }
+        return new SecurityManagerConfig(bc, wspAttr, wac);
     }
 
     /**
@@ -300,6 +350,8 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      *     &lt;PersistenceManager ...&gt;
      *     &lt;SearchIndex ...&gt;
      *     &lt;ISMLocking ...&gt;
+     *     &lt;WorkspaceSecurity ...&gt;
+     *     &lt;ISMLocking ...&gt;
      *   &lt;/Workspace&gt;
      * </pre>
      * <p>
@@ -337,6 +389,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * @throws ConfigurationException if the configuration is broken
      * @see #parseBeanConfig(Element, String)
      * @see #parseSearchConfig(Element)
+     * @see #parseWorkspaceSecurityConfig(Element)
      */
     public WorkspaceConfig parseWorkspaceConfig(InputSource xml)
             throws ConfigurationException {
@@ -371,7 +424,10 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         // Item state manager locking configuration (optional)
         ISMLockingConfig ismLockingConfig = tmpParser.parseISMLockingConfig(root);
 
-        return new WorkspaceConfig(home, name, clustered, fsc, pmc, sc, ismLockingConfig);
+        // workspace specific security configuration
+        WorkspaceSecurityConfig workspaceSecurityConfig = tmpParser.parseWorkspaceSecurityConfig(root);
+
+        return new WorkspaceConfig(home, name, clustered, fsc, pmc, sc, ismLockingConfig, workspaceSecurityConfig);
     }
 
     /**
@@ -428,6 +484,34 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
             }
         }
         return null;
+    }
+
+
+    /**
+     * Read the WorkspaceSecurity Element of Workspace's configuration. It uses
+     * the following format:
+     * <pre>
+     *   &lt;WorkspaceSecurity&gt;
+     *     &lt;AccessControlProvider class="..." (optional)&gt;
+     *   &lt;/WorkspaceSecurity&gt;
+     * </pre>
+     *
+     * @param parent Workspace-Root-Element
+     * @return
+     * @throws ConfigurationException
+     */
+    public WorkspaceSecurityConfig parseWorkspaceSecurityConfig(Element parent)
+        throws ConfigurationException {
+
+        BeanConfig factConf = null;
+        Element element = getElement(parent, WSP_SECURITY_ELEMENT, false);
+        if (element != null) {
+            Element provFact = getElement(element, AC_PROVIDER_ELEMENT, false);
+            if (provFact !=null ) {
+                factConf = parseBeanConfig(element, AC_PROVIDER_ELEMENT);
+            }
+        }
+        return new WorkspaceSecurityConfig(factConf);
     }
 
     /**
@@ -587,7 +671,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * <code>DataStore</code> is a {@link #parseBeanConfig(Element,String) bean configuration}
      * element.
      *
-     * @param cluster parent cluster element
+     * @param parent cluster element
      * @return journal configuration, or <code>null</code>
      * @throws ConfigurationException if the configuration is broken
      */

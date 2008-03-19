@@ -28,6 +28,26 @@ public interface SecurityConstants {
      *
      * @see javax.jcr.Session#impersonate(javax.jcr.Credentials)
      */
-    String IMPERSONATOR_ATTRIBUTE =
-            "org.apache.jackrabbit.core.security.impersonator";
+    String IMPERSONATOR_ATTRIBUTE = "org.apache.jackrabbit.core.security.impersonator";
+
+    /**
+     * The default principal name of the administrators group
+     */
+    String ADMINISTRATORS_NAME = "administrators";
+
+    /**
+     * The default userID of the administrator.
+     */
+    String ADMIN_ID = "admin";
+
+    /**
+     * The default userID for anonymous login
+     */
+    String ANONYMOUS_ID = "anonymous";
+
+    /**
+     * To be used for the encryption. E.g. for passwords in
+     * {@link javax.jcr.SimpleCredentials#getPassword()}  SimpleCredentials} 
+     */
+    String DEFAULT_DIGEST = "sha1";
 }

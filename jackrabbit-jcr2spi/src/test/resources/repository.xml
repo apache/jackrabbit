@@ -15,8 +15,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
   -->
-<!DOCTYPE Repository PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 1.2//EN"
-                            "http://jackrabbit.apache.org/dtd/repository-1.2.dtd">
+<!DOCTYPE Repository PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 1.5//EN"
+                            "http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-core/src/main/resources/org/apache/jackrabbit/core/config/repository-1.5.dtd">
 <!-- Example Repository Configuration File -->
 <Repository>
     <!--
@@ -32,16 +32,25 @@
     -->
     <Security appName="Jackrabbit">
         <!--
+            security manager:
+            class: FQN of class implementing the JackrabbitSecurityManager interface
+        -->
+        <SecurityManager class="org.apache.jackrabbit.core.security.simple.SimpleSecurityManager" workspaceName="security">
+            <!-- <param name="config" value="${rep.home}/security.xml"/> -->
+        </SecurityManager>
+
+        <!--
             access manager:
             class: FQN of class implementing the AccessManager interface
         -->
-        <AccessManager class="org.apache.jackrabbit.core.security.SimpleAccessManager">
+        <AccessManager class="org.apache.jackrabbit.core.security.simple.SimpleAccessManager">
             <!-- <param name="config" value="${rep.home}/access.xml"/> -->
         </AccessManager>
 
-        <LoginModule class="org.apache.jackrabbit.core.security.SimpleLoginModule">
+        <LoginModule class="org.apache.jackrabbit.core.security.simple.SimpleLoginModule">
            <!-- anonymous user name ('anonymous' is the default value) -->
            <param name="anonymousId" value="anonymous"/>
+           <param name="adminId" value="admin"/>
            <!--
               default user name to be used instead of the anonymous user
               when no login credentials are provided (unset by default)
@@ -73,7 +82,6 @@
         <PersistenceManager class="org.apache.jackrabbit.core.persistence.bundle.DerbyPersistenceManager">
           <param name="url" value="jdbc:derby:${wsp.home}/db;create=true"/>
           <param name="schemaObjectPrefix" value="${wsp.name}_"/>
-          <param name="externalBLOBs" value="false"/>
         </PersistenceManager>
         <!--
             Search index and the file system it uses.
@@ -105,7 +113,6 @@
         <PersistenceManager class="org.apache.jackrabbit.core.persistence.bundle.DerbyPersistenceManager">
           <param name="url" value="jdbc:derby:${rep.home}/version/db;create=true"/>
           <param name="schemaObjectPrefix" value="version_"/>
-          <param name="externalBLOBs" value="false"/>
         </PersistenceManager>
     </Versioning>
 

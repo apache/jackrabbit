@@ -1,0 +1,119 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.core.security.authentication;
+
+import org.apache.jackrabbit.api.security.user.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.jcr.Credentials;
+import javax.jcr.RepositoryException;
+import javax.jcr.SimpleCredentials;
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+
+/**
+ * This {@link Authentication} implementation handles all
+ * {@link javax.jcr.SimpleCredentials SimpleCredentials} stored
+ * for a given {@link org.apache.jackrabbit.api.security.user.User#getCredentials() User}.<br>
+ * For verification the <code>SimpleCredentials</code>
+ * {@link javax.jcr.SimpleCredentials#getUserID() UserID} and
+ * {@link javax.jcr.SimpleCredentials#getPassword() Password} are tested.
+ * If both are equal to the ones stored at the User, verification succeeded.
+ *
+ * @see org.apache.jackrabbit.core.security.authentication.Authentication
+ * @see javax.jcr.SimpleCredentials
+ */
+class SimpleCredentialsAuthentication implements Authentication {
+
+    private static final Logger log = LoggerFactory.getLogger(SimpleCredentialsAuthentication.class);
+
+    private final Collection credentialSet = new HashSet();
+
+    /**
+     * Create an Authentication for this User
+     *
+     * @param user to create the Authentication for
+     * @throws javax.jcr.RepositoryException
+     */
+    SimpleCredentialsAuthentication(User user) throws RepositoryException {
+        for(Iterator it = user.getCredentials(); it.hasNext();) {
+            Credentials creds = (Credentials) it.next();
+            if (creds instanceof CryptedSimpleCredentials) {
+                credentialSet.add(creds);
+            } else if (creds instanceof SimpleCredentials) {
+                try {
+                    credentialSet.add(new CryptedSimpleCredentials((SimpleCredentials) creds));
+                } catch (NoSuchAlgorithmException e) {
+                    throw new RepositoryException(e);
+                } catch (UnsupportedEncodingException e) {
+                    throw new RepositoryException(e);
+                }
+            }
+        }
+    }
+
+    //------------------------------------------------< Authentication >--------
+    /**
+     * This Authentication is able to handle the validation of SimpleCredentials.
+     *
+     * @param credentials to test
+     * @return <code>true</code> if the given Credentials are of type
+     *         {@link javax.jcr.SimpleCredentials SimpleCredentials} and if the
+     *         <code>User</code> used to construct this <code>Autentication</code>
+     *         has any SimpleCredentials
+     * @see Authentication#canHandle(Credentials)
+     */
+    public boolean canHandle(Credentials credentials) {
+        return !credentialSet.isEmpty() && credentials instanceof SimpleCredentials;
+    }
+
+    /**
+     * Compairs any of the <code>SimpleCredentials</code> of the <code>User</code>
+     * with the one given.<br>
+     * If both, UserID and Password of the credentials are equal, the authentication
+     * succeded and <code>true</code> is returned;
+     *
+     * @param credentials
+     * @return true if the given Credentials' UserID/Password pair match any
+     * of the credentials attached to the user this SimpleCredentialsAuthentication has
+     * been built for.
+     * @throws RepositoryException
+     */
+    public boolean authenticate(Credentials credentials) throws RepositoryException {
+        if (!(credentials instanceof SimpleCredentials)) {
+            throw new RepositoryException("SimpleCredentials expected. Cannot handle " + credentials.getClass().getName());
+        }
+
+        for (Iterator it = credentialSet.iterator(); it.hasNext();) {
+            try {
+                CryptedSimpleCredentials creds = (CryptedSimpleCredentials) it.next();
+                if (creds.matches((SimpleCredentials) credentials)) {
+                    return true;
+                }
+            } catch (NoSuchAlgorithmException e) {
+                log.debug("Failed to verify Credentials with {}: {} -> test next", credentials.toString(), e);
+            } catch (UnsupportedEncodingException e) {
+                log.debug("Failed to verify Credentials with {}: {} -> test next", credentials.toString(), e);
+            }
+        }
+        return false;
+    }
+}

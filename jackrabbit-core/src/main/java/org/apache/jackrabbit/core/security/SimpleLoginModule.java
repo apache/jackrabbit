@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.core.security;
 
+import org.apache.jackrabbit.core.security.authentication.CredentialsCallback;
+import org.apache.jackrabbit.core.config.LoginModuleConfig;
+
 import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
 import javax.security.auth.Subject;
@@ -25,29 +28,21 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
  * A <code>SimpleLoginModule</code> ...
+ *
+ * @deprecated Use {@link org.apache.jackrabbit.core.security.simple.SimpleLoginModule} instead.
  */
 public class SimpleLoginModule implements LoginModule {
-
-    /**
-     * Name of the anonymous user id option in the LoginModule configuration
-     */
-    private static final String OPT_ANONYMOUS = "anonymousId";
 
     /**
      * Name of the default user id option in the LoginModule configuration
      */
     private static final String OPT_DEFAULT = "defaultUserId";
-
-    /**
-     * The default user id for anonymous login
-     */
-    private static final String DEFAULT_ANONYMOUS_ID = "anonymous";
 
     // initial state
     private Subject subject;
@@ -58,22 +53,23 @@ public class SimpleLoginModule implements LoginModule {
 
     // local authentication state:
     // the principals, i.e. the authenticated identities
-    private final Set principals = new HashSet();
+    private final Set principals;
 
     /**
      * Id of an anonymous user login
      */
-    private String anonymousUserId = DEFAULT_ANONYMOUS_ID;
+    private String anonymousUserId = SecurityConstants.ANONYMOUS_ID;
 
     /**
      * The default user id. Only used when not <code>null</code>.
      */
-    private String defaultUserId = null;
+    private String defaultUserId;
 
     /**
      * Constructor
      */
     public SimpleLoginModule() {
+        principals = new HashSet();
     }
 
     /**
@@ -124,7 +120,7 @@ public class SimpleLoginModule implements LoginModule {
 
         // initialize any configured options
         //someOpt = "true".equalsIgnoreCase((String)options.get("someOpt"));
-        String userId = (String) options.get(OPT_ANONYMOUS);
+        String userId = (String) options.get(LoginModuleConfig.PARAM_ANONYMOUS_ID);
         if (userId != null) {
             anonymousUserId = userId;
         }

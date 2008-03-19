@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.core.security;
 
+import org.apache.jackrabbit.core.security.authentication.JAASAuthContext;
+import org.apache.jackrabbit.core.security.authentication.LocalAuthContext;
+
 import javax.jcr.Credentials;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
@@ -30,13 +33,14 @@ import java.util.Map;
  * <p>
  * This class is abstract and has two implementations:
  * <ul>
- *   <li>{@link AuthContext.JAAS} which delegates to a regular JAAS <code>LoginContext</code></li>
- *   <li>{@link AuthContext.Local} which implements authentication using a locally-defined
+ *   <li>{@link JAASAuthContext} which delegates to a regular JAAS <code>LoginContext</code></li>
+ *   <li>{@link LocalAuthContext} which implements authentication using a locally-defined
  *       JAAS <code>LoginModule</code></li>
  * </ul>
  *
+ * @deprecated Use {@link org.apache.jackrabbit.core.security.authentication.AuthContext} instead.
  */
-public abstract class AuthContext {
+public abstract class AuthContext implements org.apache.jackrabbit.core.security.authentication.AuthContext {
 
     /**
      * Perform the authentication and, if successful, associate Principals and Credentials
@@ -65,6 +69,8 @@ public abstract class AuthContext {
 
     /**
      * An {@link AuthContext} implemented using a regular JAAS <code>LoginContext</code>.
+     *
+     * @deprecated Use {@link org.apache.jackrabbit.core.security.authentication.JAASAuthContext} instead
      */
     public static class JAAS extends AuthContext {
 
@@ -106,6 +112,8 @@ public abstract class AuthContext {
 
     /**
      * An {@link AuthContext} implemented using a particular <code>LoginModule</code>.
+     *
+     * @deprecated Use {@link org.apache.jackrabbit.core.security.authentication.LocalAuthContext} instead.
      */
     public static class Local extends AuthContext {
         private final LoginModule module;
@@ -118,7 +126,6 @@ public abstract class AuthContext {
          *
          * @param module the login module
          * @param options login module options
-         * @param config the login module configuration
          * @param creds the credentials
          */
         public Local(LoginModule module, Map options, Credentials creds) {

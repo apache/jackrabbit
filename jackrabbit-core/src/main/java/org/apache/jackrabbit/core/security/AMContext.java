@@ -17,17 +17,21 @@
 package org.apache.jackrabbit.core.security;
 
 import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
+import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import javax.security.auth.Subject;
+import javax.jcr.Session;
 import java.io.File;
 
 /**
- * An <code>AMContext</code> is used to provide context information for an
- * <code>AccessManager</code>.
+ * An <code>AMContext</code> is used to provide <code>Session</code> specific
+ * context information for an <code>AccessManager</code>.
  *
  * @see AccessManager#init(AMContext)
+ * @see AccessManager#init(AMContext, AccessControlProvider, WorkspaceAccessManager)
  */
 public class AMContext {
 
@@ -46,15 +50,17 @@ public class AMContext {
      */
     private final Subject subject;
 
+    private final Session session;
+
     /**
      * hierarchy manager for resolving ItemId-to-Path mapping
      */
     private final HierarchyManager hierMgr;
 
     /**
-     * namespace resolver for resolving namespaces in qualified paths
+     * name and path resolver for resolving namespaces in qualified paths
      */
-    private final NamespaceResolver nsResolver;
+    private final NamePathResolver resolver;
 
     /**
      * name of the workspace
@@ -68,20 +74,22 @@ public class AMContext {
      * @param fs              the virtual jackrabbit filesystem
      * @param subject         subject whose access rights should be reflected
      * @param hierMgr         hierarchy manager
-     * @param nsResolver      namespace resolver
+     * @param resolver        name and path resolver
      * @param workspaceName   workspace name
      */
     public AMContext(File physicalHomeDir,
                      FileSystem fs,
+                     Session session,
                      Subject subject,
                      HierarchyManager hierMgr,
-                     NamespaceResolver nsResolver,
+                     NamePathResolver resolver,
                      String workspaceName) {
         this.physicalHomeDir = physicalHomeDir;
         this.fs = fs;
+        this.session = session;
         this.subject = subject;
         this.hierMgr = hierMgr;
-        this.nsResolver = nsResolver;
+        this.resolver = resolver;
         this.workspaceName = workspaceName;
     }
 
@@ -102,6 +110,15 @@ public class AMContext {
      */
     public FileSystem getFileSystem() {
         return fs;
+    }
+
+    /**
+     * Returns the session
+     *
+     * @return the session
+     */
+    public Session getSession() {
+        return session;
     }
 
     /**
@@ -127,8 +144,8 @@ public class AMContext {
      *
      * @return the namespace resolver
      */
-    public NamespaceResolver getNamespaceResolver() {
-        return nsResolver;
+    public NamePathResolver getNamePathResolver() {
+        return resolver;
     }
 
     /**

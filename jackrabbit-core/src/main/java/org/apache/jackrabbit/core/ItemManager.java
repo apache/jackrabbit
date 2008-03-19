@@ -195,7 +195,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
             throws ItemNotFoundException, AccessDeniedException,
             RepositoryException {
         // check privileges
-        if (!session.getAccessManager().isGranted(id, AccessManager.READ)) {
+        if (!canRead(id)) {
             // clear cache
             ItemImpl item = retrieveItem(id);
             if (item != null) {
@@ -215,6 +215,10 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
             log.error(msg);
             throw new RepositoryException(msg, ise);
         }
+    }
+
+    private boolean canRead(ItemId id) throws RepositoryException {
+        return session.getAccessManager().isGranted(id, AccessManager.READ);
     }
 
     //--------------------------------------------------< item access methods >
@@ -293,7 +297,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
             }
 
             // check privileges
-            if (!session.getAccessManager().isGranted(id, AccessManager.READ)) {
+            if (!canRead(id)) {
                 // clear cache
                 evictItem(id);
                 // item exists but the session has not been granted read access
@@ -397,7 +401,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         if (item == null) {
             // not yet in cache, need to create instance:
             // check privileges
-            if (!session.getAccessManager().isGranted(id, AccessManager.READ)) {
+            if (!canRead(id)) {
                 throw new AccessDeniedException("cannot read item " + id);
             }
             // create instance of item
@@ -448,8 +452,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         if (item == null) {
             // not yet in cache, need to create instance:
             // only check privileges if state is not new
-            if (state.getStatus() != ItemState.STATUS_NEW
-                    && !session.getAccessManager().isGranted(id, AccessManager.READ)) {
+            if (state.getStatus() != ItemState.STATUS_NEW && !canRead(id)) {
                 throw new AccessDeniedException("cannot read item " + id);
             }
             // create instance of item
@@ -482,7 +485,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         while (iter.hasNext()) {
             NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
             // check read access
-            if (session.getAccessManager().isGranted(entry.getId(), AccessManager.READ)) {
+            if (canRead(entry.getId())) {
                 return true;
             }
         }
@@ -514,7 +517,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         while (iter.hasNext()) {
             NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
             // check read access
-            if (session.getAccessManager().isGranted(entry.getId(), AccessManager.READ)) {
+            if (canRead(entry.getId())) {
                 childIds.add(entry.getId());
             }
         }
@@ -546,7 +549,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         while (iter.hasNext()) {
             Name propName = (Name) iter.next();
             // check read access
-            if (session.getAccessManager().isGranted(new PropertyId(parentId, propName), AccessManager.READ)) {
+            if (canRead(new PropertyId(parentId, propName))) {
                 return true;
             }
         }
@@ -580,7 +583,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
             Name propName = (Name) iter.next();
             PropertyId id = new PropertyId(parentId, propName);
             // check read access
-            if (session.getAccessManager().isGranted(id, AccessManager.READ)) {
+            if (canRead(id)) {
                 childIds.add(id);
             }
         }

@@ -398,4 +398,126 @@ commented out by default.
         </childNodeDefinition>
     </nodeType>
 
+    <!-- internal security node types -->
+    <nodeType name="rep:AccessControllable" isMixin="true" hasOrderableChildNodes="false" primaryItemName="">
+        <childNodeDefinition name="rep:policy" autoCreated="false" mandatory="false" onParentVersion="IGNORE" protected="true" sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>rep:Policy</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+    </nodeType>
+
+    <nodeType name="rep:Policy" isMixin="false" hasOrderableChildNodes="false" primaryItemName="" abstract="true">
+        <supertypes>
+            <supertype>nt:base</supertype>
+        </supertypes>
+    </nodeType>
+
+    <nodeType name="rep:ACL" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+        <supertypes>
+            <supertype>rep:Policy</supertype>
+        </supertypes>
+        <childNodeDefinition name="*" defaultPrimaryType="rep:GrantACE" autoCreated="false" mandatory="false" onParentVersion="IGNORE" protected="true" sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>rep:ACE</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+    </nodeType>
+
+    <nodeType name="rep:ACE" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+        <supertypes>
+            <supertype>nt:base</supertype>
+        </supertypes>
+        <propertyDefinition name="rep:principalName" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="true" multiple="false" />
+        <propertyDefinition name="rep:privileges" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="true" multiple="true" />
+        <propertyDefinition name="rep:nodePath" requiredType="Path" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="true" multiple="false" />
+        <propertyDefinition name="rep:glob" requiredType="String" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="true" multiple="false" />
+        <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="true" multiple="false" />
+    </nodeType>
+
+    <nodeType name="rep:GrantACE" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+        <supertypes>
+            <supertype>rep:ACE</supertype>
+        </supertypes>
+    </nodeType>
+
+    <nodeType name="rep:DenyACE" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+        <supertypes>
+            <supertype>rep:ACE</supertype>
+        </supertypes>
+    </nodeType>
+
+    <nodeType name="rep:AccessControl" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+        <supertypes>
+            <supertype>nt:base</supertype>
+            <supertype>rep:AccessControllable</supertype>
+        </supertypes>
+        <childNodeDefinition name="*" autoCreated="false" mandatory="false" onParentVersion="IGNORE" protected="true" sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>rep:AccessControl</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+    </nodeType>
+
+    <nodeType name="rep:Authorizable" isMixin="false" hasOrderableChildNodes="false" primaryItemName="" abstract="true">
+        <supertypes>
+            <supertype>nt:base</supertype>
+            <supertype>mix:referenceable</supertype>
+        </supertypes>
+        <childNodeDefinition name="*" defaultPrimaryType="rep:AuthorizableFolder" autoCreated="false" mandatory="false" onParentVersion="VERSION" protected="true" sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>rep:AuthorizableFolder</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+        <childNodeDefinition name="*" defaultPrimaryType="rep:Authorizable" autoCreated="false" mandatory="false" onParentVersion="VERSION" protected="true" sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>rep:Authorizable</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+        <propertyDefinition name="rep:principalName" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="true" multiple="false" />
+        <propertyDefinition name="rep:referees" requiredType="String" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="true" multiple="true" />
+        <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+        <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true" />
+    </nodeType>
+
+    <nodeType name="rep:Impersonatable" isMixin="true" hasOrderableChildNodes="false" primaryItemName="">
+        <propertyDefinition name="rep:impersonators" requiredType="String" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="true" multiple="true" />
+    </nodeType>
+
+    <nodeType name="rep:User" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+        <supertypes>
+            <supertype>rep:Authorizable</supertype>
+            <supertype>rep:Impersonatable</supertype>
+        </supertypes>
+        <propertyDefinition name="rep:userId" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="true" multiple="false" />
+        <propertyDefinition name="rep:password" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    </nodeType>
+
+    <nodeType name="rep:Group" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+        <supertypes>
+            <supertype>rep:Authorizable</supertype>
+        </supertypes>
+        <propertyDefinition name="rep:members" requiredType="Reference" autoCreated="false" onParentVersion="COPY" protected="true" multiple="true">
+            <valueConstraints>
+                <valueConstraint>rep:Authorizable</valueConstraint>
+            </valueConstraints>
+        </propertyDefinition>
+    </nodeType>
+
+    <nodeType name="rep:AuthorizableFolder" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+        <supertypes>
+            <supertype>nt:base</supertype>
+            <supertype>mix:referenceable</supertype>
+        </supertypes>
+        <childNodeDefinition name="*" defaultPrimaryType="rep:User" autoCreated="false" mandatory="false" onParentVersion="VERSION" protected="true" sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>rep:Authorizable</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+        <childNodeDefinition name="*" defaultPrimaryType="rep:AuthorizableFolder" autoCreated="false" mandatory="false" onParentVersion="VERSION" protected="true" sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>rep:AuthorizableFolder</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+    </nodeType>
 </nodeTypes>

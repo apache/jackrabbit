@@ -22,6 +22,7 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import org.xml.sax.InputSource;
+import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 
 /**
  * Test cases for workspace configuration handling.
@@ -62,10 +63,17 @@ public class WorkspaceConfigTest extends TestCase {
                 "org.apache.jackrabbit.core.query.lucene.SearchIndex",
                 sc.getHandlerClassName());
         assertEquals(4, sc.getParameters().size());
-        assertEquals("true", sc.getParameters().get("useCompoundFile"));
-        assertEquals("1000", sc.getParameters().get("minMergeDocs"));
-        assertEquals("10000", sc.getParameters().get("maxMergeDocs"));
-        assertEquals("10", sc.getParameters().get("mergeFactor"));
-    }
+        assertEquals("true", sc.getParameters().getProperty("useCompoundFile"));
+        assertEquals("1000", sc.getParameters().getProperty("minMergeDocs"));
+        assertEquals("10000", sc.getParameters().getProperty("maxMergeDocs"));
+        assertEquals("10", sc.getParameters().getProperty("mergeFactor"));
 
+        WorkspaceSecurityConfig ws = config.getSecurityConfig();
+        if (ws != null) {
+            BeanConfig ppfConfig =  ws.getAccessControlProviderConfig();
+            if (ppfConfig != null) {
+                AccessControlProvider prov = (AccessControlProvider) ppfConfig.newInstance();
+            }
+        }
+    }
 }

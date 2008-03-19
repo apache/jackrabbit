@@ -1,0 +1,156 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.api.security.user;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.jcr.Credentials;
+import javax.jcr.RepositoryException;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+/**
+ * <code>UserManagerCreateGroupTest</code>...
+ */
+public class UserManagerCreateUserTest extends AbstractUserTest {
+
+    private static Logger log = LoggerFactory.getLogger(UserManagerCreateUserTest.class);
+
+    private List createdUsers = new ArrayList();
+
+    protected void tearDown() throws Exception {
+        // remove all created groups again
+        for (Iterator it = createdUsers.iterator(); it.hasNext();) {
+            Authorizable auth = (Authorizable) it.next();
+            try {
+                auth.remove();
+            } catch (RepositoryException e) {
+                log.error("Failed to remove User " + auth.getID() + " during tearDown.");
+            }
+        }
+        super.tearDown();
+    }
+
+    public void testCreateUser() throws RepositoryException {
+        Principal p = getTestPrincipal();
+        String uid = p.getName();
+        User user = userMgr.createUser(uid, buildCredentials(uid, uid), p);
+        createdUsers.add(user);
+
+        assertNotNull(user.getID());
+        assertEquals(p.getName(), user.getPrincipal().getName());
+    }
+
+    public void testCreateUserWithPath() throws RepositoryException {
+        Principal p = getTestPrincipal();
+        String uid = p.getName();
+        User user = userMgr.createUser(uid, buildCredentials(uid, uid), p, "/any/path/to/the/new/user");
+        createdUsers.add(user);
+
+        assertNotNull(user.getID());
+        assertEquals(p.getName(), user.getPrincipal().getName());
+    }
+
+    public void testCreateUserWithNullParamerters() throws RepositoryException {
+        try {
+            User user = userMgr.createUser(null, null, null);
+            createdUsers.add(user);
+
+            fail("A User cannot be built from 'null' parameters");
+        } catch (Exception e) {
+            // ok
+        }
+    }
+
+    public void testCreateUserWithNullUserID() throws RepositoryException {
+        try {
+            Principal p = getTestPrincipal();
+            Credentials creds = buildCredentials(p.getName(), "");
+            User user = userMgr.createUser(null, creds, p);
+            createdUsers.add(user);
+
+            fail("A User cannot be built with 'null' userID");
+        } catch (Exception e) {
+            // ok
+        }
+    }
+
+    public void testCreateUserWithNullPrincipal() throws RepositoryException {
+        try {
+            Principal p = getTestPrincipal();
+            String uid = p.getName();
+            User user = userMgr.createUser(uid, buildCredentials(uid, uid), null);
+            createdUsers.add(user);
+
+            fail("A User cannot be built with 'null' Principal");
+        } catch (Exception e) {
+            // ok
+        }
+    }
+
+    public void testCreateTwiceWithSameUserID() throws RepositoryException {
+        Principal p = getTestPrincipal();
+        String uid = p.getName();
+        Credentials creds = buildCredentials(uid, uid);
+        User user = userMgr.createUser(uid, creds, p);
+        createdUsers.add(user);
+
+        try {
+            p = getTestPrincipal();
+            User user2 = userMgr.createUser(uid, creds, p);
+            createdUsers.add(user2);
+
+            fail("Creating 2 users with the same UserID should throw AuthorizableExistsException.");
+        } catch (AuthorizableExistsException e) {
+            // success.
+        }
+    }
+
+    public void testCreateTwiceWithSamePrincipal() throws RepositoryException {
+        Principal p = getTestPrincipal();
+        String uid = p.getName();
+        Credentials creds = buildCredentials(uid, uid);
+        User user = userMgr.createUser(uid, creds, p);
+        createdUsers.add(user);
+
+        try {
+            uid = getTestPrincipal().getName();
+            creds = buildCredentials(uid, uid);
+
+            User user2 = userMgr.createUser(uid, creds, p);
+            createdUsers.add(user2);
+
+            fail("Creating 2 users with the same Principal should throw AuthorizableExistsException.");
+        } catch (AuthorizableExistsException e) {
+            // success.
+        }
+    }
+
+    public void testGetUserAfterCreation() throws RepositoryException {
+        Principal p = getTestPrincipal();
+        String uid = p.getName();
+
+        User user = userMgr.createUser(uid, buildCredentials(uid, uid), p);
+        createdUsers.add(user);
+
+        assertNotNull(userMgr.getAuthorizable(user.getID()));
+        assertNotNull(userMgr.getAuthorizable(p));
+    }
+}

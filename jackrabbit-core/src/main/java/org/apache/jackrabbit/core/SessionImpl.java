@@ -20,7 +20,6 @@ import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.commons.AbstractSession;
 import org.apache.jackrabbit.core.RepositoryImpl.WorkspaceInfo;
-import org.apache.jackrabbit.core.config.AccessManagerConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.data.GarbageCollector;
 import org.apache.jackrabbit.core.lock.LockManager;
@@ -31,8 +30,13 @@ import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.security.AuthContext;
 import org.apache.jackrabbit.core.security.SecurityConstants;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.core.security.authentication.AuthContext;
+import org.apache.jackrabbit.core.security.jsr283.security.AccessControlManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -80,8 +84,8 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
-import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
+import javax.jcr.lock.Lock;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.observation.EventListener;
@@ -91,7 +95,6 @@ import javax.security.auth.Subject;
 import java.io.File;
 import java.io.PrintStream;
 import java.security.AccessControlException;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -99,21 +102,34 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.Arrays;
 
 /**
  * A <code>SessionImpl</code> ...
  */
 public class SessionImpl extends AbstractSession
-        implements NamePathResolver, Dumpable {
+        implements JackrabbitSession, NamePathResolver, Dumpable {
 
     private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
 
     /**
-     * prededfined action constants in checkPermission
+     * TODO deprecate as soon as present with Session interface (JSR 283)
      */
     public static final String READ_ACTION = "read";
+
+    /**
+     * TODO deprecate as soon as present with Session interface (JSR 283)
+     */
     public static final String REMOVE_ACTION = "remove";
+
+    /**
+     * TODO deprecate as soon as present with Session interface (JSR 283)
+     */
     public static final String ADD_NODE_ACTION = "add_node";
+
+    /**
+     * TODO deprecate as soon as present with Session interface (JSR 283)
+     */
     public static final String SET_PROPERTY_ACTION = "set_property";
 
     /**
@@ -208,6 +224,16 @@ public class SessionImpl extends AbstractSession
     protected ValueFactory valueFactory;
 
     /**
+     * Principal Manager
+     */
+    private PrincipalManager principalManager;
+
+    /**
+     * User Manager
+     */
+    private UserManager userManager;
+
+    /**
      * Protected constructor.
      *
      * @param rep
@@ -240,17 +266,26 @@ public class SessionImpl extends AbstractSession
             throws AccessDeniedException, RepositoryException {
         alive = true;
         this.rep = rep;
-        Set principals = subject.getPrincipals();
-        if (principals.isEmpty()) {
-            String msg = "unable to instantiate Session: no principals found";
-            log.error(msg);
-            throw new RepositoryException(msg);
-        } else {
-            // use 1st principal in case there are more that one
-            Principal principal = (Principal) principals.iterator().next();
-            userId = principal.getName();
-        }
         this.subject = subject;
+
+        /*
+         Retrieve userID from the subject.
+         Since the subject may contain multiple principals and the principal
+         name must not be equals to the UserID by definition, the proper way
+         is to check for known credentials the provide the correct userID.
+         The specification explicitely defines the UserID to be related to
+         the credentials and allows 'null' values in case the credentials do
+         not reveal a userID.
+         TODO: eval alternative approach via UserManager
+        */
+        String uid = null;
+        Iterator creds = subject.getPublicCredentials(SimpleCredentials.class).iterator();
+        if (creds.hasNext()) {
+            SimpleCredentials sc = (SimpleCredentials) creds.next();
+            uid = sc.getUserID();
+        }
+        userId = uid;
+
         nsMappings = new LocalNamespaceMappings(rep.getNamespaceRegistry());
         namePathResolver = new DefaultNamePathResolver(nsMappings, true);
         ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), rep.getNamespaceRegistry(), getNamespaceResolver(), getNamePathResolver(), rep.getDataStore());
@@ -323,27 +358,15 @@ public class SessionImpl extends AbstractSession
     protected AccessManager createAccessManager(Subject subject,
                                                 HierarchyManager hierMgr)
             throws AccessDeniedException, RepositoryException {
-        AccessManagerConfig amConfig = rep.getConfig().getAccessManagerConfig();
-        try {
-
-            AMContext ctx = new AMContext(new File(rep.getConfig().getHomeDir()),
-                    rep.getFileSystem(),
-                    subject,
-                    hierMgr,
-                    rep.getNamespaceRegistry(),
-                    wsp.getName());
-            AccessManager accessMgr = (AccessManager) amConfig.newInstance();
-            accessMgr.init(ctx);
-            return accessMgr;
-        } catch (AccessDeniedException ade) {
-            // re-throw
-            throw ade;
-        } catch (Exception e) {
-            // wrap in RepositoryException
-            String msg = "failed to instantiate AccessManager implementation: " + amConfig.getClassName();
-            log.error(msg, e);
-            throw new RepositoryException(msg, e);
-        }
+        String wspName = getWorkspace().getName();
+        AMContext ctx = new AMContext(new File(rep.getConfig().getHomeDir()),
+                rep.getFileSystem(),
+                this,
+                getSubject(),
+                getItemStateManager().getAtticAwareHierarchyMgr(),
+                getNamePathResolver(),
+                wspName);
+        return rep.getSecurityManager().getAccessManager(this, ctx);
     }
 
     /**
@@ -365,8 +388,36 @@ public class SessionImpl extends AbstractSession
      *
      * @return the <code>Subject</code> associated with this session
      */
-    protected Subject getSubject() {
+    public Subject getSubject() {
         return subject;
+    }
+
+    /**
+      * Creates a new session with the same subject as this sessions but to a
+      * different workspace. The returned session is a newly logged in session,
+      * with the same subject but a different workspace. Even if the given
+      * workspace is the same as this sessions one, the implementation must
+      * return a new session object.
+      *
+      * @param workspaceName name of the workspace to acquire a session for.
+      * @return A session to the requested workspace for the same authenticated
+      *         subject.
+      * @throws AccessDeniedException in case the current Subject is not allowed
+      *         to access the requested Workspace
+      * @throws NoSuchWorkspaceException If the named workspace does not exist.
+      * @throws RepositoryException in any other exceptional state
+      */
+    public Session createSession(String workspaceName)
+            throws AccessDeniedException, NoSuchWorkspaceException, RepositoryException {
+
+        if (workspaceName == null) {
+            workspaceName = rep.getConfig().getDefaultWorkspaceName();
+        }
+        if (loginContext!=null) {
+            return rep.createSession(loginContext, workspaceName);
+        } else {
+            return rep.createSession(getSubject(), workspaceName);
+        }
     }
 
     /**
@@ -649,134 +700,35 @@ public class SessionImpl extends AbstractSession
         return namePathResolver.getQPath(path);
     }
 
+    //----------------------------------------------------< JackrabbitSession >
+    /**
+     * @see JackrabbitSession#getPrincipalManager()
+     */
+    public PrincipalManager getPrincipalManager() throws RepositoryException, AccessDeniedException {
+        if (principalManager == null) {
+            principalManager = rep.getSecurityManager().getPrincipalManager(this);
+        }
+        return principalManager;
+    }
+
+    /**
+     * @see JackrabbitSession#getUserManager()
+     */
+    public UserManager getUserManager() throws AccessDeniedException, RepositoryException {
+        if (userManager == null) {
+            userManager = rep.getSecurityManager().getUserManager(this);
+        }
+        return userManager;
+    }
+
     //--------------------------------------------------------------< Session >
     /**
      * {@inheritDoc}
      */
     public void checkPermission(String absPath, String actions)
             throws AccessControlException, RepositoryException {
-        // check sanity of this session
-        sanityCheck();
-
-        // build the set of actions to be checked
-        String[] strings = actions.split(",");
-        HashSet set = new HashSet();
-        for (int i = 0; i < strings.length; i++) {
-            set.add(strings[i]);
-        }
-
-        Path targetPath;
-        try {
-            targetPath = getQPath(absPath).getNormalizedPath();
-        } catch (NameException e) {
-            String msg = "invalid path: " + absPath;
-            log.debug(msg, e);
-            throw new RepositoryException(msg, e);
-        }
-        if (!targetPath.isAbsolute()) {
-            throw new RepositoryException("not an absolute path: " + absPath);
-        }
-
-        ItemId targetId = null;
-
-        /**
-         * "read" action:
-         * requires READ permission on target item
-         */
-        if (set.contains(READ_ACTION)) {
-            try {
-                targetId = hierMgr.resolvePath(targetPath);
-                if (targetId == null) {
-                    // target does not exist, throw exception
-                    throw new AccessControlException(READ_ACTION);
-                }
-                accessMgr.checkPermission(targetId, AccessManager.READ);
-            } catch (AccessDeniedException re) {
-                // otherwise the RepositoryException catch clause will
-                // log a warn message, which is not appropriate in this case.
-                throw new AccessControlException(READ_ACTION);
-            }
-        }
-
-        Path parentPath = null;
-        ItemId parentId = null;
-
-        /**
-         * "add_node" action:
-         * requires WRITE permission on parent item
-         */
-        if (set.contains(ADD_NODE_ACTION)) {
-            try {
-                parentPath = targetPath.getAncestor(1);
-                parentId = hierMgr.resolveNodePath(parentPath);
-                if (parentId == null) {
-                    // parent does not exist (i.e. / was specified), throw exception
-                    throw new AccessControlException(ADD_NODE_ACTION);
-                }
-                accessMgr.checkPermission(parentId, AccessManager.WRITE);
-            } catch (AccessDeniedException re) {
-                // otherwise the RepositoryException catch clause will
-                // log a warn message, which is not appropriate in this case.
-                throw new AccessControlException(ADD_NODE_ACTION);
-            }
-        }
-
-        /**
-         * "remove" action:
-         * requires REMOVE permission on target item
-         */
-        if (set.contains(REMOVE_ACTION)) {
-            try {
-                if (targetId == null) {
-                    targetId = hierMgr.resolvePath(targetPath);
-                    if (targetId == null) {
-                        // parent does not exist, throw exception
-                        throw new AccessControlException(REMOVE_ACTION);
-                    }
-                }
-                accessMgr.checkPermission(targetId, AccessManager.REMOVE);
-            } catch (AccessDeniedException re) {
-                // otherwise the RepositoryException catch clause will
-                // log a warn message, which is not appropriate in this case.
-                throw new AccessControlException(REMOVE_ACTION);
-            }
-        }
-
-        /**
-         * "set_property" action:
-         * requires WRITE permission on parent item if property is going to be
-         * added or WRITE permission on target item if property is going to be
-         * modified
-         */
-        if (set.contains(SET_PROPERTY_ACTION)) {
-            try {
-                if (targetId == null) {
-                    targetId = hierMgr.resolvePath(targetPath);
-                    if (targetId == null) {
-                        // property does not exist yet,
-                        // check WRITE permission on parent
-                        if (parentPath == null) {
-                            parentPath = targetPath.getAncestor(1);
-                        }
-                        if (parentId == null) {
-                            parentId = hierMgr.resolveNodePath(parentPath);
-                            if (parentId == null) {
-                                // parent does not exist, throw exception
-                                throw new AccessControlException(SET_PROPERTY_ACTION);
-                            }
-                        }
-                        accessMgr.checkPermission(parentId, AccessManager.WRITE);
-                    } else {
-                        // property does already exist,
-                        // check WRITE permission on target
-                        accessMgr.checkPermission(targetId, AccessManager.WRITE);
-                    }
-                }
-            } catch (AccessDeniedException re) {
-                // otherwise the RepositoryException catch clause will
-                // log a warn message, which is not appropriate in this case.
-                throw new AccessControlException(SET_PROPERTY_ACTION);
-            }
+        if (!hasPermission(absPath, actions)) {
+            throw new AccessControlException(actions);
         }
     }
 
@@ -1391,7 +1343,7 @@ public class SessionImpl extends AbstractSession
      *         absolute path.
      * @since JCR 2.0
      */
-    boolean propertyExists(String absPath) throws RepositoryException {
+    public boolean propertyExists(String absPath) throws RepositoryException {
         // check sanity of this session
         sanityCheck();
 
@@ -1405,6 +1357,69 @@ public class SessionImpl extends AbstractSession
             String msg = "invalid path:" + absPath;
             log.debug(msg);
             throw new RepositoryException(msg, e);
+        }
+    }
+
+    /**
+     * @see Session#hasPermission(String, String)
+     * @since 2.0
+     */
+    public boolean hasPermission(String absPath, String actions) throws RepositoryException {
+        // check sanity of this session
+        sanityCheck();
+        Path path = getQPath(absPath).getNormalizedPath();
+        // test if path is absolute
+        if (!path.isAbsolute()) {
+            throw new RepositoryException("Absolute path expected. Was:" + absPath);
+        }
+
+        Set s = new HashSet(Arrays.asList(actions.split(",")));
+        int permissions = 0;
+        if (s.remove(SessionImpl.READ_ACTION)) {
+            permissions |= Permission.READ;
+        }
+        if (s.remove(SessionImpl.ADD_NODE_ACTION)) {
+            permissions |= Permission.ADD_NODE;
+        }
+        if (s.remove(SessionImpl.SET_PROPERTY_ACTION)) {
+            permissions |= Permission.SET_PROPERTY;
+        }
+        if (s.remove(SessionImpl.REMOVE_ACTION)) {
+            if (nodeExists(absPath)) {
+                permissions |= (propertyExists(absPath)) ?
+                        (Permission.REMOVE_NODE | Permission.REMOVE_PROPERTY) :
+                        Permission.REMOVE_NODE;
+            } else if (propertyExists(absPath)) {
+                permissions |= Permission.REMOVE_PROPERTY;
+            } else {
+                // item does exist -> check both permissions
+                permissions = Permission.REMOVE_NODE | Permission.REMOVE_PROPERTY;
+            }
+        }
+        if (!s.isEmpty()) {
+            StringBuffer sb = new StringBuffer();
+            for (Iterator it = s.iterator(); it.hasNext();) {
+                sb.append(it.next());
+            }
+            throw new IllegalArgumentException("Unknown actions: " + sb.toString());
+        }
+        try {
+            return getAccessManager().isGranted(path, permissions);
+        } catch (AccessDeniedException e) {
+            return false;
+        }
+    }
+
+    /**
+     * @see Session#getAccessControlManager()
+     * @since 2.0
+     */
+    public AccessControlManager getAccessControlManager()
+            throws UnsupportedRepositoryOperationException, RepositoryException {
+        if (accessMgr instanceof AccessControlManager) {
+            return (AccessControlManager) accessMgr;
+        } else {
+            throw new UnsupportedRepositoryOperationException("Access control discovery is not supported.");
         }
     }
 

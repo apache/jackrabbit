@@ -22,7 +22,7 @@ import java.security.Principal;
 /**
  * A <code>SystemPrincipal</code> ...
  */
-public class SystemPrincipal implements Principal, Serializable {
+public final class SystemPrincipal implements Principal, Serializable {
 
     private static final String SYSTEM_USER = "system";
 

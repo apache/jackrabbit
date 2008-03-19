@@ -23,7 +23,7 @@ package org.apache.jackrabbit.core.config;
  * The contained configuration information are: the home directory and name of
  * the workspace, the file system, the persistence manager, the search index and
  * the item state manager locking configuration. The search index and the item
- * state manager locking are optional parts.
+ * state manager locking and the security config are optional parts.
  */
 public class WorkspaceConfig {
 
@@ -63,6 +63,11 @@ public class WorkspaceConfig {
     private ISMLockingConfig ismLockingConfig;
 
     /**
+     * Workspace security configuration. Can be <code>null</code>.
+     */
+    private final WorkspaceSecurityConfig workspaceSecurityConfig;
+
+    /**
      * Creates a workspace configuration object.
      *
      * @param home home directory
@@ -72,10 +77,12 @@ public class WorkspaceConfig {
      * @param sc search index configuration
      * @param ismLockingConfig the item state manager locking configuration. If
      * <code>null</code> is passed, a default configuration is taken.
+     * @param workspaceSecurityConfig the workspace specific security configuration.
      */
     public WorkspaceConfig(String home, String name, boolean clustered,
                            FileSystemConfig fsc, PersistenceManagerConfig pmc,
-                           SearchConfig sc, ISMLockingConfig ismLockingConfig) {
+                           SearchConfig sc, ISMLockingConfig ismLockingConfig,
+                           WorkspaceSecurityConfig workspaceSecurityConfig) {
         this.home = home;
         this.name = name;
         this.clustered = clustered;
@@ -87,6 +94,7 @@ public class WorkspaceConfig {
         } else {
             this.ismLockingConfig = ISMLockingConfig.createDefaultConfig();
         }
+        this.workspaceSecurityConfig = workspaceSecurityConfig;
     }
 
     /**
@@ -150,5 +158,12 @@ public class WorkspaceConfig {
      */
     public SearchConfig getSearchConfig() {
         return sc;
+    }
+    /**
+     * @return workspace-specific security settings.
+     * @see WorkspaceSecurityConfig
+     */
+    public WorkspaceSecurityConfig getSecurityConfig() {
+        return workspaceSecurityConfig;
     }
 }

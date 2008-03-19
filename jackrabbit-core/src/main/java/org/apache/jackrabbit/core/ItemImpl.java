@@ -25,9 +25,9 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
@@ -465,13 +465,34 @@ public abstract class ItemImpl implements Item {
             ItemState itemState = (ItemState) dirtyIter.next();
 
             if (itemState.getStatus() != ItemState.STATUS_NEW) {
-                // transient item is not 'new', therefore it has to be 'modified'
-
+                /* transient item is not 'new', therefore it has to be 'modified'
+                   detect the effective set of modification:
+                   - child additions -> add_node perm on the child
+                   - property additions, modifications or removals -> set_property permission
+                   note: removed items are checked later on.
+                */
                 // check WRITE permission
-                ItemId id = itemState.getId();
-                if (!accessMgr.isGranted(id, AccessManager.WRITE)) {
-                    String msg = itemMgr.safeGetJCRPath(id)
-                            + ": not allowed to modify item";
+                Path path = stateMgr.getHierarchyMgr().getPath(itemState.getId());
+                boolean isGranted = true;
+                if (itemState.isNode()) {
+                    // modified node state -> check possible modifications
+                    NodeState nState = (NodeState) itemState;
+                    for (Iterator it = nState.getAddedChildNodeEntries().iterator();
+                         it.hasNext() && isGranted;) {
+                        Name nodeName = ((NodeState.ChildNodeEntry) it.next()).getName();
+                        isGranted = accessMgr.isGranted(path, nodeName, Permission.ADD_NODE);
+                    }
+                    for (Iterator it = nState.getAddedPropertyNames().iterator();
+                         it.hasNext() && isGranted;) {
+                        Name propName = (Name) it.next();
+                        isGranted = accessMgr.isGranted(path, propName, Permission.SET_PROPERTY);
+                    }
+                } else {
+                    isGranted = accessMgr.isGranted(path, Permission.SET_PROPERTY);
+                }
+
+                if (!isGranted) {
+                    String msg = itemMgr.safeGetJCRPath(path) + ": not allowed to modify item";
                     log.debug(msg);
                     throw new AccessDeniedException(msg);
                 }
@@ -640,10 +661,11 @@ public abstract class ItemImpl implements Item {
         // walk through list of removed transient items and check REMOVE permission
         while (removedIter.hasNext()) {
             ItemState itemState = (ItemState) removedIter.next();
-            ItemId id = itemState.getId();
+            Path path = stateMgr.getAtticAwareHierarchyMgr().getPath(itemState.getId());
             // check REMOVE permission
-            if (!accessMgr.isGranted(id, AccessManager.REMOVE)) {
-                String msg = itemMgr.safeGetJCRPath(id)
+            int permission = (itemState.isNode()) ? Permission.REMOVE_NODE : Permission.REMOVE_PROPERTY;
+            if (!accessMgr.isGranted(path, permission)) {
+                String msg = itemMgr.safeGetJCRPath(path)
                         + ": not allowed to remove item";
                 log.debug(msg);
                 throw new AccessDeniedException(msg);

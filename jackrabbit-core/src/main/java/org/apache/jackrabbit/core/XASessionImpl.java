@@ -20,7 +20,7 @@ import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.lock.LockManagerImpl;
 import org.apache.jackrabbit.core.lock.XALockManager;
-import org.apache.jackrabbit.core.security.AuthContext;
+import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.state.XAItemStateManager;
 import org.apache.jackrabbit.core.version.VersionManager;

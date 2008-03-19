@@ -1,0 +1,338 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.core.security.user;
+
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.AuthorizableExistsException;
+import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
+import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
+import org.apache.jackrabbit.core.security.principal.PrincipalIteratorAdapter;
+import org.apache.jackrabbit.spi.Name;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.nodetype.ConstraintViolationException;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+
+/**
+ * AuthorizableImpl
+ */
+abstract class AuthorizableImpl implements Authorizable, UserConstants {
+
+    static final Logger log = LoggerFactory.getLogger(AuthorizableImpl.class);
+
+    final UserManagerImpl userManager;
+    private final NodeImpl node;
+
+    /**
+     * @param node    the Authorizable is persisted to.
+     * @param userManager UserManager that created this Authorizable.
+     * @throws RepositoryException
+     */
+    protected AuthorizableImpl(NodeImpl node, UserManagerImpl userManager)
+            throws RepositoryException {
+        if (!node.isNodeType(NT_REP_AUTHORIZABLE)) {
+            throw new IllegalArgumentException("Node argument of NodeType " + NT_REP_AUTHORIZABLE + " required");
+        }
+        this.node = node;
+        this.userManager = userManager;
+    }
+
+    //-------------------------------------------------------< Authorizable >---
+    /**
+     * @see Authorizable#getPrincipals()
+     */
+    public PrincipalIterator getPrincipals() throws RepositoryException {
+        Collection coll = new ArrayList();
+        // the first element is the main principal of this user.
+        coll.add(getPrincipal());
+        // in addition add all referees.
+        PrincipalManager prMgr = getSession().getPrincipalManager();
+        for (Iterator it = getRefereeValues().iterator(); it.hasNext();) {
+            String refName = ((Value) it.next()).getString();
+            if (prMgr.hasPrincipal(refName)) {
+                coll.add(prMgr.getPrincipal(refName));
+            } else {
+                log.warn("Principal "+ refName +" unknown to PrincipalManager.");
+                coll.add(new PrincipalImpl(refName));
+            }
+        }
+        return new PrincipalIteratorAdapter(coll);
+    }
+
+    /**
+     * @see Authorizable#addReferee(Principal)
+     */
+    public synchronized boolean addReferee(Principal principal) throws RepositoryException {
+        String principalName = principal.getName();
+        Value princValue = getSession().getValueFactory().createValue(principalName);
+
+        List refereeValues = getRefereeValues();
+        if (refereeValues.contains(princValue) || getPrincipal().getName().equals(principalName)) {
+            return false;
+        }
+        if (userManager.hasAuthorizableOrReferee(principal)) {
+            throw new AuthorizableExistsException("Another authorizable already represented by or refeering to " +  principalName);
+        }
+        refereeValues.add(princValue);
+
+        userManager.setProtectedProperty(node, P_REFEREES, (Value[]) refereeValues.toArray(new Value[refereeValues.size()]));
+        return true;
+    }
+
+    /**
+     * @see Authorizable#removeReferee(Principal)
+     */
+    public synchronized boolean removeReferee(Principal principal) throws RepositoryException {
+        Value princValue = getSession().getValueFactory().createValue(principal.getName());
+        List existingValues = getRefereeValues();
+
+        if (existingValues.remove(princValue))  {
+            PropertyImpl prop = node.getProperty(P_REFEREES);
+            if (existingValues.isEmpty()) {
+                userManager.removeProtectedItem(prop, node);
+            } else {
+                userManager.setProtectedProperty(node, P_REFEREES, (Value[]) existingValues.toArray(new Value[existingValues.size()]));
+            }
+            return true;
+        }
+
+        // specified principal was not referee of this authorizable.
+        return false;
+    }
+
+    /**
+     * @see Authorizable#memberOf()
+     */
+    public Iterator memberOf() throws RepositoryException {
+        // TODO: replace by weak-refs
+        PropertyIterator itr = node.getReferences();
+        Collection tmp = new HashSet((int) itr.getSize());
+        while (itr.hasNext()) {
+            NodeImpl groupNode = (NodeImpl) itr.nextProperty().getParent();
+            if (groupNode.isNodeType(NT_REP_GROUP)) {
+                Group group = GroupImpl.create(groupNode, userManager);
+                tmp.add(group);
+            }
+        }
+        return tmp.iterator();
+    }
+
+    /**
+     * Tests if a Value exists for a property at the given name.
+     *
+     * @param name
+     * @return
+     * @throws javax.jcr.RepositoryException
+     * @see #getProperty(String)
+     */
+    public boolean hasProperty(String name) throws RepositoryException {
+        return node.hasProperty(name);
+    }
+
+    /**
+     * @param name
+     * @return the value or <code>null</code> if no value exists for the given name
+     * @throws javax.jcr.RepositoryException
+     * @see #hasProperty(String)
+     * @see Authorizable#getProperty(String)
+     */
+    public Value[] getProperty(String name) throws RepositoryException {
+        if (hasProperty(name)) {
+            Property prop = node.getProperty(name);
+            if (prop.getDefinition().isMultiple()) {
+                return prop.getValues();
+            } else {
+                return new Value[] {prop.getValue()};
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Sets the Value for the given name. If a value existed, it is replaced,
+     * if not it is created.
+     *
+     * @param name
+     * @param value
+     * @see Authorizable#setProperty(String, Value)
+     */
+    public synchronized void setProperty(String name, Value value) throws RepositoryException {
+		checkProtectedProperty(getSession().getQName(name));
+        try {
+			node.setProperty(name, value);
+			node.save();
+		} catch (RepositoryException e) {
+            log.warn("Failed to set Property " + name + " for Authorizable " + getID());
+            node.refresh(false);
+            throw e;
+        }
+    }
+
+    /**
+     * Sets the Value[] for the given name. If a value existed, it is replaced,
+     * if not it is created.
+     *
+     * @param name
+     * @param values
+     * @see Authorizable#setProperty(String, Value[])
+     */
+    public synchronized void setProperty(String name, Value[] values) throws RepositoryException {
+		checkProtectedProperty(getSession().getQName(name));
+        try {
+			node.setProperty(name, values);
+			node.save();
+		} catch (RepositoryException e) {
+            log.warn("Failed to set Property " + name + " for Authorizable " + getID());
+            node.refresh(false);
+            throw e;
+        }
+    }
+    /**
+     * @see Authorizable#removeProperty(String)
+     */
+    public synchronized boolean removeProperty(String name) throws RepositoryException {
+		checkProtectedProperty(getSession().getQName(name));
+        try {
+            if (node.hasProperty(name)) {
+                // 'node' is protected -> use setValue instead of Property.remove()
+                Property p = node.getProperty(name);
+                if (p.getDefinition().isMultiple()) {
+                    p.setValue((Value[]) null);
+                } else {
+                    p.setValue((Value) null);
+                }
+                node.save();
+                return true;
+            } else {
+                return false;
+            }
+        } catch (RepositoryException e) {
+            log.warn("Failed to remove Property " + name + " from Authorizable " + getID());
+            node.refresh(false);
+            throw e;
+        }
+    }
+
+    /**
+     * @see Authorizable#remove()
+     */
+    public synchronized void remove() throws RepositoryException {
+        // TODO: ev. remove group-memberships first?
+        userManager.removeProtectedItem(node, node.getParent());
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * @return node The underlying <code>Node</code> object.
+     */
+    NodeImpl getNode() throws RepositoryException {
+        return node;
+    }
+
+    SessionImpl getSession() throws RepositoryException {
+        return (SessionImpl) node.getSession();
+    }
+
+    String getPrincipalName() throws RepositoryException {
+        // principal name is mandatory property -> no check required.
+        return node.getProperty(P_PRINCIPAL_NAME).getString();
+    }
+
+    /**
+     * Check if the property to be modified/removed is one of the following that
+     * has a special meaning and must be altered using this user API:
+     * <ul>
+     * <li>rep:principalName</li>
+     * <li>rep:userId</li>
+     * <li>rep:referees</li>
+     * <li>rep:members</li>
+     * <li>rep:impersonators</li>
+     * </ul>
+     * Basically these properties are marked 'protected' in their property
+     * definition. This method is a simple utility in order to save the
+     * extra effort to modify the props just to find out later that they
+     * are in fact protected.
+     *
+     * @param pName
+     * @throws RepositoryException
+     */
+    private void checkProtectedProperty(Name pName) throws RepositoryException {
+        if (P_PRINCIPAL_NAME.equals(pName) || P_USERID.equals(pName)
+                || P_REFEREES.equals(pName) || P_MEMBERS.equals(pName)
+                || P_IMPERSONATORS.equals(pName)) {
+            throw new ConstraintViolationException("Attempt to modify protected property " + getSession().getJCRName(pName) + " of an Authorizable.");
+        }
+    }
+
+    private List getRefereeValues() throws RepositoryException {
+        List principalNames = new ArrayList();
+        if (node.hasProperty(P_REFEREES)) {
+            try {
+                Value[] refProp = node.getProperty(P_REFEREES).getValues();
+                for (int i = 0; i < refProp.length; i++) {
+                    principalNames.add(refProp[i]);
+                }
+            } catch (PathNotFoundException e) {
+                // ignore. should never occur.
+            }
+        }
+        return principalNames;
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     *
+     */
+    class NodeBasedPrincipal extends PrincipalImpl implements ItemBasedPrincipal {
+
+        /**
+         * @param name for the principal
+         */
+        NodeBasedPrincipal(String name) {
+            super(name);
+        }
+
+        //---------------------------------------------< ItemBasedPrincipal >---
+        /**
+         * Method revealing the path to the Node that represents the
+         * Authorizable this principal is created for.
+         *
+         * @return
+         * @see ItemBasedPrincipal#getPath()
+         */
+        public String getPath() throws RepositoryException {
+            return node.getPath();
+        }
+    }
+}
