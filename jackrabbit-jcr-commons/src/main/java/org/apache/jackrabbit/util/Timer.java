@@ -21,9 +21,20 @@ import java.util.TimerTask;
 /**
  * <code>Timer</code> wraps the standard Java {@link java.util.Timer} class
  * and implements a guaranteed shutdown of the background thread running
- * in the <code>Timer</code> instance.
+ * in the <code>Timer</code> instance after a certain {@link #IDLE_TIME}.
  */
 public class Timer {
+
+    /**
+     * Idle time in milliseconds. When a timer instance is idle for this amount
+     * of time the underlying timer is canceled.
+     */
+    static final int IDLE_TIME = 3 * 1000;
+
+    /**
+     * The interval at which the idle checker task runs.
+     */
+    static final int CHECKER_INTERVAL = 1000;
 
     /**
      * The timer implementation we us internally.
@@ -42,6 +53,11 @@ public class Timer {
      * instance is created and started.
      */
     private int numScheduledTasks = 0;
+
+    /**
+     * The time when the last task was scheduled.
+     */
+    private long lastTaskScheduled;
 
     /**
      * Creates a new <code>Timer</code> instance.
@@ -75,10 +91,15 @@ public class Timer {
         synchronized (this) {
             if (delegatee == null) {
                 delegatee = new java.util.Timer(runAsDeamon);
+                // run idle checker every second
+                Task idleChecker = new IdleCheckerTask();
+                idleChecker.setTimer(this);
+                delegatee.schedule(idleChecker, IDLE_TIME, CHECKER_INTERVAL);
             }
             delegatee.schedule(task, delay, period);
             task.setTimer(this);
             numScheduledTasks++;
+            lastTaskScheduled = System.currentTimeMillis();
         }
     }
 
@@ -107,14 +128,21 @@ public class Timer {
     }
 
     /**
+     * @return <code>true</code> if this timer has a running backround thread
+     *         for scheduled tasks. This method is only for test purposes.
+     */
+    boolean isRunning() {
+        synchronized (this) {
+            return delegatee != null;
+        }
+    }
+
+    /**
      * Notifies this <code>Timer</code> that a task has been canceled.
      */
     private void taskCanceled() {
         synchronized (this) {
-            if (--numScheduledTasks == 0) {
-                delegatee.cancel();
-                delegatee = null;
-            }
+            --numScheduledTasks;
         }
     }
 
@@ -147,6 +175,23 @@ public class Timer {
                 timer = null;
             }
             return super.cancel();
+        }
+    }
+
+    /**
+     * Checks if the enclosing timer had been idle for at least
+     * {@link Timer#IDLE_TIME} and cancels it in that case.
+     */
+    private class IdleCheckerTask extends Task {
+
+        public void run() {
+            synchronized (Timer.this) {
+                if (numScheduledTasks == 0 &&
+                        System.currentTimeMillis() > lastTaskScheduled + IDLE_TIME) {
+                    delegatee.cancel();
+                    delegatee = null;
+                }
+            }
         }
     }
 }

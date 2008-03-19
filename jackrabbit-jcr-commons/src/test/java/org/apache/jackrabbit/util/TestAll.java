@@ -38,6 +38,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ISO9075Test.class);
         suite.addTestSuite(TextTest.class);
         suite.addTestSuite(UUIDTest.class);
+        suite.addTestSuite(TimerTest.class);
 
         return suite;
     }
