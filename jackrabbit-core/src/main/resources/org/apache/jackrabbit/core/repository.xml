@@ -15,9 +15,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<!DOCTYPE Repository PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 1.4//EN"
-                            "http://jackrabbit.apache.org/dtd/repository-1.4.dtd">
-<!-- Example Repository Configuration File -->
+<!DOCTYPE Repository PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 1.5//EN"
+                            "http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-core/src/main/resources/org/apache/jackrabbit/core/config/repository-1.5.dtd">
+<!-- Example Repository Configuration File
+     Used by
+     - org.apache.jackrabbit.core.config.RepositoryConfigTest.java
+     -
+-->
 <Repository>
     <!--
         virtual file system where the repository stores global state
@@ -32,16 +36,31 @@
     -->
     <Security appName="Jackrabbit">
         <!--
+            security manager:
+            class: FQN of class implementing the JackrabbitSecurityManager interface
+        -->
+        <SecurityManager class="org.apache.jackrabbit.core.security.simple.SimpleSecurityManager" workspaceName="security">
+            <!--
+            workspace access:
+            class: FQN of class implementing the WorkspaceAccessManager interface
+            -->
+            <!-- <WorkspaceAccessManager class="..."/> -->
+            <!-- <param name="config" value="${rep.home}/security.xml"/> -->
+        </SecurityManager>
+
+        <!--
             access manager:
             class: FQN of class implementing the AccessManager interface
         -->
-        <AccessManager class="org.apache.jackrabbit.core.security.SimpleAccessManager">
+        <AccessManager class="org.apache.jackrabbit.core.security.simple.SimpleAccessManager">
             <!-- <param name="config" value="${rep.home}/access.xml"/> -->
         </AccessManager>
 
-        <LoginModule class="org.apache.jackrabbit.core.security.SimpleLoginModule">
-           <!-- anonymous user name ('anonymous' is the default value) -->
+        <LoginModule class="org.apache.jackrabbit.core.security.simple.SimpleLoginModule">
+           <!-- anonymous user id -->
            <param name="anonymousId" value="anonymous"/>
+           <!-- administrator user id (default value if param is missing is 'admin') -->
+           <param name="adminId" value="admin"/>
            <!--
               default user name to be used instead of the anonymous user
               when no login credentials are provided (unset by default)

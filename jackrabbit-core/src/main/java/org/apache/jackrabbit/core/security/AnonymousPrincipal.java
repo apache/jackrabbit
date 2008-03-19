@@ -22,9 +22,9 @@ import java.security.Principal;
 /**
  * A <code>AnonymousPrincipal</code> ...
  */
-public class AnonymousPrincipal implements Principal, Serializable {
+public final class AnonymousPrincipal implements Principal, Serializable {
 
-    private static final String ANONYMOUS_USER = "anonymous";
+    private static final String ANONYMOUS_NAME = "anonymous";
 
     /**
      * Creates an <code>AnonymousPrincipal</code>.
@@ -47,7 +47,7 @@ public class AnonymousPrincipal implements Principal, Serializable {
     }
 
     public int hashCode() {
-        return ANONYMOUS_USER.hashCode();
+        return ANONYMOUS_NAME.hashCode();
     }
 
     //------------------------------------------------------------< Principal >
@@ -55,6 +55,6 @@ public class AnonymousPrincipal implements Principal, Serializable {
      * {@inheritDoc}
      */
     public String getName() {
-        return ANONYMOUS_USER;
+        return ANONYMOUS_NAME;
     }
 }

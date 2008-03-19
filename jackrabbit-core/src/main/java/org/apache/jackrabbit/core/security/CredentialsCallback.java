@@ -16,38 +16,11 @@
  */
 package org.apache.jackrabbit.core.security;
 
-import javax.jcr.Credentials;
-import javax.security.auth.callback.Callback;
-import java.io.Serializable;
-
 /**
  * A <code>CredentialsCallback</code> ...
+ *
+ * @deprecated Use {@link org.apache.jackrabbit.core.security.authentication.CredentialsCallback } instead.
  */
-public class CredentialsCallback implements Callback, Serializable {
+public class CredentialsCallback extends org.apache.jackrabbit.core.security.authentication.CredentialsCallback {
 
-    private Credentials credentials;
-
-    /**
-     * Constructor
-     */
-    public CredentialsCallback() {
-    }
-
-    /**
-     * Get the retrieved credentials.
-     *
-     * @return the retrieved credentials (which may be null)
-     */
-    public Credentials getCredentials() {
-        return credentials;
-    }
-
-    /**
-     * Set the retrieved credentials.
-     *
-     * @param credentials the retrieved credentials (which may be null)
-     */
-    public void setCredentials(Credentials credentials) {
-        this.credentials = credentials;
-    }
 }

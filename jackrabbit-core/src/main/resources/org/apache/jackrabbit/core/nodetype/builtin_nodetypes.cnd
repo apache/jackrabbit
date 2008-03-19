@@ -172,3 +172,54 @@
 [rep:versionStorage]
   + * (nt:versionHistory) = nt:versionHistory protected multiple abort
   + * (rep:versionStorage) = rep:versionStorage protected multiple abort
+
+// -----------------------------------------------------------------------------
+// J A C K R A B B I T  S E C U R I T Y
+// -----------------------------------------------------------------------------
+
+[rep:AccessControllable]
+  mixin
+  + rep:policy (rep:Policy) protected ignore
+
+[rep:Policy] abstract
+
+[rep:ACL] > rep:Policy
+  + * (rep:ACE) = rep:GrantACE protected ignore
+
+[rep:ACE]
+  - rep:principalName (string) protected mandatory
+  - rep:privileges (string) protected mandatory multiple
+  - rep:nodePath (path) protected
+  - rep:glob (string) protected
+  - * (undefined) protected
+
+[rep:GrantACE] > rep:ACE
+
+[rep:DenyACE] > rep:ACE
+
+[rep:AccessControl] > nt:base, rep:AccessControllable
+  + * (rep:AccessControl) protected ignore
+  
+[rep:Authorizable] > nt:base, mix:referenceable abstract
+  + * (rep:Authorizable) = rep:Authorizable protected version
+  + * (rep:AuthorizableFolder) = rep:AuthorizableFolder protected version
+  - rep:principalName (string) protected mandatory
+  - rep:referees (string) protected multiple
+  - * (undefined)
+  - * (undefined) multiple
+
+[rep:Impersonatable]
+  mixin
+  - rep:impersonators (string) protected multiple
+
+[rep:User] > rep:Authorizable, rep:Impersonatable
+  - rep:userId (string) protected mandatory
+  - rep:password (string) mandatory
+
+[rep:Group] > rep:Authorizable
+  - rep:members (reference) protected multiple
+    < 'rep:Authorizable'
+
+[rep:AuthorizableFolder] > nt:base, mix:referenceable
+  + * (rep:Authorizable) = rep:User protected version
+  + * (rep:AuthorizableFolder) = rep:AuthorizableFolder protected version

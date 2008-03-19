@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
@@ -40,6 +41,7 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -386,7 +388,7 @@ public class BatchedItemOperations extends ItemValidator {
                 | CHECK_VERSIONING | CHECK_CONSTRAINTS);
         // check read access right on source node using source access manager
         try {
-            if (!srcAccessMgr.isGranted(srcState.getNodeId(), AccessManager.READ)) {
+            if (!srcAccessMgr.isGranted(srcPath, Permission.READ)) {
                 throw new PathNotFoundException(safeGetJCRPath(srcPath));
             }
         } catch (ItemNotFoundException infe) {
@@ -401,7 +403,7 @@ public class BatchedItemOperations extends ItemValidator {
         ReferenceChangeTracker refTracker = new ReferenceChangeTracker();
 
         // create deep copy of source node state
-        NodeState newState = copyNodeState(srcState, srcStateMgr, srcAccessMgr,
+        NodeState newState = copyNodeState(srcState, srcPath, srcStateMgr, srcAccessMgr,
                 destParentState.getNodeId(), flag, refTracker);
 
         // add to new parent
@@ -664,11 +666,11 @@ public class BatchedItemOperations extends ItemValidator {
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
             AccessManager accessMgr = session.getAccessManager();
             // make sure current session is granted read access on parent node
-            if (!accessMgr.isGranted(parentState.getNodeId(), AccessManager.READ)) {
+            if (!accessMgr.isGranted(parentPath, Permission.READ)) {
                 throw new ItemNotFoundException(safeGetJCRPath(parentState.getNodeId()));
             }
             // make sure current session is granted write access on parent node
-            if (!accessMgr.isGranted(parentState.getNodeId(), AccessManager.WRITE)) {
+            if (!accessMgr.isGranted(parentPath, nodeName, Permission.ADD_NODE)) {
                 throw new AccessDeniedException(safeGetJCRPath(parentState.getNodeId())
                         + ": not allowed to add child node");
             }
@@ -793,7 +795,7 @@ public class BatchedItemOperations extends ItemValidator {
             // root or orphaned node
             throw new ConstraintViolationException("cannot remove root node");
         }
-        NodeId targetId = targetState.getNodeId();
+        Path targetPath = hierMgr.getPath(targetState.getNodeId());
         NodeState parentState = getNodeState(parentId);
         Path parentPath = hierMgr.getPath(parentId);
 
@@ -817,17 +819,17 @@ public class BatchedItemOperations extends ItemValidator {
             AccessManager accessMgr = session.getAccessManager();
             try {
                 // make sure current session is granted read access on parent node
-                if (!accessMgr.isGranted(targetId, AccessManager.READ)) {
-                    throw new PathNotFoundException(safeGetJCRPath(targetId));
+                if (!accessMgr.isGranted(targetPath, Permission.READ)) {
+                    throw new PathNotFoundException(safeGetJCRPath(targetPath));
                 }
                 // make sure current session is allowed to remove target node
-                if (!accessMgr.isGranted(targetId, AccessManager.REMOVE)) {
-                    throw new AccessDeniedException(safeGetJCRPath(targetId)
+                if (!accessMgr.isGranted(targetPath, Permission.REMOVE_NODE)) {
+                    throw new AccessDeniedException(safeGetJCRPath(targetPath)
                             + ": not allowed to remove node");
                 }
             } catch (ItemNotFoundException infe) {
                 String msg = "internal error: failed to check access rights for "
-                        + safeGetJCRPath(targetId);
+                        + safeGetJCRPath(targetPath);
                 log.debug(msg);
                 throw new RepositoryException(msg, infe);
             }
@@ -843,11 +845,11 @@ public class BatchedItemOperations extends ItemValidator {
             }
             NodeDef targetDef = ntReg.getNodeDef(targetState.getDefinitionId());
             if (targetDef.isMandatory()) {
-                throw new ConstraintViolationException(safeGetJCRPath(targetId)
+                throw new ConstraintViolationException(safeGetJCRPath(targetPath)
                         + ": cannot remove mandatory node");
             }
             if (targetDef.isProtected()) {
-                throw new ConstraintViolationException(safeGetJCRPath(targetId)
+                throw new ConstraintViolationException(safeGetJCRPath(targetPath)
                         + ": cannot remove protected node");
             }
         }
@@ -862,12 +864,12 @@ public class BatchedItemOperations extends ItemValidator {
                     try {
                         NodeReferences refs = stateMgr.getNodeReferences(refsId);
                         if (refs.hasReferences()) {
-                            throw new ReferentialIntegrityException(safeGetJCRPath(targetId)
+                            throw new ReferentialIntegrityException(safeGetJCRPath(targetPath)
                                     + ": cannot remove node with references");
                         }
                     } catch (ItemStateException ise) {
                         String msg = "internal error: failed to check references on "
-                                + safeGetJCRPath(targetId);
+                                + safeGetJCRPath(targetPath);
                         log.error(msg, ise);
                         throw new RepositoryException(msg, ise);
                     }
@@ -912,14 +914,14 @@ public class BatchedItemOperations extends ItemValidator {
         // access rights
         AccessManager accessMgr = session.getAccessManager();
         // make sure current session is granted read access on node
-        if (!accessMgr.isGranted(node.getNodeId(), AccessManager.READ)) {
+        if (!accessMgr.isGranted(nodePath, Permission.READ)) {
             throw new PathNotFoundException(safeGetJCRPath(node.getNodeId()));
         }
-        // make sure current session is granted write access on node
-        if (!accessMgr.isGranted(node.getNodeId(), AccessManager.WRITE)) {
-            throw new AccessDeniedException(safeGetJCRPath(node.getNodeId())
-                    + ": not allowed to modify node");
-        }
+        // TODO: removed check for 'WRITE' permission on node due to the fact,
+        // TODO: that add_node and set_property permission are granted on the
+        // TODO: items to be create/modified and not on their parent.
+        // in any case, the ability to add child-nodes and properties is checked
+        // while executing the corresponding operation.
 
         // locking status
         verifyUnlocked(nodePath);
@@ -948,13 +950,11 @@ public class BatchedItemOperations extends ItemValidator {
      */
     public void verifyCanRead(Path nodePath)
             throws PathNotFoundException, RepositoryException {
-        NodeState node = getNodeState(nodePath);
-
         // access rights
         AccessManager accessMgr = session.getAccessManager();
         // make sure current session is granted read access on node
-        if (!accessMgr.isGranted(node.getNodeId(), AccessManager.READ)) {
-            throw new PathNotFoundException(safeGetJCRPath(node.getNodeId()));
+        if (!accessMgr.isGranted(nodePath, Permission.READ)) {
+            throw new PathNotFoundException(safeGetJCRPath(nodePath));
         }
     }
 
@@ -1647,6 +1647,7 @@ public class BatchedItemOperations extends ItemValidator {
      * child nodes.
      *
      * @param srcState
+     * @param srcPath
      * @param srcStateMgr
      * @param srcAccessMgr
      * @param destParentId
@@ -1661,6 +1662,7 @@ public class BatchedItemOperations extends ItemValidator {
      * @throws RepositoryException if an error occurs
      */
     private NodeState copyNodeState(NodeState srcState,
+                                    Path srcPath,
                                     ItemStateManager srcStateMgr,
                                     AccessManager srcAccessMgr,
                                     NodeId destParentId,
@@ -1738,10 +1740,11 @@ public class BatchedItemOperations extends ItemValidator {
             Iterator iter = srcState.getChildNodeEntries().iterator();
             while (iter.hasNext()) {
                 NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
-                NodeId nodeId = entry.getId();
-                if (!srcAccessMgr.isGranted(nodeId, AccessManager.READ)) {
+                Path srcChildPath = PathFactoryImpl.getInstance().create(srcPath, entry.getName(), true);
+                if (!srcAccessMgr.isGranted(srcChildPath, Permission.READ)) {
                     continue;
                 }
+                NodeId nodeId = entry.getId();
                 NodeState srcChildState = (NodeState) srcStateMgr.getItemState(nodeId);
 
                 /**
@@ -1752,7 +1755,7 @@ public class BatchedItemOperations extends ItemValidator {
                  */
 
                 // recursive copying of child node
-                NodeState newChildState = copyNodeState(srcChildState,
+                NodeState newChildState = copyNodeState(srcChildState, srcChildPath,
                         srcStateMgr, srcAccessMgr, id, flag, refTracker);
                 // store new child node
                 stateMgr.store(newChildState);
@@ -1763,10 +1766,10 @@ public class BatchedItemOperations extends ItemValidator {
             iter = srcState.getPropertyNames().iterator();
             while (iter.hasNext()) {
                 Name propName = (Name) iter.next();
-                PropertyId propId = new PropertyId(srcState.getNodeId(), propName);
-                if (!srcAccessMgr.isGranted(propId, AccessManager.READ)) {
+                if (!srcAccessMgr.isGranted(srcPath, propName, Permission.READ)) {
                     continue;
                 }
+                PropertyId propId = new PropertyId(srcState.getNodeId(), propName);
                 PropertyState srcChildState =
                         (PropertyState) srcStateMgr.getItemState(propId);
 

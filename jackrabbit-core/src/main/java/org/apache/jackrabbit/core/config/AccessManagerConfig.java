@@ -23,7 +23,7 @@ package org.apache.jackrabbit.core.config;
  * This class is currently only used to assign a static type to
  * more generic bean configuration information.
  *
- * @see RepositoryConfig#getAccessManagerConfig()
+ * @see SecurityConfig#getAccessManagerConfig()
  */
 public class AccessManagerConfig extends BeanConfig {
 

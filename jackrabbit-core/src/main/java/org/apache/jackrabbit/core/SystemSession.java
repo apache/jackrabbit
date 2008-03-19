@@ -20,6 +20,10 @@ import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.SystemPrincipal;
+import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
+import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
@@ -84,7 +88,6 @@ class SystemSession extends SessionImpl {
          * correctly
          */
         return new SystemAccessManager();
-        //return super.createAccessManager(subject, hierMgr);
     }
 
     //--------------------------------------------------------< inner classes >
@@ -102,6 +105,10 @@ class SystemSession extends SessionImpl {
          */
         public void init(AMContext context)
                 throws AccessDeniedException, Exception {
+            // nop
+        }
+
+        public void init(AMContext context, AccessControlProvider acProvider, WorkspaceAccessManager wspAccessMgr) throws AccessDeniedException, Exception {
             // nop
         }
 
@@ -134,6 +141,26 @@ class SystemSession extends SessionImpl {
          */
         public boolean isGranted(ItemId id, int permissions)
                 throws ItemNotFoundException, RepositoryException {
+            // allow everything
+            return true;
+        }
+
+        /**
+         * Always returns true.
+         *
+         * @see AccessManager#isGranted(Path, int)
+         */
+        public boolean isGranted(Path absPath, int permissions) throws RepositoryException {
+            // allow everything
+            return true;
+        }
+
+        /**
+         * Always returns true.
+         *
+         * @see AccessManager#isGranted(Path, Name, int) 
+         */
+        public boolean isGranted(Path parentPath, Name childName, int permissions) throws ItemNotFoundException, RepositoryException {
             // allow everything
             return true;
         }

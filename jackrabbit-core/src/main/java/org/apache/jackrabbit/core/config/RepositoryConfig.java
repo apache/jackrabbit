@@ -634,6 +634,7 @@ public class RepositoryConfig {
      * JAAS app-entry configuration.
      *
      * @return repository name
+     * @deprecated Use {@link SecurityConfig#getAppName()} instead.
      */
     public String getAppName() {
         return sec.getAppName();
@@ -643,6 +644,7 @@ public class RepositoryConfig {
      * Returns the repository access manager configuration.
      *
      * @return access manager configuration
+     * @deprecated Use {@link SecurityConfig#getAccessManagerConfig()} instead.
      */
     public AccessManagerConfig getAccessManagerConfig() {
         return sec.getAccessManagerConfig();
@@ -653,6 +655,7 @@ public class RepositoryConfig {
      *
      * @return login module configuration, or <code>null</code> if standard
      *         JAAS mechanism should be used.
+     * @deprecated Use {@link SecurityConfig#getLoginModuleConfig()} instead.
      */
     public LoginModuleConfig getLoginModuleConfig() {
         return sec.getLoginModuleConfig();

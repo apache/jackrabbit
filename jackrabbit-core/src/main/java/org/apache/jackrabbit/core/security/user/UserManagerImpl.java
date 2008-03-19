@@ -1,0 +1,535 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.core.security.user;
+
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.AuthorizableExistsException;
+import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.api.security.user.User;
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.core.security.authentication.CryptedSimpleCredentials;
+import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SecurityItemModifier;
+import org.apache.jackrabbit.core.ItemImpl;
+import org.apache.jackrabbit.util.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.jcr.Credentials;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.SimpleCredentials;
+import javax.jcr.Value;
+import javax.jcr.AccessDeniedException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.Node;
+import javax.jcr.Item;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.version.VersionException;
+import javax.jcr.lock.LockException;
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
+import java.security.Principal;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Set;
+
+/**
+ * UserManagerImpl
+ */
+public class UserManagerImpl extends SecurityItemModifier implements UserManager, UserConstants {
+
+    private static final Logger log = LoggerFactory.getLogger(UserManagerImpl.class);
+
+    private final SessionImpl session;
+    private final String adminId;
+    private final NodeResolver authResolver;
+
+    private String currentUserPath;
+
+    public UserManagerImpl(SessionImpl session, String adminId) throws RepositoryException {
+        this.session = session;
+        this.adminId = adminId;
+
+        NodeResolver nr;
+        try {
+            session.getWorkspace().getQueryManager();
+            nr = new IndexNodeResolver(session);
+        } catch (RepositoryException e) {
+            log.debug("UserManger: no QueryManager available for workspace '" + session.getWorkspace().getName() + "' -> Use traversing node resolver.");
+            nr = new TraversingNodeResolver(session);
+        }
+        authResolver = nr;
+    }
+
+    //--------------------------------------------------------< UserManager >---
+    /**
+     * @see UserManager#getAuthorizable(String)
+     */
+    public Authorizable getAuthorizable(String id) throws RepositoryException {
+        if (id == null || id.length() == 0) {
+            throw new IllegalArgumentException("Invalid authorizable name '" + id + "'");
+        }
+        Authorizable authorz = null;
+        NodeImpl n = (NodeImpl) authResolver.findNode(P_USERID, id, NT_REP_USER);
+        if (n != null) {
+            authorz = UserImpl.create(n, this);
+        } else {
+            // TODO: TOBEFIXED. should rather search for node with escaped(id) == Node.getName
+            String principalName = getGroupPrincipalName(id);
+            n = (NodeImpl) authResolver.findNode(P_PRINCIPAL_NAME, principalName, NT_REP_GROUP);
+            if (n != null) {
+                authorz = GroupImpl.create(n, this);
+            }
+        }
+        return authorz;
+    }
+
+    /**
+     * @see UserManager#getAuthorizable(Principal)
+     */
+    public Authorizable getAuthorizable(Principal principal) throws RepositoryException {
+        NodeImpl n = null;
+        // shortcut that avoids executing a query.
+        if (principal instanceof ItemBasedPrincipal) {
+            String authPath = ((ItemBasedPrincipal) principal).getPath();
+            if (session.itemExists(authPath)) {
+                Item authItem = session.getItem(authPath);
+                if (authItem.isNode()) {
+                    n = (NodeImpl) authItem;
+                }
+            }
+        }
+        // another Principal -> search
+        if (n == null) {
+            String name = principal.getName();
+            n = (NodeImpl) authResolver.findNode(P_PRINCIPAL_NAME, name, NT_REP_AUTHORIZABLE);
+        }
+        // build the corresponding authorizable object
+        if (n != null) {
+            if (n.isNodeType(NT_REP_USER)) {
+               return UserImpl.create(n, this);
+            } else if (n.isNodeType(NT_REP_GROUP)) {
+               return GroupImpl.create(n, this);
+            } else {
+                log.warn("Unexpected user nodetype " + n.getPrimaryNodeType().getName());
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @see UserManager#findAuthorizable(String,String)
+     */
+    public Iterator findAuthorizable(String propertyName, String value) throws RepositoryException {
+        Name name = session.getQName(propertyName);
+        NodeIterator auths  = authResolver.findNodes(name, value, NT_REP_AUTHORIZABLE, true);
+        return new AuthorizableIterator(auths);
+    }
+
+    /**
+     * Creates a new Node on the repository with the specified
+     * <code>userName</code>.<br>
+     * The <code>userID</code> is expected to be a valid JCR-<code>Name</code>.
+     * The User will be created relative to path of the User who represents the
+     * Session this UserManager has been created for.<br>
+     * If the {@link javax.jcr.Credentials Credentials} are of type
+     * {@link javax.jcr.SimpleCredentials SimpleCredentials} they will be
+     * crypted.
+     *
+     * @param userID
+     * @param credentials
+     * @see UserManager#createUser(String, Credentials, Principal principal)
+     * @inheritDoc
+     */
+    public User createUser(String userID, Credentials credentials,
+                           Principal principal) throws RepositoryException {
+        return createUser(userID, credentials, principal, null);
+    }
+
+    /**
+     *
+     * @param userID
+     * @param credentials
+     * @param principal
+     * @param intermediatePath
+     * @return
+     * @throws AuthorizableExistsException
+     * @throws RepositoryException
+     */
+    public User createUser(String userID, Credentials credentials,
+                           Principal principal, String intermediatePath)
+            throws AuthorizableExistsException, RepositoryException {
+        if (userID == null || credentials == null || principal == null) {
+            throw new IllegalArgumentException("Not possible to create user with null parameters");
+        }
+        if (getAuthorizable(userID) != null) {
+            throw new AuthorizableExistsException("User for '" + userID + "' already exists");
+        }
+        if (hasAuthorizableOrReferee(principal)) {
+            throw new AuthorizableExistsException("Authorizable for '" + principal.getName() + "' already exists");
+        }
+        if (!(credentials instanceof SimpleCredentials)) {
+            throw new RepositoryException("SimpleCredentials required. Found " + credentials.getClass());
+        } else if (!userID.equals(((SimpleCredentials) credentials).getUserID())) {
+            throw new RepositoryException("UserID mismatch: " + userID + " <-> " + ((SimpleCredentials) credentials).getUserID());
+        }
+
+        NodeImpl parent = null;
+        try {
+            String parentPath = getParentPath(intermediatePath, getCurrentUserPath());
+            parent = createParentNode(parentPath);
+
+            Name nodeName = session.getQName(Text.escapeIllegalJcrChars(userID));
+            NodeImpl userNode = addSecurityNode(parent, nodeName, NT_REP_USER);
+
+            setSecurityProperty(userNode, P_USERID, getValue(userID));
+            CryptedSimpleCredentials creds = new CryptedSimpleCredentials((SimpleCredentials) credentials);
+            setSecurityProperty(userNode, P_PASSWORD, getValue(creds.getPassword()));
+            setSecurityProperty(userNode, P_PRINCIPAL_NAME, getValue(principal.getName()));
+            parent.save();
+
+            log.info("User created: " + userID + "; " + userNode.getPath());
+            return UserImpl.create(userNode, this);
+        } catch (RepositoryException e) {
+            // something went wrong -> revert changes and rethrow
+            if (parent != null) {
+                parent.refresh(false);
+                log.debug("Failed to create new User, reverting changes.");
+            }
+            throw e;
+        } catch (NoSuchAlgorithmException e) {
+            throw new RepositoryException(e);
+        } catch (UnsupportedEncodingException e) {
+            throw new RepositoryException(e);
+        }
+    }
+
+    /**
+     * Create a new <code>Group</code> with the given <code>groupName</code>.
+     * It will be created below the this UserManager's root Path.<br>
+     * If non-existant elements of the Path will be created as <code>Nodes</code>
+     * of type {@link #NT_REP_AUTHORIZABLE_FOLDER rep:AuthorizableFolder}
+     *
+     * @param principal
+     * @see UserManager#createGroup(Principal);
+     * @inheritDoc
+     */
+    public Group createGroup(Principal principal) throws RepositoryException {
+        return createGroup(principal, null);
+    }
+
+    /**
+     *
+     * @param principal
+     * @param intermediatePath
+     * @return
+     * @throws AuthorizableExistsException
+     * @throws RepositoryException
+     */
+    public Group createGroup(Principal principal, String intermediatePath) throws AuthorizableExistsException, RepositoryException {
+        if (principal == null) {
+            throw new IllegalArgumentException("Principal might not be null.");
+        }
+        if (hasAuthorizableOrReferee(principal)) {
+            throw new AuthorizableExistsException("Authorizable for '" + principal.getName() + "' already exists: ");
+        }
+
+        NodeImpl parent = null;
+        try {
+            String parentPath = getParentPath(intermediatePath, GROUPS_PATH);
+            parent = createParentNode(parentPath);
+            Name groupID = getGroupId(principal.getName());
+
+            NodeImpl groupNode = addSecurityNode(parent, groupID, NT_REP_GROUP);
+            setSecurityProperty(groupNode, P_PRINCIPAL_NAME, getValue(principal.getName()));
+            parent.save();
+
+            log.info("Group created: " + groupID + "; " + groupNode.getPath());
+
+            return GroupImpl.create(groupNode, this);
+        } catch (RepositoryException e) {
+            if (parent != null) {
+                parent.refresh(false);
+                log.debug("newInstance new Group failed, revert changes on parent");
+            }
+            throw e;
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * Simple search for <code>User</code>s<br>
+     * The argument is a substring which must match the UserId or main
+     * Principal's name.
+     *
+     * @param simpleFilter substring to match against. The empty String matches
+     * all users.
+     * @return Iterator containing Authorizable-objects
+     * @throws RepositoryException
+     */
+    public Iterator findUsers(String simpleFilter) throws RepositoryException {
+        Set s = new HashSet(2);
+        s.add(P_USERID);
+        s.add(P_PRINCIPAL_NAME);
+        NodeIterator nodes = authResolver.findNodes(s, simpleFilter, NT_REP_USER, false, Long.MAX_VALUE);
+        return new AuthorizableIterator(nodes);
+    }
+
+    /**
+     * Simple search for a <code>Group</code>s<br>
+     * The argument is a substring which must match the Group's Principal name.
+     *
+     * @param simpleFilter substring to match against. The empty String matches
+     * all groups.
+     * @return Iterator containing Authorizable-objects
+     * @throws RepositoryException
+     */
+    public Iterator findGroups(String simpleFilter) throws RepositoryException {
+        NodeIterator nodes = authResolver.findNodes(P_PRINCIPAL_NAME, simpleFilter, NT_REP_GROUP, false);
+        return new AuthorizableIterator(nodes);
+    }
+
+    /**
+     *
+     * @param principal
+     * @return
+     * @throws RepositoryException
+     */
+    boolean hasAuthorizableOrReferee(Principal principal) throws RepositoryException {
+        Set s = new HashSet(2);
+        s.add(P_PRINCIPAL_NAME);
+        s.add(P_REFEREES);
+        NodeIterator res = authResolver.findNodes(s, principal.getName(), NT_REP_AUTHORIZABLE, true, 1);
+        return res.hasNext();
+    }
+
+    void setProtectedProperty(NodeImpl node, Name propName, Value[] values) throws RepositoryException, LockException, ConstraintViolationException, ItemExistsException, VersionException {
+        setSecurityProperty(node, propName, values);
+        node.save();
+    }
+
+    void removeProtectedItem(ItemImpl item, Node parent) throws RepositoryException, AccessDeniedException, VersionException {
+        removeSecurityItem(item);
+        parent.save();
+    }
+
+    /**
+     * Escape illegal JCR characters and test if a user exists that has the
+     * principals name as userId, which might happen if userID != principal-name.
+     * In this case: generate another ID for the group to be created.
+     *
+     * @param principalName to be used as hint for the groupid.
+     * @return a group id.
+     * @throws RepositoryException
+     */
+    private Name getGroupId(String principalName) throws RepositoryException {
+        String escHint = Text.escapeIllegalJcrChars(principalName);
+        String groupID = escHint;
+        int i = 0;
+        while (getAuthorizable(groupID) != null) {
+            // TODO: replace separator by "_" (see above)
+            groupID = escHint + "_GR_" + i;
+            i++;
+        }
+        return session.getQName(groupID);
+    }
+
+    /**
+     * TODO: Remove method as soon as searching group-by-id is fixed (see above).
+     */
+    private static String getGroupPrincipalName(String groupId) {
+        int pos = groupId.lastIndexOf("_GR_");
+        String pName = (pos > -1) ? groupId.substring(0, pos) : groupId;
+        return Text.unescapeIllegalJcrChars(pName);
+    }
+
+    private Value getValue(String strValue) throws RepositoryException {
+        return session.getValueFactory().createValue(strValue);
+    }
+
+    /**
+     * @return true if the given userID belongs to the administrator user.
+     */
+    boolean isAdminId(String userID) {
+        return adminId.equals(userID);
+    }
+
+    UserImpl getCurrentUser() {
+        try {
+            String uid = session.getUserID();
+            if (uid != null) {
+                AuthorizableImpl auth = (AuthorizableImpl) getAuthorizable(session.getUserID());
+                if (auth != null && !auth.isGroup()) {
+                    return (UserImpl) auth;
+                }
+            }
+        } catch (RepositoryException e) {
+            // should never get here
+            log.error("Internal error: unable to build current user path.", e.getMessage());
+        }
+        return null;
+    }
+
+    private String getCurrentUserPath() {
+        if (currentUserPath == null) {
+            StringBuffer b = new StringBuffer();
+            try {
+                String uid = session.getUserID();
+                if (uid != null) {
+                    UserImpl user = getCurrentUser();
+                    if (user != null) {
+                        b.append(user.getNode().getPath());
+                    }
+                }
+            } catch (RepositoryException e) {
+                // should never get here
+                log.error("Internal error: unable to build current user path.", e.getMessage());
+            }
+            if (b.length() == 0) {
+                // fallback: default user-path
+                b.append(USERS_PATH);
+            }
+            currentUserPath = b.toString();
+        }
+        return currentUserPath;
+    }
+
+    private static String getParentPath(String hint, String root) {
+        StringBuffer b = new StringBuffer();
+        if (hint == null || !hint.startsWith(root)) {
+            b.append(root);
+        }
+        if (hint != null && hint.length() > 1) {
+            if (!hint.startsWith("/")) {
+                b.append("/");
+            }
+            b.append(hint);
+        }
+        return b.toString();
+    }
+
+    /**
+     * @param path to the authorizable node to be created
+     * @return
+     * @throws RepositoryException
+     */
+    private NodeImpl createParentNode(String path) throws RepositoryException {
+        NodeImpl parent = (NodeImpl) session.getRootNode();
+        String[] elem = path.split("/");
+        for (int i = 0; i < elem.length; i++) {
+            String name = elem[i];
+            if (name.length() < 1) {
+                continue;
+            }
+            Name nName = session.getQName(name);
+            if (!parent.hasNode(nName)) {
+                Name ntName;
+                if (i == 0) {
+                    // rep:security node
+                    ntName = NameConstants.NT_UNSTRUCTURED;
+                } else {
+                    ntName = NT_REP_AUTHORIZABLE_FOLDER;
+                }
+                NodeImpl added = addSecurityNode(parent, nName, ntName);
+                parent.save();
+                parent = added;
+            } else {
+                parent = parent.getNode(nName);
+            }
+        }
+        return parent;
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * Inner class
+     */
+    private final class AuthorizableIterator implements Iterator {
+
+        private final Set served = new HashSet();
+
+        private Authorizable next;
+        private NodeIterator authNodeIter;
+
+        private AuthorizableIterator(NodeIterator authNodeIter) {
+            this.authNodeIter = authNodeIter;
+            next = seekNext();
+        }
+
+        //-------------------------------------------------------< Iterator >---
+        /**
+         * @see Iterator#hasNext()
+         */
+        public boolean hasNext() {
+            return next != null;
+        }
+
+        /**
+         * @see Iterator#next()
+         */
+        public Object next() {
+            Authorizable authr = next;
+            if (authr == null) {
+                throw new NoSuchElementException();
+            }
+            next = seekNext();
+            return authr;
+        }
+
+        /**
+         * @see Iterator#remove()
+         */
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+        //----------------------------------------------------------------------
+        private Authorizable seekNext() {
+            while (authNodeIter.hasNext()) {
+                NodeImpl node = (NodeImpl) authNodeIter.nextNode();
+                try {
+                    if (!served.contains(node.getUUID())) {
+                        Authorizable authr;
+                        if (node.isNodeType(NT_REP_USER)) {
+                            authr = UserImpl.create(node, UserManagerImpl.this);
+                        } else if (node.isNodeType(NT_REP_GROUP)) {
+                            authr = GroupImpl.create(node, UserManagerImpl.this);
+                        } else {
+                            log.warn("Ignoring unexpected nodetype: " + node.getPrimaryNodeType().getName());
+                            continue;
+                        }
+                        served.add(node.getUUID());
+                        return authr;
+                    }
+                } catch (RepositoryException e) {
+                    log.debug(e.getMessage());
+                    // continue seeking next authorizable
+                }
+            }
+
+            // no next authorizable -> iteration is completed.
+            return null;
+        }
+    }
+
+}

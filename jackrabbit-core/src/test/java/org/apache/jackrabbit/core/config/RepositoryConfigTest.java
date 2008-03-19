@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.config;
 
 import junit.framework.TestCase;
 import org.xml.sax.InputSource;
+import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,9 +34,8 @@ import java.net.URISyntaxException;
  */
 public class RepositoryConfigTest extends TestCase {
 
-    private static final String REPOSITORY_XML = "target/test-repository.xml";
-
-    private static final String REPOSITORY_HOME = "target/test-repository";
+    private static final String REPOSITORY_XML = "target/repository_for_test.xml";
+    private static final String REPOSITORY_HOME = "target/repository_for_test";
 
     private static void deleteAll(File file) {
         if (file.exists()) {
@@ -178,10 +178,27 @@ public class RepositoryConfigTest extends TestCase {
                 new File(REPOSITORY_HOME, "workspaces").getPath(),
                 new File(config.getWorkspacesConfigRootDir()).getPath());
         assertEquals("Jackrabbit", config.getAppName());
+        assertEquals("Jackrabbit", config.getSecurityConfig().getAppName());
 
-        AccessManagerConfig amc = config.getAccessManagerConfig();
+        // SecurityManagerConfig
+        SecurityManagerConfig smc = config.getSecurityConfig().getSecurityManagerConfig();
         assertEquals(
-                "org.apache.jackrabbit.core.security.SimpleAccessManager",
+                "org.apache.jackrabbit.core.security.simple.SimpleSecurityManager",
+                smc.getClassName());
+        assertTrue(smc.getParameters().isEmpty());
+        assertNotNull(smc.getWorkspaceName());
+
+        BeanConfig bc = smc.getWorkspaceAccessConfig();
+        if (bc != null) {
+            WorkspaceAccessManager wac = (WorkspaceAccessManager) smc.getWorkspaceAccessConfig().newInstance();
+            assertEquals("org.apache.jackrabbit.core.security.simple.SimpleWorkspaceAccessManager", wac.getClass().getName());
+        }
+
+        // AccessManagerConfig
+        AccessManagerConfig amc = config.getAccessManagerConfig();
+        amc = config.getSecurityConfig().getAccessManagerConfig();
+        assertEquals(
+                "org.apache.jackrabbit.core.security.simple.SimpleAccessManager",
                 amc.getClassName());
         assertTrue(amc.getParameters().isEmpty());
 

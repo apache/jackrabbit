@@ -16,6 +16,18 @@
  */
 package org.apache.jackrabbit.core.security;
 
+import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
+import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.RepositoryException;
+import javax.jcr.ItemNotFoundException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.security.Principal;
@@ -23,12 +35,6 @@ import java.security.acl.Group;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Properties;
-
-import javax.jcr.AccessDeniedException;
-
-import org.apache.jackrabbit.core.ItemId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The simple JBoss access manager is a specialized Access Manager to
@@ -56,6 +62,10 @@ public class SimpleJBossAccessManager implements AccessManager {
 
     public void init(AMContext context)
             throws AccessDeniedException, Exception {
+        init(context, null, null);
+    }
+
+    public void init(AMContext context, AccessControlProvider acProvider, WorkspaceAccessManager wspAccessMgr) throws AccessDeniedException, Exception {
         Properties rolemaps = new Properties();
         File rolemap = new File(context.getHomeDir(), "rolemapping.properties");
         log.info("Loading jbossgroup role mappings from {}", rolemap.getPath());
@@ -97,12 +107,25 @@ public class SimpleJBossAccessManager implements AccessManager {
 
     public boolean isGranted(ItemId id, int permissions) {
         // system has always all permissions
-        // anonymous has all but WRITE & REMOVE premissions
+        // anonymous has only READ premissions
         return system || (anonymous && ((permissions & (WRITE | REMOVE)) == 0));
+    }
+
+    public boolean isGranted(Path absPath, int permissions) throws RepositoryException {
+        return internalIsGranted(permissions);
+    }
+
+    public boolean isGranted(Path parentPath, Name childName, int permissions) throws ItemNotFoundException, RepositoryException {
+        return internalIsGranted(permissions);
     }
 
     public boolean canAccess(String workspaceName) {
         return system || anonymous;
     }
 
+    private boolean internalIsGranted(int permissions) {
+        /* system has always all permissions,
+           anonymous has only READ premissions */
+        return system || (anonymous && Permission.READ == permissions);
+    }
 }

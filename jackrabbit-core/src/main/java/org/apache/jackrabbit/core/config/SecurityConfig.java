@@ -28,6 +28,11 @@ public class SecurityConfig {
     private final String name;
 
     /**
+     * Repository security manager configuration;
+     */
+    private final SecurityManagerConfig smc;
+
+    /**
      * Repository access manager configuration;
      */
     private final AccessManagerConfig amc;
@@ -41,12 +46,16 @@ public class SecurityConfig {
      * Creates a new security configuration.
      *
      * @param name repository name for a JAAS app-entry configuration
+     * @param smc security manager configuration
      * @param amc access manager configuration
      * @param lmc login module configuration (can be <code>null</code>)
      */
     public SecurityConfig(
-            String name, AccessManagerConfig amc, LoginModuleConfig lmc) {
+            String name,
+            SecurityManagerConfig smc,
+            AccessManagerConfig amc, LoginModuleConfig lmc) {
         this.name = name;
+        this.smc = smc;
         this.amc = amc;
         this.lmc = lmc;
     }
@@ -59,6 +68,15 @@ public class SecurityConfig {
      */
     public String getAppName() {
         return name;
+    }
+
+    /**
+     * Returns the repository security manager configuration.
+     *
+     * @return access manager configuration
+     */
+    public SecurityManagerConfig getSecurityManagerConfig() {
+        return smc;
     }
 
     /**

@@ -16,57 +16,25 @@
  */
 package org.apache.jackrabbit.core.security;
 
+import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
+
 import javax.jcr.Credentials;
-import javax.jcr.SimpleCredentials;
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.callback.NameCallback;
-import javax.security.auth.callback.PasswordCallback;
-import javax.security.auth.callback.UnsupportedCallbackException;
-import java.io.IOException;
+import javax.jcr.Session;
 
 /**
- * A <code>CredentialsCallbackHandler</code> ...
+ * A <code>CallbackHandlerImpl</code> ...
+ *
+ * @deprecated Use {@link org.apache.jackrabbit.core.security.authentication.CallbackHandlerImpl} instead.
  */
-public class CredentialsCallbackHandler implements CallbackHandler {
+public class CredentialsCallbackHandler extends org.apache.jackrabbit.core.security.authentication.CallbackHandlerImpl {
 
-    protected final Credentials credentials;
-
-    /**
-     * Constructor
-     *
-     * @param credentials
-     */
     public CredentialsCallbackHandler(Credentials credentials) {
-        this.credentials = credentials;
+        super(credentials, null, null);
     }
 
-    //------------------------------------------------------< CallbackHandler >
-    /**
-     * {@inheritDoc}
-     */
-    public void handle(Callback[] callbacks) throws IOException,
-            UnsupportedCallbackException {
-        for (int i = 0; i < callbacks.length; i++) {
-            if (callbacks[i] instanceof CredentialsCallback) {
-                CredentialsCallback ccb = (CredentialsCallback) callbacks[i];
-                // supply credentials
-                ccb.setCredentials(credentials);
-            } else if (callbacks[i] instanceof NameCallback
-                    && credentials instanceof SimpleCredentials) {
-                NameCallback ncb = (NameCallback) callbacks[i];
-                SimpleCredentials sc = (SimpleCredentials) credentials;
-                // supply name
-                ncb.setName(sc.getUserID());
-            } else if (callbacks[i] instanceof PasswordCallback
-                    && credentials instanceof SimpleCredentials) {
-                PasswordCallback pcb = (PasswordCallback) callbacks[i];
-                SimpleCredentials sc = (SimpleCredentials) credentials;
-                // supply password
-                pcb.setPassword(sc.getPassword());
-            } else {
-                throw new UnsupportedCallbackException(callbacks[i], "Unrecognized Callback");
-            }
-        }
+    public CredentialsCallbackHandler(Credentials credentials,
+                                      Session session,
+                                      PrincipalProviderRegistry principalProviderRegistry) {
+        super(credentials, session, principalProviderRegistry);
     }
 }

@@ -29,6 +29,23 @@ import javax.security.auth.spi.LoginModule;
  */
 public class LoginModuleConfig extends BeanConfig {
 
+    public static final String PARAM_ANONYMOUS_ID = "anonymousId";
+    public static final String PARAM_ADMIN_ID = "adminId";
+
+    /**
+     * Name of the default user id to be used upon Repository.login with
+     * <code>null</code> credentials. Optional parameter in the LoginModule
+     * configuration.
+     */
+    public static final String PARAM_DEFAULT_USERID = "defaultUserId";
+
+    /**
+     * Property-Key for the fully qualified class name of the implementation of
+     * {@link org.apache.jackrabbit.core.security.principal.PrincipalProvider}
+     * to be used with the LoginModule.
+     */
+    public static final String PARAM_PRINCIPAL_PROVIDER_CLASS = "principalprovider";
+
     /**
      * Creates an access manager configuration object from the
      * given bean configuration.

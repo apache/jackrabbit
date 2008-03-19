@@ -33,9 +33,9 @@ import org.apache.jackrabbit.core.cluster.UpdateEventListener;
 import org.apache.jackrabbit.core.config.ClusterConfig;
 import org.apache.jackrabbit.core.config.DataStoreConfig;
 import org.apache.jackrabbit.core.config.FileSystemConfig;
-import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.core.config.SecurityManagerConfig;
 import org.apache.jackrabbit.core.config.VersioningConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.data.DataStore;
@@ -52,24 +52,37 @@ import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.ObservationDispatcher;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
-import org.apache.jackrabbit.core.security.AuthContext;
+import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
+import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.state.CacheManager;
 import org.apache.jackrabbit.core.state.ChangeLog;
+import org.apache.jackrabbit.core.state.ISMLocking;
 import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ManagedMLRUItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.state.ISMLocking;
 import org.apache.jackrabbit.core.util.RepositoryLock;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
+import javax.jcr.AccessDeniedException;
+import javax.jcr.Credentials;
+import javax.jcr.LoginException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+import javax.jcr.observation.EventListener;
+import javax.jcr.observation.ObservationManager;
+import javax.security.auth.Subject;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -85,19 +98,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.Credentials;
-import javax.jcr.LoginException;
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
-import javax.jcr.observation.EventListener;
-import javax.jcr.observation.ObservationManager;
-import javax.security.auth.Subject;
 
 /**
  * A <code>RepositoryImpl</code> ...
@@ -148,6 +148,11 @@ public class RepositoryImpl extends AbstractRepository
     private final NodeTypeRegistry ntReg;
     private final VersionManagerImpl vMgr;
     private final VirtualNodeTypeStateManager virtNTMgr;
+
+    /**
+     * Security manager
+     */
+    private JackrabbitSecurityManager securityMgr;
 
     /**
      * Search manager for the jcr:system tree. May be <code>null</code> if
@@ -376,6 +381,36 @@ public class RepositoryImpl extends AbstractRepository
     }
 
     /**
+     * Returns the {@link org.apache.jackrabbit.core.security.JackrabbitSecurityManager SecurityManager}
+     * of this <code>Repository</code>
+     *
+     * @return the security manager
+     * @throws RepositoryException if an error occurs.
+     */
+    protected synchronized JackrabbitSecurityManager getSecurityManager()
+            throws RepositoryException {
+
+        if (securityMgr == null) {
+            SecurityManagerConfig smc = getConfig().getSecurityConfig().getSecurityManagerConfig();
+
+            String workspaceName = smc.getWorkspaceName();
+            if (workspaceName == null) {
+                workspaceName = getConfig().getDefaultWorkspaceName();
+            }
+            SystemSession securitySession = getSystemSession(workspaceName);
+            // mark system session as 'active' for that the system workspace does
+            // not get disposed by workspace-janitor
+            onSessionCreated(securitySession);
+
+            securityMgr = (JackrabbitSecurityManager) smc.newInstance();
+            securityMgr.init(this, securitySession);
+
+            log.info("SecurityManager = " + securityMgr.getClass());
+        }
+        return securityMgr;
+    }
+
+    /**
      * Creates the version manager.
      *
      * @param vConfig the versioning config
@@ -412,8 +447,13 @@ public class RepositoryImpl extends AbstractRepository
      */
     protected void initStartupWorkspaces() throws RepositoryException {
         String wspName = repConfig.getDefaultWorkspaceName();
+        String secWspName = repConfig.getSecurityConfig().getSecurityManagerConfig().getWorkspaceName();
         try {
             initWorkspace((WorkspaceInfo) wspInfos.get(wspName));
+            if(secWspName != null && !wspInfos.containsKey(secWspName)) {
+                createWorkspace(secWspName);
+                log.info("created system workspace: {}", secWspName);
+            }
         } catch (RepositoryException e) {
             // if default workspace failed to initialize, shutdown again
             log.error("Failed to initialize workspace '" + wspName + "'", e);
@@ -578,7 +618,7 @@ public class RepositoryImpl extends AbstractRepository
         /**
          * todo implement 'System' workspace
          * FIXME
-         * - the should be one 'System' workspace per repository
+         * - there should be one 'System' workspace per repository
          * - the 'System' workspace should have the /jcr:system node
          * - versions, version history and node types should be reflected in
          *   this system workspace as content under /jcr:system
@@ -939,6 +979,57 @@ public class RepositoryImpl extends AbstractRepository
         }
     }
 
+    /**
+     * Tries to add Principals to a given subject:
+     * First Access the Subject from the current AccessControlContext,
+     * If Subject is found the LoginContext is evoked for it, in order
+     * to possibly allow for extension of preauthenticated Subject.<br>
+     * In contrast to a login with Credentials, a Session is created, even if the
+     * Authentication failed.<br>
+     * If the {@link Subject} is marked to be unmodificable or if the
+     * authentication of the the Subject failed Session is build for unchanged
+     * Subject.
+     *
+     * @param workspaceName must not be null
+     * @return if a Subject is exsting null else
+     * @throws RepositoryException
+     * @throws AccessDeniedException
+     */
+    private Session extendAuthentication(String workspaceName)
+            throws RepositoryException, AccessDeniedException {
+
+        Subject subject = null;
+        try {
+            AccessControlContext acc = AccessController.getContext();
+            subject = Subject.getSubject(acc);
+        } catch (SecurityException e) {
+            log.warn("Can't check for preauthentication. Reason:", e.getMessage());
+        }
+        if (subject == null) {
+            log.debug("No preauthenticated subject found -> return null.");
+            return null;
+        }
+
+        Session s;
+        if (subject.isReadOnly()) {
+            log.debug("Preauthenticated Subject is read-only -> create Session");
+            s = createSession(subject, workspaceName);
+        } else {
+            log.debug("Found preauthenticated Subject, try to extend authentication");
+            // login either using JAAS or custom LoginModule
+            AuthContext authCtx = getSecurityManager().getAuthContext(null, subject);
+            try {
+                authCtx.login();
+                s = createSession(authCtx, workspaceName);
+            } catch (javax.security.auth.login.LoginException e) {
+                // subject could not be extended
+                log.debug("Preauthentication could not be extended");
+                s = createSession(subject, workspaceName);
+            }
+        }
+        return s;
+    }
+
     //-------------------------------------------------< JackrabbitRepository >
 
     /**
@@ -973,6 +1064,10 @@ public class RepositoryImpl extends AbstractRepository
         // stop optional cluster node
         if (clusterNode != null) {
             clusterNode.stop();
+        }
+
+        if (securityMgr != null) {
+            securityMgr.close();
         }
 
         // close active user sessions
@@ -1236,30 +1331,24 @@ public class RepositoryImpl extends AbstractRepository
             getWorkspaceInfo(workspaceName);
 
             if (credentials == null) {
-                // null credentials, obtain the identity of the already-authenticated
+                // try to obtain the identity of the already authenticated
                 // subject from access control context
-                AccessControlContext acc = AccessController.getContext();
-                Subject subject = Subject.getSubject(acc);
-                if (subject != null) {
-                    return createSession(subject, workspaceName);
+                Session session = extendAuthentication(workspaceName);
+                if (session != null) {
+                    // sucessful extended authentication
+                    return session;
+                } else {
+                    log.debug("Attempt to login without Credentials and Subject -> try login with null credentials.");
                 }
             }
-            // login either using JAAS or our own LoginModule
-            AuthContext authCtx;
-            LoginModuleConfig lmc = repConfig.getLoginModuleConfig();
-            if (lmc == null) {
-                authCtx = new AuthContext.JAAS(repConfig.getAppName(), credentials);
-            } else {
-                authCtx = new AuthContext.Local(
-                        lmc.getLoginModule(), lmc.getParameters(), credentials);
-            }
+            // not preauthenticated -> try login with credentials
+            AuthContext authCtx = getSecurityManager().getAuthContext(credentials, new Subject());
             authCtx.login();
-
             // create session
             return createSession(authCtx, workspaceName);
+
         } catch (SecurityException se) {
-            throw new LoginException(
-                    "Unable to access authentication information", se);
+            throw new LoginException("Unable to access authentication information", se);
         } catch (javax.security.auth.login.LoginException le) {
             throw new LoginException(le.getMessage(), le);
         } catch (AccessDeniedException ade) {
@@ -1873,6 +1962,12 @@ public class RepositoryImpl extends AbstractRepository
                 searchMgr.close();
                 searchMgr = null;
             }
+
+            // deregister
+            if (securityMgr != null) {
+                securityMgr.dispose(getName());
+            }
+
 
             // close system session
             if (systemSession != null) {
