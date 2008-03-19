@@ -299,7 +299,9 @@ public abstract class ItemImpl implements Item {
 
     /**
      * Builds a list of transient (i.e. new or modified) item states that are
-     * within the scope of <code>this.{@link #save()}</code>.
+     * within the scope of <code>this.{@link #save()}</code>. The collection
+     * returned is ordered depth-first, i.e. the item itself (if transient)
+     * comes last.
      *
      * @return list of transient item states
      * @throws InvalidItemStateException
@@ -310,45 +312,6 @@ public abstract class ItemImpl implements Item {
         // list of transient states that should be persisted
         ArrayList dirty = new ArrayList();
         ItemState transientState;
-
-        // fail-fast test: check status of this item's state
-        if (isTransient()) {
-            String msg;
-            switch (state.getStatus()) {
-                case ItemState.STATUS_EXISTING_MODIFIED:
-                    // add this item's state to the list
-                    dirty.add(state);
-                    break;
-
-                case ItemState.STATUS_NEW:
-                    msg = safeGetJCRPath() + ": cannot save a new item.";
-                    log.debug(msg);
-                    throw new RepositoryException(msg);
-
-                case ItemState.STATUS_STALE_MODIFIED:
-                    msg = safeGetJCRPath()
-                        + ": the item cannot be saved because it has been modified externally.";
-                    log.debug(msg);
-                    throw new InvalidItemStateException(msg);
-
-                case ItemState.STATUS_STALE_DESTROYED:
-                    msg = safeGetJCRPath()
-                        + ": the item cannot be saved because it has been deleted externally.";
-                    log.debug(msg);
-                    throw new InvalidItemStateException(msg);
-
-                case ItemState.STATUS_UNDEFINED:
-                    msg = safeGetJCRPath()
-                        + ": the item cannot be saved; it seems to have been removed externally.";
-                    log.debug(msg);
-                    throw new InvalidItemStateException(msg);
-
-                default:
-                    log.debug("unexpected state status (" + state.getStatus() + ")");
-                    // ignore
-                    break;
-            }
-        }
 
         if (isNode()) {
             // build list of 'new' or 'modified' descendants
@@ -389,6 +352,45 @@ public abstract class ItemImpl implements Item {
                 }
             }
         }
+        // fail-fast test: check status of this item's state
+        if (isTransient()) {
+            String msg;
+            switch (state.getStatus()) {
+                case ItemState.STATUS_EXISTING_MODIFIED:
+                    // add this item's state to the list
+                    dirty.add(state);
+                    break;
+
+                case ItemState.STATUS_NEW:
+                    msg = safeGetJCRPath() + ": cannot save a new item.";
+                    log.debug(msg);
+                    throw new RepositoryException(msg);
+
+                case ItemState.STATUS_STALE_MODIFIED:
+                    msg = safeGetJCRPath()
+                        + ": the item cannot be saved because it has been modified externally.";
+                    log.debug(msg);
+                    throw new InvalidItemStateException(msg);
+
+                case ItemState.STATUS_STALE_DESTROYED:
+                    msg = safeGetJCRPath()
+                        + ": the item cannot be saved because it has been deleted externally.";
+                    log.debug(msg);
+                    throw new InvalidItemStateException(msg);
+
+                case ItemState.STATUS_UNDEFINED:
+                    msg = safeGetJCRPath()
+                        + ": the item cannot be saved; it seems to have been removed externally.";
+                    log.debug(msg);
+                    throw new InvalidItemStateException(msg);
+
+                default:
+                    log.debug("unexpected state status (" + state.getStatus() + ")");
+                    // ignore
+                    break;
+            }
+        }
+
         return dirty;
     }
 
