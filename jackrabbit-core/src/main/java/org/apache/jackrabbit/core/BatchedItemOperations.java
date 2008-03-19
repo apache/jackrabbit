@@ -268,7 +268,17 @@ public class BatchedItemOperations extends ItemValidator {
             throw new RepositoryException(msg);
         }
         
-        // 4. do clone operation (modify and store affected states)
+        // 4. detect share cycle
+        NodeId srcId = srcState.getNodeId();
+        NodeId destParentId = destParentState.getNodeId();
+        if (destParentId.equals(srcId) || 
+                hierMgr.isAncestor(srcId, destParentId)) {
+            String msg = "This would create a share cycle.";
+            log.debug(msg);
+            throw new RepositoryException(msg);
+        }
+        
+        // 5. do clone operation (modify and store affected states)
         if (!srcState.addShare(destParentState.getNodeId())) {
             String msg = "Adding a shareable node twice to the same parent is not supported.";
             log.debug(msg);
