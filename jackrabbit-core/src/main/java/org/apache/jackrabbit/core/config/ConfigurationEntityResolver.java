@@ -33,10 +33,12 @@ import java.util.Map;
  * <li><code>-//The Apache Software Foundation//DTD Jackrabbit 1.0//EN</code></li>
  * <li><code>-//The Apache Software Foundation//DTD Jackrabbit 1.2//EN</code></li>
  * <li><code>-//The Apache Software Foundation//DTD Jackrabbit 1.4//EN</code></li>
+ * <li><code>-//The Apache Software Foundation//DTD Jackrabbit 1.5//EN</code></li>
  * </ul>
  * <p>
  * Also the following system identifiers are mapped to local resources:
  * <ul>
+ * <li><code>http://jackrabbit.apache.org/dtd/repository-1.5.dtd</code></li>
  * <li><code>http://jackrabbit.apache.org/dtd/repository-1.4.dtd</code></li>
  * <li><code>http://jackrabbit.apache.org/dtd/repository-1.2.dtd</code></li>
  * <li><code>http://jackrabbit.apache.org/dtd/repository-1.0.dtd</code></li>
@@ -67,6 +69,14 @@ class ConfigurationEntityResolver implements EntityResolver {
      * Creates the singleton instance of this class.
      */
     private ConfigurationEntityResolver() {
+        // Apache Jackrabbit 1.5 DTD
+        publicIds.put(
+                "-//The Apache Software Foundation//DTD Jackrabbit 1.5//EN",
+                "repository-1.5.dtd");
+        systemIds.put(
+                "http://jackrabbit.apache.org/dtd/repository-1.5.dtd",
+                "repository-1.5.dtd");
+
         // Apache Jackrabbit 1.4 DTD
         publicIds.put(
                 "-//The Apache Software Foundation//DTD Jackrabbit 1.4//EN",
