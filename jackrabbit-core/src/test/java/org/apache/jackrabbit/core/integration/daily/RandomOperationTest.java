@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.integration;
+package org.apache.jackrabbit.core.integration.daily;
 
 import org.apache.jackrabbit.core.AbstractConcurrencyTest;
 import org.apache.jackrabbit.core.integration.random.task.VersionOperationsTask;
@@ -26,16 +26,13 @@ import javax.jcr.RepositoryException;
  * <code>RandomOperationTest</code> executes randomly chosen operations using
  * multiple threads. Each thread operates on its own subtree to avoid
  * conflicting changes.
- * <p/>
- * Please note that this test is disabled by default!
- * You can enable them by setting {@link #NUM_THREADS} to 1 or higher.
  */
 public class RandomOperationTest extends AbstractConcurrencyTest {
 
     /**
      * Each task is executed with this number of threads.
      */
-    private static final int NUM_THREADS = 0;
+    private static final int NUM_THREADS = 1;
 
     /**
      * Tasks are advised to run for this amount of time.
