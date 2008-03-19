@@ -38,8 +38,7 @@ public class Restore extends VersionOperation {
     public NodeIterator execute() throws Exception {
         Node n = getNode();
         Version v = getRandomVersion(false);
-        // TODO: for now only call restore on non-base versions. See: JCR-1476
-        if (v != null && !n.getBaseVersion().isSame(v)) {
+        if (v != null) {
             log.info(n.getPath() + ":" + v.getName());
             n.restore(v, true);
         }
