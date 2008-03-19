@@ -188,8 +188,10 @@ public class Timer {
             synchronized (Timer.this) {
                 if (numScheduledTasks == 0 &&
                         System.currentTimeMillis() > lastTaskScheduled + IDLE_TIME) {
-                    delegatee.cancel();
-                    delegatee = null;
+                    if (delegatee != null) {
+                        delegatee.cancel();
+                        delegatee = null;
+                    }
                 }
             }
         }
