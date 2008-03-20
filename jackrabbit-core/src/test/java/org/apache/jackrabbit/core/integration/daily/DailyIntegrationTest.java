@@ -16,9 +16,19 @@
  */
 package org.apache.jackrabbit.core.integration.daily;
 
-import junit.framework.TestCase;
 import junit.framework.Test;
+import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.apache.jackrabbit.core.ConcurrencyTest;
+import org.apache.jackrabbit.core.ConcurrentCheckinMixedTransactionTest;
+import org.apache.jackrabbit.core.ConcurrentLoginTest;
+import org.apache.jackrabbit.core.ConcurrentNodeModificationTest;
+import org.apache.jackrabbit.core.ConcurrentReadWriteTest;
+import org.apache.jackrabbit.core.ConcurrentSaveTest;
+import org.apache.jackrabbit.core.ConcurrentVersioningTest;
+import org.apache.jackrabbit.core.ConcurrentVersioningWithTransactionsTest;
+import org.apache.jackrabbit.core.LockTest;
+import org.apache.jackrabbit.core.ReadVersionsWhileModified;
 
 /**
  * Contains tests that are run on a daily basis.
@@ -28,7 +38,20 @@ public class DailyIntegrationTest extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("Daily integration tests");
 
+        // random operation test
         suite.addTestSuite(RandomOperationTest.class);
+
+        // multi-threading tests
+        suite.addTestSuite(ConcurrencyTest.class);
+        suite.addTestSuite(ConcurrentLoginTest.class);
+        suite.addTestSuite(ConcurrentNodeModificationTest.class);
+        suite.addTestSuite(ConcurrentReadWriteTest.class);
+        suite.addTestSuite(ConcurrentSaveTest.class);
+        suite.addTestSuite(ConcurrentVersioningTest.class);
+        suite.addTestSuite(ConcurrentVersioningWithTransactionsTest.class);
+        suite.addTestSuite(ConcurrentCheckinMixedTransactionTest.class);
+        suite.addTestSuite(LockTest.class);
+        suite.addTestSuite(ReadVersionsWhileModified.class);
 
         return suite;
     }
