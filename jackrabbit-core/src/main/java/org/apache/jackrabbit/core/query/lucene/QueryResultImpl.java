@@ -300,14 +300,9 @@ public class QueryResultImpl implements QueryResult {
                  sn != null && resultNodes.size() < maxResultSize;
                  sn = result.nextScoreNodes()) {
                 // check access
-                try {
-                    if (isAccessGranted(sn)) {
-                        resultNodes.add(sn);
-                    } else {
-                        invalid++;
-                    }
-                } catch (ItemNotFoundException e) {
-                    // has been deleted meanwhile
+                if (isAccessGranted(sn)) {
+                    resultNodes.add(sn);
+                } else {
                     invalid++;
                 }
             }
@@ -336,17 +331,19 @@ public class QueryResultImpl implements QueryResult {
      * @param nodes the nodes to check.
      * @return <code>true</code> if read access is granted to all
      *         <code>nodes</code>.
-     * @throws ItemNotFoundException if one of the <code>nodes</code> is not
-     *                               found.
-     * @throws RepositoryException   if an error occurs while checking access
-     *                               rights.
+     * @throws RepositoryException if an error occurs while checking access
+     *                             rights.
      */
     private boolean isAccessGranted(ScoreNode[] nodes)
-            throws ItemNotFoundException, RepositoryException {
+            throws RepositoryException {
         for (int i = 0; i < nodes.length; i++) {
-            if (nodes[i] != null && !accessMgr.isGranted(
-                    nodes[i].getNodeId(), AccessManager.READ)) {
-                return false;
+            try {
+                if (nodes[i] != null && !accessMgr.isGranted(
+                        nodes[i].getNodeId(), AccessManager.READ)) {
+                    return false;
+                }
+            } catch (ItemNotFoundException e) {
+                // node deleted while query was executed
             }
         }
         return true;
