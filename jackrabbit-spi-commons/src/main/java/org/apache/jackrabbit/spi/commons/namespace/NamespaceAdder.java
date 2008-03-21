@@ -34,10 +34,10 @@ public class NamespaceAdder {
     public void addNamespaces(NamespaceMapping nsm)
             throws NamespaceException, UnsupportedRepositoryOperationException, RepositoryException {
         Map m = nsm.getPrefixToURIMapping();
-        for (Iterator i = m.values().iterator(); i.hasNext();) {
+        for (Iterator i = m.entrySet().iterator(); i.hasNext();) {
             Map.Entry e = (Map.Entry) i.next();
             String prefix = (String) e.getKey();
-            String uri = (String) e.getKey();
+            String uri = (String) e.getValue();
             registry.registerNamespace(prefix, uri);
         }
     }
