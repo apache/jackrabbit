@@ -16,27 +16,27 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import junit.framework.Test;
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
+
+import java.util.Calendar;
 
 /**
- * Test suite that includes all jackrabbit core version tests.
+ * <code>InternalVersionHistoryImplTest</code> executes tests for
+ * {@link InternalVersionHistoryImpl}.
  */
-public class TestAll extends TestCase {
+public class InternalVersionHistoryImplTest extends TestCase {
 
     /**
-     * Returns a test suite that executes all tests inside this package.
-     *
-     * @return a test suite that executes all tests inside this package
+     * Checks if {@link InternalVersionHistoryImpl#getCurrentTime()} returns
+     * monotonically increasing Calendar instances.
      */
-    public static Test suite() {
-        TestSuite suite = new TestSuite("Version tests");
-        suite.addTestSuite(CheckinRemoveVersionTest.class);
-        suite.addTestSuite(InternalVersionHistoryImplTest.class);
-        suite.addTestSuite(RemoveVersionLabelTest.class);
-        suite.addTestSuite(RestoreTest.class);
-        suite.addTestSuite(VersionIteratorImplTest.class);
-        return suite;
+    public void testGetCurrentTime() {
+        Calendar last = InternalVersionHistoryImpl.getCurrentTime();
+        for (int i = 0; i < 100; i++) {
+            Calendar next = InternalVersionHistoryImpl.getCurrentTime();
+            assertTrue("InternalVersionHistoryImpl.getCurrentTime() not monotonically increasing",
+                    last.compareTo(next) < 0);
+            last = next;
+        }
     }
 }
