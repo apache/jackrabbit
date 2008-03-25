@@ -74,7 +74,7 @@ public class UpdateTest extends AbstractJCRTest {
 
         String srcWorkspace = null;
         for (int i = 0; i < accessibleWorkspaces.length; i++) {
-            if (!accessibleWorkspaces.equals(currentWorkspace)) {
+            if (!accessibleWorkspaces[i].equals(currentWorkspace)) {
                 try {
                     n.getCorrespondingNodePath(accessibleWorkspaces[i]);
                 } catch (ItemNotFoundException e) {
@@ -207,7 +207,7 @@ public class UpdateTest extends AbstractJCRTest {
     private String getAnotherWorkspace() throws NotExecutableException {
         String srcWorkspace = null;
         for (int i = 0; i < accessibleWorkspaces.length; i++) {
-            if (!accessibleWorkspaces.equals(currentWorkspace)) {
+            if (!accessibleWorkspaces[i].equals(currentWorkspace)) {
                 srcWorkspace = accessibleWorkspaces[i];
             }
         }
