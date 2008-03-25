@@ -117,7 +117,9 @@ public class BeanConfig {
             while (it.hasNext()) {
                 String key = (String) it.next();
                 if (map.get(key) == null && properties.getProperty(key) != null) {
-                    log.warn(object.getClass().getName() + " does not support '" + key + "'; the setting is ignored.");
+                    String msg = object.getClass().getName() + " does not support '" + key;
+                    log.error(msg);
+                    throw new ConfigurationException(msg);
                 }
             }
             return object;
