@@ -326,6 +326,8 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
         // @todo further investigate
         connectionManager.getConnection().setAutoCommit(true);
 
+        super.close();
+
         // now it's safe to shutdown the embedded Derby database
         try {
             DriverManager.getConnection(url);
@@ -333,8 +335,6 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
             // a shutdown command always raises a SQLException
             log.info(e.getMessage());
         }
-
-        super.close();
     }
 
 }
