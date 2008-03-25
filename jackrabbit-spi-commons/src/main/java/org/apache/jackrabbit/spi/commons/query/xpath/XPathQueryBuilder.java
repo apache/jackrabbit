@@ -296,10 +296,10 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             }
             query.jjtAccept(this, root);
         } catch (ParseException e) {
-            throw new InvalidQueryException(e.getMessage(), e);
+            throw new InvalidQueryException(e.getMessage() + " for statement: " + statement, e);
         } catch (Throwable t) {
             // also catch any other exception
-            throw new InvalidQueryException(t.getMessage(), t);
+            throw new InvalidQueryException(t.getMessage() + " for statement: " + statement, t);
         }
         if (exceptions.size() > 0) {
             // simply report the first one
