@@ -193,7 +193,7 @@ public class DocumentViewImportTest extends AbstractImportXmlTest {
                 String propVal = decodedProp.getString();
                 // both possibilities
                 if (!propVal.equals(encodedAttributeValue)
-                        || !propVal.equals(encodedAttributeValue)) {
+                        && !propVal.equals(decodedAttributeValue)) {
                     fail("Value " + encodedAttributeValue + "  of attribute " +
                             decodedAttributeName + " is not correctly imported.");
                 }
@@ -206,7 +206,7 @@ public class DocumentViewImportTest extends AbstractImportXmlTest {
                     String propVal = decodedProp.getString();
                     // both possibilities
                     if (!propVal.equals(encodedAttributeValue)
-                            || !propVal.equals(encodedAttributeValue)) {
+                            && !propVal.equals(decodedAttributeValue)) {
                         fail("Value " + encodedAttributeValue + "  of attribute " +
                                 encodedAttributeName + " is not correctly imported.");
                     }

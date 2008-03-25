@@ -115,10 +115,10 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
     protected static final String encodedAttributeName = "Prop_x0020_Name";
     protected static final String decodedAttributeName = "Prop Name";
     protected static final String encodedAttributeValue = "Hello_x0009_&_x0009_GoodBye";
-    protected static final String decodedAttributeValue = "Hello\\t&\\tGoodBye";
+    protected static final String decodedAttributeValue = "Hello\t&\tGoodBye";
 
     //String value for the test with leading and trailing spaces and entity reference charachters
-    protected String xmltext = "\\t Text for docView Export test_x0009_with escaped _x003C_ characters.  ";
+    protected String xmltext = "\t Text for docView Export test_x0009_with escaped _x003C_ characters.  ";
 
     // is semantic of mix:referenceable respected?
     protected boolean respectMixRef = false;
