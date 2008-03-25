@@ -177,6 +177,7 @@ public class ConfigurationParser {
      * Parses the given XML document and returns the DOM root element.
      * A custom entity resolver is used to make the included configuration
      * file DTD available using the specified public identifiers.
+     * This implementation does not validate the XML.
      *
      * @see ConfigurationEntityResolver
      * @param xml xml document
@@ -185,12 +186,30 @@ public class ConfigurationParser {
      *                                not be read or parsed
      */
     protected Element parseXML(InputSource xml) throws ConfigurationException {
+        return parseXML(xml, false);
+    }
+
+    /**
+     * Parses the given XML document and returns the DOM root element.
+     * A custom entity resolver is used to make the included configuration
+     * file DTD available using the specified public identifiers.
+     *
+     * @see ConfigurationEntityResolver
+     * @param xml xml document
+     * @param validate wheter the XML should be validated
+     * @return root element
+     * @throws ConfigurationException if the configuration document could
+     *                                not be read or parsed
+     */
+    protected Element parseXML(InputSource xml, boolean validate) throws ConfigurationException {
         try {
             DocumentBuilderFactory factory =
                 DocumentBuilderFactory.newInstance();
-            factory.setValidating(true);
+            factory.setValidating(validate);
             DocumentBuilder builder = factory.newDocumentBuilder();
-            builder.setErrorHandler(new ConfigurationErrorHandler());
+            if (validate) {
+                builder.setErrorHandler(new ConfigurationErrorHandler());
+            }
             builder.setEntityResolver(ConfigurationEntityResolver.INSTANCE);
             Document document = builder.parse(xml);
             return document.getDocumentElement();

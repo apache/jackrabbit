@@ -206,7 +206,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      */
     public RepositoryConfig parseRepositoryConfig(InputSource xml)
             throws ConfigurationException {
-        Element root = parseXML(xml);
+        Element root = parseXML(xml, true);
 
         // Repository home directory
         String home = getVariables().getProperty(REPOSITORY_HOME_VARIABLE);
