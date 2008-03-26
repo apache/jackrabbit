@@ -301,7 +301,7 @@ public class DatabaseJournal extends AbstractJournal {
         } catch (SQLException e) {
             close(true);
 
-            String msg = "Unable to return record iterater.";
+            String msg = "Unable to return record iterator.";
             throw new JournalException(msg, e);
         }
     }

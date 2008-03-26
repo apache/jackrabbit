@@ -274,7 +274,7 @@ public class ClusterNode implements Runnable,
                 sync();
             } catch (ClusterException e) {
                 String msg = "Periodic sync of journal failed: " + e.getMessage();
-                log.error(msg);
+                log.error(msg, e);
             } catch (Exception e) {
                 String msg = "Unexpected error while syncing of journal: " + e.getMessage();
                 log.error(msg, e);
