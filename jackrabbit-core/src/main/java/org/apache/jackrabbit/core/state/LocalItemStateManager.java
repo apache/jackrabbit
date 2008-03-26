@@ -37,7 +37,7 @@ public class LocalItemStateManager
      * cache of weak references to ItemState objects issued by this
      * ItemStateManager
      */
-    private final ItemStateReferenceCache cache;
+    private final ItemStateCache cache;
 
     /**
      * Shared item state manager
@@ -142,7 +142,7 @@ public class LocalItemStateManager
         }
 
         // check cache. synchronized to ensure an entry is not created twice.
-        synchronized (cache) {
+        synchronized (this) {
             state = cache.retrieve(id);
             if (state == null) {
                 // regular behaviour
@@ -335,13 +335,9 @@ public class LocalItemStateManager
 
         // this LocalItemStateManager instance is no longer needed;
         // cached item states can now be safely discarded
-
-        // JCR-798: copy cached item states to array
-        // to avoid ConcurrentModificationException
-        ItemState[] isa = (ItemState[]) cache.values().toArray(
-                new ItemState[cache.size()]);
-        for (int i = 0; i < isa.length; i++) {
-            ItemState state = isa[i];
+        ItemState[] states = cache.retrieveAll();
+        for (int i = 0; i < states.length; i++) {
+            ItemState state = states[i];
             if (state != null) {
                 dispatcher.notifyStateDiscarded(state);
                 // let the item state know that it has been disposed
