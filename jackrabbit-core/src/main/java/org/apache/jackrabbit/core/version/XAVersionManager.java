@@ -462,7 +462,9 @@ public class XAVersionManager extends AbstractVersionManager
      * Delegate the call to our XA item state manager.
      */
     public void prepare(TransactionContext tx) throws TransactionException {
-        ((XAItemStateManager) stateMgr).prepare(tx);
+        if (vmgrLocked) {
+            ((XAItemStateManager) stateMgr).prepare(tx);
+        }
     }
 
     /**
@@ -472,9 +474,11 @@ public class XAVersionManager extends AbstractVersionManager
      * global repository manager to update its caches.
      */
     public void commit(TransactionContext tx) throws TransactionException {
-        ((XAItemStateManager) stateMgr).commit(tx);
-        Map xaItems = (Map) tx.getAttribute(ITEMS_ATTRIBUTE_NAME);
-        vMgr.itemsUpdated(xaItems.values());
+        if (vmgrLocked) {
+            ((XAItemStateManager) stateMgr).commit(tx);
+            Map xaItems = (Map) tx.getAttribute(ITEMS_ATTRIBUTE_NAME);
+            vMgr.itemsUpdated(xaItems.values());
+        }
     }
 
     /**
@@ -483,7 +487,9 @@ public class XAVersionManager extends AbstractVersionManager
      * Delegate the call to our XA item state manager.
      */
     public void rollback(TransactionContext tx) {
-        ((XAItemStateManager) stateMgr).rollback(tx);
+        if (vmgrLocked) {
+            ((XAItemStateManager) stateMgr).rollback(tx);
+        }
     }
 
     /**
