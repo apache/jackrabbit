@@ -16,16 +16,12 @@
  */
 package org.apache.jackrabbit.core.state;
 
+import java.util.Iterator;
+
 import org.apache.commons.collections.map.LinkedMap;
 import org.apache.jackrabbit.core.ItemId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Set;
-import java.util.Collections;
-import java.util.Collection;
-import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  * An <code>ItemStateCache</code> implementation that internally uses a
@@ -112,6 +108,15 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
     /**
      * {@inheritDoc}
      */
+    public ItemState[] retrieveAll() {
+        synchronized (cache) {
+            return (ItemState[]) cache.values().toArray(new ItemState[cache.size()]);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public void update(ItemId id) {
         touch();
         synchronized (cache) {
@@ -185,39 +190,6 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
     public boolean isEmpty() {
         synchronized (cache) {
             return cache.isEmpty();
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public int size() {
-        synchronized (cache) {
-            return cache.size();
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Set keySet() {
-        synchronized (cache) {
-            return Collections.unmodifiableSet(cache.keySet());
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Collection values() {
-        synchronized (cache) {
-            ArrayList list = new ArrayList(cache.size());
-            Iterator iter = cache.values().iterator();
-            while (iter.hasNext()) {
-                Entry entry = (Entry) iter.next();
-                list.add(entry.state);
-            }
-            return list;
         }
     }
 

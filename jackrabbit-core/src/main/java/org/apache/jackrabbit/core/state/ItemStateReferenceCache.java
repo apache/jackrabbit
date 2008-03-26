@@ -21,9 +21,6 @@ import org.apache.jackrabbit.core.util.Dumpable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Set;
-import java.util.Collections;
-import java.util.Collection;
 import java.io.PrintStream;
 
 /**
@@ -42,6 +39,7 @@ import java.io.PrintStream;
  * collector if they are thus rendered weakly reachable.
  * </li>
  * </ul>
+ * This implementation of ItemStateCache is thread-safe.
  */
 public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
 
@@ -86,7 +84,7 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
     /**
      * {@inheritDoc}
      */
-    public boolean isCached(ItemId id) {
+    public synchronized boolean isCached(ItemId id) {
         // check primary cache
         return refs.contains(id);
     }
@@ -94,7 +92,7 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
     /**
      * {@inheritDoc}
      */
-    public ItemState retrieve(ItemId id) {
+    public synchronized ItemState retrieve(ItemId id) {
         // fake call to update stats of secondary cache
         cache.retrieve(id);
 
@@ -105,7 +103,15 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
     /**
      * {@inheritDoc}
      */
-    public void cache(ItemState state) {
+    public synchronized ItemState[] retrieveAll() {
+        // values of primary cache
+        return (ItemState[]) refs.values().toArray(new ItemState[refs.size()]);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public synchronized void cache(ItemState state) {
         ItemId id = state.getId();
         if (refs.contains(id)) {
             log.warn("overwriting cached entry " + id);
@@ -120,7 +126,7 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
     /**
      * {@inheritDoc}
      */
-    public void evict(ItemId id) {
+    public synchronized void evict(ItemId id) {
         // fake call to update stats of secondary cache
         cache.evict(id);
         // remove from primary cache
@@ -130,14 +136,14 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
     /**
      * {@inheritDoc}
      */
-    public void dispose() {
+    public synchronized void dispose() {
         cache.dispose();
     }
 
     /**
      * {@inheritDoc}
      */
-    public void evictAll() {
+    public synchronized void evictAll() {
         // fake call to update stats of secondary cache
         cache.evictAll();
         // remove all weak references from primary cache
@@ -147,7 +153,7 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
     /**
      * {@inheritDoc}
      */
-    public void update(ItemId id) {
+    public synchronized void update(ItemId id) {
         // delegate
         cache.update(id);
     }
@@ -155,40 +161,16 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
     /**
      * {@inheritDoc}
      */
-    public boolean isEmpty() {
+    public synchronized boolean isEmpty() {
         // check primary cache
         return refs.isEmpty();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public int size() {
-        // size of primary cache
-        return refs.size();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Set keySet() {
-        // keys of primary cache
-        return Collections.unmodifiableSet(refs.keySet());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Collection values() {
-        // values of primary cache
-        return Collections.unmodifiableCollection(refs.values());
     }
 
     //-------------------------------------------------------------< Dumpable >
     /**
      * {@inheritDoc}
      */
-    public void dump(PrintStream ps) {
+    public synchronized void dump(PrintStream ps) {
         ps.println("ItemStateReferenceCache (" + this + ")");
         ps.println();
         ps.print("[refs] ");
