@@ -21,11 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Comparator;
 
 /**
  * File-based journal implementation that appends journal records to a single
@@ -114,10 +111,10 @@ public class FileJournal extends AbstractJournal {
             maximumSize = DEFAULT_MAXSIZE;
         }
         rootDirectory = new File(directory);
-        
+
         // JCR-1341: Cluster Journal directory should be created automatically
         rootDirectory.mkdirs();
-        
+
         if (!rootDirectory.exists() || !rootDirectory.isDirectory()) {
             String msg = "Directory specified does either not exist " +
                     "or is not a directory: " + directory;
@@ -145,22 +142,16 @@ public class FileJournal extends AbstractJournal {
 
         long stopRevision = getRevision();
 
-        File[] logFiles = null;
+        File[] files = null;
         if (startRevision < stopRevision) {
-            logFiles = rootDirectory.listFiles(new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    return name.startsWith(basename + ".");
-                }
-            });
-            Arrays.sort(logFiles, new Comparator() {
-                public int compare(Object o1, Object o2) {
-                    File f1 = (File) o1;
-                    File f2 = (File) o2;
-                    return f1.compareTo(f2);
-                }
-            });
+            RotatingLogFile[] logFiles = RotatingLogFile.listFiles(rootDirectory, basename);
+            files = new File[logFiles.length];
+            for (int i = 0; i < files.length; i++) {
+                files[i] = logFiles[i].getFile();
+            }
         }
-        return new FileRecordIterator(logFiles, startRevision, stopRevision, getResolver(), getNamePathResolver());
+        return new FileRecordIterator(files, startRevision, stopRevision, 
+                getResolver(), getNamePathResolver());
     }
 
     /**
@@ -179,7 +170,7 @@ public class FileJournal extends AbstractJournal {
         try {
             FileRecordLog recordLog = new FileRecordLog(journalFile);
             if (recordLog.exceeds(maximumSize)) {
-                switchLogs();
+                rotateLogs();
                 recordLog = new FileRecordLog(journalFile);
             }
             if (recordLog.isNew()) {
@@ -244,39 +235,11 @@ public class FileJournal extends AbstractJournal {
      * <code>journal.(N+1).log</code>, whereas the main journal file gets renamed
      * to <code>journal.1.log</code>.
      */
-    private void switchLogs() {
-        FilenameFilter filter = new FilenameFilter() {
-            public boolean accept(File dir, String name) {
-                return name.startsWith(basename + ".");
-            }
-        };
-        File[] files = rootDirectory.listFiles(filter);
-        Arrays.sort(files, new Comparator() {
-            public int compare(Object o1, Object o2) {
-                File f1 = (File) o1;
-                File f2 = (File) o2;
-                return f2.compareTo(f1);
-            }
-        });
-        for (int i = 0; i < files.length; i++) {
-            File file = files[i];
-            String name = file.getName();
-            int sep = name.lastIndexOf('.');
-            if (sep != -1) {
-                String ext = name.substring(sep + 1);
-                if (ext.equals(LOG_EXTENSION)) {
-                    file.renameTo(new File(rootDirectory, name + ".1"));
-                } else {
-                    try {
-                        int version = Integer.parseInt(ext);
-                        String newName = name.substring(0, sep + 1) +
-                                String.valueOf(version + 1);
-                        file.renameTo(new File(rootDirectory, newName));
-                    } catch (NumberFormatException e) {
-                        log.warn("Bogusly named journal file, skipped: " + file);
-                    }
-                }
-            }
+    private void rotateLogs() {
+        RotatingLogFile[] logFiles = RotatingLogFile.listFiles(rootDirectory, basename);
+        for (int i = 0; i < logFiles.length; i++) {
+            logFiles[i].rotate();
         }
     }
+
 }
