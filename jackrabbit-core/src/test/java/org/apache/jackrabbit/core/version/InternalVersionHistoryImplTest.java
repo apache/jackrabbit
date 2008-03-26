@@ -35,7 +35,7 @@ public class InternalVersionHistoryImplTest extends TestCase {
         for (int i = 0; i < 100; i++) {
             Calendar next = InternalVersionHistoryImpl.getCurrentTime();
             assertTrue("InternalVersionHistoryImpl.getCurrentTime() not monotonically increasing",
-                    last.compareTo(next) < 0);
+                    last.getTimeInMillis() < next.getTimeInMillis());
             last = next;
         }
     }
