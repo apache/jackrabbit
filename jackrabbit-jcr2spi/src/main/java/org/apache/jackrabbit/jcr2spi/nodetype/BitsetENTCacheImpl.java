@@ -79,22 +79,23 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         aggregates = new HashMap();
     }
 
+    //---------------------------------------------< EffectiveNodeTypeCache >---
     /**
-     * {@inheritDoc}
+     * @see EffectiveNodeTypeCache#getKey(Name[])
      */
     public Key getKey(Name[] ntNames) {
         return new BitsetKey(ntNames, nameIndex.size() + ntNames.length);
     }
 
     /**
-     * {@inheritDoc}
+     * @see EffectiveNodeTypeCache#put(EffectiveNodeType)
      */
     public void put(EffectiveNodeType ent) {
         put(getKey(ent.getMergedNodeTypes()), ent);
     }
 
     /**
-     * {@inheritDoc}
+     * @see EffectiveNodeTypeCache#put(Key, EffectiveNodeType)
      */
     public void put(Key key, EffectiveNodeType ent) {
         aggregates.put(key, ent);
@@ -102,7 +103,7 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
     }
 
     /**
-     * {@inheritDoc}
+     * @see EffectiveNodeTypeCache#findBest(Key)
      */
     public Key findBest(Key key) {
         // quick check for already cached key
@@ -120,7 +121,7 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
     }
 
     /**
-     * {@inheritDoc}
+     * @see EffectiveNodeTypeCache#invalidate(Name)
      */
     public void invalidate(Name name) {
         /**
@@ -138,21 +139,21 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
     }
 
     /**
-     * {@inheritDoc}
+     * @see EffectiveNodeTypeCache#contains(Key)
      */
     public boolean contains(Key key) {
         return aggregates.containsKey(key);
     }
 
     /**
-     * {@inheritDoc}
+     * @see EffectiveNodeTypeCache#get(Key)
      */
     public EffectiveNodeType get(Key key) {
         return (EffectiveNodeType) aggregates.get(key);
     }
 
     /**
-     * {@inheritDoc}
+     * @see EffectiveNodeTypeCache#clear()
      */
     public void clear() {
         sortedKeys.clear();
@@ -160,6 +161,7 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         nameIndex.clear();
     }
 
+    //------------------------------------------------------------< private >---
     /**
      * Returns the bit number for the given name. If the name does not exist
      * a new new bit number for that name is created.
@@ -215,8 +217,9 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         return removed;
     }
 
+    //----------------------------------------------------------< Cloneable >---
     /**
-     * {@inheritDoc}
+     * @see Cloneable#clone()
      */
     public Object clone() {
         BitsetENTCacheImpl clone = new BitsetENTCacheImpl();
@@ -228,8 +231,9 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         return clone;
     }
 
+    //-----------------------------------------------------------< Dumpable >---
     /**
-     * {@inheritDoc}
+     * @see org.apache.jackrabbit.jcr2spi.util.Dumpable#dump(PrintStream)
      */
     public void dump(PrintStream ps) {
         ps.println("EffectiveNodeTypeCache (" + this + ")");
@@ -244,6 +248,7 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         }
     }
 
+    //----------------------------------------------------------------< Key >---
     /**
      * Implements a {@link Key} by storing the node type aggregate information
      * in a bit set. We do not use the {@link java.util.BitSet} because it
@@ -301,61 +306,6 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         }
 
         /**
-         * {@inheritDoc}
-         */
-        public Name[] getNames() {
-            return names;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public boolean contains(Key otherKey) {
-            /*
-             * 0 - 0 => 0
-             * 0 - 1 => 1
-             * 1 - 0 => 0
-             * 1 - 1 => 0
-             * !a and b
-             */
-            BitsetKey other = (BitsetKey) otherKey;
-            int len = Math.max(bits.length, other.bits.length);
-            for (int i=0; i<len; i++) {
-                long w1 = i < bits.length ? bits[i] : 0;
-                long w2 = i < other.bits.length ? other.bits[i] : 0;
-                long r = ~w1 & w2;
-                if (r != 0) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public Key subtract(Key otherKey) {
-            /*
-             * 0 - 0 => 0
-             * 0 - 1 => 0
-             * 1 - 0 => 1
-             * 1 - 1 => 0
-             * a and !b
-             */
-            BitsetKey other = (BitsetKey) otherKey;
-            int len = Math.max(bits.length, other.bits.length);
-            long[] newBits = new long[len];
-            int numBits = 0;
-            for (int i=0; i<len; i++) {
-                long w1 = i < bits.length ? bits[i] : 0;
-                long w2 = i < other.bits.length ? other.bits[i] : 0;
-                newBits[i] = w1 & ~w2;
-                numBits += bitCount(newBits[i]);
-            }
-            return new BitsetKey(newBits, numBits);
-        }
-
-        /**
          * Returns the bit number of the next bit that is set, starting at
          * <code>fromIndex</code> inclusieve.
          *
@@ -399,12 +349,87 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
              return ((int)(val) + (int)(val >>> 32)) & 0xff;
          }
 
+        /**
+         * Calculates the hashcode.
+         * @return the calculated hashcode
+         */
+        private int calcHashCode() {
+            long h = 1234;
+            int addr = bits.length -1;
+            while (addr >=0 && bits[addr] == 0) {
+                addr--;
+            }
+            while (addr >=0) {
+                h ^= bits[addr] * (addr + 1);
+                addr--;
+            }
+            return (int)((h >> 32) ^ h);
+        }
 
+        //------------------------------------------------------------< Key >---
+        /**
+         * @see Key#getNames()
+         */
+        public Name[] getNames() {
+            return names;
+        }
+
+        /**
+         * @see Key#contains(Key)
+         */
+        public boolean contains(Key otherKey) {
+            /*
+             * 0 - 0 => 0
+             * 0 - 1 => 1
+             * 1 - 0 => 0
+             * 1 - 1 => 0
+             * !a and b
+             */
+            BitsetKey other = (BitsetKey) otherKey;
+            int len = Math.max(bits.length, other.bits.length);
+            for (int i=0; i<len; i++) {
+                long w1 = i < bits.length ? bits[i] : 0;
+                long w2 = i < other.bits.length ? other.bits[i] : 0;
+                long r = ~w1 & w2;
+                if (r != 0) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /**
+         * @see Key#subtract(Key)
+         */
+        public Key subtract(Key otherKey) {
+            /*
+             * 0 - 0 => 0
+             * 0 - 1 => 0
+             * 1 - 0 => 1
+             * 1 - 1 => 0
+             * a and !b
+             */
+            BitsetKey other = (BitsetKey) otherKey;
+            int len = Math.max(bits.length, other.bits.length);
+            long[] newBits = new long[len];
+            int numBits = 0;
+            for (int i=0; i<len; i++) {
+                long w1 = i < bits.length ? bits[i] : 0;
+                long w2 = i < other.bits.length ? other.bits[i] : 0;
+                newBits[i] = w1 & ~w2;
+                numBits += bitCount(newBits[i]);
+            }
+            return new BitsetKey(newBits, numBits);
+        }
+
+        //-----------------------------------------------------< Comparable >---
         /**
          * {@inheritDoc}
          *
          * This compares 1. the cardinailty (number of set bits) and 2. the
          * nummeric value of the bitsets in descending order.
+         *
+         * @see Comparable#compareTo(Object)
          */
         public int compareTo(Object other) {
             BitsetKey o = (BitsetKey) other;
@@ -430,8 +455,9 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
             return res;
         }
 
+        //---------------------------------------------------------< Object >---
         /**
-         * {@inheritDoc}
+         * @see Object#equals(Object)
          */
         public boolean equals(Object obj) {
             if (this == obj) {
@@ -457,31 +483,14 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         }
 
         /**
-         * {@inheritDoc}
+         * @see Object#hashCode()
          */
         public int hashCode() {
             return hashCode;
         }
 
         /**
-         * Calculates the hashcode.
-         * @return the calculated hashcode
-         */
-        private int calcHashCode() {
-            long h = 1234;
-            int addr = bits.length -1;
-            while (addr >=0 && bits[addr] == 0) {
-                addr--;
-            }
-            while (addr >=0) {
-                h ^= bits[addr] * (addr + 1);
-                addr--;
-            }
-            return (int)((h >> 32) ^ h);
-        }
-
-        /**
-         * {@inheritDoc}
+         * @see Object#toString()
          */
         public String toString() {
             StringBuffer buf = new StringBuffer("w=");
@@ -494,6 +503,5 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
             }
             return buf.toString();
         }
-
     }
 }
