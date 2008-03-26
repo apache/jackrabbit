@@ -70,6 +70,7 @@ public abstract class AbstractLoginModule implements LoginModule {
     private static final String KEY_SIMPLE_CREDENTIALS = "org.apache.jackrabbit.credentials.simple";
     private static final String KEY_LOGIN_NAME = "javax.security.auth.login.name";
 
+    protected String adminId;
     protected String anonymousId;
     protected String defaultUserId;
 
@@ -135,6 +136,9 @@ public abstract class AbstractLoginModule implements LoginModule {
             //call implementation for additional setup
             doInit(callbackHandler, repositoryCb.getSession(), options);
 
+            if (options.containsKey(LoginModuleConfig.PARAM_ADMIN_ID)) {
+                adminId = (String) options.get(LoginModuleConfig.PARAM_ADMIN_ID);
+            }
             if (options.containsKey(LoginModuleConfig.PARAM_ANONYMOUS_ID)) {
                 anonymousId = (String) options.get(LoginModuleConfig.PARAM_ANONYMOUS_ID);
             }
@@ -639,5 +643,61 @@ public abstract class AbstractLoginModule implements LoginModule {
             principal = res.nextPrincipal();
         } // no matching principal -> return null
         return principal;
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * Returns the admin user id.
+     *
+     * @return admin user id
+     */
+    public String getAdminId() {
+        return adminId;
+    }
+
+    /**
+     * Sets the anonymous user id.
+     *
+     * @param anonymousId anonymous user id
+     */
+    public void setAdminId(String adminId) {
+        this.adminId = adminId;
+    }
+
+    /**
+     * Returns the anonymous user id.
+     *
+     * @return anonymous user id
+     */
+    public String getAnonymousId() {
+        return anonymousId;
+    }
+
+    /**
+     * Sets the anonymous user id.
+     *
+     * @param anonymousId anonymous user id
+     */
+    public void setAnonymousId(String anonymousId) {
+        this.anonymousId = anonymousId;
+    }
+
+    /**
+     * Returns the default user id.
+     *
+     * @return default user id
+     */
+    public String getDefaultUserId() {
+        return defaultUserId;
+    }
+
+    /**
+     * Sets the default user id to be used when no login credentials
+     * are presented.
+     *
+     * @param defaultUserId default user id
+     */
+    public void setDefaultUserId(String defaultUserId) {
+        this.defaultUserId = defaultUserId;
     }
 }
