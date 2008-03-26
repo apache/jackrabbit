@@ -1,4 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0                              http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
 <!-- ====================================================================== -->
@@ -11,14 +11,14 @@
   </parent>
   <artifactId>jackrabbit-jcr-commons</artifactId>
   <name>Jackrabbit JCR Commons</name>
-  <version>1.4.1</version>
+  <version>1.4.2-SNAPSHOT</version>
   <description>General purpose classes for use with the JCR API</description>
   <packaging>bundle</packaging>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/tags/jackrabbit-jcr-commons-1.4.1</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/tags/jackrabbit-jcr-commons-1.4.1</developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/tags/jackrabbit-jcr-commons-1.4.1</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-jcr-commons</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-jcr-commons</developerConnection>
+    <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-jcr-commons</url>
   </scm>
 
   <build>
