@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import javax.jcr.Credentials;
+import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
@@ -34,6 +35,7 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.jackrabbit.commons.xml.ParsingContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -115,14 +117,27 @@ public abstract class AbstractSession implements Session {
      * @param in input stream to be parsed as XML and imported
      * @param uuidBehavior passed through
      * @throws IOException if an I/O error occurs
-     * @throws RepositoryException if another error occurs
+     * @throws InvalidSerializedDataException if an XML parsing error occurs
+     * @throws RepositoryException if a repository error occurs
      */
     public void importXML(
             String parentAbsPath, InputStream in, int uuidBehavior)
-            throws IOException, RepositoryException {
-        ContentHandler handler =
-            getImportContentHandler(parentAbsPath, uuidBehavior);
-        new DefaultContentHandler(handler).parse(in);
+            throws IOException, InvalidSerializedDataException,
+            RepositoryException {
+        try {
+            ContentHandler handler =
+                getImportContentHandler(parentAbsPath, uuidBehavior);
+            new ParsingContentHandler(handler).parse(in);
+        } catch (SAXException e) {
+            Throwable exception = e.getException();
+            if (exception instanceof RepositoryException) {
+                throw (RepositoryException) exception;
+            } else if (exception instanceof IOException) {
+                throw (IOException) exception;
+            } else {
+                throw new InvalidSerializedDataException("XML parse error", e);
+            }
+        }
     }
 
     /**
