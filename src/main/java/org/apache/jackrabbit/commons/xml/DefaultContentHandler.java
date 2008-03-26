@@ -14,24 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.commons;
+package org.apache.jackrabbit.commons.xml;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-import javax.jcr.InvalidSerializedDataException;
-import javax.jcr.RepositoryException;
-import javax.xml.parsers.FactoryConfigurationError;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
-import org.xml.sax.InputSource;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -39,14 +25,10 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * Adapter class for exposing a {@link ContentHandler} instance as
  * {@link DefaultHandler} object.
+ *
+ * @since Jackrabbit JCR Commons 1.5
  */
-class DefaultContentHandler extends DefaultHandler {
-
-    /**
-     * Logger instance.
-     */
-    private static final Logger logger =
-        LoggerFactory.getLogger(DefaultContentHandler.class);
+public class DefaultContentHandler extends DefaultHandler {
 
     /**
      * The adapted content handler instance.
@@ -61,42 +43,6 @@ class DefaultContentHandler extends DefaultHandler {
      */
     public DefaultContentHandler(ContentHandler handler) {
         this.handler = handler;
-    }
-
-    /**
-     * Utility method that parses the given input stream using this handler.
-     *
-     * @param in XML input stream
-     * @throws IOException if an I/O error occurs
-     * @throws RepositoryException if another error occurs
-     */
-    public void parse(InputStream in) throws IOException, RepositoryException {
-        try {
-            SAXParserFactory factory = SAXParserFactory.newInstance();
-            factory.setNamespaceAware(true);
-            factory.setFeature(
-                    "http://xml.org/sax/features/namespace-prefixes", false);
-
-            SAXParser parser = factory.newSAXParser();
-            // JCR-984 & JCR-985: Log the name of the SAXParser class
-            logger.debug("Using SAX parser " + parser.getClass().getName());
-            parser.parse(new InputSource(in), this);
-        } catch (FactoryConfigurationError e) {
-            throw new RepositoryException(
-                    "SAX parser implementation not available", e);
-        } catch (ParserConfigurationException e) {
-            throw new RepositoryException("SAX parser configuration error", e);
-        } catch (SAXException e) {
-            Exception exception = e.getException();
-            if (exception instanceof RepositoryException) {
-                throw (RepositoryException) exception;
-            } else if (exception instanceof IOException) {
-                throw (IOException) exception;
-            } else {
-                throw new InvalidSerializedDataException(
-                        "Error parsing XML import", e);
-            }
-        }
     }
 
     //------------------------------------------------------< ContentHandler >
@@ -225,17 +171,6 @@ class DefaultContentHandler extends DefaultHandler {
     public void startPrefixMapping(String prefix, String uri)
             throws SAXException {
         handler.startPrefixMapping(prefix, uri);
-    }
-
-    /**
-     * Returns an empty stream to prevent the XML parser from attempting
-     * to resolve external entity references.
-     *
-     * @see https://issues.apache.org/jira/browse/JCR-1355
-     */
-    public InputSource resolveEntity(String publicId, String systemId)
-            throws SAXException {
-        return new InputSource(new ByteArrayInputStream(new byte[0]));
     }
 
 }
