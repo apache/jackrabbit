@@ -21,7 +21,6 @@ import org.apache.jackrabbit.core.security.authentication.LocalAuthContext;
 
 import javax.jcr.Credentials;
 import javax.security.auth.Subject;
-import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
 import java.util.Collections;
@@ -43,38 +42,11 @@ import java.util.Map;
 public abstract class AuthContext implements org.apache.jackrabbit.core.security.authentication.AuthContext {
 
     /**
-     * Perform the authentication and, if successful, associate Principals and Credentials
-     * with the authenticated<code>Subject</code>.
-     *
-     * @see LoginContext#login()
-     * @throws LoginException if the authentication fails.
-     */
-    public abstract void login() throws LoginException;
-
-    /**
-     * Return the authenticated Subject.
-     *
-     * @see LoginContext#getSubject()
-     * @return the authenticated Subject or <code>null</code> if authentication failed.
-     */
-    public abstract Subject getSubject();
-
-    /**
-     * Logout the <code>Subject</code>.
-     *
-     * @see LoginContext#logout()
-     * @exception LoginException if the logout fails.
-     */
-    public abstract void logout() throws LoginException;
-
-    /**
      * An {@link AuthContext} implemented using a regular JAAS <code>LoginContext</code>.
      *
      * @deprecated Use {@link org.apache.jackrabbit.core.security.authentication.JAASAuthContext} instead
      */
-    public static class JAAS extends AuthContext {
-
-        private final LoginContext ctx;
+    public static class JAAS extends org.apache.jackrabbit.core.security.authentication.JAASAuthContext {
 
         /**
          * Creates an authentication context given a JAAS configuration name and some credentials.
@@ -84,30 +56,8 @@ public abstract class AuthContext implements org.apache.jackrabbit.core.security
          * @throws LoginException if the JAAS context couldn't be created
          */
         public JAAS(String name, Credentials creds) throws LoginException {
-            this.ctx = new LoginContext(name, new CredentialsCallbackHandler(creds));
+            super(name, new CredentialsCallbackHandler(creds), null);
         }
-
-        /**
-         * {@inheritDoc}
-         */
-        public void login() throws LoginException {
-            ctx.login();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public Subject getSubject() {
-            return ctx.getSubject();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public void logout() throws LoginException {
-            ctx.logout();
-        }
-
     }
 
     /**
@@ -116,6 +66,7 @@ public abstract class AuthContext implements org.apache.jackrabbit.core.security
      * @deprecated Use {@link org.apache.jackrabbit.core.security.authentication.LocalAuthContext} instead.
      */
     public static class Local extends AuthContext {
+
         private final LoginModule module;
         private final Map options;
         private Subject subject;

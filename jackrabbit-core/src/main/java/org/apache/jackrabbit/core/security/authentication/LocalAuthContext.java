@@ -53,8 +53,9 @@ public class LocalAuthContext implements AuthContext {
      * @param cbHandler CallbackHandler for the LoginModule
      * @param subject   Subject if a pre-authenticated exists
      */
-    LocalAuthContext(LoginModuleConfig config, CallbackHandler cbHandler,
-                     Subject subject) {
+    protected LocalAuthContext(LoginModuleConfig config,
+                               CallbackHandler cbHandler,
+                               Subject subject) {
         this.config = config;
         this.cbHandler = cbHandler;
         this.subject = (null == subject) ? new Subject() : subject;
