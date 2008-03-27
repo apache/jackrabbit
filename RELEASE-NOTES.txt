@@ -7,10 +7,8 @@ This is the 1.4.1 patch release of the jackrabbit-jcr-commons component of
 Apache Jackrabbit, a fully conforming implementation of the Content
 Repository for Java Technology API (JCR).
 
-This release contains fixes to a number of issues, most notably the
-concurrent modification exception reported in JCR-1359 and two concurrent
-versioning deadlocks reported in JCR-1462 and JCR-1480. See below for
-the full list of changes in this release.
+This release contains fixes to a number of issues. See below for the full
+list of changes in this release.
 
 See the Apache Jackrabbit website at http://jackrabbit.apache.org/ for
 more information.
@@ -52,13 +50,13 @@ The issue identifier and title is listed for each change and known issue.
 You can look up individual issues for more details in the Jackrabbit
 issue tracker at http://issues.apache.org/jira/browse/JCR
 
-  Improvement:
+  Improvements:
   [JCR-1342] Create OSGi Bundle Manifest Headers
   [JCR-1350] Add a serializing content handler
 
-  Bug:
+  Bugs:
   [JCR-1331] Improper deprecation of Locked class
   [JCR-1355] XML import should not access external entities
 
-  Known Issues:
+  Known Issue:
   [JCR-1386] Not full parsing of ISO8601 date/time format that ...
