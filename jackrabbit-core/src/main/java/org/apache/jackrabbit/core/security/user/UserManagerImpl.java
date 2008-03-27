@@ -72,11 +72,10 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
 
         NodeResolver nr;
         try {
-            session.getWorkspace().getQueryManager();
-            nr = new IndexNodeResolver(session);
+            nr = new IndexNodeResolver(session, session);
         } catch (RepositoryException e) {
             log.debug("UserManger: no QueryManager available for workspace '" + session.getWorkspace().getName() + "' -> Use traversing node resolver.");
-            nr = new TraversingNodeResolver(session);
+            nr = new TraversingNodeResolver(session, session);
         }
         authResolver = nr;
     }
@@ -94,9 +93,8 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
         if (n != null) {
             authorz = UserImpl.create(n, this);
         } else {
-            // TODO: TOBEFIXED. should rather search for node with escaped(id) == Node.getName
-            String principalName = getGroupPrincipalName(id);
-            n = (NodeImpl) authResolver.findNode(P_PRINCIPAL_NAME, principalName, NT_REP_GROUP);
+            Name nodeName = session.getQName(id);
+            n = (NodeImpl) authResolver.findNode(nodeName, NT_REP_GROUP);
             if (n != null) {
                 authorz = GroupImpl.create(n, this);
             }
@@ -347,20 +345,10 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
         String groupID = escHint;
         int i = 0;
         while (getAuthorizable(groupID) != null) {
-            // TODO: replace separator by "_" (see above)
-            groupID = escHint + "_GR_" + i;
+            groupID = escHint + "_" + i;
             i++;
         }
         return session.getQName(groupID);
-    }
-
-    /**
-     * TODO: Remove method as soon as searching group-by-id is fixed (see above).
-     */
-    private static String getGroupPrincipalName(String groupId) {
-        int pos = groupId.lastIndexOf("_GR_");
-        String pName = (pos > -1) ? groupId.substring(0, pos) : groupId;
-        return Text.unescapeIllegalJcrChars(pName);
     }
 
     private Value getValue(String strValue) throws RepositoryException {

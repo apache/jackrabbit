@@ -18,9 +18,9 @@
 package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +28,7 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -48,11 +49,19 @@ class TraversingNodeResolver extends NodeResolver {
      *
      * @param session      to use for repository access
      */
-    TraversingNodeResolver(SessionImpl session) throws RepositoryException {
-        super(session);
+    TraversingNodeResolver(Session session, NamePathResolver resolver) throws RepositoryException {
+        super(session, resolver);
     }
 
     //-------------------------------------------------------< NodeResolver >---
+    /**
+     * @inheritDoc
+     */
+    public Node findNode(Name nodeName, Name ntName) throws RepositoryException {
+        Node root = (Node) getSession().getItem(getSearchRoot(ntName));
+        return collectNode(nodeName, ntName, root.getNodes());
+    }
+
     /**
      * @inheritDoc
      */
@@ -82,6 +91,25 @@ class TraversingNodeResolver extends NodeResolver {
     }
 
     //--------------------------------------------------------------------------
+
+    private Node collectNode(Name nodeName, Name ntName, NodeIterator nodes) {
+        while (nodes.hasNext()) {
+            NodeImpl node = (NodeImpl) nodes.nextNode();
+            try {
+                if (node.isNodeType(ntName) && nodeName.equals(node.getQName())) {
+                    return node;
+                }
+                if (node.hasNodes()) {
+                    return collectNode(nodeName, ntName, node.getNodes());
+                }
+            } catch (RepositoryException e) {
+                log.warn("Internal error while accessing node", e);
+            }
+        }
+        log.debug("Could not find a node matching name '" + nodeName + " and nodetype " + ntName);
+        return null;
+    }
+
     /**
      * searches the given value in the range of the given NodeIterator.
      * recurses unitll all matching values in all configured props are found.
@@ -129,7 +157,7 @@ class TraversingNodeResolver extends NodeResolver {
                             node.getNodes(), matches, exact, maxSize);
                 }
             } catch (RepositoryException e) {
-                log.warn("failed to access Node at " + e);
+                log.warn("Internal error while accessing node", e);
             }
         }
     }
