@@ -35,7 +35,8 @@ public class JAASAuthContext implements AuthContext {
      * @param cbHandler CallbackHandler for login-modules
      * @param subject   to extend authentication
      */
-    JAASAuthContext(String appName, CallbackHandler cbHandler, Subject subject) {
+    protected JAASAuthContext(String appName, CallbackHandler cbHandler,
+                              Subject subject) {
 
         // make sure we are using our own context class loader when we
         // instantiate a LoginContext. See bug# 14329.
