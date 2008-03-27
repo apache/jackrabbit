@@ -18,12 +18,13 @@ package org.apache.jackrabbit.core.security.user;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import java.util.Collections;
 import java.util.Set;
 
@@ -36,7 +37,8 @@ abstract class NodeResolver {
 
     private static final Logger log = LoggerFactory.getLogger(NodeResolver.class);
 
-    private final SessionImpl session;
+    private final Session session;
+    private final NamePathResolver resolver;
 
     /**
      * Create a new <code>NodeResolver</code>.
@@ -44,11 +46,21 @@ abstract class NodeResolver {
      * @param session;
      * @throws RepositoryException if instanciation fails
      */
-    NodeResolver(SessionImpl session)
-            throws RepositoryException {
-
+    NodeResolver(Session session, NamePathResolver resolver) throws RepositoryException {
         this.session = session;
+        this.resolver = resolver;
     }
+
+    /**
+     * Get the first node that matches <code>ntName</code> and whose name
+     * exactly matches the given <code>nodeName</code>.
+     *
+     * @param nodeName
+     * @param ntName
+     * @return A matching node or <code>null</code>.
+     * @throws RepositoryException
+     */
+    public abstract Node findNode(Name nodeName, Name ntName) throws RepositoryException;
 
     /**
      * Get the first node that matches <code>ntName</code> and has a
@@ -101,8 +113,12 @@ abstract class NodeResolver {
     /**
      * @return Session this instance has been constructed with
      */
-    SessionImpl getSession() {
+    Session getSession() {
         return session;
+    }
+
+    NamePathResolver getNamePathResolver() {
+        return resolver;
     }
 
     String getSearchRoot(Name ntName) {
