@@ -375,7 +375,7 @@ public class SessionItemStateManager
 
     /**
      * Returns an iterator over those transient item state instances that are
-     * direct or indirect descendents of the item state with the given
+     * direct or indirect descendants of the item state with the given
      * <code>parentId</code>. The transient item state instance with the given
      * <code>parentId</code> itself (if there is such) will not be included.
      * <p/>

@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.state;
 
 /**
- * The cache access listener can be registerd to a class.
+ * The cache access listener can be registered to a class.
  * From time to time, the method cacheAccess is called.
  */
 public interface CacheAccessListener {

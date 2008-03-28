@@ -125,7 +125,7 @@ public abstract class ItemImpl implements Item {
      * @param session   the <code>Session</code> through which this <code>Item</code> is acquired
      * @param id        id of this <code>Item</code>
      * @param state     state associated with this <code>Item</code>
-     * @param listeners listeners on life cylce changes of this <code>ItemImpl</code>
+     * @param listeners listeners on life cycle changes of this <code>ItemImpl</code>
      */
     ItemImpl(ItemManager itemMgr, SessionImpl session, ItemId id, ItemState state,
              ItemLifeCycleListener[] listeners) {
@@ -585,7 +585,7 @@ public abstract class ItemImpl implements Item {
                             EffectiveNodeType.checkSetPropertyValueConstraints(
                                     def.unwrap(), values);
                         } catch (RepositoryException e) {
-                            // repack exception for providing verboser error message
+                            // repack exception for providing more verbose error message
                             String msg = itemMgr.safeGetJCRPath(propId) + ": " + e.getMessage();
                             log.debug(msg);
                             throw new ConstraintViolationException(msg);
@@ -706,7 +706,7 @@ public abstract class ItemImpl implements Item {
 
     private void restoreTransientItems(Iterator iter) {
 
-        // walk through list of transient states and reapply transient changes
+        // walk through list of transient states and re-apply transient changes
         while (iter.hasNext()) {
             ItemState itemState = (ItemState) iter.next();
             ItemId id = itemState.getId();
@@ -741,7 +741,7 @@ public abstract class ItemImpl implements Item {
                     }
                 }
                 if (!item.isTransient()) {
-                    // reapply transient changes (i.e. undo effect of item.makePersistent())
+                    // re-apply transient changes (i.e. undo effect of item.makePersistent())
                     if (item.isNode()) {
                         NodeImpl node = (NodeImpl) item;
                         node.restoreTransient((NodeState) itemState);
@@ -1158,7 +1158,7 @@ public abstract class ItemImpl implements Item {
 
             /**
              * make sure that this save operation is totally 'self-contained'
-             * and independant; items within the scope of this save operation
+             * and independent; items within the scope of this save operation
              * must not have 'external' dependencies;
              * (e.g. moving a node requires that the target node including both
              * old and new parents are saved)

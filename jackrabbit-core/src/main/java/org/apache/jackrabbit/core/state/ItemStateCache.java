@@ -84,7 +84,7 @@ public interface ItemStateCache {
 
     /**
      * Informs the cache that the item was modified and the cache might need to
-     * recalc the items caching weight.
+     * recalculate the items caching weight.
      *
      * @param id the id of the item that was modified.
      */

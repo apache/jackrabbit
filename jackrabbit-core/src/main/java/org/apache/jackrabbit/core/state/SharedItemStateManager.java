@@ -66,7 +66,7 @@ import java.util.HashMap;
  * workspaces. we assume, that VISP cannot be added dynamically, neither during
  * runtime nor by configuration.
  * <p/>
- * The states from the VISP are readonly. by the exception for node references.
+ * The states from the VISP are read-only. by the exception for node references.
  * remember that the referrers are stored in a {@link NodeReferences} state,
  * having the ID of the target state.
  * <br/>
@@ -88,15 +88,15 @@ import java.util.HashMap;
  *
  * <li> virtual --> virtual' (references from 'virtual' states to 'virtual'
  *      states of different VISP).
- *      those do currently not occurr and are therfor not supported.
+ *      those do currently not occur and are therefore not supported.
  * </ol>
  * <p/>
  * if VISP are not dynamic, there is not risk that NV-type references can dangle
  * (since a VISP cannot be 'unmounted', leaving eventual references dangling).
- * although multi-workspace-referrers are not explicitelt supported, the
+ * although multi-workspace-referrers are not explicitly supported, the
  * architecture of <code>NodeReferences</code> support multiple referrers with
  * the same PropertyId. So the number of references can be tracked (an example
- * of multi-workspace-refferres is a version referenced by the jcr:baseVersion
+ * of multi-workspace-referrers is a version referenced by the jcr:baseVersion
  * of several (corresponding) nodes in multiple workspaces).
  * <br/>
  * As mentioned, VN-type references should not impose any constraints on the
@@ -107,10 +107,10 @@ import java.util.HashMap;
  * <br/>
  * VV-type references should be handled by the respective VISP. they look as
  * NN-type references in the scope if the VISP anyway...so no special treatment
- * should be neccessairy.
+ * should be necessary.
  * <br/>
  * VV'-type references are currently not possible, since the version store and
- * virtual nodetype representation don't allow such references.
+ * virtual node type representation don't allow such references.
  */
 public class SharedItemStateManager
         implements ItemStateManager, ItemStateListener, Dumpable {
@@ -766,7 +766,7 @@ public class SharedItemStateManager
                 throw new ItemStateException("Interrupted while downgrading to read lock");
             } finally {
                 if (writeLock != null) {
-                    // exception occured before downgrading lock
+                    // exception occurred before downgrading lock
                     writeLock.release();
                     writeLock = null;
                 } else if (readLock != null) {
@@ -781,7 +781,7 @@ public class SharedItemStateManager
          */
         public void cancel() {
             try {
-                /* let listener know about cancelled operation */
+                /* let listener know about canceled operation */
                 if (eventChannel != null) {
                     eventChannel.updateCancelled(this);
                 }
@@ -853,7 +853,7 @@ public class SharedItemStateManager
 
     /**
      * Begin update operation. This will return an object that can itself be
-     * ended/cancelled.
+     * ended/canceled.
      */
     public Update beginUpdate(ChangeLog local, EventStateCollectionFactory factory,
                               VirtualItemStateProvider virtualProvider)
@@ -1210,7 +1210,7 @@ public class SharedItemStateManager
      * @throws ItemStateException if an error occurs
      */
     private boolean isReferenceable(NodeState state) throws ItemStateException {
-        // shortcut: check some wellknown built-in types first
+        // shortcut: check some well known built-in types first
         Name primary = state.getNodeTypeName();
         Set mixins = state.getMixinTypeNames();
         if (mixins.contains(NameConstants.MIX_REFERENCEABLE)

@@ -1187,7 +1187,7 @@ public class WorkspaceImpl extends AbstractWorkspace
      * or the parent node of <code>srcAbsPath</code> is versionable and checked-in,
      * or is non-versionable but its nearest versionable ancestor is checked-in.
      * @throws AccessDeniedException if the current session (i.e. the session that
-     * was used to aqcuire this <code>Workspace</code> object) does not have
+     * was used to acquire this <code>Workspace</code> object) does not have
      * sufficient access rights to complete the operation.
      * @throws PathNotFoundException if the node at <code>srcAbsPath</code> or
      * the parent of <code>destAbsPath</code> does not exist.

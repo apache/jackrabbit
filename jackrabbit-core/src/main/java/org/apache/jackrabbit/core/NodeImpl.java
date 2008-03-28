@@ -263,7 +263,7 @@ public class NodeImpl extends ItemImpl implements Node {
      *
      * @return <code>true</code> if there are pending unsaved changes,
      *         <code>false</code> otherwise.
-     * @throws RepositoryException if an error occured
+     * @throws RepositoryException if an error occurred
      */
     protected boolean hasPendingChanges() throws RepositoryException {
         if (isTransient()) {
@@ -1013,7 +1013,7 @@ public class NodeImpl extends ItemImpl implements Node {
             thisState.setStatus(ItemState.STATUS_NEW);
             stateMgr.disconnectTransientItemState(thisState);
         }
-        // reapply transient changes
+        // re-apply transient changes
         thisState.setParentId(transientState.getParentId());
         thisState.setMixinTypeNames(transientState.getMixinTypeNames());
         thisState.setDefinitionId(transientState.getDefinitionId());
@@ -3789,7 +3789,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * eventual mixin types stored in the frozen node. The same as
      * <code>{@link #addNode(String relPath)}</code> except that the primary
      * node type type, the uuid and evt. mixin type of the new node is
-     * explictly specified in the nt:frozen node.
+     * explicitly specified in the nt:frozen node.
      * <p/>
      *
      * @param relPath The path of the new <code>Node</code> that is to be created.
@@ -4004,7 +4004,7 @@ public class NodeImpl extends ItemImpl implements Node {
      *
      * @param version
      * @param vsel    the version selector that will select the correct version for
-     *                OPV=Version childnodes.
+     *                OPV=Version child nodes.
      * @throws UnsupportedRepositoryOperationException
      *
      * @throws RepositoryException
@@ -4032,7 +4032,7 @@ public class NodeImpl extends ItemImpl implements Node {
      *
      * @param version
      * @param vsel           the version selector that will select the correct version for
-     *                       OPV=Version childnodes.
+     *                       OPV=Version child nodes.
      * @param removeExisting
      * @throws RepositoryException
      */

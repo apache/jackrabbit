@@ -20,14 +20,14 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * <code>NodeIdIterator</code> extends the Iterator iterface by the NodeId
+ * <code>NodeIdIterator</code> extends the Iterator interface by the NodeId
  * specific methods.
  */
 public interface NodeIdIterator extends Iterator {
 
     /**
-     * Returns the next nodeid in the iteration.
-     * @return the next nodeid.
+     * Returns the next node id in the iteration.
+     * @return the next node id.
      *
      * @throws NoSuchElementException
      */

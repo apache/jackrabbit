@@ -58,7 +58,7 @@ import java.util.Map;
  * instance. It is the factory for <code>Node</code> and <code>Property</code>
  * instances.
  * <p/>
- * The <code>ItemManager</code>'s responsabilities are:
+ * The <code>ItemManager</code>'s responsibilities are:
  * <ul>
  * <li>providing access to <code>Item</code> instances by <code>ItemId</code>
  * whereas <code>Node</code> and <code>Item</code> are only providing relative access.

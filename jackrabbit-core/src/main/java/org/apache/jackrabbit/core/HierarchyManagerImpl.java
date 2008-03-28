@@ -116,7 +116,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
      *                    node (<code>true</code>) or a property (<code>false</code>)
      * @return the id of the item denoted by <code>path</code> or
      *         <code>null</code> if no item exists at <code>path</code>.
-     * @throws ItemStateException if an error occured
+     * @throws ItemStateException if an error occurred
      */
     private ItemId resolvePath(Path path, ItemState state, int next,
                                  boolean denotesNode)
@@ -153,7 +153,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
                     return new PropertyId(parentState.getNodeId(), name);
                 }
             }
-            // no such itemn
+            // no such item
             return null;
         }
 
@@ -265,7 +265,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * @param denotesNode flag indicating whether <code>path</code> refers to a
      *                    node (<code>true</code>) or a property (<code>false</code>)
      * @return the id of the item denoted by <code>path</code>
-     * @throws RepositoryException if an error occured
+     * @throws RepositoryException if an error occurred
      */
     protected ItemId resolvePath(Path path, ItemId id, int next,
                                  boolean denotesNode)

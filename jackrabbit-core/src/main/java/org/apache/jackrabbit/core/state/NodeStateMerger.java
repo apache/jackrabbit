@@ -26,7 +26,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 /**
- * Internal utility class used for merging concurrent changes that occured
+ * Internal utility class used for merging concurrent changes that occurred
  * on different <code>NodeState</code> instances representing the same node.
  * <p/>
  * See http://issues.apache.org/jira/browse/JCR-584.
