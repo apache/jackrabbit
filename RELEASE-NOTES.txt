@@ -1,9 +1,9 @@
-Release Notes -- Apache Jackrabbit JCR Commons -- Version 1.4.1
+Release Notes -- Apache Jackrabbit JCR Commons -- Version 1.4.2
 
 Introduction
 ------------
 
-This is the 1.4.1 patch release of the jackrabbit-jcr-commons component of
+This is the 1.4.2 patch release of the jackrabbit-jcr-commons component of
 Apache Jackrabbit, a fully conforming implementation of the Content
 Repository for Java Technology API (JCR).
 
@@ -20,18 +20,18 @@ Unlike previous Jackrabbit releases that contained a full set of components,
 this patch release only contains the jackrabbit-jcr-commons component. The
 component is distributed both as a source archive and a pre-compiled binary.
 
-    * Source archive (jackrabbit-jcr-commons-1.4.1-src.jar)
+    * Source archive (jackrabbit-jcr-commons-1.4.2-src.jar)
 
         The source archive contains the full source code of this release
-        in a "jackrabbit-jcr-commons-1.4.1" directory. Use the following
+        in a "jackrabbit-jcr-commons-1.4.2" directory. Use the following
         commands (or the equivalent in your environment) to build the
         component with Maven 2 and Java 1.4 or higher:
 
-          $ jar xf jackrabbit-jcr-commons-1.4.1-src.jar
-          $ cd jackrabbit-jcr-commons-1.4.1
+          $ jar xf jackrabbit-jcr-commons-1.4.2-src.jar
+          $ cd jackrabbit-jcr-commons-1.4.2
           $ mvn install
 
-    * Pre-compiled binary (jackrabbit-jcr-commons-1.4.1.jar)
+    * Pre-compiled binary (jackrabbit-jcr-commons-1.4.2.jar)
 
         JCR Commons Library of the Apache Jackrabbit content repository
         implementation.
