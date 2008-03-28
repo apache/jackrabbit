@@ -97,17 +97,17 @@ public class NodeState extends ItemState {
      * different <code>NodeState</code> instances.
      */
     private boolean sharedPropertyNames = false;
-    
+
     /**
      * Shared set, consisting of the parent ids of this shareable node. This
      * entry is {@link Collections.EMPTY_SET} if this node is not shareable.
      */
-    private Set sharedSet = Collections.EMPTY_SET; 
-    
+    private Set sharedSet = Collections.EMPTY_SET;
+
     /**
      * Flag indicating whether we are using a read-write shared set.
      */
-    private boolean sharedSetRW; 
+    private boolean sharedSetRW;
 
     /**
      * Listener.
@@ -166,6 +166,7 @@ public class NodeState extends ItemState {
                 setModCount(state.getModCount());
             }
             sharedSet = nodeState.sharedSet;
+            sharedSetRW = false;
         }
     }
 
@@ -571,7 +572,7 @@ public class NodeState extends ItemState {
     public synchronized void setNodeTypeName(Name nodeTypeName) {
         this.nodeTypeName = nodeTypeName;
     }
-    
+
     /**
      * Return a flag indicating whether this state is shareable, i.e. whether
      * there is at least one member inside its shared set.
@@ -579,10 +580,10 @@ public class NodeState extends ItemState {
     public synchronized boolean isShareable() {
         return sharedSet != Collections.EMPTY_SET;
     }
-    
+
     /**
      * Add a parent to the shared set.
-     * 
+     *
      * @param parentId parent id to add to the shared set
      * @return <code>true</code> if the parent was successfully added;
      *         <code>false</code> otherwise
@@ -593,15 +594,15 @@ public class NodeState extends ItemState {
             return false;
         }
         if (!sharedSetRW) {
-            sharedSet = new LinkedHashSet();
+            sharedSet = new LinkedHashSet(sharedSet);
             sharedSetRW = true;
         }
         return sharedSet.add(parentId);
     }
-    
+
     /**
      * Return a flag whether the given parent id appears in the shared set.
-     * 
+     *
      * @param parentId parent id
      * @return <code>true</code> if the parent id appears in the shared set;
      *         <code>false</code> otherwise.
@@ -609,10 +610,10 @@ public class NodeState extends ItemState {
     public synchronized boolean containsShare(NodeId parentId) {
         return sharedSet.contains(parentId);
     }
-    
+
     /**
      * Return the shared set as an unmodifiable collection.
-     * 
+     *
      * @return unmodifiable collection
      */
     public Set getSharedSet() {
@@ -621,11 +622,11 @@ public class NodeState extends ItemState {
         }
         return Collections.EMPTY_SET;
     }
-    
+
     /**
      * Set the shared set of this state to the shared set of another state.
      * This state will get a deep copy of the shared set given.
-     * 
+     *
      * @param set shared set
      */
     public synchronized void setSharedSet(Set set) {
@@ -633,7 +634,8 @@ public class NodeState extends ItemState {
             sharedSet = new LinkedHashSet(set);
             sharedSetRW = true;
         } else {
-            sharedSet = Collections.EMPTY_SET;            
+            sharedSet = Collections.EMPTY_SET;
+            sharedSetRW = false;
         }
     }
 
@@ -642,7 +644,7 @@ public class NodeState extends ItemState {
      * elements in the shared set. If this number is <code>0</code>,
      * the shared set is empty, i.e. there are no more parent items
      * referencing this item and the state is free floating.
-     * 
+     *
      * @param parentId parent id to remove from the shared set
      * @return the number of elements left in the shared set
      */
