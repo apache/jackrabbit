@@ -404,13 +404,13 @@ public class WorkspaceImpl extends AbstractWorkspace
             }
         }
     }
-    
+
     /**
      * Handles a clone inside the same workspace, which is supported with
      * shareable nodes.
-     * 
+     *
      * @see {@link #clone()}
-     * 
+     *
      * @param srcAbsPath source path
      * @param destAbsPath destination path
      * @return the path of the node at its new position
@@ -426,7 +426,7 @@ public class WorkspaceImpl extends AbstractWorkspace
             throws ConstraintViolationException, AccessDeniedException,
                    VersionException, PathNotFoundException, ItemExistsException,
                    LockException, RepositoryException {
-        
+
         Path srcPath;
         try {
             srcPath = session.getQPath(srcAbsPath).getNormalizedPath();
@@ -1089,8 +1089,15 @@ public class WorkspaceImpl extends AbstractWorkspace
 
         // check workspace name
         if (getName().equals(srcWorkspace)) {
-            // same as current workspace: is allowed for mix:shareable nodes
-            return internalClone(srcAbsPath, destAbsPath);
+            // clone to same workspace is allowed for mix:shareable nodes,
+            // but only if removeExisting is false
+            if (!removeExisting) {
+                return internalClone(srcAbsPath, destAbsPath);
+            }
+            // same as current workspace
+            String msg = srcWorkspace + ": illegal workspace (same as current)";
+            log.debug(msg);
+            throw new RepositoryException(msg);
         }
 
         // check authorization for specified workspace
