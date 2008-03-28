@@ -1676,6 +1676,7 @@ public class BatchedItemOperations extends ItemValidator {
             EffectiveNodeType ent = getEffectiveNodeType(srcState);
             boolean referenceable = ent.includesNodeType(NameConstants.MIX_REFERENCEABLE);
             boolean versionable = ent.includesNodeType(NameConstants.MIX_VERSIONABLE);
+            boolean shareable = ent.includesNodeType(NameConstants.MIX_SHAREABLE);
             switch (flag) {
                 case COPY:
                     // always create new uuid
@@ -1736,6 +1737,10 @@ public class BatchedItemOperations extends ItemValidator {
             // copy node state
             newState.setMixinTypeNames(srcState.getMixinTypeNames());
             newState.setDefinitionId(srcState.getDefinitionId());
+            if (shareable) {
+                // initialize shared set
+                newState.addShare(destParentId);
+            }
             // copy child nodes
             Iterator iter = srcState.getChildNodeEntries().iterator();
             while (iter.hasNext()) {
@@ -1753,6 +1758,32 @@ public class BatchedItemOperations extends ItemValidator {
                  *
                  * todo FIXME delegate to 'node type instance handler'
                  */
+
+                /**
+                 * If child is shareble and its UUID has already been remapped,
+                 * then simply add a reference to the state with that remapped
+                 * UUID instead of copying the whole subtree.
+                 */
+                if (srcChildState.isShareable()) {
+                    UUID uuid = refTracker.getMappedUUID(srcChildState.getNodeId().getUUID());
+                    if (uuid != null) {
+                        NodeId mappedId = new NodeId(uuid);
+                        if (stateMgr.hasItemState(mappedId)) {
+                            NodeState destState = (NodeState) stateMgr.getItemState(mappedId);
+                            if (!destState.isShareable()) {
+                                String msg = "Remapped child is not shareable.";
+                                throw new ItemStateException(msg);
+                            }
+                            if (!destState.addShare(id)) {
+                                String msg = "Unable to add share to node: " + id;
+                                throw new ItemStateException(msg);
+                            }
+                            stateMgr.store(destState);
+                            newState.addChildNodeEntry(entry.getName(), mappedId);
+                            continue;
+                        }
+                    }
+                }
 
                 // recursive copying of child node
                 NodeState newChildState = copyNodeState(srcChildState, srcChildPath,
