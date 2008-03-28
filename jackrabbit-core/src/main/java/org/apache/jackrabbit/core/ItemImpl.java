@@ -1177,7 +1177,7 @@ public abstract class ItemImpl implements Item {
                         NodeId newParentId = nodeState.getParentId();
                         if (oldParentId != null) {
                             if (newParentId == null) {
-                                // node has been removed, add old parent
+                                // node has been removed, add old parents
                                 // to dependencies
                                 if (overlayedState.isShareable()) {
                                     dependentIDs.addAll(overlayedState.getSharedSet());
