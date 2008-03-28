@@ -758,7 +758,7 @@ public abstract class ItemImpl implements Item {
             }
         }
     }
-    
+
     /**
      * Process all items given in iterator and check whether <code>mix:shareable</code>
      * or (some derived node type) has been added or removed:
@@ -789,7 +789,7 @@ public abstract class ItemImpl implements Item {
                 if (!wasShareable && isShareable) {
                     // mix:shareable has been added
                     ns.addShare(ns.getParentId());
-                    
+
                 } else if (wasShareable && !isShareable) {
                     // mix:shareable has been removed: not supported
                     String msg = "Removing mix:shareable is not supported.";
@@ -1279,7 +1279,7 @@ public abstract class ItemImpl implements Item {
 
                 // process transient items marked as 'removed'
                 removeTransientItems(removed.iterator());
-                
+
                 // process transient items that have change in mixins
                 processShareableNodes(dirty.iterator());
 

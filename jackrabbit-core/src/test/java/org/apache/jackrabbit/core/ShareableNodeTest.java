@@ -60,7 +60,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         // clone
         Workspace workspace = b1.getSession().getWorkspace();
         workspace.clone(workspace.getName(), b1.getPath(),
-                a2.getPath() + "/b", true);
+                a2.getPath() + "/b", false);
 
         Node[] shared = getSharedSet(b1);
         assertEquals(2, shared.length);
@@ -90,7 +90,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         // clone
         Workspace workspace = b1.getSession().getWorkspace();
         workspace.clone(workspace.getName(), b1.getPath(),
-                a2.getPath() + "/b2", true);
+                a2.getPath() + "/b2", false);
 
         Node[] shared = getSharedSet(b1);
         assertEquals(2, shared.length);
@@ -120,7 +120,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         // clone
         Workspace workspace = b1.getSession().getWorkspace();
         workspace.clone(workspace.getName(), b1.getPath(),
-                a2.getPath() + "/b2", true);
+                a2.getPath() + "/b2", false);
 
         Node[] shared = getSharedSet(b1);
         assertEquals(2, shared.length);
@@ -149,7 +149,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         // clone
         Workspace workspace = b1.getSession().getWorkspace();
         workspace.clone(workspace.getName(), b1.getPath(),
-                a2.getPath() + "/b2", true);
+                a2.getPath() + "/b2", false);
 
         // verify shared set contains 2 items
         Node[] shared = getSharedSet(b1);
@@ -186,7 +186,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         // clone
         Workspace workspace = b1.getSession().getWorkspace();
         workspace.clone(workspace.getName(), b1.getPath(),
-                a2.getPath() + "/b2", true);
+                a2.getPath() + "/b2", false);
 
         Node[] shared = getSharedSet(b1);
         assertEquals(2, shared.length);
@@ -220,7 +220,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         // clone
         Workspace workspace = b1.getSession().getWorkspace();
         workspace.clone(workspace.getName(), b1.getPath(),
-                a2.getPath() + "/b2", true);
+                a2.getPath() + "/b2", false);
 
         // remove shared set
         ((NodeImpl) b1).removeSharedSet();
@@ -250,7 +250,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         // clone
         Workspace workspace = b1.getSession().getWorkspace();
         workspace.clone(workspace.getName(), b1.getPath(),
-                a2.getPath() + "/b2", true);
+                a2.getPath() + "/b2", false);
 
         // remove shared set
         ((NodeImpl) b1).removeSharedSet();
@@ -282,7 +282,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         // clone
         Workspace workspace = b1.getSession().getWorkspace();
         workspace.clone(workspace.getName(), b1.getPath(),
-                a2.getPath() + "/b2", true);
+                a2.getPath() + "/b2", false);
 
         Node[] shared = getSharedSet(b1);
         assertEquals(2, shared.length);
@@ -312,7 +312,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         // clone
         Workspace workspace = b1.getSession().getWorkspace();
         workspace.clone(workspace.getName(), b1.getPath(),
-                a2.getPath() + "/b2", true);
+                a2.getPath() + "/b2", false);
 
         Node[] shared = getSharedSet(b1);
         assertEquals(2, shared.length);
@@ -348,7 +348,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         // clone
         Workspace workspace = b1.getSession().getWorkspace();
         workspace.clone(workspace.getName(), b1.getPath(),
-                a2.getPath() + "/b2", true);
+                a2.getPath() + "/b2", false);
 
         // copy source tree to destination
         workspace.copy(s.getPath(), testRootNode.getPath() + "/d");
@@ -380,7 +380,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         try {
             // clone underneath b1: this must fail
             workspace.clone(workspace.getName(), b1.getPath(),
-                    b1.getPath() + "/c", true);
+                    b1.getPath() + "/c", false);
             fail("Cloning should create a share cycle.");
         } catch (RepositoryException e) {
             // expected
@@ -404,7 +404,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         // clone
         Workspace workspace = b1.getSession().getWorkspace();
         workspace.clone(workspace.getName(), b1.getPath(),
-                a2.getPath() + "/b2", true);
+                a2.getPath() + "/b2", false);
 
         // event listener that counts events received
         class EventCounter implements SynchronousEventListener {
@@ -425,7 +425,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
             public void resetCount() {
                 count = 0;
             }
-        };
+        }
 
         EventCounter el = new EventCounter();
         ObservationManager om = superuser.getWorkspace().getObservationManager();
@@ -498,7 +498,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         // clone
         Workspace workspace = b1.getSession().getWorkspace();
         workspace.clone(workspace.getName(), b1.getPath(),
-                a2.getPath() + "/b2", true);
+                a2.getPath() + "/b2", false);
 
         Node[] shared = getSharedSet(b1);
         assertEquals(2, shared.length);
@@ -538,7 +538,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         try {
             // clone (1st attempt, without mix:shareable, should fail)
             workspace.clone(workspace.getName(), b1.getPath(),
-                    a2.getPath() + "/b2", true);
+                    a2.getPath() + "/b2", false);
             fail("Cloning a node into the same workspace should fail.");
         } catch (RepositoryException e) {
             // expected
@@ -550,7 +550,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
 
         // clone (2nd attempt, with mix:shareable)
         workspace.clone(workspace.getName(), b1.getPath(),
-                a2.getPath() + "/b2", true);
+                a2.getPath() + "/b2", false);
     }
 
     /**
@@ -571,7 +571,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         // clone
         Workspace workspace = b1.getSession().getWorkspace();
         workspace.clone(workspace.getName(), b1.getPath(),
-                a2.getPath() + "/b2", true);
+                a2.getPath() + "/b2", false);
 
         Node[] shared = getSharedSet(b1);
         assertEquals(2, shared.length);
@@ -625,7 +625,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         // clone
         Workspace workspace = b1.getSession().getWorkspace();
         workspace.clone(workspace.getName(), b1.getPath(),
-                a2.getPath() + "/b2", true);
+                a2.getPath() + "/b2", false);
 
         // add new referenceable child
         Node c = b1.addNode("c");
@@ -666,7 +666,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         try {
             // clone to same parent
             workspace.clone(workspace.getName(), b1.getPath(),
-                    a.getPath() + "/b2", true);
+                    a.getPath() + "/b2", false);
             fail("Cloning inside same parent should fail.");
         } catch (UnsupportedRepositoryOperationException e) {
             // expected
