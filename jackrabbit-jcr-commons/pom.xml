@@ -33,7 +33,7 @@
   </parent>
   <artifactId>jackrabbit-jcr-commons</artifactId>
   <name>Jackrabbit JCR Commons</name>
-  <version>1.4.2</version>
+  <version>1.4.3-SNAPSHOT</version>
   <description>General purpose classes for use with the JCR API</description>
   <packaging>bundle</packaging>
 
