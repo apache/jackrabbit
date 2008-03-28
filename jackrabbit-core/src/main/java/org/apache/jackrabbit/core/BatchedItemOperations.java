@@ -148,7 +148,7 @@ public class BatchedItemOperations extends ItemValidator {
      * At the end of this operation, either {@link #update} or {@link #cancel}
      * must be invoked.
      *
-     * @throws IllegalStateException if the state mananger is already in edit mode
+     * @throws IllegalStateException if the state manager is already in edit mode
      */
     public void edit() throws IllegalStateException {
         stateMgr.edit();
@@ -176,11 +176,11 @@ public class BatchedItemOperations extends ItemValidator {
 
     /**
      * End an update operation. This will save all changes made since
-     * the last invokation of {@link #edit()}. If this operation fails,
+     * the last invocation of {@link #edit()}. If this operation fails,
      * no item will have been saved.
      *
      * @throws RepositoryException   if the update operation failed
-     * @throws IllegalStateException if the state mananger is not in edit mode
+     * @throws IllegalStateException if the state manager is not in edit mode
      */
     public void update() throws RepositoryException, IllegalStateException {
         try {
@@ -194,9 +194,9 @@ public class BatchedItemOperations extends ItemValidator {
 
     /**
      * Cancel an update operation. This will undo all changes made since
-     * the last invokation of {@link #edit()}.
+     * the last invocation of {@link #edit()}.
      *
-     * @throws IllegalStateException if the state mananger is not in edit mode
+     * @throws IllegalStateException if the state manager is not in edit mode
      */
     public void cancel() throws IllegalStateException {
         stateMgr.cancel();
@@ -468,7 +468,7 @@ public class BatchedItemOperations extends ItemValidator {
      * @throws ItemExistsException
      * @throws LockException
      * @throws RepositoryException
-     * @throws IllegalStateException        if the state mananger is not in edit mode
+     * @throws IllegalStateException        if the state manager is not in edit mode
      */
     public NodeId move(Path srcPath, Path destPath)
             throws ConstraintViolationException, VersionException,

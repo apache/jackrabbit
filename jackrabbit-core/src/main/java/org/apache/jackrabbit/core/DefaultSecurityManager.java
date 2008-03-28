@@ -325,8 +325,8 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
     /**
      * Creates an AuthContext for the given {@link Credentials} and
      * {@link Subject}.<br>
-     * This includes selection of applicatoin specific LoginModules and
-     * initalization with credentials and Session to System-Workspace
+     * This includes selection of application specific LoginModules and
+     * initialization with credentials and Session to System-Workspace
      *
      * @return an {@link AuthContext} for the given Credentials, Subject
      * @throws RepositoryException in other exceptional repository states

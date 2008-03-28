@@ -240,7 +240,7 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
                 // a different prefix there's no collision
                 return;
             }
-            // need to change enw prefix locally by appending underscore(s)
+            // need to change new prefix locally by appending underscore(s)
             // in order to guarantee unambiguous mappings
             String uniquePrefix = newPrefix + "_";
             while (prefixToURI.containsKey(uniquePrefix)) {

@@ -1297,7 +1297,7 @@ public class NodeState extends ItemState {
         }
 
         public List subList(int fromIndex, int toIndex) {
-            // @todo FIXME does not fulfil the contract of List.subList(int,int)
+            // @todo FIXME does not fulfill the contract of List.subList(int,int)
             return Collections.unmodifiableList(new ArrayList(this).subList(fromIndex, toIndex));
         }
 

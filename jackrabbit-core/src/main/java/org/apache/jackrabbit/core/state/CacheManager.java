@@ -41,7 +41,7 @@ public class CacheManager implements CacheAccessListener {
     /** The logger instance. */
     private static Logger log = LoggerFactory.getLogger(CacheManager.class);
 
-    /** The default maximum amount of memory to distribute accross the caches. */
+    /** The default maximum amount of memory to distribute across the caches. */
     private static final long DEFAULT_MAX_MEMORY = 16 * 1024 * 1024;
 
     /** The default minimum size of a cache. */

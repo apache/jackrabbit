@@ -42,7 +42,7 @@ public interface HierarchyManager {
      * {@link #resolvePropertyPath(Path)} should be used instead.
      *
      * @param path path to resolve
-     * @return item id refered to by <code>path</code> or <code>null</code>
+     * @return item id referred to by <code>path</code> or <code>null</code>
      *         if there's no item at <code>path</code>.
      * @throws RepositoryException if an error occurs
      */
@@ -56,7 +56,7 @@ public interface HierarchyManager {
      * node to be found at <code>path</code>.
      *
      * @param path path to resolve
-     * @return node id refered to by <code>path</code> or <code>null</code>
+     * @return node id referred to by <code>path</code> or <code>null</code>
      *         if there's no node at <code>path</code>.
      * @throws RepositoryException if an error occurs
      */
@@ -70,7 +70,7 @@ public interface HierarchyManager {
      * property to be found at <code>path</code>.
      *
      * @param path path to resolve
-     * @return property id refered to by <code>path</code> or <code>null</code>
+     * @return property id referred to by <code>path</code> or <code>null</code>
      *         if there's no property at <code>path</code>.
      * @throws RepositoryException if an error occurs
      */

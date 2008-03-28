@@ -1335,7 +1335,7 @@ public class RepositoryImpl extends AbstractRepository
                 // subject from access control context
                 Session session = extendAuthentication(workspaceName);
                 if (session != null) {
-                    // sucessful extended authentication
+                    // successful extended authentication
                     return session;
                 } else {
                     log.debug("Attempt to login without Credentials and Subject -> try login with null credentials.");
@@ -1436,7 +1436,7 @@ public class RepositoryImpl extends AbstractRepository
      * @throws AccessDeniedException if the subject of the given login context
      *                               is not granted access to the specified
      *                               workspace
-     * @throws RepositoryException   If any other error occurrs creating the
+     * @throws RepositoryException   If any other error occurs creating the
      *                               session.
      */
     protected SessionImpl createSessionInstance(AuthContext loginContext,
@@ -1454,7 +1454,7 @@ public class RepositoryImpl extends AbstractRepository
      * @throws AccessDeniedException if the subject of the given login context
      *                               is not granted access to the specified
      *                               workspace
-     * @throws RepositoryException   If any other error occurrs creating the
+     * @throws RepositoryException   If any other error occurs creating the
      *                               session.
      */
     protected SessionImpl createSessionInstance(Subject subject,
@@ -1790,7 +1790,7 @@ public class RepositoryImpl extends AbstractRepository
          * </ul>
          * @return <code>true</code> if this instance has been successfully
          *         initialized, <code>false</code> if it is already initialized.
-         * @throws RepositoryException if an error occured during the initialization
+         * @throws RepositoryException if an error occurred during the initialization
          */
         final boolean initialize() throws RepositoryException {
             // check initialize status
@@ -2057,13 +2057,13 @@ public class RepositoryImpl extends AbstractRepository
     private class WorkspaceJanitor implements Runnable {
 
         /**
-         * amount of time in mmilliseconds before an idle workspace is
+         * amount of time in milliseconds before an idle workspace is
          * automatically shutdown.
          */
         private long maxIdleTime;
 
         /**
-         * interval in mmilliseconds between checks for idle workspaces.
+         * interval in milliseconds between checks for idle workspaces.
          */
         private long checkInterval;
 
@@ -2071,7 +2071,7 @@ public class RepositoryImpl extends AbstractRepository
          * Creates a new <code>WorkspaceJanitor</code> instance responsible for
          * shutting down idle workspaces.
          *
-         * @param maxIdleTime amount of time in mmilliseconds before an idle
+         * @param maxIdleTime amount of time in milliseconds before an idle
          *                    workspace is automatically shutdown.
          */
         WorkspaceJanitor(long maxIdleTime) {
